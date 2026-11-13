@@ -54,3 +54,13 @@ would misrepresent both its success and its starting state.
 
 **How to apply:** Inspect the live catalog and test the intended objects before
 retrying. Report partial application separately from clean migration acceptance.
+
+Automatic task merges are not schema-review approval.
+
+**Why:** A documentation-only merge invoked a guarded schema push without a
+reviewed migration acknowledgement. Injecting acknowledgements into the merge
+hook would falsely turn task approval into database-change approval.
+
+**How to apply:** Keep dependency/type validation separate from explicit,
+reviewed SQL application and database postconditions. Hook success is not
+schema acceptance; never weaken the schema guard to make a merge succeed.
