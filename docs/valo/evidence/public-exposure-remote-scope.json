@@ -1,0 +1,2670 @@
+{
+  "/git/trees/9095e1afd4a51b08423a71bd7fbf7fa257fabc7e?recursive=1": {
+    "data": {
+      "sha": "9095e1afd4a51b08423a71bd7fbf7fa257fabc7e",
+      "tree": [
+        {
+          "path": ".agents",
+          "sha": "6f427aa63ecf87481c2a2ef5b3e48c59ee754402",
+          "type": "tree"
+        },
+        {
+          "path": ".agents/memory",
+          "sha": "55cff23c0028d7e29518812800280dae805d02bb",
+          "type": "tree"
+        },
+        {
+          "path": ".agents/memory/MEMORY.md",
+          "sha": "cddc39dfbea545d499fb39953f26c783718479a4",
+          "type": "blob"
+        },
+        {
+          "path": ".agents/memory/clerk-browser-testing.md",
+          "sha": "38268f6d31790df5341e1a3d234198abf4a45c1c",
+          "type": "blob"
+        },
+        {
+          "path": ".agents/memory/document-hash-compatibility.md",
+          "sha": "e85dbcfce9309de3bc874d3cc9c66c0338f6b6ac",
+          "type": "blob"
+        },
+        {
+          "path": ".agents/memory/github-write-permissions.md",
+          "sha": "3641bf0a47f82ea3dd0b0073a056664e8cea7cfa",
+          "type": "blob"
+        },
+        {
+          "path": ".agents/memory/infrastructure-proof.md",
+          "sha": "22ea6a13d80c4a442530ab32a3bcd81f5b0adbe2",
+          "type": "blob"
+        },
+        {
+          "path": ".agents/memory/valo-acceptance.md",
+          "sha": "66a0d2170f5b7f2b206bea871f3c39e94975e0b5",
+          "type": "blob"
+        },
+        {
+          "path": ".github",
+          "sha": "ad6d7cefbd5a4b0519418c96c1e147196187e64e",
+          "type": "tree"
+        },
+        {
+          "path": ".github/workflows",
+          "sha": "42d54fdd2e9b4cec278369828c2516c7d6d2bf2a",
+          "type": "tree"
+        },
+        {
+          "path": ".github/workflows/valo-foundation.yml",
+          "sha": "d7f8f8e0764fc6dc1d00fd2218c4846c43f1ba27",
+          "type": "blob"
+        },
+        {
+          "path": ".gitignore",
+          "sha": "15c1a5205b0401b42b055ee9295feb92fdd75189",
+          "type": "blob"
+        },
+        {
+          "path": ".npmrc",
+          "sha": "61e34c2e5dde6b5b6b9d1a478945726c27993d4b",
+          "type": "blob"
+        },
+        {
+          "path": ".replit",
+          "sha": "60b99954a3a96f48b69102f552669fb1f39f8236",
+          "type": "blob"
+        },
+        {
+          "path": ".replitignore",
+          "sha": "e8f1e23d3c14e8e2f761901d899bea4d533c79ac",
+          "type": "blob"
+        },
+        {
+          "path": "README.md",
+          "sha": "47f4c147232da5d6d3fcbccb5a8eb6253a538d58",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts",
+          "sha": "ce8041506f6c7adcdc451f0143f3704e1735e32c",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/api-server",
+          "sha": "070db3997837a24061828b566b949e18dcc63672",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/api-server/.replit-artifact",
+          "sha": "9a9c0ed5c42cc6a3c48c6441fff5fc90aabca0a9",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/api-server/.replit-artifact/artifact.toml",
+          "sha": "814b9ad51b47b2302b7364ccb37849767aec680e",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/build.mjs",
+          "sha": "294d966db2c0908273a9f462a984b9f9774c9ccf",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/package.json",
+          "sha": "97da472645c4527d1179cbb6eae6372d3cae0267",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src",
+          "sha": "9488db1a3df5365d6b580e9a9b90d1794b3fd629",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/api-server/src/app.ts",
+          "sha": "4bb316d4a29aaa796a320fac7641d91132e056be",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial",
+          "sha": "9e94f71ecca9be04f29c0e3e35abdd8349011118",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/model-adapter.ts",
+          "sha": "c11a1b7e186960a7bf06895416ed8b1d9e3ff71d",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/pipeline-contract.test.ts",
+          "sha": "bef75bebc4a4818b3ccf361b550e6a956e2a12b0",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/pipeline-contract.ts",
+          "sha": "997b617da60a4cd8f245adc4f391855d89bafd92",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/pipeline-proof.integration.test.ts",
+          "sha": "48a67f2282f305092865086cd43831b622314125",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/pipeline.ts",
+          "sha": "f1c8fe2fbb7e712509dd16e00a0b1a5059ef09c4",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/run-register.ts",
+          "sha": "76db686d8a238e591cd482912436d9a9342853f5",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/run-storage.ts",
+          "sha": "bcea9d159adb8bc80591c017d36c512b0d9c9aa0",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/source-capture.ts",
+          "sha": "e8fdd82deb2fcac74295361ed18b2e862e07b05e",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/source-controls.test.ts",
+          "sha": "14b1ed0a88ad7a7d1cb24afd970319d0a84efe6a",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/source-extract.ts",
+          "sha": "62551f6d2a57c47c67c98077ec9a152dd8584935",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/source-fetch.ts",
+          "sha": "db7294f3cc472d09f94de14a5b9e7151de0ee8e8",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/source-identity.ts",
+          "sha": "9695e0296c835983f6205bc17b45c9864c7323c2",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/source-instruments.integration.test.ts",
+          "sha": "b2a2c719d37c0e60a088652711715c903fd4f22d",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/source-register.ts",
+          "sha": "4d5599ccf31233001143d20cd2966e83dc4d59fd",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/source-storage.ts",
+          "sha": "a2da721346be921540f29a17916fd5d0ea5a6b33",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/editorial/source-store.integration.test.ts",
+          "sha": "81dc03853b36a91e0c81de169cfb8c37b59e81c9",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/index.ts",
+          "sha": "b1f024dd070f40db5058650016bf63746994c0ac",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib",
+          "sha": "593a26a1bbe4e8877101d3a2935c7e17c1097697",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/.gitkeep",
+          "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/logger.ts",
+          "sha": "d9c67f79a82872af8336ab384014fa69bbe0695f",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-export-queue.ts",
+          "sha": "086effe27f310ff0c8944c23f679e2c9a4c58580",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-exports.integration.test.ts",
+          "sha": "d79822714feea19950a2ca0d6661e2500be7ac6f",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-exports.ts",
+          "sha": "182de97a9598398c6407c4542b62af1ac2563806",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-http.test.ts",
+          "sha": "f72ebe72fe3fa8bfe533ce875ea42d37ead28bf5",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-private-storage.ts",
+          "sha": "85e403705cc717b9013c056a1d765af65299a2c7",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-quota-policy.ts",
+          "sha": "7a3baa50c6d2168e142d25adb87d646641d04834",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-quota.integration.test.ts",
+          "sha": "23146447387b711246dac56d32a23e3e07a28b73",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-quota.test.ts",
+          "sha": "79484d57ebfbb2fc50a8d317730e5370df6fe0b4",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-quota.ts",
+          "sha": "6603c06e96fbdf4d1b03db094057ae09daf99ba5",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-render.test.ts",
+          "sha": "be843b0f1d953bd994b2c630fe9f72cce8663645",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-render.ts",
+          "sha": "384d3861ca2bd3a3e18a1ed6ade6a96c428a9869",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+          "sha": "e08252c1aef13f71ef6bdc078538259f5b8427d8",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-store.ts",
+          "sha": "d45fb283eac4c720cdb649c10e5595e3651461eb",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-test-fixtures.ts",
+          "sha": "9f77c284ba8002d4c5bdcbf1c927c821208998f4",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-validation.test.ts",
+          "sha": "454729294c05cb72466ebf23120be01284d41123",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/valo-validation.ts",
+          "sha": "da2a0e50c8efa1164c7bda54ddfc4b159a3ddf25",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/middlewares",
+          "sha": "900fb5e35c49cd85e773096194f52ba458ee141e",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/api-server/src/middlewares/.gitkeep",
+          "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts",
+          "sha": "26b83b07fcbf5d916f9f578c5bc956767bbbdb2d",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/middlewares/valo-identity.ts",
+          "sha": "6ae6b8474f7d28bcab9fe4cb4ec22a54a365167d",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/middlewares/valo-quota.ts",
+          "sha": "d8f832e1371a356abae7b79538caff477f66e5fd",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/routes",
+          "sha": "d8078536d609a57caf8d3d9912088423c60fac15",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/api-server/src/routes/health.ts",
+          "sha": "c0a144626055cbc728d5d813d63b389ae1e82bee",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/routes/index.ts",
+          "sha": "5a1f77abda69515f1657b86f551c97570d05d6a3",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/routes/valo-exports.ts",
+          "sha": "d13a6219ee5bb9144e56567d25363780c45528f3",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/routes/valo.ts",
+          "sha": "62e741c63c07804577ee935a10777fc36f09f64d",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/scripts",
+          "sha": "a208f238cecfd20b529df7ec2df5e28c465251f0",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/api-server/src/scripts/editorial-proof.ts",
+          "sha": "4fbb1d47471eee150f7201cf85390a6c15faf19f",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/scripts/p0-customer-journey.ts",
+          "sha": "ce42c84612ba2974178628b7fa66d3036c8735ef",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/scripts/queue-migration.ts",
+          "sha": "e862581a7f7c0b560552d1e16c55c2cf121cdf87",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/scripts/retrieve-instruments.ts",
+          "sha": "3ee0152f6264759b7da48da37f44b8503b86e6ce",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/scripts/retrieve-sources.ts",
+          "sha": "ce3d88ccdd7d0de17a493d48c373e749116d8ba6",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/src/workers",
+          "sha": "974101b0ddd6235197ad99dd0db9940e09345153",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/api-server/src/workers/export-worker.ts",
+          "sha": "84befd8932bac964876b52c0a19595ff0f867612",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/api-server/tsconfig.json",
+          "sha": "0255b5280c72554b871ec2476111431b422df8bf",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox",
+          "sha": "f6eb3a76f2eff45653feeca86be8c7951e25fc93",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/.replit-artifact",
+          "sha": "a2f168884098ab14d796435914fe3973f7a660ba",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/.replit-artifact/artifact.toml",
+          "sha": "8f94c258bc9f10c764e933c5bcea986a62b4c2a4",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/components.json",
+          "sha": "ba0c18c0c790c4270fe1d596a400e4e24dcc643e",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/index.html",
+          "sha": "1397a638300ec564af33d63612ff217ea2c4012b",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/mockupPreviewPlugin.ts",
+          "sha": "c09ed92cbbc0cbe8e5499340d22a576720eb3c8f",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/package.json",
+          "sha": "835024f8151023e5b03d3126827a93c0a47d5b65",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src",
+          "sha": "44ca3230fc03e32637154d6141f8e8457727faa2",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/.generated",
+          "sha": "e2f69c153a9735fe173fad2bb7a838817c1d1d21",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/.generated/mockup-components.ts",
+          "sha": "97c87e1fe941456236fbbaa8a06da5a8dbab649c",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/App.tsx",
+          "sha": "d9c2317f0d952aefe737473c57dc4afe359048a0",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components",
+          "sha": "331093f608496843d6d21095dd23ea321c61e912",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui",
+          "sha": "23163d86eb0183eaf27128fa265630c254317cf8",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/accordion.tsx",
+          "sha": "e1797c93458f3751a2e0f1189ff50d77f20ae3ed",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/alert-dialog.tsx",
+          "sha": "fa2b4429f4303210462ad03f9f49280ac5ae07ce",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/alert.tsx",
+          "sha": "5afd41d142c95c74069ebb5460117e74ead3b9df",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/aspect-ratio.tsx",
+          "sha": "c4abbf37f217c715a0eaade7f45ac78600df419f",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/avatar.tsx",
+          "sha": "51e507ba9d08bcdbb1fb630498f1cbdf2bf50093",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/badge.tsx",
+          "sha": "cfd176a05b00824f7a6a029b10bb935ef38d10bb",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/breadcrumb.tsx",
+          "sha": "60e6c96f72f0350d08b47e4730cab8f3975dc853",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/button-group.tsx",
+          "sha": "d6e78014fc491465c059253d541b10afdaa3227a",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/button.tsx",
+          "sha": "a471859fcdc6b46cc07cf9445f8b7a1765d563df",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/calendar.tsx",
+          "sha": "a623682dab53fbe9e1777b83b2e93763837653d8",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/card.tsx",
+          "sha": "cabfbfc59d955db9efc2049783cad4a71db55442",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/carousel.tsx",
+          "sha": "9c2b9bf3705d8421bef00704c0c52e83d371ca11",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/chart.tsx",
+          "sha": "558b810e741ae2fa05d5249c46d3253bc9e32e4f",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/checkbox.tsx",
+          "sha": "90b71e4131b047201b35476638ea324b12f76113",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/collapsible.tsx",
+          "sha": "9fa48946afd1eb56bd932377fd888e3986304676",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/command.tsx",
+          "sha": "2cecd9104b27be82d238aa2f1cbb351e05446af7",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/context-menu.tsx",
+          "sha": "0cd4b2c03d306c38836d43c7f3dc2cb2547c64a7",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/dialog.tsx",
+          "sha": "9dbeaa096eef7b54a3272898770c4c32e00630af",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/drawer.tsx",
+          "sha": "c17b0ccaa95dccfb96c75618e078efd263e54fd0",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/dropdown-menu.tsx",
+          "sha": "5a20503b547ea0e4e467d63fe1ae78e4171afb52",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/empty.tsx",
+          "sha": "71667632e77bf4265ab740e906f785fee806eec2",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/field.tsx",
+          "sha": "0a276fcb1d7623b0d57fd649fddfb043b535ea62",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/form.tsx",
+          "sha": "1fe22e6f0be2750d1b5ec3efc7346fef4612b2e3",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/hover-card.tsx",
+          "sha": "95643d9c7099c1179f8a876fbf8840dc077e1b38",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/input-group.tsx",
+          "sha": "e66a505a0fa0c4767cc00beefe969a8a41a5b597",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/input-otp.tsx",
+          "sha": "f7891c9cc8ba7868f4b5bdb67dc883b1880ade9f",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/input.tsx",
+          "sha": "69b64fb2455114c3eeda2d18741af0027b3c5e89",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/item.tsx",
+          "sha": "93d2b8122ddd7119c3580afa71e8c53708982983",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/kbd.tsx",
+          "sha": "44d8ba842d739468527fd004503f4546cc152576",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/label.tsx",
+          "sha": "534182176bf87f9308355514adc884d2b69750a5",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/menubar.tsx",
+          "sha": "6919168b87c646d3b27fd66d68cdd7e391757583",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/navigation-menu.tsx",
+          "sha": "056354bf824bf1f06e9dbceeacad512ce21b03d1",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/pagination.tsx",
+          "sha": "d3311054cd07a90d130f7996c79b3fc0feeede39",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/popover.tsx",
+          "sha": "fdcb511dc768b79951de97416e9bd0ff1ae9ea05",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/progress.tsx",
+          "sha": "4fc3b473e6f51afa972f840fb0f4476f8663c256",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/radio-group.tsx",
+          "sha": "9d3a26e6ec5d8647f22d754be5affd9e8eba1ec5",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/resizable.tsx",
+          "sha": "f4bc5586b67f45d3cc35f228e8bac2e4bc2cea16",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/scroll-area.tsx",
+          "sha": "cf253cf17056ce04827219643e484ea99c77cf6b",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/select.tsx",
+          "sha": "6e637f7dc67daa0b2ce4f440e4bbdb3f14ce3c03",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/separator.tsx",
+          "sha": "6d7f12265ba0338704f013930ce4d52c56527dd1",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/sheet.tsx",
+          "sha": "272cb721eb48b7a5833ccd51f940a8830d85b64e",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/sidebar.tsx",
+          "sha": "3e5c20556fd9212b53e8305579b57954a1bd06ad",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/skeleton.tsx",
+          "sha": "d7e45f7bd315f86eabf32f2c9425223417920e60",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/slider.tsx",
+          "sha": "9398b331513e9668b8d76f2905d570c34d080fd2",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/sonner.tsx",
+          "sha": "452f4d9f0dde88611113632c1d759d60155fe4d3",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/spinner.tsx",
+          "sha": "a70e713c5b4ecb2af186efe3fadea51805f26ba5",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/switch.tsx",
+          "sha": "455c23b6cd5adcb0278792568cdddf084a4a37c9",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/table.tsx",
+          "sha": "c0df655c0bf26af1148d038e1d013e884663b240",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/tabs.tsx",
+          "sha": "85d83beab3224580318b1dd85f93e9294fae32c0",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/textarea.tsx",
+          "sha": "e56b0affd7e03bd8359092a81d81c606ab09972d",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/toast.tsx",
+          "sha": "a822477534192c4df5073e4015f7461e739d3344",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/toaster.tsx",
+          "sha": "6c67edff67a48c6ac1c46f25a6d468dd461e66cb",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/toggle-group.tsx",
+          "sha": "1c876bbeecabe59b684719afe58e684f34cdecbf",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/toggle.tsx",
+          "sha": "ab0a30fb3daa5b3fe5a4158ee1372405aac50aba",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/components/ui/tooltip.tsx",
+          "sha": "28e19183f4d9dfbb73c82928190556b69575eb2b",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/hooks",
+          "sha": "22a3620c73318bb39d27e5d21a5c9ba428d469b1",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/hooks/use-mobile.tsx",
+          "sha": "2b0fe1dfef3b17850bbac040665f514a8ffd0f15",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/hooks/use-toast.ts",
+          "sha": "4da06d4715bc3dfba3873ec4229040533a02d272",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/index.css",
+          "sha": "75160b5e1cf5b08ccd3f4701b30f0d01499422cd",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/lib",
+          "sha": "1bdc1d66ab5752bb8929bbb4ca0daee1df5f30da",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/lib/utils.ts",
+          "sha": "bd0c391ddd1088e9067844c48835bf4abcd61783",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/src/main.tsx",
+          "sha": "696e0d2b94fbc09e5bf2378678cfe86625c2f15c",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/tsconfig.json",
+          "sha": "10c1c4fb5d44db6aa2da5f8f7a78e6047b068302",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/mockup-sandbox/vite.config.ts",
+          "sha": "4ed43103e7146e064f8b3a0893e988121e81a483",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo",
+          "sha": "04e16ad9b985ef5f2423c0b2824f85c005705166",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/.gitignore",
+          "sha": "6e4b71289260cd0989467cdd47b96bc70e21456b",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/.replit-artifact",
+          "sha": "19ba1dcf85b0aea2004ff5662c855acff06d8d77",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/.replit-artifact/artifact.toml",
+          "sha": "3ddcd7dcc614548581c13675e5bff62c6a3ae933",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/app",
+          "sha": "1762f45d867e69cf6889899aa41d598522d71efa",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/app/[[...slug]]",
+          "sha": "5f3660a2308bbe1307cfa394972bcbc4bd8c31be",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/app/[[...slug]]/page.tsx",
+          "sha": "ea04a9c9ff8ba3aebae52c56f20572c0d59923aa",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/app/layout.tsx",
+          "sha": "2b5155a7e55260ab005ef966a5f5873663fb3c0b",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/components.json",
+          "sha": "3ff62cf0842657da595682900f6aa27592c67b4c",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/next-env.d.ts",
+          "sha": "830fb594ca2970a827555c28a253b097367e08d8",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/next.config.mjs",
+          "sha": "7675465e84ea26e86c4112370c4500c35a5b6e52",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/package.json",
+          "sha": "80e10ec7828854651f3bec534e5390df766fc1e1",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/postcss.config.mjs",
+          "sha": "d1840a7c4eb3970eff4768a48fac2207d1d8c8a4",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/public",
+          "sha": "bab33f58549732481fd66546d013bc06335a08a6",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/public/favicon.svg",
+          "sha": "32774e23c5dbc27c38dedb00a5dccadd58ffa722",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/public/logo.svg",
+          "sha": "756cad19525e816ae6842079b754c46acdf42134",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/public/robots.txt",
+          "sha": "c2a49f4fb82f19ffa9089fcf8630e5a2870d3feb",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src",
+          "sha": "c69779d4718abfe56507d02f0323720b93f2791d",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/src/App.tsx",
+          "sha": "28ada34e67ea53ea327d1c30524db06b76d6dda3",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/client-app.tsx",
+          "sha": "f47804feb0c895765a4b76852fc943262c433c0e",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components",
+          "sha": "4e0ca03cbc5ebe41bb048582dd3baf5dff66a0a0",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/src/components/brand.tsx",
+          "sha": "b4729f255f5cc3a4a972721a243cbbe7404e23bd",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/document-exports.tsx",
+          "sha": "86ea33f7e8fc41df5e2b60c920c9612d81f6ac2a",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/error-boundary.tsx",
+          "sha": "67439e75a48667ad3afab6dd628b0fc914ca9d4c",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/require-auth.tsx",
+          "sha": "bc1a284881f9a3b1eb0ba397717637f2a7987533",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/site-shell.tsx",
+          "sha": "2e78d36af82738e85831d0658085780060c94395",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/source-evidence.tsx",
+          "sha": "330fd25030c3df48fecad47f13f54c50daffd4d4",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/states.tsx",
+          "sha": "473e7b64ccfb5d6d7d99c5df535c949582a6ec44",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ticket-form.tsx",
+          "sha": "cc3b32d6f51dcaff39103b9b21da310853bdb362",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui",
+          "sha": "3af89a53a29a44ce15633194fcb92e5bf19a9902",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/accordion.tsx",
+          "sha": "5ad3b624eceb523632608a74ff6ed76a2cb86940",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/alert-dialog.tsx",
+          "sha": "82985dcdbb1ff47c3a814661e49fc52fde9f2200",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/alert.tsx",
+          "sha": "8bdb5e1f2a4021a7d665dbee584dc2acfff78668",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/aspect-ratio.tsx",
+          "sha": "5dfdf1e67a885c95b0e2993d8154c0e9f73ab2c4",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/avatar.tsx",
+          "sha": "e1cde8ea04c64b58629003b702a6a451dfbd7135",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/badge.tsx",
+          "sha": "4cd80531fc7f2da8baa3929f6cf53f9d97e6bd52",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/breadcrumb.tsx",
+          "sha": "2e43292d8a56e676c8ac5c9e99feedb6c4f015ba",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/button-group.tsx",
+          "sha": "90c86e4486415caa7ead88d13a6565cd123288be",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/button.tsx",
+          "sha": "87508a551e9f40a7d5e93bb25fa116f0ef8c9386",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/calendar.tsx",
+          "sha": "3686a1b708124cb6044f5643eaedc276788c179f",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/card.tsx",
+          "sha": "bc1c974f566d550adf17dca73fbab1b0e4553bca",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/carousel.tsx",
+          "sha": "b705b6b2138133e05ba2666b9ed94f832ccda660",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/chart.tsx",
+          "sha": "b71c184d2aa94ae2c4aac094fd5bd63c0bc76339",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/checkbox.tsx",
+          "sha": "7965822fa0a17015e52952eb858c166889038008",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/collapsible.tsx",
+          "sha": "86ab87d88e06375de0ee5084c3d28f2e2465c8bc",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/command.tsx",
+          "sha": "ddbb486b1949caee42890d712fb52f8f814802c2",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/context-menu.tsx",
+          "sha": "03a6053b34a7770cc541e279ec46289384cc01cd",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/dialog.tsx",
+          "sha": "d9593d8532b833dd66fd9b0dcd849c3cb73020cd",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/drawer.tsx",
+          "sha": "5b76128b8c31d34e52444b0b5c008b6d35289ad3",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/dropdown-menu.tsx",
+          "sha": "6a20e22d0d437c5eb5ffefcece22ce909f880287",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/empty.tsx",
+          "sha": "848baed120db63cba4bfacaba9ed0b5953ad50b9",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/field.tsx",
+          "sha": "768cd1342c9c85a47844a3675b77cdbb0db5ccc4",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/form.tsx",
+          "sha": "1c1451f06827a21a2c7f34ddad17c8f946f58cdf",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/hover-card.tsx",
+          "sha": "fde491a0144dd4885fe0d52e458e3e956394c27c",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/input-group.tsx",
+          "sha": "c1c2027f0b5fc7a7f5742cf9f7d1057b84a15d8e",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/input-otp.tsx",
+          "sha": "571c7d803915728771afcdda8d9c7c9147e2a9af",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/input.tsx",
+          "sha": "e1b9850b4b73fd4e27e9d3c4ee469aab2b5e1b42",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/item.tsx",
+          "sha": "e0948b8db406074f448dbae422f5084ed1f81529",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/kbd.tsx",
+          "sha": "c213d8ab8b7aa02acde6b2925d8e27f3d4d9cfca",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/label.tsx",
+          "sha": "f55bff04799f2d776930c19ec041ac3eb968ceae",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/menubar.tsx",
+          "sha": "f93b746f5578ccdcf3cd1c5a90f835ed657fe067",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/navigation-menu.tsx",
+          "sha": "3c470896d73caa5ad1c2b03550be3b2014894a08",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/pagination.tsx",
+          "sha": "631b0386a45c83a9ffdc2b3683d8745615d534a7",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/popover.tsx",
+          "sha": "dddd6f178bbdee3ccf30d06ae7b9d8ce0d9d151b",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/progress.tsx",
+          "sha": "6e759cbb30a6589f569d7fdc7cd7e15f794165e3",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/radio-group.tsx",
+          "sha": "f41a4783e715bc2da7066d9a2bfa7e7722210019",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/resizable.tsx",
+          "sha": "7aa8bc4354058c77a724b899d7a4383e29b592a9",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/scroll-area.tsx",
+          "sha": "eec263473cac8ad7e59badae39299380702f68da",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/select.tsx",
+          "sha": "df57107882081ab130aed307a8208c5ed176b122",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/separator.tsx",
+          "sha": "bbc78be61a00868ced168d40600e01b2ad494ba0",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/sheet.tsx",
+          "sha": "655c1cc7f80c1a641327ae65f95bf80680fec803",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/sidebar.tsx",
+          "sha": "be587147aa45a9e2304fa620244392c0d28e455c",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/skeleton.tsx",
+          "sha": "cb09f16aa84e12eba069417ad9df183850b868da",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/slider.tsx",
+          "sha": "1f4a44991e41ed2acd4fbad51e80356dc49ba3d7",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/sonner.tsx",
+          "sha": "b38ad1e0d65af2a3c1f37606324fd20292bd2c1d",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/spinner.tsx",
+          "sha": "a6a4dea2c72cc03907695783d336f14ab04daabd",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/switch.tsx",
+          "sha": "96ad9a00b8064e30da7e8ee95880a17d4606c51f",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/table.tsx",
+          "sha": "bcdac4a3184ad3b43bbdede63080bfec9942e39e",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/tabs.tsx",
+          "sha": "e9904924c79fa84ddfa94c61f73f6ae3cac3a02d",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/textarea.tsx",
+          "sha": "f3d314c3f866e756ed79125fe2116edd01e45c4d",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/toast.tsx",
+          "sha": "c291dd959da688ec43acf418a9786bd4233482c6",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/toaster.tsx",
+          "sha": "c8c9713a2b442f170235b5a0d5abc419e974fdba",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/toggle-group.tsx",
+          "sha": "4a2071052cf403d818d1df29adf851046a553923",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/toggle.tsx",
+          "sha": "ad58c359b080412bddf66cb5e1a23fc7d57397ad",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/components/ui/tooltip.tsx",
+          "sha": "acdf96b18167238f69ff461e017eae5d68f767f0",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/hooks",
+          "sha": "46bebfc6e52561980ada28ae37ff6a51275bea20",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/src/hooks/use-mobile.tsx",
+          "sha": "821f8ff4aa7d77756564f8aecda940d02f2a6c99",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/hooks/use-toast.ts",
+          "sha": "1db1c035ddd39c98c27fe2f84025bebb2d8096ed",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/index.css",
+          "sha": "9915e6d1f1a01ad56cf747f49ee22903659dfc89",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/lib",
+          "sha": "f140c59240c05cee32c95b86b5f58d91f687f3ba",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/src/lib/api.ts",
+          "sha": "3ce5bbfb728971cdc82e526524cd0bc2edf03cad",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/lib/env.ts",
+          "sha": "0fae6f7e17ad1705fc04feabfe5486081e010ff1",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/lib/utils.ts",
+          "sha": "17d6d86c73530712ed8c6cadfa586136423b5a9b",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens",
+          "sha": "301a47eab4f2772c9f025c1dbb75ce820196e37b",
+          "type": "tree"
+        },
+        {
+          "path": "artifacts/valo/src/screens/compliance.tsx",
+          "sha": "02cac45193a03e3331bfa26a48b8a240c7a09d56",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/development.tsx",
+          "sha": "5184ccd099f032f65ea142f06c3bf4256134fdf6",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/document-editor.tsx",
+          "sha": "b88fbb34e4c53a3c9a782ff935c8a50f15b00f97",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/help.tsx",
+          "sha": "d98003484163ac71e41f4b053ad8864012f27488",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/home.tsx",
+          "sha": "e90899182d9125406f14d180d235122f71014ac1",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/industries.tsx",
+          "sha": "cd7dd623237d26239ca4094f0bcc561e406dc80e",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/library.tsx",
+          "sha": "deb42e5bccf9f764930a8f341591df96fa53bad3",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/not-found.tsx",
+          "sha": "2c87d00aa3f088be5be8569dbe06e60f699b06e8",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/pricing.tsx",
+          "sha": "18ff143b11fdb597221132ac6d8f9295cffc00d5",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/privacy.tsx",
+          "sha": "e31bb478ab04dc82a20472a075b43b09c79b9ef3",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/profile.tsx",
+          "sha": "d00159c7b6515a4ef90c3bc74ed658044093fa7a",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/resources.tsx",
+          "sha": "1dfe2191e250e867001f850535933a0df781cd0e",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/services.tsx",
+          "sha": "66d36e266f5f80f59d9de430b40e702b5215f9ce",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/support.tsx",
+          "sha": "55498b8654de69c6adb7c76d9916f715db4a1def",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/terms.tsx",
+          "sha": "65dfa49b133d4358d78e1f414ea723d5cea58d0b",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/src/screens/workspace.tsx",
+          "sha": "99e7ceb457a05217ea29750c65f594bfde4771a9",
+          "type": "blob"
+        },
+        {
+          "path": "artifacts/valo/tsconfig.json",
+          "sha": "4181da2535bd498184b4d2886d73f99e65e6155d",
+          "type": "blob"
+        },
+        {
+          "path": "docs",
+          "sha": "128feae74d82929c38f42e11b4d57442b63c44d0",
+          "type": "tree"
+        },
+        {
+          "path": "docs/registers",
+          "sha": "a727b9f16d6c9215ba16503a879e3298d826ee56",
+          "type": "tree"
+        },
+        {
+          "path": "docs/registers/conflicts-and-assumptions.json",
+          "sha": "76183baa4d3ba89ed28d7593c8c0e65409734d1d",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/content-inventory.json",
+          "sha": "f37485667396c741ee548bc4e4e8f9f5ab463ba3",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/coordinating-refinement.json",
+          "sha": "d573edca4c70deeea78bbb8adcdf0ffb7cd67672",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/coverage-expansion.json",
+          "sha": "11f7a6df763567493003b16d4d6d1bbe2a484258",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/engineering-context.json",
+          "sha": "32b500a31beba83699f76e6325e76717e924c344",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/final-source-context.json",
+          "sha": "17224fbd43802888fbb9b71cbfc3219d9dbeb5d3",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/handover-checkpoint.json",
+          "sha": "7c295da247fcf0232cd4bc12871451a186fb344f",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/release-controls.json",
+          "sha": "0e9db9681aa9901777e58e1ebef2b072c240f380",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/requirements.csv",
+          "sha": "519272ded76de3039ba6d2efa1fbf153e69a0564",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/requirements.json",
+          "sha": "ab1d7009dc56948a548662144a2e3afeaeed4fb3",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/source-discovery.json",
+          "sha": "0a10d0b02b56274968a306076edb40fe13b69bf5",
+          "type": "blob"
+        },
+        {
+          "path": "docs/registers/validation-summary.txt",
+          "sha": "db408e6519433947e88f95317939a8a4ce6899c0",
+          "type": "blob"
+        },
+        {
+          "path": "docs/specification",
+          "sha": "6fa6dceb311739f73feb2e73decfadc1b6645449",
+          "type": "tree"
+        },
+        {
+          "path": "docs/specification/VALO-ROADMAP-001-v1.1.txt",
+          "sha": "3fd35d99838cfb5a149f8a3e37dff601e05a9e3f",
+          "type": "blob"
+        },
+        {
+          "path": "docs/specification/VALO-TRD-001-v1.1.txt",
+          "sha": "a06a7f6266e2ea0a65a0d1d1bef19dd7b9a399fb",
+          "type": "blob"
+        },
+        {
+          "path": "docs/specification/essential-business-documents.txt",
+          "sha": "d7e362004b9d3543de9b66572f2241cb8e2cd83a",
+          "type": "blob"
+        },
+        {
+          "path": "docs/specification/master-execution-prompt.txt",
+          "sha": "77d89025efddda850b049250c969317647c27f18",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo",
+          "sha": "2add4f75e1cd503ecae10a6b688209c778f319e7",
+          "type": "tree"
+        },
+        {
+          "path": "docs/valo/README.md",
+          "sha": "c8f5c98023650863247ff6d3b1f0c4de9168534d",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/compatibility.md",
+          "sha": "76950597964341daf2d336efebd48e45d39f9c22",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/coordinating-refinement.md",
+          "sha": "f2777071a01b65aaa36f4d4497ec36e79e61eb41",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/customer-journey-proof.md",
+          "sha": "f946b42237d36f332f646d4e97bfec3f3c13d3e5",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/editorial-provider-proof.md",
+          "sha": "31494cf01443e20d40a123ac573c81a160c508b8",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evaluations.md",
+          "sha": "322e513f007d98973a8e253264b58de918445899",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence",
+          "sha": "b3ca2aa6d8765845dc9224d87a241c7c86edfde7",
+          "type": "tree"
+        },
+        {
+          "path": "docs/valo/evidence/ci-activation.json",
+          "sha": "d0ed267865101f5f21a0bc9736f98d38956ad5e7",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/coordinating-execution-checks.json",
+          "sha": "8756ac24f7712b58cead814aefc56ce45ea0650c",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/coordinating-github-owner-confirmation.json",
+          "sha": "55c3c2524dbd51e56acbca99cd8f8531e76c0461",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/coordinating-github-recheck.json",
+          "sha": "02c36f787e58197c8a939528a836d0025b7d3e2a",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/coordinating-instrument-retrieval.json",
+          "sha": "c29febd1a0345221ae6b9312f419f6ec094400c7",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/foundation-checks.md",
+          "sha": "0d21d65715523bb9d2101a78a6030909904917a3",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/github-foundation-checks.md",
+          "sha": "603ba4b91bfba3b5035c6e120b60b59d14c25fc0",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/handover-checkpoint-read.json",
+          "sha": "ad0e015a1893cac930820d1a39133b89b785fdb3",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/handover-execution-checks.json",
+          "sha": "724992e79a96dc9c0c30887289725cea069fdb10",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/handover-schema-failure-replay.json",
+          "sha": "318b1177a17d8895ea47ea98ecf6ab045323092b",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/p0-customer-execution-checks.json",
+          "sha": "4166f0be133f6e57c513bd2f683c8bc57e9dfd45",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/p0-customer-github-sync.json",
+          "sha": "080f00f3b094734f1a21d21e81e8506059377254",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/p0-customer-journey.json",
+          "sha": "6f070b399770523c5bd3c3635d7340d0895e06ef",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/p0-editorial-execution-checks.json",
+          "sha": "571bb683978f2ebcebc36558ba7c9d8da5e3ccce",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/p0-editorial-pr2-read.json",
+          "sha": "8202eee85e4915c93cd3e65fe302f83b79d982e2",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/p0-editorial-pr2-update.json",
+          "sha": "e321ab7ffbbce114d06862e78f8261caa8bc437f",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
+          "sha": "001608cc330157f95afd7198b9c5fcfbb5d11b04",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/p0-github-privacy-correction.json",
+          "sha": "97c02c89b539dab2abf47ebdc1f77d0b13644736",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/p0-persistence-checks.json",
+          "sha": "422b295dff532044a442bf8e73cede43c2930534",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/p0-persistence.md",
+          "sha": "2794d5fe8105798399b85cff0178d78b23d7b98a",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/part3-controls-checks.json",
+          "sha": "fa3947b7cca42fbdab10ced3cdcc1c97d86a1768",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/part4-inventory-checks.json",
+          "sha": "1bcb304455fdea767889e157d7507388839cc793",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/part5-export-checks.json",
+          "sha": "f7665965ec48af04e6098ca4471f628c876858f5",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/part5-runtime-checks.json",
+          "sha": "9a20f3a57e9438e383b2968e09919c243b63d49f",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/part6-execution-checks.json",
+          "sha": "c8bf679d86eb4f9675a38b8919fa43d27636fb89",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/part6-github-status.json",
+          "sha": "472e39029ce205b36ea7d65dfe9e9092a4982105",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/part6-platform-documentation.json",
+          "sha": "a03800f7f1bd5439124f1a152bf46340fff12556",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/part6-source-retrieval.json",
+          "sha": "ce3cdc340ae7d66cd2a38612c93a41b4a0ee8e94",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/platform",
+          "sha": "218941c6956d8285233583914b83449e8d80adef",
+          "type": "tree"
+        },
+        {
+          "path": "docs/valo/evidence/platform/data-recovery.md",
+          "sha": "0fd739daaf0eec9541134f44b905e998141f33d6",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/platform/deployment-types.md",
+          "sha": "6c82892df47d9bb0058caf8afa958802c78fc0d9",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/platform/object-storage.md",
+          "sha": "9da6a4b7926866a97cb3d5891cf3c8600ec13cb0",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/platform/publish-database-changes.md",
+          "sha": "21f5417ffc7c3ce2822073197748814b46a5de40",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/project-title-attempt.json",
+          "sha": "7c50960e272c396bdad675dbef65efd65740b887",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/repository-sync.json",
+          "sha": "e9d8f28799c06c60877f2e6a51ca44ffa7ff8ee1",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/evidence/specification-import.json",
+          "sha": "e4bdc02db11527d2b5ce1e01c22d180bd860ebbe",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/handover-checkpoint.md",
+          "sha": "3220d2b760b69c9f614baefd4b2bd4fb6077d192",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/operating-runbooks.md",
+          "sha": "5ca727f739c89d601cdd6ed15fffde861c071950",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/operations-development.md",
+          "sha": "a4d7c62202e13642063f3cb801162bbb9b16d813",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/part3-proof-and-controls.md",
+          "sha": "6fafab96a06a6b996eaf7114c12fd5229a258b01",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/part4-inventory-and-coverage.md",
+          "sha": "395370d4d6860ff6817f80afa1d1e47586c9165e",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/part5-architecture-and-exports.md",
+          "sha": "cdc8d0357f7a012906ff080b06f6edc35cafac64",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/part6-sources-and-retention.md",
+          "sha": "9b6713222e56bf63e8f91c9f7a6926c211b2aa24",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/requirement-evidence.md",
+          "sha": "bda038819929ab6152addc651ac8e6bf9b0fca1b",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/schema-safety.md",
+          "sha": "88956d409b678b3c86f0a190066051dde435ecb0",
+          "type": "blob"
+        },
+        {
+          "path": "docs/valo/source-register.json",
+          "sha": "06b648d484c73615df382b26c430a7130927788c",
+          "type": "blob"
+        },
+        {
+          "path": "lib",
+          "sha": "6cf631a929f7dabe47cc484bf1770bb40d0802be",
+          "type": "tree"
+        },
+        {
+          "path": "lib/api-client-react",
+          "sha": "dfd1c400d2d19f4ef8a230b63f52fbfebc424195",
+          "type": "tree"
+        },
+        {
+          "path": "lib/api-client-react/package.json",
+          "sha": "c2005452ab09fbec1ef36a804d41a8608e29873d",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-client-react/src",
+          "sha": "6b9a364363e012dbeac9883621a4f09456bee776",
+          "type": "tree"
+        },
+        {
+          "path": "lib/api-client-react/src/custom-fetch.ts",
+          "sha": "3a5021b6a11c47985772b83830035345c155856b",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-client-react/src/generated",
+          "sha": "4319eff5c001353e69b52b3b7cf0e59c95639400",
+          "type": "tree"
+        },
+        {
+          "path": "lib/api-client-react/src/generated/api.schemas.ts",
+          "sha": "664ab76e3a99072f82d6e08c94b0dcd540c63ae3",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-client-react/src/generated/api.ts",
+          "sha": "94f102a596bc3c6ca7d739cfc5cef970b11f7fcd",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-client-react/src/index.ts",
+          "sha": "980b8e289e42953d2df31f986f1245b6131ca7d8",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-client-react/tsconfig.json",
+          "sha": "a651119b2e1d7f224ad42fa6d15ca9929e3487e4",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-spec",
+          "sha": "d54fc1e143a705276ebecf0686f2b489f39dbcc4",
+          "type": "tree"
+        },
+        {
+          "path": "lib/api-spec/openapi.yaml",
+          "sha": "3f32d9fa035905beb6e5d20bdbc03b3c4c54fd0f",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-spec/orval.config.ts",
+          "sha": "503ae7fd45d5d263ea1b5268c163129d37074ac0",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-spec/package.json",
+          "sha": "7b3c5419c4877985c0dc6a63a7f1cabfd6a2820d",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod",
+          "sha": "6ca9fda014b9259f6d5da9f736b7bc284337a96c",
+          "type": "tree"
+        },
+        {
+          "path": "lib/api-zod/package.json",
+          "sha": "60fe769c6a815c47e7930c1171703512a75ad389",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src",
+          "sha": "11e7ebf7ace6fb9b6c57bebac4f747b48f5190bb",
+          "type": "tree"
+        },
+        {
+          "path": "lib/api-zod/src/generated",
+          "sha": "fde15f4c26d60316d6a96d19fad2c411c5289d6f",
+          "type": "tree"
+        },
+        {
+          "path": "lib/api-zod/src/generated/api.ts",
+          "sha": "a2db7adfce7cb90282683f118be881ae077ddf4a",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types",
+          "sha": "09fe4f118c1f59bfe599e06b70975eddecda67ab",
+          "type": "tree"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/answer.ts",
+          "sha": "7ee3cec1bcd9e8ccda9843c2dfe325ad9cdb0ba6",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/apiProblem.ts",
+          "sha": "b745cdc75c2f24c1da12a62fa10a5d61f3aa169d",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/authErrorResponse.ts",
+          "sha": "cbd7dce48715057285d28068fef6949f1ff65ba8",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/buildStatus.ts",
+          "sha": "0a717fe980893200bafd399d3e566c91d5a1703c",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/businessDocument.ts",
+          "sha": "c0938276c261ce760ee56537d33f89eabfec7829",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/businessDocumentStatus.ts",
+          "sha": "c6b03b4d4d82ecd70097250f5c9cefca2b55f3dd",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/canonicalDocument.ts",
+          "sha": "1ce9861565aa2622292f3d014557e03466de6a4d",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/canonicalDocumentFields.ts",
+          "sha": "ce707047f32730b5d843c479f19b38ca499ba1bc",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/canonicalDocumentFormatting.ts",
+          "sha": "286303de2ba6e81d6ec4d82e8b2830997017753a",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/canonicalDocumentFormattingAccent.ts",
+          "sha": "6a73ef9eca0803a67de6b9b513e5873355221423",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/canonicalDocumentFormattingFont.ts",
+          "sha": "aed6ae83b9c93b8092bfaf4381e006fec6e29e61",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/cataloguePage.ts",
+          "sha": "9a5719abdd1f1904cda595a82333e2d08cdfabc3",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/conflictRecord.ts",
+          "sha": "6e98653f805594d72b4dfc4e4d97c13c04ef5a42",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/contentRegister.ts",
+          "sha": "24967d27975a54f69c39dd569a35124045eefe6e",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/contentTraceRow.ts",
+          "sha": "1ba996247f6eb2c99c39e83741ecfab2e3d108ed",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/coverageLayer.ts",
+          "sha": "39798b5bbbbfe391d1b0c0a0038127cebe762361",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/documentBlock.ts",
+          "sha": "63c91cf723646d90c249acb6db3027dbbe66c2bb",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/documentBlockType.ts",
+          "sha": "9eb610d300588afa0d261ec1eaf2253ef45cd30e",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/documentInput.ts",
+          "sha": "fe84b61061a7727320f6f0c84ef6271e86d56444",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/documentUpdate.ts",
+          "sha": "1ccaaff137ee94b955fd3392b25b52222cfe38f2",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/editorialRunEvidence.ts",
+          "sha": "aa7d3833afb95695274bc0e6c17a882b55be0543",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/editorialRunEvidencePublication.ts",
+          "sha": "17a5dee004ff75f1a7cbb5063fe5bb9cd0e042a2",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/expansionBoundary.ts",
+          "sha": "daed9591c67525d8319c817bbaf45a92c54ad229",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/expansionTargets.ts",
+          "sha": "083ff26d04dd6e1ebf52d5ceb1407f6752e81909",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/exportInput.ts",
+          "sha": "932ae65b645f67bea10805d3f3c1ac4e5d65264d",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/exportInputFormat.ts",
+          "sha": "358d76632a216ec0c2ca08dc6d1e409b2f20ec38",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/exportJob.ts",
+          "sha": "af9c3324d8ca25823800b328b8c2e07bb926d16d",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/exportJobFormat.ts",
+          "sha": "0a91a6cdd8e769d9cb0827bdb6125a1cd2517e17",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/exportJobStatus.ts",
+          "sha": "d84dd0368f1b6da154cb6e5013fa4b79487f5c40",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/exportRetryInput.ts",
+          "sha": "218ee2ce7346f5fa912391347ee6ec379ddbbf5b",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/healthStatus.ts",
+          "sha": "202c01ea510df4e7f42ee20339456bf3481bd400",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/index.ts",
+          "sha": "8fc6208a3bc2c1033727bbc5d3a781424a37a400",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/industryCoverage.ts",
+          "sha": "d9dd0279519530d4f9d387e95c6aa0c7cb50d06b",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/inventoryOverlap.ts",
+          "sha": "b670ad4290475146f96a2bf8a2dcf92814f5617a",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/listPublicCatalogueParams.ts",
+          "sha": "77f4a6809c3ec42ccac4cb0f7a50c7ff4d55af91",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/listPublicCatalogueType.ts",
+          "sha": "2cb4de5007d71e30a68ba10d084f69e1e6bb909d",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/managementFile.ts",
+          "sha": "90d24b1b290ca9a1031847d4f97a19bbeac38abb",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/profile.ts",
+          "sha": "cfb6d74a7948c75dc5d517f9e0d50f2f06add62c",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/profileInput.ts",
+          "sha": "da6f83c7109f86da9194f1293d23c5fa81ecb6e6",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/profileLegalForm.ts",
+          "sha": "e65fd8e992af7b0fa1718100b8ca3c42fdaadafb",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/profileRegistrationStatus.ts",
+          "sha": "5a4c69fe2600cf04edd0f9419216cbb26084df06",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/profileState.ts",
+          "sha": "fc18850416d26e5f30bec2f88f9a0e1d5702aa0a",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/profileTurnoverBand.ts",
+          "sha": "fba419615045eb4d2888ea8fe5c7efd348631a00",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/profileTurnoverCurrency.ts",
+          "sha": "84caaac18a113801dad0206feee7d176868c51e3",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/profileTurnoverMetric.ts",
+          "sha": "66770606026fa905580e321a0e29c66c344874b0",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/proofRegister.ts",
+          "sha": "d3ad6877690be741a326d64248e3308f0d1d68d5",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/proofSuite.ts",
+          "sha": "f9197c821c42f6eeb6bba2bf6e958eeffda45311",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/publicCoverage.ts",
+          "sha": "83750de134edc05b478f8fda7ff2a9f878c15355",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/publicItem.ts",
+          "sha": "26ca647ccc16be9cf00d87fd71ca6ffdb3d18021",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/quotaErrorResponse.ts",
+          "sha": "b43558ae2650abac86580b16f2061dc8bf78f202",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/referenceEvidence.ts",
+          "sha": "df76daa3818a3d8b29a55c6454e0b8873419cbd5",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/referenceEvidencePublication.ts",
+          "sha": "6f7858c06b621642290595ad7466139fb2f2da29",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/releaseControl.ts",
+          "sha": "267b39c21a3afdd9151a152cbcdf3bf424819eac",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/releaseGate.ts",
+          "sha": "e24b194ad643eed4dc5ea6cfca96062354a06265",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/requirementRecord.ts",
+          "sha": "96f4ce726509b90555c82fa2a03ced144228049e",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/requirementRecordStatus.ts",
+          "sha": "3281a1be4c47c3f5380c93484aa0c26786184e70",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/requirementsRegister.ts",
+          "sha": "43a8879460cbe5e4c10c1390129e206a0ee6d3b8",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/retentionProposal.ts",
+          "sha": "fd8c26df3dcaae5dd86681288afbd42907718720",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/roadmapContext.ts",
+          "sha": "540e0d96e2eb594e8f1ed1bde190ae06c10f50d6",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/sourceEvidenceRegister.ts",
+          "sha": "0a2e908ac89ec5a58e4d6a2fc28988eac9442510",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/ticketInput.ts",
+          "sha": "8f0aacfcf596d44eadf6bf1d43f953dde61c0d03",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/ticketInputCategory.ts",
+          "sha": "6c97f90b971d55514aca46017b8caf365ae8e977",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/ticketReceipt.ts",
+          "sha": "23ebc53169fbdc4865aa635bed5b160fdc7c25c6",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/ticketReceiptDispatchStatus.ts",
+          "sha": "4a833c14a6d0ee04c61864dcc932d7d839379743",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/uatPack.ts",
+          "sha": "0c4cce779a0ff42b07bf6d8772a64c4842bef225",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/generated/types/workspace.ts",
+          "sha": "e922b8def9b8cbcd1cf75b1d317ea252ed36741d",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/src/index.ts",
+          "sha": "ac442e766c70f83d7aea94a00b832405db0b8d4e",
+          "type": "blob"
+        },
+        {
+          "path": "lib/api-zod/tsconfig.json",
+          "sha": "5859959cb9219e0c20d2f6b9e4c2cce2d1dc3711",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db",
+          "sha": "ec219cd3279df0ffa9df4b451864c88cfd5fb6ee",
+          "type": "tree"
+        },
+        {
+          "path": "lib/db/drizzle.config.ts",
+          "sha": "dcf8b84fa750c5b2eaa7a7b1f825be697a8cc260",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle",
+          "sha": "700b68af07678636d52a6bb3e1493d74e4b33a1d",
+          "type": "tree"
+        },
+        {
+          "path": "lib/db/drizzle/0000_valo_p0.sql",
+          "sha": "bfba81dc9d43876c4f030b777cd5b0eb1a0af991",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/0001_valo_rate_quotas.sql",
+          "sha": "bccee5e642dcbfe5b33efeaaf26b9456cb9badfa",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/0002_fresh_alice.sql",
+          "sha": "ff969323c4465bbe405171c5cfffd4bb88862452",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/0003_breezy_whiplash.sql",
+          "sha": "839aefccd6fa4cabe272e8d8e27b27f3f025892d",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/0004_valo_editorial_runs.sql",
+          "sha": "846a0b0143a06fa540784044e9343327378c3d40",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/meta",
+          "sha": "cec174e0ea08956d1cc3c8fd1ec52399243686dc",
+          "type": "tree"
+        },
+        {
+          "path": "lib/db/drizzle/meta/0000_snapshot.json",
+          "sha": "6af6db4a0f1fa48639ec3cc558fd9334c496c8c9",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/meta/0001_snapshot.json",
+          "sha": "887f3260bdc0c4cbadf6ff7ed6649d62d299db0e",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/meta/0002_snapshot.json",
+          "sha": "79410f2b3fed4a8231c7cdbf1c3d2314874005d3",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/meta/0003_snapshot.json",
+          "sha": "ce073ed4baaf427d9a19ec963a0263f230e15383",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/meta/0004_snapshot.json",
+          "sha": "e88bd2e5940ae238f2a0b2910cbbf1251e1323de",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/meta/_journal.json",
+          "sha": "7995bf79f0b36fe72a5cc214ac767c085a085d3b",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/drizzle/pg-boss-development.sql",
+          "sha": "491cd0e996e23592aa1151c9a0584b0694f417e4",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/package.json",
+          "sha": "96a1bacb73f04baaac8ac5ea004cc28197e7ccae",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/scripts",
+          "sha": "fed57a0b2d0516e97d06f3bc1a1b2cb27d5221c2",
+          "type": "tree"
+        },
+        {
+          "path": "lib/db/scripts/schema-push.mjs",
+          "sha": "600b446bccaf0e4c8b1662f65159fd2786e08ad4",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/scripts/schema-push.test.mjs",
+          "sha": "8d11c6410c1cfc62f87829854935af89588d43c0",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src",
+          "sha": "38338ac46bb116c879def3b38bdc5d83be9f7f9b",
+          "type": "tree"
+        },
+        {
+          "path": "lib/db/src/index.ts",
+          "sha": "50cbf483d87a8a741f4965acde5edf6225fedd3e",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema",
+          "sha": "2218c4a4a3efa8f7a17b02c8c0062ca4ad61cd87",
+          "type": "tree"
+        },
+        {
+          "path": "lib/db/src/schema/index.ts",
+          "sha": "b7aeb46fcf40a53c1a1688f9243102d02ea5dd8c",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-document-revisions.ts",
+          "sha": "b70f75525c212f0fc96b25da18e7c1fc8085c75b",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-documents.ts",
+          "sha": "d7a8b5db781c260781a386ebc38e2260d6594cde",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-editorial-runs.ts",
+          "sha": "323a286c811ecec500aeafbe65efe70d9dd6c337",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-events.ts",
+          "sha": "1cbeaf11c164df3fbd2c254a40ef3e9be871f968",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-export-requests.ts",
+          "sha": "ec01cb9dad12cc4fa5bda12839dac1ded46ec580",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-exports.ts",
+          "sha": "68b8fb80492ab63f7f364d13f8e8743cc5327587",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-file-assets.ts",
+          "sha": "66865bc99ee151c16ec0d6b29a59f3b5fc832ad5",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-memberships.ts",
+          "sha": "11fb9795706dec2541c059d2b0588a95d8affeb6",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-profiles.ts",
+          "sha": "a8ac47aaea2446c0d61c6be09b65947833f6f0f3",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-rate-buckets.ts",
+          "sha": "8a03db805f1e5d1a672487bc34becfcb7546d557",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-source-snapshots.ts",
+          "sha": "d85cd5cb0ed76bf9429df3a0781dd6c6cd075090",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-support.ts",
+          "sha": "e9dd11e5b5d1290444280f3ca2abb2abd5011faf",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/src/schema/valo-workspaces.ts",
+          "sha": "b92e1da1a67dc4fc8fe57b8840b614ba52487a72",
+          "type": "blob"
+        },
+        {
+          "path": "lib/db/tsconfig.json",
+          "sha": "53af906a0d19e9529580b4891101ae9637b5da07",
+          "type": "blob"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server",
+          "sha": "464008ab46cf63d4a658d56b06ded668ba1cc5a4",
+          "type": "tree"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/package.json",
+          "sha": "7adf32d64a71dc4116d0b5b77212690f15da6aae",
+          "type": "blob"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src",
+          "sha": "399f8efaba9eda226060b289c5b460b44a08c5bc",
+          "type": "tree"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/audio",
+          "sha": "f3a3c42e509535a1ffa9da25f136c707081f6d5b",
+          "type": "tree"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/audio/client.ts",
+          "sha": "e736df8a7e44a9b8be76d093c65f96be3aa1c1c4",
+          "type": "blob"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/audio/index.ts",
+          "sha": "0999dd831b30bb56a09ca1918aaf2a286c1ca046",
+          "type": "blob"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/batch",
+          "sha": "318ff1eae64777507dc8516633937e7f849ada36",
+          "type": "tree"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/batch/index.ts",
+          "sha": "f84c2c134a5587037c4fba3fc071c41331b7d404",
+          "type": "blob"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/batch/utils.ts",
+          "sha": "e3fc9732d8b7e79c1e372d62cade7a217e87c2de",
+          "type": "blob"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/client.ts",
+          "sha": "c8343cbeeaf1776903678996994356f71d494fea",
+          "type": "blob"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/image",
+          "sha": "6d7bc6f96122d0ec2f67a785268c0be01499ad5d",
+          "type": "tree"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/image/client.ts",
+          "sha": "e73ccca9797bc84a4aa6710affc09c4f4bfa0f6a",
+          "type": "blob"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/image/index.ts",
+          "sha": "63b41f94bad749195e89cc62f52c0854094160ce",
+          "type": "blob"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/src/index.ts",
+          "sha": "98860d54097ee77ff27653bc7c0af1cc28042e01",
+          "type": "blob"
+        },
+        {
+          "path": "lib/integrations-openai-ai-server/tsconfig.json",
+          "sha": "53af906a0d19e9529580b4891101ae9637b5da07",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core",
+          "sha": "7fa17f7d1b3d6fd64ad6918bf565c657cbd2668c",
+          "type": "tree"
+        },
+        {
+          "path": "lib/valo-core/package.json",
+          "sha": "31601ce84ddb1bd5181768d0dee61aa6632e038e",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src",
+          "sha": "f8e68a5f3d5e1192df67199a1c4a98fb7dee571c",
+          "type": "tree"
+        },
+        {
+          "path": "lib/valo-core/src/catalogue.ts",
+          "sha": "f4eb8ad0cf57cedd0312eaff01567f1e284fd36c",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/content-register.generated.ts",
+          "sha": "c020ec9c7d96c55a80380810f90800c5ce9edc46",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/coordinating.generated.ts",
+          "sha": "17ae38c697b1c1faac46a6ed8ec73ac53edf31c6",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/coverage-expansion.generated.ts",
+          "sha": "be2b635583f8c1146fdc60786354aac8a9a4a58f",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/coverage.ts",
+          "sha": "7450a08ad25a963038f1977358762665b1701f01",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/customer-journey-evidence.ts",
+          "sha": "8a3c8a41f70502fba916137ab062b69f80cc4f53",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/export-evidence.generated.ts",
+          "sha": "043188d04868758ad9c96c326ca387ec325f91eb",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/handover.generated.ts",
+          "sha": "55e8c85b81f0c664eea1f19d77b363c3f4f0ee3e",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/index.ts",
+          "sha": "15ab1973344625664049b8a280307df45f9b8e6f",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/publication.ts",
+          "sha": "674b3c966bc8cebaaac2531f06ae48b21847349e",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/reference-leads.generated.ts",
+          "sha": "b93f64720f52da34108383692ec7d29d83ba8651",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/requirements-r1.ts",
+          "sha": "507297467087ccb45f0660f2d47372710ab5e7a7",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/specification.generated.ts",
+          "sha": "4d286fcca0dacf566973509b35bbb677f7cc4ae2",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/src/traceability.ts",
+          "sha": "a312b00aadf7fa32fefe89fb812f170da9f47db1",
+          "type": "blob"
+        },
+        {
+          "path": "lib/valo-core/tsconfig.json",
+          "sha": "aa079d9ee6f01bd607fcc6bd0f85b46d56657b51",
+          "type": "blob"
+        },
+        {
+          "path": "package.json",
+          "sha": "eb4e283ce17a37a23818f89b4f0f8f842766347f",
+          "type": "blob"
+        },
+        {
+          "path": "pnpm-lock.yaml",
+          "sha": "17e52268a4119cd7d6348b41f778946aea6c42aa",
+          "type": "blob"
+        },
+        {
+          "path": "pnpm-workspace.yaml",
+          "sha": "6c5cf44096d9dc751849a56c287594b27377c82a",
+          "type": "blob"
+        },
+        {
+          "path": "replit.md",
+          "sha": "617fcb3bcca3d688886dce99a9a0ecf511b7273c",
+          "type": "blob"
+        },
+        {
+          "path": "scripts",
+          "sha": "80af9f96f877b3968829194599545e53f713be2b",
+          "type": "tree"
+        },
+        {
+          "path": "scripts/package.json",
+          "sha": "ce1fea7dd47a55bc1ae16b6482e3dbf2c368bdf6",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/post-merge.sh",
+          "sha": "ab61c4490ae6f73dd7dd672348a1289cbad62515",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src",
+          "sha": "5e2ba3d011c06ce6cbec647c46f9a29db5cc1745",
+          "type": "tree"
+        },
+        {
+          "path": "scripts/src/hello.ts",
+          "sha": "9fa5cec17c0d902b107884bf52524cd83662e372",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo",
+          "sha": "268ca06b495f270057e1e51708f245a0ede5d00a",
+          "type": "tree"
+        },
+        {
+          "path": "scripts/src/valo/coordinating.test.ts",
+          "sha": "3a81248c40e834549788db8fb9daae8728e96a14",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/coverage.test.ts",
+          "sha": "3454adcaa010f6df54f498023e4d9f101c9fc727",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/engineering-contract.test.ts",
+          "sha": "4186755bf5fa7505d4f67478284ad385da25a317",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/final-context.test.ts",
+          "sha": "446d4be5c33d76a08eacf62ffbd70149ddc05f75",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/handover.test.ts",
+          "sha": "66cf6b41e75787bb0907693ea47c4f58495b1a58",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/link-export-evidence.ts",
+          "sha": "ff0874655d15a5877d1673c6505945828e402aee",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/publication.test.ts",
+          "sha": "e32a9fd2ef8b20b0c5e70dceff364d815f2d69f1",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/readiness.ts",
+          "sha": "2448a887534610d9d6a27e6ffd1158e55044fc60",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/source-register.ts",
+          "sha": "793d14257e328d938eb9f2c2282e5823625ae787",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/sync-coordinating.ts",
+          "sha": "3c61f1bfca3c710023c7c96dee82132126a43bab",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/sync-engineering.ts",
+          "sha": "e1d62e109199e4e6e3ef7335d34a0dbf053d4fff",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/sync-final-context.ts",
+          "sha": "15a70119a75f1a7c635d74c3d59627e808133489",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/sync-handover.ts",
+          "sha": "42d5c8c1333e9e03c8ddd019115a82c7d55cc68e",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/sync-specification.ts",
+          "sha": "b5d877f1659dd86814aec649b3b8f42aa95540d0",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/src/valo/traceability.test.ts",
+          "sha": "d357df3c38e8c6281d6e2ff28af2a7d5f1c88529",
+          "type": "blob"
+        },
+        {
+          "path": "scripts/tsconfig.json",
+          "sha": "12e34566f4017def336165ca3ad8490746e4c73d",
+          "type": "blob"
+        },
+        {
+          "path": "tsconfig.base.json",
+          "sha": "1088a70cd1dc7eba4b9a22432b7b57b2a9a0d49b",
+          "type": "blob"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha": "e0196c479bac085968c9f2c803a1b113a4c28c78",
+          "type": "blob"
+        }
+      ],
+      "truncated": false
+    },
+    "hasNext": false,
+    "status": 200
+  },
+  "/pulls?state=all&per_page=100": {
+    "data": [
+      {
+        "base": "650e60d855da5fab61b98f3ec7d89c4c29c7fc57",
+        "head": "9095e1afd4a51b08423a71bd7fbf7fa257fabc7e",
+        "number": 2,
+        "state": "open"
+      },
+      {
+        "base": "650e60d855da5fab61b98f3ec7d89c4c29c7fc57",
+        "head": "871899483093363ec69d765e2d16fa1d88e0836e",
+        "number": 1,
+        "state": "open"
+      }
+    ],
+    "hasNext": false,
+    "status": 200
+  }
+}

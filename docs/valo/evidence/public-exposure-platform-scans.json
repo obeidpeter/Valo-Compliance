@@ -1,0 +1,532 @@
+[
+  {
+    "scanner": "dependency",
+    "status": "fulfilled",
+    "counts": {
+      "critical": 0,
+      "high": 10,
+      "info": 0,
+      "low": 2,
+      "moderate": 10
+    },
+    "findings": [
+      {
+        "id": "GHSA-27r3-jxmh-p828@body-parser-2.3.0",
+        "package": {
+          "ecosystem": "npm",
+          "name": "body-parser",
+          "purl": "pkg:npm/body-parser",
+          "version": "2.3.0"
+        },
+        "severity": {
+          "level": "high",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "2.4.0"
+        }
+      },
+      {
+        "id": "GHSA-333x-w4r6-6crp@fast-uri-3.1.8",
+        "package": {
+          "ecosystem": "npm",
+          "name": "fast-uri",
+          "purl": "pkg:npm/fast-uri",
+          "version": "3.1.8"
+        },
+        "severity": {
+          "level": "low",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "fast-uri vulnerable to scheme injection via an unescaped first-segment colon in suffix references",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "3.1.9"
+        }
+      },
+      {
+        "id": "GHSA-w74x-v6f9-j3xg@fast-uri-3.1.8",
+        "package": {
+          "ecosystem": "npm",
+          "name": "fast-uri",
+          "purl": "pkg:npm/fast-uri",
+          "version": "3.1.8"
+        },
+        "severity": {
+          "level": "moderate",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "fast-uri vulnerable to URI scheme spoofing via percent-encoded scheme decoding",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "3.1.9"
+        }
+      },
+      {
+        "id": "GHSA-wjr9-j795-jxcr@fast-uri-3.1.8",
+        "package": {
+          "ecosystem": "npm",
+          "name": "fast-uri",
+          "purl": "pkg:npm/fast-uri",
+          "version": "3.1.8"
+        },
+        "severity": {
+          "level": "moderate",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "fast-uri vulnerable to host confusion via unchecked WHATWG host canonicalization",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "3.1.9"
+        }
+      },
+      {
+        "id": "GHSA-xhq7-xmqj-769h@fast-uri-3.1.8",
+        "package": {
+          "ecosystem": "npm",
+          "name": "fast-uri",
+          "purl": "pkg:npm/fast-uri",
+          "version": "3.1.8"
+        },
+        "severity": {
+          "level": "low",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "fast-uri vulnerable to improper path equivalence in relative reference normalization",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "3.1.9"
+        }
+      },
+      {
+        "id": "GHSA-6g55-p6wh-862q@postcss-8.4.31",
+        "package": {
+          "ecosystem": "npm",
+          "name": "postcss",
+          "purl": "pkg:npm/postcss",
+          "version": "8.4.31"
+        },
+        "severity": {
+          "level": "high",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "8.5.12"
+        }
+      },
+      {
+        "id": "GHSA-fxqj-rqcc-2cmp@postcss-8.4.31",
+        "package": {
+          "ecosystem": "npm",
+          "name": "postcss",
+          "purl": "pkg:npm/postcss",
+          "version": "8.4.31"
+        },
+        "severity": {
+          "level": "moderate",
+          "type": "CVSS_V4",
+          "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "8.5.23"
+        }
+      },
+      {
+        "id": "GHSA-qx2v-qp2m-jg93@postcss-8.4.31",
+        "package": {
+          "ecosystem": "npm",
+          "name": "postcss",
+          "purl": "pkg:npm/postcss",
+          "version": "8.4.31"
+        },
+        "severity": {
+          "level": "moderate",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "8.5.10"
+        }
+      },
+      {
+        "id": "GHSA-r28c-9q8g-f849@postcss-8.4.31",
+        "package": {
+          "ecosystem": "npm",
+          "name": "postcss",
+          "purl": "pkg:npm/postcss",
+          "version": "8.4.31"
+        },
+        "severity": {
+          "level": "high",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "8.5.18"
+        }
+      },
+      {
+        "id": "GHSA-rj75-hqrm-r3gf@postcss-selector-parser-6.0.10",
+        "package": {
+          "ecosystem": "npm",
+          "name": "postcss-selector-parser",
+          "purl": "pkg:npm/postcss-selector-parser",
+          "version": "6.0.10"
+        },
+        "severity": {
+          "level": "moderate",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "PostCSS: Quadratic complexity in flat selector parsing allows CPU exhaustion",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "6.1.5"
+        }
+      },
+      {
+        "id": "GHSA-6pq8-jhm2-2vcw@qs-6.16.0",
+        "package": {
+          "ecosystem": "npm",
+          "name": "qs",
+          "purl": "pkg:npm/qs",
+          "version": "6.16.0"
+        },
+        "severity": {
+          "level": "moderate",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "qs : qs.stringify with arrayFormat 'comma' throws an uncaught TypeError on array elements carrying a non-callable own toString (DoS)",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "6.16.1"
+        }
+      },
+      {
+        "id": "GHSA-2m5v-pch6-74hx@undici-7.29.1",
+        "package": {
+          "ecosystem": "npm",
+          "name": "undici",
+          "purl": "pkg:npm/undici",
+          "version": "7.29.1"
+        },
+        "severity": {
+          "level": "high",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "7.30.1"
+        }
+      },
+      {
+        "id": "GHSA-4qv8-2p9j-2685@undici-7.29.1",
+        "package": {
+          "ecosystem": "npm",
+          "name": "undici",
+          "purl": "pkg:npm/undici",
+          "version": "7.29.1"
+        },
+        "severity": {
+          "level": "moderate",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "undici vulnerable to Denial of Service via unbounded memory in the EventSource parser",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "7.30.1"
+        }
+      },
+      {
+        "id": "GHSA-4w7w-5xrc-9h26@undici-7.29.1",
+        "package": {
+          "ecosystem": "npm",
+          "name": "undici",
+          "purl": "pkg:npm/undici",
+          "version": "7.29.1"
+        },
+        "severity": {
+          "level": "high",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "undici vulnerable to cache poisoning and cross-user disclosure via cross-origin redirects",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "7.30.1"
+        }
+      },
+      {
+        "id": "GHSA-55wc-3pg8-jfw6@undici-7.29.1",
+        "package": {
+          "ecosystem": "npm",
+          "name": "undici",
+          "purl": "pkg:npm/undici",
+          "version": "7.29.1"
+        },
+        "severity": {
+          "level": "moderate",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "undici vulnerable to Denial of Service via unhandled exception in the decompress interceptor",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "7.30.1"
+        }
+      },
+      {
+        "id": "GHSA-9fm3-97px-rjf6@undici-7.29.1",
+        "package": {
+          "ecosystem": "npm",
+          "name": "undici",
+          "purl": "pkg:npm/undici",
+          "version": "7.29.1"
+        },
+        "severity": {
+          "level": "moderate",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "undici WebSocket client vulnerable to Denial of Service via unbounded automatic PONG buffering",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "7.30.1"
+        }
+      },
+      {
+        "id": "GHSA-f72v-6w45-q472@undici-7.29.1",
+        "package": {
+          "ecosystem": "npm",
+          "name": "undici",
+          "purl": "pkg:npm/undici",
+          "version": "7.29.1"
+        },
+        "severity": {
+          "level": "moderate",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "undici vulnerable to Subresource Integrity bypass via non-lowercase algorithm tokens",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "7.30.1"
+        }
+      },
+      {
+        "id": "GHSA-qrxm-fqhp-jwvm@undici-7.29.1",
+        "package": {
+          "ecosystem": "npm",
+          "name": "undici",
+          "purl": "pkg:npm/undici",
+          "version": "7.29.1"
+        },
+        "severity": {
+          "level": "high",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "undici vulnerable to Denial of Service via TLS 1.2 certificate-changing renegotiation",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "7.30.1"
+        }
+      },
+      {
+        "id": "GHSA-xjj6-f33q-929c@undici-7.29.1",
+        "package": {
+          "ecosystem": "npm",
+          "name": "undici",
+          "purl": "pkg:npm/undici",
+          "version": "7.29.1"
+        },
+        "severity": {
+          "level": "high",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "undici vulnerable to Denial of Service via unhandled error on excessive content-encodings",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "7.30.1"
+        }
+      },
+      {
+        "id": "GHSA-w5hq-g745-h8pq@uuid-9.0.1",
+        "package": {
+          "ecosystem": "npm",
+          "name": "uuid",
+          "purl": "pkg:npm/uuid",
+          "version": "9.0.1"
+        },
+        "severity": {
+          "level": "high",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": true,
+          "version": "11.1.1"
+        }
+      },
+      {
+        "id": "GHSA-mrhx-c7xc-m3w5@zod-3.25.76",
+        "package": {
+          "ecosystem": "npm",
+          "name": "zod",
+          "purl": "pkg:npm/zod",
+          "version": "3.25.76"
+        },
+        "severity": {
+          "level": "high",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "Zod can exhaust memory while validating oversized constrained collections",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": true,
+          "version": "4.6.6"
+        }
+      },
+      {
+        "id": "GHSA-mrhx-c7xc-m3w5@zod-4.6.5",
+        "package": {
+          "ecosystem": "npm",
+          "name": "zod",
+          "purl": "pkg:npm/zod",
+          "version": "4.6.5"
+        },
+        "severity": {
+          "level": "high",
+          "type": "CVSS_V3",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        "paths": [
+          "pnpm-lock.yaml"
+        ],
+        "title": "Zod can exhaust memory while validating oversized constrained collections",
+        "fix": {
+          "available": true,
+          "requiresMajorUpdate": false,
+          "version": "4.6.6"
+        }
+      }
+    ]
+  },
+  {
+    "scanner": "sast",
+    "status": "fulfilled",
+    "incomplete": false,
+    "findings": []
+  },
+  {
+    "scanner": "privacy",
+    "status": "fulfilled",
+    "findings": []
+  }
+]

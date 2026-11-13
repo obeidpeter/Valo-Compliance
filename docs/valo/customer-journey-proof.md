@@ -75,3 +75,7 @@ The authorized correction returned HTTP 200; fresh verification showed private=t
 and unsigned 404. See `evidence/p0-github-privacy-correction.json`.
 This does not retract prior public copies, prove main protection enforcement or
 claim an application-source push/CI run. Synchronization evidence is recorded separately.
+
+The subsequent [bounded public-exposure audit](public-exposure-audit.md) records
+the scanned history, redacted findings, GitHub traffic limitations and remaining
+security/privacy risks. It is not launch approval or assurance that no copies exist.
