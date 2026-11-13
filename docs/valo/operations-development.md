@@ -18,8 +18,10 @@ Server: `DATABASE_URL`, `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, artifact `P
 Frontend build: only the public Clerk key and proxy/base path are mapped to
 `NEXT_PUBLIC_*`. Never map the Clerk secret key or database connection to a client.
 Managed production proxy variables are supplied by the platform; do not fabricate
-them in development. No email, Paystack, storage or AI credentials are configured by
-this increment; those features must not report success.
+them in development. No email, Paystack or AI credentials are configured by this
+increment. Private App Storage was provisioned through the managed setup; its
+native SDK passed real development file round trips. Production storage/worker
+access and recovery remain unapproved.
 
 ## Synthetic checks
 
@@ -64,7 +66,10 @@ An enquiry is acknowledged only after its PostgreSQL ticket and metadata-only ev
 commit. `awaiting_staff` is not delivered email, provider routing or an appointment.
 Staff queue UI, role separation, MFA, dispatch/retries and delivery reporting remain
 unimplemented. Manual documents remain available independently of future AI features;
-exports currently state the exact missing renderer/worker/storage prerequisite.
+development-only private exports now use real renderers, a separate durable worker
+and managed private storage. See `part5-architecture-and-exports.md` and
+`operating-runbooks.md` for measured limits. This is not proof of signed-in delivery,
+all twelve guided templates, production compatibility or disaster recovery.
 
 ## Launch controls
 

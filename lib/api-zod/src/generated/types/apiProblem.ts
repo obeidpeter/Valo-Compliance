@@ -8,5 +8,8 @@
 
 export interface ApiProblem {
   error: string;
+  code: string;
+  message: string;
+  requestId: string;
   currentRevision?: number;
 }

@@ -1,2 +1,4 @@
 - [Valo acceptance constraints](valo-acceptance.md) — R1 gates precede R2; evidence, not inventory titles or model verdicts, determines acceptance.
 - [GitHub write permissions](github-write-permissions.md) — metadata push rights do not prove connector permission to activate workflow files.
+- [Infrastructure proof pitfalls](infrastructure-proof.md) — native storage SDK, consistent ORM peers and actual constraints must be proved, not inferred from setup/exit codes.
+- [Saved document hashes](document-hash-compatibility.md) — JSONB key order differs; preserve historic digests with version-aware reconstruction.

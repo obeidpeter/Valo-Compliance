@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, jsonb, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, jsonb, timestamp, uniqueIndex, index, foreignKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { valoDocuments } from "./valo-documents";
 import { valoWorkspaces } from "./valo-workspaces";
@@ -15,6 +15,8 @@ export const valoDocumentRevisions = pgTable("valo_document_revisions", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, t => [
   uniqueIndex("valo_document_revision_unique").on(t.documentId, t.revision),
+  uniqueIndex("valo_revision_document_workspace_unique").on(t.id, t.documentId, t.workspaceId),
+  foreignKey({ columns: [t.documentId, t.workspaceId], foreignColumns: [valoDocuments.id, valoDocuments.workspaceId] }),
   index("valo_revisions_workspace_idx").on(t.workspaceId),
 ]);
 export const insertValoRevisionSchema = createInsertSchema(valoDocumentRevisions);

@@ -1,0 +1,167 @@
+import { randomUUID } from "node:crypto";
+import { and, eq, ne, desc } from "drizzle-orm";
+import { db, valoMemberships, valoDocuments, valoDocumentRevisions, valoExportJobs, valoExportRequests, valoFileAssets, valoEvents } from "@workspace/db";
+import { CreateDocumentExportBody, CreateDocumentExportResponse } from "@workspace/api-zod";
+import { sha256 } from "@workspace/valo-core";
+import { ValoProblem, type WorkspaceActor } from "./valo-store";
+import { RENDER_VERSION, renderDocument, exportMime } from "./valo-render";
+import { readPrivateFile, writePrivateFile, deletePrivateFile } from "./valo-private-storage";
+import { documentInput } from "./valo-validation";
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+export function developmentExportsOnly() {
+  if (process.env.NODE_ENV === "production")
+    throw new ValoProblem(503, "Exports remain disabled pending production storage, worker, recovery and privacy approval.");
+}
+export async function assertExportActor(actor: WorkspaceActor, connection: typeof db | Tx = db) {
+  const [membership] = await connection.select().from(valoMemberships).where(and(
+    eq(valoMemberships.workspaceId, actor.workspaceId), eq(valoMemberships.identityId, actor.identityId),
+    eq(valoMemberships.active, "yes"), eq(valoMemberships.role, "owner")));
+  if (!membership) throw new ValoProblem(404, "Export not found or access revoked");
+}
+function publicJob(job: typeof valoExportJobs.$inferSelect, asset?: typeof valoFileAssets.$inferSelect | null) {
+  return CreateDocumentExportResponse.parse({
+    id:job.id, documentId:job.documentId, revisionId:job.revisionId, revision:job.revision, format:job.format,
+    renderVersion:job.renderVersion, sourceHash:job.sourceHash, status:job.status, attempts:job.attempts,
+    errorCode:job.errorCode, checksum:asset?.checksum ?? null, size:asset?.size ?? null,
+    downloadUrl:job.status === "ready" && asset ? `/api/v1/exports/${job.id}/file` : null,
+    createdAt:job.createdAt.toISOString(), updatedAt:job.updatedAt.toISOString(),
+  });
+}
+export async function getExport(actor: WorkspaceActor, id: string) {
+  developmentExportsOnly();
+  await assertExportActor(actor);
+  const [row] = await db.select({ job:valoExportJobs, asset:valoFileAssets }).from(valoExportJobs)
+    .leftJoin(valoFileAssets, and(eq(valoFileAssets.jobId, valoExportJobs.id), eq(valoFileAssets.workspaceId, actor.workspaceId)))
+    .where(and(eq(valoExportJobs.id, id), eq(valoExportJobs.workspaceId, actor.workspaceId)));
+  if (!row) throw new ValoProblem(404, "Export not found");
+  return row;
+}
+export async function listExports(actor: WorkspaceActor, documentId: string) {
+  developmentExportsOnly();
+  await assertExportActor(actor);
+  const [document] = await db.select().from(valoDocuments).where(and(eq(valoDocuments.id, documentId), eq(valoDocuments.workspaceId, actor.workspaceId)));
+  if (!document) throw new ValoProblem(404, "Document not found");
+  const rows = await db.select({ job:valoExportJobs, asset:valoFileAssets }).from(valoExportJobs)
+    .leftJoin(valoFileAssets, and(eq(valoFileAssets.jobId, valoExportJobs.id), eq(valoFileAssets.workspaceId, actor.workspaceId)))
+    .where(and(eq(valoExportJobs.documentId, documentId), eq(valoExportJobs.workspaceId, actor.workspaceId)))
+    .orderBy(desc(valoExportJobs.createdAt)).limit(200);
+  return rows.map(({job,asset})=>publicJob(job,asset));
+}
+export async function requestExport(actor: WorkspaceActor, documentId: string, key: string, raw: unknown) {
+  developmentExportsOnly();
+  const input = CreateDocumentExportBody.strict().parse(raw);
+  if (!input.acknowledgeDraft) throw new ValoProblem(422, "Deliberately acknowledge the visibly marked incomplete business draft before exporting.");
+  const fingerprint = sha256(JSON.stringify({ documentId, revisionId:input.revisionId, format:input.format, renderVersion:RENDER_VERSION }));
+  const id = await db.transaction(async tx => {
+    await assertExportActor(actor, tx);
+    const [revision] = await tx.select().from(valoDocumentRevisions).where(and(
+      eq(valoDocumentRevisions.id, input.revisionId), eq(valoDocumentRevisions.documentId, documentId),
+      eq(valoDocumentRevisions.workspaceId, actor.workspaceId)));
+    if (!revision) throw new ValoProblem(404, "Saved document revision not found");
+    const [created] = await tx.insert(valoExportJobs).values({
+      id:randomUUID(), workspaceId:actor.workspaceId, documentId, revisionId:revision.id, revision:revision.revision,
+      format:input.format, renderVersion:RENDER_VERSION, sourceHash:revision.contentHash,
+      requestedBy:actor.identityId, queueId:randomUUID(),
+    }).onConflictDoNothing().returning();
+    const [existing] = created ? [created] : await tx.select().from(valoExportJobs).where(and(
+      eq(valoExportJobs.workspaceId, actor.workspaceId), eq(valoExportJobs.revisionId, revision.id),
+      eq(valoExportJobs.format, input.format), eq(valoExportJobs.renderVersion, RENDER_VERSION)));
+    if (!existing) throw new Error("EXPORT_TRANSACTION_FAILED");
+    await tx.insert(valoExportRequests).values({ workspaceId:actor.workspaceId, key, jobId:existing.id, fingerprint }).onConflictDoNothing();
+    const [request] = await tx.select().from(valoExportRequests).where(and(eq(valoExportRequests.workspaceId, actor.workspaceId), eq(valoExportRequests.key,key)));
+    if (request?.fingerprint !== fingerprint) throw new ValoProblem(409, "Idempotency-Key was already used for a different revision or format.");
+    if (created) await tx.insert(valoEvents).values({ id:randomUUID(), workspaceId:actor.workspaceId,
+      actorId:actor.identityId, action:"export.requested", entityId:existing.id, revision:revision.revision });
+    return existing.id;
+  });
+  const row = await getExport(actor,id);
+  return publicJob(row.job,row.asset);
+}
+export async function retryExport(actor: WorkspaceActor, id: string) {
+  await getExport(actor,id);
+  await db.transaction(async tx => {
+    await assertExportActor(actor,tx);
+    const [job] = await tx.select().from(valoExportJobs).where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,actor.workspaceId))).for("update");
+    if (!job) throw new ValoProblem(404,"Export not found");
+    if (job.status !== "failed") return;
+    if (job.retryCycles >= 3) throw new ValoProblem(409,"Retry limit reached. Your saved draft is safe; contact support.");
+    await tx.update(valoExportJobs).set({ status:"queued", attempts:0, retryCycles:job.retryCycles+1, queueId:randomUUID(), errorCode:null, updatedAt:new Date() })
+      .where(eq(valoExportJobs.id,id));
+    await tx.insert(valoEvents).values({ id:randomUUID(),workspaceId:actor.workspaceId,actorId:actor.identityId,action:"export.retry_requested",entityId:id,revision:job.revision });
+  });
+  const row = await getExport(actor,id);
+  return publicJob(row.job,row.asset);
+}
+export async function downloadExport(actor: WorkspaceActor, id: string) {
+  const { job, asset } = await getExport(actor,id);
+  if (job.status !== "ready" || !asset) throw new ValoProblem(404,"Export is not ready");
+  const bytes = await readPrivateFile(asset.objectKey,asset.checksum);
+  if (bytes.length !== asset.size || asset.mime !== exportMime[job.format]) throw new Error("PRIVATE_FILE_BINDING_MISMATCH");
+  await assertExportActor(actor);
+  return { bytes, mime:asset.mime, filename:`valo-business-draft-r${job.revision}.${job.format}` };
+}
+/** Worker entry: load scoped immutable inputs afresh; never trust queue-supplied document bodies or paths. */
+export async function executeExport(id: string, workspaceId: string, queueId: string) {
+  developmentExportsOnly();
+  const job = await db.transaction(async tx => {
+    const [row] = await tx.select().from(valoExportJobs).where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,workspaceId))).for("update");
+    if (!row) throw new Error("EXPORT_SCOPE_MISMATCH");
+    if (row.queueId !== queueId) return null; // Superseded retry generation: acknowledge without side effects.
+    if (row.status === "ready") return row;
+    if (row.renderVersion !== RENDER_VERSION || row.attempts >= 3) throw new Error("EXPORT_VERSION_OR_RETRY_LIMIT");
+    await tx.update(valoExportJobs).set({ status:"running", attempts:row.attempts+1, updatedAt:new Date() }).where(eq(valoExportJobs.id,id));
+    await tx.insert(valoEvents).values({id:randomUUID(),workspaceId,actorId:"service:export-worker",action:"export.running",entityId:id,revision:row.revision});
+    return { ...row, attempts:row.attempts+1 };
+  });
+  if (!job || job.status === "ready") return;
+  const actor = {workspaceId,identityId:job.requestedBy};
+  let temporaryKey: string | null = null;
+  try {
+    await assertExportActor(actor);
+    const [revision] = await db.select().from(valoDocumentRevisions).where(and(eq(valoDocumentRevisions.id,job.revisionId),
+      eq(valoDocumentRevisions.workspaceId,workspaceId),eq(valoDocumentRevisions.documentId,job.documentId)));
+    // PostgreSQL JSONB reorders object keys. Reconstruct the same validated v1 input
+    // used at save time; never hash raw JSONB serialisation or rewrite historic hashes.
+    const savedInput = revision ? documentInput.parse({title:revision.title,content:revision.content}) : null;
+    if (!revision || revision.revision !== job.revision || revision.contentHash !== job.sourceHash ||
+      sha256(JSON.stringify(savedInput)) !== job.sourceHash)
+      throw new Error("REVISION_INTEGRITY_FAILED");
+    const bytes = await renderDocument(savedInput,job.format,job.revision);
+    if (bytes.length > 10 * 1024 * 1024) throw new Error("EXPORT_SIZE_LIMIT");
+    const assetId = randomUUID();
+    const objectKey = `valo/development/${workspaceId}/${assetId}.${job.format}`;
+    temporaryKey = objectKey;
+    const stored = await writePrivateFile(objectKey,bytes);
+    let committed = false;
+    await db.transaction(async tx => {
+      const [current] = await tx.select().from(valoExportJobs).where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,workspaceId))).for("update");
+      if (!current || current.queueId !== queueId) throw new Error("EXPORT_SCOPE_MISMATCH");
+      if (current.status === "ready") return;
+      const [membership] = await tx.select().from(valoMemberships).where(and(eq(valoMemberships.workspaceId,workspaceId),
+        eq(valoMemberships.identityId,actor.identityId),eq(valoMemberships.active,"yes"),eq(valoMemberships.role,"owner"))).for("update");
+      if (!membership) throw new Error("EXPORT_ACCESS_REVOKED");
+      await tx.insert(valoFileAssets).values({id:assetId,workspaceId,jobId:id,objectKey,...stored,mime:exportMime[job.format]});
+      await tx.update(valoExportJobs).set({status:"ready",errorCode:null,updatedAt:new Date()}).where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,workspaceId)));
+      await tx.insert(valoEvents).values({id:randomUUID(),workspaceId,actorId:"service:export-worker",action:"export.ready",entityId:id,revision:job.revision});
+      committed = true;
+    });
+    if (committed) temporaryKey = null;
+    else await deletePrivateFile(objectKey);
+  } catch (error) {
+    if (temporaryKey) {
+      try { await deletePrivateFile(temporaryKey); } catch { /* Orphan reconciliation remains an explicit operational proof gap. */ }
+    }
+    const message = error instanceof Error ? error.message : "";
+    const safe = error instanceof ValoProblem && error.status === 404 ? "EXPORT_ACCESS_REVOKED" :
+      ["REVISION_INTEGRITY_FAILED","EXPORT_ACCESS_REVOKED","EXPORT_SIZE_LIMIT","PRIVATE_FILE_CHECKSUM_MISMATCH","PRIVATE_FILE_BINDING_MISMATCH"].includes(message)
+        ? message : "RENDER_OR_STORAGE_UNAVAILABLE";
+    await db.transaction(async tx => {
+      const changed = await tx.update(valoExportJobs).set({status:job.attempts < 3 ? "retrying" : "failed",errorCode:safe,updatedAt:new Date()})
+        .where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,workspaceId),eq(valoExportJobs.queueId,queueId),ne(valoExportJobs.status,"ready"))).returning();
+      if (changed.length) await tx.insert(valoEvents).values({id:randomUUID(),workspaceId,actorId:"service:export-worker",
+        action:job.attempts < 3 ? "export.retrying" : "export.failed",entityId:id,revision:job.revision});
+    });
+    throw new Error(safe);
+  }
+}

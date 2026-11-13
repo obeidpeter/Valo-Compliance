@@ -73,4 +73,6 @@ _Populate as you build — sharp edges, "always run X before Y" rules._
 
 ## Pointers
 
+- Part 5 retains exact engineering/operations context in `docs/registers/engineering-context.json`. Development manual drafts now have real private DOCX/PDF exports using the native Replit App Storage SDK and a separate pg-boss worker. Production exports remain off; P0/R1, signed-in E2E and disaster recovery remain unaccepted. See `docs/valo/part5-architecture-and-exports.md`.
+
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details

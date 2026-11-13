@@ -9,6 +9,7 @@ import type { BusinessDocumentStatus } from './businessDocumentStatus';
 import type { CanonicalDocument } from './canonicalDocument';
 
 export interface BusinessDocument {
+  revisionId: string;
   id: string;
   title: string;
   revision: number;

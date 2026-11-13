@@ -15,6 +15,13 @@
       "when": 1794591642138,
       "tag": "0001_valo_rate_quotas",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794593568470,
+      "tag": "0002_fresh_alice",
+      "breakpoints": true
     }
   ]
 }

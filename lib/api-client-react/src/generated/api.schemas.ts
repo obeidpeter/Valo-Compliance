@@ -196,6 +196,9 @@ export interface RequirementsRegister {
 
 export interface ApiProblem {
   error: string;
+  code: string;
+  message: string;
+  requestId: string;
   currentRevision?: number;
 }
 
@@ -333,6 +336,63 @@ export interface Workspace {
   documentCount: number;
 }
 
+export type ExportInputFormat = typeof ExportInputFormat[keyof typeof ExportInputFormat];
+
+
+export const ExportInputFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export interface ExportInput {
+  revisionId: string;
+  format: ExportInputFormat;
+  acknowledgeDraft: boolean;
+}
+
+export interface ExportRetryInput { [key: string]: unknown }
+
+export type ExportJobFormat = typeof ExportJobFormat[keyof typeof ExportJobFormat];
+
+
+export const ExportJobFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export type ExportJobStatus = typeof ExportJobStatus[keyof typeof ExportJobStatus];
+
+
+export const ExportJobStatus = {
+  queued: 'queued',
+  running: 'running',
+  retrying: 'retrying',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export interface ExportJob {
+  id: string;
+  documentId: string;
+  revisionId: string;
+  revision: number;
+  format: ExportJobFormat;
+  renderVersion: string;
+  sourceHash: string;
+  status: ExportJobStatus;
+  attempts: number;
+  /** @nullable */
+  errorCode: string | null;
+  /** @nullable */
+  checksum: string | null;
+  /** @nullable */
+  size: number | null;
+  /** @nullable */
+  downloadUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type DocumentBlockType = typeof DocumentBlockType[keyof typeof DocumentBlockType];
 
 
@@ -432,6 +492,7 @@ export const BusinessDocumentStatus = {
 } as const;
 
 export interface BusinessDocument {
+  revisionId: string;
   id: string;
   title: string;
   revision: number;

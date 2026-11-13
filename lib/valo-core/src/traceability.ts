@@ -1,5 +1,6 @@
 import { r1Transfer } from "./requirements-r1";
 import { sourceRequirements, sourceGates, sourceUatPackages, sourceReleaseControls } from "./specification.generated";
+import { partialExportEvidence } from "./export-evidence.generated";
 
 export type Evidence = {
   kind: "implementation" | "test" | "source" | "approval";
@@ -56,6 +57,15 @@ const partialImplementations: Record<string, string[]> = {
   "EDT-003": ["artifacts/valo/src/screens/document-editor.tsx"],
   "EDT-004": ["artifacts/api-server/src/lib/valo-store.ts", "artifacts/valo/src/screens/document-editor.tsx"],
   "EDT-005": ["artifacts/api-server/src/lib/valo-validation.ts", "artifacts/valo/src/screens/document-editor.tsx"],
+  "EDT-006": ["artifacts/api-server/src/lib/valo-render.ts", "artifacts/api-server/src/lib/valo-exports.integration.test.ts"],
+  "EDT-007": ["artifacts/api-server/src/workers/export-worker.ts", "lib/db/src/schema/valo-exports.ts"],
+  "EDT-008": ["artifacts/api-server/src/routes/valo-exports.ts", "artifacts/api-server/src/lib/valo-private-storage.ts"],
+  "EDT-009": ["artifacts/api-server/src/lib/valo-render.ts", "artifacts/api-server/src/lib/valo-render.test.ts"],
+  "SEC-001": ["artifacts/api-server/src/lib/valo-exports.ts", "artifacts/api-server/src/lib/valo-exports.integration.test.ts"],
+  "SEC-004": ["artifacts/api-server/src/lib/valo-render.ts", "artifacts/api-server/src/lib/valo-render.test.ts"],
+  "OPS-002": ["artifacts/api-server/src/workers/export-worker.ts"],
+  "OPS-003": ["lib/db/drizzle/0002_fresh_alice.sql", "lib/db/drizzle/pg-boss-development.sql"],
+  "OPS-007": ["docs/valo/part5-architecture-and-exports.md"],
   "WRK-001": ["artifacts/valo/src/screens/workspace.tsx"],
   "WRK-005": ["artifacts/valo/src/screens/workspace.tsx"],
   "WRK-006": ["artifacts/api-server/src/lib/valo-store.ts", "lib/db/src/schema/valo-support.ts"],
@@ -83,7 +93,7 @@ for (const original of initialTransfers) {
 export const requirements: Requirement[] = sourceRequirements.map(r => ({
   ...r, implementationPaths: partialImplementations[r.id] ??
     (r.id.startsWith("EDP-") ? ["lib/valo-core/src/publication.ts"] : []),
-  evidence: [],
+  evidence: partialExportEvidence.ids.includes(r.id) ? [partialExportEvidence.record] : [],
   blockers: ["Complete acceptance evidence and required operational approvals are not established"],
 }));
 
@@ -105,12 +115,12 @@ export const conflicts = [
   { id: "CON-002", topic: "Specification transfer", status: "resolved",
     issue: "Only 76 exact requirements were initially present in Replit.",
     resolution: "Read-only import of the coordinating team's complete extracted TRD, roadmap, master brief and 27/79 inventory baseline succeeded. All 127 exact requirements are matched to retained source text. Import hashes are retained; no implementation or publication acceptance follows from receipt.", blocks: [] },
-  { id: "CON-003", topic: "Worker and queue migration proof", status: "unmeasured",
-    issue: "Always-on worker is documented, not demonstrated. Publish omits some database objects/grants. pg-boss migration and least-privilege worker access need measured proof.",
-    resolution: null, blocks: ["P0 production compatibility"] },
-  { id: "CON-004", topic: "Private storage isolation", status: "unmeasured",
+  { id: "CON-003", topic: "Worker and queue migration proof", status: "development_partial",
+    issue: "Development pg-boss construction and an actual separate worker were exercised; production publish omits required functions/grants. Least-privilege roles, in-flight crash recovery and deployment scale-down remain unproved.",
+    resolution: "Pinned construction SQL is retained. Migrations are development-only and never run at web/worker startup. Production migration/deployment approval remains blocked.", blocks: ["P0 production compatibility"] },
+  { id: "CON-004", topic: "Private storage isolation", status: "development_partial",
     issue: "Project-scoped private storage is not tenant isolation; authenticated application checks and cross-tenant negative tests are required.",
-    resolution: null, blocks: ["Private exports", "Evidence attachments"] },
+    resolution: "Real DOCX/PDF private-object round trips, anonymous denial and negative tenant tests passed with the native App Storage SDK. Signed-in delivery, deployed worker credentials, retention and independent security approval remain unproved.", blocks: ["Production private exports", "Evidence attachments"] },
   { id: "CON-005", topic: "Recovery and retention", status: "blocked",
     issue: "Native retention does not establish 35-day recovery. Separate database/object backup, retention and restore evidence are required without buying a plan.",
     resolution: null, blocks: ["P0 restore gate"] },

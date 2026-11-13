@@ -1,0 +1,43 @@
+import { z } from "zod";
+import { db, pool, valoExportJobs } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import { exportQueue, EXPORT_QUEUE } from "../lib/valo-export-queue";
+import { executeExport, developmentExportsOnly } from "../lib/valo-exports";
+import { logger } from "../lib/logger";
+
+developmentExportsOnly();
+const payload = z.object({ jobId:z.string().uuid(),workspaceId:z.string().uuid() }).strict();
+const boss = exportQueue();
+boss.on("error", () => logger.error({event:"queue.database_error"}));
+await boss.start();
+await boss.work(EXPORT_QUEUE, {batchSize:1,pollingIntervalSeconds:1}, async jobs => {
+  for (const entry of jobs) {
+    const input = payload.parse(entry.data);
+    await executeExport(input.jobId,input.workspaceId,entry.id);
+  }
+});
+let dispatching = false;
+async function dispatch() {
+  if (dispatching) return;
+  dispatching = true;
+  try {
+    // This durable table is the transactional outbox. Stable queue IDs make retries harmless.
+    const pending = await db.select().from(valoExportJobs).where(eq(valoExportJobs.status,"queued")).limit(25);
+    for (const job of pending)
+      await boss.send(EXPORT_QUEUE, {jobId:job.id,workspaceId:job.workspaceId},{id:job.queueId});
+  } catch { logger.error({event:"export.dispatch_failed"}); }
+  finally { dispatching = false; }
+}
+await dispatch();
+const timer = setInterval(dispatch,3000);
+logger.info({event:"export.worker_ready",mode:"synthetic-development-only"});
+let stopping = false;
+async function stop() {
+  if (stopping) return;
+  stopping = true;
+  clearInterval(timer);
+  await boss.stop({graceful:true,timeout:60000});
+  await pool.end();
+}
+process.on("SIGTERM",()=>{void stop();});
+process.on("SIGINT",()=>{void stop();});

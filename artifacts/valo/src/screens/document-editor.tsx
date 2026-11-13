@@ -10,6 +10,7 @@ import {
 import { ErrorState, Notice, Skel } from '@/components/states';
 import { FIELD_LABELS, describeError, formatDate, missingFields, newBlockId } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { DocumentExports } from '@/components/document-exports';
 
 type Snapshot = { title: string; content: CanonicalDocument };
 type SaveState = 'idle' | 'dirty' | 'saving' | 'saved' | 'error' | 'conflict' | 'blocked';
@@ -196,7 +197,7 @@ export default function DocumentEditor({ id }: { id: string }) {
   if (doc.isLoading || (doc.isSuccess && !content)) {
     return <div className="mx-auto grid max-w-7xl gap-6 px-5 py-10 lg:grid-cols-[1fr_20rem] lg:px-8"><Skel className="h-[36rem]" /><Skel className="h-80" /></div>;
   }
-  if (doc.isError || !content) {
+  if (doc.isError || !content || !doc.data) {
     return <div className="mx-auto max-w-3xl px-5 py-12"><ErrorState error={doc.error} onRetry={() => doc.refetch()} /><Link href="/workspace" className="btn btn-ghost btn-sm mt-4">Back to workspace</Link></div>;
   }
 
@@ -243,7 +244,7 @@ export default function DocumentEditor({ id }: { id: string }) {
             </div>
             <div className="flex gap-2">
               <button className="btn btn-ghost btn-sm" onClick={undo} disabled={!history.length} data-testid="button-undo"><Undo2 className="h-4 w-4" /> Undo</button>
-              <button className="btn btn-ghost btn-sm" disabled aria-disabled="true" title="Export needs a private renderer, worker and verified storage that are not built yet." data-testid="button-export"><Download className="h-4 w-4" /> Export unavailable</button>
+              <a href="#private-exports" className="btn btn-ghost btn-sm" data-testid="button-export"><Download className="h-4 w-4" /> Private draft exports</a>
             </div>
           </div>
 
@@ -322,7 +323,8 @@ export default function DocumentEditor({ id }: { id: string }) {
             )}
             <p className="hint mt-3">Restoring saves that content as a new revision. Older history stays intact.</p>
           </div>
-          <Notice tone="ink" title="Export not available">PDF and Word export wait on a private renderer, worker, storage and restore checks. No download is simulated.</Notice>
+          <DocumentExports documentId={id} revisionId={doc.data.revisionId} revisionNumber={doc.data.revision}
+            disabled={!['idle','saved'].includes(state)} />
         </aside>
       </div>
     </div>

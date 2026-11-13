@@ -41,11 +41,14 @@ test("running development HTTP API fails closed and reports factual release stat
     }
   });
   await t.test("unauthenticated private endpoints reject reads without shared-cache retention", async () => {
-    for (const path of ["/api/workspace", "/api/workspace/documents", "/api/workspace/documents/00000000-0000-4000-8000-000000000001/revisions"]) {
+    for (const path of ["/api/workspace", "/api/workspace/documents", "/api/workspace/documents/00000000-0000-4000-8000-000000000001/revisions",
+      "/api/v1/documents/00000000-0000-4000-8000-000000000001/exports", "/api/v1/exports/00000000-0000-4000-8000-000000000001/file"]) {
       const response = await fetch(`${base}${path}`);
       assert.equal(response.status, 401);
       assert.ok(response.headers.get("cache-control")?.includes("no-store"));
       assert.equal(response.headers.get("access-control-allow-origin"), null);
+      const error = await response.json() as {code:string;requestId:string;message:string};
+      assert.ok(error.code && error.requestId && error.message);
     }
   });
   await t.test("cross-origin and missing-origin mutations are rejected before any save", async () => {

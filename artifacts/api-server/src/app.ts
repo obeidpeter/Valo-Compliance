@@ -5,6 +5,7 @@ import { publishableKeyFromHost } from "@clerk/shared/keys";
 import { ZodError } from "zod";
 import { CLERK_PROXY_PATH, clerkProxyMiddleware, getClerkProxyHost } from "./middlewares/clerkProxyMiddleware";
 import valoRouter from "./routes/valo";
+import valoExportsRouter from "./routes/valo-exports";
 import { ValoProblem } from "./lib/valo-store";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -32,6 +33,17 @@ app.use(
   }),
 );
 app.disable("x-powered-by");
+app.use((req,res,next) => {
+  const sendJson = res.json.bind(res);
+  res.json = ((body: unknown) => {
+    if (res.statusCode >= 400 && typeof body === "object" && body !== null && "error" in body) {
+      res.setHeader("Cache-Control","private, no-store");
+      body = { ...body, code:"HTTP_"+res.statusCode, requestId:String(req.id), message:body.error };
+    }
+    return sendJson(body);
+  }) as typeof res.json;
+  next();
+});
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 app.use(express.json({ limit: "128kb" }));
 app.use(
@@ -51,6 +63,7 @@ app.use((_req, res, next) => {
 app.use(requestReadQuota);
 app.use("/api", router);
 app.use("/api", valoRouter);
+app.use("/api", valoExportsRouter);
 const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
   res.setHeader("Cache-Control", "private, no-store");
   if (typeof error === "object" && error !== null && "type" in error) {
@@ -62,7 +75,7 @@ const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
     }
   }
   if (error instanceof ZodError) {
-    res.status(400).json({ error: "Invalid request", fields: error.issues.map(i => ({ path: i.path.join("."), message: i.message })) });
+    res.status(422).json({ code:"VALIDATION_FAILED", requestId:String(req.id), error: "Invalid request", fields: error.issues.map(i => ({ path: i.path.join("."), message: i.message })) });
     return;
   }
   if (error instanceof ValoProblem) {
@@ -70,7 +83,7 @@ const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
   }
   // Never log request bodies, provider payloads, user text or raw prompts.
   req.log.error({ event: "request.failed", errorType: error instanceof Error ? error.name : "unknown" });
-  res.status(503).json({ error: "A required service is unavailable. No success has been recorded. Please retry." });
+  res.status(503).json({ error: "A required service is unavailable. Check the saved status before retrying; your request may need recovery." });
 };
 app.use(onError);
 

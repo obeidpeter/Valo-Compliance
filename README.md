@@ -19,12 +19,13 @@ Valo is being built for Nigerian SMEs to create business documents and understan
 - PostgreSQL-backed read quotas with keyed pseudonyms, atomic concurrent caps and request-driven expiry. Production end-user IP resolution and abuse alerting remain unproved; this is partial SEC-005.
 - Complete specification extracts and the coordinating team's registers under `docs/specification/` and `docs/registers/`. All 27 supplementary document mappings and 79 regulatory research rows are retained. Five direct matches, one composite and 21 additions give 61 identified templates; 19 distinct-purpose proposals bring the backlog to 80, not 80 published assets. NGO SCUML remains an alias.
 - Public industry discovery and library filters now use all 20 exact taxonomy categories. Six deeper-pack targets, location/source gaps and NGO cautions are explicit; no checked dates or released guidance are invented.
+- Development-only private DOCX/Chromium PDF exports from saved manual revisions, a durable pg-boss worker, transactionally recorded requests, bounded retries and checksum-verified App Storage files. Exact engineering context is retained separately without inflating the 127 formal requirements.
 
 ## Not yet implemented or proven
 
 The initial application is implemented, not a static mockup. Local database tests passed isolation, stale-write/concurrency, version preservation, profile consent and durable ticket checks. Anonymous HTTP tests reject private access and cross-origin mutation. These checks do not prove the managed signed-in browser journey.
 
-Verified customer sign-in/recovery/expired-link/revoked-session browser tests, staff MFA, private DOCX/PDF exports, actual server AI/editorial publication, the source-backed checker, sandbox commerce, pg-boss workers and disaster recovery remain incomplete or unproved. The editor currently creates only **user-authored business drafts**, not a released baseline template. Export controls explicitly state their missing renderer/worker/storage prerequisite. No content is labelled AI-reviewed without real runs.
+Verified customer sign-in/recovery/expired-link/revoked-session browser tests, staff MFA, production export/worker compatibility, actual server AI/editorial publication, the source-backed checker, sandbox commerce and disaster recovery remain incomplete or unproved. The editor creates **user-authored business drafts**, not released baseline templates. Development exports require deliberate incomplete-draft acknowledgement and show actual queue states. No content is labelled AI-reviewed without real runs.
 
 The separate **80-rule**, **60-customer-AI** and **60-editorial** acceptance suites remain unexecuted. Foundation tests do not count toward those suites. No R1 gate is accepted and R2 is locked. R3 is excluded.
 
@@ -44,13 +45,15 @@ pnpm --filter @workspace/api-server test:valo
 VALO_RUN_DB_TESTS=synthetic-development-only pnpm --filter @workspace/api-server test:valo-db
 # Running Replit development preview only, anonymous safety/status checks:
 VALO_RUN_HTTP_TESTS=synthetic-development-only pnpm --filter @workspace/api-server test:valo-http
+# Actual development storage, renderer and separate-process worker tests:
+VALO_RUN_EXPORT_TESTS=synthetic-development-only NODE_ENV=development pnpm --filter @workspace/api-server test:valo-exports
 pnpm --filter @workspace/valo run build
 ```
 
 No credential values belong in source or GitHub Actions. Foundation checks require no provider secrets or production access. See [implementation evidence](docs/valo/README.md), [compatibility findings](docs/valo/compatibility.md) and [evaluation boundaries](docs/valo/evaluations.md).
 
 The latest bounded development increment is documented in
-[part 4 inventory and coverage](docs/valo/part4-inventory-and-coverage.md), with actual
+[part 5 architecture and exports](docs/valo/part5-architecture-and-exports.md), with actual
 commands, outputs and source hashes in its linked evidence record. Earlier CI passes
 do not certify this unuploaded batch.
 

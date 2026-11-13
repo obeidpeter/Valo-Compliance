@@ -32,6 +32,9 @@ import type {
   ContentRegister,
   DocumentInput,
   DocumentUpdate,
+  ExportInput,
+  ExportJob,
+  ExportRetryInput,
   HealthStatus,
   ListPublicCatalogueParams,
   ProfileInput,
@@ -70,6 +73,362 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getListDocumentExportsUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/documents/${id}/exports`
+}
+
+export const listDocumentExports = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ExportJob[]> => {
+
+  return customFetch<ExportJob[]>(getListDocumentExportsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDocumentExportsQueryKey = (id: string,) => {
+    return [
+    `/api/v1/documents/${id}/exports`
+    ] as const;
+    }
+
+
+export const getListDocumentExportsQueryOptions = <TData = Awaited<ReturnType<typeof listDocumentExports>>, TError = ErrorType<unknown>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDocumentExportsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDocumentExports>>> = ({ signal }) => listDocumentExports(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDocumentExports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListDocumentExportsQueryResult = NonNullable<Awaited<ReturnType<typeof listDocumentExports>>>
+export type ListDocumentExportsQueryError = ErrorType<unknown>
+
+
+export function useListDocumentExports<TData = Awaited<ReturnType<typeof listDocumentExports>>, TError = ErrorType<unknown>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentExports>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDocumentExports>>,
+          TError,
+          Awaited<ReturnType<typeof listDocumentExports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListDocumentExports<TData = Awaited<ReturnType<typeof listDocumentExports>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentExports>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDocumentExports>>,
+          TError,
+          Awaited<ReturnType<typeof listDocumentExports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListDocumentExports<TData = Awaited<ReturnType<typeof listDocumentExports>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListDocumentExports<TData = Awaited<ReturnType<typeof listDocumentExports>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListDocumentExportsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateDocumentExportUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/documents/${id}/exports`
+}
+
+export const createDocumentExport = async (id: string,
+    exportInput: ExportInput, options?: Parameters<typeof customFetch>[1]): Promise<ExportJob> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ExportJob>(getCreateDocumentExportUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(exportInput)
+  }
+);}
+
+
+
+
+
+export const getCreateDocumentExportMutationKey = () => ['createDocumentExport'] as const;
+
+export const getCreateDocumentExportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDocumentExport>>, TError,CreateDocumentExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDocumentExport>>, TError,CreateDocumentExportMutationVariables, TContext> => {
+
+const mutationKey = getCreateDocumentExportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDocumentExport>>, CreateDocumentExportMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createDocumentExport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDocumentExportMutationResult = NonNullable<Awaited<ReturnType<typeof createDocumentExport>>>
+    export type CreateDocumentExportMutationBody = BodyType<ExportInput>
+    export type CreateDocumentExportMutationError = ErrorType<void>
+    export type CreateDocumentExportMutationVariables = {id: string;data: BodyType<ExportInput>}
+
+    export const useCreateDocumentExport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDocumentExport>>, TError,CreateDocumentExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createDocumentExport>>,
+        TError,
+        CreateDocumentExportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateDocumentExportMutationOptions(options), queryClient);
+    }
+
+export const getRetryDocumentExportUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/exports/${id}/retry`
+}
+
+export const retryDocumentExport = async (id: string,
+    exportRetryInput: ExportRetryInput, options?: Parameters<typeof customFetch>[1]): Promise<ExportJob> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ExportJob>(getRetryDocumentExportUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(exportRetryInput)
+  }
+);}
+
+
+
+
+
+export const getRetryDocumentExportMutationKey = () => ['retryDocumentExport'] as const;
+
+export const getRetryDocumentExportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryDocumentExport>>, TError,RetryDocumentExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof retryDocumentExport>>, TError,RetryDocumentExportMutationVariables, TContext> => {
+
+const mutationKey = getRetryDocumentExportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retryDocumentExport>>, RetryDocumentExportMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  retryDocumentExport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RetryDocumentExportMutationResult = NonNullable<Awaited<ReturnType<typeof retryDocumentExport>>>
+    export type RetryDocumentExportMutationBody = BodyType<ExportRetryInput>
+    export type RetryDocumentExportMutationError = ErrorType<unknown>
+    export type RetryDocumentExportMutationVariables = {id: string;data: BodyType<ExportRetryInput>}
+
+    export const useRetryDocumentExport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryDocumentExport>>, TError,RetryDocumentExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof retryDocumentExport>>,
+        TError,
+        RetryDocumentExportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRetryDocumentExportMutationOptions(options), queryClient);
+    }
+
+export const getDownloadDocumentExportUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/exports/${id}/file`
+}
+
+export const downloadDocumentExport = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadDocumentExportUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadDocumentExportQueryKey = (id: string,) => {
+    return [
+    `/api/v1/exports/${id}/file`
+    ] as const;
+    }
+
+
+export const getDownloadDocumentExportQueryOptions = <TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadDocumentExportQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadDocumentExport>>> = ({ signal }) => downloadDocumentExport(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadDocumentExportQueryResult = NonNullable<Awaited<ReturnType<typeof downloadDocumentExport>>>
+export type DownloadDocumentExportQueryError = ErrorType<void>
+
+
+export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadDocumentExport>>,
+          TError,
+          Awaited<ReturnType<typeof downloadDocumentExport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadDocumentExport>>,
+          TError,
+          Awaited<ReturnType<typeof downloadDocumentExport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadDocumentExportQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetPublicCoverageUrl = () => {
 

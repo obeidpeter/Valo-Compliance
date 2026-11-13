@@ -41,7 +41,7 @@ export default function Development() {
             <Gate label="P0 release gate passed" value={d.p0Passed ? 'Yes' : 'No'} ok={d.p0Passed} />
             <Gate label="Release 2 unlocked" value={d.r2Unlocked ? 'Yes' : 'No'} ok={d.r2Unlocked} />
             <Gate label="Live payments" value={d.livePaymentsEnabled ? 'On' : 'Off'} ok={d.livePaymentsEnabled} />
-            <Gate label="Document export" value="Unavailable" ok={false} />
+            <Gate label="P0 export acceptance" value={d.p0Passed ? 'Accepted' : 'Not accepted'} ok={d.p0Passed} />
             <Gate label="API health" value={h.isLoading ? 'Checking' : h.data?.status ?? 'Unreachable'} ok={h.data?.status === 'ok'} />
           </ul>
         </div>

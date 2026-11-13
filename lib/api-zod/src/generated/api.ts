@@ -8,6 +8,97 @@
 import * as zod from 'zod';
 
 
+export const ListDocumentExportsParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const ListDocumentExportsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "documentId": zod.string().uuid(),
+  "revisionId": zod.string().uuid(),
+  "revision": zod.number().int(),
+  "format": zod.enum(['docx', 'pdf']),
+  "renderVersion": zod.string(),
+  "sourceHash": zod.string(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
+  "attempts": zod.number().int(),
+  "errorCode": zod.string().nullable(),
+  "checksum": zod.string().nullable(),
+  "size": zod.number().int().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListDocumentExportsResponse = zod.array(ListDocumentExportsResponseItem)
+
+
+export const CreateDocumentExportParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const CreateDocumentExportHeader = zod.object({
+  "Idempotency-Key": zod.string().uuid()
+})
+
+export const CreateDocumentExportBody = zod.object({
+  "revisionId": zod.string().uuid(),
+  "format": zod.enum(['docx', 'pdf']),
+  "acknowledgeDraft": zod.boolean()
+})
+
+export const CreateDocumentExportResponse = zod.object({
+  "id": zod.string().uuid(),
+  "documentId": zod.string().uuid(),
+  "revisionId": zod.string().uuid(),
+  "revision": zod.number().int(),
+  "format": zod.enum(['docx', 'pdf']),
+  "renderVersion": zod.string(),
+  "sourceHash": zod.string(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
+  "attempts": zod.number().int(),
+  "errorCode": zod.string().nullable(),
+  "checksum": zod.string().nullable(),
+  "size": zod.number().int().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const RetryDocumentExportParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const RetryDocumentExportBody = zod.object({
+
+})
+
+export const RetryDocumentExportResponse = zod.object({
+  "id": zod.string().uuid(),
+  "documentId": zod.string().uuid(),
+  "revisionId": zod.string().uuid(),
+  "revision": zod.number().int(),
+  "format": zod.enum(['docx', 'pdf']),
+  "renderVersion": zod.string(),
+  "sourceHash": zod.string(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
+  "attempts": zod.number().int(),
+  "errorCode": zod.string().nullable(),
+  "checksum": zod.string().nullable(),
+  "size": zod.number().int().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const DownloadDocumentExportParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const DownloadDocumentExportResponse = zod.unknown()
+
+
 export const GetPublicCoverageResponse = zod.object({
   "industries": zod.array(zod.object({
   "id": zod.string(),
@@ -347,6 +438,7 @@ export const listDocumentsResponseContentSelectedClausesMax = 0;
 
 
 export const ListDocumentsResponseItem = zod.object({
+  "revisionId": zod.string().uuid(),
   "id": zod.string(),
   "title": zod.string(),
   "revision": zod.number().int(),
@@ -464,6 +556,7 @@ export const createDocumentResponseContentSelectedClausesMax = 0;
 
 
 export const CreateDocumentResponse = zod.object({
+  "revisionId": zod.string().uuid(),
   "id": zod.string(),
   "title": zod.string(),
   "revision": zod.number().int(),
@@ -529,6 +622,7 @@ export const getDocumentResponseContentSelectedClausesMax = 0;
 
 
 export const GetDocumentResponse = zod.object({
+  "revisionId": zod.string().uuid(),
   "id": zod.string(),
   "title": zod.string(),
   "revision": zod.number().int(),
@@ -651,6 +745,7 @@ export const saveDocumentResponseContentSelectedClausesMax = 0;
 
 
 export const SaveDocumentResponse = zod.object({
+  "revisionId": zod.string().uuid(),
   "id": zod.string(),
   "title": zod.string(),
   "revision": zod.number().int(),
@@ -716,6 +811,7 @@ export const listDocumentRevisionsResponseContentSelectedClausesMax = 0;
 
 
 export const ListDocumentRevisionsResponseItem = zod.object({
+  "revisionId": zod.string().uuid(),
   "id": zod.string(),
   "title": zod.string(),
   "revision": zod.number().int(),

@@ -65,7 +65,7 @@ export async function saveProfile(actor: WorkspaceActor, raw: unknown) {
 }
 function serialize(document: typeof valoDocuments.$inferSelect, revision: typeof valoDocumentRevisions.$inferSelect) {
   return {
-    id: document.id, title: revision.title, revision: revision.revision, content: revision.content,
+    id: document.id, revisionId: revision.id, title: revision.title, revision: revision.revision, content: revision.content,
     contentHash: revision.contentHash, createdAt: document.createdAt.toISOString(), updatedAt: revision.createdAt.toISOString(),
     status: "business_draft" as const, templateVersion: null,
   };
