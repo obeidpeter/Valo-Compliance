@@ -1,0 +1,58 @@
+{
+  "checkedAt": "2026-11-13T21:15:57.168Z",
+  "repository": "obeidpeter/Valo-Compliance",
+  "private": true,
+  "verifiedRemoteSourceHead": "c660f128be2a887d9a73bdfa8b1a7f2d44db71a7",
+  "draftPullRequest": {
+    "draft": true,
+    "head": "c660f128be2a887d9a73bdfa8b1a7f2d44db71a7",
+    "status": 200,
+    "url": "https://github.com/obeidpeter/Valo-Compliance/pull/2"
+  },
+  "sourceCommit": "c649daea538e67b9f816c0af21c0c0a14d629888",
+  "ciFixCommit": "c660f128be2a887d9a73bdfa8b1a7f2d44db71a7",
+  "ci": [
+    {
+      "conclusion": "success",
+      "head": "c660f128be2a887d9a73bdfa8b1a7f2d44db71a7",
+      "id": 43508476128,
+      "status": "completed",
+      "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43508476128"
+    },
+    {
+      "conclusion": "success",
+      "head": "c660f128be2a887d9a73bdfa8b1a7f2d44db71a7",
+      "id": 43508463263,
+      "status": "completed",
+      "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43508463263"
+    },
+    {
+      "conclusion": "failure",
+      "head": "c649daea538e67b9f816c0af21c0c0a14d629888",
+      "id": 43507922634,
+      "status": "completed",
+      "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43507922634"
+    },
+    {
+      "conclusion": "failure",
+      "head": "c649daea538e67b9f816c0af21c0c0a14d629888",
+      "id": 43507916175,
+      "status": "completed",
+      "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43507916175"
+    }
+  ],
+  "firstCiFailure": {
+    "runs": [
+      43507922634,
+      43507916175
+    ],
+    "error": "fatal: Not a valid commit name 871899483093363ec69d765e2d16fa1d88e0836e",
+    "cause": "Checkout was shallow; the baseline ancestry test was retained and fetch-depth changed to 0."
+  },
+  "mainProtectionEnforcement": "blocked_unverified",
+  "p0Accepted": false,
+  "r1Accepted": false,
+  "r2Unlocked": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false
+}
