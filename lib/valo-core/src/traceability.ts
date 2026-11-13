@@ -72,9 +72,10 @@ export const conflicts = [
   { id: "CON-007", topic: "Main-branch protection enforcement", status: "blocked",
     issue: "Owner reports the saved private-repository protection rule is not enforced under the current account plan. Saved configuration is not protected main.",
     resolution: null, blocks: ["Enforced repository review and merge safeguards"] },
-  { id: "CON-008", topic: "GitHub Actions workflow activation", status: "blocked",
-    issue: "Source-tree creation with an active workflow returned 404; a minimal source tree succeeded. The prepared CI configuration is inactive pending workflow-file write authorization. No actual checks are required or claimed.",
-    resolution: null, blocks: ["GitHub-hosted CI", "Required CI check configuration"] },
+  { id: "CON-008", topic: "GitHub Actions workflow authorization", status: "resolved",
+    issue: "Targeted workflow-file writes initially returned HTTP 404 while ordinary source writes succeeded.",
+    resolution: "The user reconnected GitHub securely; the single retry succeeded with HTTP 201. CI execution still needs observable evidence. No required-check or protection settings were changed.",
+    blocks: [] },
 ];
 
 export function readiness() {
