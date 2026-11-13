@@ -1,0 +1,1 @@
+- [Valo acceptance constraints](valo-acceptance.md) — R1 gates precede R2; evidence, not inventory titles or model verdicts, determines acceptance.
