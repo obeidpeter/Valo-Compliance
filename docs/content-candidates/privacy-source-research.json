@@ -1,0 +1,106 @@
+{
+  "purpose": "Research support only; no publication, acceptance or legal approval",
+  "checked_on": "2026-11-13",
+  "sources": [
+    {
+      "id": "ndpc_act_2023",
+      "url": "https://ndpc.gov.ng/wp-content/uploads/2024/03/Nigeria_Data_Protection_Act_2023.pdf",
+      "http_status": 200,
+      "content_type": "application/pdf",
+      "bytes": 658393,
+      "sha256": "5bfb22cf7b344e92ecca9b80decf73db694a0d1000c4f42188f46e047d8df075",
+      "pdf_pages": 43,
+      "extracted_text_sha256": "61090b5e57a360914d3ccdfb703b952e8636f4994179514a74aca1c006015d17",
+      "locators": {
+        "scope": "sections 2-3; PDF pages 7-8; Gazette A723-A724",
+        "principles": "section 24; PDF page 16; Gazette A732",
+        "lawful_basis": "section 25; PDF page 17; Gazette A733",
+        "information": "section 27; PDF pages 18-19; Gazette A734-A735",
+        "registration": "section 44; PDF pages 29-30; Gazette A745-A746"
+      },
+      "retrieval": "Python urllib HTTPS with standard Mozilla/5.0 User-Agent; web open returned403 but direct origin returned200",
+      "retrieved_on": "2026-11-13",
+      "snapshot_status": "Retrieved in coordinating research environment; application must independently retain these source bytes and passages."
+    },
+    {
+      "id": "ndpc_gaid_2025",
+      "url": "https://ndpc.gov.ng/wp-content/uploads/2025/07/NDP-ACT-GAID-2025-MARCH-20TH.pdf",
+      "http_status": 200,
+      "content_type": "application/pdf",
+      "bytes": 1830615,
+      "sha256": "e4359e90c9a11cd772f9605c797d6f36af000c58a27bfba251fa37a89824cc5a",
+      "pdf_pages": 117,
+      "extracted_text_sha256": "2cdb70cf225ac75389d424229544b38dafdc13e8e88e7a22d7395a6f1bef505b",
+      "locators": {
+        "priority": "Article 3; PDF/printed pages 10-11",
+        "policy_and_notices": "Article 7(j)-(m); PDF/printed pages 13-14",
+        "major_importance": "Articles 8-10; PDF/printed pages 15-18, Schedule 7 pages 105-108; not validated into an applicability rule by this research",
+        "information": "Article 27(1)-(4); PDF/printed page 31",
+        "signature": "PDF/printed page 117; issued 20 March 2025"
+      },
+      "retrieval": "Python urllib HTTPS with standard Mozilla/5.0 User-Agent; web open returned403 but direct origin returned200",
+      "retrieved_on": "2026-11-13",
+      "snapshot_status": "Retrieved in coordinating research environment; application must independently retain these source bytes and passages."
+    }
+  ],
+  "official_alternative_routes": [
+    {
+      "index": "https://www.ncc.gov.ng/cybersecurity-resources",
+      "document": "https://www.ncc.gov.ng/media/1084/view",
+      "kind": "Act, full 43-page PDF web text retrieved"
+    },
+    {
+      "index": "https://fctirs.gov.ng/ndpr-compliance/",
+      "document": "https://fctirs.gov.ng/wp-content/uploads/2026/06/NDP-ACT-GAID-2025.pdf",
+      "kind": "GAID, full 117-page PDF web text retrieved; byte equivalence not yet checked"
+    },
+    {
+      "index": "https://fctirs.gov.ng/ndpr-compliance/",
+      "document": "https://fctirs.gov.ng/wp-content/uploads/2026/06/Nigeria_Data_Protection_Act_2023.pdf",
+      "kind": "Act, full 43-page PDF web text retrieved; byte equivalence not yet checked"
+    }
+  ],
+  "candidate": {
+    "title": "Explain personal-data collection before collecting it",
+    "type": "Narrow statutory privacy information guidance; not a registration or audit-filing rule",
+    "jurisdiction": "Nigeria national; assess section2 territorial connection",
+    "relevance_facts": [
+      "Personal data is processed",
+      "Ordinary commercial business purpose, not purely personal/household",
+      "Business determines purposes/means (controller)",
+      "Collects directly from the person",
+      "Nigeria territorial connection is established",
+      "No claimed section3 partial exemption requiring separate assessment"
+    ],
+    "unknowns": [
+      "Whether data identify a person",
+      "Controller versus processor role",
+      "Direct versus indirect collection",
+      "Purposes and lawful bases",
+      "Recipients",
+      "Retention periods",
+      "Automated decisions/profiling",
+      "Vulnerable audience and understandable format",
+      "Any asserted special exemption"
+    ],
+    "substantive_summary": "For in-scope controllers, section27 requires information before direct collection and an accessible privacy policy. It covers identity/contact details, purpose and lawful basis, recipients, rights, retention, complaint route and relevant automated decisions. Indirect-collection exceptions are separately stated in section27(2). GAID Article27 elaborates understandable formats and clarifies that providing information is not itself consent.",
+    "actions": [
+      "Inventory each collection point and purpose",
+      "Complete accurate notice fields from actual operations",
+      "Provide the notice before collection in understandable accessible form",
+      "Request consent separately only where it is the applicable lawful basis"
+    ],
+    "avoid": [
+      "Do not infer universal NDPC registration, DPO appointment or CAR filing from this candidate",
+      "Do not invent fees or a fixed retention duration",
+      "Do not treat an accepted privacy notice as consent for all uses",
+      "Do not claim the notice alone achieves full compliance"
+    ]
+  },
+  "remaining_evidence_gaps": [
+    "No publication manifest or independent AI factual/challenge evaluation executed by this research",
+    "GAID effective-date evidence (19 September2025) discovered in official2026 NDPC journal/annual-report search index only; direct original URLs returned404, so full supporting evidence still needed before using that exact operational date.",
+    "No exhaustive confirmation of all later amendments, exemption notices or sector instruments",
+    "Rights/provenance record and final content hash/export tests still required"
+  ]
+}
