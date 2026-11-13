@@ -3,6 +3,7 @@
   "compileOnSave": false,
   "files": [],
   "references": [
+    { "path": "./lib/valo-core" },
     {
       "path": "./lib/db"
     },

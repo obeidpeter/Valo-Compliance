@@ -448,7 +448,21 @@ importers:
         specifier: ^0.31.11
         version: 0.31.11
 
+  lib/valo-core:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.9.9
+
   scripts:
+    dependencies:
+      '@workspace/valo-core':
+        specifier: workspace:*
+        version: link:../lib/valo-core
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

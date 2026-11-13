@@ -1,6 +1,6 @@
-# [Project name]
+# Valo Compliance
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Valo is a Nigerian SME business-documentation and source-governed compliance application being implemented against R1, then gated R2. It is not yet release-ready.
 
 ## Run & Operate
 
@@ -30,11 +30,19 @@ _Populate as you build — non-obvious choices a reader couldn't infer from the 
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Visible brand: Valo. Required homepage copy: "The documents you need. The business rules you should know."
+
+Current work is the initial requirements/catalogue registers and a fail-closed editorial eligibility validator, not the completed application. See `docs/valo/README.md`, `docs/valo/compatibility.md` and `docs/valo/evidence/foundation-checks.md`.
+
+Run `pnpm --filter @workspace/scripts valo:readiness` for the current machine-readable register and `pnpm --filter @workspace/scripts test:valo` for foundation unit tests. Synthetic unit tests never count toward formal rule/customer-AI/editorial acceptance totals.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Preserve original requirement IDs and acceptance text; do not fabricate the missing portions of the 127-requirement TRD.
+- R1 gates must pass before R2; R3 is excluded.
+- No public launch, live payments, recurring billing, real confidential customer data, plan purchases or paid hosting commitments without explicit approvals.
+- Use Next.js, TypeScript, Tailwind, PostgreSQL, Drizzle, Clerk, private storage, separate pg-boss workers, DOCX/Chromium PDF, Paystack sandbox, email and server AI unless the owner approves a documented alternative.
+- Never label catalogue titles as published documents or synthetic fixtures as integration success.
 
 ## Gotchas
 
