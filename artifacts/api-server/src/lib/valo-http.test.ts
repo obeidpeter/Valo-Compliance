@@ -15,9 +15,10 @@ test("running development HTTP API fails closed and reports factual release stat
       retentionProposals:{approved:boolean;enforced:boolean;statutoryPeriod:boolean}[];
       roadmapSections:{id:string;status:string}[];
     };
-    assert.deepEqual(body.references.map(r=>r.id),Array.from({length:24},(_,i)=>`S${String(i+1).padStart(2,"0")}`));
+    assert.deepEqual(body.references.filter(r=>/^S\d{2}$/.test(r.id)).map(r=>r.id),Array.from({length:24},(_,i)=>`S${String(i+1).padStart(2,"0")}`));
+    assert.equal(body.references.filter(r=>r.id.startsWith("SV-")).length,4);
     assert.ok(body.references.every(r=>r.publication==="held"&&r.aiReviewedAt===null&&r.sourceCheckedAt===null));
-    assert.ok(body.references.every(r=>r.attemptedAt!==null&&r.status!=="not_attempted"));
+    assert.ok(body.references.filter(r=>/^S\d{2}$/.test(r.id)).every(r=>r.attemptedAt!==null&&r.status!=="not_attempted"));
     assert.equal(body.retentionProposals.length,7);
     assert.ok(body.retentionProposals.every(r=>!r.approved&&!r.enforced&&!r.statutoryPeriod));
     assert.equal(body.roadmapSections.length,4);

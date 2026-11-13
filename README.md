@@ -1,9 +1,11 @@
 # Valo Compliance — Valo Platform
 
-Latest increment: real private source collection and exact final specification
-intake. See [part 6 evidence and limits](docs/valo/part6-sources-and-retention.md).
-All 24 reference links were attempted; 17 yielded privately retained raw/text
-snapshots. None is approved, AI reviewed or published by retrieval alone.
+Latest increment: coordinating findings reconciled and larger official PDF
+ingestion tested. See [the current evidence and limits](docs/valo/coordinating-refinement.md).
+The original 24 references remain intact, with four distinct additional source
+leads. Nineteen sources now have privately retained raw/text snapshots, including
+the 27,677,259-byte NRS Act and the CAC Gazette PDF. None is approved, AI reviewed
+or published by retrieval alone.
 Proposed retention periods remain unapproved and unenforced.
 
 Valo is being built for Nigerian SMEs to create business documents and understand source-backed business obligations.
@@ -26,6 +28,7 @@ Valo is being built for Nigerian SMEs to create business documents and understan
 - Complete specification extracts and the coordinating team's registers under `docs/specification/` and `docs/registers/`. All 27 supplementary document mappings and 79 regulatory research rows are retained. Five direct matches, one composite and 21 additions give 61 identified templates; 19 distinct-purpose proposals bring the backlog to 80, not 80 published assets. NGO SCUML remains an alias.
 - Public industry discovery and library filters now use all 20 exact taxonomy categories. Six deeper-pack targets, location/source gaps and NGO cautions are explicit; no checked dates or released guidance are invented.
 - Development-only private DOCX/Chromium PDF exports from saved manual revisions, a durable pg-boss worker, transactionally recorded requests, bounded retries and checksum-verified App Storage files. Exact engineering context is retained separately without inflating the 127 formal requirements.
+- All 27 supplementary mappings match the coordinating refinement; all 13 original conflict resolutions and 14 attributed discovery observations are retained separately from actual local retrieval. The dashboard shows local outcomes, private checksums, metadata/title conflicts and publication holds.
 
 ## Not yet implemented or proven
 
@@ -54,6 +57,9 @@ VALO_RUN_HTTP_TESTS=synthetic-development-only pnpm --filter @workspace/api-serv
 # Actual development storage, renderer and separate-process worker tests:
 VALO_RUN_EXPORT_TESTS=synthetic-development-only NODE_ENV=development pnpm --filter @workspace/api-server test:valo-exports
 pnpm --filter @workspace/valo run build
+# Explicit development-only source collection / private storage tests:
+NODE_ENV=development VALO_RUN_SOURCE_RETRIEVAL=official-development-only pnpm --filter @workspace/api-server sources:retrieve-instruments
+NODE_ENV=development VALO_RUN_SOURCE_TESTS=official-development-only pnpm --filter @workspace/api-server exec tsx --test src/editorial/source-instruments.integration.test.ts src/editorial/source-store.integration.test.ts
 ```
 
 No credential values belong in source or GitHub Actions. Foundation checks require no provider secrets or production access. See [implementation evidence](docs/valo/README.md), [compatibility findings](docs/valo/compatibility.md) and [evaluation boundaries](docs/valo/evaluations.md).

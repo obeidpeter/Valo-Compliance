@@ -13,6 +13,13 @@ export const ReferenceEvidencePublication = {
 } as const;
 
 export interface ReferenceEvidence {
+  coordinatingNotes: string[];
+  /** @nullable */
+  titleEvidenceStatus: string | null;
+  /** @nullable */
+  metadataTitle: string | null;
+  /** @nullable */
+  titleWarning: string | null;
   id: string;
   title: string;
   url: string;
@@ -60,6 +67,7 @@ export interface RoadmapContext {
 }
 
 export interface SourceEvidenceRegister {
+  coordinatingSummary: string;
   notice: string;
   references: ReferenceEvidence[];
   retentionProposals: RetentionProposal[];

@@ -1,13 +1,39 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { assertPublicAddress,assertSourceUrl,referenceFor } from "./source-fetch";
+import { assertPublicAddress,assertSourceUrl,referenceFor,sourceBodyLimit,MAX_SOURCE_BYTES,MAX_INSTRUMENT_BYTES } from "./source-fetch";
+import { instrumentIdentity } from "./source-identity";
 import { checkExtractedText,extractSource } from "./source-extract";
 import { storeSourceSnapshot } from "./source-storage";
 import { randomUUID } from "node:crypto";
-test("only the 24 original references can be selected",()=>{
+import { chromium } from "playwright";
+test("only original and explicitly recorded coordinating references can be selected",()=>{
   assert.equal(referenceFor("S04").id,"S04");
   for(const id of ["S25","../../private","https://example.com","S04?admin=true"])
     assert.throws(()=>referenceFor(id),/SOURCE_NOT_ALLOWLISTED/);
+});
+test("only the identified large instruments get a larger bounded ingestion profile",async()=>{
+  assert.equal(sourceBodyLimit("S02"),MAX_INSTRUMENT_BYTES);assert.equal(sourceBodyLimit("SV-010"),MAX_INSTRUMENT_BYTES);
+  for(const id of ["S01","S04","S16","S24"])assert.equal(sourceBodyLimit(id),MAX_SOURCE_BYTES);
+  await assert.rejects(()=>extractSource(Buffer.alloc(MAX_SOURCE_BYTES+1),"text/html",MAX_INSTRUMENT_BYTES),/LARGE_PROFILE_PDF_ONLY/);
+});
+test("instrument identity uses body pages, not a plausible or misleading metadata title",()=>{
+  const cama=instrumentIdentity("SV-010","Official Gazette\fCompanies and Allied Matters Act, 2020","ELECTORAL (AMENDMENT) ACT 2015")!;
+  assert.equal(cama.status,"content_title_present_unreviewed");assert.equal(cama.metadataConflict,true);
+  assert.deepEqual(cama.matchingPages,[2]);
+  assert.equal(instrumentIdentity("SV-010","Unrelated text","Companies and Allied Matters Act 2020")!.status,"held_title_unconfirmed");
+  assert.equal(instrumentIdentity("S02","Nigeria Tax Administration Act 2025",null)!.status,"content_title_present_unreviewed");
+});
+test("PDF extraction retains a blank first page so operative locators cannot shift",async()=>{
+  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE_PATH??"/repl/tools/bin/chromium",headless:true,args:["--no-sandbox"]});
+  let bytes:Buffer;
+  try{
+    const page=await browser.newPage();
+    await page.setContent('<div style="height:1px;break-after:page"></div><p>'+("Companies and Allied Matters Act 2020. ".repeat(12))+'</p>');
+    bytes=await page.pdf({format:"A4"});
+  }finally{await browser.close();}
+  const result=await extractSource(bytes,"application/pdf");
+  assert.ok(result.text.startsWith("\f"));assert.equal(result.locators.pageCount,2);
+  assert.deepEqual(instrumentIdentity("SV-010",result.text,result.title)!.matchingPages,[2]);
 });
 test("redirects cannot switch origin, downgrade TLS or include credentials",()=>{
   const original=referenceFor("S01").url;

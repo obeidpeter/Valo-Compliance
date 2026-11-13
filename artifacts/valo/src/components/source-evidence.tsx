@@ -6,7 +6,8 @@ export function SourceEvidence(){
     <h2 id="source-evidence-title" className="font-display text-3xl">Source evidence and proposed policies</h2>
     {query.isLoading?<Skel className="mt-5 h-40"/>:query.isError?<ErrorState error={query.error} onRetry={()=>query.refetch()}/>:query.data&&<>
       <p className="mt-4 text-sm text-muted-foreground">{query.data.notice}</p>
-      <p className="mt-4 font-mono text-xs">{query.data.references.length} original reference leads · {query.data.references.filter(r=>r.status==='retrieved_unreviewed').length} retrieved but unreviewed · 0 published</p>
+      <p className="mt-4 text-sm text-muted-foreground">{query.data.coordinatingSummary}</p>
+      <p className="mt-4 font-mono text-xs">{query.data.references.filter(r=>/^S\d{2}$/.test(r.id)).length} original leads + {query.data.references.filter(r=>r.id.startsWith('SV-')).length} distinct coordinating additions · {query.data.references.filter(r=>r.status==='retrieved_unreviewed').length} retrieved but unreviewed · 0 published</p>
       <div className="mt-5 space-y-3">{query.data.references.map(r=><details key={r.id} className="surface p-5">
         <summary className="cursor-pointer"><span className="font-mono">{r.id}</span> · {r.title}<span className="mt-2 block text-xs text-muted-foreground">{r.status.replaceAll('_',' ')} · publication held</span></summary>
         <a className="mt-4 block break-all text-sm underline" href={r.url} target="_blank" rel="noopener noreferrer">Original official/source reference</a>
@@ -16,6 +17,10 @@ export function SourceEvidence(){
         <p className="mt-3 text-sm">Source checked: {r.sourceCheckedAt??'Not recorded'} · AI reviewed: {r.aiReviewedAt??'Not recorded'}</p>
         <p className="mt-3 break-all font-mono text-xs">Raw SHA-256: {r.rawChecksum??'None'}<br/>Text SHA-256: {r.textChecksum??'None'}</p>
         <p className="mt-4 text-sm text-muted-foreground"><strong>Original baseline note, not this retrieval’s conclusion:</strong> {r.baselineNotes}</p>
+        {r.coordinatingNotes.map(note=><p key={note} className="mt-3 text-sm text-muted-foreground">{note}</p>)}
+        {r.titleEvidenceStatus&&<p className="mt-3 text-sm">Content/title identity: {r.titleEvidenceStatus.replaceAll('_',' ')}. This is not legal or amendment review.</p>}
+        {r.metadataTitle&&<p className="mt-3 text-sm">Document metadata title: {r.metadataTitle}</p>}
+        {r.titleWarning&&<p className="mt-3 text-sm">{r.titleWarning}</p>}
       </details>)}</div>
       <h3 className="font-display mt-8 text-2xl">Retention proposals — not enacted policy</h3>
       <p className="mt-3 text-sm text-muted-foreground">These periods are not Nigerian statutory deadlines. No automatic deletion or 35-day recovery guarantee has been enabled.</p>

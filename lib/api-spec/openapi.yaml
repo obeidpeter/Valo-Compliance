@@ -319,8 +319,9 @@ components:
   schemas:
     SourceEvidenceRegister:
       type: object
-      required: [notice, references, retentionProposals, roadmapSections]
+      required: [notice, references, retentionProposals, roadmapSections, coordinatingSummary]
       properties:
+        coordinatingSummary: { type: string }
         notice: { type: string }
         references:
           type: array
@@ -333,8 +334,14 @@ components:
           items: { $ref: "#/components/schemas/RoadmapContext" }
     ReferenceEvidence:
       type: object
-      required: [id, title, url, category, baselineNotes, sourceLocator, status, attemptedAt, fetchedAt, httpStatus, failureCode, rawChecksum, textChecksum, rawStored, textStored, publication, aiReviewedAt, sourceCheckedAt]
+      required: [id, title, url, category, baselineNotes, sourceLocator, status, attemptedAt, fetchedAt, httpStatus, failureCode, rawChecksum, textChecksum, rawStored, textStored, publication, aiReviewedAt, sourceCheckedAt, coordinatingNotes, titleEvidenceStatus, metadataTitle, titleWarning]
       properties:
+        coordinatingNotes:
+          type: array
+          items: { type: string }
+        titleEvidenceStatus: { type: ["string", "null"] }
+        metadataTitle: { type: ["string", "null"] }
+        titleWarning: { type: ["string", "null"] }
         id: { type: string }
         title: { type: string }
         url: { type: string, format: uri }

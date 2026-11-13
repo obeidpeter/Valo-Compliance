@@ -8,6 +8,13 @@
 import type { ReferenceEvidencePublication } from './referenceEvidencePublication';
 
 export interface ReferenceEvidence {
+  coordinatingNotes: string[];
+  /** @nullable */
+  titleEvidenceStatus: string | null;
+  /** @nullable */
+  metadataTitle: string | null;
+  /** @nullable */
+  titleWarning: string | null;
   id: string;
   title: string;
   url: string;

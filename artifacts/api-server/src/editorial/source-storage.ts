@@ -13,8 +13,9 @@ function sourceObject(snapshotId:string,kind:"raw"|"text"){
   return{client,name,key,bucket};
 }
 /** Dedicated namespace: cannot accept document keys or expose source bytes publicly. */
-export async function storeSourceSnapshot(snapshotId:string,kind:"raw"|"text",bytes:Buffer){
-  if(bytes.length>8*1024*1024)throw Error("SOURCE_STORAGE_TOO_LARGE");
+export async function storeSourceSnapshot(snapshotId:string,kind:"raw"|"text",bytes:Buffer,maximumBytes=8*1024*1024){
+  if(![8*1024*1024,32*1024*1024].includes(maximumBytes)||bytes.length>maximumBytes||
+    (kind==="text"&&bytes.length>8*1024*1024))throw Error("SOURCE_STORAGE_TOO_LARGE");
   const {client,name,key}=sourceObject(snapshotId,kind);
   const existing=await client.exists(name);
   if(!existing.ok||existing.value)throw Error("SOURCE_STORAGE_KEY_UNAVAILABLE");

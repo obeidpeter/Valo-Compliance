@@ -126,8 +126,13 @@ export const GetPublicCoverageResponse = zod.object({
 
 
 export const GetSourceEvidenceResponse = zod.object({
+  "coordinatingSummary": zod.string(),
   "notice": zod.string(),
   "references": zod.array(zod.object({
+  "coordinatingNotes": zod.array(zod.string()),
+  "titleEvidenceStatus": zod.string().nullable(),
+  "metadataTitle": zod.string().nullable(),
+  "titleWarning": zod.string().nullable(),
   "id": zod.string(),
   "title": zod.string(),
   "url": zod.string().url(),

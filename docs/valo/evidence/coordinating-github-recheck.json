@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-11-13T19:23:04.351Z",
+  "coordinatingReport": "No repository was created; external creation capability unavailable.",
+  "observation": {
+    "authenticatedLogin": "obeidpeter",
+    "createdAt": "2026-11-13T16:34:22Z",
+    "defaultBranch": "main",
+    "description": "Valo Compliance — Valo Platform. Nigerian SME business documents and source-backed compliance guidance. R1 and R2 development.",
+    "mutations": 0,
+    "nameCheckHttpStatus": 200,
+    "private": false,
+    "readme": {
+      "httpStatus": 200,
+      "sha": "875981d23cd96ebfed572a3ffc07a25f7103d3ef",
+      "title": "# Valo-Compliance"
+    },
+    "repositoryExists": true,
+    "userHttpStatus": 200,
+    "visibility": "public"
+  },
+  "decision": "Existing exact-name repository conflicts with latest report; do not create, overwrite, upload or assume it is this product. Ownership/purpose/private status need resolution.",
+  "sourceSyncConfirmedThisTurn": false
+}

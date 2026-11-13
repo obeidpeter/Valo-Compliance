@@ -30,7 +30,7 @@ test("development source history and public metadata never imply review or leak 
     });
     await t.test("metadata cannot forge review, publication, policy approval or expose a private locator",async()=>{
       const register=await sourceEvidenceRegister();
-      assert.equal(register.references.length,24);
+      assert.equal(register.references.length,28);
       assert.ok(register.references.every(r=>r.publication==="held"&&r.aiReviewedAt===null&&r.sourceCheckedAt===null));
       assert.ok(register.retentionProposals.every(r=>!r.approved&&!r.enforced&&!r.statutoryPeriod));
       const serialized=JSON.stringify(register);

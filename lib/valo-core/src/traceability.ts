@@ -1,3 +1,4 @@
+import { coordinatingRefinement } from "./coordinating.generated";
 import { r1Transfer } from "./requirements-r1";
 import { sourceRequirements, sourceGates, sourceUatPackages, sourceReleaseControls } from "./specification.generated";
 import { partialExportEvidence } from "./export-evidence.generated";
@@ -113,6 +114,12 @@ export function requirementStatus(requirement: Requirement) {
 }
 
 export const conflicts = [
+  ...coordinatingRefinement.conflicts.map(c=>({id:c.id,topic:c.topic,status:c.status,issue:c.source_conflict,
+    resolution:c.resolution,blocks:c.status.startsWith("open")?["Applicable implementation/owner/evidence gate remains open"]:[]})),
+  {id:"CON-GH-01",topic:"Repository identity, privacy and creation reports",status:"identity_confirmed_privacy_blocked",
+    issue:"The coordinating report retracts creation claims; the authorised name check found an existing public repository. The owner confirmed that repository is intended for this build. Creation history, current private visibility and synchronisation remain separate unproved facts.",
+    resolution:"Preserve local history. No duplicate creation, destructive overwrite, upload while public or unsupported protection/synchronisation claim. Visibility action requires explicit authorisation and read-back verification.",
+    blocks:["Verified private visibility","Verified source synchronisation","Branch protection evidence"]},
   { id: "CON-001", topic: "Frontend architecture", status: "development_compatible",
     issue: "Selected artifact uses React/Vite; preferred architecture requires Next.js.",
     resolution: "The bootstrap was adapted to Next.js 15.5.29 without replacing the preferred stack. Strict workspace typechecking, Next production build and managed proxied development runtime passed. Production was not published or proven.", blocks: ["Production runtime, worker, storage and recovery compatibility proof"] },
@@ -132,7 +139,7 @@ export const conflicts = [
     issue: "No public-launch, live-commerce, recurring-billing or real-confidential-data approval exists. Processor geography and independent security/privacy/beta evidence remain required.",
     resolution: null, blocks: ["Public launch", "Live payments", "Real confidential customer data", "R2 until R1 gates pass"] },
   { id: "CON-007", topic: "Main-branch protection enforcement", status: "blocked",
-    issue: "Owner reports the saved private-repository protection rule is not enforced under the current account plan. Saved configuration is not protected main.",
+    issue: "Previous reports of saved protection are not current proof. The latest repository-creation correction and exact-name conflict leave intended-repository identity, private visibility and enforcement unverified.",
     resolution: null, blocks: ["Enforced repository review and merge safeguards"] },
   { id: "CON-008", topic: "GitHub Actions workflow authorization", status: "resolved",
     issue: "Targeted workflow-file writes initially returned HTTP 404 while ordinary source writes succeeded.",

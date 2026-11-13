@@ -27,11 +27,30 @@ Next.js is the preferred frontend. The selected web artifact is React/Vite; do n
 
 **How to apply:** Retain Next.js when adapting the artifact bootstrap. Only a genuinely necessary alternative requires owner approval; selecting the bootstrap did not approve Vite as a replacement.
 
-The intended GitHub repository must remain private. Its saved main-branch protection rule is not enforced under the current account plan. Do not buy/upgrade, transfer it, make it public, force-push or delete it.
+The intended GitHub repository must be verified private and belong to this
+product before use. Do not infer creation, protection or synchronisation from
+coordinating reports. Check exact-name conflicts first. Do not buy/upgrade,
+transfer, make public, force-push, delete or overwrite another Valo product.
 
-**Why:** The user reported GitHub's enforcement limitation and explicitly prohibited those changes.
+**Why:** The user corrected earlier repository-creation claims. A current
+authorised name check conflicts with that report, so existence alone cannot
+establish that reuse or uploads are safe. Historical protection claims are not
+current enforcement evidence.
 
-**How to apply:** Use feature branches and draft pull requests, preserve existing main history, report enforcement as blocked, and add required CI checks only after real checks exist.
+**How to apply:** Preserve local history while the conflict is unresolved. Create
+only if the exact name is available through authorised access; otherwise confirm
+identity and private visibility before uploads. Use feature branches/draft PRs,
+preserve main history and prove actual CI/protection rather than assume it.
+
+The owner confirmed the existing exact-name Valo Compliance repository is the
+intended repository for this build. That does not itself confirm creation history,
+private visibility, protection or source synchronisation.
+
+**Why:** The user explicitly confirmed repository identity after the name-conflict
+check.
+
+**How to apply:** Do not ask the identity question again solely because historical
+creation reports conflict. Verify privacy and actual writes separately.
 
 The master execution prompt authorises actual engineering despite earlier
 document-only language. Human staffing/week estimates are planning assumptions

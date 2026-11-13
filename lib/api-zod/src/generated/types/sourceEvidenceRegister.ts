@@ -10,6 +10,7 @@ import type { RetentionProposal } from './retentionProposal';
 import type { RoadmapContext } from './roadmapContext';
 
 export interface SourceEvidenceRegister {
+  coordinatingSummary: string;
   notice: string;
   references: ReferenceEvidence[];
   retentionProposals: RetentionProposal[];
