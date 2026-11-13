@@ -4,6 +4,15 @@ Visible brand: **Valo**. Homepage copy: **The documents you need. The business r
 
 This is development work, not a released compliance product. Do not infer acceptance from a title, a screenshot, a test fixture or this document.
 
+## Working checker and customer AI checkpoint
+
+The [executed feature checkpoint](checker-ai-checkpoint.md) records verified
+customer assessments/history/tasks, opt-in held reminders, four actual-provider
+AI drafting flows and eight private DOCX/PDF files checked through the browser.
+The 80 engineering rule cases are not Nigerian source-backed acceptance. The
+60 customer AI cases are not the separate editorial evaluation. R1/R2 remain
+unaccepted and all release approvals remain separate.
+
 ## Contract intake
 
 Part 4 reconciles all 27/79 source titles, makes row-level evidence/coverage holds

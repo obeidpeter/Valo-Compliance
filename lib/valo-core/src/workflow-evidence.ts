@@ -15,6 +15,12 @@ const browser = {
   kind:"test" as const,path:"docs/valo/evidence/checker-customer-journey.json",
   hash:"47382befec7a822f2bd16c59d0d7cd0c36093f6d76eb5d478916f577d1f4bb08",result:"pass" as const,
 };
+// A completed technical proof with zero quote errors and a correct HOLD.
+// This is explicitly not factual/challenge agreement or publication eligibility.
+const editorialHold = {
+  kind:"test" as const,path:"docs/valo/evidence/p0-editorial-provider-proof.json",
+  hash:"50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e",result:"pass" as const,
+};
 const groups = [
   {ids:["RUL-001","RUL-002","RUL-003","RUL-004","RUL-005","RUL-006","RUL-008","CMP-002","CMP-003","CMP-006","CMP-007"],
     paths:["lib/valo-core/src/checker.ts","artifacts/valo/src/screens/checker.tsx"],record:rules},
@@ -29,6 +35,9 @@ const groups = [
   {ids:["IAM-001","IAM-003","PRO-001","PRO-003","RUL-007","WRK-001","WRK-002","WRK-003","WRK-004",
     "AI-001","AI-002","AI-003","AI-009","EDT-002","EDT-003","EDT-004","EDT-006","EDT-007","EDT-008","SEC-001","NFR-007","NFR-008","NFR-009"],
     paths:["artifacts/api-server/src/scripts/checker-customer-journey.ts"],record:browser},
+  {ids:["EDP-002","EDP-003","EDP-004","EDP-006","EDP-012"],
+    paths:["artifacts/api-server/src/editorial/citation-selection.ts","artifacts/api-server/src/editorial/pipeline.ts",
+      "artifacts/api-server/src/editorial/model-adapter.ts"],record:editorialHold},
 ];
 export function partialWorkflowEvidence(id:string){
   const matching=groups.filter(g=>g.ids.includes(id));

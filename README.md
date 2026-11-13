@@ -1,8 +1,13 @@
 # Valo Compliance — Valo Platform
 
-Latest increment: the documentation checkpoint was merged with normal history,
-and development schema changes now fail closed on reported SQL errors. See
-[the checkpoint and executed evidence](docs/valo/handover-checkpoint.md).
+Latest implemented increment: saved profile-driven checker assessments,
+comparisons, private tasks and opted-in held reminders; four real-provider AI
+document flows with editable private revisions and DOCX/PDF exports. The
+verified-account browser run passed nine groups and checked eight private files.
+See [working behaviour, actual results and remaining scope](docs/valo/checker-ai-checkpoint.md).
+R1/R2 are not accepted; no Nigerian rule is released and live commerce/public
+launch remain off. Earlier [foundation evidence](docs/valo/handover-checkpoint.md)
+is retained.
 The previous [official PDF ingestion evidence](docs/valo/coordinating-refinement.md) remains retained.
 The original 24 references remain intact, with four distinct additional source
 leads. Nineteen sources now have privately retained raw/text snapshots, including

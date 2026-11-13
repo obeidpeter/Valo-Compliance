@@ -1,8 +1,9 @@
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { z } from "zod/v4";
 import { candidateSchema,reviewSchema,editorialModel,systemPrompt,type EditorialRole } from "./pipeline-contract";
+import { draftSelectionSchema,resolveDraftSelection } from "./citation-selection";
 export async function callEditorialModel(role:EditorialRole,input:unknown){
-  const schema=role==="draft"?candidateSchema:reviewSchema;
+  const schema=role==="draft"?draftSelectionSchema:reviewSchema;
   const jsonSchema=z.toJSONSchema(schema,{target:"draft-7"});delete jsonSchema.$schema;
   const started=performance.now();
   const response=await openai.chat.completions.create({
@@ -13,10 +14,14 @@ export async function callEditorialModel(role:EditorialRole,input:unknown){
   },{timeout:45000,maxRetries:0});
   if(response.choices[0]?.finish_reason!=="stop"||!response.choices[0]?.message.content)
     throw Error("AI_OUTPUT_INCOMPLETE");
-  let output:unknown;
-  try{output=schema.parse(JSON.parse(response.choices[0].message.content));}
+  let output:unknown,providerOutput:unknown;
+  try{
+    providerOutput=schema.parse(JSON.parse(response.choices[0].message.content));
+    output=role==="draft"?resolveDraftSelection(providerOutput,input):providerOutput;
+    if(role==="draft")candidateSchema.parse(output);
+  }
   catch{throw Error("AI_OUTPUT_SCHEMA_INVALID");}
-  return{output,providerResponseId:response.id,providerRequestId:response._request_id??null,
+  return{output,providerOutput,providerResponseId:response.id,providerRequestId:response._request_id??null,
     actualModel:response.model,latencyMs:Math.round(performance.now()-started),
     inputTokens:response.usage?.prompt_tokens??null,outputTokens:response.usage?.completion_tokens??null};
 }

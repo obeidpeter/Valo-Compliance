@@ -8,6 +8,7 @@ import { callEditorialModel } from "./model-adapter";
 import { candidateSchema,reviewSchema,reviewInput,mechanicalCandidate,mandatoryDevelopmentHolds,
   editorialModel,editorialPromptVersion,systemPrompt,type EditorialRole,type EvidenceBundle } from "./pipeline-contract";
 import { logger } from "../lib/logger";
+import { editorialDraftInput } from "./citation-selection";
 
 async function sourceBundle():Promise<EvidenceBundle>{
   const [source]=await db.select().from(valoSourceSnapshots).where(eq(valoSourceSnapshots.sourceId,"SV-010"))
@@ -60,14 +61,21 @@ async function executeRun(row:ValoEditorialRun,input:unknown,candidateHash:strin
       inputTokens:result.inputTokens,outputTokens:result.outputTokens})
       .where(and(eq(valoEditorialRuns.id,row.id),eq(valoEditorialRuns.status,"running")));
     const artifact={runId:row.id,pipelineId:row.pipelineId,role,promptVersion:editorialPromptVersion,
-      model:result.actualModel,input,systemPrompt:systemPrompt(role),inputHash,candidateHash,
+      model:result.actualModel,input,systemPrompt:systemPrompt(role),inputHash,
+      candidateHash:role==="draft"?hashEditorial(JSON.stringify(result.output)):candidateHash,
       sourceHash:row.sourceHash,output:result.output,providerResponseId:result.providerResponseId};
+    Object.assign(artifact,{providerOutput:result.providerOutput,
+      providerOutputHash:hashEditorial(JSON.stringify(result.providerOutput)),
+      citationResolutionVersion:role==="draft"?"source-excerpts-v1":null});
     const saved=await storeEditorialRun(row.id,artifact);
     const parsedReview=role==="draft"?null:reviewSchema.parse(result.output);
     await db.update(valoEditorialRuns).set({status:"succeeded",objectKey:saved.key,outputHash:saved.hash,
       model:result.actualModel,providerResponseId:result.providerResponseId,providerRequestId:result.providerRequestId,
       latencyMs:result.latencyMs,inputTokens:result.inputTokens,outputTokens:result.outputTokens,completedAt:new Date(),
-      metadata:{...row.metadata,modelVerdict:parsedReview?.verdict??null,findingsCount:parsedReview?.findings.length??null}})
+      candidateHash:role==="draft"?hashEditorial(JSON.stringify(result.output)):candidateHash,
+      metadata:{...row.metadata,providerOutputHash:hashEditorial(JSON.stringify(result.providerOutput)),
+        citationResolutionVersion:role==="draft"?"source-excerpts-v1":null,
+        modelVerdict:parsedReview?.verdict??null,findingsCount:parsedReview?.findings.length??null}})
       .where(and(eq(valoEditorialRuns.id,row.id),eq(valoEditorialRuns.status,"running")));
     logger.info({event:"editorial.run_completed",runId:row.id,role,latencyMs:result.latencyMs});
     return result.output;
@@ -95,7 +103,7 @@ export async function runDevelopmentEditorialProof(){
     process.env.VALO_RUN_EDITORIAL_PROOF!=="official-development-only")throw Error("EDITORIAL_DEVELOPMENT_ACK_REQUIRED");
   const bundle=await sourceBundle(),rows=await reserveRuns(bundle);
   const draft=rows.find(r=>r.role==="draft")!;
-  const candidate=await executeRun(draft,{role:"draft",sourceBundle:bundle,task:"Summarise only the included formation provisions and their stated exceptions. Do not assert currentness."},null);
+  const candidate=await executeRun(draft,editorialDraftInput(bundle),null);
   const candidateHash=candidate?hashEditorial(JSON.stringify(candidate)):null;
   const mechanicalErrors=candidate?mechanicalCandidate(candidate,bundle):["draft_unavailable"];
   if(!candidate){

@@ -38,6 +38,17 @@ accounts and documents are synthetic.
 | Rule-engine evaluation | 80/80 synthetic engineering cases; **zero** Nigerian source-backed acceptance cases | `evidence/rule-engine-80-evaluation.json` |
 | Customer AI evaluation | 60/60 rubric cases; 20 actual provider requests, 28 preflight cases, 12 injected negative transport cases; zero observed critical failures | `evidence/customer-ai-60-evaluation.json` |
 | Verified-account browser journey | 9/9 groups passed; eight private files parsed/text-checked across the four AI tasks | `evidence/checker-customer-journey.json` |
+| Citation correction | 18 editorial unit checks passed; three actual draft/factual/challenge provider runs completed, with zero mechanical quote errors | `evidence/p0-editorial-provider-proof.json` |
+
+The citation repair selects bounded authoritative excerpts and inserts their
+exact bytes/locators deterministically. It does not relax the original quote
+validator. Raw provider selections, resolved candidate hashes and source
+provenance are retained privately. Factual review passed; independent challenge
+held. Currentness, policy, rights, full scope, publication export samples and
+publisher credential isolation remain unresolved, so the item is **held**.
+The prior failed citation report remains separately retained. These 18 unit
+checks and three runs do **not** complete the required 60-case editorial suite
+or establish the first eligible publication.
 
 The browser run used actual managed identity, PostgreSQL, private storage and
 the export worker. Anonymous download attempts returned 401. The file checks
@@ -73,3 +84,19 @@ client-revision race was fixed; harness filter/selector issues were also fixed.
 The exact 127-row specification remains authoritative. Hash-bound partial
 evidence is attached to relevant live requirement rows; all release acceptance
 and operational approvals remain separate.
+
+The original source register is preserved. The generated
+`docs/registers/implementation-evidence.json` joins all 127 exact rows to
+actual code paths, retained report hashes and the saved code revision.
+Regenerate it with `pnpm --filter @workspace/scripts exec tsx
+src/valo/update-evidence-register.ts` after a substantive checkpoint.
+
+## Workspace name and development limits
+
+The actual application and artifact are branded **Valo**. Workspace-level
+renaming is not exposed by the available supported Agent/Admin API; the
+supported owner action is the project-name menu → Rename → Valo. No Enterprise
+API key, paid plan or new repository is required for that UI action.
+The preview can show a Next.js development HMR WebSocket warning; the rendered
+routes and verified-account browser checks worked. This is not production
+performance or self-hosting acceptance.
