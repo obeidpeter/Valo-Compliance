@@ -6,9 +6,9 @@ This is development work, not a released compliance product. Do not infer accept
 
 ## Contract intake
 
-The master brief, EDP-001–EDP-012 and TPL-01–TPL-40 were supplied in chat. The three referenced Word documents are not present. Remaining formal requirements and original P0–P5 criteria must be ingested verbatim when supplied. Expected formal count is 127; received exact formal IDs: 12. Do not fabricate the other 115 or their numbering.
+The original master brief and complete extracted text of all three supplied Word documents are now preserved in the specification baseline on this development branch. The source register contains all 127 exact formal TRD requirements and original roadmap gates. The executable traceability module still covers only EDP-001–EDP-012; integrating the other 115 is implementation work, not a missing-document dependency. The Word formatting is not reproduced by the text extracts.
 
-The team reports a 27-document/79-row inventory, yielding five direct matches, one composite manual and 21 additions, hence 61 distinct identified templates. This report has not been independently mapped here. The 19 proposed candidates must be checked against the missing inventory before claiming 80 distinct templates. NGO SCUML is an alias, not a second publication.
+The saved coordinating-team register maps all 27 supplementary document rows and all 79 regulatory source rows. It identifies five direct matches, one composite manual and 21 additions, hence 61 distinct identified templates. Reconcile the application's 19 proposed additions against that complete mapping before claiming 80 distinct templates. These are inventory mappings, not validated or published content. NGO SCUML is an alias, not a second publication.
 
 ## Executable registers
 

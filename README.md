@@ -7,10 +7,14 @@ Valo is being built for Nigerian SMEs to create business documents and understan
 ## Implemented source in this branch
 
 - Framework-independent editorial eligibility validation with strict schemas, candidate/source/policy/review/test/export bindings and fail-closed holds.
-- Traceability for the 12 exact editorial requirements supplied so far, preserving EDP-001–EDP-012. The expected formal TRD total is 127; the missing 115 are not reconstructed.
+- Executable traceability currently covers the 12 editorial requirements, EDP-001–EDP-012. The complete supplied TRD with all 127 exact requirements is now available in this branch's specification and register baseline; integrating the other 115 into executable tracking remains required.
 - Metadata for the original 40-template baseline and 19 provisional additional candidates. All templates are held; zero published templates.
 - Requirements, content, conflict and platform-source research registers.
 - Executable foundation unit tests and a machine-readable readiness report.
+
+## Complete specification baseline
+
+The master execution prompt, TRD v1.1, Roadmap v1.1 and Essential Business Documents extracts are preserved in [the specification baseline](docs/specification/). The [registers](docs/registers/) contain all 127 exact requirements, the 40 baseline templates, all 27 supplementary mappings and all 79 regulatory source rows. These files were brought from the original specification review branch without reconstructing missing requirements or changing application behavior. Content remains held and implementation status remains unverified. The missing-source-documents blocker is resolved at repository level; the Replit workspace and executable registers still need to consume this baseline.
 
 ## Not yet implemented or proven
 

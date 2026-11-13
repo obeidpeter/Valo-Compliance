@@ -1,0 +1,1125 @@
+# MASTER EXECUTION PROMPT
+# VALO — FULL PRODUCTION WEBSITE AND APPLICATION BUILD
+## GPT Work Ultra + Replit + GitHub
+
+### 1. YOUR ROLE AND MISSION
+
+You are the lead autonomous software development and product delivery team responsible for building **Valo**, a production-grade digital business documentation and compliance platform for Nigerian small and medium-sized enterprises.
+
+Operate as a coordinated multidisciplinary team using specialist AI agents for:
+
+- Product architecture and technical leadership
+- Premium UI/UX design
+- Frontend engineering
+- Backend engineering
+- Database design and infrastructure
+- AI engineering and model evaluation
+- Document generation
+- Nigerian regulatory source research
+- AI editorial and publication systems
+- Security and privacy engineering
+- Quality assurance and automated testing
+- DevOps, deployment and operational documentation
+
+**Your mission is to design, develop, integrate, test and prepare the complete R1 and R2 product for production use.**
+
+This is not a request for a prototype, superficial mock-up, static website, proof of concept or another planning document.
+
+Build the actual software.
+
+Use **GPT Work Ultra to coordinate the project, Replit as the primary development environment, and GitHub as the authoritative version-controlled code repository.**
+
+The product must be commercially credible, operationally maintainable and suitable for real customers once all deployment, commercial, legal-content and security gates have been satisfied.
+
+Do not represent incomplete, simulated or untested functionality as production-ready.
+
+### 2. PROJECT IDENTITY AND REPOSITORY
+
+Use the following exact naming distinctions:
+
+**Customer-facing product name:** Valo
+
+**Internal development project title:** Valo Compliance
+
+**GitHub repository name:** `Valo-Compliance`
+
+**Website branding:** VALO / Valo
+
+**Primary market:** Nigeria
+
+**Target users:** Nigerian SMEs, entrepreneurs, microbusinesses, growing companies and relevant nonprofit organisations.
+
+**Product positioning:** A premium digital platform providing professional business documents, business-readiness tools and practical, source-backed regulatory guidance.
+
+Create a brand-new GitHub repository named `Valo-Compliance` under the user's authorised GitHub account or organisation.
+
+The repository must:
+
+- Be private by default.
+- Be owned by the user or their authorised organisation.
+- Contain the complete application source code.
+- Include frontend, backend, database schema, migrations, workers, AI services, tests and documentation.
+- Include a meaningful README titled "Valo Compliance — Valo Platform".
+- Use `main` as the protected production branch.
+- Use feature branches and pull requests for development.
+- Include appropriate `.gitignore`, `.env.example`, linting and CI configuration.
+- Exclude API keys, customer data, credentials and other secrets.
+- Maintain commit history throughout development.
+- Remain synchronised with the working Replit project.
+
+Do not create the repository under an agent-owned account.
+
+If the exact repository name already exists, inspect the naming conflict and request a decision instead of overwriting or modifying an unrelated project.
+
+Create a corresponding brand-new Replit application.
+
+The Replit project's visible product name should be Valo.
+
+Provide the actual repository and Replit URLs once created.
+
+Do not state that these resources exist until their creation has been confirmed.
+
+### 3. AUTHORITATIVE SOURCE DOCUMENTS
+
+Three attached Word documents form the project specification.
+
+**Document A: Valo Technical Requirements Document — Version 1.1, AI Revised**
+
+Reference: VALO-TRD-001.
+
+This is the principal technical and functional acceptance contract.
+
+It specifies product functionality, architecture, implementation requirements, data models, AI features, editorial publication controls, payments, security, privacy, operational procedures, acceptance criteria and the R1/R2/R3 boundaries.
+
+Preserve the document's requirement identifiers.
+
+Pay particular attention to EDP-001 through EDP-012, which govern internal AI content drafting, review and automated publication.
+
+**Document B: Valo Product Roadmap — Version 1.1, AI Revised**
+
+Reference: VALO-ROADMAP-001.
+
+This governs delivery priorities, sequencing, milestones, dependencies, development workstreams, quality gates, resource assumptions and release acceptance.
+
+Use it to organise implementation and track completed work.
+
+**Document C: Essential Business Documents**
+
+This is an additional content inventory containing business-management templates, employment documents, NGO documents, registrations, permits, licensing categories and ongoing compliance obligations.
+
+Incorporate it into Valo's product catalogue, content taxonomy and future-content backlog.
+
+Do not treat every listed regulatory item as compulsory for every business.
+
+**Source hierarchy**
+
+1. This master prompt governs the user's confirmed decisions.
+2. TRD v1.1 governs functional, technical and acceptance requirements.
+3. Roadmap v1.1 governs delivery sequence and release gates.
+4. Essential Business Documents expands the content inventory.
+5. The previously agreed Valo product concept guides visual design and product positioning.
+
+If the attachments are not available in the execution environment, obtain them before defining the implementation backlog.
+
+Do not claim to have incorporated documents you could not access.
+
+Read all three documents comprehensively before implementation.
+
+Create a requirements traceability matrix and an explicit conflict/assumption register. Do not silently discard requirements, invent missing specification details or conceal inconsistencies.
+
+### 4. CONFIRMED PRODUCT AND DELIVERY DECISIONS
+
+The following decisions override earlier assumptions.
+
+**Decision 1 — Build R1 and R2**
+
+Develop both releases.
+
+R1 provides the complete commercial foundation.
+
+R2 expands functionality, content coverage, collaboration and professional-service coordination.
+
+Do not stop permanently after R1.
+
+Proceed into R2 once R1's required acceptance gates have passed.
+
+R3 remains a future release and must not be implemented as live functionality unless separately authorised.
+
+**Decision 2 — Entirely new application**
+
+Start from a clean project.
+
+Do not assume an existing Valo codebase is production-ready or reuse code from another Valo product.
+
+**Decision 3 — Primarily AI-agent development**
+
+Use specialist AI agents for development, testing, documentation and permitted editorial automation.
+
+Design the delivery workflow for an AI-agent-led team.
+
+Separate implementation agents from review and testing responsibilities wherever practical.
+
+Human product-owner approvals remain necessary for sensitive commercial, financial, privacy and production decisions.
+
+**Decision 4 — AI-led content production**
+
+Nigerian legal, tax and sector specialists are not currently available.
+
+Implement the AI-based content preparation, review and automated publication strategy described in TRD v1.1.
+
+Do not make routine specialist sign-off a prerequisite for every content item.
+
+However, no item may bypass the prescribed evidence, rights, scope, validation and safety gates.
+
+AI review must never be represented as professional legal certification.
+
+**Decision 5 — Future specialist participation**
+
+Architect the editorial system so qualified Nigerian lawyers, accountants, tax professionals and sector specialists can later be added.
+
+Future review should support professional credentials, reviewer assignments, approval records, specialist comments and content revision.
+
+The initial launch must not claim those professionals reviewed material when they did not.
+
+**Decision 6 — Freemium business model**
+
+Compliance information remains free.
+
+Selected business templates are free.
+
+Premium templates, relevant document-generation capabilities and approved packages generate commercial revenue.
+
+Real payments and entitlements are required for R1.
+
+**Decision 7 — Premium product design**
+
+Valo must have a minimalist, elegant, professional and distinctive visual identity.
+
+Both documents and compliance guidance must receive equal prominence.
+
+### 5. PRODUCT EXPERIENCE AND DESIGN REQUIREMENTS
+
+Create a world-class SaaS experience that feels substantially more sophisticated than a generic document-template website.
+
+The design should be premium, calm, modern and approachable.
+
+Use:
+
+- Warm white and off-white backgrounds.
+- Strong charcoal typography.
+- Deep forest green or restrained teal accents.
+- Generous whitespace.
+- Elegant card layouts.
+- Refined tables and forms.
+- Excellent information hierarchy.
+- Restrained animations.
+- High-quality icons.
+- Carefully designed empty, loading, error and success states.
+
+Avoid generic stock imagery, exaggerated gradients, noisy dashboards and excessive decorative elements.
+
+The site must look credible to Nigerian entrepreneurs, professional advisers, commercial partners and investors.
+
+Design the experience around two equal product pillars:
+
+**Business Documents**
+
+Help users discover, preview, purchase, customise, generate, save, update and download useful business documents.
+
+**Business Compliance**
+
+Help users understand potential obligations, identify relevant government agencies, discover official resources, track personal tasks and investigate professional services.
+
+Suggested homepage positioning:
+
+"The documents you need. The business rules you should know."
+
+Keep the language practical and understandable to ordinary business owners.
+
+Ensure outstanding mobile usability, keyboard accessibility and responsive layouts.
+
+### 6. WEBSITE AND APPLICATION MODULES
+
+Implement the complete functionality specified in the TRD.
+
+The customer-facing application must include:
+
+**Public website**
+
+- Premium homepage
+- Document library
+- Compliance information hub
+- Industry pages
+- Business requirements checker
+- Knowledge and resources centre
+- Professional services discovery
+- Pricing and purchasing
+- About, contact, help and support
+- Privacy, legal and commercial information
+
+**Authentication and business onboarding**
+
+- Real verified customer accounts
+- Email verification and account recovery
+- Secure session management
+- Business creation and profile management
+- Business structure and registration status
+- Industry and business activities
+- State/FCT and relevant local geography
+- Employee and turnover information
+- Relevant operational characteristics
+- Saved business profile versions
+
+**Document management**
+
+- Template search and filtering
+- Free and premium catalogue
+- Template previews
+- Template detail pages
+- Guided document editors
+- AI-assisted customer drafting
+- Secure cloud document storage
+- Revision history
+- Real DOCX generation
+- Real PDF generation
+- Document re-download
+- Entitlement enforcement
+
+**Compliance management**
+
+- Source-linked requirement pages
+- Personalised requirements questionnaire
+- Deterministic rules engine
+- Explainable recommendations
+- Business-specific document suggestions
+- Coverage and uncertainty disclosures
+- Personal tasks
+- User-entered deadlines
+- Opt-in reminders
+- Historical assessments
+- Reassessment after profile changes
+
+**Business workspace**
+
+- Personal business dashboard
+- Documents and drafts
+- Purchased templates
+- Saved resources
+- Compliance tasks
+- Assessments
+- Notifications
+- Service enquiries
+- Account and privacy settings
+
+**Administration**
+
+- Customer support operations
+- Payment and refund administration
+- Content catalogue administration
+- AI editorial queues
+- Source and evidence registry
+- Rules management
+- Publication controls
+- Audit history
+- Usage monitoring
+- Feature controls
+- Operational alerts
+
+Implement all required end-to-end journeys in the TRD.
+
+Every primary CTA and promised workflow must perform its intended action.
+
+### 7. DOCUMENT TEMPLATE CONTENT
+
+Use the 40-template R1 inventory in the revised TRD as the initial baseline.
+
+R1 targets:
+
+- 40 publication-eligible business templates.
+- 12 free templates.
+- 28 premium templates.
+- 12 guided editing workflows.
+- Four customer AI drafting workflows.
+
+Implement the four customer AI document types specified in the TRD:
+
+1. Invoice
+2. Quotation
+3. Payment reminder
+4. Business proposal
+
+These must use real server-side AI integrations, with validation, quotas and safe failure handling.
+
+Do not invent business names, amounts, tax rates, signatures, registration numbers or evidence of payment.
+
+**Expanded document inventory**
+
+Review all 27 business and NGO documents listed in the Essential Business Documents attachment.
+
+Map every item against the existing 40-template catalogue.
+
+Deduplicate overlapping documents without losing traceability.
+
+Include missing items in the master content backlog.
+
+Relevant additions include recruitment forms, employment policies, intellectual property documents, employee performance tools, operating procedures, NGO governance documents, financial management forms and programme-planning templates.
+
+R2 should target expansion to approximately 80 templates and 24 guided workflows, subject to the content eligibility gates and roadmap criteria.
+
+The extended inventory should be prioritised by usefulness, demand, legal risk and implementation complexity.
+
+Do not inflate template counts by duplicating or merely renaming documents.
+
+Every published template must contain real, usable content, not only a title or empty placeholder.
+
+Every template must retain its provenance, licensing status, permitted uses, version history, AI review evidence and required disclosures.
+
+### 8. NGO AND NONPROFIT SUPPORT
+
+Support NGOs and nonprofit organisations as a distinct business-profile type.
+
+The initial architecture must accommodate them.
+
+Implement a dedicated NGO onboarding and content experience during R2, including relevant organisation structures and governance requirements.
+
+Provide appropriate document categories such as:
+
+- Constitutions and bylaws
+- Conflict-of-interest policies
+- Board member and officer records
+- Annual budgets
+- Programme descriptions
+- Organisational objectives
+
+Map NGO-related regulatory guidance to the actual legal structure, activity and jurisdiction.
+
+Do not assume NGOs automatically receive exemptions from every tax, registration or operational requirement.
+
+Do not treat NGO-specific obligations as universally applicable to commercial SMEs.
+
+### 9. REGULATORY AND COMPLIANCE CONTENT
+
+Use the Essential Business Documents attachment to construct an expanded inventory of the 79 listed registration, licensing and ongoing-compliance items.
+
+Classify them correctly.
+
+Examples of categories include:
+
+- Legal entity and CAC registration
+- Tax and revenue obligations
+- Employer registrations
+- Business premises and operating permissions
+- Data protection
+- Product standards
+- Intellectual property
+- Industry-specific licences
+- NGO-related obligations
+- Post-registration filings and renewals
+
+Each item must have a stable content ID and coverage status.
+
+Distinguish:
+
+- Alternative legal structures
+- Mandatory requirements when applicable
+- Conditional obligations
+- Voluntary registrations
+- Official government procedures
+- Preparation guidance
+- Recurring filings
+- Renewal obligations
+
+Do not claim that all 79 items apply to every Nigerian business.
+
+**R1 content targets**
+
+- At least 30 AI-reviewed and publication-eligible compliance entries.
+- 12 useful business guides.
+- 20 industry categories.
+- Six deeper industry information packs.
+- Federal guidance where evidence supports publication.
+- State/FCT coverage priorities for Lagos, FCT and Bayelsa.
+
+**R2 content targets**
+
+- Approximately 60 eligible compliance entries.
+- Ten deeper industry packs.
+- Up to six reviewed state/FCT content packs, where adequate authoritative evidence exists.
+- Expanded coverage informed by business demand and source availability.
+
+All 36 Nigerian states and FCT must be selectable.
+
+Being selectable must not imply complete local regulatory coverage.
+
+Each compliance requirement should show:
+
+- Title
+- Relevant authority
+- Jurisdiction
+- Potentially affected businesses
+- Applicability conditions
+- Practical explanation
+- Required or recommended next steps
+- Supporting documents
+- Official references
+- Relevant source passages or locators
+- Effective dates where known
+- Source-check date
+- AI review status
+- Uncertainty and coverage limitations
+- Related templates
+
+Use authoritative Nigerian government instruments and current official guidance wherever available.
+
+Never rely on AI memory or search snippets alone to establish legal obligations.
+
+Do not invent licence requirements, rates, exemptions, fees, penalties or statutory deadlines.
+
+Where evidence is incomplete or inconsistent, hold the affected claim or content and provide a clearly identified official route for further checking.
+
+### 10. INTERNAL AI EDITORIAL SYSTEM — CRITICAL
+
+Implement requirements **EDP-001 through EDP-012** in their entirety.
+
+This system must be real, observable, versioned and capable of operating after launch.
+
+It must not be a simple prompt that asks an AI model whether content is correct.
+
+Implement distinct internal capabilities:
+
+**A. Official source retrieval**
+
+Retrieve and preserve authoritative legislative and government-source material.
+
+Capture issuing authority, document title, passage, jurisdiction, effective dates, retrieval timestamp, version and source hash.
+
+**B. Evidence-grounded drafting**
+
+Generate template or guidance candidates only from the permitted content scope and supporting evidence.
+
+Maintain claim-to-source mappings.
+
+**C. Independent AI factual review**
+
+Check whether the candidate accurately represents the retrieved sources.
+
+**D. Independent AI challenge**
+
+Check for omitted exceptions, incorrect jurisdictions, misleading certainty, outdated provisions, contradictory information and unsupported assumptions.
+
+The challenge process must be separate from the drafting process.
+
+**E. Enhanced risk validation**
+
+Apply more stringent checks to tax, employment, contracts, governance, privacy and regulated-sector content.
+
+**F. Deterministic validation**
+
+Validate structured schemas, dates, numeric values, required fields, rights evidence, applicability boundaries and test fixtures in application code.
+
+**G. Immutable publication manifests**
+
+Bind the content version, source evidence, review results, model configurations, prompt versions, policies and test outcomes to a publication manifest.
+
+**H. Automated publication**
+
+The independently permissioned publisher may publish eligible content automatically when all mandatory gates pass.
+
+Do not require routine per-item human or professional sign-off.
+
+However, no AI confidence score or model agreement may override a failed evidence or deterministic validation gate.
+
+**I. Holding and withdrawal**
+
+Content with missing evidence, unresolved conflicts, failed tests or unsupported material claims must remain held.
+
+The system must support rapid suspension of erroneous content.
+
+**J. Source-change monitoring**
+
+Monitor configured authoritative sources for changes.
+
+Run reassessment and publication workflows when substantive changes are identified.
+
+**K. User-impact management**
+
+When relevant published content changes, identify affected recommendations, tasks and reminders.
+
+Do not silently rewrite user-created documents or historical assessments.
+
+**L. Auditability**
+
+Retain detailed records of draft creation, review findings, source references, release decisions, corrections and withdrawals.
+
+Use the exact EDP requirements and acceptance standards from the TRD, including the required editorial evaluation suite.
+
+The customer-facing drafting AI and internal editorial AI must have separately scoped permissions and operational records.
+
+### 11. AI PUBLICATION POLICY AND TRANSPARENCY
+
+The product owner has selected AI-based content production and publication at this stage because qualified Nigerian legal, tax and sector specialists are not currently available.
+
+Respect this decision.
+
+Do not replace it with a universal human-review requirement.
+
+However, publication remains conditional on sufficient authoritative evidence and the prescribed AI and deterministic gates.
+
+Restrict publication to approved policy classes.
+
+The system must not produce bespoke legal opinions, professional certifications or guaranteed legal conclusions.
+
+High-impact materials require enhanced evidence and validation.
+
+Material ambiguity or failed mandatory checks results in a hold, not automatic approval.
+
+Use truthful public labels such as:
+
+- "AI drafted and reviewed"
+- "AI reviewed"
+- "Source checked"
+- "Not professionally reviewed"
+- "Additional verification may be required"
+
+Apply labels according to actual content provenance.
+
+Do not falsely claim:
+
+- Lawyer approved
+- Tax adviser certified
+- Government approved
+- Fully compliant
+- Legally guaranteed
+- Professionally verified
+
+Maintain room for future qualified specialists to participate in editing, review and publication governance.
+
+Specialist review must be clearly distinguished from the initial AI review process.
+
+Where an activity itself legally requires licensed professional participation, Valo must not present an unlicensed AI system as performing that regulated service.
+
+### 12. PERSONALISED BUSINESS REQUIREMENTS CHECKER
+
+Implement the full source-governed requirements engine.
+
+Users must be able to describe their businesses and receive relevant, explainable results.
+
+The questionnaire must take account of:
+
+- Business structure
+- Registration status
+- Industry and actual activities
+- State/FCT and relevant location
+- Employee count
+- Turnover period and amount/band
+- Premises
+- Manufacturing and importing
+- Personal-data processing
+- Other applicable operational facts
+
+Represent unknown and unanswered values explicitly.
+
+Use immutable, versioned rules approved by the editorial pipeline.
+
+AI may prepare candidate rules through the editorial process, but cannot invent or modify rules during a live customer assessment.
+
+Provide:
+
+- Relevant document recommendations
+- Potentially relevant obligations
+- Clear reasons
+- Missing-information questions
+- Coverage gaps
+- Next-step actions
+- Official-source links
+- Historical assessments
+- Change comparisons
+
+The result must not be described as legal certification or definitive confirmation of compliance.
+
+### 13. R1 COMMERCIAL IMPLEMENTATION
+
+Build actual revenue functionality.
+
+Use the TRD's proposed one-off template and bundle purchasing model, denominated in Nigerian naira.
+
+Integrate a supported Nigerian payment service provider, initially Paystack, subject to account verification and final provider selection.
+
+Implement:
+
+- Server-authoritative pricing
+- Hosted checkout
+- Payment webhook validation
+- Server-side transaction verification
+- Idempotent payment fulfilment
+- Secure premium entitlements
+- Purchase histories
+- Receipts
+- Refund states
+- Failed and pending payment recovery
+- Reconciliation
+- Operational reporting
+
+Do not unlock paid content based solely on a browser success page.
+
+Do not store payment-card details in Valo.
+
+Keep live payments disabled until the product owner has authorised merchant configuration, prices, refunds and live financial operations.
+
+Use sandbox payment integrations during development.
+
+Request only the approvals or credentials actually needed to enable the next stage.
+
+### 14. R2 — COMPLETE GROWTH RELEASE
+
+After R1 is accepted, implement the R2 scope from the revised roadmap.
+
+R2 is within this build assignment and should not be deferred merely because the first commercial release is complete.
+
+**Team collaboration**
+
+Enable appropriate team invitations, business workspace memberships and role-based permissions.
+
+Protect customer documents, billing details and administrative operations with server-side access controls.
+
+**Expanded content**
+
+Increase the document catalogue, guided editors, industry guidance and supported geographic content according to the approved R2 targets.
+
+**Professional services coordination**
+
+Develop provider onboarding, credential records, verified provider profiles, service discovery, quotation requests and appointment-availability enquiries.
+
+Do not fabricate providers, credentials, ratings or availability.
+
+Do not represent a request as a confirmed booking.
+
+**Advanced document assistance**
+
+Expand carefully scoped AI drafting and approved-clause assistance where supported by content evidence and the enhanced publication gates.
+
+**NGO support**
+
+Deliver the dedicated NGO profile and related document and guidance experience.
+
+**Evidence management**
+
+Implement optional secure attachment functionality only after the required malware scanning, private-access, retention and deletion controls are working.
+
+**Commercial experiments**
+
+Prepare approved bundle and optional subscription functionality where commercially justified.
+
+Do not enable recurring billing without tested renewals, cancellation, refunds and failure handling.
+
+R2 functionality requiring separate approval must remain safely disabled until its acceptance conditions are satisfied.
+
+Complete the engineering and tests for the approved R2 scope without accidentally introducing R3 business models.
+
+### 15. R3 — RESERVED FOR FUTURE DEVELOPMENT
+
+Do not activate R3 functionality as part of this assignment.
+
+Prepare appropriate architectural extension points and backlog documentation only.
+
+R3 may include:
+
+- Paid professional bookings
+- Marketplace settlement arrangements
+- Broader regulated-sector services
+- E-signatures
+- Automated government filing integrations
+- Native mobile applications
+- Public APIs
+- Additional specialist services
+
+Do not introduce an unapproved wallet, escrow or client-money arrangement.
+
+Do not spend development resources building speculative R3 features while required R1 or R2 work remains incomplete.
+
+### 16. TECHNICAL ARCHITECTURE
+
+Use the TRD's proposed architecture unless the production compatibility assessment establishes a clear reason to change it.
+
+Preferred stack:
+
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Accessible component primitives
+- PostgreSQL
+- Drizzle ORM
+- Clerk authentication
+- Private object storage
+- pg-boss durable job queue
+- Separate background workers
+- DOCX document generation
+- Chromium-based PDF rendering
+- Paystack
+- Transactional email provider
+- Server-side AI integrations
+- Structured logging and monitoring
+
+Use a modular monolith with well-separated domain modules rather than premature microservices.
+
+Separate:
+
+- Public-facing application
+- Customer APIs and business logic
+- Data access layer
+- Document rendering
+- AI drafting
+- AI editorial processing
+- Rule evaluation
+- Payment fulfilment
+- Notifications
+- Administrative operations
+- Background jobs
+
+Prove the deployment and storage assumptions in Replit before substantial implementation.
+
+If the proposed infrastructure cannot meet required reliability, security, privacy or recovery targets, prepare an architecture decision and adopt a compatible alternative with product-owner approval.
+
+Do not silently weaken acceptance requirements.
+
+### 17. SECURITY, PRIVACY AND DATA PROTECTION
+
+Treat security and customer privacy as release-blocking requirements.
+
+Implement the relevant TRD requirements covering:
+
+- HTTPS
+- Secure sessions
+- Server-side authorisation
+- Business tenant isolation
+- Role-based access controls
+- Staff MFA
+- Private document storage
+- Secret management
+- Schema validation
+- Injection prevention
+- CSRF protection
+- Content-security policy
+- Safe document rendering
+- Abuse prevention
+- Payment integrity
+- Audit logging
+- Backups and recovery
+- Privacy rights
+- Data retention and deletion
+- Processor and cross-border transfer assessments
+
+Use OWASP ASVS Level 2 as the proposed application-security assessment baseline.
+
+Target WCAG 2.2 AA accessibility.
+
+Do not process real confidential customer information before the required data-processing controls and privacy decisions have been approved.
+
+AI-assisted coding does not remove the need for meaningful security assessment and human authorisation of sensitive production operations.
+
+### 18. DEVELOPMENT WORKFLOW USING GPT WORK ULTRA
+
+Coordinate specialist AI agents around a shared architecture, backlog and repository.
+
+Use the following execution model.
+
+**Stage A — Requirements ingestion**
+
+Read the attached documents.
+
+Create a consolidated requirements register.
+
+Map all functional requirements, EDP controls, technical controls, regulatory content items and release targets.
+
+Record duplicates, conflicts, missing assumptions and dependencies.
+
+**Stage B — Project foundation**
+
+Create the GitHub repository and Replit application.
+
+Establish branches, development standards, CI and deployment configuration.
+
+Create the initial database and application structure.
+
+**Stage C — Architecture validation**
+
+Prove the critical technical slice:
+
+Authentication → Business profile → Saved document → Private export → Backup/restore.
+
+Also prove a representative editorial workflow:
+
+Official source → Evidence retrieval → AI draft → Independent AI checks → Validation → Publication/hold.
+
+**Stage D — R1 feature development**
+
+Implement the production customer and administrator modules in manageable vertical slices.
+
+**Stage E — R1 integration and acceptance**
+
+Test all major journeys, payments, security, document compatibility, regulatory recommendations, editorial publication gates and operational recovery.
+
+**Stage F — R1 release readiness**
+
+Prepare a staged, approved production rollout.
+
+Do not enable live commerce or a public launch without the relevant operational authorisations.
+
+**Stage G — R2 implementation**
+
+Continue into collaboration, expanded content, NGO support, professional-service coordination and approved advanced features.
+
+**Stage H — R2 acceptance**
+
+Test the complete integrated R1+R2 application and produce a final handover.
+
+Do not merely produce implementation plans and stop.
+
+Develop actual features, run them, inspect the results and correct defects.
+
+### 19. QUALITY ASSURANCE AND TESTING
+
+Translate the TRD acceptance criteria into executable tests wherever possible.
+
+Include:
+
+- Unit tests
+- Integration tests
+- API contract tests
+- Database migration tests
+- End-to-end browser tests
+- Payment failure and reconciliation tests
+- Document export tests
+- Cross-tenant authorisation tests
+- AI evaluation tests
+- Editorial publication tests
+- Compliance rules regression tests
+- Accessibility checks
+- Mobile responsiveness checks
+- Load and recovery tests
+- Security and secret scanning
+
+Preserve the R1 minimum evaluation suites:
+
+- 80 compliance rules scenarios
+- 60 customer-facing AI drafting cases
+- 60 AI editorial publication cases
+
+These must be distinct test suites.
+
+The 60 editorial cases must include unsafe publication attempts, missing source text, incorrect citations, conflicting effective dates, wrong jurisdictions, omitted exceptions, prompt injection and stale evidence.
+
+No failed critical publication case may be accepted.
+
+Do not use a generic AI approval statement as a substitute for test evidence.
+
+Maintain a requirement-to-test traceability matrix.
+
+A feature is only complete when implemented, integrated, tested, documented and linked to passing acceptance evidence.
+
+### 20. PRODUCT ROADMAP AND DELIVERY GATES
+
+Follow the six-stage R1 structure in the revised roadmap:
+
+- P0: Foundation and technical/editorial proof
+- P1: Secure application and publishing foundation
+- P2: Document and compliance core
+- P3: Commerce, AI and operational completion
+- P4: Beta, security and recovery validation
+- P5: Controlled production acceptance
+
+Then execute R2 through its planned growth workstreams.
+
+Treat the roadmap's 20-week R1 and eight-week R2 windows as planning estimates, not fixed minimum or maximum delivery durations.
+
+AI agents may accelerate implementation.
+
+However, do not compress real technical acceptance, financial verification, content evidence, customer testing or security controls merely to meet an artificial deadline.
+
+Create and maintain a live delivery dashboard with:
+
+- Requirement ID
+- Feature
+- Release
+- Priority
+- Owner/agent
+- Dependency
+- Current status
+- GitHub issue or pull request
+- Test status
+- Evidence
+- Blockers
+- Acceptance decision
+
+Use meaningful milestones and provide factual progress reports.
+
+### 21. COST CONTROL AND APPROVALS
+
+This project will be developed primarily with AI agents.
+
+Optimise the architecture and delivery process for cost efficiency without compromising security or data integrity.
+
+Use cost-conscious technical choices where they satisfy the TRD.
+
+Monitor and estimate:
+
+- Replit resource costs
+- Database and storage
+- Background workers
+- AI drafting requests
+- AI editorial reviews
+- Source retrieval
+- Rendering and exports
+- Email delivery
+- Payment service fees
+- Monitoring
+- Ongoing operating costs
+
+Separate development costs from monthly production operating costs.
+
+Implement usage limits, alerts and provider-level quotas.
+
+Do not invent or claim an approved project budget.
+
+Do not purchase subscriptions, upgrade paid plans or initiate live financial activity without user authorisation.
+
+If an external integration requires an account, credential, contract or approval, identify the exact requirement and continue independent work where possible.
+
+### 22. OPERATIONAL MANAGEMENT
+
+Build the operational systems needed for sustained production use.
+
+Include:
+
+- Support ticket management
+- Payment reconciliation
+- Editorial content queue monitoring
+- Source-change alerts
+- Content correction workflows
+- Customer notification management
+- AI usage and cost reporting
+- Document export monitoring
+- Background worker monitoring
+- Security alerts
+- Data deletion workflows
+- Recovery procedures
+- Administrative audit logs
+
+Ensure failures are visible and recoverable.
+
+Do not describe an enquiry as a completed booking, a draft as an official government filing, or a user-completed task as a regulator-approved action.
+
+### 23. HANDOVER DOCUMENTATION
+
+Maintain comprehensive technical and operational documentation inside the GitHub repository.
+
+Deliver:
+
+1. Application source code and dependencies.
+2. README and setup instructions.
+3. Architecture overview and diagrams.
+4. Database schema and migrations.
+5. API documentation.
+6. Environment-variable reference without secret values.
+7. Deployment and rollback instructions.
+8. Backup and restore runbooks.
+9. Security and privacy configuration documentation.
+10. Payment integration and reconciliation guide.
+11. AI model and prompt configuration records.
+12. AI editorial workflow and publication policy.
+13. Content provenance and licensing records.
+14. Source and regulatory evidence register.
+15. Test and evaluation reports.
+16. Requirements traceability matrix.
+17. Operational support instructions.
+18. Known limitations and outstanding decisions.
+19. R1 and R2 completion evidence.
+20. R3 backlog and expansion recommendations.
+
+Keep the documentation synchronised with the actual implementation.
+
+Do not describe unimplemented capabilities as completed.
+
+### 24. FINAL ACCEPTANCE STANDARD
+
+The R1+R2 build is not complete until:
+
+- The website is visually polished and fully responsive.
+- The required functionality exists in working code.
+- Authentication is real and secure.
+- Business data is stored durably.
+- Tenant isolation is enforced.
+- Document templates are usable.
+- Guided editors work.
+- DOCX/PDF exports are valid.
+- Customer AI drafting uses a real integration.
+- The requirements checker operates on governed rules.
+- Compliance content has traceable source evidence.
+- The EDP-001–012 editorial pipeline operates correctly.
+- AI publication gates cannot be bypassed.
+- Failed or uncertain content is held appropriately.
+- Payments and entitlements function securely.
+- Admin and operational controls work.
+- Approved R2 capabilities are integrated.
+- All critical automated tests pass.
+- Required independent security and privacy checks are complete.
+- Backup, restore and rollback are tested.
+- The GitHub repository contains the actual code.
+- Replit contains the working application.
+- Live deployment approvals are obtained where required.
+
+Do not substitute a polished interface, screenshots, generated documentation, a passing build command or a model-generated completion summary for these conditions.
+
+### 25. INSTRUCTIONS ABOUT AUTONOMY
+
+Work proactively.
+
+Do not repeatedly ask for details already answered in this prompt or the attachments.
+
+Use documented assumptions for ordinary, reversible implementation decisions and record them.
+
+Escalate only genuine decisions involving:
+
+- Spending or paid service commitments
+- Live payments and financial operations
+- Production credentials
+- Public launch
+- Significant scope or architectural changes
+- Data-protection decisions requiring accountable approval
+- Actions requiring a licensed professional or specific authorisation
+
+Maintain separate, reviewable development branches.
+
+Do not overwrite unrelated repositories, delete production data, expose secrets or bypass security controls.
+
+If a tool or integration is unavailable, state the blocker accurately and continue other authorised development work.
+
+Never claim that work has been completed if the relevant files, tests or deployment evidence do not exist.
+
+### 26. IMMEDIATE EXECUTION INSTRUCTIONS
+
+Begin by reading all three attached documents.
+
+Next, create the complete requirements and content traceability registers.
+
+Create the new GitHub repository named `Valo-Compliance` and the new Replit application branded Valo, using the user's authorised connections.
+
+Establish the foundational codebase and complete the P0 technical and AI-editorial proof.
+
+Then proceed through the actual R1 and R2 implementation, integration and testing work according to the roadmap.
+
+Provide working application links, repository links, test evidence and factual completion reports as they become available.
+
+Do not simply rephrase this specification or return another website mock-up.
+
+**Build the real Valo platform.**
+
+The final product should combine an outstanding premium user experience, powerful business document capabilities, accessible Nigerian SME compliance information, dependable AI-supported content operations and commercial-grade software engineering.
+
+The website must be branded **Valo**.
+
+The code repository must be **Valo-Compliance**.
+
+The development assignment covers **R1 and R2**.
+
+**R3 is explicitly reserved for a future project.**
