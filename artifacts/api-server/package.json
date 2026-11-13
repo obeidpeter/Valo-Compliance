@@ -19,18 +19,19 @@
     "editorial:proof-development": "tsx src/scripts/editorial-proof.ts",
     "test:valo-editorial": "tsx --test src/editorial/pipeline-contract.test.ts",
     "test:valo-editorial-proof": "tsx --test src/editorial/pipeline-proof.integration.test.ts",
+    "test:valo-customer-journey": "tsx src/scripts/p0-customer-journey.ts",
     "test:valo-sources": "tsx --test src/editorial/source-controls.test.ts",
     "test:valo-source-db": "tsx --test src/editorial/source-store.integration.test.ts",
     "queue:apply-development": "tsx src/scripts/queue-migration.ts apply-development"
   },
   "dependencies": {
-    "@workspace/integrations-openai-ai-server": "workspace:*",
     "@clerk/express": "^2.1.88",
     "@clerk/shared": "^4.44.1",
     "@opentelemetry/api": "1.10.0",
     "@replit/object-storage": "1.0.0",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
+    "@workspace/integrations-openai-ai-server": "workspace:*",
     "@workspace/valo-core": "workspace:*",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -45,6 +46,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@clerk/testing": "^2.2.55",
+    "@playwright/test": "1.65.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

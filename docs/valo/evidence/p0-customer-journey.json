@@ -1,0 +1,116 @@
+{
+  "startedAt": "2026-11-13T20:53:34.748Z",
+  "syntheticOnly": true,
+  "managedProviderTestMode": true,
+  "actualEmailDeliveryTested": false,
+  "checks": [
+    {
+      "name": "signup_and_unverified_workspace_denial",
+      "status": "passed",
+      "durationMs": 5146
+    },
+    {
+      "name": "managed_email_test_verification_and_workspace",
+      "status": "passed",
+      "durationMs": 4726
+    },
+    {
+      "name": "profile_all_states_unknowns_and_marketing_decline",
+      "status": "passed",
+      "durationMs": 7249
+    },
+    {
+      "name": "saved_document_autosave_reload_and_preview",
+      "status": "passed",
+      "durationMs": 9029
+    },
+    {
+      "name": "real_private_DOCX_PDF_same_revision_and_anonymous_denial",
+      "status": "passed",
+      "durationMs": 7452
+    },
+    {
+      "name": "new_browser_session_sees_saved_profile_and_document",
+      "status": "passed",
+      "durationMs": 12790
+    },
+    {
+      "name": "two_tabs_conflict_preserves_unsaved_text_then_explicit_save",
+      "status": "passed",
+      "durationMs": 6985
+    },
+    {
+      "name": "revision_restore_appends_and_preserves_previous_history",
+      "status": "passed",
+      "durationMs": 712
+    },
+    {
+      "name": "two_verified_businesses_cannot_substitute_document_or_export_identifiers",
+      "status": "passed",
+      "durationMs": 12328
+    },
+    {
+      "name": "revoked_provider_session_cannot_read_workspace_or_private_files",
+      "status": "passed",
+      "durationMs": 1211
+    },
+    {
+      "name": "logout_removes_private_endpoint_access",
+      "status": "passed",
+      "durationMs": 370
+    }
+  ],
+  "p0Accepted": false,
+  "r1Accepted": false,
+  "r2Unlocked": false,
+  "isolatedDatabaseRestoreTested": false,
+  "unverifiedWorkspaceStatus": 401,
+  "workspaceId": "de93408d-892e-4ee2-a9b4-17522d266dff",
+  "documentId": "fad29c3d-3fcf-4659-87cb-67f727a95aa9",
+  "savedRevision": {
+    "id": "d4b1f63b-2487-4fd0-902d-9a1418cbaa28",
+    "number": 2,
+    "hash": "d581e20a7f2f1024624d0c2e7a47f4e175e0c64d41096bb7954d2a1d28af79ad"
+  },
+  "exports": [
+    {
+      "format": "docx",
+      "jobId": "1ba40b76-61bb-401f-bc72-4ea5d22e90c7",
+      "revisionId": "d4b1f63b-2487-4fd0-902d-9a1418cbaa28",
+      "checksum": "638671115a8207754085352e85722c492531b4de75c016b9a50714a90ebca97c",
+      "bytes": 11680,
+      "anonymousStatus": 401,
+      "privateHeaders": true,
+      "openedAndTextChecked": true
+    },
+    {
+      "format": "pdf",
+      "jobId": "a50c502c-126d-43c5-828a-2fe6130e26a5",
+      "revisionId": "d4b1f63b-2487-4fd0-902d-9a1418cbaa28",
+      "checksum": "ffad8043f17568dcd0e6d20da20c67ea6262823e50fee2609060ae34b8c14a5f",
+      "bytes": 45827,
+      "anonymousStatus": 401,
+      "privateHeaders": true,
+      "openedAndTextChecked": true
+    }
+  ],
+  "mobileViewport": {
+    "width": 360,
+    "height": 800,
+    "noHorizontalOverflow": true
+  },
+  "revisionRestore": {
+    "newRevision": 5,
+    "preservedHash": "d581e20a7f2f1024624d0c2e7a47f4e175e0c64d41096bb7954d2a1d28af79ad",
+    "databaseDisasterRecovery": false
+  },
+  "tenantIsolation": {
+    "verifiedBusinesses": 2,
+    "readSubstitutions": 6,
+    "retrySubstitutions": 2,
+    "spoofedWorkspaceIgnored": true
+  },
+  "execution": "passed",
+  "syntheticIdentityCleanup": "deleted_test_user",
+  "completedAt": "2026-11-13T20:54:48.016Z"
+}

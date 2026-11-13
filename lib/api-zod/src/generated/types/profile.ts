@@ -8,6 +8,7 @@
 import type { Answer } from './answer';
 import type { ProfileLegalForm } from './profileLegalForm';
 import type { ProfileRegistrationStatus } from './profileRegistrationStatus';
+import type { ProfileState } from './profileState';
 import type { ProfileTurnoverBand } from './profileTurnoverBand';
 import type { ProfileTurnoverCurrency } from './profileTurnoverCurrency';
 import type { ProfileTurnoverMetric } from './profileTurnoverMetric';
@@ -27,8 +28,7 @@ export interface Profile {
      * @items.maxLength 120
      */
   activities: string[];
-  /** @maxLength 60 */
-  state: string;
+  state: ProfileState;
   /** @maxLength 100 */
   lga: string;
   /** @pattern ^(unknown|unanswered|not_applicable|[0-9]{1,7})$ */

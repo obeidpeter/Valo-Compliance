@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Loader2, Plus, X } from 'lucide-react';
 import {
   useGetWorkspace, useSaveBusinessProfile, getGetWorkspaceQueryKey,
-  Answer, ProfileLegalForm, ProfileRegistrationStatus, ProfileTurnoverBand, ProfileTurnoverCurrency, ProfileTurnoverMetric,
+  Answer, ProfileLegalForm, ProfileRegistrationStatus, ProfileTurnoverBand, ProfileTurnoverCurrency, ProfileTurnoverMetric, ProfileState,
   type Profile,
 } from '@workspace/api-client-react';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +12,7 @@ import { ErrorState, Notice, Skel } from '@/components/states';
 import { describeError } from '@/lib/api';
 
 const EMPTY: Profile = {
-  businessName: '', legalForm: 'unknown', registrationStatus: 'unknown', activities: [''], state: '', lga: '',
+  businessName: '', legalForm: 'unknown', registrationStatus: 'unknown', activities: [''], state: 'unanswered', lga: '',
   employees: 'unanswered', turnoverBand: 'unanswered', turnoverYear: 'unknown', turnoverMetric: 'unknown', turnoverCurrency: 'unknown',
   premises: 'unanswered', manufacturing: 'unanswered', importing: 'unanswered', personalData: 'unanswered', marketingConsent: false,
 };
@@ -50,7 +50,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setTouched(true);
     if (Object.keys(errors).length || !ws.data) return;
-    save.mutate({ data: { expectedRevision: ws.data.profileRevision, profile: { ...p, businessName: p.businessName.trim(), activities: acts, state: p.state.trim(), lga: p.lga.trim() } } }, {
+    save.mutate({ data: { expectedRevision: ws.data.profileRevision, profile: { ...p, businessName: p.businessName.trim(), activities: acts, state: p.state, lga: p.lga.trim() } } }, {
       onSuccess: (next) => {
         setConflict(false);
         qc.setQueryData(getGetWorkspaceQueryKey(), next);
@@ -112,7 +112,9 @@ export default function ProfilePage() {
             </div>
           </Field>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="State" id="state"><input id="state" className="field" maxLength={60} value={p.state} placeholder="e.g. Lagos" onChange={(e) => set('state', e.target.value)} data-testid="input-state" /></Field>
+            <Field label="State or FCT" id="state"><select id="state" className="field" value={p.state} onChange={(e) => set('state', e.target.value as ProfileState)} data-testid="input-state">
+              {Object.values(ProfileState).map(state=><option key={state} value={state}>{label(state)}</option>)}
+            </select></Field>
             <Field label="LGA" id="lga"><input id="lga" className="field" maxLength={100} value={p.lga} placeholder="e.g. Ikeja" onChange={(e) => set('lga', e.target.value)} data-testid="input-lga" /></Field>
           </div>
         </Section>

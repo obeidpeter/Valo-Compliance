@@ -90,7 +90,7 @@ export default function WorkspaceHome() {
                 A new draft starts empty. Valo does not insert sample legal or invoice wording, and released templates are not available yet.
               </EmptyState>
             )}
-            <Notice className="mt-4" tone="ink" title="Development workspace">Use synthetic test details only. Exports are unavailable in this build.</Notice>
+            <Notice className="mt-4" tone="ink" title="Development workspace">Use synthetic test details only. Open a saved draft to request private, visibly marked DOCX or PDF exports. Production recovery and release approval remain unproved.</Notice>
           </section>
         </div>
       )}

@@ -364,8 +364,6 @@ export const getWorkspaceResponseProfileOneActivitiesItemMax = 120;
 
 export const getWorkspaceResponseProfileOneActivitiesMax = 10;
 
-export const getWorkspaceResponseProfileOneStateMax = 60;
-
 export const getWorkspaceResponseProfileOneLgaMax = 100;
 
 export const getWorkspaceResponseProfileOneEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
@@ -380,7 +378,7 @@ export const GetWorkspaceResponse = zod.object({
   "legalForm": zod.enum(['unknown', 'sole_proprietor', 'partnership', 'limited_company', 'incorporated_trustees', 'company_limited_by_guarantee']),
   "registrationStatus": zod.enum(['unknown', 'registered', 'unregistered', 'pending']),
   "activities": zod.array(zod.string().min(1).max(getWorkspaceResponseProfileOneActivitiesItemMax)).min(1).max(getWorkspaceResponseProfileOneActivitiesMax),
-  "state": zod.string().max(getWorkspaceResponseProfileOneStateMax),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
   "lga": zod.string().max(getWorkspaceResponseProfileOneLgaMax),
   "employees": zod.string().regex(getWorkspaceResponseProfileOneEmployeesRegExp),
   "turnoverBand": zod.enum(['unknown', 'unanswered', 'not_applicable', 'under_5m', '5m_to_25m', '25m_to_100m', 'over_100m']),
@@ -405,8 +403,6 @@ export const saveBusinessProfileBodyProfileActivitiesItemMax = 120;
 
 export const saveBusinessProfileBodyProfileActivitiesMax = 10;
 
-export const saveBusinessProfileBodyProfileStateMax = 60;
-
 export const saveBusinessProfileBodyProfileLgaMax = 100;
 
 export const saveBusinessProfileBodyProfileEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
@@ -420,7 +416,7 @@ export const SaveBusinessProfileBody = zod.object({
   "legalForm": zod.enum(['unknown', 'sole_proprietor', 'partnership', 'limited_company', 'incorporated_trustees', 'company_limited_by_guarantee']),
   "registrationStatus": zod.enum(['unknown', 'registered', 'unregistered', 'pending']),
   "activities": zod.array(zod.string().min(1).max(saveBusinessProfileBodyProfileActivitiesItemMax)).min(1).max(saveBusinessProfileBodyProfileActivitiesMax),
-  "state": zod.string().max(saveBusinessProfileBodyProfileStateMax),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
   "lga": zod.string().max(saveBusinessProfileBodyProfileLgaMax),
   "employees": zod.string().regex(saveBusinessProfileBodyProfileEmployeesRegExp),
   "turnoverBand": zod.enum(['unknown', 'unanswered', 'not_applicable', 'under_5m', '5m_to_25m', '25m_to_100m', 'over_100m']),
@@ -441,8 +437,6 @@ export const saveBusinessProfileResponseProfileOneActivitiesItemMax = 120;
 
 export const saveBusinessProfileResponseProfileOneActivitiesMax = 10;
 
-export const saveBusinessProfileResponseProfileOneStateMax = 60;
-
 export const saveBusinessProfileResponseProfileOneLgaMax = 100;
 
 export const saveBusinessProfileResponseProfileOneEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
@@ -457,7 +451,7 @@ export const SaveBusinessProfileResponse = zod.object({
   "legalForm": zod.enum(['unknown', 'sole_proprietor', 'partnership', 'limited_company', 'incorporated_trustees', 'company_limited_by_guarantee']),
   "registrationStatus": zod.enum(['unknown', 'registered', 'unregistered', 'pending']),
   "activities": zod.array(zod.string().min(1).max(saveBusinessProfileResponseProfileOneActivitiesItemMax)).min(1).max(saveBusinessProfileResponseProfileOneActivitiesMax),
-  "state": zod.string().max(saveBusinessProfileResponseProfileOneStateMax),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
   "lga": zod.string().max(saveBusinessProfileResponseProfileOneLgaMax),
   "employees": zod.string().regex(saveBusinessProfileResponseProfileOneEmployeesRegExp),
   "turnoverBand": zod.enum(['unknown', 'unanswered', 'not_applicable', 'under_5m', '5m_to_25m', '25m_to_100m', 'over_100m']),

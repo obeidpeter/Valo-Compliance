@@ -34,9 +34,9 @@ Valo is being built for Nigerian SMEs to create business documents and understan
 
 ## Not yet implemented or proven
 
-The initial application is implemented, not a static mockup. Local database tests passed isolation, stale-write/concurrency, version preservation, profile consent and durable ticket checks. Anonymous HTTP tests reject private access and cross-origin mutation. These checks do not prove the managed signed-in browser journey.
+The initial application is implemented, not a static mockup. Local database tests passed isolation, stale-write/concurrency, version preservation, profile consent and durable ticket checks. Eleven actual managed-development browser checks now also pass: signup/test verification, profile persistence, saved drafts, real private DOCX/PDF downloads, two-business isolation, concurrent tabs, revision restore, new-browser sign-in, session revocation and logout. See [customer journey execution](docs/valo/customer-journey-proof.md). Development test codes do not prove real email delivery.
 
-Verified customer sign-in/recovery/expired-link/revoked-session browser tests, staff MFA, production export/worker compatibility, actual server AI/editorial publication, the source-backed checker, sandbox commerce and disaster recovery remain incomplete or unproved. The editor creates **user-authored business drafts**, not released baseline templates. Development exports require deliberate incomplete-draft acknowledgement and show actual queue states. No content is labelled AI-reviewed without real runs.
+Password recovery, expired links, suspended accounts, staff MFA, production identity/export/worker compatibility, eligible editorial publication, the source-backed checker, sandbox commerce and disaster recovery remain incomplete or unproved. Actual server editorial drafting and separate factual/challenge calls ran; deterministic source/locator failures held the candidate. The editor creates **user-authored business drafts**, not released baseline templates. Development exports require deliberate incomplete-draft acknowledgement and show actual queue states. Document revision restoration is not database disaster recovery.
 
 The separate **80-rule**, **60-customer-AI** and **60-editorial** acceptance suites remain unexecuted. Foundation tests do not count toward those suites. No R1 gate is accepted and R2 is locked. R3 is excluded.
 
@@ -80,11 +80,11 @@ The preferred application stack remains Next.js, TypeScript, Tailwind, PostgreSQ
 
 ## Repository safeguards
 
-The intended repository is `obeidpeter/Valo-Compliance` and is required to remain **private**. The current authenticated metadata check returned `private=false`, despite the handover report describing it as private. **Application-source upload remains paused; no visibility change was performed.** The owner confirmed repository identity. Complete current application source and tests remain in Replit.
+The intended repository is `obeidpeter/Valo-Compliance` and is required to remain **private**. Authenticated and unsigned GitHub reads initially confirmed public access. The existing authorized connection corrected this exact repository to private; fresh verification returned `private=true` and unsigned HTTP 404. See [privacy correction evidence](docs/valo/evidence/p0-github-privacy-correction.json). This does not retract earlier public copies. Source-transfer and CI status require their own commit-bound readback, not an inferred success.
 
 The documentation checkpoint is commit `871899483093363ec69d765e2d16fa1d88e0836e` on `docs/specification-baseline`, with open draft PR [#1](https://github.com/obeidpeter/Valo-Compliance/pull/1). These facts were read back through authorised access; main contained only `README.md`. The baseline and application have separate Git roots and are being joined without rewriting either history. The specification/register files match the local copies byte for byte.
 
-**Main-protection enforcement remains unverified/blocked.** The handover reports an unenforced saved policy under the account plan; it is not evidence of protected main. Historical CI records are retained, but they do not prove checks exist or pass on this checkpoint. Current application-source synchronization and remote application CI have not been verified. Do not upgrade, transfer, make public, force-push, delete history or bypass review.
+**Main-protection enforcement remains unverified/blocked.** The handover reports an unenforced saved policy under the account plan; it is not evidence of protected main. Historical CI records do not prove a newer commit passed. Source-transfer and CI claims must identify the actual remote commit and readback; local test success alone is insufficient. Do not upgrade, transfer, make public, force-push, delete history or bypass review.
 
 CI check names must only be added as requirements after actual checks exist. Even then, account-plan restrictions may prevent enforcement. No protection setting or required-check configuration has been changed. Foundation CI is not evidence of P0 acceptance.
 

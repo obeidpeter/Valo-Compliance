@@ -46,6 +46,7 @@ export * from './profile';
 export * from './profileInput';
 export * from './profileLegalForm';
 export * from './profileRegistrationStatus';
+export * from './profileState';
 export * from './profileTurnoverBand';
 export * from './profileTurnoverCurrency';
 export * from './profileTurnoverMetric';

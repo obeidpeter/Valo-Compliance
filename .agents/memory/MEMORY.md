@@ -2,3 +2,4 @@
 - [GitHub write permissions](github-write-permissions.md) — metadata push rights do not prove connector permission to activate workflow files.
 - [Infrastructure proof pitfalls](infrastructure-proof.md) — native storage SDK, consistent ORM peers and actual constraints must be proved, not inferred from setup/exit codes.
 - [Saved document hashes](document-hash-compatibility.md) — JSONB key order differs; preserve historic digests with version-aware reconstruction.
+- [Managed identity browser tests](clerk-browser-testing.md) — match test tooling to the actual FAPI; a bot challenge is not automatically missing identity setup.

@@ -2,6 +2,7 @@ import { coordinatingRefinement } from "./coordinating.generated";
 import { r1Transfer } from "./requirements-r1";
 import { sourceRequirements, sourceGates, sourceUatPackages, sourceReleaseControls } from "./specification.generated";
 import { partialExportEvidence } from "./export-evidence.generated";
+import { partialCustomerJourneyEvidence } from "./customer-journey-evidence";
 
 export type Evidence = {
   kind: "implementation" | "test" | "source" | "approval";
@@ -102,7 +103,10 @@ for (const original of initialTransfers) {
 export const requirements: Requirement[] = sourceRequirements.map(r => ({
   ...r, implementationPaths: partialImplementations[r.id] ??
     (r.id.startsWith("EDP-") ? ["lib/valo-core/src/publication.ts"] : []),
-  evidence: partialExportEvidence.ids.includes(r.id) ? [partialExportEvidence.record] : [],
+  evidence: [
+    ...(partialExportEvidence.ids.includes(r.id) ? [partialExportEvidence.record] : []),
+    ...(partialCustomerJourneyEvidence.ids.includes(r.id) ? [partialCustomerJourneyEvidence.record] : []),
+  ],
   blockers: ["Complete acceptance evidence and required operational approvals are not established"],
 }));
 
@@ -135,7 +139,7 @@ export const conflicts = [
     resolution: "Pinned construction SQL is retained. Migrations are development-only and never run at web/worker startup. Production migration/deployment approval remains blocked.", blocks: ["P0 production compatibility"] },
   { id: "CON-004", topic: "Private storage isolation", status: "development_partial",
     issue: "Project-scoped private storage is not tenant isolation; authenticated application checks and cross-tenant negative tests are required.",
-    resolution: "Real DOCX/PDF private-object round trips, anonymous denial and negative tenant tests passed with the native App Storage SDK. Signed-in delivery, deployed worker credentials, retention and independent security approval remain unproved.", blocks: ["Production private exports", "Evidence attachments"] },
+    resolution: "Native App Storage round trips and real signed-in browser downloads passed. Two verified synthetic businesses received 404 for each other's document/revision/export identifiers; anonymous and revoked sessions received 401. Deployed worker credentials, retention and independent security approval remain unproved.", blocks: ["Production private exports", "Evidence attachments"] },
   { id: "CON-005", topic: "Recovery and retention", status: "blocked",
     issue: "Native retention does not establish 35-day recovery. Separate database/object backup, retention and restore evidence are required without buying a plan.",
     resolution: null, blocks: ["P0 restore gate"] },
@@ -143,16 +147,16 @@ export const conflicts = [
     issue: "No public-launch, live-commerce, recurring-billing or real-confidential-data approval exists. Processor geography and independent security/privacy/beta evidence remain required.",
     resolution: null, blocks: ["Public launch", "Live payments", "Real confidential customer data", "R2 until R1 gates pass"] },
   { id: "CON-007", topic: "Main-branch protection enforcement", status: "blocked",
-    issue: "Previous reports of saved protection are not current proof. The latest repository-creation correction and exact-name conflict leave intended-repository identity, private visibility and enforcement unverified.",
+    issue: "The intended repository and private visibility are now confirmed, but saved protection settings do not prove enforcement. Account-plan enforcement, required checks and sensitive-change human approval remain unproved.",
     resolution: null, blocks: ["Enforced repository review and merge safeguards"] },
   { id: "CON-008", topic: "GitHub Actions workflow authorization", status: "resolved",
     issue: "Targeted workflow-file writes initially returned HTTP 404 while ordinary source writes succeeded.",
     resolution: "The user reconnected GitHub securely; the single retry succeeded with HTTP 201. Two successful source-bound GitHub Actions runs are retained in docs/valo/evidence/ci-activation.json. No required-check or protection settings were changed.",
     blocks: [] },
-  { id: "CON-009", topic: "Repository visibility", status: "blocked",
+  { id: "CON-009", topic: "Repository visibility", status: "resolved",
     issue: "GitHub repository metadata reported private=false during this development batch, contrary to the owner's private-repository instruction.",
-    resolution: "No visibility change or new application-source upload was performed. Continue retaining source in Replit; the owner must restore private visibility before synchronization can resume.",
-    blocks: ["New application-source synchronization", "OPS-005 private repository prerequisite"] },
+    resolution: "The existing authorized connection changed this exact intended repository to private (HTTP 200). A fresh authenticated read returned private=true and an unsigned read returned 404. Evidence: docs/valo/evidence/p0-github-privacy-correction.json. Earlier public copies cannot be retracted; protection enforcement and source synchronization require separate proof.",
+    blocks: [] },
 ];
 
 export function readiness() {

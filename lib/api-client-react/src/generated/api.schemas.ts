@@ -354,6 +354,51 @@ export const ProfileRegistrationStatus = {
   pending: 'pending',
 } as const;
 
+export type ProfileState = typeof ProfileState[keyof typeof ProfileState];
+
+
+export const ProfileState = {
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  Abia: 'Abia',
+  Adamawa: 'Adamawa',
+  Akwa_Ibom: 'Akwa Ibom',
+  Anambra: 'Anambra',
+  Bauchi: 'Bauchi',
+  Bayelsa: 'Bayelsa',
+  Benue: 'Benue',
+  Borno: 'Borno',
+  Cross_River: 'Cross River',
+  Delta: 'Delta',
+  Ebonyi: 'Ebonyi',
+  Edo: 'Edo',
+  Ekiti: 'Ekiti',
+  Enugu: 'Enugu',
+  FCT: 'FCT',
+  Gombe: 'Gombe',
+  Imo: 'Imo',
+  Jigawa: 'Jigawa',
+  Kaduna: 'Kaduna',
+  Kano: 'Kano',
+  Katsina: 'Katsina',
+  Kebbi: 'Kebbi',
+  Kogi: 'Kogi',
+  Kwara: 'Kwara',
+  Lagos: 'Lagos',
+  Nasarawa: 'Nasarawa',
+  Niger: 'Niger',
+  Ogun: 'Ogun',
+  Ondo: 'Ondo',
+  Osun: 'Osun',
+  Oyo: 'Oyo',
+  Plateau: 'Plateau',
+  Rivers: 'Rivers',
+  Sokoto: 'Sokoto',
+  Taraba: 'Taraba',
+  Yobe: 'Yobe',
+  Zamfara: 'Zamfara',
+} as const;
+
 export type ProfileTurnoverBand = typeof ProfileTurnoverBand[keyof typeof ProfileTurnoverBand];
 
 
@@ -409,8 +454,7 @@ export interface Profile {
      * @items.maxLength 120
      */
   activities: string[];
-  /** @maxLength 60 */
-  state: string;
+  state: ProfileState;
   /** @maxLength 100 */
   lga: string;
   /** @pattern ^(unknown|unanswered|not_applicable|[0-9]{1,7})$ */
