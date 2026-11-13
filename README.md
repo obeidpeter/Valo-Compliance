@@ -45,6 +45,6 @@ The intended repository is private: `obeidpeter/Valo-Compliance`. Feature work i
 
 **Main-branch protection enforcement is blocked under the current private-repository account plan**, as reported by the repository owner. A saved rule is not enforced protection. Do not claim main is protected, upgrade or transfer the repository, make it public, force-push, delete branches or bypass review.
 
-After secure GitHub reconnection, the previously rejected workflow-file write succeeded. CI is configured at `.github/workflows/valo-foundation.yml` for the feature branch and pull requests. Execution results must be observed before claiming a passing GitHub check.
+After secure GitHub reconnection, the previously rejected workflow-file write succeeded. CI is active at `.github/workflows/valo-foundation.yml`. The activation commit's push and pull-request runs both passed dependency installation, full typechecking, foundation tests and the readiness report. Actual run identifiers, source commit and step results are preserved in [CI evidence](docs/valo/evidence/ci-activation.json).
 
 CI check names must only be added as requirements after actual checks exist. Even then, account-plan restrictions may prevent enforcement. No protection setting or required-check configuration has been changed. Foundation CI is not evidence of P0 acceptance.
