@@ -1,11 +1,14 @@
 import { Router } from "express";
 import { z } from "zod";
-import { ListPublicCatalogueQueryParams, GetProofRegisterResponse } from "@workspace/api-zod";
-import { readiness, catalogueSummary, contentReadiness, baselineTemplates } from "@workspace/valo-core";
+import { ListPublicCatalogueQueryParams, GetProofRegisterResponse, GetContentRegisterResponse, GetPublicCoverageResponse } from "@workspace/api-zod";
+import { readiness, catalogueSummary, contentReadiness, contentTraceRows, expansionReadiness, coveragePlan } from "@workspace/valo-core";
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
 import * as store from "../lib/valo-store";
 
 const router = Router();
+router.get("/public/coverage", (_req, res) => {
+  res.json(GetPublicCoverageResponse.parse(coveragePlan()));
+});
 router.get("/public/catalogue", (req, res) => {
   const query = ListPublicCatalogueQueryParams.parse(req.query);
   // There are NO approved public records yet. Held metadata and private
@@ -34,34 +37,14 @@ router.get("/development/content", (_req, res) => {
   if (process.env.NODE_ENV === "production") { res.sendStatus(404); return; }
   res.setHeader("Cache-Control", "no-store");
   const c = contentReadiness();
-  res.json({
-    rows: [
-      ...baselineTemplates.map(t => ({
-        id: t.id, title: t.title, kind: "R1 baseline template", status: "held",
-        relatedIds: [], limitation: t.holdReasons.join("; "),
-      })),
-      ...c.supplementaryMappings.map(m => ({
-        id: m.source_id, title: m.source_title, kind: `Supplementary mapping: ${m.mapping_type}`,
-        status: "inventory_only", relatedIds: [...(m.canonical_template_id ? [m.canonical_template_id] : []), ...m.related_template_ids],
-        limitation: m.note,
-      })),
-      ...c.identifiedAdditions.map(t => ({
-        id: t.id, title: t.title, kind: "Identified R2 template addition", status: "held",
-        relatedIds: [t.source_item_id], limitation: t.hold_reasons.join("; "),
-      })),
-      ...c.furtherProposals.map(t => ({
-        id: t.id, title: t.title, kind: "Further distinct-purpose proposal", status: "proposed_not_published",
-        relatedIds: [], limitation: `${t.rationale} ${t.distinctness}`,
-      })),
-      ...c.regulatoryRows.map(r => ({
-        id: r.source_id, title: r.source_title, kind: `Regulatory research: ${r.classification}`, status: "held",
-        relatedIds: [r.canonical_topic_id], limitation: r.hold_reasons.join("; "),
-      })),
-    ],
+  res.json(GetContentRegisterResponse.parse({
+    rows: contentTraceRows(),
     industries: c.industryTaxonomy, deeperPacks: c.deeperPacks,
     identifiedTemplates: c.summary.identifiedIncludingProposals,
-    regulatoryRows: c.summary.regulatoryRows, publishedTemplates: 0, notice: c.summary.notice,
-  });
+    regulatoryRows: c.summary.regulatoryRows, publishedTemplates: 0,
+    notice: `${c.summary.notice} 78 canonical research keys remain after the explicit SCUML alias only; other umbrella overlaps remain. Neither figure counts distinct published entries.`,
+    overlaps:c.overlaps, ...expansionReadiness(),
+  }));
 });
 router.use("/workspace", sameOriginMutation, verifiedWorkspace);
 router.get("/workspace", async (_req, res) => { res.json(await store.getWorkspace(res.locals.valoActor)); });

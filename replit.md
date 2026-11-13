@@ -48,6 +48,11 @@ release controls. API read quotas use atomic PostgreSQL counters and HMAC
 pseudonyms; anonymous socket-address limits conservatively group proxied users
 until trusted client IP is proved. This is partial SEC-005, not production acceptance.
 
+The public coverage endpoint supplies all 20 source-taxonomy categories to industry
+discovery and library filters, with six held deeper-pack targets and no invented
+source-check dates. The development inventory exposes all 27/79 rows, five overlap
+notes and explicit evidence/coverage states; R2 expansion remains disabled.
+
 Run `pnpm --filter @workspace/scripts valo:readiness` for the current machine-readable register and `pnpm --filter @workspace/scripts test:valo` for foundation unit tests. Synthetic unit tests never count toward formal rule/customer-AI/editorial acceptance totals.
 
 ## User preferences

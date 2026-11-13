@@ -1,9 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useSearch } from 'wouter';
 import { BookOpen, Search, X } from 'lucide-react';
-import { useListPublicCatalogue, getListPublicCatalogueQueryKey, ListPublicCatalogueType, type ListPublicCatalogueParams } from '@workspace/api-client-react';
+import { useListPublicCatalogue, getListPublicCatalogueQueryKey, useGetPublicCoverage, ListPublicCatalogueType, type ListPublicCatalogueParams } from '@workspace/api-client-react';
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from '@/components/states';
-import { INDUSTRIES } from '@/screens/industries';
 
 const TYPES: { v: ListPublicCatalogueType; l: string }[] = [
   { v: 'all', l: 'Everything' }, { v: 'template', l: 'Templates' }, { v: 'guidance', l: 'Guidance' }, { v: 'service', l: 'Services' },
@@ -23,6 +22,8 @@ export default function Library() {
 
   const params: ListPublicCatalogueParams = { type, page, ...(q ? { q } : {}), ...(industry ? { industry } : {}) };
   const cat = useListPublicCatalogue(params, { query: { enabled: true, queryKey: getListPublicCatalogueQueryKey(params) } });
+  const coverage = useGetPublicCoverage({ query:{retry:false,staleTime:60000} });
+  const unknownIndustry = !!industry && !coverage.data?.industries.some(i => i.slug === industry);
 
   function go(next: Record<string, string | number | undefined>) {
     const merged = new URLSearchParams();
@@ -52,12 +53,15 @@ export default function Library() {
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input type="search" value={draft} maxLength={120} onChange={(e) => setDraft(e.target.value)} placeholder="Search by name, topic or keyword" className="field !border-transparent !bg-transparent pl-11" data-testid="input-search" />
         </label>
-        <select aria-label="Industry" className="field sm:w-56" value={industry} onChange={(e) => go({ industry: e.target.value })} data-testid="select-industry">
+        <select aria-label="Industry" className="field sm:w-56" value={industry} disabled={coverage.isLoading || coverage.isError} onChange={(e) => go({ industry: e.target.value })} data-testid="select-industry">
           <option value="">All industries</option>
-          {INDUSTRIES.map((i) => <option key={i.slug} value={i.slug}>{i.name}</option>)}
+          {unknownIndustry && <option value={industry}>Selected filter: {industry}</option>}
+          {coverage.data?.industries.map((i) => <option key={i.id} value={i.slug}>{i.title}</option>)}
         </select>
         <button className="btn btn-primary" type="submit" data-testid="button-search">Search</button>
       </form>
+      {coverage.isError && <div className="mt-3"><ErrorState error={coverage.error} title="Industry filters unavailable" onRetry={() => coverage.refetch()} /></div>}
+      {unknownIndustry && coverage.data && <p className="mt-3 text-sm text-muted-foreground">This saved industry filter is not in the current taxonomy. It is preserved in the URL; choose a listed category or clear filters. No different activity is inferred.</p>}
 
       <div className="mt-4 flex flex-wrap items-center gap-2" role="tablist" aria-label="Type">
         {TYPES.map((t) => (

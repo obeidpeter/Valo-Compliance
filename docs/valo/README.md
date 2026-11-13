@@ -6,6 +6,11 @@ This is development work, not a released compliance product. Do not infer accept
 
 ## Contract intake
 
+Part 4 reconciles all 27/79 source titles, makes row-level evidence/coverage holds
+and all five overlap notes explicit, and connects the public industry page/library
+filters to the exact 20-category taxonomy. R2 stays locked and R3 excluded. See
+[inventory and coverage evidence](part4-inventory-and-coverage.md).
+
 Part 3 adds the exact UAT packs, G0–G5 criteria/approver roles and non-waivable
 release controls to the live proof register. See [measured controls and remaining
 scope](part3-proof-and-controls.md). Receipt and partial test results are not release

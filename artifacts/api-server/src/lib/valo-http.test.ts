@@ -103,4 +103,34 @@ test("running development HTTP API fails closed and reports factual release stat
     assert.equal(body.r1Accepted || body.r2Unlocked || body.publicLaunchEnabled, false);
     assert.ok(body.releaseControls.some(c => c.text.includes("cannot waive failed mandatory evidence gates")));
   });
+  await t.test("public coverage serves exactly 20 held industries and six pack targets, not fictional guidance", async () => {
+    const response = await fetch(`${base}/api/public/coverage`);
+    assert.equal(response.status,200);
+    const body=await response.json() as {
+      industries:{id:string;slug:string;coverageState:string;publishedItems:number;sourceCheckedAt:string|null;deeperPackTarget:boolean}[];
+      publishedGuidance:number;publishedGuides:number;checkedLocationPacks:number;priorityLocations:string[];ngoNotice:string;
+    };
+    assert.equal(body.industries.length,20);
+    assert.equal(body.industries.filter(i=>i.deeperPackTarget).length,6);
+    assert.ok(body.industries.every(i=>i.coverageState==="held" && i.publishedItems===0 && i.sourceCheckedAt===null));
+    assert.equal(body.publishedGuidance + body.publishedGuides + body.checkedLocationPacks,0);
+    assert.deepEqual(body.priorityLocations,["Lagos","FCT","Bayelsa"]);
+    assert.match(body.ngoNotice,/No tax or licensing exemption/);
+  });
+  await t.test("every supplied inventory row has explicit evidence and coverage states; expansion stays disabled", async () => {
+    const response=await fetch(`${base}/api/development/content`);
+    assert.equal(response.status,200);
+    const body=await response.json() as {
+      rows:{id:string;canonicalId:string|null;sourceCheckedAt:string|null;publicationEligible:boolean;evidenceState:string;coverageState:string;overlapIds:string[]}[];
+      overlaps:unknown[];expansionBoundaries:{enabled:boolean;release:string;status:string}[];
+    };
+    assert.equal(body.rows.filter(r=>r.id.startsWith("EBD-")).length,27);
+    assert.equal(body.rows.filter(r=>r.id.startsWith("REG-")).length,79);
+    assert.ok(body.rows.every(r=>r.evidenceState && r.coverageState && !r.publicationEligible && r.sourceCheckedAt===null));
+    assert.equal(body.rows.find(r=>r.id==="EBD-B12")!.canonicalId,null);
+    assert.ok(body.rows.find(r=>r.id==="REG-G04")!.overlapIds.includes("OVL-02"));
+    assert.equal(body.overlaps.length,5);
+    assert.ok(body.expansionBoundaries.every(r=>!r.enabled));
+    assert.ok(body.expansionBoundaries.filter(r=>r.release==="R3").every(r=>r.status==="excluded_from_commission"));
+  });
 });

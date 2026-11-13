@@ -40,7 +40,10 @@ const editorial: [string, string, string][] = [
 
 const partialImplementations: Record<string, string[]> = {
   "WEB-001": ["artifacts/valo/src/screens/home.tsx", "artifacts/valo/src/components/site-shell.tsx"],
-  "WEB-002": ["artifacts/valo/src/App.tsx", "artifacts/valo/src/screens/library.tsx"],
+  "WEB-002": ["artifacts/valo/src/App.tsx", "artifacts/valo/src/screens/library.tsx", "artifacts/valo/src/screens/industries.tsx"],
+  "DOC-001": ["lib/valo-core/src/catalogue.ts", "lib/valo-core/src/coverage.ts"],
+  "DOC-002": ["artifacts/valo/src/screens/library.tsx"],
+  "CMP-003": ["lib/valo-core/src/coverage.ts", "artifacts/valo/src/screens/industries.tsx"],
   "IAM-001": ["artifacts/valo/src/App.tsx", "artifacts/api-server/src/middlewares/valo-identity.ts"],
   "IAM-002": ["artifacts/api-server/src/middlewares/valo-identity.ts"],
   "IAM-003": ["artifacts/api-server/src/lib/valo-store.ts", "artifacts/api-server/src/lib/valo-store.integration.test.ts"],

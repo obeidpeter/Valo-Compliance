@@ -6,6 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ContentTraceRow } from './contentTraceRow';
+import type { CoverageLayer } from './coverageLayer';
+import type { ExpansionBoundary } from './expansionBoundary';
+import type { ExpansionTargets } from './expansionTargets';
+import type { InventoryOverlap } from './inventoryOverlap';
+import type { ManagementFile } from './managementFile';
 
 export interface ContentRegister {
   rows: ContentTraceRow[];
@@ -15,4 +20,11 @@ export interface ContentRegister {
   regulatoryRows: number;
   publishedTemplates: number;
   notice: string;
+  overlaps: InventoryOverlap[];
+  coverageLayers: CoverageLayer[];
+  expansionBoundaries: ExpansionBoundary[];
+  managementFiles: ManagementFile[];
+  ngoCaution: string;
+  provisionalTargets: string;
+  r2Targets: ExpansionTargets;
 }

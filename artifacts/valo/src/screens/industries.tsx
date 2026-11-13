@@ -1,36 +1,25 @@
 import { Link } from 'wouter';
-import { useListPublicCatalogue, getListPublicCatalogueQueryKey } from '@workspace/api-client-react';
+import { useGetPublicCoverage } from '@workspace/api-client-react';
 import { ErrorState, Notice, PageHeader, Skel } from '@/components/states';
 
-export const INDUSTRIES = [
-  { slug: 'retail', name: 'Retail and trading' },
-  { slug: 'food', name: 'Food and hospitality' },
-  { slug: 'manufacturing', name: 'Light manufacturing' },
-  { slug: 'professional-services', name: 'Professional services' },
-  { slug: 'technology', name: 'Technology and digital' },
-  { slug: 'logistics', name: 'Logistics and transport' },
-  { slug: 'agriculture', name: 'Agriculture and agro-processing' },
-  { slug: 'beauty', name: 'Beauty and personal care' },
-  { slug: 'construction', name: 'Construction and trades' },
-  { slug: 'education', name: 'Education and training' },
-];
-
 export default function Industries() {
-  const cat = useListPublicCatalogue(undefined, { query: { enabled: true, queryKey: getListPublicCatalogueQueryKey() } });
+  const coverage = useGetPublicCoverage({ query: { retry:false, staleTime:60000 } });
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <PageHeader eyebrow="Industries" title="Coverage by industry">
-        The sectors we plan to cover, with their honest status today. Each count comes from the live catalogue.
+        All 20 planned categories, including six deeper-pack targets. Targets are not reviewed guidance or proof of compliance.
       </PageHeader>
-      {cat.isError ? <ErrorState error={cat.error} onRetry={() => cat.refetch()} /> : (
+      {coverage.isLoading ? <Skel className="h-64" /> : coverage.isError ? <ErrorState error={coverage.error} onRetry={() => coverage.refetch()} /> : (
         <ul className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-          {INDUSTRIES.map((ind) => {
-            const n = cat.data ? cat.data.items.filter((i) => i.industry === ind.slug).length : 0;
+          {coverage.data?.industries.map((ind) => {
+            const n = ind.publishedItems;
             return (
-              <li key={ind.slug} className="flex items-center justify-between gap-4 bg-card p-5" data-testid={'row-industry-' + ind.slug}>
-                <div>
-                  <p className="font-medium">{ind.name}</p>
-                  {cat.isLoading ? <Skel className="mt-2 h-4 w-32" /> : <p className="mt-1 text-sm text-muted-foreground">{n} released item{n === 1 ? '' : 's'}</p>}
+              <li key={ind.slug} className="flex flex-col items-start justify-between gap-4 bg-card p-5 sm:flex-row sm:items-center" data-testid={'row-industry-' + ind.slug}>
+                <div className="min-w-0 flex-1">
+                  <p className="break-words font-medium capitalize">{ind.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{n} released item{n === 1 ? '' : 's'} · {ind.deeperPackTarget ? 'Deeper-pack target' : 'Category target'}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">No source-check date or AI review recorded.</p>
+                  {ind.enhancedEvidenceRequired && <p className="mt-2 text-xs">Activity-specific evidence and enhanced checks required; no specialist availability implied.</p>}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={'pill ' + (n > 0 ? 'pill-forest' : 'pill-ochre')}><span className="dot" />{n > 0 ? 'Partial' : 'Held'}</span>
@@ -41,7 +30,15 @@ export default function Industries() {
           })}
         </ul>
       )}
-      <Notice className="mt-6" title="Your sector is not listed?">Sector approvals vary widely. <Link href="/services" className="underline">Send us a scoped enquiry</Link> and it is saved for staff to review.</Notice>
+      {coverage.data && <>
+        <Notice className="mt-6" title="Source and location gaps">
+          <p>{coverage.data.notice}</p>
+          <p className="mt-2">Source-check priority: {coverage.data.priorityLocations.join(', ')}. Checked location packs: {coverage.data.checkedLocationPacks}. All 36 states and FCT remain selectable in the business profile.</p>
+          <p className="mt-2">Guidance: {coverage.data.publishedGuidance}/{coverage.data.guidanceTarget} target. Practical guides: {coverage.data.publishedGuides}/{coverage.data.guidesTarget} target. Deeper packs: {coverage.data.publishedDeeperPacks}/{coverage.data.deeperPackTarget} target.</p>
+        </Notice>
+        <Notice className="mt-4" title="Nonprofit applicability">{coverage.data.ngoNotice}</Notice>
+      </>}
+      <Notice className="mt-6" title="Need to clarify your activity?">Sector approvals vary widely. <Link href="/services" className="underline">Send us a scoped enquiry</Link> for staff review. This is not a confirmed booking or an assurance that a specialist is available.</Notice>
     </div>
   );
 }

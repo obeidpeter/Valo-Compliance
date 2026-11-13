@@ -5,6 +5,74 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface IndustryCoverage {
+  id: string;
+  slug: string;
+  title: string;
+  deeperPackTarget: boolean;
+  enhancedEvidenceRequired: boolean;
+  coverageState: string;
+  evidenceState: string;
+  /** @nullable */
+  sourceCheckedAt: string | null;
+  publishedItems: number;
+}
+
+export interface PublicCoverage {
+  industries: IndustryCoverage[];
+  guidanceTarget: number;
+  publishedGuidance: number;
+  guidesTarget: number;
+  publishedGuides: number;
+  deeperPackTarget: number;
+  publishedDeeperPacks: number;
+  selectableLocations: number;
+  priorityLocations: string[];
+  checkedLocationPacks: number;
+  notice: string;
+  ngoNotice: string;
+}
+
+export interface InventoryOverlap {
+  id: string;
+  source_ids: string[];
+  type: string;
+  note: string;
+  canonical_id?: string;
+}
+
+export interface CoverageLayer {
+  id: string;
+  title: string;
+  commitment: string;
+  representation: string;
+  status: string;
+}
+
+export interface ExpansionBoundary {
+  id: string;
+  release: string;
+  horizon: string;
+  priority: string;
+  condition: string;
+  enabled: boolean;
+  status: string;
+}
+
+export interface ManagementFile {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface ExpansionTargets {
+  templates: number;
+  guided: number;
+  guidance: number;
+  deeperPacks: number;
+  locationsUpTo: number;
+}
+
 export interface UatPack {
   id: string;
   title: string;
@@ -56,6 +124,16 @@ export interface ContentTraceRow {
   status: string;
   relatedIds: string[];
   limitation: string;
+  /** @nullable */
+  canonicalId: string | null;
+  mappingType: string;
+  evidenceState: string;
+  coverageState: string;
+  publicationEligible: boolean;
+  sourceLocator: string;
+  overlapIds: string[];
+  /** @nullable */
+  sourceCheckedAt: string | null;
 }
 
 export interface ContentRegister {
@@ -66,6 +144,13 @@ export interface ContentRegister {
   regulatoryRows: number;
   publishedTemplates: number;
   notice: string;
+  overlaps: InventoryOverlap[];
+  coverageLayers: CoverageLayer[];
+  expansionBoundaries: ExpansionBoundary[];
+  managementFiles: ManagementFile[];
+  ngoCaution: string;
+  provisionalTargets: string;
+  r2Targets: ExpansionTargets;
 }
 
 export type RequirementRecordStatus = typeof RequirementRecordStatus[keyof typeof RequirementRecordStatus];

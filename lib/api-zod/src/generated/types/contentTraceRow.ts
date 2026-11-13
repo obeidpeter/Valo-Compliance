@@ -13,4 +13,14 @@ export interface ContentTraceRow {
   status: string;
   relatedIds: string[];
   limitation: string;
+  /** @nullable */
+  canonicalId: string | null;
+  mappingType: string;
+  evidenceState: string;
+  coverageState: string;
+  publicationEligible: boolean;
+  sourceLocator: string;
+  overlapIds: string[];
+  /** @nullable */
+  sourceCheckedAt: Date | null;
 }

@@ -36,6 +36,7 @@ import type {
   ListPublicCatalogueParams,
   ProfileInput,
   ProofRegister,
+  PublicCoverage,
   QuotaErrorResponse,
   RequirementsRegister,
   TicketInput,
@@ -69,6 +70,101 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetPublicCoverageUrl = () => {
+
+
+
+
+  return `/api/public/coverage`
+}
+
+export const getPublicCoverage = async ( options?: Parameters<typeof customFetch>[1]): Promise<PublicCoverage> => {
+
+  return customFetch<PublicCoverage>(getGetPublicCoverageUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicCoverageQueryKey = () => {
+    return [
+    `/api/public/coverage`
+    ] as const;
+    }
+
+
+export const getGetPublicCoverageQueryOptions = <TData = Awaited<ReturnType<typeof getPublicCoverage>>, TError = ErrorType<QuotaErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicCoverage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicCoverageQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicCoverage>>> = ({ signal }) => getPublicCoverage({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicCoverage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPublicCoverageQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicCoverage>>>
+export type GetPublicCoverageQueryError = ErrorType<QuotaErrorResponse>
+
+
+export function useGetPublicCoverage<TData = Awaited<ReturnType<typeof getPublicCoverage>>, TError = ErrorType<QuotaErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicCoverage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicCoverage>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicCoverage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicCoverage<TData = Awaited<ReturnType<typeof getPublicCoverage>>, TError = ErrorType<QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicCoverage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicCoverage>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicCoverage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicCoverage<TData = Awaited<ReturnType<typeof getPublicCoverage>>, TError = ErrorType<QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicCoverage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetPublicCoverage<TData = Awaited<ReturnType<typeof getPublicCoverage>>, TError = ErrorType<QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicCoverage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPublicCoverageQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetProofRegisterUrl = () => {
 

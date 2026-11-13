@@ -18,6 +18,7 @@ Valo is being built for Nigerian SMEs to create business documents and understan
 - The same dashboard exposes UAT-01–10, original G0–G5 evidence/approver roles and non-waivable launch blockers. All remain unaccepted.
 - PostgreSQL-backed read quotas with keyed pseudonyms, atomic concurrent caps and request-driven expiry. Production end-user IP resolution and abuse alerting remain unproved; this is partial SEC-005.
 - Complete specification extracts and the coordinating team's registers under `docs/specification/` and `docs/registers/`. All 27 supplementary document mappings and 79 regulatory research rows are retained. Five direct matches, one composite and 21 additions give 61 identified templates; 19 distinct-purpose proposals bring the backlog to 80, not 80 published assets. NGO SCUML remains an alias.
+- Public industry discovery and library filters now use all 20 exact taxonomy categories. Six deeper-pack targets, location/source gaps and NGO cautions are explicit; no checked dates or released guidance are invented.
 
 ## Not yet implemented or proven
 
@@ -49,7 +50,7 @@ pnpm --filter @workspace/valo run build
 No credential values belong in source or GitHub Actions. Foundation checks require no provider secrets or production access. See [implementation evidence](docs/valo/README.md), [compatibility findings](docs/valo/compatibility.md) and [evaluation boundaries](docs/valo/evaluations.md).
 
 The latest bounded development increment is documented in
-[part 3 proof and controls](docs/valo/part3-proof-and-controls.md), with actual
+[part 4 inventory and coverage](docs/valo/part4-inventory-and-coverage.md), with actual
 commands, outputs and source hashes in its linked evidence record. Earlier CI passes
 do not certify this unuploaded batch.
 

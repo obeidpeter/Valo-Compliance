@@ -53,12 +53,19 @@ export const additionalCandidates = [
   ["Access permission review record", "Review system access and removals, distinct from staff onboarding."],
   ["Vendor data-sharing register", "Map disclosures to vendors, distinct from a data processing agreement."],
   ["Customer consent record", "Record actual consent and withdrawal without inventing consent."],
-  ["Conflict of interest declaration", "Disclose interests; does not certify absence of conflicts."],
+  ["Conflict of interest declaration", "An individual's disclosure record, distinct from the NGO conflict-handling policy (TPL-57); does not certify absence of conflicts."],
   ["Whistleblowing intake form", "Record a confidential concern with explicit handling limitations."],
   ["Training attendance and competency record", "Record training and assessment supplied by the business."],
 ].map(([title, rationale], index) => ({
   id: `CAND-${String(index + 1).padStart(2, "0")}`,
   title, rationale, release: "R2", status: "proposed",
+  comparedWithTemplateIds: [
+    ["TPL-38"], ["TPL-06"], ["TPL-06", "TPL-07"], ["TPL-07"], ["TPL-05"],
+    ["TPL-24"], ["TPL-01", "TPL-19"], ["TPL-01", "TPL-03"], ["TPL-09"],
+    ["TPL-23"], ["TPL-23", "TPL-05"], ["TPL-36", "TPL-35"], ["TPL-34"],
+    ["TPL-11", "TPL-32"], ["TPL-31", "TPL-29"], ["TPL-29", "TPL-43"],
+    ["TPL-57"], ["TPL-28"], ["TPL-11"],
+  ][index]!,
   distinctness: "Distinct artifact purpose compared against the 40 baseline and 21 supplementary additions; retain CAND ID until owner prioritisation",
   countsAsPublished: false,
 }));
@@ -95,5 +102,7 @@ export function contentReadiness() {
     industryTaxonomy: sourceContentInventory.industry_taxonomy,
     deeperPacks: sourceContentInventory.r1_deeper_packs,
     statePriorities: sourceContentInventory.state_source_priorities,
+    overlaps: sourceContentInventory.overlap_register,
+    releaseTargets: sourceContentInventory.release_targets,
   };
 }

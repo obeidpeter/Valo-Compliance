@@ -8,6 +8,32 @@
 import * as zod from 'zod';
 
 
+export const GetPublicCoverageResponse = zod.object({
+  "industries": zod.array(zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "deeperPackTarget": zod.boolean(),
+  "enhancedEvidenceRequired": zod.boolean(),
+  "coverageState": zod.string(),
+  "evidenceState": zod.string(),
+  "sourceCheckedAt": zod.coerce.date().nullable(),
+  "publishedItems": zod.number().int()
+})),
+  "guidanceTarget": zod.number().int(),
+  "publishedGuidance": zod.number().int(),
+  "guidesTarget": zod.number().int(),
+  "publishedGuides": zod.number().int(),
+  "deeperPackTarget": zod.number().int(),
+  "publishedDeeperPacks": zod.number().int(),
+  "selectableLocations": zod.number().int(),
+  "priorityLocations": zod.array(zod.string()),
+  "checkedLocationPacks": zod.number().int(),
+  "notice": zod.string(),
+  "ngoNotice": zod.string()
+})
+
+
 export const GetProofRegisterResponse = zod.object({
   "uatPackages": zod.array(zod.object({
   "id": zod.string(),
@@ -52,14 +78,59 @@ export const GetContentRegisterResponse = zod.object({
   "kind": zod.string(),
   "status": zod.string(),
   "relatedIds": zod.array(zod.string()),
-  "limitation": zod.string()
+  "limitation": zod.string(),
+  "canonicalId": zod.string().nullable(),
+  "mappingType": zod.string(),
+  "evidenceState": zod.string(),
+  "coverageState": zod.string(),
+  "publicationEligible": zod.boolean(),
+  "sourceLocator": zod.string(),
+  "overlapIds": zod.array(zod.string()),
+  "sourceCheckedAt": zod.coerce.date().nullable()
 })),
   "industries": zod.array(zod.string()),
   "deeperPacks": zod.array(zod.string()),
   "identifiedTemplates": zod.number().int(),
   "regulatoryRows": zod.number().int(),
   "publishedTemplates": zod.number().int(),
-  "notice": zod.string()
+  "notice": zod.string(),
+  "overlaps": zod.array(zod.object({
+  "id": zod.string(),
+  "source_ids": zod.array(zod.string()),
+  "type": zod.string(),
+  "note": zod.string(),
+  "canonical_id": zod.string().optional()
+})),
+  "coverageLayers": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "commitment": zod.string(),
+  "representation": zod.string(),
+  "status": zod.string()
+})),
+  "expansionBoundaries": zod.array(zod.object({
+  "id": zod.string(),
+  "release": zod.string(),
+  "horizon": zod.string(),
+  "priority": zod.string(),
+  "condition": zod.string(),
+  "enabled": zod.boolean(),
+  "status": zod.string()
+})),
+  "managementFiles": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string()
+})),
+  "ngoCaution": zod.string(),
+  "provisionalTargets": zod.string(),
+  "r2Targets": zod.object({
+  "templates": zod.number().int(),
+  "guided": zod.number().int(),
+  "guidance": zod.number().int(),
+  "deeperPacks": zod.number().int(),
+  "locationsUpTo": zod.number().int()
+})
 })
 
 

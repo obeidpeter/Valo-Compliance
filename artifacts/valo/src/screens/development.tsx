@@ -11,10 +11,16 @@ export default function Development() {
   const proof = useGetProofRegister({ query: { retry: false } });
   const [search, setSearch] = useState('');
   const [contentSearch, setContentSearch] = useState('');
+  const [inventoryType, setInventoryType] = useState('all');
+  const [contentPage, setContentPage] = useState(1);
   const rows = useMemo(() => register.data?.requirements.filter(r =>
     `${r.id} ${r.title} ${r.exactText} ${r.acceptance}`.toLowerCase().includes(search.toLowerCase())) ?? [], [register.data, search]);
   const contentRows = useMemo(() => content.data?.rows.filter(r =>
-    `${r.id} ${r.title} ${r.kind} ${r.relatedIds.join(' ')}`.toLowerCase().includes(contentSearch.toLowerCase())) ?? [], [content.data, contentSearch]);
+    (inventoryType === 'all' || (inventoryType === 'regulatory' ? r.id.startsWith('REG-') : r.id.startsWith('EBD-'))) &&
+    `${r.id} ${r.title} ${r.kind} ${r.relatedIds.join(' ')} ${r.overlapIds.join(' ')}`.toLowerCase().includes(contentSearch.toLowerCase())) ?? [], [content.data, contentSearch, inventoryType]);
+  const contentPages = Math.max(1, Math.ceil(contentRows.length / 20));
+  const visibleContentPage = Math.min(contentPage, contentPages);
+  const visibleContentRows = contentRows.slice((visibleContentPage - 1) * 20, visibleContentPage * 20);
   const d = s.data;
   const pct = d && d.expectedRequirements > 0 ? Math.round((d.receivedRequirements / d.expectedRequirements) * 1000) / 10 : 0;
   return (
@@ -93,14 +99,27 @@ export default function Development() {
         <p className="mt-3 text-sm text-muted-foreground">{content.data?.notice ?? 'Held research inventory; not released content.'}</p>
         {content.data && <p className="mt-3 font-mono text-xs">{content.data.identifiedTemplates} identified template types including proposals · {content.data.regulatoryRows} source rows · {content.data.publishedTemplates} published templates</p>}
         <label className="mt-5 block text-sm" htmlFor="content-search">Find an inventory ID, mapping or title</label>
-        <input id="content-search" className="mt-2 w-full rounded-lg border border-border bg-card p-3" value={contentSearch} onChange={e => setContentSearch(e.target.value)} placeholder="TPL-01, EBD-B01, SCUML…" />
+        <input id="content-search" className="mt-2 w-full rounded-lg border border-border bg-card p-3" value={contentSearch} onChange={e => {setContentSearch(e.target.value);setContentPage(1);}} placeholder="TPL-01, EBD-B01, SCUML, OVL-02…" />
+        <label className="mt-4 block text-sm" htmlFor="inventory-type">Inventory row type</label>
+        <select id="inventory-type" className="field mt-2" value={inventoryType} onChange={e => {setInventoryType(e.target.value);setContentPage(1);}}>
+          <option value="all">All records and proposals</option><option value="documents">27 supplied document mappings</option><option value="regulatory">79 regulatory research rows</option>
+        </select>
         {content.isLoading ? <Skel className="mt-4 h-32" /> : content.isError ? <ErrorState error={content.error} onRetry={() => content.refetch()} /> : (
-          <div className="mt-5 space-y-3">{contentRows.map(r => <details key={`${r.kind}-${r.id}`} className="surface p-5">
+          <div className="mt-5 space-y-3"><p className="font-mono text-xs">{contentRows.length} matching rows · page {visibleContentPage}/{contentPages}</p>{visibleContentRows.map(r => <details key={`${r.kind}-${r.id}`} className="surface p-5">
             <summary className="cursor-pointer"><span className="font-mono text-xs">{r.id}</span> <span className="ml-2 font-medium">{r.title}</span> <span className="ml-2 text-xs text-muted-foreground">{r.status.replaceAll('_', ' ')}</span></summary>
             <p className="mt-4 text-sm">{r.kind}</p><p className="mt-3 text-sm text-muted-foreground">{r.limitation}</p>
             {r.relatedIds.length > 0 && <p className="mt-3 font-mono text-xs">Linked inventory IDs: {r.relatedIds.join(', ')}</p>}
+            <p className="mt-3 text-xs">Mapping: {r.mappingType} · Canonical key: {r.canonicalId ?? 'Composite; no separate template'}</p>
+            <p className="mt-2 text-xs">Evidence: {r.evidenceState} · Coverage: {r.coverageState} · Publication eligible: {r.publicationEligible ? 'Yes' : 'No'}</p>
+            <p className="mt-2 break-all font-mono text-xs">Source inventory: {r.sourceLocator}</p>
+            <p className="mt-2 text-xs">Authoritative source-check date: {r.sourceCheckedAt ?? 'None recorded'}</p>
+            {r.overlapIds.length > 0 && <p className="mt-2 font-mono text-xs">Overlap notes: {r.overlapIds.join(', ')}</p>}
           </details>)}
           {contentRows.length === 0 && <p>No matching inventory row. Try an ID or clear the search.</p>}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button className="btn btn-ghost btn-sm" disabled={visibleContentPage <= 1} onClick={() => setContentPage(visibleContentPage - 1)}>Previous inventory page</button>
+            <button className="btn btn-ghost btn-sm" disabled={visibleContentPage >= contentPages} onClick={() => setContentPage(visibleContentPage + 1)}>Next inventory page</button>
+          </div>
           </div>
         )}
         {content.data && <details className="surface mt-5 p-5"><summary className="cursor-pointer">Industry taxonomy and deeper-pack targets</summary>
@@ -108,6 +127,24 @@ export default function Development() {
           <p className="mt-3 text-sm"><strong>20 industries:</strong> {content.data.industries.join('; ')}</p>
           <p className="mt-3 text-sm"><strong>Six deeper-pack targets:</strong> {content.data.deeperPacks.join('; ')}</p>
         </details>}
+        {content.data && <div className="mt-5 space-y-4">
+          <details className="surface p-5"><summary className="cursor-pointer">Aliases and sector/facility overlaps</summary>
+            <p className="mt-4 text-sm">{content.data.ngoCaution} This is a supplied inventory caution, not an independently sourced legal finding.</p>
+            {content.data.overlaps.map(o => <div key={o.id} className="mt-5 text-sm"><p className="font-mono text-xs">{o.id} · {o.source_ids.join(', ')}</p><p className="mt-2">{o.note}</p></div>)}
+          </details>
+          <details className="surface p-5"><summary className="cursor-pointer">Exact coverage commitments, not completed coverage</summary>
+            {content.data.coverageLayers.map(l => <div key={l.id} className="mt-5 text-sm"><h3 className="font-semibold">{l.title}</h3><p className="mt-2">{l.commitment}</p><p className="mt-2 text-muted-foreground">{l.representation}</p></div>)}
+          </details>
+          <details className="surface p-5"><summary className="cursor-pointer">R2 locked; R3 excluded</summary>
+            <p className="mt-4 text-sm">{content.data.provisionalTargets}</p>
+            <p className="mt-3 text-sm">R2 targets: approximately {content.data.r2Targets.templates} templates, {content.data.r2Targets.guided} guided editors, {content.data.r2Targets.guidance} guidance entries, {content.data.r2Targets.deeperPacks} deeper packs and up to {content.data.r2Targets.locationsUpTo} checked state/FCT packs. These are not completed counts.</p>
+            {content.data.expansionBoundaries.map(e => <div key={e.id} className="mt-5 text-sm"><h3 className="font-semibold">{e.horizon} · {e.status.replaceAll('_',' ')}</h3><p className="mt-2">{e.priority}</p><p className="mt-2 text-muted-foreground">Required condition: {e.condition}</p></div>)}
+          </details>
+          <details className="surface p-5"><summary className="cursor-pointer">Four suggested management filing categories</summary>
+            <p className="mt-4 text-sm">Organisation suggestions, not four additional templates, generated downloads or enabled evidence-upload folders.</p>
+            {content.data.managementFiles.map(f => <div key={f.id} className="mt-4 text-sm"><h3 className="font-semibold">{f.title}</h3><p>{f.description}</p></div>)}
+          </details>
+        </div>}
       </section>
       <section className="mt-10" aria-labelledby="conflict-title">
         <h2 id="conflict-title" className="font-display text-3xl">Compatibility and conflict register</h2>
