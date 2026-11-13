@@ -1,3 +1,4 @@
+export * from "./checker";
 export { finalSourceContext } from "./reference-leads.generated";
 export { coordinatingRefinement,allSourceLeads,additionalSourceLeads } from "./coordinating.generated";
 export { handoverCheckpoint } from "./handover.generated";

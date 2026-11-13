@@ -8,6 +8,7 @@
 import type { CanonicalDocumentFields } from './canonicalDocumentFields';
 import type { CanonicalDocumentFormatting } from './canonicalDocumentFormatting';
 import type { DocumentBlock } from './documentBlock';
+import type { FinancialInput } from './financialInput';
 
 export interface CanonicalDocument {
   fields: CanonicalDocumentFields;
@@ -15,5 +16,6 @@ export interface CanonicalDocument {
   blocks: DocumentBlock[];
   /** @maxItems 0 */
   selectedClauses: string[];
+  financialInput?: FinancialInput;
   formatting: CanonicalDocumentFormatting;
 }

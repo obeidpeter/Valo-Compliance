@@ -461,6 +461,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.3.5
         version: 4.3.5
+      '@workspace/valo-core':
+        specifier: workspace:*
+        version: link:../../lib/valo-core
       next:
         specifier: ^15.5.29
         version: 15.5.29(@opentelemetry/api@1.10.0)(@playwright/test@1.65.0)(@types/node@25.9.9)(react-dom@19.2.9(react@19.2.9))(react@19.2.9)

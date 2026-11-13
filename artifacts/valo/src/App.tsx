@@ -27,6 +27,11 @@ import Development from '@/screens/development';
 import WorkspaceHome from '@/screens/workspace';
 import ProfilePage from '@/screens/profile';
 import DocumentEditor from '@/screens/document-editor';
+import Checker from '@/screens/checker';
+import { AssessmentsList, AssessmentDetail } from '@/screens/assessments';
+import TasksPage from '@/screens/tasks';
+import RemindersPage from '@/screens/reminders';
+import { AIDraftCompose, AIDraftPreview } from '@/screens/ai-drafts';
 
 // Canonical Clerk wiring; only the env adapter differs (Next exposes NEXT_PUBLIC_*).
 const clerkPubKey = publishableKeyFromHost(
@@ -198,6 +203,13 @@ function ShellRoutes() {
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
         <Route path="/development" component={Development} />
+        <Route path="/checker" component={Checker} />
+        <Route path="/workspace/assessments">{() => <RequireAuth><AssessmentsList /></RequireAuth>}</Route>
+        <Route path="/workspace/assessments/:id">{(p) => <RequireAuth><AssessmentDetail id={p.id} /></RequireAuth>}</Route>
+        <Route path="/workspace/ai">{() => <RequireAuth><AIDraftCompose /></RequireAuth>}</Route>
+        <Route path="/workspace/ai/:id">{(p) => <RequireAuth><AIDraftPreview id={p.id} /></RequireAuth>}</Route>
+        <Route path="/workspace/tasks">{() => <RequireAuth><TasksPage /></RequireAuth>}</Route>
+        <Route path="/workspace/reminders">{() => <RequireAuth><RemindersPage /></RequireAuth>}</Route>
         <Route path="/workspace">{() => <RequireAuth><WorkspaceHome /></RequireAuth>}</Route>
         <Route path="/workspace/profile">{() => <RequireAuth><ProfilePage /></RequireAuth>}</Route>
         <Route path="/workspace/documents/:id">{(p) => <RequireAuth><DocumentEditor id={p.id} /></RequireAuth>}</Route>

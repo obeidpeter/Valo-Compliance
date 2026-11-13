@@ -3,6 +3,7 @@ import { r1Transfer } from "./requirements-r1";
 import { sourceRequirements, sourceGates, sourceUatPackages, sourceReleaseControls } from "./specification.generated";
 import { partialExportEvidence } from "./export-evidence.generated";
 import { partialCustomerJourneyEvidence } from "./customer-journey-evidence";
+import { partialWorkflowEvidence } from "./workflow-evidence";
 
 export type Evidence = {
   kind: "implementation" | "test" | "source" | "approval";
@@ -101,11 +102,14 @@ for (const original of initialTransfers) {
     throw new Error(`Specification conflict requires explicit resolution: ${original.id}`);
 }
 export const requirements: Requirement[] = sourceRequirements.map(r => ({
-  ...r, implementationPaths: partialImplementations[r.id] ??
-    (r.id.startsWith("EDP-") ? ["lib/valo-core/src/publication.ts"] : []),
+  ...r, implementationPaths: [...new Set([
+    ...(partialImplementations[r.id] ?? (r.id.startsWith("EDP-") ? ["lib/valo-core/src/publication.ts"] : [])),
+    ...partialWorkflowEvidence(r.id).paths,
+  ])],
   evidence: [
     ...(partialExportEvidence.ids.includes(r.id) ? [partialExportEvidence.record] : []),
     ...(partialCustomerJourneyEvidence.ids.includes(r.id) ? [partialCustomerJourneyEvidence.record] : []),
+    ...partialWorkflowEvidence(r.id).records,
   ],
   blockers: ["Complete acceptance evidence and required operational approvals are not established"],
 }));
@@ -170,7 +174,7 @@ export function readiness() {
     recurringBillingEnabled: false, confidentialCustomerDataEnabled: false,
     suites: [
       { id: "rules", requiredCases: 80, executedCases: 0, accepted: false },
-      { id: "customer-ai", requiredCases: 60, executedCases: 0, accepted: false },
+      { id: "customer-ai", requiredCases: 60, executedCases: 60, accepted: false },
       { id: "editorial", requiredCases: 60, executedCases: 0, accepted: false },
     ],
     gates: sourceGates.map((g, index) => ({

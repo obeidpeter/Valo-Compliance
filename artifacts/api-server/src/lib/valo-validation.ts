@@ -1,4 +1,5 @@
 import { CreateDocumentBody, SaveBusinessProfileBody, SaveDocumentBody, CreateSupportTicketBody } from "@workspace/api-zod";
+import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
 
 export const nigerianStates = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", "Delta", "Ebonyi",
@@ -16,7 +17,7 @@ export const profileInput = SaveBusinessProfileBody.strict().superRefine((input,
     ctx.addIssue({ code: "custom", path: ["profile", "turnoverYear"], message: "Invalid reporting year" });
 });
 
-function calendarDate(value: string) {
+export function calendarDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00Z`);
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
@@ -27,12 +28,18 @@ function contentValid(input: { content: { fields: { issueDate: string; dueDate: 
     (!issueDate || !dueDate || dueDate >= issueDate) &&
     new Set(input.content.blocks.map(b => b.id)).size === input.content.blocks.length;
 }
+function financialsValid(input:{content:Parameters<typeof synchronizeFinancialBlocks>[0]}){
+  try{return JSON.stringify(synchronizeFinancialBlocks(input.content).blocks)===JSON.stringify(input.content.blocks);}
+  catch{return false;}
+}
 export const documentInput = CreateDocumentBody.strict()
   .refine(i => Boolean(i.title.trim()), "Title must not be blank")
-  .refine(contentValid, "Invalid or inconsistent calendar dates, or duplicate section identifiers");
+  .refine(contentValid, "Invalid or inconsistent calendar dates, or duplicate section identifiers")
+  .refine(financialsValid,"Financial rows must match the supplied structured amounts. Use the financial fields to recalculate.");
 export const documentUpdate = SaveDocumentBody.strict()
   .refine(i => Number.isSafeInteger(i.expectedRevision), "Expected revision must be an integer")
   .refine(i => Boolean(i.title.trim()), "Title must not be blank")
-  .refine(contentValid, "Invalid or inconsistent calendar dates, or duplicate section identifiers");
+  .refine(contentValid, "Invalid or inconsistent calendar dates, or duplicate section identifiers")
+  .refine(financialsValid,"Financial rows must match the supplied structured amounts. Use the financial fields to recalculate.");
 export const ticketInput = CreateSupportTicketBody.strict()
   .refine(i => i.category === "support" || i.sharingConsent, "Service enquiries require explicit contact-sharing consent");

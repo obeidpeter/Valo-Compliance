@@ -11,6 +11,9 @@ import { ErrorState, Notice, Skel } from '@/components/states';
 import { FIELD_LABELS, describeError, formatDate, missingFields, newBlockId } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { DocumentExports } from '@/components/document-exports';
+import { FinancialFields, FINANCIAL_BLOCK_IDS } from '@/components/financial-fields';
+import { synchronizeFinancialBlocks } from '@workspace/valo-core/money';
+import type { FinancialInput } from '@workspace/api-client-react';
 
 type Snapshot = { title: string; content: CanonicalDocument };
 type SaveState = 'idle' | 'dirty' | 'saving' | 'saved' | 'error' | 'conflict' | 'blocked';
@@ -34,6 +37,8 @@ export default function DocumentEditor({ id }: { id: string }) {
   const [conflictRev, setConflictRev] = useState<number | null>(null);
   const [history, setHistory] = useState<Snapshot[]>([]);
   const [restoring, setRestoring] = useState<number | null>(null);
+  const [finDraft, setFinDraft] = useState<FinancialInput | null>(null);
+  const [finKey, setFinKey] = useState(0);
 
   const initFor = useRef<string | null>(null);
   const baseRev = useRef(0);
@@ -267,6 +272,17 @@ export default function DocumentEditor({ id }: { id: string }) {
                 </div>
               </div>
 
+              {content.financialInput && (
+                <div className="mt-10 rounded-2xl border border-border bg-sidebar/50 p-4 sm:p-5" data-testid="panel-financial">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="eyebrow">Financial details</p><span className="text-xs text-muted-foreground">Totals in whole kobo; tables update when applied</span></div>
+                  <FinancialFields key={'fin-' + finKey} idPrefix="doc" value={content.financialInput} onChange={setFinDraft} />
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button type="button" className="btn btn-primary btn-sm" disabled={!finDraft || JSON.stringify(finDraft) === JSON.stringify(content.financialInput)} onClick={() => { if (finDraft) update({ title, content: synchronizeFinancialBlocks({ ...content, financialInput: finDraft }) as CanonicalDocument }); }} data-testid="button-apply-financial">Apply financial changes</button>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFinKey((k) => k + 1)} data-testid="button-reset-financial">Reset</button>
+                  </div>
+                </div>
+              )}
+
               <p className="eyebrow mb-4 mt-10">Body</p>
               <ol className="grid gap-3">
                 {content.blocks.map((b, i) => (
@@ -351,6 +367,15 @@ function SaveIndicator({ state, rev, onRetry }: { state: SaveState; rev: number;
 
 function BlockEditor({ block, index, count, onChange, onMove, onDelete }: { block: DocumentBlock; index: number; count: number; onChange: (b: DocumentBlock) => void; onMove: (d: -1 | 1) => void; onDelete: () => void }) {
   const Icon = block.type === 'list' ? List : block.type === 'table' ? Table2 : Pilcrow;
+  const locked = FINANCIAL_BLOCK_IDS.includes(block.id);
+  if (locked) {
+    return (
+      <li className="rounded-xl border border-dashed border-border p-3" data-testid={'block-' + index}>
+        <p className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground"><Table2 className="h-3.5 w-3.5" />{block.text || 'Financial table'} · edit with Financial details above</p>
+        <div className="overflow-x-auto"><table className="w-full border-collapse text-sm"><tbody>{block.rows.map((r, i) => <tr key={i} className={i === 0 ? 'font-medium' : ''}>{r.map((c, j) => <td key={j} className="border border-border px-2.5 py-1.5 tabular-nums">{c}</td>)}</tr>)}</tbody></table></div>
+      </li>
+    );
+  }
   return (
     <li className="group relative rounded-xl border border-transparent p-1 transition-colors focus-within:border-border hover:border-border" data-testid={'block-' + index}>
       <div className="mb-1 flex items-center justify-between px-2 pt-1 text-xs text-muted-foreground">

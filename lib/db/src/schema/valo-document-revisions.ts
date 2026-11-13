@@ -12,6 +12,7 @@ export const valoDocumentRevisions = pgTable("valo_document_revisions", {
   content: jsonb("content").notNull().$type<Record<string, unknown>>(),
   contentHash: text("content_hash").notNull(),
   actorId: text("actor_id").notNull(),
+  origin: text("origin").notNull().default("manual"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, t => [
   uniqueIndex("valo_document_revision_unique").on(t.documentId, t.revision),

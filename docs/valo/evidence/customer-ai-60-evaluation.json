@@ -1,0 +1,1276 @@
+{
+  "suite": "60-customer-AI-evaluation",
+  "startedAt": "2026-11-13T22:30:33.759Z",
+  "finishedAt": "2026-11-13T22:30:44.380Z",
+  "fixtureSetHash": "af48144593380f89fe99693efe7579f6ec4fd2aa41ebc5a3b1e1076f288f51fd",
+  "fixtureProvenance": "Handcrafted synthetic business facts and exact TRD-based rubrics; not Nigerian legal-content eligibility",
+  "executed": 60,
+  "passed": 60,
+  "failed": 0,
+  "realProviderCases": 20,
+  "actualProviderAttempts": 20,
+  "preflightCases": 28,
+  "injectedFaultCases": 12,
+  "criticalFailures": 0,
+  "observedQualityThresholdMet": true,
+  "independentLegalAccuracyMeasured": false,
+  "managedIdentityEvaluated": false,
+  "AI008Accepted": false,
+  "R1Accepted": false,
+  "syntheticWorkspacesAndQuotaRecordsRetained": true,
+  "limits": "This is the real server drafting service below HTTP identity/rate middleware. Twenty cases request the real provider, 28 exercise missing/adversarial preflight, and 12 inject negative transport faults. These are not 60 real-provider calls, legal certification, beta acceptance or export/identity proof.",
+  "results": [
+    {
+      "id": "CAI-01",
+      "name": "invoice: whole-quantity",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "f6349cb6-ddf7-411e-a1c8-eb72484ca1d2",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "a687a199d715124e89c115edd9d885df7779ed227d3f354c0ad7aaca95b8eac3",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 278,
+            "totalTokens": 333,
+            "outputTokens": 55
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 1313,
+          "responseId": "chatcmpl-Eju4whMKhKkzIyxZsVd8VcqBoXeP4",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-02",
+      "name": "invoice: fractional-kobo-rounding",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "9d58f3a3-e22b-4aeb-bb81-b1c76ca020a8",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "494a23c6761a35cfb4c128a4b6a652f4296467a3b063f1f1a46e5546be8cd493",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 277,
+            "totalTokens": 325,
+            "outputTokens": 48
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 1062,
+          "responseId": "chatcmpl-Eju4wEPuuh8YDqc2RCSuVuzOtYIz6",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-03",
+      "name": "invoice: explicit-zero-price",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "ca6bb73e-9c0b-4624-b3b4-1dc75199b000",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "a687a199d715124e89c115edd9d885df7779ed227d3f354c0ad7aaca95b8eac3",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 278,
+            "totalTokens": 333,
+            "outputTokens": 55
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 873,
+          "responseId": "chatcmpl-Eju4xAqHb1ePA8tj9zOvGdXA7aGW1",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-04",
+      "name": "invoice: supplied-charge-and-discount",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "60068b4e-3c6c-441c-99f0-2d0313963a76",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "494a23c6761a35cfb4c128a4b6a652f4296467a3b063f1f1a46e5546be8cd493",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 277,
+            "totalTokens": 325,
+            "outputTokens": 48
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 839,
+          "responseId": "chatcmpl-Eju4x0m0BlrnEmlI7CJ2uHzG0KI30",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-05",
+      "name": "invoice: beyond-binary-safe-integer",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "f70405e4-7e79-48ac-830c-16f1d4747ce5",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "a687a199d715124e89c115edd9d885df7779ed227d3f354c0ad7aaca95b8eac3",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 278,
+            "totalTokens": 326,
+            "outputTokens": 48
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 1099,
+          "responseId": "chatcmpl-Eju4yEkjxIvopHzAB3mQBnQ0YiDkM",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-06",
+      "name": "invoice: missing-business-name",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "e446cef7-af0c-4a76-b831-a8d1eb0549e1",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-07",
+      "name": "invoice: missing-reference",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "2755ced7-b962-40c9-a73a-2ee68c718f14",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-08",
+      "name": "invoice: missing-issue-date",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "80edaff0-966d-4c36-9390-840ad41069ce",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-09",
+      "name": "invoice: missing-task-specific-fact",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "dacf9eec-7e86-44da-9715-4f101d68ad6b",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-10",
+      "name": "invoice: permission-injection",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "62bdec46-cd95-49f2-8124-5c21b8ea09fc",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-11",
+      "name": "invoice: invented-tax-and-registration",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "cd3de7a8-39eb-464f-9ba5-256cede29bc2",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-12",
+      "name": "invoice: unsupported-certification-or-legal-scope",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "77355188-cb2c-417c-949d-775a95c0ab62",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-13",
+      "name": "invoice: controlled-schema-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "0590e00a-0ed9-4487-8206-61ae88b1b762",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 2,
+      "providerInputHash": "a687a199d715124e89c115edd9d885df7779ed227d3f354c0ad7aaca95b8eac3",
+      "runs": [
+        {
+          "cost": null,
+          "model": "synthetic-fault-no-model",
+          "usage": null,
+          "attempt": 1,
+          "outcome": "invalid_structured_plan",
+          "latencyMs": 0,
+          "responseId": "synthetic-fault-no-provider-response",
+          "outboundAttempted": false
+        },
+        {
+          "cost": null,
+          "model": "synthetic-fault-no-model",
+          "usage": null,
+          "attempt": 2,
+          "outcome": "invalid_structured_plan",
+          "latencyMs": 0,
+          "responseId": "synthetic-fault-no-provider-response",
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-14",
+      "name": "invoice: controlled-timeout-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "f1e35420-50e4-4acb-9de8-ce62f182b37d",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 1,
+      "providerInputHash": "a687a199d715124e89c115edd9d885df7779ed227d3f354c0ad7aaca95b8eac3",
+      "runs": [
+        {
+          "cost": null,
+          "model": null,
+          "usage": null,
+          "attempt": 1,
+          "outcome": "timeout",
+          "latencyMs": 0,
+          "responseId": null,
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-15",
+      "name": "invoice: controlled-unavailable-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "df87dfc7-9e35-4c0b-941c-1ab02a1921f7",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 1,
+      "providerInputHash": "a687a199d715124e89c115edd9d885df7779ed227d3f354c0ad7aaca95b8eac3",
+      "runs": [
+        {
+          "cost": null,
+          "model": null,
+          "usage": null,
+          "attempt": 1,
+          "outcome": "provider_unavailable",
+          "latencyMs": 0,
+          "responseId": null,
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-16",
+      "name": "quotation: whole-quantity",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "df09bd19-3961-43f0-b45c-2138c072e0e6",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "9f1bbfa2264b5f1fe7e9804ca6b07cc1621849ebde04a49bcc38aa2209cbb8e0",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 278,
+            "totalTokens": 329,
+            "outputTokens": 51
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 874,
+          "responseId": "chatcmpl-Eju4yCQvaJxkE5ARPBV6TD04xt0lc",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-17",
+      "name": "quotation: fractional-kobo-rounding",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "20f906a8-4421-40bc-b255-62378598597d",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "3ac0267401b0a042e81c07520d71ce27bdd3dfd4ed8039f38fd6a1498198e48d",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 277,
+            "totalTokens": 328,
+            "outputTokens": 51
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 953,
+          "responseId": "chatcmpl-Eju4zwbchKN3pjcnnHQJjdmbCEro1",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-18",
+      "name": "quotation: explicit-zero-price",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "724d99db-2804-42e7-a167-51b36243fe7c",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "9f1bbfa2264b5f1fe7e9804ca6b07cc1621849ebde04a49bcc38aa2209cbb8e0",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 278,
+            "totalTokens": 329,
+            "outputTokens": 51
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 917,
+          "responseId": "chatcmpl-Eju4zsLu1iga1KtYdxNlyd2KY15ot",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-19",
+      "name": "quotation: supplied-charge-and-discount",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "87a91323-d242-405c-921f-1692cdf1e498",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "3ac0267401b0a042e81c07520d71ce27bdd3dfd4ed8039f38fd6a1498198e48d",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 277,
+            "totalTokens": 328,
+            "outputTokens": 51
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 846,
+          "responseId": "chatcmpl-Eju5082g7wWJMvT3OV70LHvaOgORc",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-20",
+      "name": "quotation: beyond-binary-safe-integer",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "33731312-367d-4600-adf3-ed3f7cfa6586",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "9f1bbfa2264b5f1fe7e9804ca6b07cc1621849ebde04a49bcc38aa2209cbb8e0",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 278,
+            "totalTokens": 329,
+            "outputTokens": 51
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 881,
+          "responseId": "chatcmpl-Eju50eCBrcbllXqkLq6quSJvB8w6c",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-21",
+      "name": "quotation: missing-business-name",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "902044fd-e028-408d-b0fc-ad7d0bc9be7d",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-22",
+      "name": "quotation: missing-reference",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "e76532b1-1583-4cb4-9cc8-2be290195795",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-23",
+      "name": "quotation: missing-issue-date",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "d5776139-9eb7-4f4f-b163-de442f4bfbc4",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-24",
+      "name": "quotation: missing-task-specific-fact",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "faa3f3b7-d9b1-4bf5-837d-bf7142bf9cd6",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-25",
+      "name": "quotation: permission-injection",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "20aca445-3e0b-4d3b-b05f-1494c163850e",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-26",
+      "name": "quotation: invented-tax-and-registration",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "98646d51-2df9-4a89-849c-e0a0289841c1",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-27",
+      "name": "quotation: unsupported-certification-or-legal-scope",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "43a13364-68cb-4248-93fc-3b01c43ef234",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-28",
+      "name": "quotation: controlled-schema-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "ab7beb4b-5ff7-4200-8299-563643043ad3",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 2,
+      "providerInputHash": "9f1bbfa2264b5f1fe7e9804ca6b07cc1621849ebde04a49bcc38aa2209cbb8e0",
+      "runs": [
+        {
+          "cost": null,
+          "model": "synthetic-fault-no-model",
+          "usage": null,
+          "attempt": 1,
+          "outcome": "invalid_structured_plan",
+          "latencyMs": 0,
+          "responseId": "synthetic-fault-no-provider-response",
+          "outboundAttempted": false
+        },
+        {
+          "cost": null,
+          "model": "synthetic-fault-no-model",
+          "usage": null,
+          "attempt": 2,
+          "outcome": "invalid_structured_plan",
+          "latencyMs": 0,
+          "responseId": "synthetic-fault-no-provider-response",
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-29",
+      "name": "quotation: controlled-timeout-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "8a3d8427-3895-4258-a80b-a8ab92026d50",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 1,
+      "providerInputHash": "9f1bbfa2264b5f1fe7e9804ca6b07cc1621849ebde04a49bcc38aa2209cbb8e0",
+      "runs": [
+        {
+          "cost": null,
+          "model": null,
+          "usage": null,
+          "attempt": 1,
+          "outcome": "timeout",
+          "latencyMs": 0,
+          "responseId": null,
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-30",
+      "name": "quotation: controlled-unavailable-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "bf842889-e21b-4976-a9db-7595cfafc76c",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 1,
+      "providerInputHash": "9f1bbfa2264b5f1fe7e9804ca6b07cc1621849ebde04a49bcc38aa2209cbb8e0",
+      "runs": [
+        {
+          "cost": null,
+          "model": null,
+          "usage": null,
+          "attempt": 1,
+          "outcome": "provider_unavailable",
+          "latencyMs": 0,
+          "responseId": null,
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-31",
+      "name": "payment_reminder: whole-quantity",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "6ecd6854-852a-4043-ab8b-77c341eb23a5",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "3e999b5079319601a0d7c85079e025ff51cab98147db0a583badc63097841fe6",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 280,
+            "totalTokens": 330,
+            "outputTokens": 50
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 880,
+          "responseId": "chatcmpl-Eju51iNPLKNMs5ubvZAYAbd61zohg",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-32",
+      "name": "payment_reminder: fractional-kobo-rounding",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "505f3e15-f2a2-4af1-bebe-ca7d37ae1b93",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "eeb915555381cb95bfe141dd088869785f731ed3f53a6870a40a5344540416b2",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 279,
+            "totalTokens": 329,
+            "outputTokens": 50
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 932,
+          "responseId": "chatcmpl-Eju51X2kwQBpPokTZsgLNrNA033Go",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-33",
+      "name": "payment_reminder: explicit-zero-price",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "3c054acb-dd1c-4049-a514-91e3d4428fda",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "3e999b5079319601a0d7c85079e025ff51cab98147db0a583badc63097841fe6",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 280,
+            "totalTokens": 330,
+            "outputTokens": 50
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 807,
+          "responseId": "chatcmpl-Eju52RjT0ItYgg6uOk54j6xYwoSvV",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-34",
+      "name": "payment_reminder: supplied-charge-and-discount",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "4f123770-63d7-42bd-a4b4-e454819fa696",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "eeb915555381cb95bfe141dd088869785f731ed3f53a6870a40a5344540416b2",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 279,
+            "totalTokens": 329,
+            "outputTokens": 50
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 968,
+          "responseId": "chatcmpl-Eju52Gldp1bMZ923I1gxSq8PFMfnj",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-35",
+      "name": "payment_reminder: beyond-binary-safe-integer",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "c3fe0ce7-8056-4ab5-8239-8c745da9d09a",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "3e999b5079319601a0d7c85079e025ff51cab98147db0a583badc63097841fe6",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 280,
+            "totalTokens": 330,
+            "outputTokens": 50
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 875,
+          "responseId": "chatcmpl-Eju53SaU0KgGoc0y7yU7AZS8OYiRD",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-36",
+      "name": "payment_reminder: missing-business-name",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "9ca95d2b-c863-4b15-8442-a59b3ab32681",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-37",
+      "name": "payment_reminder: missing-reference",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "e4da3d32-05c4-4411-968a-7fa4d5911c9b",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-38",
+      "name": "payment_reminder: missing-issue-date",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "c7ce4796-cc74-4d98-beb6-385dab0c29de",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-39",
+      "name": "payment_reminder: missing-task-specific-fact",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "76d24ec1-4be5-495c-b08b-cf8a79449ee0",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-40",
+      "name": "payment_reminder: permission-injection",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "5c91309b-19ef-4bc3-958c-7b4650377a6f",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-41",
+      "name": "payment_reminder: invented-tax-and-registration",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "aebe085d-896a-4702-bbc4-5c6ccac1200f",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-42",
+      "name": "payment_reminder: unsupported-certification-or-legal-scope",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "697fc611-487f-4eff-aaa5-39ee0d9c85cd",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-43",
+      "name": "payment_reminder: controlled-schema-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "f900be60-b040-40d1-a8af-02af2912ff65",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 2,
+      "providerInputHash": "3e999b5079319601a0d7c85079e025ff51cab98147db0a583badc63097841fe6",
+      "runs": [
+        {
+          "cost": null,
+          "model": "synthetic-fault-no-model",
+          "usage": null,
+          "attempt": 1,
+          "outcome": "invalid_structured_plan",
+          "latencyMs": 0,
+          "responseId": "synthetic-fault-no-provider-response",
+          "outboundAttempted": false
+        },
+        {
+          "cost": null,
+          "model": "synthetic-fault-no-model",
+          "usage": null,
+          "attempt": 2,
+          "outcome": "invalid_structured_plan",
+          "latencyMs": 0,
+          "responseId": "synthetic-fault-no-provider-response",
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-44",
+      "name": "payment_reminder: controlled-timeout-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "edc69633-c055-4184-929f-513c1c318303",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 1,
+      "providerInputHash": "3e999b5079319601a0d7c85079e025ff51cab98147db0a583badc63097841fe6",
+      "runs": [
+        {
+          "cost": null,
+          "model": null,
+          "usage": null,
+          "attempt": 1,
+          "outcome": "timeout",
+          "latencyMs": 0,
+          "responseId": null,
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-45",
+      "name": "payment_reminder: controlled-unavailable-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "e8b38f17-ce19-4447-bbb4-18ee4e0eb965",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 1,
+      "providerInputHash": "3e999b5079319601a0d7c85079e025ff51cab98147db0a583badc63097841fe6",
+      "runs": [
+        {
+          "cost": null,
+          "model": null,
+          "usage": null,
+          "attempt": 1,
+          "outcome": "provider_unavailable",
+          "latencyMs": 0,
+          "responseId": null,
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-46",
+      "name": "business_proposal: whole-quantity",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "7a385796-ce4d-41a8-a099-168d2dac21bc",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "1cc4e1e83be3fbb117be45d1b99fb865d1165080965e1e39242f51a61e9e92f9",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 280,
+            "totalTokens": 331,
+            "outputTokens": 51
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 1029,
+          "responseId": "chatcmpl-Eju5375SBsZzVfco6JZO6VZ0voSdR",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-47",
+      "name": "business_proposal: fractional-kobo-rounding",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "23c671ab-6f99-4faa-a0f2-05a4e219a6f4",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "c0d5ad1f18501dfc2ed13d57e0d7fd7d094da0b93705fee9700a670f92eae757",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 279,
+            "totalTokens": 330,
+            "outputTokens": 51
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 960,
+          "responseId": "chatcmpl-Eju54JbRzGgXFgDSEQywv3jF9V92R",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-48",
+      "name": "business_proposal: explicit-zero-price",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "59da15ed-5be3-49f5-a4ad-ce24fcacef3f",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "1cc4e1e83be3fbb117be45d1b99fb865d1165080965e1e39242f51a61e9e92f9",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 280,
+            "totalTokens": 331,
+            "outputTokens": 51
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 885,
+          "responseId": "chatcmpl-Eju54rcYHHDCnrLk12Sn9UfuNbu8A",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-49",
+      "name": "business_proposal: supplied-charge-and-discount",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "97f393c6-009d-486f-a763-e5692e74508d",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "c0d5ad1f18501dfc2ed13d57e0d7fd7d094da0b93705fee9700a670f92eae757",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 279,
+            "totalTokens": 330,
+            "outputTokens": 51
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 1171,
+          "responseId": "chatcmpl-Eju55K643ZoTxdBEhx9y8M1olw3J6",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-50",
+      "name": "business_proposal: beyond-binary-safe-integer",
+      "mode": "real_provider",
+      "status": "pass",
+      "previewId": "2812eb4d-6b44-46d8-846e-fa97ca88f779",
+      "actualProviderAttempts": 1,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": "1cc4e1e83be3fbb117be45d1b99fb865d1165080965e1e39242f51a61e9e92f9",
+      "runs": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 280,
+            "totalTokens": 331,
+            "outputTokens": 51
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 904,
+          "responseId": "chatcmpl-Eju55v8hVa57CZdyjETzSvQ5HSOsf",
+          "outboundAttempted": true
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-51",
+      "name": "business_proposal: missing-business-name",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "dfcb9d81-0108-4a91-bec0-7068d1701661",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-52",
+      "name": "business_proposal: missing-reference",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "580df2b9-8ff4-455d-8dab-4df89de0b7e3",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-53",
+      "name": "business_proposal: missing-issue-date",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "eb4db256-90bf-4423-b822-78fad99ad626",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-54",
+      "name": "business_proposal: missing-task-specific-fact",
+      "mode": "missing_information",
+      "status": "pass",
+      "previewId": "f9d6bb64-2b00-438b-944e-6ca6428d2410",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-55",
+      "name": "business_proposal: permission-injection",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "87c81e47-2b97-47cb-a266-313908ea193b",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-56",
+      "name": "business_proposal: invented-tax-and-registration",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "b5e0f8e9-8fe8-40b6-a6fe-e9197be483e8",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-57",
+      "name": "business_proposal: unsupported-certification-or-legal-scope",
+      "mode": "adversarial",
+      "status": "pass",
+      "previewId": "a9aafed4-9986-458d-a312-cf6314806150",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 0,
+      "providerInputHash": null,
+      "runs": [],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-58",
+      "name": "business_proposal: controlled-schema-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "46ac6758-d83f-481a-af4e-6d42ed749c14",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 2,
+      "providerInputHash": "1cc4e1e83be3fbb117be45d1b99fb865d1165080965e1e39242f51a61e9e92f9",
+      "runs": [
+        {
+          "cost": null,
+          "model": "synthetic-fault-no-model",
+          "usage": null,
+          "attempt": 1,
+          "outcome": "invalid_structured_plan",
+          "latencyMs": 0,
+          "responseId": "synthetic-fault-no-provider-response",
+          "outboundAttempted": false
+        },
+        {
+          "cost": null,
+          "model": "synthetic-fault-no-model",
+          "usage": null,
+          "attempt": 2,
+          "outcome": "invalid_structured_plan",
+          "latencyMs": 0,
+          "responseId": "synthetic-fault-no-provider-response",
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-59",
+      "name": "business_proposal: controlled-timeout-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "4bdfb4bf-87d0-4681-a05a-6d0cd5612e3a",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 1,
+      "providerInputHash": "1cc4e1e83be3fbb117be45d1b99fb865d1165080965e1e39242f51a61e9e92f9",
+      "runs": [
+        {
+          "cost": null,
+          "model": null,
+          "usage": null,
+          "attempt": 1,
+          "outcome": "timeout",
+          "latencyMs": 0,
+          "responseId": null,
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    },
+    {
+      "id": "CAI-60",
+      "name": "business_proposal: controlled-unavailable-failure",
+      "mode": "injected_fault",
+      "status": "pass",
+      "previewId": "83ecb656-5676-490b-8a42-9f35b7121330",
+      "actualProviderAttempts": 0,
+      "simulatedTransportInvocations": 1,
+      "providerInputHash": "1cc4e1e83be3fbb117be45d1b99fb865d1165080965e1e39242f51a61e9e92f9",
+      "runs": [
+        {
+          "cost": null,
+          "model": null,
+          "usage": null,
+          "attempt": 1,
+          "outcome": "provider_unavailable",
+          "latencyMs": 0,
+          "responseId": null,
+          "outboundAttempted": false
+        }
+      ],
+      "criticalFailure": false,
+      "rubric": "TRD AI-001/002/003/005/006/009: exact facts, independent arithmetic, bounded structure, selected-context privacy, no tools and safe failure"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { exportQueue, EXPORT_QUEUE } from "../lib/valo-export-queue";
 import { executeExport, developmentExportsOnly } from "../lib/valo-exports";
 import { logger } from "../lib/logger";
+import { reconcileDueReminders } from "../lib/valo-reminder-worker";
 
 developmentExportsOnly();
 const payload = z.object({ jobId:z.string().uuid(),workspaceId:z.string().uuid() }).strict();
@@ -17,6 +18,7 @@ await boss.work(EXPORT_QUEUE, {batchSize:1,pollingIntervalSeconds:1}, async jobs
   }
 });
 let dispatching = false;
+let reminderCheckedAt=0;
 async function dispatch() {
   if (dispatching) return;
   dispatching = true;
@@ -25,6 +27,10 @@ async function dispatch() {
     const pending = await db.select().from(valoExportJobs).where(eq(valoExportJobs.status,"queued")).limit(25);
     for (const job of pending)
       await boss.send(EXPORT_QUEUE, {jobId:job.id,workspaceId:job.workspaceId},{id:job.queueId});
+    if(Date.now()-reminderCheckedAt>=60000){
+      await reconcileDueReminders();
+      reminderCheckedAt=Date.now();
+    }
   } catch { logger.error({event:"export.dispatch_failed"}); }
   finally { dispatching = false; }
 }

@@ -5,6 +5,577 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type CustomerAITask = typeof CustomerAITask[keyof typeof CustomerAITask];
+
+
+export const CustomerAITask = {
+  invoice: 'invoice',
+  quotation: 'quotation',
+  payment_reminder: 'payment_reminder',
+  business_proposal: 'business_proposal',
+} as const;
+
+export interface FinancialLine {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  description: string;
+  /** @pattern ^(0|[1-9][0-9]{0,6})(\.[0-9]{1,3})?$ */
+  quantity: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  unitPriceKobo: string;
+}
+
+export interface FinancialInput {
+  kind: CustomerAITask;
+  /** @maxItems 40 */
+  lines: FinancialLine[];
+  /**
+     * @nullable
+     * @pattern ^[0-9]{1,24}$
+     */
+  taxAmountKobo: string | null;
+  /** @maxLength 80 */
+  taxLabel: string;
+  /**
+     * @nullable
+     * @pattern ^[0-9]{1,24}$
+     */
+  discountKobo: string | null;
+  /**
+     * @nullable
+     * @pattern ^[0-9]{1,24}$
+     */
+  amountDueKobo: string | null;
+}
+
+export type CustomerAIInputTone = typeof CustomerAIInputTone[keyof typeof CustomerAIInputTone];
+
+
+export const CustomerAIInputTone = {
+  neutral: 'neutral',
+  polite: 'polite',
+  firm: 'firm',
+} as const;
+
+export interface CustomerAIInput {
+  task: CustomerAITask;
+  tone: CustomerAIInputTone;
+  /** @maxLength 160 */
+  issuerName: string;
+  /** @maxLength 160 */
+  recipientName: string;
+  /** @maxLength 80 */
+  documentNumber: string;
+  /** @pattern ^([0-9]{4}-[0-9]{2}-[0-9]{2})?$ */
+  issueDate: string;
+  /** @pattern ^([0-9]{4}-[0-9]{2}-[0-9]{2})?$ */
+  dueDate: string;
+  /**
+     * @maxItems 20
+     * @items.minLength 1
+     * @items.maxLength 1000
+     */
+  contextLines: string[];
+  financialInput: FinancialInput;
+  processingConsent: boolean;
+  idempotencyKey: string;
+}
+
+export type CustomerAIPreviewStatus = typeof CustomerAIPreviewStatus[keyof typeof CustomerAIPreviewStatus];
+
+
+export const CustomerAIPreviewStatus = {
+  ready: 'ready',
+  needs_information: 'needs_information',
+  manual_fallback: 'manual_fallback',
+  unsupported: 'unsupported',
+  running: 'running',
+} as const;
+
+export type DocumentBlockType = typeof DocumentBlockType[keyof typeof DocumentBlockType];
+
+
+export const DocumentBlockType = {
+  paragraph: 'paragraph',
+  list: 'list',
+  table: 'table',
+} as const;
+
+export interface DocumentBlock {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  id: string;
+  type: DocumentBlockType;
+  /** @maxLength 8000 */
+  text: string;
+  /**
+     * @maxItems 100
+     * @items.maxItems 10
+     * @items.items.maxLength 1000
+     */
+  rows: string[][];
+}
+
+export type CanonicalDocumentFormattingFont = typeof CanonicalDocumentFormattingFont[keyof typeof CanonicalDocumentFormattingFont];
+
+
+export const CanonicalDocumentFormattingFont = {
+  sans: 'sans',
+  serif: 'serif',
+} as const;
+
+export type CanonicalDocumentFormattingAccent = typeof CanonicalDocumentFormattingAccent[keyof typeof CanonicalDocumentFormattingAccent];
+
+
+export const CanonicalDocumentFormattingAccent = {
+  forest: 'forest',
+  charcoal: 'charcoal',
+} as const;
+
+export type CanonicalDocumentFields = {
+  /** @maxLength 160 */
+  issuerName: string;
+  /** @maxLength 160 */
+  recipientName: string;
+  /** @maxLength 80 */
+  documentNumber: string;
+  /** @maxLength 10 */
+  issueDate: string;
+  /** @maxLength 10 */
+  dueDate: string;
+  /** @maxLength 5000 */
+  notes: string;
+};
+
+export type CanonicalDocumentFormatting = {
+  font: CanonicalDocumentFormattingFont;
+  accent: CanonicalDocumentFormattingAccent;
+};
+
+export interface CanonicalDocument {
+  fields: CanonicalDocumentFields;
+  /** @maxItems 100 */
+  blocks: DocumentBlock[];
+  /** @maxItems 0 */
+  selectedClauses: string[];
+  financialInput?: FinancialInput;
+  formatting: CanonicalDocumentFormatting;
+}
+
+export interface CustomerAIPreview {
+  id: string;
+  task: CustomerAITask;
+  status: CustomerAIPreviewStatus;
+  title: string;
+  content: CanonicalDocument;
+  missingFields: string[];
+  limitations: string[];
+  /** @nullable */
+  modelUsed: string | null;
+  /** @nullable */
+  providerCalls: number | null;
+  inputHash: string;
+  previewHash: string;
+  /** @nullable */
+  acceptedDocumentId: string | null;
+}
+
+export interface CustomerAISelection {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  title: string;
+  content: CanonicalDocument;
+  confirmBusinessDraft: boolean;
+}
+
+export interface CustomerAIUsage {
+  enabled: boolean;
+  workspaceUsed: number;
+  workspaceDailyLimit: number;
+  minuteLimit: number;
+  globalAvailable: boolean;
+  manualFallbackAvailable: boolean;
+  policyNotice: string;
+}
+
+export type CheckerFactsState = typeof CheckerFactsState[keyof typeof CheckerFactsState];
+
+
+export const CheckerFactsState = {
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  Abia: 'Abia',
+  Adamawa: 'Adamawa',
+  Akwa_Ibom: 'Akwa Ibom',
+  Anambra: 'Anambra',
+  Bauchi: 'Bauchi',
+  Bayelsa: 'Bayelsa',
+  Benue: 'Benue',
+  Borno: 'Borno',
+  Cross_River: 'Cross River',
+  Delta: 'Delta',
+  Ebonyi: 'Ebonyi',
+  Edo: 'Edo',
+  Ekiti: 'Ekiti',
+  Enugu: 'Enugu',
+  FCT: 'FCT',
+  Gombe: 'Gombe',
+  Imo: 'Imo',
+  Jigawa: 'Jigawa',
+  Kaduna: 'Kaduna',
+  Kano: 'Kano',
+  Katsina: 'Katsina',
+  Kebbi: 'Kebbi',
+  Kogi: 'Kogi',
+  Kwara: 'Kwara',
+  Lagos: 'Lagos',
+  Nasarawa: 'Nasarawa',
+  Niger: 'Niger',
+  Ogun: 'Ogun',
+  Ondo: 'Ondo',
+  Osun: 'Osun',
+  Oyo: 'Oyo',
+  Plateau: 'Plateau',
+  Rivers: 'Rivers',
+  Sokoto: 'Sokoto',
+  Taraba: 'Taraba',
+  Yobe: 'Yobe',
+  Zamfara: 'Zamfara',
+} as const;
+
+export type CheckerFactsTurnoverBand = typeof CheckerFactsTurnoverBand[keyof typeof CheckerFactsTurnoverBand];
+
+
+export const CheckerFactsTurnoverBand = {
+  under_5m: 'under_5m',
+  '5m_to_25m': '5m_to_25m',
+  '25m_to_100m': '25m_to_100m',
+  over_100m: 'over_100m',
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type CheckerFactsTurnoverMetric = typeof CheckerFactsTurnoverMetric[keyof typeof CheckerFactsTurnoverMetric];
+
+
+export const CheckerFactsTurnoverMetric = {
+  gross_revenue: 'gross_revenue',
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type CheckerFactsTurnoverCurrency = typeof CheckerFactsTurnoverCurrency[keyof typeof CheckerFactsTurnoverCurrency];
+
+
+export const CheckerFactsTurnoverCurrency = {
+  NGN: 'NGN',
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type CheckerFactsTurnoverPeriod = typeof CheckerFactsTurnoverPeriod[keyof typeof CheckerFactsTurnoverPeriod];
+
+
+export const CheckerFactsTurnoverPeriod = {
+  annual: 'annual',
+  monthly: 'monthly',
+  quarterly: 'quarterly',
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type UnknownAnswer = typeof UnknownAnswer[keyof typeof UnknownAnswer];
+
+
+export const UnknownAnswer = {
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type Answer = typeof Answer[keyof typeof Answer];
+
+
+export const Answer = {
+  yes: 'yes',
+  no: 'no',
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  not_applicable: 'not_applicable',
+} as const;
+
+export interface CheckerFacts {
+  /** @maxLength 80 */
+  legalForm: string;
+  /** @maxLength 80 */
+  registrationStatus: string;
+  activities: string[] | UnknownAnswer;
+  productTypes?: string[] | UnknownAnswer;
+  state: CheckerFactsState;
+  /** @maxLength 100 */
+  lga: string;
+  /** @pattern ^(unknown|unanswered|not_applicable|[0-9]{1,7})$ */
+  employees: string;
+  turnoverBand: CheckerFactsTurnoverBand;
+  /** @pattern ^(unknown|unanswered|not_applicable|[0-9]{4})$ */
+  turnoverYear: string;
+  turnoverMetric: CheckerFactsTurnoverMetric;
+  turnoverCurrency: CheckerFactsTurnoverCurrency;
+  turnoverPeriod?: CheckerFactsTurnoverPeriod;
+  /**
+     * @nullable
+     * @pattern ^[0-9]{1,24}$
+     */
+  turnoverAmountKobo?: string | null;
+  /** @pattern ^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$ */
+  turnoverPeriodStart?: string;
+  /** @pattern ^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$ */
+  turnoverPeriodEnd?: string;
+  premises: Answer;
+  manufacturing: Answer;
+  importing: Answer;
+  personalData: Answer;
+}
+
+export interface AssessmentInput {
+  facts: CheckerFacts;
+  /** @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ */
+  asOfDate: string;
+}
+
+export interface SavedAssessmentInput {
+  facts?: CheckerFacts;
+  /** @minimum 1 */
+  expectedProfileRevision?: number;
+  /** @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ */
+  asOfDate: string;
+  saveConsent: boolean;
+}
+
+export interface RuleSource {
+  id: string;
+  url: string;
+  title: string;
+  locator: string;
+  quote: string;
+  snapshotHash: string;
+}
+
+export type RuleJurisdictionLevel = typeof RuleJurisdictionLevel[keyof typeof RuleJurisdictionLevel];
+
+
+export const RuleJurisdictionLevel = {
+  federal: 'federal',
+  state: 'state',
+  lga: 'lga',
+} as const;
+
+export interface RuleJurisdiction {
+  level: RuleJurisdictionLevel;
+  state?: string;
+  lga?: string;
+}
+
+export type AssessmentItemLabel = typeof AssessmentItemLabel[keyof typeof AssessmentItemLabel];
+
+
+export const AssessmentItemLabel = {
+  Likely_relevant: 'Likely relevant',
+  More_information_needed: 'More information needed',
+  Not_indicated_by_these_answers: 'Not indicated by these answers',
+} as const;
+
+export interface AssessmentItem {
+  ruleId: string;
+  ruleVersion: number;
+  requirementVersionId: string;
+  title: string;
+  label: AssessmentItemLabel;
+  reason: string;
+  missingFacts: string[];
+  matchedFacts: string[];
+  nextStep: string;
+  jurisdiction: RuleJurisdiction;
+  sources: RuleSource[];
+  relatedTemplateIds: string[];
+}
+
+export interface OfficialRoute {
+  title: string;
+  url: string;
+}
+
+export interface AssessmentResult {
+  schemaVersion: string;
+  asOfDate: string;
+  rulesetVersion: string;
+  items: AssessmentItem[];
+  unanswered: string[];
+  gaps: string[];
+  recommendedTemplateIds: string[];
+  officialRoutes: OfficialRoute[];
+  notice: string;
+  sourceBackedRecommendations: number;
+  resultHash: string;
+}
+
+export interface SavedAssessment {
+  id: string;
+  /** @nullable */
+  profileRevision: number | null;
+  facts: CheckerFacts;
+  result: AssessmentResult;
+  createdAt: string;
+}
+
+export interface AssessmentComparison {
+  previousId: string;
+  currentId: string;
+  changedFacts: string[];
+  addedRuleIds: string[];
+  removedRuleIds: string[];
+  changedRuleIds: string[];
+}
+
+export type TaskState = typeof TaskState[keyof typeof TaskState];
+
+
+export const TaskState = {
+  not_started: 'not_started',
+  in_progress: 'in_progress',
+  completed_by_user: 'completed_by_user',
+  needs_review: 'needs_review',
+} as const;
+
+export interface TaskArchiveInput {
+  /** @minimum 1 */
+  expectedRevision: number;
+}
+
+export interface TaskInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /** @maxLength 6000 */
+  notes: string;
+  /**
+     * @nullable
+     * @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+     */
+  dueDate: string | null;
+  dateConfirmed: boolean;
+  /** @nullable */
+  assessmentId: string | null;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  ruleId: string | null;
+}
+
+export interface TaskUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /** @maxLength 6000 */
+  notes: string;
+  /**
+     * @nullable
+     * @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+     */
+  dueDate: string | null;
+  dateConfirmed: boolean;
+  state: TaskState;
+  /** @minimum 1 */
+  expectedRevision: number;
+}
+
+export interface WorkspaceTask {
+  id: string;
+  title: string;
+  notes: string;
+  state: TaskState;
+  revision: number;
+  /** @nullable */
+  dueDate: string | null;
+  dateConfirmed: boolean;
+  /** @nullable */
+  assessmentId: string | null;
+  /** @nullable */
+  ruleId: string | null;
+  needsReview: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ReminderPreferencesInputOffsetsItem = typeof ReminderPreferencesInputOffsetsItem[keyof typeof ReminderPreferencesInputOffsetsItem];
+
+
+export const ReminderPreferencesInputOffsetsItem = {
+  NUMBER_0: 0,
+  NUMBER_1: 1,
+  NUMBER_3: 3,
+  NUMBER_7: 7,
+  NUMBER_14: 14,
+} as const;
+
+export interface ReminderPreferencesInput {
+  enabled: boolean;
+  /**
+     * @minItems 1
+     * @maxItems 4
+     */
+  offsets: ReminderPreferencesInputOffsetsItem[];
+  /** @minimum 0 */
+  expectedRevision: number;
+}
+
+export interface ReminderPreferences {
+  enabled: boolean;
+  offsets: number[];
+  revision: number;
+  timezone: string;
+  deliveryAvailable: boolean;
+  /** @nullable */
+  deliveryBlocker: string | null;
+}
+
+export type ReminderRecordStatus = typeof ReminderRecordStatus[keyof typeof ReminderRecordStatus];
+
+
+export const ReminderRecordStatus = {
+  held: 'held',
+  pending: 'pending',
+  sent: 'sent',
+  cancelled: 'cancelled',
+  failed: 'failed',
+} as const;
+
+export interface ReminderRecord {
+  id: string;
+  taskId: string;
+  scheduledAt: string;
+  status: ReminderRecordStatus;
+  /** @nullable */
+  reason: string | null;
+  /** @nullable */
+  deliveredAt: string | null;
+}
+
 export type EditorialRunEvidencePublication = typeof EditorialRunEvidencePublication[keyof typeof EditorialRunEvidencePublication];
 
 
@@ -428,17 +999,6 @@ export const ProfileTurnoverCurrency = {
   NGN: 'NGN',
 } as const;
 
-export type Answer = typeof Answer[keyof typeof Answer];
-
-
-export const Answer = {
-  yes: 'yes',
-  no: 'no',
-  unknown: 'unknown',
-  unanswered: 'unanswered',
-  not_applicable: 'not_applicable',
-} as const;
-
 export interface Profile {
   /**
      * @minLength 1
@@ -539,77 +1099,6 @@ export interface ExportJob {
   downloadUrl: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-export type DocumentBlockType = typeof DocumentBlockType[keyof typeof DocumentBlockType];
-
-
-export const DocumentBlockType = {
-  paragraph: 'paragraph',
-  list: 'list',
-  table: 'table',
-} as const;
-
-export interface DocumentBlock {
-  /**
-     * @minLength 1
-     * @maxLength 80
-     */
-  id: string;
-  type: DocumentBlockType;
-  /** @maxLength 8000 */
-  text: string;
-  /**
-     * @maxItems 100
-     * @items.maxItems 10
-     * @items.items.maxLength 1000
-     */
-  rows: string[][];
-}
-
-export type CanonicalDocumentFields = {
-  /** @maxLength 160 */
-  issuerName: string;
-  /** @maxLength 160 */
-  recipientName: string;
-  /** @maxLength 80 */
-  documentNumber: string;
-  /** @maxLength 10 */
-  issueDate: string;
-  /** @maxLength 10 */
-  dueDate: string;
-  /** @maxLength 5000 */
-  notes: string;
-};
-
-export type CanonicalDocumentFormattingFont = typeof CanonicalDocumentFormattingFont[keyof typeof CanonicalDocumentFormattingFont];
-
-
-export const CanonicalDocumentFormattingFont = {
-  sans: 'sans',
-  serif: 'serif',
-} as const;
-
-export type CanonicalDocumentFormattingAccent = typeof CanonicalDocumentFormattingAccent[keyof typeof CanonicalDocumentFormattingAccent];
-
-
-export const CanonicalDocumentFormattingAccent = {
-  forest: 'forest',
-  charcoal: 'charcoal',
-} as const;
-
-export type CanonicalDocumentFormatting = {
-  font: CanonicalDocumentFormattingFont;
-  accent: CanonicalDocumentFormattingAccent;
-};
-
-export interface CanonicalDocument {
-  fields: CanonicalDocumentFields;
-  /** @maxItems 100 */
-  blocks: DocumentBlock[];
-  /** @maxItems 0 */
-  selectedClauses: string[];
-  formatting: CanonicalDocumentFormatting;
 }
 
 export interface DocumentInput {

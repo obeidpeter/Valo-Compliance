@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'wouter';
 import { useUser } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, FilePlus2, FileText, Loader2, UserRound } from 'lucide-react';
+import { ArrowRight, Sparkles, FilePlus2, FileText, Loader2, UserRound } from 'lucide-react';
 import { useCreateDocument, useGetWorkspace, useListDocuments, getGetWorkspaceQueryKey, getListDocumentsQueryKey } from '@workspace/api-client-react';
+import { WorkspaceNav } from '@/components/workspace-nav';
 import { EmptyState, ErrorState, Notice, Skel } from '@/components/states';
 import { blankContent, describeError, formatDate, missingFields } from '@/lib/api';
 
@@ -29,14 +30,16 @@ export default function WorkspaceHome() {
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
+      <WorkspaceNav />
       <header className="reveal flex flex-wrap items-end justify-between gap-6">
         <div>
           <p className="eyebrow">Your workspace</p>
           <h1 className="font-display mt-2 text-4xl sm:text-5xl">{name ? 'Good to see you, ' + name + '.' : 'Your workspace'}</h1>
         </div>
+        <div className="flex flex-wrap gap-2"><Link href="/workspace/ai" className="btn btn-ink" data-testid="link-ai-drafting"><Sparkles className="h-4 w-4" /> Prepare invoice or quotation</Link>
         <button className="btn btn-primary" onClick={newDraft} disabled={create.isPending || !ws.isSuccess} data-testid="button-new-draft">
           {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FilePlus2 className="h-4 w-4" />} New blank draft
-        </button>
+        </button></div>
       </header>
       {create.error && <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{describeError(create.error).message}</p>}
 

@@ -86,8 +86,21 @@ test("R2, launch, live commerce and real confidential data remain disabled", () 
   assert.equal(r.livePaymentsEnabled, false);
   assert.equal(r.recurringBillingEnabled, false);
   assert.equal(r.confidentialCustomerDataEnabled, false);
-  assert.ok(r.suites.every(s => s.executedCases === 0 && !s.accepted));
+  assert.ok(r.suites.every(s => !s.accepted));
+  assert.deepEqual(Object.fromEntries(r.suites.map(s=>[s.id,s.executedCases])),{
+    rules:0,"customer-ai":60,editorial:0,
+  }); // Mechanical rule fixtures are not source-backed Nigerian acceptance scenarios.
   assert.ok(r.gates.every(g => g.status !== "passed"));
+});
+test("partial execution bindings match the actual retained report bytes",async()=>{
+  const {readFile}=await import("node:fs/promises");
+  const {createHash}=await import("node:crypto");
+  const {readiness}=await import("@workspace/valo-core");
+  const records=new Map(readiness().requirements.flatMap(r=>r.evidence).map(e=>[e.path,e]));
+  for(const record of records.values()){
+    const bytes=await readFile(new URL("../../../"+record.path,import.meta.url));
+    assert.equal(createHash("sha256").update(bytes).digest("hex"),record.hash,record.path);
+  }
 });
 test("all ten UAT packs and six original gate IDs remain unaccepted with exact release expectations", () => {
   const r = readiness();

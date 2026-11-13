@@ -11,6 +11,7 @@ export const valoProfileVersions = pgTable("valo_profile_versions", {
   noticeVersion: text("notice_version").notNull(),
   actorId: text("actor_id").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-}, t => [uniqueIndex("valo_profile_revision_unique").on(t.workspaceId, t.revision)]);
+}, t => [uniqueIndex("valo_profile_revision_unique").on(t.workspaceId, t.revision),
+  uniqueIndex("valo_profile_workspace_id_unique").on(t.workspaceId,t.id)]);
 export const insertValoProfileSchema = createInsertSchema(valoProfileVersions);
 export type ValoProfileVersion = typeof valoProfileVersions.$inferSelect;

@@ -6,6 +6,8 @@ import { ListPublicCatalogueQueryParams, GetProofRegisterResponse, GetContentReg
 import { readiness, catalogueSummary, contentReadiness, contentTraceRows, expansionReadiness, coveragePlan } from "@workspace/valo-core";
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
 import * as store from "../lib/valo-store";
+import requirementsRouter from "./valo-requirements";
+import customerAIRouter from "./valo-customer-ai";
 
 const router = Router();
 router.get("/development/source-evidence",async (_req,res):Promise<void>=>{
@@ -68,4 +70,7 @@ router.get("/workspace/documents/:id/revisions", async (req, res) => {
   res.json(await store.listRevisions(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
 });
 router.post("/workspace/support", async (req, res) => { res.status(201).json(await store.createTicket(res.locals.valoActor, req.body)); });
+// Mounted after the shared server identity, workspace and CSRF boundary above.
+router.use(requirementsRouter);
+router.use(customerAIRouter);
 export default router;

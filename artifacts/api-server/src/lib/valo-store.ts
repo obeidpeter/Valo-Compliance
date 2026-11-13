@@ -97,11 +97,11 @@ export async function listRevisions(actor: WorkspaceActor, id: string) {
     .orderBy(desc(valoDocumentRevisions.revision));
   return revisions.map(revision => serialize(document, revision));
 }
-async function appendRevision(tx: Tx, actor: WorkspaceActor, id: string, revision: number, input: z.infer<typeof documentInput>) {
+async function appendRevision(tx: Tx, actor: WorkspaceActor, id: string, revision: number, input: z.infer<typeof documentInput>,origin="manual") {
   // The hash binds the title and entire canonical document, not only its visible text.
   await tx.insert(valoDocumentRevisions).values({
     id: randomUUID(), workspaceId: actor.workspaceId, documentId: id, revision,
-    title: input.title, content: input.content, contentHash: sha256(JSON.stringify(input)), actorId: actor.identityId,
+    title: input.title, content: input.content, contentHash: sha256(JSON.stringify(input)), actorId: actor.identityId,origin,
   });
   await event(tx, actor, "document.revision_saved", id, revision);
 }
@@ -115,13 +115,19 @@ async function getExactRevision(actor: WorkspaceActor, id: string, revisionNumbe
   return serialize(row.document, row.revision);
 }
 export async function createDocument(actor: WorkspaceActor, raw: unknown) {
+  const id=await db.transaction(tx=>createDocumentInTransaction(tx,actor,raw));
+  return getExactRevision(actor,id,1);
+}
+/** AI acceptance and document creation share one transaction and one tenant check. */
+export async function createDocumentInTransaction(tx:Tx,actor:WorkspaceActor,raw:unknown,origin:"manual"|"customer_ai"="manual"){
   const input = documentInput.parse(raw);
   const id = randomUUID();
-  await db.transaction(async tx => {
-    await tx.insert(valoDocuments).values({ id, workspaceId: actor.workspaceId, currentRevision: 1 });
-    await appendRevision(tx, actor, id, 1, input);
-  });
-  return getExactRevision(actor, id, 1);
+  const[member]=await tx.select().from(valoMemberships).where(and(eq(valoMemberships.workspaceId,actor.workspaceId),
+    eq(valoMemberships.identityId,actor.identityId),eq(valoMemberships.active,"yes"))).for("share");
+  if(!member)throw new ValoProblem(403,"Active workspace membership is required");
+  await tx.insert(valoDocuments).values({ id, workspaceId: actor.workspaceId, currentRevision: 1 });
+  await appendRevision(tx, actor, id, 1, input,origin);
+  return id;
 }
 export async function saveDocument(actor: WorkspaceActor, id: string, raw: unknown) {
   const { expectedRevision, ...input } = documentUpdate.parse(raw);
@@ -131,6 +137,11 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
     if (!document) throw new ValoProblem(404, "Document not found");
     if (document.currentRevision !== expectedRevision)
       throw new ValoProblem(409, "Document changed in another tab. Your text was not overwritten; compare with the latest revision.", document.currentRevision);
+    const[current]=await tx.select({content:valoDocumentRevisions.content}).from(valoDocumentRevisions)
+      .where(and(eq(valoDocumentRevisions.documentId,id),eq(valoDocumentRevisions.workspaceId,actor.workspaceId),
+        eq(valoDocumentRevisions.revision,expectedRevision)));
+    if(current?.content.financialInput&&!input.content.financialInput)
+      throw new ValoProblem(422,"Keep the guided financial model. Create a separate blank draft for unrestricted free-form content.");
     await appendRevision(tx, actor, id, expectedRevision + 1, input);
     await tx.update(valoDocuments).set({ currentRevision: expectedRevision + 1, updatedAt: new Date() })
       .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)));

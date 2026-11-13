@@ -10,6 +10,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ErrorState, Notice, Skel } from '@/components/states';
 import { describeError } from '@/lib/api';
+import { WorkspaceNav } from '@/components/workspace-nav';
 
 const EMPTY: Profile = {
   businessName: '', legalForm: 'unknown', registrationStatus: 'unknown', activities: [''], state: 'unanswered', lga: '',
@@ -81,6 +82,7 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 lg:px-8">
+      <WorkspaceNav />
       <Link href="/workspace" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Workspace</Link>
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-4xl">Business profile</h1>

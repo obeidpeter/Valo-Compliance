@@ -1,0 +1,147 @@
+{
+  "syntheticOnly": true,
+  "startedAt": "2026-11-13T23:00:10.817Z",
+  "checks": [
+    {
+      "name": "anonymous_progressive_checker_has_real_gaps_and_no_false_exemption",
+      "status": "pass"
+    },
+    {
+      "name": "managed_verified_account_and_consented_saved_profile_assessment",
+      "status": "pass"
+    },
+    {
+      "name": "assessment_comparison_keeps_profile_history",
+      "status": "pass"
+    },
+    {
+      "name": "task_creation_reload_and_user_completion_are_real",
+      "status": "pass"
+    },
+    {
+      "name": "opted_in_reminders_show_held_not_delivery_and_mobile_reflows",
+      "status": "pass"
+    },
+    {
+      "name": "invoice_real_AI_edit_save_private_DOCX_PDF",
+      "status": "pass"
+    },
+    {
+      "name": "quotation_real_AI_edit_save_private_DOCX_PDF",
+      "status": "pass"
+    },
+    {
+      "name": "payment_reminder_real_AI_edit_save_private_DOCX_PDF",
+      "status": "pass"
+    },
+    {
+      "name": "business_proposal_real_AI_edit_save_private_DOCX_PDF",
+      "status": "pass"
+    }
+  ],
+  "managedIdentityUsed": true,
+  "actualEmailDeliveryTested": false,
+  "sourceBackedRulesPublished": 0,
+  "r1Accepted": false,
+  "financialExports": [
+    {
+      "task": "invoice",
+      "format": "docx",
+      "revisionId": "b5c99850-548c-43d9-bfc1-36e204ce34b8",
+      "checksum": "15b5781bb391c60e78047fc0cfd48c7be3c8748097adbd8a00cdd80b37a10fac",
+      "bytes": 12037,
+      "privateHeaders": true,
+      "anonymousStatus": 401,
+      "model": "gpt-5.4-mini-2026-03-17",
+      "providerCalls": 1,
+      "parsedAndTextChecked": true
+    },
+    {
+      "task": "invoice",
+      "format": "pdf",
+      "revisionId": "b5c99850-548c-43d9-bfc1-36e204ce34b8",
+      "checksum": "55c30b5b53bf1058e63d1f3abbf90c0dfd5a3a60fd51d3b8fb0f2125206a317d",
+      "bytes": 46331,
+      "privateHeaders": true,
+      "anonymousStatus": 401,
+      "model": "gpt-5.4-mini-2026-03-17",
+      "providerCalls": 1,
+      "parsedAndTextChecked": true
+    },
+    {
+      "task": "quotation",
+      "format": "docx",
+      "revisionId": "7a4e5585-db38-47f8-b8c9-f82621c288a7",
+      "checksum": "80ab69eca2ee6d0c2788296e70cf8f7d870c1ab9b41b1edbb29f3d3df334973e",
+      "bytes": 12058,
+      "privateHeaders": true,
+      "anonymousStatus": 401,
+      "model": "gpt-5.4-mini-2026-03-17",
+      "providerCalls": 1,
+      "parsedAndTextChecked": true
+    },
+    {
+      "task": "quotation",
+      "format": "pdf",
+      "revisionId": "7a4e5585-db38-47f8-b8c9-f82621c288a7",
+      "checksum": "d2998ab3e347430fb922cb69b18be974db6c4aa4143dfb7b8e12a766ea5c07b6",
+      "bytes": 46693,
+      "privateHeaders": true,
+      "anonymousStatus": 401,
+      "model": "gpt-5.4-mini-2026-03-17",
+      "providerCalls": 1,
+      "parsedAndTextChecked": true
+    },
+    {
+      "task": "payment_reminder",
+      "format": "docx",
+      "revisionId": "d1df559d-4125-4e75-afa6-7b3262e789e2",
+      "checksum": "4ad8f2361d54d0d7ca9301d04f2dcf8de1c871d21f94b9ad9ded2ce789d52c70",
+      "bytes": 12009,
+      "privateHeaders": true,
+      "anonymousStatus": 401,
+      "model": "gpt-5.4-mini-2026-03-17",
+      "providerCalls": 1,
+      "parsedAndTextChecked": true
+    },
+    {
+      "task": "payment_reminder",
+      "format": "pdf",
+      "revisionId": "d1df559d-4125-4e75-afa6-7b3262e789e2",
+      "checksum": "5969b378943c002ee5ecbb0f06a7b9f86f32726a598f2e59f885f51c41200e2a",
+      "bytes": 46503,
+      "privateHeaders": true,
+      "anonymousStatus": 401,
+      "model": "gpt-5.4-mini-2026-03-17",
+      "providerCalls": 1,
+      "parsedAndTextChecked": true
+    },
+    {
+      "task": "business_proposal",
+      "format": "docx",
+      "revisionId": "3332defb-c4b7-453e-954d-2cfed210d604",
+      "checksum": "ddbc37c298b9392602db7054dc65e6dae944972793b6b426d6cd6591d506dfb9",
+      "bytes": 12078,
+      "privateHeaders": true,
+      "anonymousStatus": 401,
+      "model": "gpt-5.4-mini-2026-03-17",
+      "providerCalls": 1,
+      "parsedAndTextChecked": true
+    },
+    {
+      "task": "business_proposal",
+      "format": "pdf",
+      "revisionId": "3332defb-c4b7-453e-954d-2cfed210d604",
+      "checksum": "9ae23e2c246d0d2764ab1b5f4ec0bd3bd24367c152ae975597e5fed5fcfaa903",
+      "bytes": 46706,
+      "privateHeaders": true,
+      "anonymousStatus": 401,
+      "model": "gpt-5.4-mini-2026-03-17",
+      "providerCalls": 1,
+      "parsedAndTextChecked": true
+    }
+  ],
+  "finishedAt": "2026-11-13T23:01:33.182Z",
+  "syntheticAppRowsRetained": true,
+  "verifiedAccountFlowPassed": true
+}

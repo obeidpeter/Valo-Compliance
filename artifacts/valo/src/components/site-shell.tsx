@@ -7,6 +7,7 @@ import { basePath } from '@/lib/env';
 import { cn } from '@/lib/utils';
 
 const NAV = [
+  { href: '/checker', label: 'Checker' },
   { href: '/library', label: 'Library' },
   { href: '/compliance', label: 'Compliance' },
   { href: '/industries', label: 'Industries' },
@@ -90,7 +91,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">Your business drafts and source-governed guidance, kept on separate shelves. Built for owners of Nigerian small businesses.</p>
           </div>
           <FooterCol title="Documents" links={[['/library', 'Template library'], ['/workspace', 'Your workspace'], ['/pricing', 'Pricing']]} />
-          <FooterCol title="Compliance" links={[['/compliance', 'Guidance status'], ['/industries', 'Industries'], ['/resources', 'Resources'], ['/services', 'Services']]} />
+          <FooterCol title="Compliance" links={[['/checker', 'Requirements checker'], ['/compliance', 'Guidance status'], ['/industries', 'Industries'], ['/resources', 'Resources'], ['/services', 'Services']]} />
           <FooterCol title="Valo" links={[['/help', 'Help'], ['/support', 'Support'], ['/development', 'Build status'], ['/privacy', 'Privacy'], ['/terms', 'Terms']]} />
         </div>
         <div className="mx-auto max-w-7xl border-t border-border px-5 py-5 text-xs text-muted-foreground lg:px-8">
@@ -126,7 +127,7 @@ function MobileDock() {
         <Show when="signed-out">
           <Link href="/sign-up" className="btn btn-primary w-full" data-testid="link-dock-documents"><FileText className="h-4 w-4" /> Start a draft</Link>
         </Show>
-        <Link href="/compliance" className="btn btn-ink w-full" data-testid="link-dock-compliance"><Scale className="h-4 w-4" /> Rules status</Link>
+        <Link href="/checker" className="btn btn-ink w-full" data-testid="link-dock-compliance"><Scale className="h-4 w-4" /> Check rules</Link>
       </div>
     </div>
   );

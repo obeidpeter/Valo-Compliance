@@ -72,6 +72,7 @@
     "@clerk/react": "^6.18.6",
     "@clerk/themes": "^2.4.57",
     "@tailwindcss/postcss": "^4.3.5",
+    "@workspace/valo-core": "workspace:*",
     "next": "^15.5.29",
     "postcss": "^8.5.32"
   }

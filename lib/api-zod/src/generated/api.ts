@@ -494,6 +494,17 @@ export const listDocumentsResponseContentBlocksMax = 100;
 
 export const listDocumentsResponseContentSelectedClausesMax = 0;
 
+export const listDocumentsResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const listDocumentsResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const listDocumentsResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentsResponseContentFinancialInputLinesMax = 40;
+
+export const listDocumentsResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentsResponseContentFinancialInputTaxLabelMax = 80;
+
+export const listDocumentsResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentsResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 
 
 export const ListDocumentsResponseItem = zod.object({
@@ -517,6 +528,18 @@ export const ListDocumentsResponseItem = zod.object({
   "rows": zod.array(zod.array(zod.string().max(listDocumentsResponseContentBlocksItemRowsItemItemMax)).max(listDocumentsResponseContentBlocksItemRowsItemMax)).max(listDocumentsResponseContentBlocksItemRowsMax)
 })).max(listDocumentsResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string()).max(listDocumentsResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(listDocumentsResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(listDocumentsResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(listDocumentsResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(listDocumentsResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(listDocumentsResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(listDocumentsResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(listDocumentsResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(listDocumentsResponseContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
   "formatting": zod.object({
   "font": zod.enum(['sans', 'serif']),
   "accent": zod.enum(['forest', 'charcoal'])
@@ -559,6 +582,17 @@ export const createDocumentBodyContentBlocksMax = 100;
 
 export const createDocumentBodyContentSelectedClausesMax = 0;
 
+export const createDocumentBodyContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const createDocumentBodyContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createDocumentBodyContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentBodyContentFinancialInputLinesMax = 40;
+
+export const createDocumentBodyContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentBodyContentFinancialInputTaxLabelMax = 80;
+
+export const createDocumentBodyContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentBodyContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 
 
 export const CreateDocumentBody = zod.object({
@@ -579,6 +613,18 @@ export const CreateDocumentBody = zod.object({
   "rows": zod.array(zod.array(zod.string().max(createDocumentBodyContentBlocksItemRowsItemItemMax)).max(createDocumentBodyContentBlocksItemRowsItemMax)).max(createDocumentBodyContentBlocksItemRowsMax)
 })).max(createDocumentBodyContentBlocksMax),
   "selectedClauses": zod.array(zod.string()).max(createDocumentBodyContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createDocumentBodyContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createDocumentBodyContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createDocumentBodyContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(createDocumentBodyContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(createDocumentBodyContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(createDocumentBodyContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(createDocumentBodyContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(createDocumentBodyContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
   "formatting": zod.object({
   "font": zod.enum(['sans', 'serif']),
   "accent": zod.enum(['forest', 'charcoal'])
@@ -612,6 +658,17 @@ export const createDocumentResponseContentBlocksMax = 100;
 
 export const createDocumentResponseContentSelectedClausesMax = 0;
 
+export const createDocumentResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const createDocumentResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentResponseContentFinancialInputLinesMax = 40;
+
+export const createDocumentResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentResponseContentFinancialInputTaxLabelMax = 80;
+
+export const createDocumentResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 
 
 export const CreateDocumentResponse = zod.object({
@@ -635,6 +692,18 @@ export const CreateDocumentResponse = zod.object({
   "rows": zod.array(zod.array(zod.string().max(createDocumentResponseContentBlocksItemRowsItemItemMax)).max(createDocumentResponseContentBlocksItemRowsItemMax)).max(createDocumentResponseContentBlocksItemRowsMax)
 })).max(createDocumentResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string()).max(createDocumentResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createDocumentResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createDocumentResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(createDocumentResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(createDocumentResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(createDocumentResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(createDocumentResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(createDocumentResponseContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
   "formatting": zod.object({
   "font": zod.enum(['sans', 'serif']),
   "accent": zod.enum(['forest', 'charcoal'])
@@ -678,6 +747,17 @@ export const getDocumentResponseContentBlocksMax = 100;
 
 export const getDocumentResponseContentSelectedClausesMax = 0;
 
+export const getDocumentResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const getDocumentResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const getDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getDocumentResponseContentFinancialInputLinesMax = 40;
+
+export const getDocumentResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getDocumentResponseContentFinancialInputTaxLabelMax = 80;
+
+export const getDocumentResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getDocumentResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 
 
 export const GetDocumentResponse = zod.object({
@@ -701,6 +781,18 @@ export const GetDocumentResponse = zod.object({
   "rows": zod.array(zod.array(zod.string().max(getDocumentResponseContentBlocksItemRowsItemItemMax)).max(getDocumentResponseContentBlocksItemRowsItemMax)).max(getDocumentResponseContentBlocksItemRowsMax)
 })).max(getDocumentResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string()).max(getDocumentResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(getDocumentResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(getDocumentResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(getDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(getDocumentResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(getDocumentResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(getDocumentResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(getDocumentResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(getDocumentResponseContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
   "formatting": zod.object({
   "font": zod.enum(['sans', 'serif']),
   "accent": zod.enum(['forest', 'charcoal'])
@@ -747,6 +839,17 @@ export const saveDocumentBodyContentBlocksMax = 100;
 
 export const saveDocumentBodyContentSelectedClausesMax = 0;
 
+export const saveDocumentBodyContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const saveDocumentBodyContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const saveDocumentBodyContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentBodyContentFinancialInputLinesMax = 40;
+
+export const saveDocumentBodyContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentBodyContentFinancialInputTaxLabelMax = 80;
+
+export const saveDocumentBodyContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentBodyContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 
 
 export const SaveDocumentBody = zod.object({
@@ -768,6 +871,18 @@ export const SaveDocumentBody = zod.object({
   "rows": zod.array(zod.array(zod.string().max(saveDocumentBodyContentBlocksItemRowsItemItemMax)).max(saveDocumentBodyContentBlocksItemRowsItemMax)).max(saveDocumentBodyContentBlocksItemRowsMax)
 })).max(saveDocumentBodyContentBlocksMax),
   "selectedClauses": zod.array(zod.string()).max(saveDocumentBodyContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(saveDocumentBodyContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(saveDocumentBodyContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(saveDocumentBodyContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(saveDocumentBodyContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(saveDocumentBodyContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(saveDocumentBodyContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(saveDocumentBodyContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(saveDocumentBodyContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
   "formatting": zod.object({
   "font": zod.enum(['sans', 'serif']),
   "accent": zod.enum(['forest', 'charcoal'])
@@ -801,6 +916,17 @@ export const saveDocumentResponseContentBlocksMax = 100;
 
 export const saveDocumentResponseContentSelectedClausesMax = 0;
 
+export const saveDocumentResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const saveDocumentResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const saveDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentResponseContentFinancialInputLinesMax = 40;
+
+export const saveDocumentResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentResponseContentFinancialInputTaxLabelMax = 80;
+
+export const saveDocumentResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 
 
 export const SaveDocumentResponse = zod.object({
@@ -824,6 +950,18 @@ export const SaveDocumentResponse = zod.object({
   "rows": zod.array(zod.array(zod.string().max(saveDocumentResponseContentBlocksItemRowsItemItemMax)).max(saveDocumentResponseContentBlocksItemRowsItemMax)).max(saveDocumentResponseContentBlocksItemRowsMax)
 })).max(saveDocumentResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string()).max(saveDocumentResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(saveDocumentResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(saveDocumentResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(saveDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(saveDocumentResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(saveDocumentResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(saveDocumentResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(saveDocumentResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(saveDocumentResponseContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
   "formatting": zod.object({
   "font": zod.enum(['sans', 'serif']),
   "accent": zod.enum(['forest', 'charcoal'])
@@ -867,6 +1005,17 @@ export const listDocumentRevisionsResponseContentBlocksMax = 100;
 
 export const listDocumentRevisionsResponseContentSelectedClausesMax = 0;
 
+export const listDocumentRevisionsResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const listDocumentRevisionsResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const listDocumentRevisionsResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentRevisionsResponseContentFinancialInputLinesMax = 40;
+
+export const listDocumentRevisionsResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentRevisionsResponseContentFinancialInputTaxLabelMax = 80;
+
+export const listDocumentRevisionsResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentRevisionsResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 
 
 export const ListDocumentRevisionsResponseItem = zod.object({
@@ -890,6 +1039,18 @@ export const ListDocumentRevisionsResponseItem = zod.object({
   "rows": zod.array(zod.array(zod.string().max(listDocumentRevisionsResponseContentBlocksItemRowsItemItemMax)).max(listDocumentRevisionsResponseContentBlocksItemRowsItemMax)).max(listDocumentRevisionsResponseContentBlocksItemRowsMax)
 })).max(listDocumentRevisionsResponseContentBlocksMax),
   "selectedClauses": zod.array(zod.string()).max(listDocumentRevisionsResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(listDocumentRevisionsResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(listDocumentRevisionsResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(listDocumentRevisionsResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
   "formatting": zod.object({
   "font": zod.enum(['sans', 'serif']),
   "accent": zod.enum(['forest', 'charcoal'])
@@ -932,5 +1093,983 @@ export const CreateSupportTicketResponse = zod.object({
 export const HealthCheckResponse = zod.object({
   "status": zod.string()
 })
+
+
+export const createCustomerAIDraftBodyIssuerNameMax = 160;
+
+export const createCustomerAIDraftBodyRecipientNameMax = 160;
+
+export const createCustomerAIDraftBodyDocumentNumberMax = 80;
+
+export const createCustomerAIDraftBodyIssueDateRegExp = new RegExp('^([0-9]{4}-[0-9]{2}-[0-9]{2})?$');
+export const createCustomerAIDraftBodyDueDateRegExp = new RegExp('^([0-9]{4}-[0-9]{2}-[0-9]{2})?$');
+export const createCustomerAIDraftBodyContextLinesItemMax = 1000;
+
+export const createCustomerAIDraftBodyContextLinesMax = 20;
+
+export const createCustomerAIDraftBodyFinancialInputLinesItemDescriptionMax = 200;
+
+export const createCustomerAIDraftBodyFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createCustomerAIDraftBodyFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputLinesMax = 40;
+
+export const createCustomerAIDraftBodyFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputTaxLabelMax = 80;
+
+export const createCustomerAIDraftBodyFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+
+
+export const CreateCustomerAIDraftBody = zod.object({
+  "task": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "tone": zod.enum(['neutral', 'polite', 'firm']),
+  "issuerName": zod.string().max(createCustomerAIDraftBodyIssuerNameMax),
+  "recipientName": zod.string().max(createCustomerAIDraftBodyRecipientNameMax),
+  "documentNumber": zod.string().max(createCustomerAIDraftBodyDocumentNumberMax),
+  "issueDate": zod.string().regex(createCustomerAIDraftBodyIssueDateRegExp),
+  "dueDate": zod.string().regex(createCustomerAIDraftBodyDueDateRegExp),
+  "contextLines": zod.array(zod.string().min(1).max(createCustomerAIDraftBodyContextLinesItemMax)).max(createCustomerAIDraftBodyContextLinesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createCustomerAIDraftBodyFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createCustomerAIDraftBodyFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(createCustomerAIDraftBodyFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(createCustomerAIDraftBodyFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputAmountDueKoboRegExp).nullable()
+}),
+  "processingConsent": zod.boolean(),
+  "idempotencyKey": zod.string().uuid()
+})
+
+export const createCustomerAIDraftResponseContentFieldsIssuerNameMax = 160;
+
+export const createCustomerAIDraftResponseContentFieldsRecipientNameMax = 160;
+
+export const createCustomerAIDraftResponseContentFieldsDocumentNumberMax = 80;
+
+export const createCustomerAIDraftResponseContentFieldsIssueDateMax = 10;
+
+export const createCustomerAIDraftResponseContentFieldsDueDateMax = 10;
+
+export const createCustomerAIDraftResponseContentFieldsNotesMax = 5000;
+
+export const createCustomerAIDraftResponseContentBlocksItemIdMax = 80;
+
+export const createCustomerAIDraftResponseContentBlocksItemTextMax = 8000;
+
+export const createCustomerAIDraftResponseContentBlocksItemRowsItemItemMax = 1000;
+
+export const createCustomerAIDraftResponseContentBlocksItemRowsItemMax = 10;
+
+export const createCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
+
+export const createCustomerAIDraftResponseContentBlocksMax = 100;
+
+export const createCustomerAIDraftResponseContentSelectedClausesMax = 0;
+
+export const createCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const createCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
+
+export const createCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
+
+export const createCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+
+
+export const CreateCustomerAIDraftResponse = zod.object({
+  "id": zod.string(),
+  "task": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "status": zod.enum(['ready', 'needs_information', 'manual_fallback', 'unsupported', 'running']),
+  "title": zod.string(),
+  "content": zod.object({
+  "fields": zod.object({
+  "issuerName": zod.string().max(createCustomerAIDraftResponseContentFieldsIssuerNameMax),
+  "recipientName": zod.string().max(createCustomerAIDraftResponseContentFieldsRecipientNameMax),
+  "documentNumber": zod.string().max(createCustomerAIDraftResponseContentFieldsDocumentNumberMax),
+  "issueDate": zod.string().max(createCustomerAIDraftResponseContentFieldsIssueDateMax),
+  "dueDate": zod.string().max(createCustomerAIDraftResponseContentFieldsDueDateMax),
+  "notes": zod.string().max(createCustomerAIDraftResponseContentFieldsNotesMax)
+}),
+  "blocks": zod.array(zod.object({
+  "id": zod.string().min(1).max(createCustomerAIDraftResponseContentBlocksItemIdMax),
+  "type": zod.enum(['paragraph', 'list', 'table']),
+  "text": zod.string().max(createCustomerAIDraftResponseContentBlocksItemTextMax),
+  "rows": zod.array(zod.array(zod.string().max(createCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsMax)
+})).max(createCustomerAIDraftResponseContentBlocksMax),
+  "selectedClauses": zod.array(zod.string()).max(createCustomerAIDraftResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(createCustomerAIDraftResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(createCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
+  "formatting": zod.object({
+  "font": zod.enum(['sans', 'serif']),
+  "accent": zod.enum(['forest', 'charcoal'])
+})
+}),
+  "missingFields": zod.array(zod.string()),
+  "limitations": zod.array(zod.string()),
+  "modelUsed": zod.string().nullable(),
+  "providerCalls": zod.number().int().nullable(),
+  "inputHash": zod.string(),
+  "previewHash": zod.string(),
+  "acceptedDocumentId": zod.string().nullable()
+})
+
+
+export const GetCustomerAIDraftParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const getCustomerAIDraftResponseContentFieldsIssuerNameMax = 160;
+
+export const getCustomerAIDraftResponseContentFieldsRecipientNameMax = 160;
+
+export const getCustomerAIDraftResponseContentFieldsDocumentNumberMax = 80;
+
+export const getCustomerAIDraftResponseContentFieldsIssueDateMax = 10;
+
+export const getCustomerAIDraftResponseContentFieldsDueDateMax = 10;
+
+export const getCustomerAIDraftResponseContentFieldsNotesMax = 5000;
+
+export const getCustomerAIDraftResponseContentBlocksItemIdMax = 80;
+
+export const getCustomerAIDraftResponseContentBlocksItemTextMax = 8000;
+
+export const getCustomerAIDraftResponseContentBlocksItemRowsItemItemMax = 1000;
+
+export const getCustomerAIDraftResponseContentBlocksItemRowsItemMax = 10;
+
+export const getCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
+
+export const getCustomerAIDraftResponseContentBlocksMax = 100;
+
+export const getCustomerAIDraftResponseContentSelectedClausesMax = 0;
+
+export const getCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const getCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const getCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
+
+export const getCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
+
+export const getCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+
+
+export const GetCustomerAIDraftResponse = zod.object({
+  "id": zod.string(),
+  "task": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "status": zod.enum(['ready', 'needs_information', 'manual_fallback', 'unsupported', 'running']),
+  "title": zod.string(),
+  "content": zod.object({
+  "fields": zod.object({
+  "issuerName": zod.string().max(getCustomerAIDraftResponseContentFieldsIssuerNameMax),
+  "recipientName": zod.string().max(getCustomerAIDraftResponseContentFieldsRecipientNameMax),
+  "documentNumber": zod.string().max(getCustomerAIDraftResponseContentFieldsDocumentNumberMax),
+  "issueDate": zod.string().max(getCustomerAIDraftResponseContentFieldsIssueDateMax),
+  "dueDate": zod.string().max(getCustomerAIDraftResponseContentFieldsDueDateMax),
+  "notes": zod.string().max(getCustomerAIDraftResponseContentFieldsNotesMax)
+}),
+  "blocks": zod.array(zod.object({
+  "id": zod.string().min(1).max(getCustomerAIDraftResponseContentBlocksItemIdMax),
+  "type": zod.enum(['paragraph', 'list', 'table']),
+  "text": zod.string().max(getCustomerAIDraftResponseContentBlocksItemTextMax),
+  "rows": zod.array(zod.array(zod.string().max(getCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsMax)
+})).max(getCustomerAIDraftResponseContentBlocksMax),
+  "selectedClauses": zod.array(zod.string()).max(getCustomerAIDraftResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(getCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(getCustomerAIDraftResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(getCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
+  "formatting": zod.object({
+  "font": zod.enum(['sans', 'serif']),
+  "accent": zod.enum(['forest', 'charcoal'])
+})
+}),
+  "missingFields": zod.array(zod.string()),
+  "limitations": zod.array(zod.string()),
+  "modelUsed": zod.string().nullable(),
+  "providerCalls": zod.number().int().nullable(),
+  "inputHash": zod.string(),
+  "previewHash": zod.string(),
+  "acceptedDocumentId": zod.string().nullable()
+})
+
+
+export const AcceptCustomerAIDraftParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const acceptCustomerAIDraftBodyTitleMax = 160;
+
+export const acceptCustomerAIDraftBodyContentFieldsIssuerNameMax = 160;
+
+export const acceptCustomerAIDraftBodyContentFieldsRecipientNameMax = 160;
+
+export const acceptCustomerAIDraftBodyContentFieldsDocumentNumberMax = 80;
+
+export const acceptCustomerAIDraftBodyContentFieldsIssueDateMax = 10;
+
+export const acceptCustomerAIDraftBodyContentFieldsDueDateMax = 10;
+
+export const acceptCustomerAIDraftBodyContentFieldsNotesMax = 5000;
+
+export const acceptCustomerAIDraftBodyContentBlocksItemIdMax = 80;
+
+export const acceptCustomerAIDraftBodyContentBlocksItemTextMax = 8000;
+
+export const acceptCustomerAIDraftBodyContentBlocksItemRowsItemItemMax = 1000;
+
+export const acceptCustomerAIDraftBodyContentBlocksItemRowsItemMax = 10;
+
+export const acceptCustomerAIDraftBodyContentBlocksItemRowsMax = 100;
+
+export const acceptCustomerAIDraftBodyContentBlocksMax = 100;
+
+export const acceptCustomerAIDraftBodyContentSelectedClausesMax = 0;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesMax = 40;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputTaxLabelMax = 80;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+
+
+export const AcceptCustomerAIDraftBody = zod.object({
+  "title": zod.string().min(1).max(acceptCustomerAIDraftBodyTitleMax),
+  "content": zod.object({
+  "fields": zod.object({
+  "issuerName": zod.string().max(acceptCustomerAIDraftBodyContentFieldsIssuerNameMax),
+  "recipientName": zod.string().max(acceptCustomerAIDraftBodyContentFieldsRecipientNameMax),
+  "documentNumber": zod.string().max(acceptCustomerAIDraftBodyContentFieldsDocumentNumberMax),
+  "issueDate": zod.string().max(acceptCustomerAIDraftBodyContentFieldsIssueDateMax),
+  "dueDate": zod.string().max(acceptCustomerAIDraftBodyContentFieldsDueDateMax),
+  "notes": zod.string().max(acceptCustomerAIDraftBodyContentFieldsNotesMax)
+}),
+  "blocks": zod.array(zod.object({
+  "id": zod.string().min(1).max(acceptCustomerAIDraftBodyContentBlocksItemIdMax),
+  "type": zod.enum(['paragraph', 'list', 'table']),
+  "text": zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemTextMax),
+  "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsMax)
+})).max(acceptCustomerAIDraftBodyContentBlocksMax),
+  "selectedClauses": zod.array(zod.string()).max(acceptCustomerAIDraftBodyContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(acceptCustomerAIDraftBodyContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(acceptCustomerAIDraftBodyContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(acceptCustomerAIDraftBodyContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
+  "formatting": zod.object({
+  "font": zod.enum(['sans', 'serif']),
+  "accent": zod.enum(['forest', 'charcoal'])
+})
+}),
+  "confirmBusinessDraft": zod.boolean()
+})
+
+export const acceptCustomerAIDraftResponseContentFieldsIssuerNameMax = 160;
+
+export const acceptCustomerAIDraftResponseContentFieldsRecipientNameMax = 160;
+
+export const acceptCustomerAIDraftResponseContentFieldsDocumentNumberMax = 80;
+
+export const acceptCustomerAIDraftResponseContentFieldsIssueDateMax = 10;
+
+export const acceptCustomerAIDraftResponseContentFieldsDueDateMax = 10;
+
+export const acceptCustomerAIDraftResponseContentFieldsNotesMax = 5000;
+
+export const acceptCustomerAIDraftResponseContentBlocksItemIdMax = 80;
+
+export const acceptCustomerAIDraftResponseContentBlocksItemTextMax = 8000;
+
+export const acceptCustomerAIDraftResponseContentBlocksItemRowsItemItemMax = 1000;
+
+export const acceptCustomerAIDraftResponseContentBlocksItemRowsItemMax = 10;
+
+export const acceptCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
+
+export const acceptCustomerAIDraftResponseContentBlocksMax = 100;
+
+export const acceptCustomerAIDraftResponseContentSelectedClausesMax = 0;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+
+
+export const AcceptCustomerAIDraftResponse = zod.object({
+  "revisionId": zod.string().uuid(),
+  "id": zod.string(),
+  "title": zod.string(),
+  "revision": zod.number().int(),
+  "content": zod.object({
+  "fields": zod.object({
+  "issuerName": zod.string().max(acceptCustomerAIDraftResponseContentFieldsIssuerNameMax),
+  "recipientName": zod.string().max(acceptCustomerAIDraftResponseContentFieldsRecipientNameMax),
+  "documentNumber": zod.string().max(acceptCustomerAIDraftResponseContentFieldsDocumentNumberMax),
+  "issueDate": zod.string().max(acceptCustomerAIDraftResponseContentFieldsIssueDateMax),
+  "dueDate": zod.string().max(acceptCustomerAIDraftResponseContentFieldsDueDateMax),
+  "notes": zod.string().max(acceptCustomerAIDraftResponseContentFieldsNotesMax)
+}),
+  "blocks": zod.array(zod.object({
+  "id": zod.string().min(1).max(acceptCustomerAIDraftResponseContentBlocksItemIdMax),
+  "type": zod.enum(['paragraph', 'list', 'table']),
+  "text": zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemTextMax),
+  "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsMax)
+})).max(acceptCustomerAIDraftResponseContentBlocksMax),
+  "selectedClauses": zod.array(zod.string()).max(acceptCustomerAIDraftResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(acceptCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(acceptCustomerAIDraftResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(acceptCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
+  "formatting": zod.object({
+  "font": zod.enum(['sans', 'serif']),
+  "accent": zod.enum(['forest', 'charcoal'])
+})
+}),
+  "contentHash": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "status": zod.enum(['business_draft']),
+  "templateVersion": zod.string().nullable()
+})
+
+
+export const GetCustomerAIUsageResponse = zod.object({
+  "enabled": zod.boolean(),
+  "workspaceUsed": zod.number().int(),
+  "workspaceDailyLimit": zod.number().int(),
+  "minuteLimit": zod.number().int(),
+  "globalAvailable": zod.boolean(),
+  "manualFallbackAvailable": zod.boolean(),
+  "policyNotice": zod.string()
+})
+
+
+export const previewAssessmentBodyFactsLegalFormMax = 80;
+
+export const previewAssessmentBodyFactsRegistrationStatusMax = 80;
+
+export const previewAssessmentBodyFactsActivitiesOneItemMax = 120;
+
+export const previewAssessmentBodyFactsActivitiesOneMax = 10;
+
+export const previewAssessmentBodyFactsProductTypesOneItemMax = 120;
+
+export const previewAssessmentBodyFactsProductTypesOneMax = 10;
+
+export const previewAssessmentBodyFactsLgaMax = 100;
+
+export const previewAssessmentBodyFactsEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
+export const previewAssessmentBodyFactsTurnoverYearRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4})$');
+export const previewAssessmentBodyFactsTurnoverAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const previewAssessmentBodyFactsTurnoverPeriodStartRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const previewAssessmentBodyFactsTurnoverPeriodEndRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const previewAssessmentBodyAsOfDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const PreviewAssessmentBody = zod.object({
+  "facts": zod.object({
+  "legalForm": zod.string().max(previewAssessmentBodyFactsLegalFormMax),
+  "registrationStatus": zod.string().max(previewAssessmentBodyFactsRegistrationStatusMax),
+  "activities": zod.union([zod.array(zod.string().min(1).max(previewAssessmentBodyFactsActivitiesOneItemMax)).max(previewAssessmentBodyFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
+  "productTypes": zod.union([zod.array(zod.string().min(1).max(previewAssessmentBodyFactsProductTypesOneItemMax)).max(previewAssessmentBodyFactsProductTypesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]).optional(),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
+  "lga": zod.string().max(previewAssessmentBodyFactsLgaMax),
+  "employees": zod.string().regex(previewAssessmentBodyFactsEmployeesRegExp),
+  "turnoverBand": zod.enum(['under_5m', '5m_to_25m', '25m_to_100m', 'over_100m', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverYear": zod.string().regex(previewAssessmentBodyFactsTurnoverYearRegExp),
+  "turnoverMetric": zod.enum(['gross_revenue', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverCurrency": zod.enum(['NGN', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverPeriod": zod.enum(['annual', 'monthly', 'quarterly', 'unknown', 'unanswered', 'not_applicable']).optional(),
+  "turnoverAmountKobo": zod.string().regex(previewAssessmentBodyFactsTurnoverAmountKoboRegExp).nullish(),
+  "turnoverPeriodStart": zod.string().regex(previewAssessmentBodyFactsTurnoverPeriodStartRegExp).optional(),
+  "turnoverPeriodEnd": zod.string().regex(previewAssessmentBodyFactsTurnoverPeriodEndRegExp).optional(),
+  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable'])
+}),
+  "asOfDate": zod.string().regex(previewAssessmentBodyAsOfDateRegExp)
+})
+
+export const PreviewAssessmentResponse = zod.object({
+  "schemaVersion": zod.string(),
+  "asOfDate": zod.string(),
+  "rulesetVersion": zod.string(),
+  "items": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "ruleVersion": zod.number().int(),
+  "requirementVersionId": zod.string(),
+  "title": zod.string(),
+  "label": zod.enum(['Likely relevant', 'More information needed', 'Not indicated by these answers']),
+  "reason": zod.string(),
+  "missingFacts": zod.array(zod.string()),
+  "matchedFacts": zod.array(zod.string()),
+  "nextStep": zod.string(),
+  "jurisdiction": zod.object({
+  "level": zod.enum(['federal', 'state', 'lga']),
+  "state": zod.string().optional(),
+  "lga": zod.string().optional()
+}),
+  "sources": zod.array(zod.object({
+  "id": zod.string(),
+  "url": zod.string(),
+  "title": zod.string(),
+  "locator": zod.string(),
+  "quote": zod.string(),
+  "snapshotHash": zod.string()
+})),
+  "relatedTemplateIds": zod.array(zod.string())
+})),
+  "unanswered": zod.array(zod.string()),
+  "gaps": zod.array(zod.string()),
+  "recommendedTemplateIds": zod.array(zod.string()),
+  "officialRoutes": zod.array(zod.object({
+  "title": zod.string(),
+  "url": zod.string()
+})),
+  "notice": zod.string(),
+  "sourceBackedRecommendations": zod.number().int(),
+  "resultHash": zod.string()
+})
+
+
+export const listAssessmentsResponseFactsLegalFormMax = 80;
+
+export const listAssessmentsResponseFactsRegistrationStatusMax = 80;
+
+export const listAssessmentsResponseFactsActivitiesOneItemMax = 120;
+
+export const listAssessmentsResponseFactsActivitiesOneMax = 10;
+
+export const listAssessmentsResponseFactsProductTypesOneItemMax = 120;
+
+export const listAssessmentsResponseFactsProductTypesOneMax = 10;
+
+export const listAssessmentsResponseFactsLgaMax = 100;
+
+export const listAssessmentsResponseFactsEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
+export const listAssessmentsResponseFactsTurnoverYearRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4})$');
+export const listAssessmentsResponseFactsTurnoverAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listAssessmentsResponseFactsTurnoverPeriodStartRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const listAssessmentsResponseFactsTurnoverPeriodEndRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+
+
+export const ListAssessmentsResponseItem = zod.object({
+  "id": zod.string(),
+  "profileRevision": zod.number().int().nullable(),
+  "facts": zod.object({
+  "legalForm": zod.string().max(listAssessmentsResponseFactsLegalFormMax),
+  "registrationStatus": zod.string().max(listAssessmentsResponseFactsRegistrationStatusMax),
+  "activities": zod.union([zod.array(zod.string().min(1).max(listAssessmentsResponseFactsActivitiesOneItemMax)).max(listAssessmentsResponseFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
+  "productTypes": zod.union([zod.array(zod.string().min(1).max(listAssessmentsResponseFactsProductTypesOneItemMax)).max(listAssessmentsResponseFactsProductTypesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]).optional(),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
+  "lga": zod.string().max(listAssessmentsResponseFactsLgaMax),
+  "employees": zod.string().regex(listAssessmentsResponseFactsEmployeesRegExp),
+  "turnoverBand": zod.enum(['under_5m', '5m_to_25m', '25m_to_100m', 'over_100m', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverYear": zod.string().regex(listAssessmentsResponseFactsTurnoverYearRegExp),
+  "turnoverMetric": zod.enum(['gross_revenue', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverCurrency": zod.enum(['NGN', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverPeriod": zod.enum(['annual', 'monthly', 'quarterly', 'unknown', 'unanswered', 'not_applicable']).optional(),
+  "turnoverAmountKobo": zod.string().regex(listAssessmentsResponseFactsTurnoverAmountKoboRegExp).nullish(),
+  "turnoverPeriodStart": zod.string().regex(listAssessmentsResponseFactsTurnoverPeriodStartRegExp).optional(),
+  "turnoverPeriodEnd": zod.string().regex(listAssessmentsResponseFactsTurnoverPeriodEndRegExp).optional(),
+  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable'])
+}),
+  "result": zod.object({
+  "schemaVersion": zod.string(),
+  "asOfDate": zod.string(),
+  "rulesetVersion": zod.string(),
+  "items": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "ruleVersion": zod.number().int(),
+  "requirementVersionId": zod.string(),
+  "title": zod.string(),
+  "label": zod.enum(['Likely relevant', 'More information needed', 'Not indicated by these answers']),
+  "reason": zod.string(),
+  "missingFacts": zod.array(zod.string()),
+  "matchedFacts": zod.array(zod.string()),
+  "nextStep": zod.string(),
+  "jurisdiction": zod.object({
+  "level": zod.enum(['federal', 'state', 'lga']),
+  "state": zod.string().optional(),
+  "lga": zod.string().optional()
+}),
+  "sources": zod.array(zod.object({
+  "id": zod.string(),
+  "url": zod.string(),
+  "title": zod.string(),
+  "locator": zod.string(),
+  "quote": zod.string(),
+  "snapshotHash": zod.string()
+})),
+  "relatedTemplateIds": zod.array(zod.string())
+})),
+  "unanswered": zod.array(zod.string()),
+  "gaps": zod.array(zod.string()),
+  "recommendedTemplateIds": zod.array(zod.string()),
+  "officialRoutes": zod.array(zod.object({
+  "title": zod.string(),
+  "url": zod.string()
+})),
+  "notice": zod.string(),
+  "sourceBackedRecommendations": zod.number().int(),
+  "resultHash": zod.string()
+}),
+  "createdAt": zod.string()
+})
+export const ListAssessmentsResponse = zod.array(ListAssessmentsResponseItem)
+
+
+export const createAssessmentBodyFactsLegalFormMax = 80;
+
+export const createAssessmentBodyFactsRegistrationStatusMax = 80;
+
+export const createAssessmentBodyFactsActivitiesOneItemMax = 120;
+
+export const createAssessmentBodyFactsActivitiesOneMax = 10;
+
+export const createAssessmentBodyFactsProductTypesOneItemMax = 120;
+
+export const createAssessmentBodyFactsProductTypesOneMax = 10;
+
+export const createAssessmentBodyFactsLgaMax = 100;
+
+export const createAssessmentBodyFactsEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
+export const createAssessmentBodyFactsTurnoverYearRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4})$');
+export const createAssessmentBodyFactsTurnoverAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createAssessmentBodyFactsTurnoverPeriodStartRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const createAssessmentBodyFactsTurnoverPeriodEndRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+
+export const createAssessmentBodyAsOfDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const CreateAssessmentBody = zod.object({
+  "facts": zod.object({
+  "legalForm": zod.string().max(createAssessmentBodyFactsLegalFormMax),
+  "registrationStatus": zod.string().max(createAssessmentBodyFactsRegistrationStatusMax),
+  "activities": zod.union([zod.array(zod.string().min(1).max(createAssessmentBodyFactsActivitiesOneItemMax)).max(createAssessmentBodyFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
+  "productTypes": zod.union([zod.array(zod.string().min(1).max(createAssessmentBodyFactsProductTypesOneItemMax)).max(createAssessmentBodyFactsProductTypesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]).optional(),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
+  "lga": zod.string().max(createAssessmentBodyFactsLgaMax),
+  "employees": zod.string().regex(createAssessmentBodyFactsEmployeesRegExp),
+  "turnoverBand": zod.enum(['under_5m', '5m_to_25m', '25m_to_100m', 'over_100m', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverYear": zod.string().regex(createAssessmentBodyFactsTurnoverYearRegExp),
+  "turnoverMetric": zod.enum(['gross_revenue', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverCurrency": zod.enum(['NGN', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverPeriod": zod.enum(['annual', 'monthly', 'quarterly', 'unknown', 'unanswered', 'not_applicable']).optional(),
+  "turnoverAmountKobo": zod.string().regex(createAssessmentBodyFactsTurnoverAmountKoboRegExp).nullish(),
+  "turnoverPeriodStart": zod.string().regex(createAssessmentBodyFactsTurnoverPeriodStartRegExp).optional(),
+  "turnoverPeriodEnd": zod.string().regex(createAssessmentBodyFactsTurnoverPeriodEndRegExp).optional(),
+  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable'])
+}).optional(),
+  "expectedProfileRevision": zod.number().int().min(1).optional(),
+  "asOfDate": zod.string().regex(createAssessmentBodyAsOfDateRegExp),
+  "saveConsent": zod.boolean()
+})
+
+export const createAssessmentResponseFactsLegalFormMax = 80;
+
+export const createAssessmentResponseFactsRegistrationStatusMax = 80;
+
+export const createAssessmentResponseFactsActivitiesOneItemMax = 120;
+
+export const createAssessmentResponseFactsActivitiesOneMax = 10;
+
+export const createAssessmentResponseFactsProductTypesOneItemMax = 120;
+
+export const createAssessmentResponseFactsProductTypesOneMax = 10;
+
+export const createAssessmentResponseFactsLgaMax = 100;
+
+export const createAssessmentResponseFactsEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
+export const createAssessmentResponseFactsTurnoverYearRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4})$');
+export const createAssessmentResponseFactsTurnoverAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createAssessmentResponseFactsTurnoverPeriodStartRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const createAssessmentResponseFactsTurnoverPeriodEndRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+
+
+export const CreateAssessmentResponse = zod.object({
+  "id": zod.string(),
+  "profileRevision": zod.number().int().nullable(),
+  "facts": zod.object({
+  "legalForm": zod.string().max(createAssessmentResponseFactsLegalFormMax),
+  "registrationStatus": zod.string().max(createAssessmentResponseFactsRegistrationStatusMax),
+  "activities": zod.union([zod.array(zod.string().min(1).max(createAssessmentResponseFactsActivitiesOneItemMax)).max(createAssessmentResponseFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
+  "productTypes": zod.union([zod.array(zod.string().min(1).max(createAssessmentResponseFactsProductTypesOneItemMax)).max(createAssessmentResponseFactsProductTypesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]).optional(),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
+  "lga": zod.string().max(createAssessmentResponseFactsLgaMax),
+  "employees": zod.string().regex(createAssessmentResponseFactsEmployeesRegExp),
+  "turnoverBand": zod.enum(['under_5m', '5m_to_25m', '25m_to_100m', 'over_100m', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverYear": zod.string().regex(createAssessmentResponseFactsTurnoverYearRegExp),
+  "turnoverMetric": zod.enum(['gross_revenue', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverCurrency": zod.enum(['NGN', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverPeriod": zod.enum(['annual', 'monthly', 'quarterly', 'unknown', 'unanswered', 'not_applicable']).optional(),
+  "turnoverAmountKobo": zod.string().regex(createAssessmentResponseFactsTurnoverAmountKoboRegExp).nullish(),
+  "turnoverPeriodStart": zod.string().regex(createAssessmentResponseFactsTurnoverPeriodStartRegExp).optional(),
+  "turnoverPeriodEnd": zod.string().regex(createAssessmentResponseFactsTurnoverPeriodEndRegExp).optional(),
+  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable'])
+}),
+  "result": zod.object({
+  "schemaVersion": zod.string(),
+  "asOfDate": zod.string(),
+  "rulesetVersion": zod.string(),
+  "items": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "ruleVersion": zod.number().int(),
+  "requirementVersionId": zod.string(),
+  "title": zod.string(),
+  "label": zod.enum(['Likely relevant', 'More information needed', 'Not indicated by these answers']),
+  "reason": zod.string(),
+  "missingFacts": zod.array(zod.string()),
+  "matchedFacts": zod.array(zod.string()),
+  "nextStep": zod.string(),
+  "jurisdiction": zod.object({
+  "level": zod.enum(['federal', 'state', 'lga']),
+  "state": zod.string().optional(),
+  "lga": zod.string().optional()
+}),
+  "sources": zod.array(zod.object({
+  "id": zod.string(),
+  "url": zod.string(),
+  "title": zod.string(),
+  "locator": zod.string(),
+  "quote": zod.string(),
+  "snapshotHash": zod.string()
+})),
+  "relatedTemplateIds": zod.array(zod.string())
+})),
+  "unanswered": zod.array(zod.string()),
+  "gaps": zod.array(zod.string()),
+  "recommendedTemplateIds": zod.array(zod.string()),
+  "officialRoutes": zod.array(zod.object({
+  "title": zod.string(),
+  "url": zod.string()
+})),
+  "notice": zod.string(),
+  "sourceBackedRecommendations": zod.number().int(),
+  "resultHash": zod.string()
+}),
+  "createdAt": zod.string()
+})
+
+
+export const GetAssessmentParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const getAssessmentResponseFactsLegalFormMax = 80;
+
+export const getAssessmentResponseFactsRegistrationStatusMax = 80;
+
+export const getAssessmentResponseFactsActivitiesOneItemMax = 120;
+
+export const getAssessmentResponseFactsActivitiesOneMax = 10;
+
+export const getAssessmentResponseFactsProductTypesOneItemMax = 120;
+
+export const getAssessmentResponseFactsProductTypesOneMax = 10;
+
+export const getAssessmentResponseFactsLgaMax = 100;
+
+export const getAssessmentResponseFactsEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
+export const getAssessmentResponseFactsTurnoverYearRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4})$');
+export const getAssessmentResponseFactsTurnoverAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getAssessmentResponseFactsTurnoverPeriodStartRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const getAssessmentResponseFactsTurnoverPeriodEndRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+
+
+export const GetAssessmentResponse = zod.object({
+  "id": zod.string(),
+  "profileRevision": zod.number().int().nullable(),
+  "facts": zod.object({
+  "legalForm": zod.string().max(getAssessmentResponseFactsLegalFormMax),
+  "registrationStatus": zod.string().max(getAssessmentResponseFactsRegistrationStatusMax),
+  "activities": zod.union([zod.array(zod.string().min(1).max(getAssessmentResponseFactsActivitiesOneItemMax)).max(getAssessmentResponseFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
+  "productTypes": zod.union([zod.array(zod.string().min(1).max(getAssessmentResponseFactsProductTypesOneItemMax)).max(getAssessmentResponseFactsProductTypesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]).optional(),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
+  "lga": zod.string().max(getAssessmentResponseFactsLgaMax),
+  "employees": zod.string().regex(getAssessmentResponseFactsEmployeesRegExp),
+  "turnoverBand": zod.enum(['under_5m', '5m_to_25m', '25m_to_100m', 'over_100m', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverYear": zod.string().regex(getAssessmentResponseFactsTurnoverYearRegExp),
+  "turnoverMetric": zod.enum(['gross_revenue', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverCurrency": zod.enum(['NGN', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverPeriod": zod.enum(['annual', 'monthly', 'quarterly', 'unknown', 'unanswered', 'not_applicable']).optional(),
+  "turnoverAmountKobo": zod.string().regex(getAssessmentResponseFactsTurnoverAmountKoboRegExp).nullish(),
+  "turnoverPeriodStart": zod.string().regex(getAssessmentResponseFactsTurnoverPeriodStartRegExp).optional(),
+  "turnoverPeriodEnd": zod.string().regex(getAssessmentResponseFactsTurnoverPeriodEndRegExp).optional(),
+  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable'])
+}),
+  "result": zod.object({
+  "schemaVersion": zod.string(),
+  "asOfDate": zod.string(),
+  "rulesetVersion": zod.string(),
+  "items": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "ruleVersion": zod.number().int(),
+  "requirementVersionId": zod.string(),
+  "title": zod.string(),
+  "label": zod.enum(['Likely relevant', 'More information needed', 'Not indicated by these answers']),
+  "reason": zod.string(),
+  "missingFacts": zod.array(zod.string()),
+  "matchedFacts": zod.array(zod.string()),
+  "nextStep": zod.string(),
+  "jurisdiction": zod.object({
+  "level": zod.enum(['federal', 'state', 'lga']),
+  "state": zod.string().optional(),
+  "lga": zod.string().optional()
+}),
+  "sources": zod.array(zod.object({
+  "id": zod.string(),
+  "url": zod.string(),
+  "title": zod.string(),
+  "locator": zod.string(),
+  "quote": zod.string(),
+  "snapshotHash": zod.string()
+})),
+  "relatedTemplateIds": zod.array(zod.string())
+})),
+  "unanswered": zod.array(zod.string()),
+  "gaps": zod.array(zod.string()),
+  "recommendedTemplateIds": zod.array(zod.string()),
+  "officialRoutes": zod.array(zod.object({
+  "title": zod.string(),
+  "url": zod.string()
+})),
+  "notice": zod.string(),
+  "sourceBackedRecommendations": zod.number().int(),
+  "resultHash": zod.string()
+}),
+  "createdAt": zod.string()
+})
+
+
+export const CompareAssessmentsParams = zod.object({
+  "id": zod.coerce.string().uuid(),
+  "previousId": zod.coerce.string().uuid()
+})
+
+export const CompareAssessmentsResponse = zod.object({
+  "previousId": zod.string(),
+  "currentId": zod.string(),
+  "changedFacts": zod.array(zod.string()),
+  "addedRuleIds": zod.array(zod.string()),
+  "removedRuleIds": zod.array(zod.string()),
+  "changedRuleIds": zod.array(zod.string())
+})
+
+
+export const ListTasksResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "notes": zod.string(),
+  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
+  "revision": zod.number().int(),
+  "dueDate": zod.string().nullable(),
+  "dateConfirmed": zod.boolean(),
+  "assessmentId": zod.string().nullable(),
+  "ruleId": zod.string().nullable(),
+  "needsReview": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListTasksResponse = zod.array(ListTasksResponseItem)
+
+
+export const createTaskBodyTitleMax = 200;
+
+export const createTaskBodyNotesMax = 6000;
+
+export const createTaskBodyDueDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+export const createTaskBodyRuleIdMax = 100;
+
+
+
+export const CreateTaskBody = zod.object({
+  "title": zod.string().min(1).max(createTaskBodyTitleMax),
+  "notes": zod.string().max(createTaskBodyNotesMax),
+  "dueDate": zod.string().regex(createTaskBodyDueDateRegExp).nullable(),
+  "dateConfirmed": zod.boolean(),
+  "assessmentId": zod.string().uuid().nullable(),
+  "ruleId": zod.string().max(createTaskBodyRuleIdMax).nullable()
+})
+
+export const CreateTaskResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "notes": zod.string(),
+  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
+  "revision": zod.number().int(),
+  "dueDate": zod.string().nullable(),
+  "dateConfirmed": zod.boolean(),
+  "assessmentId": zod.string().nullable(),
+  "ruleId": zod.string().nullable(),
+  "needsReview": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const UpdateTaskParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const updateTaskBodyTitleMax = 200;
+
+export const updateTaskBodyNotesMax = 6000;
+
+export const updateTaskBodyDueDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+
+export const UpdateTaskBody = zod.object({
+  "title": zod.string().min(1).max(updateTaskBodyTitleMax),
+  "notes": zod.string().max(updateTaskBodyNotesMax),
+  "dueDate": zod.string().regex(updateTaskBodyDueDateRegExp).nullable(),
+  "dateConfirmed": zod.boolean(),
+  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
+  "expectedRevision": zod.number().int().min(1)
+})
+
+export const UpdateTaskResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "notes": zod.string(),
+  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
+  "revision": zod.number().int(),
+  "dueDate": zod.string().nullable(),
+  "dateConfirmed": zod.boolean(),
+  "assessmentId": zod.string().nullable(),
+  "ruleId": zod.string().nullable(),
+  "needsReview": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const DeleteTaskParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+
+
+
+export const DeleteTaskBody = zod.object({
+  "expectedRevision": zod.number().int().min(1)
+})
+
+export const DeleteTaskResponse = zod.void()
+
+
+export const GetReminderPreferencesResponse = zod.object({
+  "enabled": zod.boolean(),
+  "offsets": zod.array(zod.number().int()),
+  "revision": zod.number().int(),
+  "timezone": zod.string(),
+  "deliveryAvailable": zod.boolean(),
+  "deliveryBlocker": zod.string().nullable()
+})
+
+
+export const saveReminderPreferencesBodyOffsetsMax = 4;
+
+export const saveReminderPreferencesBodyExpectedRevisionMin = 0;
+
+
+
+export const SaveReminderPreferencesBody = zod.object({
+  "enabled": zod.boolean(),
+  "offsets": zod.array(zod.union([zod.literal(0),zod.literal(1),zod.literal(3),zod.literal(7),zod.literal(14)])).min(1).max(saveReminderPreferencesBodyOffsetsMax),
+  "expectedRevision": zod.number().int().min(saveReminderPreferencesBodyExpectedRevisionMin)
+})
+
+export const SaveReminderPreferencesResponse = zod.object({
+  "enabled": zod.boolean(),
+  "offsets": zod.array(zod.number().int()),
+  "revision": zod.number().int(),
+  "timezone": zod.string(),
+  "deliveryAvailable": zod.boolean(),
+  "deliveryBlocker": zod.string().nullable()
+})
+
+
+export const ListRemindersResponseItem = zod.object({
+  "id": zod.string(),
+  "taskId": zod.string(),
+  "scheduledAt": zod.string(),
+  "status": zod.enum(['held', 'pending', 'sent', 'cancelled', 'failed']),
+  "reason": zod.string().nullable(),
+  "deliveredAt": zod.string().nullable()
+})
+export const ListRemindersResponse = zod.array(ListRemindersResponseItem)
 
 
