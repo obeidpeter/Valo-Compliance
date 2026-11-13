@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-11-13T19:40:34.187Z",
+  "reported": {
+    "private": true,
+    "branch": "docs/specification-baseline",
+    "commit": "871899483093363ec69d765e2d16fa1d88e0836e",
+    "draftPr": "https://github.com/obeidpeter/Valo-Compliance/pull/1",
+    "applicationSourceSyncVerified": false
+  },
+  "observed": {
+    "baselineCommit": {
+      "message": "docs: preserve Valo R1 and R2 specifications and traceability registers",
+      "parents": [
+        "650e60d855da5fab61b98f3ec7d89c4c29c7fc57"
+      ],
+      "sha": "871899483093363ec69d765e2d16fa1d88e0836e",
+      "status": 200
+    },
+    "mainTree": {
+      "paths": [
+        "README.md"
+      ],
+      "sha": "650e60d855da5fab61b98f3ec7d89c4c29c7fc57",
+      "status": 200
+    },
+    "pullRequest": {
+      "base": "main",
+      "draft": true,
+      "head": "docs/specification-baseline",
+      "headSha": "871899483093363ec69d765e2d16fa1d88e0836e",
+      "state": "open",
+      "status": 200,
+      "url": "https://github.com/obeidpeter/Valo-Compliance/pull/1"
+    },
+    "repository": {
+      "defaultBranch": "main",
+      "permissions": {
+        "admin": true,
+        "maintain": true,
+        "pull": true,
+        "push": true,
+        "triage": true
+      },
+      "private": false,
+      "status": 200,
+      "visibility": "public"
+    }
+  },
+  "mutations": 0
+}
