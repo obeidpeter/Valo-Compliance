@@ -7,14 +7,21 @@ Valo is being built for Nigerian SMEs to create business documents and understan
 ## Implemented source in this branch
 
 - Framework-independent editorial eligibility validation with strict schemas, candidate/source/policy/review/test/export bindings and fail-closed holds.
-- Traceability for the 12 exact editorial requirements supplied so far, preserving EDP-001–EDP-012. The expected formal TRD total is 127; the missing 115 are not reconstructed.
+- Verbatim traceability for all 127 formal requirements, checked against the coordinating team's retained complete TRD extract. Earlier bounded transfers are compared for conflicts rather than replaced silently. All requirements remain unaccepted.
 - Metadata for the original 40-template baseline and 19 provisional additional candidates. All templates are held; zero published templates.
 - Requirements, content, conflict and platform-source research registers.
 - Executable foundation unit tests and a machine-readable readiness report.
+- A running Next.js/TypeScript/Tailwind application with Valo's public development pages, branded managed Clerk screens, a private workspace, versioned business-profile form, canonical manual draft editor, preview, revision history, undo and conflict-aware autosave.
+- PostgreSQL/Drizzle persistence and a tracked migration for memberships, business-profile versions, document revisions, support tickets and metadata-only activity events.
+- Server-validated Clerk identity, active-session and verified-primary-email checks; application-resolved tenant membership; same-origin JSON mutation checks and private no-store responses.
+- A development-only live requirements/conflict dashboard at `/development`, with exact criteria and honest blocked states.
+- Complete specification extracts and the coordinating team's registers under `docs/specification/` and `docs/registers/`. All 27 supplementary document mappings and 79 regulatory research rows are retained. Five direct matches, one composite and 21 additions give 61 identified templates; 19 distinct-purpose proposals bring the backlog to 80, not 80 published assets. NGO SCUML remains an alias.
 
 ## Not yet implemented or proven
 
-The customer-facing application, verified customer sign-in and recovery, tenant-scoped business/document persistence, private DOCX/PDF exports, actual server AI review pipeline, pg-boss worker proof and backup/restore remain incomplete. Clerk development provisioning alone is not sign-in proof.
+The initial application is implemented, not a static mockup. Local database tests passed isolation, stale-write/concurrency, version preservation, profile consent and durable ticket checks. Anonymous HTTP tests reject private access and cross-origin mutation. These checks do not prove the managed signed-in browser journey.
+
+Verified customer sign-in/recovery/expired-link/revoked-session browser tests, staff MFA, private DOCX/PDF exports, actual server AI/editorial publication, the source-backed checker, sandbox commerce, pg-boss workers and disaster recovery remain incomplete or unproved. The editor currently creates only **user-authored business drafts**, not a released baseline template. Export controls explicitly state their missing renderer/worker/storage prerequisite. No content is labelled AI-reviewed without real runs.
 
 The separate **80-rule**, **60-customer-AI** and **60-editorial** acceptance suites remain unexecuted. Foundation tests do not count toward those suites. No R1 gate is accepted and R2 is locked. R3 is excluded.
 
@@ -29,6 +36,12 @@ pnpm install --frozen-lockfile
 pnpm run typecheck
 pnpm --filter @workspace/scripts test:valo
 pnpm --filter @workspace/scripts valo:readiness
+pnpm --filter @workspace/api-server test:valo
+# Development database only; creates and removes UUID-scoped synthetic test records:
+VALO_RUN_DB_TESTS=synthetic-development-only pnpm --filter @workspace/api-server test:valo-db
+# Running Replit development preview only, anonymous safety/status checks:
+VALO_RUN_HTTP_TESTS=synthetic-development-only pnpm --filter @workspace/api-server test:valo-http
+pnpm --filter @workspace/valo run build
 ```
 
 No credential values belong in source or GitHub Actions. Foundation checks require no provider secrets or production access. See [implementation evidence](docs/valo/README.md), [compatibility findings](docs/valo/compatibility.md) and [evaluation boundaries](docs/valo/evaluations.md).
@@ -37,14 +50,14 @@ No credential values belong in source or GitHub Actions. Foundation checks requi
 
 Public launch, live payments, recurring billing, real confidential customer data and new paid hosting/subscription commitments remain disabled pending the required approvals. Use synthetic development data and sandbox transactions only.
 
-The preferred application stack remains Next.js, TypeScript, Tailwind, PostgreSQL/Drizzle, Clerk, private storage, separate pg-boss workers, DOCX/Chromium PDF, Paystack hosted sandbox checkout, email and server AI. The frontend bootstrap conflict is recorded, not silently resolved by substituting a different stack.
+The preferred application stack remains Next.js, TypeScript, Tailwind, PostgreSQL/Drizzle, Clerk, private storage, separate pg-boss workers, DOCX/Chromium PDF, Paystack hosted sandbox checkout, email and server AI. The artifact bootstrap was adapted to Next.js, not substituted for Vite. Next.js strict typechecking, production build and proxied development serving pass locally. Production serving is configured as a server rather than a static Vite export; deployment, worker, storage and recovery compatibility are not yet proven.
 
 ## Repository safeguards
 
-The intended repository is private: `obeidpeter/Valo-Compliance`. Feature work is submitted through a draft pull request; the original README-only main commit is preserved.
+The intended repository is `obeidpeter/Valo-Compliance` and is required to remain **private**. It was initially verified private, but the latest metadata observation returned `private=false`. **New application-source synchronization is paused; no visibility change was performed.** Restore private visibility before uploading the current Replit source. The existing draft pull request contains earlier foundation work and the coordinating team's specification baseline, not this latest application batch. Complete current source and tests remain in Replit.
 
 **Main-branch protection enforcement is blocked under the current private-repository account plan**, as reported by the repository owner. A saved rule is not enforced protection. Do not claim main is protected, upgrade or transfer the repository, make it public, force-push, delete branches or bypass review.
 
-After secure GitHub reconnection, the previously rejected workflow-file write succeeded. CI is active at `.github/workflows/valo-foundation.yml`. The activation commit's push and pull-request runs both passed dependency installation, full typechecking, foundation tests and the readiness report. Actual run identifiers, source commit and step results are preserved in [CI evidence](docs/valo/evidence/ci-activation.json).
+After secure GitHub reconnection, the previously rejected workflow-file write succeeded. Earlier foundation CI is active remotely. The activation commit's push and pull-request runs both passed dependency installation, full typechecking, foundation tests and the readiness report. Actual historical run identifiers, source commit and step results are preserved in [CI evidence](docs/valo/evidence/ci-activation.json). Expanded API/Next.js/PostgreSQL CI is prepared locally but not uploaded or executed remotely while visibility is public.
 
 CI check names must only be added as requirements after actual checks exist. Even then, account-plan restrictions may prevent enforcement. No protection setting or required-check configuration has been changed. Foundation CI is not evidence of P0 acceptance.

@@ -1,0 +1,68 @@
+{
+  "source": "https://github.com/obeidpeter/Valo-Compliance",
+  "sourceCommit": "8c5c8013944bed70183c40784fb6ef49f30768fc",
+  "importedAt": "2026-11-13T17:23:18.871Z",
+  "direction": "read-only import; no repository writes; visibility observed public",
+  "files": [
+    {
+      "bytes": 6953,
+      "gitBlobSha": "76183baa4d3ba89ed28d7593c8c0e65409734d1d",
+      "path": "docs/registers/conflicts-and-assumptions.json",
+      "sha256": "61e89476a89c3014378dc58d7708f1e248abb156c98165645b3adbaf113c96dc"
+    },
+    {
+      "bytes": 130116,
+      "gitBlobSha": "f37485667396c741ee548bc4e4e8f9f5ab463ba3",
+      "path": "docs/registers/content-inventory.json",
+      "sha256": "97afb417f68173fd8ec621e4b041d3e85e3407ae04f6773ba892cccbf5328a28"
+    },
+    {
+      "bytes": 28742,
+      "gitBlobSha": "519272ded76de3039ba6d2efa1fbf153e69a0564",
+      "path": "docs/registers/requirements.csv",
+      "sha256": "9ba5d2bb8e04be83380c953bb1e5fc7640a5462d994904789ed5c510b787327d"
+    },
+    {
+      "bytes": 210235,
+      "gitBlobSha": "ab1d7009dc56948a548662144a2e3afeaeed4fb3",
+      "path": "docs/registers/requirements.json",
+      "sha256": "0cc350c105ace94b295e1117646a6c9878f5d6f542479e82f875d127e267650e"
+    },
+    {
+      "bytes": 13542,
+      "gitBlobSha": "0a10d0b02b56274968a306076edb40fe13b69bf5",
+      "path": "docs/registers/source-discovery.json",
+      "sha256": "7ae4e0c18e18b861866654b802fd6a36e98a2f6c2ee8fc66fd8604abf2982c79"
+    },
+    {
+      "bytes": 515,
+      "gitBlobSha": "db408e6519433947e88f95317939a8a4ce6899c0",
+      "path": "docs/registers/validation-summary.txt",
+      "sha256": "2a503e04669b9527b07074e013016524d9cb76babaa3696f3bf3be4247f2a9f0"
+    },
+    {
+      "bytes": 39709,
+      "gitBlobSha": "3fd35d99838cfb5a149f8a3e37dff601e05a9e3f",
+      "path": "docs/specification/VALO-ROADMAP-001-v1.1.txt",
+      "sha256": "0b8db130845f36ce9828aafbebf1a292c9734fab1ba3518fa6469ae1ce4210f4"
+    },
+    {
+      "bytes": 91718,
+      "gitBlobSha": "a06a7f6266e2ea0a65a0d1d1bef19dd7b9a399fb",
+      "path": "docs/specification/VALO-TRD-001-v1.1.txt",
+      "sha256": "cc1a9f021b1d5c33288a25d13fa10e9eb45f37e707fd4ae9c4c539b61dace9d1"
+    },
+    {
+      "bytes": 10393,
+      "gitBlobSha": "d7e362004b9d3543de9b66572f2241cb8e2cd83a",
+      "path": "docs/specification/essential-business-documents.txt",
+      "sha256": "7d96bac7992fd4e04f4e6b7e1a9520e7cb69c34571dc8fd32cf37cdebcb0ed5c"
+    },
+    {
+      "bytes": 38729,
+      "gitBlobSha": "77d89025efddda850b049250c969317647c27f18",
+      "path": "docs/specification/master-execution-prompt.txt",
+      "sha256": "f134b49678d3a084ed17ea36379efb7dd8242f3a50870c04ac9abc219781a281"
+    }
+  ]
+}

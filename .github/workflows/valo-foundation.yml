@@ -37,5 +37,48 @@ jobs:
         run: pnpm run typecheck
       - name: Run foundation unit tests
         run: pnpm --filter @workspace/scripts test:valo
+      - name: Run API input-safety tests
+        run: pnpm --filter @workspace/api-server test:valo
+      - name: Build the Next.js application
+        run: pnpm --filter @workspace/valo run build
       - name: Print factual readiness
         run: pnpm --filter @workspace/scripts valo:readiness
+  postgres:
+    name: Synthetic PostgreSQL isolation and concurrency
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: valo_ci
+          POSTGRES_PASSWORD: synthetic_ci_only
+          POSTGRES_DB: valo_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U valo_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # Ephemeral synthetic CI service only; no workspace/provider/production secret.
+      DATABASE_URL: postgresql://valo_ci:synthetic_ci_only@localhost:5432/valo_ci
+      VALO_RUN_DB_TESTS: synthetic-development-only
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Set up pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.1 --activate
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply tracked migrations to empty synthetic database
+        run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
+      - name: Prove tenant boundaries, conflicts and history
+        run: pnpm --filter @workspace/api-server test:valo-db

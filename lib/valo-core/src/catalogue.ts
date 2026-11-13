@@ -1,3 +1,4 @@
+import { sourceContentInventory } from "./content-register.generated";
 /** Inventory metadata only. These titles are NOT published documents. */
 const baselineTitles = [
   "Invoice", "Quotation", "Receipt", "Purchase order", "Delivery note",
@@ -34,7 +35,7 @@ export const baselineTemplates = baselineTitles.map((title, index) => {
   };
 });
 
-/** Proposed candidates, not formal TPL IDs; deduplication against missing inventory is pending. */
+/** Proposed candidates, compared against all 61 identified items; never publications. */
 export const additionalCandidates = [
   ["Asset handover and return record", "Record custody of company equipment, distinct from maintenance."],
   ["Travel authorisation form", "Approve a proposed trip before costs are incurred, distinct from expense reimbursement."],
@@ -58,7 +59,7 @@ export const additionalCandidates = [
 ].map(([title, rationale], index) => ({
   id: `CAND-${String(index + 1).padStart(2, "0")}`,
   title, rationale, release: "R2", status: "proposed",
-  distinctness: "Pending comparison with the 27-document inventory",
+  distinctness: "Distinct artifact purpose compared against the 40 baseline and 21 supplementary additions; retain CAND ID until owner prioritisation",
   countsAsPublished: false,
 }));
 
@@ -69,9 +70,30 @@ export const catalogueSummary = {
   baselinePremiumTarget: 28,
   baselineAiTarget: 4,
   coordinatingTeamIdentifiedTotal: 61,
-  independentlyMappedTotal: 40,
+  independentlyMappedTotal: 61,
+  identifiedIncludingProposals: 80,
   additionalProposed: additionalCandidates.length,
   finalDistinctTotal: null,
   published: 0,
-  note: "61 is a coordinating-team report, not a verified local mapping. Missing inventory prevents final deduplication. NGO SCUML aliases broader SCUML and is never counted twice.",
+  note: "All 27 mappings are retained: five direct matches, one composite, 21 additions. Nineteen further distinct-purpose proposals bring the identified backlog to 80, not 80 authored, rights-cleared or published templates. NGO SCUML aliases broader SCUML and is never counted twice.",
 };
+
+export function contentReadiness() {
+  return {
+    summary: {
+      baselineTemplates: 40, supplementaryRows: 27, directMatches: 5, compositeRows: 1,
+      identifiedAdditions: 21, distinctIdentifiedBeforeProposals: 61,
+      furtherProposals: additionalCandidates.length, identifiedIncludingProposals: 80,
+      regulatoryRows: 79, canonicalRegulatoryTopicsAfterScumlAlias: 78,
+      publishedTemplates: 0, publishedGuidance: 0,
+      notice: "Research inventory only. Titles, mappings and links are not legal evidence, reviewed content or universal obligations.",
+    },
+    supplementaryMappings: sourceContentInventory.essential_document_mapping,
+    identifiedAdditions: sourceContentInventory.r2_missing_template_candidates,
+    furtherProposals: additionalCandidates,
+    regulatoryRows: sourceContentInventory.regulatory_inventory,
+    industryTaxonomy: sourceContentInventory.industry_taxonomy,
+    deeperPacks: sourceContentInventory.r1_deeper_packs,
+    statePriorities: sourceContentInventory.state_source_priorities,
+  };
+}

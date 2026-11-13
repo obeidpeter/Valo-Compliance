@@ -1,0 +1,23 @@
+kind = "web"
+previewPath = "/"
+title = "Valo"
+description = "Valo Compliance: Nigerian SME business documents and source-governed compliance, with a verified private business workspace. Next.js runtime retained as specified; R1 development, not approved for public launch."
+version = "1.0.0"
+id = "artifacts/valo"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20147
+
+[services.development]
+run = "pnpm --filter @workspace/valo run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/valo", "run", "build" ]
+run = "pnpm --filter @workspace/valo run serve"
+
+[services.env]
+PORT = "20147"
+BASE_PATH = "/"

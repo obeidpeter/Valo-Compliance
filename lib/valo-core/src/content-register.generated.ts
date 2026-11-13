@@ -1,0 +1,3305 @@
+// Generated research inventory, not authoritative evidence or published content.
+export const sourceContentInventory = {
+  "artifact": "Valo content traceability inventory",
+  "date": "2026-11-13",
+  "status": "analysis_only_not_implementation_or_publication_evidence",
+  "authority_hierarchy": [
+    "Master execution prompt",
+    "VALO-TRD-001 v1.1",
+    "VALO-ROADMAP-001 v1.1",
+    "Essential Business Documents"
+  ],
+  "source_files": [
+    {
+      "filename": "Valo_Product_Roadmap_AI_Revised(2).txt",
+      "sha256_of_extracted_text": "0b8db130845f36ce9828aafbebf1a292c9734fab1ba3518fa6469ae1ce4210f4"
+    },
+    {
+      "filename": "ESSENTIAL BUSINESS DOCUMENTS(1).txt",
+      "sha256_of_extracted_text": "7d96bac7992fd4e04f4e6b7e1a9520e7cb69c34571dc8fd32cf37cdebcb0ed5c"
+    },
+    {
+      "filename": "Valo_Technical_Requirements_Document_AI_Revised(2).txt",
+      "sha256_of_extracted_text": "cc1a9f021b1d5c33288a25d13fa10e9eb45f37e707fd4ae9c4c539b61dace9d1"
+    }
+  ],
+  "counts": {
+    "baseline_templates": 40,
+    "baseline_free": 12,
+    "baseline_premium": 28,
+    "baseline_guided": 12,
+    "baseline_customer_ai": 4,
+    "essential_document_rows": 27,
+    "direct_template_matches": 5,
+    "composite_document_rows": 1,
+    "distinct_R2_additions_identified": 21,
+    "identified_distinct_templates_including_R1": 61,
+    "additional_distinct_candidates_needed_for_80_target": 19,
+    "regulatory_source_rows": 79,
+    "regulatory_category_counts": {
+      "A": 9,
+      "B": 6,
+      "C": 5,
+      "D": 12,
+      "E": 4,
+      "F": 28,
+      "G": 5,
+      "H": 10
+    },
+    "regulatory_topics_after_one_clear_alias": 78,
+    "regulatory_unique_count_warning": "78 still includes broad umbrella and activity overlaps; this is not a legal obligation count.",
+    "published_templates": 0,
+    "published_regulatory_entries": 0
+  },
+  "baseline_templates": [
+    {
+      "id": "TPL-01",
+      "title": "Invoice",
+      "release": "R1",
+      "access": "free",
+      "guided": true,
+      "customer_ai": true,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-02",
+      "title": "Quotation",
+      "release": "R1",
+      "access": "free",
+      "guided": true,
+      "customer_ai": true,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-03",
+      "title": "Receipt",
+      "release": "R1",
+      "access": "free",
+      "guided": true,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-04",
+      "title": "Purchase order",
+      "release": "R1",
+      "access": "free",
+      "guided": true,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-05",
+      "title": "Delivery note",
+      "release": "R1",
+      "access": "free",
+      "guided": true,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-06",
+      "title": "Expense claim form",
+      "release": "R1",
+      "access": "free",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-07",
+      "title": "Inventory register",
+      "release": "R1",
+      "access": "free",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-08",
+      "title": "Meeting minutes",
+      "release": "R1",
+      "access": "free",
+      "guided": true,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-09",
+      "title": "Customer complaint form",
+      "release": "R1",
+      "access": "free",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-10",
+      "title": "Leave request form",
+      "release": "R1",
+      "access": "free",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-11",
+      "title": "Staff onboarding checklist",
+      "release": "R1",
+      "access": "free",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-12",
+      "title": "Payment reminder letter",
+      "release": "R1",
+      "access": "free",
+      "guided": true,
+      "customer_ai": true,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-13",
+      "title": "Service agreement",
+      "release": "R1",
+      "access": "premium",
+      "guided": true,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-14",
+      "title": "Consultancy agreement",
+      "release": "R1",
+      "access": "premium",
+      "guided": true,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-15",
+      "title": "Non-disclosure agreement",
+      "release": "R1",
+      "access": "premium",
+      "guided": true,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-16",
+      "title": "Employment contract",
+      "release": "R1",
+      "access": "premium",
+      "guided": true,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-17",
+      "title": "Offer letter",
+      "release": "R1",
+      "access": "premium",
+      "guided": true,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-18",
+      "title": "Supplier agreement",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-19",
+      "title": "Sales agreement",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-20",
+      "title": "Partnership agreement",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-21",
+      "title": "Independent contractor agreement",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-22",
+      "title": "Business proposal",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": true,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-23",
+      "title": "Statement of work",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-24",
+      "title": "Procurement evaluation form",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-25",
+      "title": "Board resolution",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-26",
+      "title": "Employee handbook",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-27",
+      "title": "Leave policy",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-28",
+      "title": "Disciplinary procedure",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-29",
+      "title": "Privacy notice",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-30",
+      "title": "Website terms and conditions",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-31",
+      "title": "Data processing agreement",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-32",
+      "title": "Data retention policy",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-33",
+      "title": "Health and safety checklist",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-34",
+      "title": "Incident report",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-35",
+      "title": "Standard operating procedure",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-36",
+      "title": "Product recall plan",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-37",
+      "title": "Food hygiene checklist",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-38",
+      "title": "Equipment maintenance log",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-39",
+      "title": "Commercial lease checklist",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    },
+    {
+      "id": "TPL-40",
+      "title": "Compliance evidence checklist",
+      "release": "R1",
+      "access": "premium",
+      "guided": false,
+      "customer_ai": false,
+      "status": "backlog",
+      "publication_status": "held",
+      "hold_reasons": [
+        "No executable content body supplied in specification",
+        "Rights evidence and applicable EDP-001–012 manifest absent",
+        "DOCX/PDF export evidence absent"
+      ],
+      "source": "VALO-TRD-001 v1.1 section 13"
+    }
+  ],
+  "essential_document_mapping": [
+    {
+      "source_id": "EBD-B01",
+      "source_number": 1,
+      "section": "Business",
+      "source_title": "Job Description Template",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-41",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B02",
+      "source_number": 2,
+      "section": "Business",
+      "source_title": "Employee Reference Check Form",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-42",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B03",
+      "source_number": 3,
+      "section": "Business",
+      "source_title": "Employment Offer Letter",
+      "mapping_type": "exact",
+      "canonical_template_id": "TPL-17",
+      "related_template_ids": [],
+      "release": "R1",
+      "status": "backlog",
+      "note": "Offer letter and employment offer letter share one canonical template."
+    },
+    {
+      "source_id": "EBD-B04",
+      "source_number": 4,
+      "section": "Business",
+      "source_title": "Employment Contract / Appointment Letter",
+      "mapping_type": "exact",
+      "canonical_template_id": "TPL-16",
+      "related_template_ids": [],
+      "release": "R1",
+      "status": "backlog",
+      "note": "Employment contract maps directly; preserve appointment-letter alias and actual use assumptions without assuming all appointment letters are contracts."
+    },
+    {
+      "source_id": "EBD-B05",
+      "source_number": 5,
+      "section": "Business",
+      "source_title": "Employee Personal Data Form",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-43",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B06",
+      "source_number": 6,
+      "section": "Business",
+      "source_title": "Employee Guarantor Form",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-44",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B07",
+      "source_number": 7,
+      "section": "Business",
+      "source_title": "Non-Disclosure Agreement (NDA)",
+      "mapping_type": "exact",
+      "canonical_template_id": "TPL-15",
+      "related_template_ids": [],
+      "release": "R1",
+      "status": "backlog",
+      "note": "NDA is the same document type."
+    },
+    {
+      "source_id": "EBD-B08",
+      "source_number": 8,
+      "section": "Business",
+      "source_title": "Non-Solicitation Agreement",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-45",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B09",
+      "source_number": 9,
+      "section": "Business",
+      "source_title": "Non-Compete Agreement",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-46",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B10",
+      "source_number": 10,
+      "section": "Business",
+      "source_title": "Intellectual Property (IP) Assignment Agreement",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-47",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B11",
+      "source_number": 11,
+      "section": "Business",
+      "source_title": "Employee Handbook",
+      "mapping_type": "exact",
+      "canonical_template_id": "TPL-26",
+      "related_template_ids": [],
+      "release": "R1",
+      "status": "backlog",
+      "note": "Same employee handbook."
+    },
+    {
+      "source_id": "EBD-B12",
+      "source_number": 12,
+      "section": "Business",
+      "source_title": "Company Policies and Procedures Manual",
+      "mapping_type": "composite",
+      "canonical_template_id": null,
+      "related_template_ids": [
+        "TPL-26",
+        "TPL-27",
+        "TPL-28",
+        "TPL-32",
+        "TPL-35"
+      ],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Map as a curated manual assembled from governed policies and SOPs; do not count a renamed bundle as an additional unique template."
+    },
+    {
+      "source_id": "EBD-B13",
+      "source_number": 13,
+      "section": "Business",
+      "source_title": "Employee Code of Conduct",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-48",
+      "related_template_ids": [
+        "TPL-26"
+      ],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates. Handbook component overlap does not make a usable standalone code of conduct identical to the handbook."
+    },
+    {
+      "source_id": "EBD-B14",
+      "source_number": 14,
+      "section": "Business",
+      "source_title": "Leave Request Form",
+      "mapping_type": "exact",
+      "canonical_template_id": "TPL-10",
+      "related_template_ids": [],
+      "release": "R1",
+      "status": "backlog",
+      "note": "Same leave request form."
+    },
+    {
+      "source_id": "EBD-B15",
+      "source_number": 15,
+      "section": "Business",
+      "source_title": "Employee Task Tracker Template",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-49",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B16",
+      "source_number": 16,
+      "section": "Business",
+      "source_title": "Weekly Activity Report Template",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-50",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B17",
+      "source_number": 17,
+      "section": "Business",
+      "source_title": "Monthly Performance Report Template",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-51",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B18",
+      "source_number": 18,
+      "section": "Business",
+      "source_title": "Employee Performance Review Template",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-52",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B19",
+      "source_number": 19,
+      "section": "Business",
+      "source_title": "Employee Return on Investment (ROI) Measurement and Implementation Guide",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-53",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-B20",
+      "source_number": 20,
+      "section": "Business",
+      "source_title": "Disciplinary Action / Warning Letter",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-54",
+      "related_template_ids": [
+        "TPL-28"
+      ],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates. A case-specific warning/action letter is different from a general disciplinary procedure."
+    },
+    {
+      "source_id": "EBD-B21",
+      "source_number": 21,
+      "section": "Business",
+      "source_title": "Employee Promotion Letter",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-55",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-N01",
+      "source_number": 1,
+      "section": "NGO",
+      "source_title": "Organisational Bylaws / Constitution",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-56",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-N02",
+      "source_number": 2,
+      "section": "NGO",
+      "source_title": "Conflict of Interest Policy",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-57",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-N03",
+      "source_number": 3,
+      "section": "NGO",
+      "source_title": "Board Member and Officer Records",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-58",
+      "related_template_ids": [
+        "TPL-25"
+      ],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates. Officer records differ from a board resolution."
+    },
+    {
+      "source_id": "EBD-N04",
+      "source_number": 4,
+      "section": "NGO",
+      "source_title": "Annual Budget Template",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-59",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-N05",
+      "source_number": 5,
+      "section": "NGO",
+      "source_title": "Written Programme Description",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-60",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    },
+    {
+      "source_id": "EBD-N06",
+      "source_number": 6,
+      "section": "NGO",
+      "source_title": "Organisational Goals and Objectives Document",
+      "mapping_type": "new",
+      "canonical_template_id": "TPL-61",
+      "related_template_ids": [],
+      "release": "R2",
+      "status": "backlog",
+      "note": "Distinct missing document type; retain as R2 candidate, subject to evidence, rights, content and export gates."
+    }
+  ],
+  "r2_missing_template_candidates": [
+    {
+      "id": "TPL-41",
+      "title": "Job Description Template",
+      "source_item_id": "EBD-B01",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "standard",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-42",
+      "title": "Employee Reference Check Form",
+      "source_item_id": "EBD-B02",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "standard",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-43",
+      "title": "Employee Personal Data Form",
+      "source_item_id": "EBD-B05",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-44",
+      "title": "Employee Guarantor Form",
+      "source_item_id": "EBD-B06",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "later_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-45",
+      "title": "Non-Solicitation Agreement",
+      "source_item_id": "EBD-B08",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "later_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-46",
+      "title": "Non-Compete Agreement",
+      "source_item_id": "EBD-B09",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "later_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-47",
+      "title": "Intellectual Property (IP) Assignment Agreement",
+      "source_item_id": "EBD-B10",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-48",
+      "title": "Employee Code of Conduct",
+      "source_item_id": "EBD-B13",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-49",
+      "title": "Employee Task Tracker Template",
+      "source_item_id": "EBD-B15",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "standard",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-50",
+      "title": "Weekly Activity Report Template",
+      "source_item_id": "EBD-B16",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "standard",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-51",
+      "title": "Monthly Performance Report Template",
+      "source_item_id": "EBD-B17",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "standard",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-52",
+      "title": "Employee Performance Review Template",
+      "source_item_id": "EBD-B18",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-53",
+      "title": "Employee Return on Investment (ROI) Measurement and Implementation Guide",
+      "source_item_id": "EBD-B19",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "standard",
+      "priority": "later_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-54",
+      "title": "Disciplinary Action / Warning Letter",
+      "source_item_id": "EBD-B20",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-55",
+      "title": "Employee Promotion Letter",
+      "source_item_id": "EBD-B21",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-56",
+      "title": "Organisational Bylaws / Constitution",
+      "source_item_id": "EBD-N01",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-57",
+      "title": "Conflict of Interest Policy",
+      "source_item_id": "EBD-N02",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-58",
+      "title": "Board Member and Officer Records",
+      "source_item_id": "EBD-N03",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-59",
+      "title": "Annual Budget Template",
+      "source_item_id": "EBD-N04",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-60",
+      "title": "Written Programme Description",
+      "source_item_id": "EBD-N05",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    },
+    {
+      "id": "TPL-61",
+      "title": "Organisational Goals and Objectives Document",
+      "source_item_id": "EBD-N06",
+      "release": "R2",
+      "access": "undecided",
+      "guided": "undecided",
+      "status": "backlog",
+      "publication_status": "held",
+      "risk": "enhanced",
+      "priority": "early_R2",
+      "hold_reasons": [
+        "Content not yet authored",
+        "Provenance and commercial-use rights not cleared",
+        "Applicable source-grounded EDP checks and export tests not run"
+      ]
+    }
+  ],
+  "regulatory_inventory": [
+    {
+      "source_id": "REG-A01",
+      "ordinal": 1,
+      "source_category": "CAC & LEGAL ENTITY REGISTRATIONS",
+      "source_title": "Business Name Registration",
+      "canonical_topic_id": "REG-A01",
+      "classification": "alternative_legal_structure",
+      "candidate_jurisdiction": "legal-form-specific; cooperative registrar jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-A02",
+      "ordinal": 2,
+      "source_category": "CAC & LEGAL ENTITY REGISTRATIONS",
+      "source_title": "Private Limited Liability Company Registration (Ltd)",
+      "canonical_topic_id": "REG-A02",
+      "classification": "alternative_legal_structure",
+      "candidate_jurisdiction": "legal-form-specific; cooperative registrar jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-A03",
+      "ordinal": 3,
+      "source_category": "CAC & LEGAL ENTITY REGISTRATIONS",
+      "source_title": "Public Limited Liability Company Registration (Plc)",
+      "canonical_topic_id": "REG-A03",
+      "classification": "alternative_legal_structure",
+      "candidate_jurisdiction": "legal-form-specific; cooperative registrar jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-A04",
+      "ordinal": 4,
+      "source_category": "CAC & LEGAL ENTITY REGISTRATIONS",
+      "source_title": "Company Limited by Guarantee Registration (Ltd/Gte)",
+      "canonical_topic_id": "REG-A04",
+      "classification": "alternative_legal_structure",
+      "candidate_jurisdiction": "legal-form-specific; cooperative registrar jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-A05",
+      "ordinal": 5,
+      "source_category": "CAC & LEGAL ENTITY REGISTRATIONS",
+      "source_title": "Unlimited Liability Company Registration",
+      "canonical_topic_id": "REG-A05",
+      "classification": "alternative_legal_structure",
+      "candidate_jurisdiction": "legal-form-specific; cooperative registrar jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-A06",
+      "ordinal": 6,
+      "source_category": "CAC & LEGAL ENTITY REGISTRATIONS",
+      "source_title": "Limited Liability Partnership (LLP) Registration",
+      "canonical_topic_id": "REG-A06",
+      "classification": "alternative_legal_structure",
+      "candidate_jurisdiction": "legal-form-specific; cooperative registrar jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-A07",
+      "ordinal": 7,
+      "source_category": "CAC & LEGAL ENTITY REGISTRATIONS",
+      "source_title": "Limited Partnership (LP) Registration",
+      "canonical_topic_id": "REG-A07",
+      "classification": "alternative_legal_structure",
+      "candidate_jurisdiction": "legal-form-specific; cooperative registrar jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-A08",
+      "ordinal": 8,
+      "source_category": "CAC & LEGAL ENTITY REGISTRATIONS",
+      "source_title": "Incorporated Trustees Registration (NGOs, foundations, associations, religious bodies)",
+      "canonical_topic_id": "REG-A08",
+      "classification": "alternative_legal_structure",
+      "candidate_jurisdiction": "legal-form-specific; cooperative registrar jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-A09",
+      "ordinal": 9,
+      "source_category": "CAC & LEGAL ENTITY REGISTRATIONS",
+      "source_title": "Cooperative Society Registration (through the relevant cooperative registrar)",
+      "canonical_topic_id": "REG-A09",
+      "classification": "alternative_legal_structure",
+      "candidate_jurisdiction": "legal-form-specific; cooperative registrar jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-B01",
+      "ordinal": 10,
+      "source_category": "TAX & REVENUE REGISTRATIONS",
+      "source_title": "Tax Identification (Tax ID) Registration or Retrieval",
+      "canonical_topic_id": "REG-B01",
+      "classification": "conditional_tax_procedure",
+      "candidate_jurisdiction": "federal or state/FCT as applicable",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-B02",
+      "ordinal": 11,
+      "source_category": "TAX & REVENUE REGISTRATIONS",
+      "source_title": "Nigeria Revenue Service (NRS) Corporate Taxpayer Registration",
+      "canonical_topic_id": "REG-B02",
+      "classification": "conditional_tax_procedure",
+      "candidate_jurisdiction": "federal or state/FCT as applicable",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-B03",
+      "ordinal": 12,
+      "source_category": "TAX & REVENUE REGISTRATIONS",
+      "source_title": "Value Added Tax (VAT) Registration",
+      "canonical_topic_id": "REG-B03",
+      "classification": "conditional_tax_procedure",
+      "candidate_jurisdiction": "federal or state/FCT as applicable",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-B04",
+      "ordinal": 13,
+      "source_category": "TAX & REVENUE REGISTRATIONS",
+      "source_title": "State Internal Revenue Service Taxpayer Registration",
+      "canonical_topic_id": "REG-B04",
+      "classification": "conditional_tax_procedure",
+      "candidate_jurisdiction": "federal or state/FCT as applicable",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-B05",
+      "ordinal": 14,
+      "source_category": "TAX & REVENUE REGISTRATIONS",
+      "source_title": "Pay-As-You-Earn (PAYE) Employer Registration",
+      "canonical_topic_id": "REG-B05",
+      "classification": "conditional_tax_procedure",
+      "candidate_jurisdiction": "federal or state/FCT as applicable",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-B06",
+      "ordinal": 15,
+      "source_category": "TAX & REVENUE REGISTRATIONS",
+      "source_title": "NRS E-Invoicing / Merchant Buyer Solution (MBS) Onboarding, where applicable",
+      "canonical_topic_id": "REG-B06",
+      "classification": "conditional_tax_procedure",
+      "candidate_jurisdiction": "federal or state/FCT as applicable",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-C01",
+      "ordinal": 16,
+      "source_category": "EMPLOYER & EMPLOYEE REGISTRATIONS",
+      "source_title": "Nigeria Social Insurance Trust Fund (NSITF) Employer Registration",
+      "canonical_topic_id": "REG-C01",
+      "classification": "conditional_employer_or_employee_procedure",
+      "candidate_jurisdiction": "federal or applicable state scheme",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-C02",
+      "ordinal": 17,
+      "source_category": "EMPLOYER & EMPLOYEE REGISTRATIONS",
+      "source_title": "National Pension Commission (PenCom) Employer Code Registration",
+      "canonical_topic_id": "REG-C02",
+      "classification": "conditional_employer_or_employee_procedure",
+      "candidate_jurisdiction": "federal or applicable state scheme",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-C03",
+      "ordinal": 18,
+      "source_category": "EMPLOYER & EMPLOYEE REGISTRATIONS",
+      "source_title": "Employee Retirement Savings Account (RSA) Registration",
+      "canonical_topic_id": "REG-C03",
+      "classification": "conditional_employer_or_employee_procedure",
+      "candidate_jurisdiction": "federal or applicable state scheme",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-C04",
+      "ordinal": 19,
+      "source_category": "EMPLOYER & EMPLOYEE REGISTRATIONS",
+      "source_title": "Industrial Training Fund (ITF) Employer Registration",
+      "canonical_topic_id": "REG-C04",
+      "classification": "conditional_employer_or_employee_procedure",
+      "candidate_jurisdiction": "federal or applicable state scheme",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-C05",
+      "ordinal": 20,
+      "source_category": "EMPLOYER & EMPLOYEE REGISTRATIONS",
+      "source_title": "National Health Insurance / Applicable State Health Insurance Scheme Registration",
+      "canonical_topic_id": "REG-C05",
+      "classification": "conditional_employer_or_employee_procedure",
+      "candidate_jurisdiction": "federal or applicable state scheme",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D01",
+      "ordinal": 21,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Special Control Unit Against Money Laundering (SCUML) Registration, for covered businesses and at-risk NGOs",
+      "canonical_topic_id": "REG-D01",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D02",
+      "ordinal": 22,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Nigeria Data Protection Commission (NDPC) Registration, for qualifying data controllers and processors",
+      "canonical_topic_id": "REG-D02",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D03",
+      "ordinal": 23,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Small and Medium Enterprises Development Agency of Nigeria (SMEDAN) Registration, voluntary",
+      "canonical_topic_id": "REG-D03",
+      "classification": "voluntary_business_registration",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D04",
+      "ordinal": 24,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Bureau of Public Procurement (BPP) Contractor/Consultant Registration, where applicable",
+      "canonical_topic_id": "REG-D04",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D05",
+      "ordinal": 25,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "State Business Premises Registration",
+      "canonical_topic_id": "REG-D05",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D06",
+      "ordinal": 26,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Local Government Trade or Business Operating Permit, where applicable",
+      "canonical_topic_id": "REG-D06",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D07",
+      "ordinal": 27,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Signage and Outdoor Advertising Permit",
+      "canonical_topic_id": "REG-D07",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D08",
+      "ordinal": 28,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Fire Safety Inspection and Certification",
+      "canonical_topic_id": "REG-D08",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D09",
+      "ordinal": 29,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Environmental Permits, including NESREA permits where applicable",
+      "canonical_topic_id": "REG-D09",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D10",
+      "ordinal": 30,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Building Development or Change-of-Use Approval",
+      "canonical_topic_id": "REG-D10",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D11",
+      "ordinal": 31,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Environmental Health and Sanitation Permits, where required",
+      "canonical_topic_id": "REG-D11",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-D12",
+      "ordinal": 32,
+      "source_category": "GENERAL BUSINESS & REGULATORY REGISTRATIONS",
+      "source_title": "Waste Management Registration or Permit, where applicable",
+      "canonical_topic_id": "REG-D12",
+      "classification": "conditional_general_or_operating_permission",
+      "candidate_jurisdiction": "federal/state/FCT/LGA according to authority and activity",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-E01",
+      "ordinal": 33,
+      "source_category": "INTELLECTUAL PROPERTY REGISTRATIONS",
+      "source_title": "Trademark Registration",
+      "canonical_topic_id": "REG-E01",
+      "classification": "voluntary_IP_protection_procedure",
+      "candidate_jurisdiction": "federal discovery candidate",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-E02",
+      "ordinal": 34,
+      "source_category": "INTELLECTUAL PROPERTY REGISTRATIONS",
+      "source_title": "Patent Registration",
+      "canonical_topic_id": "REG-E02",
+      "classification": "voluntary_IP_protection_procedure",
+      "candidate_jurisdiction": "federal discovery candidate",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-E03",
+      "ordinal": 35,
+      "source_category": "INTELLECTUAL PROPERTY REGISTRATIONS",
+      "source_title": "Industrial Design Registration",
+      "canonical_topic_id": "REG-E03",
+      "classification": "voluntary_IP_protection_procedure",
+      "candidate_jurisdiction": "federal discovery candidate",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-E04",
+      "ordinal": 36,
+      "source_category": "INTELLECTUAL PROPERTY REGISTRATIONS",
+      "source_title": "Copyright Voluntary Registration / Notification",
+      "canonical_topic_id": "REG-E04",
+      "classification": "voluntary_IP_protection_procedure",
+      "candidate_jurisdiction": "federal discovery candidate",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F01",
+      "ordinal": 37,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "NAFDAC Product Registration, for regulated food, cosmetics, medicines, medical devices and other products",
+      "canonical_topic_id": "REG-F01",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F02",
+      "ordinal": 38,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Standards Organisation of Nigeria (SON) MANCAP Certification",
+      "canonical_topic_id": "REG-F02",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F03",
+      "ordinal": 39,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "SONCAP Product Conformity Certification, for applicable imports",
+      "canonical_topic_id": "REG-F03",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F04",
+      "ordinal": 40,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Nigerian Export Promotion Council (NEPC) Exporter Registration",
+      "canonical_topic_id": "REG-F04",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F05",
+      "ordinal": 41,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Customs Importer Registration / Trade Portal Onboarding, where applicable",
+      "canonical_topic_id": "REG-F05",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F06",
+      "ordinal": 42,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Nigerian Investment Promotion Commission (NIPC) Registration, for foreign-participation investments",
+      "canonical_topic_id": "REG-F06",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F07",
+      "ordinal": 43,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Federal Ministry of Interior Business Permit, for qualifying foreign-participation companies",
+      "canonical_topic_id": "REG-F07",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F08",
+      "ordinal": 44,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Expatriate Quota Approval and Relevant Immigration Registration",
+      "canonical_topic_id": "REG-F08",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F09",
+      "ordinal": 45,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Central Bank of Nigeria (CBN) Banking or Financial Institution Licensing",
+      "canonical_topic_id": "REG-F09",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F10",
+      "ordinal": 46,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "CBN Payment Service Provider Licensing",
+      "canonical_topic_id": "REG-F10",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F11",
+      "ordinal": 47,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Securities and Exchange Commission (SEC) Capital Market Operator Registration",
+      "canonical_topic_id": "REG-F11",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F12",
+      "ordinal": 48,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Federal Competition and Consumer Protection Commission (FCCPC) Digital Money Lender Approval",
+      "canonical_topic_id": "REG-F12",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F13",
+      "ordinal": 49,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Nigerian Communications Commission (NCC) Telecommunications Licensing",
+      "canonical_topic_id": "REG-F13",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F14",
+      "ordinal": 50,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Electricity Generation, Distribution or Trading Licences, through NERC or the relevant state regulator",
+      "canonical_topic_id": "REG-F14",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F15",
+      "ordinal": 51,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Nigerian Upstream Petroleum Regulatory Commission (NUPRC) Licences and Service Permits",
+      "canonical_topic_id": "REG-F15",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F16",
+      "ordinal": 52,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Nigerian Midstream and Downstream Petroleum Regulatory Authority (NMDPRA) Licences and Permits",
+      "canonical_topic_id": "REG-F16",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F17",
+      "ordinal": 53,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Healthcare Facility Registration and Licensing",
+      "canonical_topic_id": "REG-F17",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F18",
+      "ordinal": 54,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Pharmacy / Pharmaceutical Premises Registration",
+      "canonical_topic_id": "REG-F18",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F19",
+      "ordinal": 55,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Educational Institution Registration and Accreditation",
+      "canonical_topic_id": "REG-F19",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F20",
+      "ordinal": 56,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Hospitality and Tourism Business Licensing",
+      "canonical_topic_id": "REG-F20",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F21",
+      "ordinal": 57,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Real Estate Practitioner or Agency Registration, where required",
+      "canonical_topic_id": "REG-F21",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F22",
+      "ordinal": 58,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Engineering and Construction Professional Registration, where applicable",
+      "canonical_topic_id": "REG-F22",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F23",
+      "ordinal": 59,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Aviation Business Licensing",
+      "canonical_topic_id": "REG-F23",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F24",
+      "ordinal": 60,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Maritime Operator Registration and Licensing",
+      "canonical_topic_id": "REG-F24",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F25",
+      "ordinal": 61,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Mining and Mineral Title Registration",
+      "canonical_topic_id": "REG-F25",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F26",
+      "ordinal": 62,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Private Security Company Licensing",
+      "canonical_topic_id": "REG-F26",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F27",
+      "ordinal": 63,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Technology Transfer Agreement Registration (NOTAP), where applicable",
+      "canonical_topic_id": "REG-F27",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-F28",
+      "ordinal": 64,
+      "source_category": "INDUSTRY-SPECIFIC REGISTRATIONS & LICENCES",
+      "source_title": "Financial Reporting Council (FRC) Audit and Assurance Firm Registration",
+      "canonical_topic_id": "REG-F28",
+      "classification": "conditional_sector_permission",
+      "candidate_jurisdiction": "sector and activity specific; authority/jurisdiction unresolved",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-G01",
+      "ordinal": 65,
+      "source_category": "ADDITIONAL NON-PROFIT ORGANISATION REGISTRATIONS",
+      "source_title": "SCUML Registration for At-Risk Non-Profit Organisations, where applicable",
+      "canonical_topic_id": "REG-D01",
+      "classification": "conditional_NGO_procedure",
+      "candidate_jurisdiction": "structure, programme and jurisdiction specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "alias_no_additional_count",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-G02",
+      "ordinal": 66,
+      "source_category": "ADDITIONAL NON-PROFIT ORGANISATION REGISTRATIONS",
+      "source_title": "State-Level NGO Registration, where required",
+      "canonical_topic_id": "REG-G02",
+      "classification": "conditional_NGO_procedure",
+      "candidate_jurisdiction": "structure, programme and jurisdiction specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-G03",
+      "ordinal": 67,
+      "source_category": "ADDITIONAL NON-PROFIT ORGANISATION REGISTRATIONS",
+      "source_title": "International NGO Cooperation or Government Authorisation, where applicable",
+      "canonical_topic_id": "REG-G03",
+      "classification": "conditional_NGO_procedure",
+      "candidate_jurisdiction": "structure, programme and jurisdiction specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-G04",
+      "ordinal": 68,
+      "source_category": "ADDITIONAL NON-PROFIT ORGANISATION REGISTRATIONS",
+      "source_title": "Relevant Programme or Facility Licensing, such as schools, clinics or residential care facilities",
+      "canonical_topic_id": "REG-G04",
+      "classification": "conditional_NGO_procedure",
+      "candidate_jurisdiction": "structure, programme and jurisdiction specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-G05",
+      "ordinal": 69,
+      "source_category": "ADDITIONAL NON-PROFIT ORGANISATION REGISTRATIONS",
+      "source_title": "Tax Exemption Documentation or Recognition, where applicable",
+      "canonical_topic_id": "REG-G05",
+      "classification": "conditional_recognition_or_exemption_documentation",
+      "candidate_jurisdiction": "structure, programme and jurisdiction specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-H01",
+      "ordinal": 70,
+      "source_category": "POST-REGISTRATION FILINGS & ONGOING COMPLIANCE",
+      "source_title": "CAC Annual Returns Filing",
+      "canonical_topic_id": "REG-H01",
+      "classification": "conditional_recurring_or_event_filing",
+      "candidate_jurisdiction": "underlying authority/legal form specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-H02",
+      "ordinal": 71,
+      "source_category": "POST-REGISTRATION FILINGS & ONGOING COMPLIANCE",
+      "source_title": "Persons with Significant Control (PSC) Disclosure",
+      "canonical_topic_id": "REG-H02",
+      "classification": "conditional_recurring_or_event_filing",
+      "candidate_jurisdiction": "underlying authority/legal form specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-H03",
+      "ordinal": 72,
+      "source_category": "POST-REGISTRATION FILINGS & ONGOING COMPLIANCE",
+      "source_title": "Directors’ and Company Secretaries’ Changes",
+      "canonical_topic_id": "REG-H03",
+      "classification": "conditional_recurring_or_event_filing",
+      "candidate_jurisdiction": "underlying authority/legal form specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-H04",
+      "ordinal": 73,
+      "source_category": "POST-REGISTRATION FILINGS & ONGOING COMPLIANCE",
+      "source_title": "Registered Office Address Changes",
+      "canonical_topic_id": "REG-H04",
+      "classification": "conditional_recurring_or_event_filing",
+      "candidate_jurisdiction": "underlying authority/legal form specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-H05",
+      "ordinal": 74,
+      "source_category": "POST-REGISTRATION FILINGS & ONGOING COMPLIANCE",
+      "source_title": "Share Capital Changes and Share Allotment Filings",
+      "canonical_topic_id": "REG-H05",
+      "classification": "conditional_recurring_or_event_filing",
+      "candidate_jurisdiction": "underlying authority/legal form specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-H06",
+      "ordinal": 75,
+      "source_category": "POST-REGISTRATION FILINGS & ONGOING COMPLIANCE",
+      "source_title": "Registration of Company Charges and Debentures",
+      "canonical_topic_id": "REG-H06",
+      "classification": "conditional_recurring_or_event_filing",
+      "candidate_jurisdiction": "underlying authority/legal form specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-H07",
+      "ordinal": 76,
+      "source_category": "POST-REGISTRATION FILINGS & ONGOING COMPLIANCE",
+      "source_title": "Corporate Name Changes and Re-registration",
+      "canonical_topic_id": "REG-H07",
+      "classification": "conditional_recurring_or_event_filing",
+      "candidate_jurisdiction": "underlying authority/legal form specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "future_content_backlog",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-H08",
+      "ordinal": 77,
+      "source_category": "POST-REGISTRATION FILINGS & ONGOING COMPLIANCE",
+      "source_title": "Tax Returns and Statutory Remittances",
+      "canonical_topic_id": "REG-H08",
+      "classification": "conditional_recurring_filing_or_remittance",
+      "candidate_jurisdiction": "underlying authority/legal form specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R1_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-H09",
+      "ordinal": 78,
+      "source_category": "POST-REGISTRATION FILINGS & ONGOING COMPLIANCE",
+      "source_title": "Pension, Employee Compensation and Other Statutory Returns",
+      "canonical_topic_id": "REG-H09",
+      "classification": "conditional_recurring_filing_or_remittance",
+      "candidate_jurisdiction": "underlying authority/legal form specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    },
+    {
+      "source_id": "REG-H10",
+      "ordinal": 79,
+      "source_category": "POST-REGISTRATION FILINGS & ONGOING COMPLIANCE",
+      "source_title": "Regulatory Licence Renewals and Updates",
+      "canonical_topic_id": "REG-H10",
+      "classification": "conditional_renewal_or_update",
+      "candidate_jurisdiction": "underlying authority/legal form specific",
+      "jurisdiction_verified": false,
+      "applicability_status": "not_assessed",
+      "coverage_status": "inventory_only",
+      "publication_status": "held",
+      "release_priority": "R2_research_candidate",
+      "source_evidence": [],
+      "hold_reasons": [
+        "Inventory statement is not authoritative legal evidence",
+        "Current controlling text and claim-to-passage mapping not retrieved",
+        "Effective dates, jurisdiction and conditions not validated",
+        "EDP publication review, tests and manifest absent"
+      ],
+      "mandatory_for_all_businesses": false
+    }
+  ],
+  "overlap_register": [
+    {
+      "id": "OVL-01",
+      "source_ids": [
+        "REG-D01",
+        "REG-G01"
+      ],
+      "type": "same_registration_context_variant",
+      "canonical_id": "REG-D01",
+      "note": "Keep NGO applicability and evidence as a scoped variant, not a second generic registration."
+    },
+    {
+      "id": "OVL-02",
+      "source_ids": [
+        "REG-G04",
+        "REG-F17",
+        "REG-F19"
+      ],
+      "type": "umbrella_to_activity_topics",
+      "note": "Programme/facility licensing is an umbrella for NGO schools, clinics and other activities; source rows retained, but do not duplicate obligations."
+    },
+    {
+      "id": "OVL-03",
+      "source_ids": [
+        "REG-H08",
+        "REG-B01",
+        "REG-B02",
+        "REG-B03",
+        "REG-B04",
+        "REG-B05"
+      ],
+      "type": "registration_vs_recurring_obligation",
+      "note": "Tax registration and subsequent returns/remittances are related but distinct. Refine recurring entries after authoritative research."
+    },
+    {
+      "id": "OVL-04",
+      "source_ids": [
+        "REG-H09",
+        "REG-C01",
+        "REG-C02",
+        "REG-C03",
+        "REG-C04",
+        "REG-C05"
+      ],
+      "type": "registration_vs_recurring_obligation",
+      "note": "Employer registrations, employee account arrangements and recurring statutory returns must not be merged indiscriminately."
+    },
+    {
+      "id": "OVL-05",
+      "source_ids": [
+        "REG-H10"
+      ],
+      "type": "renewal_umbrella",
+      "note": "Link to each actual licence and verified renewal rule; not one universally applicable deadline."
+    }
+  ],
+  "industry_taxonomy": [
+    "retail/wholesale",
+    "packaged-food manufacturing",
+    "restaurants/hospitality",
+    "agriculture",
+    "general manufacturing",
+    "logistics/transport",
+    "construction",
+    "real estate",
+    "technology/software",
+    "e-commerce",
+    "beauty/personal care",
+    "fashion/textiles",
+    "healthcare",
+    "education",
+    "professional services",
+    "media/creative",
+    "import/export",
+    "energy",
+    "financial services",
+    "other"
+  ],
+  "r1_deeper_packs": [
+    "retail/wholesale",
+    "packaged-food manufacturing",
+    "restaurants/hospitality",
+    "technology/software",
+    "professional services",
+    "beauty/personal care"
+  ],
+  "state_source_priorities": [
+    "Lagos",
+    "FCT",
+    "Bayelsa"
+  ],
+  "location_selection": "All 36 states plus FCT; selection never establishes coverage.",
+  "release_targets": {
+    "R1": {
+      "templates": 40,
+      "free": 12,
+      "premium": 28,
+      "guided": 12,
+      "customer_ai_types": [
+        "Invoice",
+        "Quotation",
+        "Payment reminder",
+        "Business proposal"
+      ],
+      "compliance_entries": 30,
+      "guides": 12,
+      "industries": 20,
+      "deeper_industry_packs": 6
+    },
+    "R2": {
+      "templates_approximately": 80,
+      "guided": 24,
+      "compliance_entries_approximately": 60,
+      "deeper_industry_packs": 10,
+      "reviewed_state_FCT_packs_up_to": 6,
+      "NGO_experience": true
+    }
+  },
+  "conflicts_and_assumptions": [
+    {
+      "id": "CNT-A01",
+      "issue": "27 document rows are not 27 additions",
+      "resolution": "5 map directly to the baseline; 1 is a composite manual/bundle; 21 distinct new candidate documents. Preserve all 27 source IDs."
+    },
+    {
+      "id": "CNT-A02",
+      "issue": "80-template R2 target exceeds identified distinct inventory",
+      "resolution": "40 baseline + 21 new candidates = 61 distinct planned templates under the composite-manual treatment; select 19 further useful, distinct templates from measured demand. Do not invent completion or duplicate names."
+    },
+    {
+      "id": "CNT-A03",
+      "issue": "79 regulatory rows contain overlaps and umbrella topics",
+      "resolution": "Counts match 9+6+5+12+4+28+5+10=79. REG-G01 aliases REG-D01 for SCUML NGO context. REG-G04 aggregates activity licences already represented by sector topics. Preserve source rows; do not equate row count with distinct obligations or certificates."
+    },
+    {
+      "id": "CNT-A04",
+      "issue": "Essential Business Documents requests Nigerian-law review before implementation",
+      "resolution": "Master prompt and TRD supersede blanket professional-review interpretation: separate AI checks plus deterministic gates; future specialist review optional. No publication without adequate evidence."
+    },
+    {
+      "id": "CNT-A05",
+      "issue": "Essential inventory contains unsupported reference snippets and 2026 assertions",
+      "resolution": "Treat phrases such as Tax ID +3 and source-name +N fragments as unusable citations. Do not assert NRS, Tax ID, e-invoicing or SCUML applicability from this inventory alone."
+    },
+    {
+      "id": "CNT-A06",
+      "issue": "R1/R2 regulatory per-item selection unspecified",
+      "resolution": "Thirty R1 and thirty additional R2 research candidates below are an explicit reversible prioritisation assumption; all remain held and do not count as published. Remaining high-impact/sector entries remain in backlog."
+    },
+    {
+      "id": "CNT-A07",
+      "issue": "R2 24 guided workflows not named",
+      "resolution": "12 exact R1 workflows retained. Twelve additional R2 guided choices remain to be selected and tested; do not claim 24 are implemented."
+    },
+    {
+      "id": "CNT-A08",
+      "issue": "Restrictive covenants, employee guarantees and NGO governance are high impact",
+      "resolution": "Keep candidate templates held until policy scope, authoritative evidence, party/use assumptions, rights, enhanced EDP checks and working export tests pass. No enforceability or blanket NGO exemption claim."
+    }
+  ],
+  "mandatory_publication_evidence": [
+    "Permitted policy scope",
+    "Actual authoritative source passages for material legal claims",
+    "Provenance and rights evidence",
+    "Independent factual and challenge runs",
+    "Enhanced checks where applicable",
+    "All deterministic checks and required fixtures",
+    "Successful DOCX/PDF output tests where relevant",
+    "Immutable exact-version publication manifest",
+    "Truthful AI and absence-of-professional-review disclosure"
+  ],
+  "unimplemented": "This register contains no generated template bodies, researched operative provisions, released rules, publication manifests, export evidence or implementation claims."
+} as const;

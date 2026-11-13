@@ -1,0 +1,301 @@
+VALO
+DOCUMENTS  /  GUIDANCE  /  BUSINESS READINESS
+
+
+
+Product Roadmap
+From production foundation to launch and controlled expansion
+
+
+PRODUCTION BUILD  A practical specification for a live Nigerian SME platform, not a front-end mock-up.
+
+Business document templates and compliance guidance, given equal prominence.
+
+
+
+DOCUMENT | BASELINE
+Reference | VALO-ROADMAP-001
+Version / status | 1.1 · AI editorial baseline
+Prepared | 13 November 2026
+Prepared for | Valo product owner and delivery team
+Scope | Nigeria · All SME sectors · Phased source-backed coverage
+
+Planning assumptions, proposed targets and unapproved commercial decisions are identified explicitly. No development, procurement or public launch is authorised by this document alone.
+
+01 / DECISION SUMMARY
+Executive roadmap and planning basis
+Build Valo as a commercial platform with documents and compliance guidance as equal pillars. This revision adopts AI drafting, separate AI checks and automated content publication because Nigerian legal, tax and sector specialists are unavailable. No per-item specialist or human content sign-off is assumed. Valo’s product owner remains accountable for scope, operating policy and platform release.
+RECOMMENDED DELIVERY BASELINE  Plan R1 over 20 elapsed weeks from an approved, staffed kickoff, followed by an eight-week R2 growth window and a gated R3 expansion horizon. These are planning estimates, not a guaranteed delivery date or a commitment to start development automatically.
+
+What customers receive at R1
+R1 targets a public website; 40 AI-reviewed templates (12 free, 28 premium); 12 guided editors; four customer AI drafting types; secure workspaces; free source-linked guidance and checker; real purchases/exports; reminders; enquiries; and an internal AI editorial pipeline with automated publishing and correction controls.
+All states/FCT and 20 industries are selectable. Six deeper packs and Lagos/FCT/Bayelsa receive initial source-check priority. Labels distinguish AI-reviewed content, evidence dates and coverage gaps. Selectability does not imply exhaustive local coverage; AI review is not professional verification.
+Assumptions behind the schedule
+The plan assumes two full-time engineers, part-time design/QA, an active product owner and a content operations lead. AI supplies legal, tax and sector drafting/review capacity; specialist recruitment is not on the critical path. Authoritative sources, rights evidence, model access/budget, security assessment and operations must be ready early. Holidays and prolonged procurement remain outside the baseline.
+How to use the two documents
+Use VALO-TRD-001 version 1.1 as the acceptance contract, including EDP-001–012 for internal AI content operations. Use this roadmap for sequence, capacity and gates. The four customer AI drafting tools remain a separate feature. Convert requirements into testable tickets; changes to Must scope require a recorded decision.
+No hidden commitments
+Prices, budget, hiring and launch date remain unapproved; no existing code audit is implied. Nigerian specialist availability is not assumed. Optional future professional review may improve coverage but is not a prerequisite for AI publication. Real provider services remain gated on actual provider availability.
+Document control: VALO-ROADMAP-001 • Version 1.1 • Revised 13 November 2026 • AI editorial baseline. Scope: Valo documents and compliance, not Valo Pay or an earlier lending product. Specialist pre-publication sign-off is replaced throughout this plan.
+
+NAVIGATION
+Contents and delivery principles
+SECTION | PAGE
+Master timeline and release map | 4
+Sprint backlog · foundation and core | 5
+Sprint backlog · commerce to launch | 6
+Content and coverage roadmap | 7
+Team, capacity and ownership | 8
+Dependencies and critical path | 9
+Phase gates and release acceptance | 10
+Validation plan and product metrics | 11
+R2 and R3 product expansion | 12
+Risk register and contingency rules | 13
+Commercial readiness and operating cost | 14
+First actions and owner decisions | 15
+References and interpretation notes | 16
+
+Five principles for delivery decisions
+Complete a journey before expanding the menu. Prioritise working document and purchase flows.
+Treat content as maintained work. Fund source access, AI checks, rights evidence and correction handling.
+Keep guidance free and uncertainty visible. Never make a template purchase appear legally compulsory.
+Release on evidence. Real storage, payments, recovery, support and passing publication gates are required.
+Expand by demand and readiness. Add scope only when source coverage and operating capacity support it.
+RELEASE LABELS  R1 = production commercial core. R2 = growth, collaboration and provider coordination. R3 = selectively activated marketplace and deeper sector/integration capabilities. Every feature must clearly identify its release rather than appearing half-built at launch.
+
+
+02 / PROPOSED SEQUENCE
+Master timeline and release map
+PHASE / WINDOW | OUTCOME | GATE
+P0 · Weeks 1–2 | Approve team, scope, architecture and AI policy; prove technical slice and source-to-review pipeline; measure initial content throughput. | G0: build-ready baseline
+P1 · Weeks 3–6 | Public site, identity, workspace, CMS, AI review/publisher gates and initial eligible content. | G1: secure foundation
+P2 · Weeks 7–10 | Template catalogue, guided editor/export, compliance hub, deterministic checker and assessment history. | G2: core product alpha
+P3 · Weeks 11–14 | Real checkout/entitlements, bounded AI drafting, reminders, service enquiries, complete R1 content and admin operations. | G3: beta-ready release
+P4 · Weeks 15–18 | Real-user beta, payment/refund reconciliation, AI content audit, security/accessibility and recovery exercises. | G4: commercial readiness
+P5 · Weeks 19–20 | Remediation, operational rehearsal, approved production release and staged public rollout. | G5: accepted R1 launch
+R2 · Weeks 21–28 | Improve retention; deepen content, team access, provider verification and quote/appointment requests. | Demand and operational gates
+R3 · Months 8–12 | Selective paid bookings, further regulated sectors and justified integrations; no automatic commitment to every feature. | Separate risk and commercial approval
+
+Illustrative calendar only
+A hypothetical kickoff on Monday, 16 November 2026 places P0 on 16–29 November; P1 on 30 November–27 December; P2 on 28 December–24 January 2027; P3 on 25 January–21 February; beta on 22 February–21 March; and launch preparation on 22 March–4 April. The final business day of that baseline is 2 April 2027. R2 would run 5 April–30 May.
+This calendar assumes uninterrupted capacity, including December/January. Rebaseline against actual team availability, procurement, source acquisition and measured AI pipeline throughput. The relative-week sequence is the primary plan; it is not an announced launch date.
+Protected scope boundary
+R1 includes all three document modes and real commercial operations. It excludes recurring billing, team collaboration, evidence-file uploads, electronic signatures, automated government submissions, live professional booking payments and a comprehensive national legal determination. Service enquiry routing is real; an enquiry is not a booking.
+
+03 / SPRINTS 1–5
+Sprint backlog · foundation and core
+Sprint 1 · Weeks 1–2 | De-risk the build
+Work: resolve D01–D07; inspect any demo; establish Git/staging; prove identity, storage, export worker, migrations and restore. Configure AI drafting/review roles, allowed sources, rights register and publisher policy; measure an initial content batch. Owners: product, technical/content leads and privacy owner. Exit: G0, working technical slice and scoped pipeline plan; no specialist recruitment dependency. Trace: OPS-001–008; PRV-001–002; EDP-001–004/009.
+Sprint 2 · Weeks 3–4 | Build the public and account foundation
+Work: public design/navigation, sign-in, workspace and profile. Build AI drafting/review jobs and publication states with distinct service permissions. Retrieve real source text and draft the early catalogue. Owners: engineering, designer and content operations lead. Exit: tenant-isolated saved profiles and working source-to-candidate evidence flow. Trace: WEB-001–004; IAM-001–003; PRO-001–003; ADM-001–003; EDP-002–004/009.
+Sprint 3 · Weeks 5–6 | Make content discoverable and safe
+Work: search, previews, source/jurisdiction records, publisher gates and audits. Finish 10 AI-cleared templates and 10 guidance entries; build an initial 20 editorial test cases. Exit: G1; a valid manifest publishes automatically, failed/forged evidence is held and two businesses remain isolated. Trace: DOC-001–009; CMP-001–004; ADM-009; SEC-001–003; EDP-005–010.
+Sprint 4 · Weeks 7–8 | Deliver the first complete document flow
+Work: canonical model, revision-safe saves, six guided editors, private DOCX/PDF jobs and typed questionnaire/rules. Exercise high-impact template gates and begin PSP onboarding. Exit: a customer completes, exports and reopens a real guided document; unsupported clauses cannot pass publishing. Trace: EDT-001–010; RUL-001–003; PAY-001–002; EDP-005–007.
+Sprint 5 · Weeks 9–10 | Connect documents to requirements
+Work: complete 12 guided editors, guidance hub, explainable checker and assessment history. Reach 20 AI-cleared templates, 20 guidance entries, six guide candidates, 40 rule scenarios and 40 editorial cases. Exit: G2; J1/J2/J6 work with actual storage, source-backed fixtures and visible held/gap states. Trace: CMP/RUL; WRK-001–002; UAT-01/03/05/06/07.
+
+04 / SPRINTS 6–10
+Sprint backlog · commerce to launch
+Sprint 6 · Weeks 11–12 | Activate commerce and bounded AI
+Work: checkout, webhooks, atomic entitlements, receipts and history. Integrate four customer AI tasks with validation, privacy, arithmetic and quotas; keep customer permissions separate from the editorial pipeline. Owners: engineering/QA; AI review plus content owner monitors evidence. Exit: sandbox purchase/refund and AI fallback pass. Trace: PAY-001–010; AI-001–009; EDP-009.
+Sprint 7 · Weeks 13–14 | Complete the beta product
+Work: reconciliation, reminders, enquiries, privacy requests and alerts. Target 40 AI-cleared templates, 30 guidance entries, 12 guides and six deeper packs. Complete three separate suites: 80 rule scenarios, 60 customer AI cases and 60 editorial cases. Exit: G3; all content gates pass, no critical defect remains and any inventory shortfall has an approved scope/schedule response. Trace: WRK/SRV/ADM/PRV; EDP-001–012; UAT-02/04/07/09/10.
+Sprint 8 · Weeks 15–16 | Controlled beta and independent assessment
+Work: invite a small first cohort, then expand toward 30 businesses across six sectors; include at least five outside the initially prioritised locations. Run supervised tasks, authorised low-value live purchases/refunds, security review, accessibility testing and export compatibility checks. Exit: supported beta with measured task outcomes and a prioritised defect register; no unresolved critical security or false-legal-claim issue. Trace: UAT-01–10; SEC-007; NFR-006–007.
+Sprint 9 · Weeks 17–18 | Stabilise and rehearse operations
+Work: resolve beta issues; test payment races, load, restore and deletion; reconcile transactions; rehearse source expiry, holds and correction notices. Obtain commercial, privacy and security operational decisions plus a complete AI publication manifest. Exit: G4; blockers closed and support/content owners ready. No professional content signature is required. Trace: NFR-001–011; OPS-008; PRV-003; PAY-007–008; EDP-007/011–012.
+Sprint 10 · Weeks 19–20 | Release with controls
+Work: freeze scope, verify backups, deploy reviewed migrations/build, smoke-test and open traffic gradually. Monitor payments, queues, content reports and source freshness. Exit: G5 product/technical/privacy/security operational acceptance plus passing AI publication evidence; record residual issues. Subsequent eligible content updates publish automatically under the approved policy.
+PROTECT THE RELEASE EVIDENCE  AI can draft, review and publish eligible content. It does not replace customer testing, payment integrity, technical security assessment or recovery evidence. Keep these operational gates separate from the automated content pipeline.
+
+
+05 / PARALLEL WORKSTREAM
+Content and coverage roadmap
+Content starts in Week 1 beside engineering. The critical path is authoritative evidence, rights clearance and a tested AI drafting/review/publishing pipeline, not access to specialist reviewers. “AI-cleared” below means all configured publication gates passed; it never means professionally verified or legally certified.
+MILESTONE | CONTENT OUTPUT | PUBLICATION EVIDENCE
+W2 / pipeline defined | 40-item inventory; rights/source registers; six sectors; locations; allowed content classes; model roles and policy. | Accountable owner, AI configurations, source requirements and draft/hold/release criteria; no reviewer contracts.
+W6 / initial eligible set | 10 templates; 10 guidance entries; industry navigation; early guides; 20 editorial cases. | Separate AI findings, evidence hashes, exports and working publisher; failed items held; AI status visible.
+W10 / core alpha content | 20 templates; 20 entries; 12 guided schemas; six guide candidates; 40 rule and 40 editorial cases. | Cross-links and fixtures pass; conflicts held; local coverage gaps visible; no legal-accuracy claim.
+W14 / complete R1 set | 40 templates (12 free/28 premium); 30 entries; 12 guides; six packs; 80 rule and 60 editorial cases. | Rights, sources, enhanced AI checks and exports pass; all 60 customer AI cases evaluated separately.
+W18 / launch validation | Recheck source changes, scope, fees/deadlines, stale content and live correction handling. | Complete manifests, correction/hold log, freshness dates, withdrawal drill and user notices where material.
+R2 / proposed growth | 80 templates; 24 guided flows; 60 entries; 10 deeper packs; up to six AI-reviewed state/FCT packs. | Expand with demand and measured pipeline/maintenance capacity; each rule has sources, tests and disclosure.
+
+Initial depth and honest breadth
+Initial deeper sectors: retail/wholesale, packaged foods, restaurants/hospitality, technology/software, professional services and beauty/personal care. Prioritise Lagos, FCT and Bayelsa sources. Other businesses receive relevant AI-reviewed federal guidance with explicit state/LGA or activity-specific gaps; no specialist availability is promised.
+Maintenance is a permanent responsibility
+Monitor official sources daily and run separate AI reassessment after a material change. High-impact content is rechecked monthly; other guidance quarterly. Passing updates publish automatically; uncertainty or failed tests hold the affected item. Preserve historical versions, suspend stale recommendations/reminders and notify material corrections. These are operating targets, not statutory periods. [S01; TRD EDP-011–012]
+Counts are targets, not existing assets or evidence of quality. Do not pad them with failed items. Publish only eligible versions; the product owner must record a scope or schedule change for a shortfall. AI agreement is not professional validation. Use TRD EDP-001–012 for disclosure, source evidence and release criteria.
+
+06 / RESOURCE PLAN
+Team, capacity and ownership
+ROLE | PLANNED CAPACITY | PRIMARY ACCOUNTABILITY
+Product owner / delivery sponsor | 0.25 FTE throughout 20 weeks. | Scope, decisions, user access, acceptance, budget and supplier ownership.
+Technical lead / full-stack engineer A | 1.0 FTE throughout. | Architecture, security, data integrity, identity, payments, deployment and recovery.
+Full-stack engineer B | 1.0 FTE throughout. | Public experience, editor/exports, checker, AI, integrations and automated tests.
+Product designer | 0.5 FTE W1–6; 0.1 FTE W7–20. | Premium design system, mobile journeys, usability and accessible interaction.
+QA / test engineer | 0.25 FTE W3–10; 0.5 W11–14; 1.0 W15–20. | Regression, negative cases, beta support, release evidence and compatibility checks.
+Content operations lead | 0.75 FTE throughout. | AI queue, sources/rights, evidence completeness, scope, disclosure, held items and corrections; no legal sign-off.
+AI editorial services | Usage-based; no specialist human FTE. Size in W1–2. | Draft, run separate checks and publish eligible manifests. Budget retrieval, models, tests and retries.
+Security engineer / privacy owner | 0.1 FTE W1–14; 0.3 FTE W15–20. | Technical privacy/security assessment, processors, controls and incident drills; no Nigerian legal credentials assumed.
+Support/service operations | 0.25 FTE W15–20, then a funded steady-state allocation. | Customer tickets, enquiries, refunds coordination and post-launch issue handling.
+
+Capacity interpretation
+FTE is human full-time equivalent capacity. Removing the 0.3 FTE specialist-review allowance changes the baseline from about 85 to about 79 person-weeks, including 40 engineering person-weeks. AI review is usage-based expenditure, not human FTE. Measure retry/hold rates and source acquisition time in W1–2 before committing the calendar.
+One person may hold compatible business/content roles. AI drafting, reviewing and publishing remain separate service roles and run records, not fictional people. A solo founder with coding agents must re-estimate engineering, security assessment, support and content operations capacity; this revision removes only the unavailable legal/tax/sector review dependency.
+Decision and escalation cadence
+Hold weekly product/engineering/content reviews, twice-weekly blocker reviews during integration and gate reviews at phase ends. Content operations monitors sources, held items and corrections; unresolved legal questions stay held or are narrowed and rechecked. Product owns scope/spend. These meetings do not approve individual content items or certify legal interpretations.
+If capacity is smaller, preserve payment/security/privacy controls and AI publication gates; defer expansion. Source gaps or unavailable AI service must create a visible hold or coverage gap, not an unsupported published item.
+
+07 / SEQUENCE CONSTRAINTS
+Dependencies and critical path
+DEPENDENCY | NEEDED BEFORE | OWNER / RESPONSE IF BLOCKED
+Legal identity, Valo-owned domain, PSP merchant onboarding | Authorised live checkout and beta payments. | Product + finance. Start W1; keep sandbox only until approved.
+Architecture and infrastructure spike | High-volume feature implementation. | Technical lead. Replace incompatible DB/storage/worker adapter before building around it.
+Identity and tenant model | Saved drafts, orders, assessments and private files. | Technical lead. No feature may bypass authorisation to meet a demo deadline.
+Canonical document model + immutable revisions | Reliable guided editor, AI drafts and exports. | Engineering. Prove one representative document and a long-table export before adding all templates.
+Authoritative text + AI evidence gates | Public guidance, released rules and statutory reminders. | Content owner + pipeline. Hold failed claims; provide official routes and gaps, never guessed applicability.
+Server-priced orders + verified payment service | Premium entitlements and purchase receipts. | Technical lead + finance. One fulfilment path; no front-end “paid” toggle.
+Processor/retention decisions + privacy notice | Real beta accounts and confidential document data. | Privacy owner. Use synthetic data until approved.
+Support routing and provider consent | Actual enquiry forwarding or provider listings. | Service operations. Keep informative service pages without fake availability.
+Recovery, security and evidence pack | Public commercial launch. | Release owner. Delay launch if a release blocker remains; do not relabel it “post-launch”.
+
+Critical path
+Scope and proof → secure workspace/model → documents and deterministic checker → verified purchases plus eligible AI-reviewed content → real-user beta → security/recovery validation → release acceptance. Source acquisition, pipeline quality and merchant onboarding can delay gates; specialist reviewer calendars cannot.
+Work that can run in parallel
+Design can run beside the infrastructure spike. AI drafts and checks sourced content while engineers build schemas, gates and exports; the content owner handles rights and evidence gaps. QA develops fixtures as APIs stabilise. Provider vetting can proceed without paid bookings. Use common contracts and one integration owner.
+REPLIT-SPECIFIC CHECK  Do not assume a successful preview proves a published worker, database migration or storage path will behave identically. Validate deployment types, production migration behaviour and recovery in the actual configured environment. [S10–S13]
+
+
+08 / GO OR NO-GO
+Phase gates and release acceptance
+GATE | REQUIRED EVIDENCE | APPROVERS
+G0 / end W2 | Scope/roles and AI policy set; technical slice works; privacy/procurement issues understood; source/AI budget and risks assigned. | Product owner + technical/content leads + privacy owner.
+G1 / end W6 | Identity/tenant isolation; public/CMS foundation; 10 eligible templates and 10 entries; publisher allows valid manifests and blocks failures. | Technical lead + QA + content lead.
+G2 / end W10 | Document/checker alpha; 12 guided schemas; saved exports; evidence-based explanations/gaps; 40 editorial cases. | Product owner + engineering + content operations owner.
+G3 / end W14 | R1 journeys, safe payments, 60 customer AI cases, 80 rule scenarios and 60 editorial cases; target content eligible; privacy/support ready. | Engineering + QA + content/privacy owners.
+G4 / end W18 | Beta results; reconciled transactions; independent security assessment; accessibility; restore/correction drills; commercial decisions and current manifests. | Product owner + technical lead + security/privacy + finance/content leads.
+G5 / W19–20 | Approved build, safe migrations/rollback, live smoke tests, staffed support, healthy monitoring and no failed mandatory content gates. | Product owner + technical/privacy/security owners; AI manifests evidence content readiness.
+
+Non-negotiable launch blockers
+Cross-tenant leakage, incorrect entitlements, exposed secrets, silent draft loss, unsupported material legal claims, false professional-review labels, bypassed publication gates, high/critical exploitable defects, missing template rights or failed restore block launch. A polished demo or model confidence score cannot waive these conditions.
+Meaning of “done”
+Every R1 Must item has an owner, revision and passing implementation evidence. Content also has source/rights evidence, separate AI findings, test results, public disclosure and a release manifest. Required manual security/usability checks remain. Blocked capabilities are disabled or unavailable, never presented as live.
+Security testing follows a mapped OWASP ASVS baseline; accessibility aims at WCAG 2.2 AA with manual review as well as automated checks. Neither a vulnerability scan nor an accessibility score alone is sufficient evidence. [S19–S20]
+Record operational sign-offs, AI publication manifests and residual risks in the release register. The product owner may accept non-critical scope changes, but cannot waive failed mandatory evidence gates, data protection, payment integrity or truthful content status.
+
+09 / MEASURE USEFUL OUTCOMES
+Validation plan and product metrics
+Beta design
+Target 30 beta SMEs across the six deeper sectors, varied sizes and digital confidence. Include at least five outside Lagos/FCT/Bayelsa to test coverage gaps. Begin with a smaller invited cohort. Disclose AI drafting/review and absence of specialist content review; increase access only as support and reliability stabilise.
+Ask each participant to find a relevant document, use or customise it, export it, run the requirements checker and explain a recommended next step in their own words. Test paid flows only with consent and clear refund arrangements. Do not require users to upload sensitive evidence to complete beta tasks.
+METRIC | PROPOSED TARGET / DECISION RULE | DEFINITION
+Usability task success | ≥80% complete the primary assigned journey without facilitator intervention. | Successful users ÷ users attempting the same defined task; report device and task type.
+Document reliability | ≥95% beta export jobs complete within one retry; no silent content/revision corruption. | Successful job count ÷ attempted jobs; separate user validation failures from system failures.
+Checker quality | 100% critical fixture outcomes correct; users can understand reasons and gaps. | 80-scenario test suite plus qualitative explanation checks; do not use a misleading “legal accuracy” percentage.
+Payment
+integrity | 100% beta transactions reconciled; zero duplicate grants or incorrect amount/currency acceptance. | PSP records compared with internal orders, entitlements, refunds and receipts.
+Customer AI quality | ≥95% on the 60-case rubric and zero critical privacy/false-legal-claim failures. | 60 fixed cases, source/rubric-backed expectations and versioned model/prompt; separate from editorial testing.
+Content readiness | 100% of published items have sources/rights as applicable, AI disclosure, complete manifests and current checks; zero critical false releases in 60 editorial cases. | Eligible published items ÷ published items; ≥95% editorial-suite pass, all critical cases pass; gaps/held items excluded from coverage.
+Operational readiness | Restore/incident drills pass; all critical alerts have a named owner. | Evidence in release pack, not a verbal assurance.
+
+Post-launch learning dashboard
+Track activation, first-use time, discovery-to-use, purchase conversion, return use, support, refunds and cost per completed document. Add source coverage, editorial holds/retries, correction frequency, stale-item exposure and time to suspend/correct. Record denominators, risk class and sample size; AI pass rates do not measure certified legal accuracy.
+Numeric thresholds here are proposed internal hypotheses, not published industry benchmarks. Commercial conversion and retention targets should be agreed after the first meaningful cohort baseline rather than invented as guaranteed forecasts.
+
+10 / GROWTH WITH EXPLICIT GATES
+R2 and R3 product expansion
+HORIZON | PRIORITY | RELEASE CONDITION
+R2 / W21–24 | Resolve launch friction; add role-based team invitations; improve repeat document use and saved requirements; begin additional location/sector content. | R1 payment/content/security metrics stable; tenant-role model and permission tests extended.
+R2 / W25–28 | Provider onboarding, verified directory and quote/availability requests; 80-template/24-guided content target; new bundle/subscription experiments. | Real provider agreements and support ownership; recurring billing remains off until cancellation, refunds and renewal failures are tested.
+R2 / advanced drafting | Add scoped drafting types and evidence-backed clause assistance for selected contracts. | Enhanced AI publication gates, new tests, appropriate disclosure, privacy/cost checks and measured demand; no mandatory legal reviewer.
+R2 / evidence storage | Add optional attachments and richer task evidence only when useful to customers. | Malware quarantine, file access, retention, safe preview and data-protection review complete.
+R3 / M8–12 | Controlled paid-booking pilot and provider workflow; selected specialist-sector depth; justified integrations. | Approved service contracts, PSP settlement design, cancellation/disputes, provider credentials and reconciliation runbooks.
+R3 / longer-term options | Native mobile, public API, e-signatures, filings or multilingual guidance only after separate assessment. | Demand, capacity, source-backed legal/regulatory feasibility and separate approved scope; any legally required licensed role must actually be met.
+
+Paid-booking gate: what must exist first
+Define who contracts with the customer, who receives payment, the scope and deliverables, scheduling/acceptance states, cancellation/refund rights, complaints, disputes, provider responsibility and any referral fee. Decide the compliant PSP settlement model; do not add a Valo wallet, escrow or client-money holding arrangement by default.
+Run a small controlled pilot only after actual provider acceptance and verified credentials. Keep each booking’s statement of work, communications, payment status and resolution history auditable. Valo must not guarantee licence approval, filing acceptance or professional outcomes.
+Expansion prioritisation
+Rank expansion by customer need, authoritative source availability, AI gate performance, maintenance capacity, effort and risk. Prefer useful depth over catalogue size. Healthcare, finance and energy require activity-specific evidence and enhanced checks; unresolved content remains unavailable. Optional later specialist review can deepen coverage, without becoming a blanket publication dependency.
+R2/R3 quantities and windows are provisional. Review them after the first post-launch cohort and approve a new delivery baseline before committing expenditure or public dates.
+
+11 / PROTECT THE CORE PRODUCT
+Risk register and contingency rules
+RISK / SIGNAL | MITIGATION | OWNER / ESCALATION
+Scope expansion / repeated “small” additions | Lock R1 Must scope; require value, effort and displaced work for each change; defer low-evidence features. | Product owner; review weekly.
+Unsupported or conflicting AI content | Retrieve authoritative text; separate AI checks; deterministic gates; hold unresolved claims; source/rights evidence and honest disclosure. | Content owner + pipeline; narrow scope or defer affected items when evidence fails.
+Nationwide coverage overstatement | Show scope/gaps on every affected page and result; distinguish federal, state/FCT and LGA layers. | Product + content; misleading claim is a release blocker.
+Replit worker/migration/backup mismatch | Complete proof in W1–2; use replaceable adapters and approved alternate infrastructure when necessary. | Technical lead; architecture gate blocks further coupling.
+Payment race, mismatch or provider delay | Atomic fulfilment, raw-signature verification, sandbox failure cases and daily reconciliation. | Engineering + finance; disable checkout for integrity incidents.
+Cross-tenant data or private-file exposure | Server enforcement, least privilege, negative tests and independent assessment. | Security lead; stop beta/public access until contained.
+AI unreliable, slow or too expensive | Limit task scope; evaluation, quotas, budgets and kill switch; manual editor remains available. | Technical lead; disable AI independently if needed.
+Poor demand or weak conversion | Interview users, instrument full journeys and test useful template bundles; avoid premature marketplace investment. | Product owner; re-prioritise R2 on cohort evidence.
+Provider quality or enquiry mishandling | List only checked providers, retain sharing consent and track responses; no fake booking confirmation. | Service operations; remove unready providers.
+Under-resourced support/content maintenance | Fund named owners and schedule recurring review; publish only the coverage that can be maintained. | Product owner; delay growth rather than accumulate unsafe content.
+
+Contingency policy
+Keep the 20-week baseline subject to measured delivery and AI pipeline throughput. Retain the proposed 20% financial effort reserve. Re-estimate delays caused by missing sources, review failures, model changes, procurement or holidays; do not hide them in late sprints. Unavailable legal/tax/sector reviewers are no longer a schedule dependency.
+If constrained, defer provider payments, subscriptions, extra sectors, collaboration and advanced AI first. Preserve isolation, payment checks, rights evidence, AI publishing gates, backups, privacy controls and honest communication. Neither a headcount shortfall nor an inventory target justifies gate bypass.
+
+12 / BEFORE MONEY OR LIVE DATA
+Commercial readiness and operating cost
+Commercial workstream
+Agree operating identity, domain/accounts, PSP onboarding, licence, refunds, tax treatment and customer terms. Use retrieved sources and the AI review pipeline for legal/tax wording; product and finance/privacy owners accept business decisions. Specialist sign-off is not mandatory. Resolve material gaps or disable the affected activity before live operation.
+COST / READINESS AREA | WHAT MUST BE BUDGETED OR APPROVED
+Delivery team | Engineering, design, QA, content operations, AI workflow implementation/evaluation and independent technical security/privacy assessment.
+Infrastructure | Replit publishing/worker resources, managed database, object storage, backups, domains, observability and recovery capacity.
+Identity and communication | Managed authentication, transactional email, sender-domain setup, support ticketing and any extra delivery channels.
+Usage-variable services | AI drafting, separate review calls, retrieval/monitoring and retries; file jobs/storage/egress; PSP fees. Use actual volumes and current provider terms.
+Content and operations | Template rights/licensing, source acquisition, recurring AI checks, corrections, support, reconciliation and provider vetting. Future specialist advice is optional and separately costed.
+Risk reserve | Proposed 20% of estimated delivery effort cost, plus separately approved operating headroom; do not count unused reserve as committed spend.
+
+Budget model for supplier quotations
+Delivery budget = approved human effort × rates + source/licensing and AI setup/evaluation costs + security assessment + setup + contingency. Monthly costs = fixed platform/support/content operations + AI drafting/review/monitoring/retries + export/storage/email/PSP usage. Optional future professional review is separate; it is not in the mandatory launch baseline.
+No budget figure is asserted here because team rates, provider plans, traffic and commercial pricing have not been supplied. The technical lead and product owner should obtain current quotations at G0 and set hard usage alerts before beta. Reconfirm actual data regions, processor terms and endpoint-specific AI data settings at procurement. [S10, S18]
+Launch communication
+Describe actual capabilities and gaps, with prominent AI drafting/review disclosure and no claim of professional approval. Do not advertise universal compliance, guaranteed approvals, fictional users, unavailable providers or unstaffed support. Show terms, privacy, prices, refunds and content status before purchase.
+The roadmap does not recommend a loan, investment or revenue forecast. This section is a project-costing framework and an operational readiness checklist, not a priced vendor proposal.
+
+13 / START THE BUILD IN THE RIGHT ORDER
+First actions and owner decisions
+WHEN | ACTION | OUTPUT / OWNER
+Kickoff / days 1–2 | Approve the paired documents and assign accountable owners; confirm available people, costs and non-working days. | Signed baseline and decision log / product owner.
+Days 1–3 | Inventory any existing code; establish Valo-owned Git, Replit, identity, PSP and domain accounts without sharing secrets in prompts. | Reuse assessment and access register / technical lead.
+Days 2–5 | Run the production architecture slice: identity → profile → saved document → private export → restore. | Technical spike evidence and approved architecture decision / engineering.
+Days 2–6 | Configure AI roles, publication policy, source/rights registers and first content batch; define federal/state/LGA evidence criteria. | Working content pipeline plan and measured sample / content lead + engineering.
+Days 3–7 | Approve processor geography, data roles, retention, privacy risk assessment and beta consent approach. | Source-grounded privacy decision record / privacy owner.
+Days 4–8 | Interview an initial 8–10 SMEs; test navigation language, priority documents and willingness to pay without claiming results in advance. | Research notes and prioritised usability/content changes / product + design.
+Days 6–10 | Convert R1 Must requirements into tickets with dependencies, test cases and estimates; resolve spike failures. | Prioritised sprint backlog and G0 evidence / delivery lead.
+End W2 / G0 | Approve actual schedule, cost cap, architecture, first source/content priorities and launch success criteria. | Authorised production implementation baseline / named gate approvers.
+
+Owner decisions and automated publication
+The product owner decides prices, scope, automation policy and launch commitments. AI drafts, checks and publishes eligible content without per-item human approval; owners monitor exceptions and cannot waive failed gates. Privacy/security owns data risk; finance authorises live financial operations; the technical lead approves production access, migrations and recovery.
+Instruction for the implementation team
+EXECUTION RULE  Use VALO-TRD-001 version 1.1 as the acceptance contract, including EDP-001–012. Start with the technical and editorial proof, retain evidence and report holds truthfully. AI may publish eligible content under policy without per-item human or specialist sign-off. Live payments and public platform launch still require operational release approval.
+
+Next baseline review: end of Week 2, or sooner after a material architecture, staffing, source, AI-quality or commercial change. This roadmap does not itself start development or publish live content.
+
+REFERENCE REGISTER / CHECKED 13 NOVEMBER 2026
+References and interpretation notes
+S01  Federal Ministry of Information and National Orientation: tax-transition guidelines, 18 June 2026
+https://fmino.gov.ng/federal-government-issues-transition-guidelines-for-tax-acts-2025/
+S10  Replit: publishing and hosting geography
+https://docs.replit.com/learn/projects-and-artifacts/replit-deployments
+S11  Replit: deployment types
+https://docs.replit.com/features/publishing/deployment-types
+S12  Replit: development and production databases
+https://docs.replit.com/features/data-and-storage/development-and-production
+S13  Replit: App Storage
+https://docs.replit.com/features/data-and-storage/object-storage
+S18  OpenAI: API data controls
+https://developers.openai.com/api/docs/guides/your-data
+S19  OWASP: Application Security Verification Standard
+https://asvs.owasp.org/
+S20  W3C: Web Content Accessibility Guidelines 2.2
+https://www.w3.org/TR/WCAG22/
+Source and evidence limits
+The retained sources support context, deployment assumptions, AI data review and quality standards. The TRD contains the full reference register, retrieval limitations and S24 on AI risk. Every production legal claim needs retrieved authoritative text and EDP evidence. No qualified specialist review is assumed or claimed.
+All schedules, staffing, counts, cost-reserve percentages and product metrics in this roadmap are planning proposals specific to Valo. They are not vendor promises, market forecasts, existing customer results or a legal opinion. Reconfirm live product documentation and account terms when implementation begins.
+Working definitions
+R1/R2/R3: releases. FTE: human full-time equivalent. Gate: evidence-based release decision. AI-cleared: passed EDP checks, not legal certification. UAT: user testing. RPO/RTO: recovery targets. Must: release-blocking. Coverage gap: insufficient evidence or unresolved interpretation, not proof that no obligation exists.

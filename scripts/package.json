@@ -8,6 +8,7 @@
     "test:valo": "tsx --test ./src/valo/*.test.ts",
     "valo:readiness": "tsx ./src/valo/readiness.ts",
     "valo:source-register": "tsx ./src/valo/source-register.ts",
+    "valo:sync-specification": "tsx ./src/valo/sync-specification.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

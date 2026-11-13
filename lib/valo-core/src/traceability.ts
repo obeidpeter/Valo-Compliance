@@ -1,3 +1,6 @@
+import { r1Transfer } from "./requirements-r1";
+import { sourceRequirements, sourceGates } from "./specification.generated";
+
 export type Evidence = {
   kind: "implementation" | "test" | "source" | "approval";
   path: string;
@@ -7,13 +10,17 @@ export type Evidence = {
 export type Requirement = {
   id: string;
   title: string;
-  release: "R1" | "R2";
-  priority: "Must";
+  release: "R1" | "R2" | "R2/R3";
+  priority: "Must" | "Acceptance target";
   exactText: string;
   acceptance: string;
   implementationPaths: string[];
   evidence: Evidence[];
   blockers: string[];
+  sourceExactText?: string;
+  sourceLocator?: string;
+  owner?: string;
+  dependencies?: readonly string[];
 };
 
 const editorial: [string, string, string][] = [
@@ -31,12 +38,48 @@ const editorial: [string, string, string][] = [
   ["Holds and accountability", "Missing evidence, conflicting reviews or provider failure leaves an item held; elapsed time never clears it. Retry with new evidence/configuration or narrow and recheck scope; otherwise keep it unavailable and show an official route. The content owner monitors queues, rights and corrections; specialist review is optional when later available, not a launch dependency.", "owners cannot waive a failed mandatory gate."],
 ];
 
-export const requirements: Requirement[] = editorial.map(([title, exactText, acceptance], index) => ({
+const partialImplementations: Record<string, string[]> = {
+  "WEB-001": ["artifacts/valo/src/screens/home.tsx", "artifacts/valo/src/components/site-shell.tsx"],
+  "WEB-002": ["artifacts/valo/src/App.tsx", "artifacts/valo/src/screens/library.tsx"],
+  "IAM-001": ["artifacts/valo/src/App.tsx", "artifacts/api-server/src/middlewares/valo-identity.ts"],
+  "IAM-002": ["artifacts/api-server/src/middlewares/valo-identity.ts"],
+  "IAM-003": ["artifacts/api-server/src/lib/valo-store.ts", "artifacts/api-server/src/lib/valo-store.integration.test.ts"],
+  "PRO-001": ["artifacts/valo/src/screens/profile.tsx", "artifacts/api-server/src/lib/valo-validation.ts"],
+  "PRO-002": ["lib/db/src/schema/valo-profiles.ts", "artifacts/api-server/src/lib/valo-store.ts"],
+  "PRO-003": ["lib/db/src/schema/valo-profiles.ts"],
+  "EDT-002": ["lib/db/src/schema/valo-document-revisions.ts"],
+  "EDT-003": ["artifacts/valo/src/screens/document-editor.tsx"],
+  "EDT-004": ["artifacts/api-server/src/lib/valo-store.ts", "artifacts/valo/src/screens/document-editor.tsx"],
+  "EDT-005": ["artifacts/api-server/src/lib/valo-validation.ts", "artifacts/valo/src/screens/document-editor.tsx"],
+  "WRK-001": ["artifacts/valo/src/screens/workspace.tsx"],
+  "WRK-005": ["artifacts/valo/src/screens/workspace.tsx"],
+  "WRK-006": ["artifacts/api-server/src/lib/valo-store.ts", "lib/db/src/schema/valo-support.ts"],
+  "SRV-001": ["artifacts/valo/src/screens/services.tsx"],
+  "SRV-002": ["artifacts/valo/src/components/ticket-form.tsx", "lib/db/src/schema/valo-support.ts"],
+};
+
+const initialTransfers: Requirement[] = [...editorial.map(([title, exactText, acceptance], index): Requirement => ({
   id: `EDP-${String(index + 1).padStart(3, "0")}`,
   title, release: "R1", priority: "Must", exactText, acceptance,
   implementationPaths: index < 9 || index === 11 ? ["lib/valo-core/src/publication.ts"] : [],
   evidence: [],
   blockers: ["Full workflow not implemented or verified"],
+})), ...r1Transfer.map(([id, title, exactText, acceptance]): Requirement => ({
+  id, title, exactText, acceptance, release: "R1", priority: "Must",
+  implementationPaths: partialImplementations[id] ?? [], evidence: [],
+  blockers: ["Full requirement acceptance not implemented or verified"],
+}))];
+// New baseline intake must not silently change any of the earlier quoted contracts.
+for (const original of initialTransfers) {
+  const source = sourceRequirements.find(r => r.id === original.id);
+  if (!source || source.exactText !== original.exactText || source.acceptance !== original.acceptance)
+    throw new Error(`Specification conflict requires explicit resolution: ${original.id}`);
+}
+export const requirements: Requirement[] = sourceRequirements.map(r => ({
+  ...r, implementationPaths: partialImplementations[r.id] ??
+    (r.id.startsWith("EDP-") ? ["lib/valo-core/src/publication.ts"] : []),
+  evidence: [],
+  blockers: ["Complete acceptance evidence and required operational approvals are not established"],
 }));
 
 /** Never accept a requirement merely because a file or an agent verdict exists. */
@@ -51,12 +94,12 @@ export function requirementStatus(requirement: Requirement) {
 }
 
 export const conflicts = [
-  { id: "CON-001", topic: "Frontend architecture", status: "owner_decision_required",
+  { id: "CON-001", topic: "Frontend architecture", status: "development_compatible",
     issue: "Selected artifact uses React/Vite; preferred architecture requires Next.js.",
-    resolution: null, blocks: ["Application shell"] },
-  { id: "CON-002", topic: "Original specifications unavailable", status: "blocked",
-    issue: "No three Word attachments or bounded remaining requirements are present. Only 12 exact formal IDs are supplied locally; expected total is 127.",
-    resolution: null, blocks: ["Complete formal traceability", "P0–P5 exact gate criteria", "Inventory deduplication"] },
+    resolution: "The bootstrap was adapted to Next.js 15.5.29 without replacing the preferred stack. Strict workspace typechecking, Next production build and managed proxied development runtime passed. Production was not published or proven.", blocks: ["Production runtime, worker, storage and recovery compatibility proof"] },
+  { id: "CON-002", topic: "Specification transfer", status: "resolved",
+    issue: "Only 76 exact requirements were initially present in Replit.",
+    resolution: "Read-only import of the coordinating team's complete extracted TRD, roadmap, master brief and 27/79 inventory baseline succeeded. All 127 exact requirements are matched to retained source text. Import hashes are retained; no implementation or publication acceptance follows from receipt.", blocks: [] },
   { id: "CON-003", topic: "Worker and queue migration proof", status: "unmeasured",
     issue: "Always-on worker is documented, not demonstrated. Publish omits some database objects/grants. pg-boss migration and least-privilege worker access need measured proof.",
     resolution: null, blocks: ["P0 production compatibility"] },
@@ -74,8 +117,12 @@ export const conflicts = [
     resolution: null, blocks: ["Enforced repository review and merge safeguards"] },
   { id: "CON-008", topic: "GitHub Actions workflow authorization", status: "resolved",
     issue: "Targeted workflow-file writes initially returned HTTP 404 while ordinary source writes succeeded.",
-    resolution: "The user reconnected GitHub securely; the single retry succeeded with HTTP 201. CI execution still needs observable evidence. No required-check or protection settings were changed.",
+    resolution: "The user reconnected GitHub securely; the single retry succeeded with HTTP 201. Two successful source-bound GitHub Actions runs are retained in docs/valo/evidence/ci-activation.json. No required-check or protection settings were changed.",
     blocks: [] },
+  { id: "CON-009", topic: "Repository visibility", status: "blocked",
+    issue: "GitHub repository metadata reported private=false during this development batch, contrary to the owner's private-repository instruction.",
+    resolution: "No visibility change or new application-source upload was performed. Continue retaining source in Replit; the owner must restore private visibility before synchronization can resume.",
+    blocks: ["New application-source synchronization", "OPS-005 private repository prerequisite"] },
 ];
 
 export function readiness() {
@@ -92,12 +139,11 @@ export function readiness() {
       { id: "customer-ai", requiredCases: 60, executedCases: 0, accepted: false },
       { id: "editorial", requiredCases: 60, executedCases: 0, accepted: false },
     ],
-    gates: [
-      { id: "P0", status: "not_passed", reason: "Identity, tenant persistence, private dual exports, restore and end-to-end editorial proof not completed." },
-      ...["P1", "P2", "P3", "P4", "P5"].map(id => ({
-        id, status: "blocked", reason: "Await original roadmap gate criteria and preceding gate evidence.",
-      })),
-    ],
+    gates: sourceGates.map((g, index) => ({
+      id: `P${index}`, gateId: g.id, status: index === 0 ? "not_passed" : "blocked",
+      requiredEvidence: g.requiredEvidence, approvers: g.approvers,
+      reason: "Required implementation evidence, preceding gates and operational approvals are not established.",
+    })),
     requirements: requirements.map(r => ({ ...r, status: requirementStatus(r) })),
     conflicts,
   };

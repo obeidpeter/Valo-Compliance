@@ -25,7 +25,7 @@ Next.js is the preferred frontend. The selected web artifact is React/Vite; do n
 
 **Why:** The user required owner-approved alternatives if compatibility requires a stack change.
 
-**How to apply:** Resolve the architecture conflict with the owner before substantial frontend work.
+**How to apply:** Retain Next.js when adapting the artifact bootstrap. Only a genuinely necessary alternative requires owner approval; selecting the bootstrap did not approve Vite as a replacement.
 
 The intended GitHub repository must remain private. Its saved main-branch protection rule is not enforced under the current account plan. Do not buy/upgrade, transfer it, make it public, force-push or delete it.
 

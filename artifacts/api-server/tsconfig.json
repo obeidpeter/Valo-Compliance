@@ -9,6 +9,7 @@
   },
   "include": ["src"],
   "references": [
+    { "path": "../../lib/valo-core" },
     {
       "path": "../../lib/db"
     },
