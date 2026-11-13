@@ -1,5 +1,11 @@
 # Valo Compliance — Valo Platform
 
+Latest increment: real private source collection and exact final specification
+intake. See [part 6 evidence and limits](docs/valo/part6-sources-and-retention.md).
+All 24 reference links were attempted; 17 yielded privately retained raw/text
+snapshots. None is approved, AI reviewed or published by retrieval alone.
+Proposed retention periods remain unapproved and unenforced.
+
 Valo is being built for Nigerian SMEs to create business documents and understand source-backed business obligations.
 
 **Status: early R1/P0 implementation. Not launched; P0 has not passed.**

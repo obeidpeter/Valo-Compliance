@@ -33,3 +33,13 @@ ordering did not do this.
 
 **How to apply:** Review SQL order, inspect output and execute negative constraint
 tests. Never add production startup/deploy DDL to compensate.
+
+Failed schema pushes can leave earlier objects applied before reporting an
+existing-index error, still with a zero process exit code.
+
+**Why:** A later development push created the requested table and index before
+failing on an existing composite index. Blindly replaying the whole operation
+would misrepresent both its success and its starting state.
+
+**How to apply:** Inspect the live catalog and test the intended objects before
+retrying. Report partial application separately from clean migration acceptance.

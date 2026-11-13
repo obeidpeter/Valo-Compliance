@@ -71,6 +71,10 @@ const partialImplementations: Record<string, string[]> = {
   "WRK-006": ["artifacts/api-server/src/lib/valo-store.ts", "lib/db/src/schema/valo-support.ts"],
   "SRV-001": ["artifacts/valo/src/screens/services.tsx"],
   "SRV-002": ["artifacts/valo/src/components/ticket-form.tsx", "lib/db/src/schema/valo-support.ts"],
+  "EDP-002": ["artifacts/api-server/src/editorial/source-capture.ts", "docs/valo/evidence/part6-source-retrieval.json", "artifacts/api-server/src/editorial/source-store.integration.test.ts"],
+  "EDP-009": ["artifacts/api-server/src/editorial/source-fetch.ts", "artifacts/api-server/src/editorial/source-storage.ts", "artifacts/api-server/src/editorial/source-controls.test.ts"],
+  "ADM-003": ["artifacts/api-server/src/editorial/source-register.ts", "artifacts/valo/src/components/source-evidence.tsx"],
+  "PRV-001": ["docs/registers/final-source-context.json", "docs/valo/part6-sources-and-retention.md"],
 };
 
 const initialTransfers: Requirement[] = [...editorial.map(([title, exactText, acceptance], index): Requirement => ({

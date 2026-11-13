@@ -28,3 +28,4 @@ export * from "./valo-rate-buckets";
 export * from "./valo-exports";
 export * from "./valo-export-requests";
 export * from "./valo-file-assets";
+export * from "./valo-source-snapshots";

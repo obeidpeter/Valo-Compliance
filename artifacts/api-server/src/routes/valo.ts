@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { GetSourceEvidenceResponse } from "@workspace/api-zod";
+import { sourceEvidenceRegister } from "../editorial/source-register";
 import { z } from "zod";
 import { ListPublicCatalogueQueryParams, GetProofRegisterResponse, GetContentRegisterResponse, GetPublicCoverageResponse } from "@workspace/api-zod";
 import { readiness, catalogueSummary, contentReadiness, contentTraceRows, expansionReadiness, coveragePlan } from "@workspace/valo-core";
@@ -6,6 +8,11 @@ import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-ident
 import * as store from "../lib/valo-store";
 
 const router = Router();
+router.get("/development/source-evidence",async (_req,res):Promise<void>=>{
+  if(process.env.NODE_ENV!=="development"){res.status(404).json({error:"Not found"});return;}
+  res.set("Cache-Control","no-store");
+  res.json(GetSourceEvidenceResponse.parse(await sourceEvidenceRegister()));
+});
 router.get("/public/coverage", (_req, res) => {
   res.json(GetPublicCoverageResponse.parse(coveragePlan()));
 });

@@ -32,3 +32,13 @@ The intended GitHub repository must remain private. Its saved main-branch protec
 **Why:** The user reported GitHub's enforcement limitation and explicitly prohibited those changes.
 
 **How to apply:** Use feature branches and draft pull requests, preserve existing main history, report enforcement as blocked, and add required CI checks only after real checks exist.
+
+The master execution prompt authorises actual engineering despite earlier
+document-only language. Human staffing/week estimates are planning assumptions
+for this AI-agent build; do not invent budgets or dates.
+
+**Why:** The user explicitly resolved this source-document conflict and clarified
+how the roadmap estimates must be interpreted.
+
+**How to apply:** Preserve the phase order and measured gates, but never turn the
+illustrative calendar or proposed staffing into committed dates, spend or approvals.

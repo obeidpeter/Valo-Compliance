@@ -42,6 +42,7 @@ import type {
   PublicCoverage,
   QuotaErrorResponse,
   RequirementsRegister,
+  SourceEvidenceRegister,
   TicketInput,
   TicketReceipt,
   Workspace
@@ -513,6 +514,101 @@ export function useGetPublicCoverage<TData = Awaited<ReturnType<typeof getPublic
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPublicCoverageQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetSourceEvidenceUrl = () => {
+
+
+
+
+  return `/api/development/source-evidence`
+}
+
+export const getSourceEvidence = async ( options?: Parameters<typeof customFetch>[1]): Promise<SourceEvidenceRegister> => {
+
+  return customFetch<SourceEvidenceRegister>(getGetSourceEvidenceUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSourceEvidenceQueryKey = () => {
+    return [
+    `/api/development/source-evidence`
+    ] as const;
+    }
+
+
+export const getGetSourceEvidenceQueryOptions = <TData = Awaited<ReturnType<typeof getSourceEvidence>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceEvidence>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSourceEvidenceQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSourceEvidence>>> = ({ signal }) => getSourceEvidence({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSourceEvidence>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSourceEvidenceQueryResult = NonNullable<Awaited<ReturnType<typeof getSourceEvidence>>>
+export type GetSourceEvidenceQueryError = ErrorType<void>
+
+
+export function useGetSourceEvidence<TData = Awaited<ReturnType<typeof getSourceEvidence>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceEvidence>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSourceEvidence>>,
+          TError,
+          Awaited<ReturnType<typeof getSourceEvidence>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSourceEvidence<TData = Awaited<ReturnType<typeof getSourceEvidence>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceEvidence>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSourceEvidence>>,
+          TError,
+          Awaited<ReturnType<typeof getSourceEvidence>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSourceEvidence<TData = Awaited<ReturnType<typeof getSourceEvidence>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceEvidence>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSourceEvidence<TData = Awaited<ReturnType<typeof getSourceEvidence>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceEvidence>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSourceEvidenceQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

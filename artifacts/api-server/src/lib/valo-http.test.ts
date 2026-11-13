@@ -7,6 +7,23 @@ test("running development HTTP API fails closed and reports factual release stat
   assert.notEqual(process.env.NODE_ENV, "production");
   assert.ok(process.env.REPLIT_DEV_DOMAIN, "Use only the Replit development preview for this check");
   const base = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  await t.test("source references report actual snapshots, not baseline approval or private storage locators",async()=>{
+    const response=await fetch(`${base}/api/development/source-evidence`);
+    assert.equal(response.status,200);assert.match(response.headers.get("cache-control")??"",/no-store/);
+    const body=await response.json() as {
+      references:{id:string;publication:string;aiReviewedAt:null;sourceCheckedAt:null;status:string;attemptedAt:string|null}[];
+      retentionProposals:{approved:boolean;enforced:boolean;statutoryPeriod:boolean}[];
+      roadmapSections:{id:string;status:string}[];
+    };
+    assert.deepEqual(body.references.map(r=>r.id),Array.from({length:24},(_,i)=>`S${String(i+1).padStart(2,"0")}`));
+    assert.ok(body.references.every(r=>r.publication==="held"&&r.aiReviewedAt===null&&r.sourceCheckedAt===null));
+    assert.ok(body.references.every(r=>r.attemptedAt!==null&&r.status!=="not_attempted"));
+    assert.equal(body.retentionProposals.length,7);
+    assert.ok(body.retentionProposals.every(r=>!r.approved&&!r.enforced&&!r.statutoryPeriod));
+    assert.equal(body.roadmapSections.length,4);
+    assert.ok(body.roadmapSections.every(r=>r.status==="planning_assumption_not_accepted"));
+    assert.doesNotMatch(JSON.stringify(body),/rawObjectKey|textObjectKey|bucketId|PRIVATE_OBJECT_DIR/);
+  });
   await t.test("published search excludes all held templates and private documents", async () => {
     const result = await fetch(`${base}/api/public/catalogue?q=invoice&type=template&page=1`);
     assert.equal(result.status, 200);

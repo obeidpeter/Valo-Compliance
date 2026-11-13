@@ -22,6 +22,13 @@
       "when": 1794593568470,
       "tag": "0002_fresh_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794596538295,
+      "tag": "0003_breezy_whiplash",
+      "breakpoints": true
     }
   ]
 }

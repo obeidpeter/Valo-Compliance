@@ -125,6 +125,47 @@ export const GetPublicCoverageResponse = zod.object({
 })
 
 
+export const GetSourceEvidenceResponse = zod.object({
+  "notice": zod.string(),
+  "references": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.string().url(),
+  "category": zod.string(),
+  "baselineNotes": zod.string(),
+  "sourceLocator": zod.string(),
+  "status": zod.string(),
+  "attemptedAt": zod.string().nullable(),
+  "fetchedAt": zod.string().nullable(),
+  "httpStatus": zod.number().int().nullable(),
+  "failureCode": zod.string().nullable(),
+  "rawChecksum": zod.string().nullable(),
+  "textChecksum": zod.string().nullable(),
+  "rawStored": zod.boolean(),
+  "textStored": zod.boolean(),
+  "publication": zod.enum(['held']),
+  "aiReviewedAt": zod.string().nullable(),
+  "sourceCheckedAt": zod.string().nullable()
+})),
+  "retentionProposals": zod.array(zod.object({
+  "id": zod.string(),
+  "dataClass": zod.string(),
+  "exactProposal": zod.string(),
+  "status": zod.string(),
+  "statutoryPeriod": zod.literal(false),
+  "approved": zod.literal(false),
+  "enforced": zod.literal(false)
+})),
+  "roadmapSections": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "exactContract": zod.string(),
+  "sha256": zod.string(),
+  "status": zod.string()
+}))
+})
+
+
 export const GetProofRegisterResponse = zod.object({
   "uatPackages": zod.array(zod.object({
   "id": zod.string(),

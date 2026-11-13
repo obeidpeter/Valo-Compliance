@@ -5,6 +5,67 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type ReferenceEvidencePublication = typeof ReferenceEvidencePublication[keyof typeof ReferenceEvidencePublication];
+
+
+export const ReferenceEvidencePublication = {
+  held: 'held',
+} as const;
+
+export interface ReferenceEvidence {
+  id: string;
+  title: string;
+  url: string;
+  category: string;
+  baselineNotes: string;
+  sourceLocator: string;
+  status: string;
+  /** @nullable */
+  attemptedAt: string | null;
+  /** @nullable */
+  fetchedAt: string | null;
+  /** @nullable */
+  httpStatus: number | null;
+  /** @nullable */
+  failureCode: string | null;
+  /** @nullable */
+  rawChecksum: string | null;
+  /** @nullable */
+  textChecksum: string | null;
+  rawStored: boolean;
+  textStored: boolean;
+  publication: ReferenceEvidencePublication;
+  /** @nullable */
+  aiReviewedAt: string | null;
+  /** @nullable */
+  sourceCheckedAt: string | null;
+}
+
+export interface RetentionProposal {
+  id: string;
+  dataClass: string;
+  exactProposal: string;
+  status: string;
+  statutoryPeriod: false;
+  approved: false;
+  enforced: false;
+}
+
+export interface RoadmapContext {
+  id: string;
+  title: string;
+  exactContract: string;
+  sha256: string;
+  status: string;
+}
+
+export interface SourceEvidenceRegister {
+  notice: string;
+  references: ReferenceEvidence[];
+  retentionProposals: RetentionProposal[];
+  roadmapSections: RoadmapContext[];
+}
+
 export interface IndustryCoverage {
   id: string;
   slug: string;

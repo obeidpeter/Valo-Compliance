@@ -14,6 +14,9 @@
     "test:valo-http": "tsx --test src/lib/valo-http.test.ts",
     "worker:dev": "NODE_ENV=development tsx src/workers/export-worker.ts",
     "queue:generate": "tsx src/scripts/queue-migration.ts generate",
+    "sources:retrieve-development": "NODE_ENV=development tsx src/scripts/retrieve-sources.ts",
+    "test:valo-sources": "tsx --test src/editorial/source-controls.test.ts",
+    "test:valo-source-db": "tsx --test src/editorial/source-store.integration.test.ts",
     "queue:apply-development": "tsx src/scripts/queue-migration.ts apply-development"
   },
   "dependencies": {

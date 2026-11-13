@@ -83,6 +83,18 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PublicCoverage" }
         "429": { $ref: "#/components/responses/QuotaError" }
+  /development/source-evidence:
+    get:
+      operationId: getSourceEvidence
+      responses:
+        "200":
+          description: Development-only original reference leads, actual retrieval state and unapproved policy proposals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SourceEvidenceRegister"
+        "404":
+          description: Not available outside development
   /development/proof:
     get:
       operationId: getProofRegister
@@ -305,6 +317,62 @@ components:
           schema:
             $ref: "#/components/schemas/ApiProblem"
   schemas:
+    SourceEvidenceRegister:
+      type: object
+      required: [notice, references, retentionProposals, roadmapSections]
+      properties:
+        notice: { type: string }
+        references:
+          type: array
+          items: { $ref: "#/components/schemas/ReferenceEvidence" }
+        retentionProposals:
+          type: array
+          items: { $ref: "#/components/schemas/RetentionProposal" }
+        roadmapSections:
+          type: array
+          items: { $ref: "#/components/schemas/RoadmapContext" }
+    ReferenceEvidence:
+      type: object
+      required: [id, title, url, category, baselineNotes, sourceLocator, status, attemptedAt, fetchedAt, httpStatus, failureCode, rawChecksum, textChecksum, rawStored, textStored, publication, aiReviewedAt, sourceCheckedAt]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        url: { type: string, format: uri }
+        category: { type: string }
+        baselineNotes: { type: string }
+        sourceLocator: { type: string }
+        status: { type: string }
+        attemptedAt: { type: ["string", "null"] }
+        fetchedAt: { type: ["string", "null"] }
+        httpStatus: { type: ["integer", "null"] }
+        failureCode: { type: ["string", "null"] }
+        rawChecksum: { type: ["string", "null"] }
+        textChecksum: { type: ["string", "null"] }
+        rawStored: { type: boolean }
+        textStored: { type: boolean }
+        publication: { type: string, enum: [held] }
+        aiReviewedAt: { type: ["string", "null"] }
+        sourceCheckedAt: { type: ["string", "null"] }
+    RetentionProposal:
+      type: object
+      required: [id, dataClass, exactProposal, status, statutoryPeriod, approved, enforced]
+      properties:
+        id: { type: string }
+        dataClass: { type: string }
+        exactProposal: { type: string }
+        status: { type: string }
+        statutoryPeriod: { type: boolean, enum: [false] }
+        approved: { type: boolean, enum: [false] }
+        enforced: { type: boolean, enum: [false] }
+    RoadmapContext:
+      type: object
+      required: [id, title, exactContract, sha256, status]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        exactContract: { type: string }
+        sha256: { type: string }
+        status: { type: string }
     IndustryCoverage:
       type: object
       required: [id, slug, title, deeperPackTarget, enhancedEvidenceRequired, coverageState, evidenceState, sourceCheckedAt, publishedItems]

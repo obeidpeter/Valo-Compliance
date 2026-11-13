@@ -2,8 +2,11 @@ import { useMemo, useState } from 'react';
 import { CheckCircle2, CircleDashed } from 'lucide-react';
 import { useGetBuildStatus, useHealthCheck, useGetRequirementsRegister, useGetContentRegister, useGetProofRegister } from '@workspace/api-client-react';
 import { ErrorState, PageHeader, Skel } from '@/components/states';
+import { SourceEvidence } from '@/components/source-evidence';
+import { useSearch } from 'wouter';
 
 export default function Development() {
+  const sourceView=new URLSearchParams(useSearch()).get('view')==='sources';
   const s = useGetBuildStatus();
   const h = useHealthCheck();
   const register = useGetRequirementsRegister({ query: { retry: false } });
@@ -26,6 +29,8 @@ export default function Development() {
   return (
     <div className="mx-auto max-w-5xl px-5 py-14 lg:px-8">
       <PageHeader eyebrow="Build status" title="Where Valo actually stands.">Figures below are read live from the service, not written by hand.</PageHeader>
+      <a className="mb-6 inline-block text-sm underline" href={sourceView?'/development':'/development?view=sources'}>{sourceView?'Back to requirements and release gates':'Inspect source retrieval, retention proposals and roadmap'}</a>
+      {sourceView?<SourceEvidence/>:<>
       {s.isLoading ? <Skel className="h-64" /> : s.isError ? <ErrorState error={s.error} onRetry={() => s.refetch()} /> : d && (
         <div className="grid gap-4">
           <div className="surface p-7">
@@ -155,6 +160,7 @@ export default function Development() {
           {c.blocks.length > 0 && <p className="mt-3 text-sm text-muted-foreground">Blocks: {c.blocks.join(' · ')}</p>}
         </details>)}</div>
       </section>
+      </>}
     </div>
   );
 }
