@@ -23,6 +23,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+          # The handover test verifies the original specification commit is an ancestor.
+          fetch-depth: 0
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
