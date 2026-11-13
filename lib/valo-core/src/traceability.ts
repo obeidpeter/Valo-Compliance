@@ -69,6 +69,9 @@ export const conflicts = [
   { id: "CON-006", topic: "Launch and processor approvals", status: "blocked",
     issue: "No public-launch, live-commerce, recurring-billing or real-confidential-data approval exists. Processor geography and independent security/privacy/beta evidence remain required.",
     resolution: null, blocks: ["Public launch", "Live payments", "Real confidential customer data", "R2 until R1 gates pass"] },
+  { id: "CON-007", topic: "Main-branch protection enforcement", status: "blocked",
+    issue: "Owner reports the saved private-repository protection rule is not enforced under the current account plan. Saved configuration is not protected main.",
+    resolution: null, blocks: ["Enforced repository review and merge safeguards"] },
 ];
 
 export function readiness() {

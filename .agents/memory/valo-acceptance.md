@@ -26,3 +26,9 @@ Next.js is the preferred frontend. The selected web artifact is React/Vite; do n
 **Why:** The user required owner-approved alternatives if compatibility requires a stack change.
 
 **How to apply:** Resolve the architecture conflict with the owner before substantial frontend work.
+
+The intended GitHub repository must remain private. Its saved main-branch protection rule is not enforced under the current account plan. Do not buy/upgrade, transfer it, make it public, force-push or delete it.
+
+**Why:** The user reported GitHub's enforcement limitation and explicitly prohibited those changes.
+
+**How to apply:** Use feature branches and draft pull requests, preserve existing main history, report enforcement as blocked, and add required CI checks only after real checks exist.

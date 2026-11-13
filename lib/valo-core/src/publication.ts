@@ -70,6 +70,12 @@ export const publicationSchema = z.object({
 
 export type PublicationBundle = z.infer<typeof publicationSchema>;
 
+/** The entire candidate, not just visible body text, must be bound to review evidence. */
+export function candidateDigest(candidate: Omit<PublicationBundle["candidate"], "hash"> | PublicationBundle["candidate"]) {
+  const { hash: _ignored, ...content } = candidate as PublicationBundle["candidate"];
+  return digest(content);
+}
+
 /** Fixed property-order encoding for durable manifests. Arrays retain semantic order. */
 export function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
@@ -106,7 +112,7 @@ export function evaluatePublication(input: unknown, now = new Date()) {
   const evidenceHash = digest(b.sources);
   const timestamp = now.getTime();
   fail(!Number.isFinite(timestamp), "invalid_clock");
-  fail(c.hash !== sha256(c.body), "candidate_hash_mismatch");
+  fail(c.hash !== candidateDigest(c), "candidate_hash_mismatch");
   fail(!b.policy.ownerApproved, "policy_not_owner_approved");
   const { hash: policyHash, ...policyContent } = b.policy;
   fail(policyHash !== digest(policyContent), "policy_hash_mismatch");

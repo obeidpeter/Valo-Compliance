@@ -1,0 +1,41 @@
+name: Valo foundation CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ["feature/valo-*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: valo-foundation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  foundation:
+    name: Foundation typecheck and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Set up pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.1 --activate
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck all source
+        run: pnpm run typecheck
+      - name: Run foundation unit tests
+        run: pnpm --filter @workspace/scripts test:valo
+      - name: Print factual readiness
+        run: pnpm --filter @workspace/scripts valo:readiness

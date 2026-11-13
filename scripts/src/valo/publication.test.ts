@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  digest, disclosure, evaluatePublication, mandatoryEnhancedChecks,
+  candidateDigest, digest, disclosure, evaluatePublication, mandatoryEnhancedChecks,
   mandatoryMechanicalChecks, sha256, type PublicationBundle,
 } from "@workspace/valo-core";
 
@@ -62,6 +62,10 @@ function fixture(): PublicationBundle {
   return b;
 }
 function rebind(b: PublicationBundle) {
+  b.candidate.hash = candidateDigest(b.candidate);
+  for (const r of [b.draftRun, ...b.reviews]) r.candidateHash = b.candidate.hash;
+  for (const check of [...b.mechanicalChecks, ...b.enhancedChecks]) check.candidateHash = b.candidate.hash;
+  for (const output of b.exports) output.candidateHash = b.candidate.hash;
   b.manifest = {
     candidateHash: b.candidate.hash, evidenceHash: digest(b.sources),
     rightsHash: digest(b.rights), policyHash: b.policy.hash,
@@ -79,6 +83,11 @@ test("complete synthetic attestations establish eligibility, never publication",
 });
 const cases: [string, (b: PublicationBundle) => void, string][] = [
   ["changed body", b => { b.candidate.body += " edit"; }, "candidate_hash_mismatch"],
+  ["changed applicability scope", b => { b.candidate.scope = "Different audience"; }, "candidate_hash_mismatch"],
+  ["changed assumptions", b => { b.candidate.assumptions.push("New use assumption"); }, "candidate_hash_mismatch"],
+  ["changed claim wording", b => { b.candidate.claims[0].text = "New legal conclusion"; }, "candidate_hash_mismatch"],
+  ["changed content version", b => { b.candidate.version += 1; }, "candidate_hash_mismatch"],
+  ["changed source-check date", b => { b.candidate.sourceCheckDate = "2026-11-11T00:00:00Z"; }, "candidate_hash_mismatch"],
   ["changed source text", b => { b.sources[0].text += " tampering"; }, "source_hash_mismatch"],
   ["policy not approved", b => { b.policy.ownerApproved = false; }, "policy_not_owner_approved"],
   ["policy changed after binding", b => { b.policy.risks.push("tax"); }, "policy_hash_mismatch"],

@@ -36,6 +36,8 @@ The validator's synthetic attestations exercise logic. Production must derive at
 
 ## GitHub
 
-A GitHub connection was attached. A metadata request for `obeidpeter/Valo-Compliance` returned HTTP 404. This can mean the repository does not exist or that the connected GitHub App cannot see it. It does not establish repository creation or successful synchronization.
+A GitHub connection was attached. An initial metadata request returned HTTP 404. After secure sign-in and repository creation, a second request confirmed `obeidpeter/Valo-Compliance` is private, main points to the user-supplied initial commit, and the connected GitHub App has push access.
 
-Do not create a competing repository while separate creation is underway. Required: make the intended private repository visible to the connected GitHub App with contents write permission, then verify its identity and existing content before a non-destructive initial push. Keep all work in Replit until then.
+Do not create a competing repository. Synchronization must preserve the initial main commit, add actual source on a feature branch and open a draft pull request without force pushes or direct main writes. Remote synchronization is not successful until the branch commit/tree and PR response are verified.
+
+The owner reports the saved main protection rule is not enforced by the account plan. Enforcement is blocked; no upgrade, transfer, visibility change or bypass is authorised. A foundation CI workflow is included; its existence is not a passing GitHub run, and no required-check settings are applied before actual checks exist.
