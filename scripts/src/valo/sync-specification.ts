@@ -11,9 +11,29 @@ const register = JSON.parse(await read("docs/registers/requirements.json")) as {
     acceptance_criteria: string; source_line: number; source_exact_text: string;
     suggested_owner: string; dependencies: string[];
   }[];
-  release_gates: {id: string; required_evidence: string; approvers: string}[];
+  release_gates: {id: string; planned_window: string; required_evidence: string; approvers: string}[];
+  uat_packages: {id: string; title: string; requirements: string; required_evidence: string}[];
 };
 const trd = await read("docs/specification/VALO-TRD-001-v1.1.txt");
+const roadmap = await read("docs/specification/VALO-ROADMAP-001-v1.1.txt");
+const normalize = (text: string) => text.replace(/\s+/g, " ").trim();
+const controls = JSON.parse(await read("docs/registers/release-controls.json")) as {
+  id:string;title:string;source:"TRD"|"ROADMAP";text:string;
+}[];
+for (const control of controls)
+  assert.ok(normalize(control.source === "TRD" ? trd : roadmap).includes(normalize(control.text)), control.id);
+assert.equal(register.uat_packages.length, 10);
+assert.equal(register.release_gates.length, 6);
+for (const [i, pack] of register.uat_packages.entries()) {
+  assert.equal(pack.id, `UAT-${String(i + 1).padStart(2, "0")}`);
+  assert.ok(normalize(trd).includes(normalize(pack.requirements)), pack.id);
+  assert.ok(normalize(trd).includes(normalize(pack.required_evidence)), pack.id);
+}
+for (const [i, gate] of register.release_gates.entries()) {
+  assert.equal(gate.id, `G${i}`);
+  assert.ok(normalize(roadmap).includes(normalize(gate.required_evidence)), gate.id);
+  assert.ok(normalize(roadmap).includes(normalize(gate.approvers)), gate.id);
+}
 assert.equal(register.requirements.length, 127);
 assert.equal(new Set(register.requirements.map(r => r.id)).size, 127);
 const sourceRequirements = register.requirements.map(r => {
@@ -44,8 +64,12 @@ const output = "// Generated from retained coordinating-team sources. Do not edi
   `export const specificationSha256 = ${JSON.stringify(sourceDigest)};\n` +
   `export const sourceRequirements = ${JSON.stringify(sourceRequirements, null, 2)} as const;\n` +
   `export const sourceGates = ${JSON.stringify(register.release_gates.map(g => ({
-    id: g.id, requiredEvidence: g.required_evidence, approvers: g.approvers,
-  })), null, 2)} as const;\n`;
+    id: g.id, plannedWindow: g.planned_window, requiredEvidence: g.required_evidence, approvers: g.approvers,
+  })), null, 2)} as const;\n` +
+  `export const sourceUatPackages = ${JSON.stringify(register.uat_packages.map(p => ({
+    id:p.id, title:p.title, requirements:p.requirements, requiredEvidence:p.required_evidence,
+  })), null, 2)} as const;\n` +
+  `export const sourceReleaseControls = ${JSON.stringify(controls, null, 2)} as const;\n`;
 await writeFile(root + "lib/valo-core/src/specification.generated.ts", output);
 // Inventory remains wholly held. Never turn source inventory statuses into publication.
 await writeFile(root + "lib/valo-core/src/content-register.generated.ts",

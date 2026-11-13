@@ -8,6 +8,7 @@ import valoRouter from "./routes/valo";
 import { ValoProblem } from "./lib/valo-store";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { requestReadQuota } from "./middlewares/valo-quota";
 
 const app: Express = express();
 
@@ -47,9 +48,19 @@ app.use((_req, res, next) => {
   next();
 });
 
+app.use(requestReadQuota);
 app.use("/api", router);
 app.use("/api", valoRouter);
 const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
+  res.setHeader("Cache-Control", "private, no-store");
+  if (typeof error === "object" && error !== null && "type" in error) {
+    if (error.type === "entity.parse.failed") {
+      res.status(400).json({ error: "Request body is not valid JSON." }); return;
+    }
+    if (error.type === "entity.too.large") {
+      res.status(413).json({ error: "Request body exceeds the 128 KiB limit." }); return;
+    }
+  }
   if (error instanceof ZodError) {
     res.status(400).json({ error: "Invalid request", fields: error.issues.map(i => ({ path: i.path.join("."), message: i.message })) });
     return;

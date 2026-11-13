@@ -89,3 +89,26 @@ test("R2, launch, live commerce and real confidential data remain disabled", () 
   assert.ok(r.suites.every(s => s.executedCases === 0 && !s.accepted));
   assert.ok(r.gates.every(g => g.status !== "passed"));
 });
+test("all ten UAT packs and six original gate IDs remain unaccepted with exact release expectations", () => {
+  const r = readiness();
+  assert.deepEqual(r.uatPackages.map(p => p.id), Array.from({length:10}, (_,i) => `UAT-${String(i+1).padStart(2,"0")}`));
+  assert.deepEqual(r.gates.map(g => g.id), ["G0","G1","G2","G3","G4","G5"]);
+  assert.ok(r.uatPackages.every(p => !p.accepted && p.acceptanceEvidence.length === 0 && p.status === "blocked"));
+  assert.ok(r.gates.every(g => g.status !== "accepted" && g.approvers && g.plannedWindow));
+  assert.match(r.uatPackages[1]!.requiredEvidence, /authorised low-value live purchase\/refund/);
+  assert.match(r.gates[4]!.requiredEvidence, /independent security assessment/);
+  assert.match(r.gates[5]!.requiredEvidence, /safe migrations\/rollback/);
+  assert.equal(r.releaseControls.length, 7);
+  assert.ok(r.releaseControls.some(c => c.text.includes("cannot waive failed mandatory evidence gates")));
+});
+test("part three formal families preserve 51 exact criteria without expanding R3 scope", () => {
+  const ids = [
+    "SRV-003", "SRV-004",
+    ...(["PAY","ADM","OPS","SEC","PRV","NFR"] as const).flatMap(family =>
+      Array.from({length:({PAY:10,ADM:9,OPS:8,SEC:8,PRV:3,NFR:11})[family]}, (_,i) => `${family}-${String(i+1).padStart(3,"0")}`)),
+  ];
+  assert.equal(ids.length, 51);
+  assert.ok(ids.every(id => requirements.some(r => r.id === id && r.exactText && r.acceptance && r.sourceLocator)));
+  assert.equal(requirements.find(r => r.id === "SRV-004")!.release, "R2/R3");
+  assert.equal(readiness().r3Excluded, true);
+});

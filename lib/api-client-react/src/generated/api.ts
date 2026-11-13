@@ -35,6 +35,8 @@ import type {
   HealthStatus,
   ListPublicCatalogueParams,
   ProfileInput,
+  ProofRegister,
+  QuotaErrorResponse,
   RequirementsRegister,
   TicketInput,
   TicketReceipt,
@@ -68,6 +70,101 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
+export const getGetProofRegisterUrl = () => {
+
+
+
+
+  return `/api/development/proof`
+}
+
+export const getProofRegister = async ( options?: Parameters<typeof customFetch>[1]): Promise<ProofRegister> => {
+
+  return customFetch<ProofRegister>(getGetProofRegisterUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProofRegisterQueryKey = () => {
+    return [
+    `/api/development/proof`
+    ] as const;
+    }
+
+
+export const getGetProofRegisterQueryOptions = <TData = Awaited<ReturnType<typeof getProofRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProofRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProofRegisterQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProofRegister>>> = ({ signal }) => getProofRegister({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProofRegister>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProofRegisterQueryResult = NonNullable<Awaited<ReturnType<typeof getProofRegister>>>
+export type GetProofRegisterQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
+
+
+export function useGetProofRegister<TData = Awaited<ReturnType<typeof getProofRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProofRegister>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProofRegister>>,
+          TError,
+          Awaited<ReturnType<typeof getProofRegister>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProofRegister<TData = Awaited<ReturnType<typeof getProofRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProofRegister>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProofRegister>>,
+          TError,
+          Awaited<ReturnType<typeof getProofRegister>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProofRegister<TData = Awaited<ReturnType<typeof getProofRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProofRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetProofRegister<TData = Awaited<ReturnType<typeof getProofRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProofRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProofRegisterQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetContentRegisterUrl = () => {
 
 
@@ -98,7 +195,7 @@ export const getGetContentRegisterQueryKey = () => {
     }
 
 
-export const getGetContentRegisterQueryOptions = <TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getContentRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetContentRegisterQueryOptions = <TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getContentRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -117,10 +214,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetContentRegisterQueryResult = NonNullable<Awaited<ReturnType<typeof getContentRegister>>>
-export type GetContentRegisterQueryError = ErrorType<AuthErrorResponse>
+export type GetContentRegisterQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
 
 
-export function useGetContentRegister<TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetContentRegister<TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getContentRegister>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getContentRegister>>,
@@ -130,7 +227,7 @@ export function useGetContentRegister<TData = Awaited<ReturnType<typeof getConte
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetContentRegister<TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetContentRegister<TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getContentRegister>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getContentRegister>>,
@@ -140,12 +237,12 @@ export function useGetContentRegister<TData = Awaited<ReturnType<typeof getConte
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetContentRegister<TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetContentRegister<TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getContentRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetContentRegister<TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetContentRegister<TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getContentRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -193,7 +290,7 @@ export const getGetRequirementsRegisterQueryKey = () => {
     }
 
 
-export const getGetRequirementsRegisterQueryOptions = <TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequirementsRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetRequirementsRegisterQueryOptions = <TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequirementsRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -212,10 +309,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetRequirementsRegisterQueryResult = NonNullable<Awaited<ReturnType<typeof getRequirementsRegister>>>
-export type GetRequirementsRegisterQueryError = ErrorType<AuthErrorResponse>
+export type GetRequirementsRegisterQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
 
 
-export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequirementsRegister>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getRequirementsRegister>>,
@@ -225,7 +322,7 @@ export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof get
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequirementsRegister>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getRequirementsRegister>>,
@@ -235,12 +332,12 @@ export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof get
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequirementsRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequirementsRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -295,7 +392,7 @@ export const getListPublicCatalogueQueryKey = (params?: ListPublicCatalogueParam
     }
 
 
-export const getListPublicCatalogueQueryOptions = <TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<unknown>>(params?: ListPublicCatalogueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCatalogue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getListPublicCatalogueQueryOptions = <TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<QuotaErrorResponse>>(params?: ListPublicCatalogueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCatalogue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -314,10 +411,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListPublicCatalogueQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicCatalogue>>>
-export type ListPublicCatalogueQueryError = ErrorType<unknown>
+export type ListPublicCatalogueQueryError = ErrorType<QuotaErrorResponse>
 
 
-export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<unknown>>(
+export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<QuotaErrorResponse>>(
  params: undefined |  ListPublicCatalogueParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCatalogue>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listPublicCatalogue>>,
@@ -327,7 +424,7 @@ export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPub
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<unknown>>(
+export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<QuotaErrorResponse>>(
  params?: ListPublicCatalogueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCatalogue>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listPublicCatalogue>>,
@@ -337,12 +434,12 @@ export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPub
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<unknown>>(
+export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<QuotaErrorResponse>>(
  params?: ListPublicCatalogueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCatalogue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<unknown>>(
+export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<QuotaErrorResponse>>(
  params?: ListPublicCatalogueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCatalogue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -390,7 +487,7 @@ export const getGetBuildStatusQueryKey = () => {
     }
 
 
-export const getGetBuildStatusQueryOptions = <TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBuildStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetBuildStatusQueryOptions = <TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<QuotaErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBuildStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -409,10 +506,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetBuildStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getBuildStatus>>>
-export type GetBuildStatusQueryError = ErrorType<unknown>
+export type GetBuildStatusQueryError = ErrorType<QuotaErrorResponse>
 
 
-export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<unknown>>(
+export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<QuotaErrorResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBuildStatus>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getBuildStatus>>,
@@ -422,7 +519,7 @@ export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStat
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<unknown>>(
+export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBuildStatus>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getBuildStatus>>,
@@ -432,12 +529,12 @@ export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStat
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<unknown>>(
+export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBuildStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<unknown>>(
+export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBuildStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -485,7 +582,7 @@ export const getGetWorkspaceQueryKey = () => {
     }
 
 
-export const getGetWorkspaceQueryOptions = <TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetWorkspaceQueryOptions = <TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -504,10 +601,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetWorkspaceQueryResult = NonNullable<Awaited<ReturnType<typeof getWorkspace>>>
-export type GetWorkspaceQueryError = ErrorType<AuthErrorResponse>
+export type GetWorkspaceQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
 
 
-export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getWorkspace>>,
@@ -517,7 +614,7 @@ export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getWorkspace>>,
@@ -527,12 +624,12 @@ export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -662,7 +759,7 @@ export const getListDocumentsQueryKey = () => {
     }
 
 
-export const getListDocumentsQueryOptions = <TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getListDocumentsQueryOptions = <TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -681,10 +778,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListDocumentsQueryResult = NonNullable<Awaited<ReturnType<typeof listDocuments>>>
-export type ListDocumentsQueryError = ErrorType<AuthErrorResponse>
+export type ListDocumentsQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
 
 
-export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse>>(
+export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listDocuments>>,
@@ -694,7 +791,7 @@ export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse>>(
+export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listDocuments>>,
@@ -704,12 +801,12 @@ export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse>>(
+export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse>>(
+export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -839,7 +936,7 @@ export const getGetDocumentQueryKey = (id: string,) => {
     }
 
 
-export const getGetDocumentQueryOptions = <TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocument>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetDocumentQueryOptions = <TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocument>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -858,10 +955,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetDocumentQueryResult = NonNullable<Awaited<ReturnType<typeof getDocument>>>
-export type GetDocumentQueryError = ErrorType<AuthErrorResponse>
+export type GetDocumentQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
 
 
-export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocument>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getDocument>>,
@@ -871,7 +968,7 @@ export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, 
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocument>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getDocument>>,
@@ -881,12 +978,12 @@ export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, 
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocument>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse>>(
+export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocument>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1017,7 +1114,7 @@ export const getListDocumentRevisionsQueryKey = (id: string,) => {
     }
 
 
-export const getListDocumentRevisionsQueryOptions = <TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentRevisions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getListDocumentRevisionsQueryOptions = <TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentRevisions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1036,10 +1133,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListDocumentRevisionsQueryResult = NonNullable<Awaited<ReturnType<typeof listDocumentRevisions>>>
-export type ListDocumentRevisionsQueryError = ErrorType<AuthErrorResponse>
+export type ListDocumentRevisionsQueryError = ErrorType<AuthErrorResponse | QuotaErrorResponse>
 
 
-export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse>>(
+export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentRevisions>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listDocumentRevisions>>,
@@ -1049,7 +1146,7 @@ export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listD
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse>>(
+export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentRevisions>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listDocumentRevisions>>,
@@ -1059,12 +1156,12 @@ export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listD
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse>>(
+export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentRevisions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse>>(
+export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentRevisions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

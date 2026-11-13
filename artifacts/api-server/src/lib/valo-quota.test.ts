@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { quotaPolicy, quotaSubjectHash } from "./valo-quota-policy";
+
+test("quota defaults preserve the requested initial ceilings", () => {
+  assert.deepEqual(quotaPolicy, {
+    "anonymous-read":60, "authenticated-read":120, "customer-ai":5, "checkout-create":10, "export-create":10,
+  });
+});
+test("quota subjects are pseudonymised, domain-separated and keyed", () => {
+  const synthetic = "synthetic-unit-test-only-secret-00001";
+  const hash = quotaSubjectHash(synthetic, "ip", "192.0.2.1");
+  assert.match(hash, /^[a-f0-9]{64}$/);
+  assert.notEqual(hash, quotaSubjectHash(synthetic, "user", "192.0.2.1"));
+  assert.notEqual(hash, quotaSubjectHash(synthetic + "rotation", "ip", "192.0.2.1"));
+  assert.equal(hash, quotaSubjectHash(synthetic, "ip", "192.0.2.1"));
+});
+test("missing quota configuration fails rather than silently using memory or an unkeyed IP hash", () => {
+  assert.throws(() => quotaSubjectHash(undefined, "ip", "192.0.2.1"), /Unavailable/);
+  assert.throws(() => quotaSubjectHash("short", "user", "synthetic"), /Unavailable/);
+});

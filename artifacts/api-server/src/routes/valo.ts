@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { ListPublicCatalogueQueryParams } from "@workspace/api-zod";
+import { ListPublicCatalogueQueryParams, GetProofRegisterResponse } from "@workspace/api-zod";
 import { readiness, catalogueSummary, contentReadiness, baselineTemplates } from "@workspace/valo-core";
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
 import * as store from "../lib/valo-store";
@@ -24,6 +24,11 @@ router.get("/development/requirements", (_req, res) => {
   if (process.env.NODE_ENV === "production") { res.sendStatus(404); return; }
   res.setHeader("Cache-Control", "no-store");
   res.json(readiness());
+});
+router.get("/development/proof", (_req, res) => {
+  if (process.env.NODE_ENV === "production") { res.sendStatus(404); return; }
+  res.setHeader("Cache-Control", "no-store");
+  res.json(GetProofRegisterResponse.parse(readiness()));
 });
 router.get("/development/content", (_req, res) => {
   if (process.env.NODE_ENV === "production") { res.sendStatus(404); return; }

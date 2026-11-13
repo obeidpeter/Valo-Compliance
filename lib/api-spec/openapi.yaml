@@ -11,6 +11,17 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /development/proof:
+    get:
+      operationId: getProofRegister
+      responses:
+        "200":
+          description: Original UAT packs, gates and non-waivable release controls; not acceptance
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProofRegister" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
   /development/content:
     get:
       operationId: getContentRegister
@@ -21,6 +32,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ContentRegister" }
         "404": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
   /development/requirements:
     get:
       operationId: getRequirementsRegister
@@ -31,6 +43,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/RequirementsRegister" }
         "404": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
   /public/catalogue:
     get:
       operationId: listPublicCatalogue
@@ -46,6 +59,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CataloguePage"
+        "429": { $ref: "#/components/responses/QuotaError" }
   /public/status:
     get:
       operationId: getBuildStatus
@@ -56,6 +70,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BuildStatus"
+        "429": { $ref: "#/components/responses/QuotaError" }
   /workspace:
     get:
       operationId: getWorkspace
@@ -68,6 +83,7 @@ paths:
                 $ref: "#/components/schemas/Workspace"
         "401": { $ref: "#/components/responses/AuthError" }
         "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
   /workspace/profile:
     put:
       operationId: saveBusinessProfile
@@ -101,6 +117,7 @@ paths:
                 items: { $ref: "#/components/schemas/BusinessDocument" }
         "401": { $ref: "#/components/responses/AuthError" }
         "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
     post:
       operationId: createDocument
       requestBody:
@@ -133,6 +150,7 @@ paths:
         "401": { $ref: "#/components/responses/AuthError" }
         "403": { $ref: "#/components/responses/AuthError" }
         "404": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
     patch:
       operationId: saveDocument
       requestBody:
@@ -168,6 +186,7 @@ paths:
         "401": { $ref: "#/components/responses/AuthError" }
         "403": { $ref: "#/components/responses/AuthError" }
         "404": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
   /workspace/support:
     post:
       operationId: createSupportTicket
@@ -200,6 +219,13 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   responses:
+    QuotaError:
+      description: Read ceiling reached; retry after the indicated seconds without changing saved work
+      headers:
+        Retry-After: { schema: { type: integer }, description: Seconds until the current database window resets }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiProblem" }
     AuthError:
       description: Validation, access or concurrency error
       content:
@@ -207,6 +233,55 @@ components:
           schema:
             $ref: "#/components/schemas/ApiProblem"
   schemas:
+    UatPack:
+      type: object
+      required: [id, title, requirements, requiredEvidence, status, accepted, reason]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        requirements: { type: string }
+        requiredEvidence: { type: string }
+        status: { type: string }
+        accepted: { type: boolean }
+        reason: { type: string }
+    ReleaseGate:
+      type: object
+      required: [id, phaseId, plannedWindow, requiredEvidence, approvers, status, reason]
+      properties:
+        id: { type: string }
+        phaseId: { type: string }
+        plannedWindow: { type: string }
+        requiredEvidence: { type: string }
+        approvers: { type: string }
+        status: { type: string }
+        reason: { type: string }
+    ReleaseControl:
+      type: object
+      required: [id, title, source, text]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        source: { type: string }
+        text: { type: string }
+    ProofSuite:
+      type: object
+      required: [id, requiredCases, executedCases, accepted]
+      properties:
+        id: { type: string }
+        requiredCases: { type: integer }
+        executedCases: { type: integer }
+        accepted: { type: boolean }
+    ProofRegister:
+      type: object
+      required: [uatPackages, gates, releaseControls, suites, r1Accepted, r2Unlocked, publicLaunchEnabled]
+      properties:
+        uatPackages: { type: array, items: { $ref: "#/components/schemas/UatPack" } }
+        gates: { type: array, items: { $ref: "#/components/schemas/ReleaseGate" } }
+        releaseControls: { type: array, items: { $ref: "#/components/schemas/ReleaseControl" } }
+        suites: { type: array, items: { $ref: "#/components/schemas/ProofSuite" } }
+        r1Accepted: { type: boolean }
+        r2Unlocked: { type: boolean }
+        publicLaunchEnabled: { type: boolean }
     ContentTraceRow:
       type: object
       required: [id, title, kind, status, relatedIds, limitation]

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "TRD-TEST-OWNERSHIP",
+    "title": "Test layers and ownership",
+    "source": "TRD",
+    "text": "Engineers own unit, contract, integration and concurrency tests. QA owns journeys, regressions and fixture provenance. The AI pipeline proposes and challenges content/rules; the content owner monitors evidence and held items without providing legal sign-off. Technical security/privacy assessment remains separate. The product owner accepts usability, scope and operating policy."
+  },
+  {
+    "id": "TRD-RELEASE-BLOCKERS",
+    "title": "Release-blocking defects",
+    "source": "TRD",
+    "text": "Any cross-tenant exposure, incorrect entitlement grant, unverified payment unlock, uncontrolled secret exposure, silent draft overwrite, false verified legal claim, critical/high exploitable vulnerability or failed restore drill blocks R1. Cosmetic and minor usability defects require named owners and a dated fix plan; they must not disguise missing promised functionality."
+  },
+  {
+    "id": "TRD-EVIDENCE-PACK",
+    "title": "Evidence pack",
+    "source": "TRD",
+    "text": "Every Must requirement links to a ticket, code/content revision, test or review result, owner and release. Keep a traceability register in the repository and refresh it at each gate. Do not mark deferred R2/R3 work as completed R1 functionality."
+  },
+  {
+    "id": "ROADMAP-LAUNCH-BLOCKERS",
+    "title": "Non-negotiable launch blockers",
+    "source": "ROADMAP",
+    "text": "Cross-tenant leakage, incorrect entitlements, exposed secrets, silent draft loss, unsupported material legal claims, false professional-review labels, bypassed publication gates, high/critical exploitable defects, missing template rights or failed restore block launch. A polished demo or model confidence score cannot waive these conditions."
+  },
+  {
+    "id": "ROADMAP-DONE",
+    "title": "Meaning of done",
+    "source": "ROADMAP",
+    "text": "Every R1 Must item has an owner, revision and passing implementation evidence. Content also has source/rights evidence, separate AI findings, test results, public disclosure and a release manifest. Required manual security/usability checks remain. Blocked capabilities are disabled or unavailable, never presented as live."
+  },
+  {
+    "id": "ROADMAP-INDEPENDENT-CHECKS",
+    "title": "Independent security and accessibility",
+    "source": "ROADMAP",
+    "text": "Security testing follows a mapped OWASP ASVS baseline; accessibility aims at WCAG 2.2 AA with manual review as well as automated checks. Neither a vulnerability scan nor an accessibility score alone is sufficient evidence. [S19–S20]"
+  },
+  {
+    "id": "ROADMAP-SIGNOFFS",
+    "title": "Operational sign-offs and mandatory gates",
+    "source": "ROADMAP",
+    "text": "Record operational sign-offs, AI publication manifests and residual risks in the release register. The product owner may accept non-critical scope changes, but cannot waive failed mandatory evidence gates, data protection, payment integrity or truthful content status."
+  }
+]

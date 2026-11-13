@@ -5,6 +5,50 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface UatPack {
+  id: string;
+  title: string;
+  requirements: string;
+  requiredEvidence: string;
+  status: string;
+  accepted: boolean;
+  reason: string;
+}
+
+export interface ReleaseGate {
+  id: string;
+  phaseId: string;
+  plannedWindow: string;
+  requiredEvidence: string;
+  approvers: string;
+  status: string;
+  reason: string;
+}
+
+export interface ReleaseControl {
+  id: string;
+  title: string;
+  source: string;
+  text: string;
+}
+
+export interface ProofSuite {
+  id: string;
+  requiredCases: number;
+  executedCases: number;
+  accepted: boolean;
+}
+
+export interface ProofRegister {
+  uatPackages: UatPack[];
+  gates: ReleaseGate[];
+  releaseControls: ReleaseControl[];
+  suites: ProofSuite[];
+  r1Accepted: boolean;
+  r2Unlocked: boolean;
+  publicLaunchEnabled: boolean;
+}
+
 export interface ContentTraceRow {
   id: string;
   title: string;
@@ -357,6 +401,11 @@ export interface TicketReceipt {
 export interface HealthStatus {
   status: string;
 }
+
+/**
+ * Read ceiling reached; retry after the indicated seconds without changing saved work
+ */
+export type QuotaErrorResponse = ApiProblem;
 
 /**
  * Validation, access or concurrency error

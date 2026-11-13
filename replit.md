@@ -43,6 +43,11 @@ Visible brand: Valo. Required homepage copy: "The documents you need. The busine
 
 The initial Next.js application now has a database-backed profile, canonical manual draft editor, revision history, conflict-aware saves, durable support tickets and a live development requirements/content/conflict register. All 127 formal requirements and the 27/79 inventories are retained. No P0/R1 gate is passed, no template is published and no private export or real editorial pipeline is implemented. See `docs/valo/README.md` and its evidence links.
 
+The development register also shows original UAT-01–10, G0–G5 and non-waivable
+release controls. API read quotas use atomic PostgreSQL counters and HMAC
+pseudonyms; anonymous socket-address limits conservatively group proxied users
+until trusted client IP is proved. This is partial SEC-005, not production acceptance.
+
 Run `pnpm --filter @workspace/scripts valo:readiness` for the current machine-readable register and `pnpm --filter @workspace/scripts test:valo` for foundation unit tests. Synthetic unit tests never count toward formal rule/customer-AI/editorial acceptance totals.
 
 ## User preferences

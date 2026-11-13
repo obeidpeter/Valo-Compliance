@@ -8,8 +8,8 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:valo": "tsx --test src/lib/valo-validation.test.ts",
-    "test:valo-db": "tsx --test src/lib/valo-store.integration.test.ts",
+    "test:valo": "tsx --test src/lib/valo-validation.test.ts src/lib/valo-quota.test.ts",
+    "test:valo-db": "tsx --test src/lib/valo-store.integration.test.ts src/lib/valo-quota.integration.test.ts",
     "test:valo-http": "tsx --test src/lib/valo-http.test.ts"
   },
   "dependencies": {

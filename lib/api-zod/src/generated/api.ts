@@ -8,6 +8,43 @@
 import * as zod from 'zod';
 
 
+export const GetProofRegisterResponse = zod.object({
+  "uatPackages": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "requirements": zod.string(),
+  "requiredEvidence": zod.string(),
+  "status": zod.string(),
+  "accepted": zod.boolean(),
+  "reason": zod.string()
+})),
+  "gates": zod.array(zod.object({
+  "id": zod.string(),
+  "phaseId": zod.string(),
+  "plannedWindow": zod.string(),
+  "requiredEvidence": zod.string(),
+  "approvers": zod.string(),
+  "status": zod.string(),
+  "reason": zod.string()
+})),
+  "releaseControls": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "source": zod.string(),
+  "text": zod.string()
+})),
+  "suites": zod.array(zod.object({
+  "id": zod.string(),
+  "requiredCases": zod.number().int(),
+  "executedCases": zod.number().int(),
+  "accepted": zod.boolean()
+})),
+  "r1Accepted": zod.boolean(),
+  "r2Unlocked": zod.boolean(),
+  "publicLaunchEnabled": zod.boolean()
+})
+
+
 export const GetContentRegisterResponse = zod.object({
   "rows": zod.array(zod.object({
   "id": zod.string(),

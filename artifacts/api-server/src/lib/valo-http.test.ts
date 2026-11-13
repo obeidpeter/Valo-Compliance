@@ -22,6 +22,24 @@ test("running development HTTP API fails closed and reports factual release stat
     assert.equal(body.r2Unlocked, false);
     assert.equal(body.livePaymentsEnabled, false);
   });
+  await t.test("real development reads receive durable quota metadata without trusting client identity headers", async () => {
+    const response = await fetch(`${base}/api/public/status`, { headers: { "X-Forwarded-For":"192.0.2.123", "X-User-Id":"fabricated-user" } });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("x-ratelimit-limit"), "60");
+    assert.ok(Number(response.headers.get("x-ratelimit-remaining")) < 60);
+    assert.ok(response.headers.get("cache-control")?.includes("no-store"));
+    assert.ok(Number.isFinite(Date.parse(response.headers.get("x-ratelimit-reset")!)));
+  });
+  await t.test("malformed and oversized bodies fail explicitly, without reflecting submitted content", async () => {
+    for (const [body,status] of [["{\"synthetic\":",400], [JSON.stringify({synthetic:"x".repeat(132000)}),413]] as const) {
+      const response = await fetch(`${base}/api/workspace/documents`, {
+        method:"POST", headers:{"Content-Type":"application/json",Origin:base}, body,
+      });
+      assert.equal(response.status, status);
+      assert.ok(response.headers.get("cache-control")?.includes("no-store"));
+      assert.ok(!(await response.text()).includes("synthetic"));
+    }
+  });
   await t.test("unauthenticated private endpoints reject reads without shared-cache retention", async () => {
     for (const path of ["/api/workspace", "/api/workspace/documents", "/api/workspace/documents/00000000-0000-4000-8000-000000000001/revisions"]) {
       const response = await fetch(`${base}${path}`);
@@ -66,5 +84,23 @@ test("running development HTTP API fails closed and reports factual release stat
     assert.equal(body.rows.length, 186);
     assert.ok(body.rows.every(r => r.status !== "published"));
     assert.deepEqual(body.rows.find(r => r.id === "REG-G01")!.relatedIds, ["REG-D01"]);
+  });
+  await t.test("the original UAT and gate register does not claim execution or sign-offs", async () => {
+    const response = await fetch(`${base}/api/development/proof`);
+    assert.equal(response.status, 200);
+    const body = await response.json() as {
+      uatPackages:{id:string;accepted:boolean;requiredEvidence:string}[];
+      gates:{id:string;status:string;approvers:string}[];
+      releaseControls:{text:string}[];
+      suites:{executedCases:number;accepted:boolean}[];
+      r1Accepted:boolean;r2Unlocked:boolean;publicLaunchEnabled:boolean;
+    };
+    assert.equal(body.uatPackages.length, 10);
+    assert.deepEqual(body.gates.map(g => g.id), ["G0","G1","G2","G3","G4","G5"]);
+    assert.ok(body.gates.every(g => g.status !== "accepted" && g.approvers));
+    assert.ok(body.uatPackages.every(p => !p.accepted && p.requiredEvidence));
+    assert.ok(body.suites.every(s => s.executedCases === 0 && !s.accepted));
+    assert.equal(body.r1Accepted || body.r2Unlocked || body.publicLaunchEnabled, false);
+    assert.ok(body.releaseControls.some(c => c.text.includes("cannot waive failed mandatory evidence gates")));
   });
 });

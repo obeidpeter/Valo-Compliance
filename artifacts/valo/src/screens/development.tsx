@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CheckCircle2, CircleDashed } from 'lucide-react';
-import { useGetBuildStatus, useHealthCheck, useGetRequirementsRegister, useGetContentRegister } from '@workspace/api-client-react';
+import { useGetBuildStatus, useHealthCheck, useGetRequirementsRegister, useGetContentRegister, useGetProofRegister } from '@workspace/api-client-react';
 import { ErrorState, PageHeader, Skel } from '@/components/states';
 
 export default function Development() {
@@ -8,6 +8,7 @@ export default function Development() {
   const h = useHealthCheck();
   const register = useGetRequirementsRegister({ query: { retry: false } });
   const content = useGetContentRegister({ query: { retry: false } });
+  const proof = useGetProofRegister({ query: { retry: false } });
   const [search, setSearch] = useState('');
   const [contentSearch, setContentSearch] = useState('');
   const rows = useMemo(() => register.data?.requirements.filter(r =>
@@ -39,6 +40,32 @@ export default function Development() {
           </ul>
         </div>
       )}
+      <section className="mt-10" aria-labelledby="proof-title">
+        <h2 id="proof-title" className="font-display text-3xl">Release proof and UAT</h2>
+        <p className="mt-3 text-sm text-muted-foreground">These are acceptance contracts, not completed tests. Original planning windows do not automatically clear gates. Partial checks do not complete a journey or replace independent security/privacy and usability review.</p>
+        {proof.isLoading ? <Skel className="mt-4 h-32" /> : proof.isError ? <ErrorState error={proof.error} onRetry={() => proof.refetch()} /> : proof.data && <div className="mt-5 space-y-4">
+          <div className="surface p-5">
+            <h3 className="font-medium">Required separate evaluation suites</h3>
+            {proof.data.suites.map(suite => <p key={suite.id} className="mt-3 text-sm"><span className="font-mono">{suite.id}</span>: {suite.executedCases} / {suite.requiredCases} executed · {suite.accepted ? 'accepted' : 'not accepted'}</p>)}
+            <p className="mt-4 text-xs text-muted-foreground">Foundation and security-counter tests are not cases in these suites.</p>
+          </div>
+          {proof.data.gates.map(g => <details key={g.id} className="surface p-5">
+            <summary className="cursor-pointer"><span className="font-mono">{g.id}</span> · {g.phaseId} · {g.status.replaceAll('_', ' ')}</summary>
+            <p className="mt-4 text-sm"><strong>Required evidence:</strong> {g.requiredEvidence}</p>
+            <p className="mt-3 text-sm"><strong>Required approvers, not recorded approval:</strong> {g.approvers}</p>
+            <p className="mt-3 text-xs text-muted-foreground">Original planning window: {g.plannedWindow}. {g.reason}</p>
+          </details>)}
+          {proof.data.uatPackages.map(p => <details key={p.id} className="surface p-5">
+            <summary className="cursor-pointer"><span className="font-mono">{p.id}</span> · {p.title} · {p.status}</summary>
+            <p className="mt-4 text-sm">{p.requirements}</p>
+            <p className="mt-3 text-sm"><strong>Required release evidence:</strong> {p.requiredEvidence}</p>
+            <p className="mt-3 text-sm text-muted-foreground">{p.reason}</p>
+          </details>)}
+          <details className="surface p-5"><summary className="cursor-pointer font-medium">Non-waivable blockers, ownership and meaning of done</summary>
+            {proof.data.releaseControls.map(c => <div key={c.id} className="mt-5"><h3 className="text-sm font-semibold">{c.title}</h3><p className="mt-2 text-sm text-muted-foreground">{c.text}</p><p className="mt-2 font-mono text-xs">Source: {c.source}</p></div>)}
+          </details>
+        </div>}
+      </section>
       <section className="mt-10" aria-labelledby="requirements-title">
         <h2 id="requirements-title" className="font-display text-3xl">Live requirements register</h2>
         <p className="mt-3 text-sm text-muted-foreground">Receipt and implementation links are not acceptance. Partial work stays blocked until the complete criterion has evidence. This detailed register is available only in development.</p>

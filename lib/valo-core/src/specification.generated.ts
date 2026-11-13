@@ -2036,32 +2036,144 @@ export const sourceRequirements = [
 export const sourceGates = [
   {
     "id": "G0",
+    "plannedWindow": "end W2",
     "requiredEvidence": "Scope/roles and AI policy set; technical slice works; privacy/procurement issues understood; source/AI budget and risks assigned.",
     "approvers": "Product owner + technical/content leads + privacy owner."
   },
   {
     "id": "G1",
+    "plannedWindow": "end W6",
     "requiredEvidence": "Identity/tenant isolation; public/CMS foundation; 10 eligible templates and 10 entries; publisher allows valid manifests and blocks failures.",
     "approvers": "Technical lead + QA + content lead."
   },
   {
     "id": "G2",
+    "plannedWindow": "end W10",
     "requiredEvidence": "Document/checker alpha; 12 guided schemas; saved exports; evidence-based explanations/gaps; 40 editorial cases.",
     "approvers": "Product owner + engineering + content operations owner."
   },
   {
     "id": "G3",
+    "plannedWindow": "end W14",
     "requiredEvidence": "R1 journeys, safe payments, 60 customer AI cases, 80 rule scenarios and 60 editorial cases; target content eligible; privacy/support ready.",
     "approvers": "Engineering + QA + content/privacy owners."
   },
   {
     "id": "G4",
+    "plannedWindow": "end W18",
     "requiredEvidence": "Beta results; reconciled transactions; independent security assessment; accessibility; restore/correction drills; commercial decisions and current manifests.",
     "approvers": "Product owner + technical lead + security/privacy + finance/content leads."
   },
   {
     "id": "G5",
+    "plannedWindow": "W19–20",
     "requiredEvidence": "Approved build, safe migrations/rollback, live smoke tests, staffed support, healthy monitoring and no failed mandatory content gates.",
     "approvers": "Product owner + technical/privacy/security owners; AI manifests evidence content readiness."
+  }
+] as const;
+export const sourceUatPackages = [
+  {
+    "id": "UAT-01",
+    "title": "Free journey",
+    "requirements": "WEB, DOC, EDT: visitor finds a free template, saves a draft and exports it.",
+    "requiredEvidence": "Recorded mobile/desktop journey; correct output and stored revision."
+  },
+  {
+    "id": "UAT-02",
+    "title": "Paid journey",
+    "requirements": "PAY-001–009: purchase, webhook/callback race, premium grant, receipt and re-download.",
+    "requiredEvidence": "Sandbox tests plus authorised low-value live purchase/refund before public launch."
+  },
+  {
+    "id": "UAT-03",
+    "title": "Guided editing",
+    "requirements": "EDT-001–010: all 12 guided templates, long fields, tables, omissions and concurrent tabs.",
+    "requiredEvidence": "Golden sample comparison, Word/PDF opening and revision-conflict tests."
+  },
+  {
+    "id": "UAT-04",
+    "title": "AI drafting",
+    "requirements": "AI-001–009: all four tasks, invalid output, quota, timeout and injection cases.",
+    "requiredEvidence": "60-case rubric; ≥95% pass; zero critical leakage or invented legal claims."
+  },
+  {
+    "id": "UAT-05",
+    "title": "Requirements",
+    "requirements": "CMP + RUL: source-backed AI-reviewed applicability, unknowns, coverage gaps and historical/current versions.",
+    "requiredEvidence": "80-scenario expected-output suite; all critical decisions and exclusions pass."
+  },
+  {
+    "id": "UAT-06",
+    "title": "Isolation",
+    "requirements": "IAM, SEC, PRV: other-tenant identifiers, revoked sessions, support roles and private files.",
+    "requiredEvidence": "Negative test matrix across every private entity and action."
+  },
+  {
+    "id": "UAT-07",
+    "title": "Content governance",
+    "requirements": "ADM + EDP-001–012: draft/review separation, source expiry, wrong citations, failed tests, holds, withdrawal and rollback.",
+    "requiredEvidence": "Separate editorial suite of 60 cases; zero critical false releases; immutable AI/publisher evidence and visible disclosure."
+  },
+  {
+    "id": "UAT-08",
+    "title": "Operations",
+    "requirements": "OPS + NFR: environment separation, load, restore, worker crash and provider outage.",
+    "requiredEvidence": "Restore drill, reconciliation result, load report and on-call drill."
+  },
+  {
+    "id": "UAT-09",
+    "title": "Privacy",
+    "requirements": "PRV + WRK: consent, export/deletion request, backup re-delete and no raw-content logging.",
+    "requiredEvidence": "Verified processor checklist and end-to-end data-lifecycle test."
+  },
+  {
+    "id": "UAT-10",
+    "title": "Enquiry and reminders",
+    "requirements": "SRV + WRK: actual saved enquiry, consented routing, reminder opt-out and duplicate prevention.",
+    "requiredEvidence": "Delivered test email, support ticket, preference and retry records."
+  }
+] as const;
+export const sourceReleaseControls = [
+  {
+    "id": "TRD-TEST-OWNERSHIP",
+    "title": "Test layers and ownership",
+    "source": "TRD",
+    "text": "Engineers own unit, contract, integration and concurrency tests. QA owns journeys, regressions and fixture provenance. The AI pipeline proposes and challenges content/rules; the content owner monitors evidence and held items without providing legal sign-off. Technical security/privacy assessment remains separate. The product owner accepts usability, scope and operating policy."
+  },
+  {
+    "id": "TRD-RELEASE-BLOCKERS",
+    "title": "Release-blocking defects",
+    "source": "TRD",
+    "text": "Any cross-tenant exposure, incorrect entitlement grant, unverified payment unlock, uncontrolled secret exposure, silent draft overwrite, false verified legal claim, critical/high exploitable vulnerability or failed restore drill blocks R1. Cosmetic and minor usability defects require named owners and a dated fix plan; they must not disguise missing promised functionality."
+  },
+  {
+    "id": "TRD-EVIDENCE-PACK",
+    "title": "Evidence pack",
+    "source": "TRD",
+    "text": "Every Must requirement links to a ticket, code/content revision, test or review result, owner and release. Keep a traceability register in the repository and refresh it at each gate. Do not mark deferred R2/R3 work as completed R1 functionality."
+  },
+  {
+    "id": "ROADMAP-LAUNCH-BLOCKERS",
+    "title": "Non-negotiable launch blockers",
+    "source": "ROADMAP",
+    "text": "Cross-tenant leakage, incorrect entitlements, exposed secrets, silent draft loss, unsupported material legal claims, false professional-review labels, bypassed publication gates, high/critical exploitable defects, missing template rights or failed restore block launch. A polished demo or model confidence score cannot waive these conditions."
+  },
+  {
+    "id": "ROADMAP-DONE",
+    "title": "Meaning of done",
+    "source": "ROADMAP",
+    "text": "Every R1 Must item has an owner, revision and passing implementation evidence. Content also has source/rights evidence, separate AI findings, test results, public disclosure and a release manifest. Required manual security/usability checks remain. Blocked capabilities are disabled or unavailable, never presented as live."
+  },
+  {
+    "id": "ROADMAP-INDEPENDENT-CHECKS",
+    "title": "Independent security and accessibility",
+    "source": "ROADMAP",
+    "text": "Security testing follows a mapped OWASP ASVS baseline; accessibility aims at WCAG 2.2 AA with manual review as well as automated checks. Neither a vulnerability scan nor an accessibility score alone is sufficient evidence. [S19–S20]"
+  },
+  {
+    "id": "ROADMAP-SIGNOFFS",
+    "title": "Operational sign-offs and mandatory gates",
+    "source": "ROADMAP",
+    "text": "Record operational sign-offs, AI publication manifests and residual risks in the release register. The product owner may accept non-critical scope changes, but cannot waive failed mandatory evidence gates, data protection, payment integrity or truthful content status."
   }
 ] as const;

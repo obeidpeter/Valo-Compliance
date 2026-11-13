@@ -24,3 +24,4 @@ export * from "./valo-documents";
 export * from "./valo-document-revisions";
 export * from "./valo-support";
 export * from "./valo-events";
+export * from "./valo-rate-buckets";

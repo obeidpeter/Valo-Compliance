@@ -8,6 +8,13 @@
       "when": 1794589853460,
       "tag": "0000_valo_p0",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794591642138,
+      "tag": "0001_valo_rate_quotas",
+      "breakpoints": true
     }
   ]
 }

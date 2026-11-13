@@ -1,5 +1,5 @@
 import { r1Transfer } from "./requirements-r1";
-import { sourceRequirements, sourceGates } from "./specification.generated";
+import { sourceRequirements, sourceGates, sourceUatPackages, sourceReleaseControls } from "./specification.generated";
 
 export type Evidence = {
   kind: "implementation" | "test" | "source" | "approval";
@@ -44,6 +44,8 @@ const partialImplementations: Record<string, string[]> = {
   "IAM-001": ["artifacts/valo/src/App.tsx", "artifacts/api-server/src/middlewares/valo-identity.ts"],
   "IAM-002": ["artifacts/api-server/src/middlewares/valo-identity.ts"],
   "IAM-003": ["artifacts/api-server/src/lib/valo-store.ts", "artifacts/api-server/src/lib/valo-store.integration.test.ts"],
+  "SEC-003": ["artifacts/api-server/src/app.ts", "artifacts/api-server/src/middlewares/valo-identity.ts", "artifacts/api-server/src/lib/valo-http.test.ts"],
+  "SEC-005": ["artifacts/api-server/src/middlewares/valo-quota.ts", "artifacts/api-server/src/lib/valo-quota.ts", "lib/db/src/schema/valo-rate-buckets.ts", "artifacts/api-server/src/lib/valo-quota.integration.test.ts"],
   "PRO-001": ["artifacts/valo/src/screens/profile.tsx", "artifacts/api-server/src/lib/valo-validation.ts"],
   "PRO-002": ["lib/db/src/schema/valo-profiles.ts", "artifacts/api-server/src/lib/valo-store.ts"],
   "PRO-003": ["lib/db/src/schema/valo-profiles.ts"],
@@ -140,10 +142,16 @@ export function readiness() {
       { id: "editorial", requiredCases: 60, executedCases: 0, accepted: false },
     ],
     gates: sourceGates.map((g, index) => ({
-      id: `P${index}`, gateId: g.id, status: index === 0 ? "not_passed" : "blocked",
+      id: g.id, phaseId: `P${index}`, gateId: g.id, plannedWindow: g.plannedWindow,
+      status: index === 0 ? "not_passed" : "blocked",
       requiredEvidence: g.requiredEvidence, approvers: g.approvers,
       reason: "Required implementation evidence, preceding gates and operational approvals are not established.",
     })),
+    uatPackages: sourceUatPackages.map(p => ({
+      ...p, status: "blocked" as const, accepted: false, acceptanceEvidence: [],
+      reason: "Full journey execution and required release evidence have not been recorded. Partial unit/integration checks do not complete a UAT pack.",
+    })),
+    releaseControls: sourceReleaseControls,
     requirements: requirements.map(r => ({ ...r, status: requirementStatus(r) })),
     conflicts,
   };

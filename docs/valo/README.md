@@ -6,6 +6,11 @@ This is development work, not a released compliance product. Do not infer accept
 
 ## Contract intake
 
+Part 3 adds the exact UAT packs, G0–G5 criteria/approver roles and non-waivable
+release controls to the live proof register. See [measured controls and remaining
+scope](part3-proof-and-controls.md). Receipt and partial test results are not release
+acceptance.
+
 The coordinating team added the complete master brief, TRD, roadmap and Essential Business Documents extracts to the existing GitHub feature branch. A read-only, Git-blob-hash-checked import preserved them under `docs/specification/` and `docs/registers/`; import SHA-256 evidence is in `evidence/specification-import.json`. All three complete extracts have been read. Word formatting is not reproduced. All 127 formal IDs, exact body/acceptance text, source locators, dependencies and original roadmap gate criteria are now executable. Earlier quoted requirements must remain byte-consistent with that baseline; mismatch fails explicitly.
 
 All 27 supplementary document mappings and 79 regulatory source rows are preserved and traced: five direct template matches, one composite manual and 21 additions give 61 identified template types. The 19 further proposals have distinct artifact purposes compared with that inventory; they bring the identified backlog to 80, not the published catalogue. A personal conflict-of-interest declaration records an individual's disclosure, distinct from the NGO conflict-handling policy. Inventory titles, coordinating-team retrieval notes and model statements never substitute for authoritative claim evidence or rights. NGO SCUML aliases the broader SCUML topic; 79 source rows produce 78 canonical research topics, not 78 universal obligations.
