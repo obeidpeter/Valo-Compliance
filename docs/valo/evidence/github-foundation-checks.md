@@ -23,6 +23,8 @@ The synchronization must add a feature-branch commit whose parent preserves that
 
 ## CI and protection
 
-The foundation workflow runs full typechecking and executable unit tests with read-only repository permissions, without credentials, deployment steps or production data. A local successful run does not prove a GitHub Actions run succeeded.
+The prepared foundation workflow would run full typechecking and executable unit tests with read-only repository permissions, without credentials, deployment steps or production data. It is retained as inactive documentation, not an installed workflow. A local successful run does not prove a GitHub Actions run succeeded.
+
+The source-tree POST containing `.github/workflows/valo-foundation.yml` returned HTTP 404. A subsequent minimal tree POST without workflow files succeeded (201). The secondary source-control connection withheld credentials. Therefore workflow-file write authorization is the exact CI setup dependency; no workflow is active and no required checks were added.
 
 The owner reports main's saved protection rule is not enforced under the account plan. Enforcement remains **blocked**. No required check is configured before an actual check run exists, and no such configuration is applied by this change.

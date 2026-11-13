@@ -40,4 +40,6 @@ A GitHub connection was attached. An initial metadata request returned HTTP 404.
 
 Do not create a competing repository. Synchronization must preserve the initial main commit, add actual source on a feature branch and open a draft pull request without force pushes or direct main writes. Remote synchronization is not successful until the branch commit/tree and PR response are verified.
 
-The owner reports the saved main protection rule is not enforced by the account plan. Enforcement is blocked; no upgrade, transfer, visibility change or bypass is authorised. A foundation CI workflow is included; its existence is not a passing GitHub run, and no required-check settings are applied before actual checks exist.
+The owner reports the saved main protection rule is not enforced by the account plan. Enforcement is blocked; no upgrade, transfer, visibility change or bypass is authorised.
+
+Foundation CI configuration is retained as **inactive documentation** at `docs/valo/ci/valo-foundation.yml`. An upload including an active workflow failed with HTTP 404, while a minimal source-tree write succeeded. The secondary authorised source-control connection withheld credentials in this context. Workflow-file write authorization must be restored before activating CI. No GitHub checks have been claimed or made required.

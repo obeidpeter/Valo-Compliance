@@ -1,3 +1,5 @@
+# Prepared workflow. Not active: workflow-file write authorization is unavailable.
+# After authorization, install this at .github/workflows/valo-foundation.yml.
 name: Valo foundation CI
 
 on:
