@@ -1,0 +1,66 @@
+{
+  "recordedAt": "2026-11-13T20:27:40.249Z",
+  "testResults": [
+    {
+      "name": "editorialUnit",
+      "log": "generated-artifacts/valo-checks/p0-editorial-unit.log",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "editorialPrivateProof",
+      "log": "generated-artifacts/valo-checks/p0-editorial-private-proof.log",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "foundation",
+      "log": "generated-artifacts/valo-checks/p0-editorial-foundation.log",
+      "passed": 67,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "http",
+      "log": "generated-artifacts/valo-checks/p0-editorial-http.log",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "typecheck": "passed",
+  "nextProductionBuild": "passed",
+  "developmentMigration": {
+    "file": "lib/db/drizzle/0004_valo_editorial_runs.sql",
+    "transactionResult": "COMMIT",
+    "negativeConstraintsTested": true,
+    "productionDDLExecuted": false
+  },
+  "providerProof": "docs/valo/evidence/p0-editorial-provider-proof.json",
+  "formalSuites": {
+    "rulesExecuted": 0,
+    "customerAIExecuted": 0,
+    "editorialExecuted": 0
+  },
+  "signedInBrowserVerified": false,
+  "isolatedRestoreVerified": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false,
+  "r1Accepted": false,
+  "r2Unlocked": false,
+  "workerAndAppRestarted": true,
+  "mobileScreenshot": {
+    "path": "/development?view=sources",
+    "width": 390,
+    "height": 1500,
+    "manifestFailure": false,
+    "notes": "Known development HMR proxy WebSocket 502; Clerk development-key warning. Signed-in UI not verified."
+  },
+  "productionInvocationGuard": {
+    "exitCode": 1,
+    "providerCallsMade": 0,
+    "log": "generated-artifacts/valo-checks/p0-editorial-production-denial.log"
+  }
+}

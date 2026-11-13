@@ -16,11 +16,15 @@
     "queue:generate": "tsx src/scripts/queue-migration.ts generate",
     "sources:retrieve-development": "NODE_ENV=development tsx src/scripts/retrieve-sources.ts",
     "sources:retrieve-instruments": "tsx src/scripts/retrieve-instruments.ts",
+    "editorial:proof-development": "tsx src/scripts/editorial-proof.ts",
+    "test:valo-editorial": "tsx --test src/editorial/pipeline-contract.test.ts",
+    "test:valo-editorial-proof": "tsx --test src/editorial/pipeline-proof.integration.test.ts",
     "test:valo-sources": "tsx --test src/editorial/source-controls.test.ts",
     "test:valo-source-db": "tsx --test src/editorial/source-store.integration.test.ts",
     "queue:apply-development": "tsx src/scripts/queue-migration.ts apply-development"
   },
   "dependencies": {
+    "@workspace/integrations-openai-ai-server": "workspace:*",
     "@clerk/express": "^2.1.88",
     "@clerk/shared": "^4.44.1",
     "@opentelemetry/api": "1.10.0",

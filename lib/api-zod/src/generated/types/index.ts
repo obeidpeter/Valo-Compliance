@@ -26,6 +26,8 @@ export * from './documentBlock';
 export * from './documentBlockType';
 export * from './documentInput';
 export * from './documentUpdate';
+export * from './editorialRunEvidence';
+export * from './editorialRunEvidencePublication';
 export * from './expansionBoundary';
 export * from './expansionTargets';
 export * from './exportInput';

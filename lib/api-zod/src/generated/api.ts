@@ -126,6 +126,24 @@ export const GetPublicCoverageResponse = zod.object({
 
 
 export const GetSourceEvidenceResponse = zod.object({
+  "editorialRuns": zod.array(zod.object({
+  "id": zod.string(),
+  "pipelineId": zod.string(),
+  "role": zod.string(),
+  "status": zod.string(),
+  "model": zod.string(),
+  "promptVersion": zod.string(),
+  "sourceHash": zod.string(),
+  "candidateHash": zod.string().nullable(),
+  "providerResponseId": zod.string().nullable(),
+  "latencyMs": zod.number().int().nullable(),
+  "inputTokens": zod.number().int().nullable(),
+  "outputTokens": zod.number().int().nullable(),
+  "createdAt": zod.string(),
+  "publication": zod.enum(['held']),
+  "failureCode": zod.string().nullable(),
+  "modelVerdict": zod.string().nullable()
+})),
   "handoverSummary": zod.string(),
   "coordinatingSummary": zod.string(),
   "notice": zod.string(),

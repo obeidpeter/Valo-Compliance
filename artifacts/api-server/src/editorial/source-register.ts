@@ -1,12 +1,14 @@
 import { db,valoSourceSnapshots } from "@workspace/db";
 import { desc } from "drizzle-orm";
 import { finalSourceContext,allSourceLeads,coordinatingRefinement,handoverCheckpoint } from "@workspace/valo-core";
+import { editorialRunRegister } from "./run-register";
 export async function sourceEvidenceRegister(){
   const latest=await db.selectDistinctOn([valoSourceSnapshots.sourceId]).from(valoSourceSnapshots)
     .orderBy(valoSourceSnapshots.sourceId,desc(valoSourceSnapshots.attemptedAt));
   return{
     notice:"Actual retrieval is not legal currency, rights clearance, AI review or publication. Retention and roadmap periods remain unapproved planning proposals. No confidential customer data or production launch is authorised.",
     handoverSummary:handoverCheckpoint.summary,
+    editorialRuns:await editorialRunRegister(),
     coordinatingSummary:"All 27 supplied document mappings match the existing register: five direct matches, one composite manual and 21 distinct additions. All 13 conflict resolutions and 14 source observations are retained; no implementation acceptance follows. The owner confirmed the existing repository is intended; creation history, private visibility, source synchronisation and protection remain separate evidence checks.",
     references:allSourceLeads.map(lead=>{
       const row=latest.find(s=>s.sourceId===lead.id);

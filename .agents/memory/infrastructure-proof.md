@@ -25,6 +25,17 @@ caused extensive incompatible-column type errors.
 **How to apply:** Align the relevant peer context in API/database consumers rather
 than casting away ORM types or duplicating schema definitions.
 
+Do not infer AI inference compatibility from an advertised model list, an HTTP
+health response or rejection of an intentionally invalid request.
+
+**Why:** The same managed gateway returned input-validation responses but failed
+actual structured generation for one configuration; another supported
+configuration completed real drafting and separate reviews.
+
+**How to apply:** Keep task-level model/configuration evidence, including failed
+and dependency-held runs. A successful alternative does not establish why the
+original failed, and model completion does not clear content publication gates.
+
 Do not trust a schema-push process exit code as migration evidence.
 
 **Why:** A real development push logged a foreign-key failure yet exited zero.

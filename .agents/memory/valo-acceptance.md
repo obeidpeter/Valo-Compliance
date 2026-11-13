@@ -72,3 +72,14 @@ how the roadmap estimates must be interpreted.
 
 **How to apply:** Preserve the phase order and measured gates, but never turn the
 illustrative calendar or proposed staffing into committed dates, spend or approvals.
+
+Do not re-request the original source documents or call them missing before
+checking their recorded repository branch. Specification transfers add to the
+same build; they do not restart it. Continue actual P0 customer/editorial
+journeys, not only validators, registers, plans or screenshots.
+
+**Why:** The user repeated these instructions after documentation-only
+checkpoints and a reported missing-specification blocker.
+
+**How to apply:** Incorporate normal source history, preserve exact acceptance
+criteria and report executed implementation evidence separately from acceptance.

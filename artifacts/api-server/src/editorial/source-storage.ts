@@ -35,3 +35,11 @@ export async function probePrivateSource(snapshotId:string,kind:"raw"|"text",exp
   await response.body?.cancel();
   return{anonymousStatus:response.status,authorizedChecksumMatched:true,size:stored.value[0].length};
 }
+/** Internal source-evidence reader only; never mounted as a public download. */
+export async function readSourceText(snapshotId:string,expectedChecksum:string){
+  const {client,name}=sourceObject(snapshotId,"text");
+  const stored=await client.downloadAsBytes(name);
+  if(!stored.ok||stored.value[0].length>8*1024*1024||checksum(stored.value[0])!==expectedChecksum)
+    throw Error("SOURCE_STORAGE_CHECKSUM_FAILED");
+  return stored.value[0].toString("utf8");
+}

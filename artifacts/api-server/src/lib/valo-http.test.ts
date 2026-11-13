@@ -24,7 +24,9 @@ test("running development HTTP API fails closed and reports factual release stat
     assert.ok(body.retentionProposals.every(r=>!r.approved&&!r.enforced&&!r.statutoryPeriod));
     assert.equal(body.roadmapSections.length,4);
     assert.ok(body.roadmapSections.every(r=>r.status==="planning_assumption_not_accepted"));
-    assert.doesNotMatch(JSON.stringify(raw),/rawObjectKey|textObjectKey|bucketId|PRIVATE_OBJECT_DIR/);
+    assert.ok(Array.isArray(body.editorialRuns));
+    assert.ok(body.editorialRuns.every(r=>r.publication==="held"&&["draft","factual","challenge"].includes(r.role)));
+    assert.doesNotMatch(JSON.stringify(raw),/rawObjectKey|textObjectKey|bucketId|PRIVATE_OBJECT_DIR|"objectKey"|"sourceBundle"|"systemPrompt"|"paragraphs"/);
   });
   await t.test("published search excludes all held templates and private documents", async () => {
     const result = await fetch(`${base}/api/public/catalogue?q=invoice&type=template&page=1`);

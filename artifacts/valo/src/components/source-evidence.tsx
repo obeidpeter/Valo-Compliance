@@ -13,6 +13,16 @@ export function SourceEvidence(){
         <a className="mt-3 inline-block text-sm underline" href="https://github.com/obeidpeter/Valo-Compliance/pull/1" target="_blank" rel="noopener noreferrer">Open the documentation draft pull request</a>
       </div>
       <p className="mt-4 font-mono text-xs">{query.data.references.filter(r=>/^S\d{2}$/.test(r.id)).length} original leads + {query.data.references.filter(r=>r.id.startsWith('SV-')).length} distinct coordinating additions · {query.data.references.filter(r=>r.status==='retrieved_unreviewed').length} retrieved but unreviewed · 0 published</p>
+      <h3 className="mt-7 font-display text-2xl">Editorial provider runs</h3>
+      <p className="mt-3 text-sm text-muted-foreground">Separate drafting, factual and challenge calls. Successful execution is not a cleared review or publication. Source currency, rights, policy, export and isolation gates remain held. Candidate bodies stay private.</p>
+      {!query.data.editorialRuns.length?<p className="mt-3 text-sm">No persisted provider runs yet.</p>:
+        <div className="mt-4 space-y-3">{query.data.editorialRuns.map(r=><details key={r.id} className="surface p-5">
+          <summary className="cursor-pointer">{r.role} · {r.status} · publication held</summary>
+          <p className="mt-3 break-all text-sm">Run {r.id}<br/>Model {r.model}<br/>Prompt {r.promptVersion}</p>
+          <p className="mt-3 text-sm">Provider response: {r.providerResponseId??'None'}<br/>Latency: {r.latencyMs===null?'Not recorded':`${r.latencyMs} ms`}<br/>Review verdict: {r.modelVerdict??'Not applicable or unavailable'}</p>
+          <p className="mt-3 break-all font-mono text-xs">Source hash: {r.sourceHash}<br/>Candidate hash: {r.candidateHash??'Not created'}</p>
+          {r.failureCode&&<p className="mt-3 text-sm">{r.failureCode}</p>}
+        </details>)}</div>}
       <div className="mt-5 space-y-3">{query.data.references.map(r=><details key={r.id} className="surface p-5">
         <summary className="cursor-pointer"><span className="font-mono">{r.id}</span> · {r.title}<span className="mt-2 block text-xs text-muted-foreground">{r.status.replaceAll('_',' ')} · publication held</span></summary>
         <a className="mt-4 block break-all text-sm underline" href={r.url} target="_blank" rel="noopener noreferrer">Original official/source reference</a>

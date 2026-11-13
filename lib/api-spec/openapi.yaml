@@ -319,8 +319,11 @@ components:
   schemas:
     SourceEvidenceRegister:
       type: object
-      required: [notice, references, retentionProposals, roadmapSections, coordinatingSummary, handoverSummary]
+      required: [notice, references, retentionProposals, roadmapSections, coordinatingSummary, handoverSummary, editorialRuns]
       properties:
+        editorialRuns:
+          type: array
+          items: { $ref: "#/components/schemas/EditorialRunEvidence" }
         handoverSummary: { type: string }
         coordinatingSummary: { type: string }
         notice: { type: string }
@@ -333,6 +336,26 @@ components:
         roadmapSections:
           type: array
           items: { $ref: "#/components/schemas/RoadmapContext" }
+    EditorialRunEvidence:
+      type: object
+      required: [id, pipelineId, role, status, model, promptVersion, sourceHash, candidateHash, providerResponseId, latencyMs, inputTokens, outputTokens, createdAt, publication, failureCode, modelVerdict]
+      properties:
+        id: { type: string }
+        pipelineId: { type: string }
+        role: { type: string }
+        status: { type: string }
+        model: { type: string }
+        promptVersion: { type: string }
+        sourceHash: { type: string }
+        candidateHash: { type: ["string", "null"] }
+        providerResponseId: { type: ["string", "null"] }
+        latencyMs: { type: ["integer", "null"] }
+        inputTokens: { type: ["integer", "null"] }
+        outputTokens: { type: ["integer", "null"] }
+        createdAt: { type: string }
+        publication: { type: string, enum: [held] }
+        failureCode: { type: ["string", "null"] }
+        modelVerdict: { type: ["string", "null"] }
     ReferenceEvidence:
       type: object
       required: [id, title, url, category, baselineNotes, sourceLocator, status, attemptedAt, fetchedAt, httpStatus, failureCode, rawChecksum, textChecksum, rawStored, textStored, publication, aiReviewedAt, sourceCheckedAt, coordinatingNotes, titleEvidenceStatus, metadataTitle, titleWarning]

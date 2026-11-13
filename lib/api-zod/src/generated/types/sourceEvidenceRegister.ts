@@ -5,11 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { EditorialRunEvidence } from './editorialRunEvidence';
 import type { ReferenceEvidence } from './referenceEvidence';
 import type { RetentionProposal } from './retentionProposal';
 import type { RoadmapContext } from './roadmapContext';
 
 export interface SourceEvidenceRegister {
+  editorialRuns: EditorialRunEvidence[];
   handoverSummary: string;
   coordinatingSummary: string;
   notice: string;

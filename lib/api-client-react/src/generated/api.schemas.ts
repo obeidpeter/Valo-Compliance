@@ -5,6 +5,39 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type EditorialRunEvidencePublication = typeof EditorialRunEvidencePublication[keyof typeof EditorialRunEvidencePublication];
+
+
+export const EditorialRunEvidencePublication = {
+  held: 'held',
+} as const;
+
+export interface EditorialRunEvidence {
+  id: string;
+  pipelineId: string;
+  role: string;
+  status: string;
+  model: string;
+  promptVersion: string;
+  sourceHash: string;
+  /** @nullable */
+  candidateHash: string | null;
+  /** @nullable */
+  providerResponseId: string | null;
+  /** @nullable */
+  latencyMs: number | null;
+  /** @nullable */
+  inputTokens: number | null;
+  /** @nullable */
+  outputTokens: number | null;
+  createdAt: string;
+  publication: EditorialRunEvidencePublication;
+  /** @nullable */
+  failureCode: string | null;
+  /** @nullable */
+  modelVerdict: string | null;
+}
+
 export type ReferenceEvidencePublication = typeof ReferenceEvidencePublication[keyof typeof ReferenceEvidencePublication];
 
 
@@ -67,6 +100,7 @@ export interface RoadmapContext {
 }
 
 export interface SourceEvidenceRegister {
+  editorialRuns: EditorialRunEvidence[];
   handoverSummary: string;
   coordinatingSummary: string;
   notice: string;
