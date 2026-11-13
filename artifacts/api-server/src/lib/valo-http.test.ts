@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { GetSourceEvidenceResponse } from "@workspace/api-zod";
 
 test("running development HTTP API fails closed and reports factual release status", {
   skip: process.env.VALO_RUN_HTTP_TESTS !== "synthetic-development-only",
@@ -10,20 +11,20 @@ test("running development HTTP API fails closed and reports factual release stat
   await t.test("source references report actual snapshots, not baseline approval or private storage locators",async()=>{
     const response=await fetch(`${base}/api/development/source-evidence`);
     assert.equal(response.status,200);assert.match(response.headers.get("cache-control")??"",/no-store/);
-    const body=await response.json() as {
-      references:{id:string;publication:string;aiReviewedAt:null;sourceCheckedAt:null;status:string;attemptedAt:string|null}[];
-      retentionProposals:{approved:boolean;enforced:boolean;statutoryPeriod:boolean}[];
-      roadmapSections:{id:string;status:string}[];
-    };
+    const raw=await response.json();
+    const body=GetSourceEvidenceResponse.parse(raw);
     assert.deepEqual(body.references.filter(r=>/^S\d{2}$/.test(r.id)).map(r=>r.id),Array.from({length:24},(_,i)=>`S${String(i+1).padStart(2,"0")}`));
     assert.equal(body.references.filter(r=>r.id.startsWith("SV-")).length,4);
+    assert.match(body.handoverSummary,/871899483093363ec69d765e2d16fa1d88e0836e/);
+    assert.match(body.handoverSummary,/local application branch/);
+    assert.match(body.handoverSummary,/not application-source upload/);
     assert.ok(body.references.every(r=>r.publication==="held"&&r.aiReviewedAt===null&&r.sourceCheckedAt===null));
     assert.ok(body.references.filter(r=>/^S\d{2}$/.test(r.id)).every(r=>r.attemptedAt!==null&&r.status!=="not_attempted"));
     assert.equal(body.retentionProposals.length,7);
     assert.ok(body.retentionProposals.every(r=>!r.approved&&!r.enforced&&!r.statutoryPeriod));
     assert.equal(body.roadmapSections.length,4);
     assert.ok(body.roadmapSections.every(r=>r.status==="planning_assumption_not_accepted"));
-    assert.doesNotMatch(JSON.stringify(body),/rawObjectKey|textObjectKey|bucketId|PRIVATE_OBJECT_DIR/);
+    assert.doesNotMatch(JSON.stringify(raw),/rawObjectKey|textObjectKey|bucketId|PRIVATE_OBJECT_DIR/);
   });
   await t.test("published search excludes all held templates and private documents", async () => {
     const result = await fetch(`${base}/api/public/catalogue?q=invoice&type=template&page=1`);

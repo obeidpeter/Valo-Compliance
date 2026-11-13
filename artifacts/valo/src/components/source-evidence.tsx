@@ -7,6 +7,11 @@ export function SourceEvidence(){
     {query.isLoading?<Skel className="mt-5 h-40"/>:query.isError?<ErrorState error={query.error} onRetry={()=>query.refetch()}/>:query.data&&<>
       <p className="mt-4 text-sm text-muted-foreground">{query.data.notice}</p>
       <p className="mt-4 text-sm text-muted-foreground">{query.data.coordinatingSummary}</p>
+      <div className="surface mt-5 p-5">
+        <h3 className="font-medium">Documentation handover — preserved in local history</h3>
+        <p className="mt-3 break-words text-sm text-muted-foreground">{query.data.handoverSummary}</p>
+        <a className="mt-3 inline-block text-sm underline" href="https://github.com/obeidpeter/Valo-Compliance/pull/1" target="_blank" rel="noopener noreferrer">Open the documentation draft pull request</a>
+      </div>
       <p className="mt-4 font-mono text-xs">{query.data.references.filter(r=>/^S\d{2}$/.test(r.id)).length} original leads + {query.data.references.filter(r=>r.id.startsWith('SV-')).length} distinct coordinating additions · {query.data.references.filter(r=>r.status==='retrieved_unreviewed').length} retrieved but unreviewed · 0 published</p>
       <div className="mt-5 space-y-3">{query.data.references.map(r=><details key={r.id} className="surface p-5">
         <summary className="cursor-pointer"><span className="font-mono">{r.id}</span> · {r.title}<span className="mt-2 block text-xs text-muted-foreground">{r.status.replaceAll('_',' ')} · publication held</span></summary>

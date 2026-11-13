@@ -126,6 +126,7 @@ export const GetPublicCoverageResponse = zod.object({
 
 
 export const GetSourceEvidenceResponse = zod.object({
+  "handoverSummary": zod.string(),
   "coordinatingSummary": zod.string(),
   "notice": zod.string(),
   "references": zod.array(zod.object({

@@ -319,8 +319,9 @@ components:
   schemas:
     SourceEvidenceRegister:
       type: object
-      required: [notice, references, retentionProposals, roadmapSections, coordinatingSummary]
+      required: [notice, references, retentionProposals, roadmapSections, coordinatingSummary, handoverSummary]
       properties:
+        handoverSummary: { type: string }
         coordinatingSummary: { type: string }
         notice: { type: string }
         references:

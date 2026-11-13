@@ -52,6 +52,17 @@ check.
 **How to apply:** Do not ask the identity question again solely because historical
 creation reports conflict. Verify privacy and actual writes separately.
 
+Preserve the complete master prompt, three original document extracts and
+requirements/content/conflict/source registers as a version-controlled handover
+baseline. Incorporate its normal Git history; do not force-push or replace it.
+
+**Why:** The user explicitly requested a persistent handover checkpoint.
+
+**How to apply:** Use `docs/registers/handover-checkpoint.json` for the exact
+baseline and evidence pointers. Keep documentation incorporation separate from
+application-source upload, remote CI and release acceptance. Do not treat a
+reported private repository or project-title change as verified without read-back.
+
 The master execution prompt authorises actual engineering despite earlier
 document-only language. Human staffing/week estimates are planning assumptions
 for this AI-agent build; do not invent budgets or dates.

@@ -8,8 +8,9 @@
     "./schema": "./src/schema/index.ts"
   },
   "scripts": {
-    "push": "drizzle-kit push --config ./drizzle.config.ts",
-    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts"
+    "push": "node ./scripts/schema-push.mjs",
+    "push-force": "node ./scripts/schema-push.mjs --force",
+    "test:schema-guard": "node --test ./scripts/schema-push.test.mjs"
   },
   "dependencies": {
     "@opentelemetry/api": "1.10.0",

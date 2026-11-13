@@ -1,7 +1,9 @@
 # Valo Compliance — Valo Platform
 
-Latest increment: coordinating findings reconciled and larger official PDF
-ingestion tested. See [the current evidence and limits](docs/valo/coordinating-refinement.md).
+Latest increment: the documentation checkpoint was merged with normal history,
+and development schema changes now fail closed on reported SQL errors. See
+[the checkpoint and executed evidence](docs/valo/handover-checkpoint.md).
+The previous [official PDF ingestion evidence](docs/valo/coordinating-refinement.md) remains retained.
 The original 24 references remain intact, with four distinct additional source
 leads. Nineteen sources now have privately retained raw/text snapshots, including
 the 27,677,259-byte NRS Act and the CAC Gazette PDF. None is approved, AI reviewed
@@ -50,6 +52,7 @@ pnpm run typecheck
 pnpm --filter @workspace/scripts test:valo
 pnpm --filter @workspace/scripts valo:readiness
 pnpm --filter @workspace/api-server test:valo
+pnpm --filter @workspace/db test:schema-guard
 # Development database only; creates and removes UUID-scoped synthetic test records:
 VALO_RUN_DB_TESTS=synthetic-development-only pnpm --filter @workspace/api-server test:valo-db
 # Running Replit development preview only, anonymous safety/status checks:
@@ -84,3 +87,10 @@ The documentation checkpoint is commit `871899483093363ec69d765e2d16fa1d88e0836e
 **Main-protection enforcement remains unverified/blocked.** The handover reports an unenforced saved policy under the account plan; it is not evidence of protected main. Historical CI records are retained, but they do not prove checks exist or pass on this checkpoint. Current application-source synchronization and remote application CI have not been verified. Do not upgrade, transfer, make public, force-push, delete history or bypass review.
 
 CI check names must only be added as requirements after actual checks exist. Even then, account-plan restrictions may prevent enforcement. No protection setting or required-check configuration has been changed. Foundation CI is not evidence of P0 acceptance.
+
+Development schema changes now use a fail-closed wrapper. It rejects production,
+unacknowledged changes and force arguments; SQL errors cannot become success
+merely because Drizzle exits zero. A clean command must also pass non-skipped
+application database postcondition tests. See [schema safety](docs/valo/schema-safety.md).
+The historical partial migration, production schema/queue grants and restore
+remain unaccepted.

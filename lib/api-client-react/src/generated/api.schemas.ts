@@ -67,6 +67,7 @@ export interface RoadmapContext {
 }
 
 export interface SourceEvidenceRegister {
+  handoverSummary: string;
   coordinatingSummary: string;
   notice: string;
   references: ReferenceEvidence[];
