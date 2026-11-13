@@ -1,0 +1,20 @@
+{
+  "repository": "obeidpeter/Valo-Compliance",
+  "visibility": "private",
+  "featureBranch": "feature/valo-p0-foundation",
+  "initialMainCommit": "650e60d855da5fab61b98f3ec7d89c4c29c7fc57",
+  "verifiedSourceSnapshotCommit": "7307b6c7125dccb75b90a862eee2ca6adc92cb18",
+  "snapshotFileCount": 138,
+  "verification": "Every remote blob SHA matched the local tracked snapshot; main was unchanged and feature ref was verified.",
+  "draftPullRequest": "https://github.com/obeidpeter/Valo-Compliance/pull/2",
+  "draftVerified": true,
+  "synchronizationMethod": "Authorized GitHub API; incremental tree creation, child commit of original main, new feature ref. No force push or main update.",
+  "localSourceHistory": "Retained in the Replit Git repository.",
+  "ciStatus": "blocked_workflow_write_authorization",
+  "ciEvidence": "A targeted tree creation containing only the prepared workflow, based on the synchronized feature commit, returned HTTP 404. No workflow commit/ref update occurred. Inactive CI configuration is preserved under docs/valo/ci.",
+  "githubCiExecuted": false,
+  "requiredChecksConfigured": false,
+  "branchProtectionEnforced": false,
+  "branchProtectionBasis": "Owner reported saved private-repository protection is not enforced under the account plan.",
+  "applicationAcceptance": "P0 unpassed; R1 not accepted; R2 locked."
+}

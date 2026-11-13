@@ -1,1 +1,2 @@
 - [Valo acceptance constraints](valo-acceptance.md) — R1 gates precede R2; evidence, not inventory titles or model verdicts, determines acceptance.
+- [GitHub write permissions](github-write-permissions.md) — metadata push rights do not prove connector permission to activate workflow files.
