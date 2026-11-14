@@ -153,3 +153,16 @@ test("fallback does not admit tools, multiple completions or streaming",()=>{
     const i=contextInput("nontext");assert.throws(()=>reserveBudget(baseline(),contextAuthority,{...i,request:{...i.request,...extra}}),/TEXT_ONLY/);
   }
 });
+
+
+test("a hold installed after pair reservation blocks the reserved sibling",()=>{
+  const f=contextInput("reserved-f","publication"),c={...contextInput("reserved-c","publication"),
+    request:{...input().request,messages:[{role:"system",content:"independent challenge"}]}};
+  let s=reserveReviewPair(baseline(),contextAuthority,f,c).state;
+  s=transitionBudget(s,f.runKey,"dispatch");
+  s=settleBudget(s,f.runKey,{input:400001,output:1,responseId:"bad-provider-bound",resultRef:"held",freshUntil:200});
+  assert.equal(s.entries[1]!.status,"reserved");
+  assert.throws(()=>transitionBudget(s,c.runKey,"dispatch"),/UNRECONCILED/);
+  for(const hold of[{suspended:true},{priorUseReconciled:false},{unboundedPrior:["new-liability"]}])
+    assert.throws(()=>transitionBudget({...reserveReviewPair(baseline(),contextAuthority,f,c).state,...hold},c.runKey,"dispatch"),/UNRECONCILED/);
+});

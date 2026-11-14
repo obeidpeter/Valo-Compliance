@@ -1,0 +1,36 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {prepareFiniteAllocationPackage,allocationPackageId,validateAllocationPackage,assertWorkPackageMembership} from "./inference-allocation-package";
+import {additionalInferenceAllocation,requestDigest} from "./inference-budget";
+import type {FiniteWork} from "./inference-batch-dispatch";
+const work=():FiniteWork=>({key:"controlled-factual",lane:"publication",role:"factual",pair:"controlled-pair",
+  candidateHash:"a".repeat(64),caseHash:"b".repeat(64),sourceHashes:[],
+  request:{model:"gpt-5.4-mini",max_completion_tokens:8192,messages:[{role:"user",content:"controlled review"}]},
+  bindings:{candidateVersionId:"11111111-1111-4111-8111-111111111111",corpus:null,caseId:null,sourceFiles:[],
+    operationalPlan:{id:"22222222-2222-4222-8222-222222222222",hash:"c".repeat(64),extension:"json"}}});
+test("package freezes actual inventory and the original three case rosters without approving them",async()=>{
+  const pkg=await prepareFiniteAllocationPackage();validateAllocationPackage(pkg);
+  assert.ok(pkg.contentIds.includes("TPL-07"));assert.deepEqual(pkg.corpora.map(c=>c.cases.length),[60,80,60]);
+  assert.deepEqual(pkg.allocation,additionalInferenceAllocation);assert.equal(pkg.sourceFiles.length,5);
+  assert.equal(allocationPackageId(pkg),`finite-package:${requestDigest(pkg)}`);
+  assert.deepEqual(pkg.supportedPreparers,["operational-template-pair-v1"]);
+  assert.equal("approved" in pkg,false);
+});
+test("delegated membership cannot broaden the content inventory or enable unsupported preparers",async()=>{
+  const pkg=await prepareFiniteAllocationPackage(),w=work();
+  assert.doesNotThrow(()=>assertWorkPackageMembership(w,pkg,"TPL-07"));
+  assert.throws(()=>assertWorkPackageMembership(w,pkg,"unapproved-content"),/OUTSIDE_PACKAGE/);
+  assert.throws(()=>assertWorkPackageMembership(w,pkg,"TPL-01"),/PREPARER_UNAVAILABLE/);
+  const customer={...w,lane:"customer" as const,role:"customer" as const,pair:null,
+    caseHash:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.hash,
+    bindings:{...w.bindings,corpus:"customer-ai" as const,caseId:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.id}};
+  assert.throws(()=>assertWorkPackageMembership(customer,pkg,null),/PREPARER_UNAVAILABLE/);
+  customer.caseHash="f".repeat(64);assert.throws(()=>assertWorkPackageMembership(customer,pkg,null),/OUTSIDE_PACKAGE/);
+});
+test("package allocation, lane ceilings and allowed roles are immutable policy decisions",async()=>{
+  for(const edit of[(p:any)=>{p.allocation.id="new-counter";},(p:any)=>{p.allocation.capNanoUsd="60000000000";},
+    (p:any)=>{p.laneAttemptLimits.publication=999;},(p:any)=>{p.allowedRoles.push("draft");},
+    (p:any)=>{p.sourceFiles[0].path="../secret";}]){
+    const pkg=await prepareFiniteAllocationPackage();edit(pkg);assert.throws(()=>validateAllocationPackage(pkg),/INVALID/);
+  }
+});

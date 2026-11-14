@@ -8,10 +8,10 @@ import { organizeCustomerDraft } from "./valo-customer-ai-model";
 import { workspaceTransaction,workspaceEvent,type WorkspaceTx } from "./valo-assessments";
 import { createDocumentInTransaction,getDocument,ValoProblem,type WorkspaceActor } from "./valo-store";
 import { documentInput } from "./valo-validation";
-import {inferenceProposal} from "./inference-budget";
+import {hasApprovedInferenceContext} from "./managed-inference";
 const workspaceDailyLimit=30,globalDailyLimit=120;
 async function enabled(tx:WorkspaceTx,workspaceId:string){
-  if(!inferenceProposal.enabled)return false;
+  if(!hasApprovedInferenceContext("customer"))return false;
   // No customer or model input can enable this; production remains off even if a development switch is copied.
   if(process.env.NODE_ENV!=="development"||process.env.REPLIT_DEPLOYMENT)return false;
   // A workspace may be additionally paused; it can never override a global or
@@ -38,7 +38,7 @@ export async function customerAIUsage(actor:WorkspaceActor){
     const b=await budget(tx,actor.workspaceId);
     return GetCustomerAIUsageResponse.parse({enabled:await enabled(tx,actor.workspaceId),workspaceUsed:b.workspaceUsed,
       workspaceDailyLimit,minuteLimit:5,globalAvailable:b.globalUsed<globalDailyLimit,manualFallbackAvailable:true,
-      policyNotice:"Managed inference spending is held: the proposed $30 ceiling is disabled, full-request token bounds and prior charges remain unverified. Existing daily ceilings are unchanged. The independent manual editor does not require AI consent or AI quota. Provider retention and production use are not approved."});
+      policyNotice:"AI requires an explicitly approved finite development work item and available shared budget. Historical unknown charges are retained separately from any approved additional allowance. Existing daily ceilings and the independent manual editor are unchanged. Provider retention and production use are not approved."});
   });
 }
 export async function createCustomerAIDraft(actor:WorkspaceActor,raw:unknown,adapter=organizeCustomerDraft){
@@ -65,7 +65,7 @@ export async function createCustomerAIDraft(actor:WorkspaceActor,raw:unknown,ada
     const[row]=await tx.insert(valoAIDrafts).values({id,workspaceId:actor.workspaceId,actorId:actor.identityId,
       idempotencyKey,inputHash,task:input.task,status,promptVersion:`${customerPromptVersion}/${customerNoticeVersion}`,
       budgetReserved:canCall,preview,providerRuns:[],failureCode:canCall?null:status==="manual_fallback"?
-        (!inferenceProposal.enabled?"AI_MANAGED_BUDGET_HELD":"AI_DISABLED_OR_DAILY_QUOTA"):null}).returning();
+        (!hasApprovedInferenceContext("customer")?"AI_MANAGED_BUDGET_HELD":"AI_DISABLED_OR_DAILY_QUOTA"):null}).returning();
     await workspaceEvent(tx,actor,"customer_ai.preview_created",id);
     return{row:row!,call:canCall};
   });
@@ -128,3 +128,4 @@ export async function acceptCustomerAIDraft(actor:WorkspaceActor,id:string,raw:u
   });
   return getDocument(actor,documentId);
 }
+

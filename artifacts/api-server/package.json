@@ -41,7 +41,8 @@
     "test:valo-customer-journey": "tsx src/scripts/p0-customer-journey.ts",
     "test:valo-sources": "tsx --test src/editorial/source-controls.test.ts src/editorial/business-name-evidence.test.ts",
     "test:valo-source-db": "tsx --test src/editorial/source-store.integration.test.ts",
-    "queue:apply-development": "tsx src/scripts/queue-migration.ts apply-development"
+    "queue:apply-development": "tsx src/scripts/queue-migration.ts apply-development",
+    "test:valo-finite-entry": "node --experimental-test-module-mocks --import tsx --test src/lib/inference-manifest.test.ts src/lib/inference-allocation-package.test.ts src/lib/inference-history-reconciliation.test.ts src/lib/managed-inference-entry.test.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",
