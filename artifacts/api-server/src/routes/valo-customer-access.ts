@@ -10,6 +10,10 @@ import { saveAccessSupport,customerAccount,requestPrivacy,workspaceDataExport,st
 import {financeRefunds,decideRefund,reconcileFinanceRefund,assertFinanceActor} from "../lib/valo-refunds";
 import {ValoProblem} from "../lib/valo-problem";
 import {GetFinanceRefundsResponse,DecideFinanceRefundResponse,ReconcileFinanceRefundResponse,ReconcileFinanceRefundBody} from "@workspace/api-zod";
+import {ListPrivacyCasesResponse,GetPrivacyCaseResponse,VerifyPrivacyCaseResponse,CancelPrivacyCaseResponse,
+  ListStaffPrivacyCasesResponse,ActOnStaffPrivacyCaseResponse} from "@workspace/api-zod";
+import {listPrivacyCases,customerPrivacyDetail,confirmPrivacyCase,listStaffPrivacyCases} from "../lib/valo-privacy";
+import {processPrivacyAction,privacyPreparedResult} from "../lib/valo-privacy-processing";
 export const publicAccessRouter=Router();
 publicAccessRouter.post("/public/access-support",sameOriginMutation,async(req,res)=>{
   res.set("Cache-Control","private, no-store");
@@ -26,6 +30,24 @@ customerAccessRouter.get("/workspace/data-export",async(_req,res)=>{
   res.set({"Cache-Control":"private, no-store","Content-Disposition":'attachment; filename="valo-workspace-data.json"',
     "X-Content-Type-Options":"nosniff"});
   res.json(WorkspaceDataExport.parse(await workspaceDataExport(res.locals.valoActor)));
+});
+customerAccessRouter.use("/workspace/privacy-cases",(_req,res,next)=>{res.set("Cache-Control","private, no-store");next();});
+customerAccessRouter.get("/workspace/privacy-cases",async(_req,res)=>{
+  res.json(ListPrivacyCasesResponse.parse(await listPrivacyCases(res.locals.valoActor)));
+});
+customerAccessRouter.get("/workspace/privacy-cases/:id",async(req,res)=>{
+  res.json(GetPrivacyCaseResponse.parse(await customerPrivacyDetail(res.locals.valoActor,z.string().uuid().parse(req.params.id))));
+});
+customerAccessRouter.post("/workspace/privacy-cases/:id/verify",sameOriginMutation,async(req,res)=>{
+  res.json(VerifyPrivacyCaseResponse.parse(await confirmPrivacyCase(res.locals.valoActor,z.string().uuid().parse(req.params.id),req.body)));
+});
+customerAccessRouter.post("/workspace/privacy-cases/:id/cancel",sameOriginMutation,async(req,res)=>{
+  res.json(CancelPrivacyCaseResponse.parse(await confirmPrivacyCase(res.locals.valoActor,z.string().uuid().parse(req.params.id),req.body,true)));
+});
+customerAccessRouter.get("/workspace/privacy-cases/:id/result",async(req,res)=>{
+  const id=z.string().uuid().parse(req.params.id);
+  res.set({"Content-Disposition":`attachment; filename="valo-privacy-${id}.json"`,"X-Content-Type-Options":"nosniff"});
+  res.json(await privacyPreparedResult(res.locals.valoActor,id));
 });
 export const staffOperationsRouter=Router();
 async function financeIdentity(req:Request){
@@ -48,6 +70,14 @@ staffOperationsRouter.post("/admin/refunds/:id/decision",sameOriginMutation,asyn
 staffOperationsRouter.post("/admin/refunds/:id/reconcile",sameOriginMutation,async(req,res)=>{
   ReconcileFinanceRefundBody.strict().parse(req.body);
   res.json(ReconcileFinanceRefundResponse.parse(await reconcileFinanceRefund(await financeIdentity(req),z.string().uuid().parse(req.params.id))));
+});
+staffOperationsRouter.use("/admin/privacy-cases",(_req,res,next)=>{res.set("Cache-Control","private, no-store");next();});
+staffOperationsRouter.get("/admin/privacy-cases",async(req,res)=>{
+  const page=z.coerce.number().int().min(1).max(100000).default(1).parse(req.query.page);
+  res.json(ListStaffPrivacyCasesResponse.parse(await listStaffPrivacyCases(await financeIdentity(req),page)));
+});
+staffOperationsRouter.post("/admin/privacy-cases/:id/action",sameOriginMutation,async(req,res)=>{
+  res.json(ActOnStaffPrivacyCaseResponse.parse(await processPrivacyAction(await financeIdentity(req),z.string().uuid().parse(req.params.id),req.body)));
 });
 staffOperationsRouter.get("/admin/operations",async(req,res)=>{
   res.set("Cache-Control","private, no-store");

@@ -12,6 +12,8 @@ import { WorkspaceNav } from '@/components/workspace-nav';
 import { EmptyState, ErrorState, Notice, Skel } from '@/components/states';
 import { describeError, formatDate } from '@/lib/api';
 import { PurchaseHistoryPage } from './purchase-history';
+import {PrivacyCases} from "@/components/privacy-cases";
+import {getListPrivacyCasesQueryKey} from "@workspace/api-client-react";
 
 export function AccountPage() {
   return (
@@ -42,7 +44,10 @@ const KINDS: { v: PrivacyRequestInputKind; l: string; d: string }[] = [
 export function PrivacyPage() {
   const qc = useQueryClient();
   const account = useGetCustomerAccount({ query: { queryKey: getGetCustomerAccountQueryKey(), refetchOnWindowFocus: true } });
-  const req = useRequestCustomerPrivacy({ mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: getGetCustomerAccountQueryKey() }) } });
+  const req = useRequestCustomerPrivacy({ mutation: { onSuccess: async() => {
+    await Promise.all([qc.invalidateQueries({queryKey:getGetCustomerAccountQueryKey()}),qc.invalidateQueries({queryKey:getListPrivacyCasesQueryKey()})]);
+  } } });
+  const[idempotencyKey,setIdempotencyKey]=useState(()=>crypto.randomUUID());
   const [kind, setKind] = useState<PrivacyRequestInputKind>('correction');
   const [message, setMessage] = useState('');
   const [ack, setAckChecked] = useState(false);
@@ -55,8 +60,8 @@ export function PrivacyPage() {
   function submit(e: FormEvent) {
     e.preventDefault(); setTouched(true);
     if (msgErr || !ack || req.isPending) return;
-    req.mutate({ data: { kind, message: message.trim(), acknowledgement: true } }, {
-      onSuccess: (r) => { setSaved(r); setMessage(''); setAckChecked(false); setTouched(false); },
+    req.mutate({ data: { kind, message: message.trim(), acknowledgement: true,idempotencyKey } }, {
+      onSuccess: (r) => { setSaved(r); setMessage(''); setAckChecked(false); setTouched(false);setIdempotencyKey(crypto.randomUUID()); },
     });
   }
 
@@ -134,8 +139,10 @@ export function PrivacyPage() {
         </section>
       </div>
 
+      <PrivacyCases/>
       <section className="mt-10">
-        <h2 className="font-display text-2xl">Your saved requests</h2>
+        <h2 className="font-display text-2xl">Support references</h2>
+        <p className="mt-2 text-sm text-muted-foreground">These are saved support acknowledgements, not privacy-fulfilment outcomes. New requests have processing history and results above; older support-only requests still require intake.</p>
         <div className="mt-4">
           {account.isLoading ? <Skel className="h-24" /> : account.isError ? <ErrorState error={account.error} onRetry={() => account.refetch()} /> : account.data && account.data.privacyRequests.length ? (
             <ul className="divide-y divide-border rounded-2xl border border-border bg-card">

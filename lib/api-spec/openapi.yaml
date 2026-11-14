@@ -790,6 +790,111 @@ paths:
           content:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/ReminderRecord" } }
+  /workspace/privacy-cases:
+    get:
+      operationId: listPrivacyCases
+      responses:
+        "200":
+          description: Owner-scoped requests with actual processing state, not assumed fulfilment
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/PrivacyCase" } }
+        "401": { $ref: "#/components/responses/AuthError" }
+  /workspace/privacy-cases/{id}:
+    get:
+      operationId: getPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Request and its audited processing steps
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "404": { $ref: "#/components/responses/AuthError" }
+  /workspace/privacy-cases/{id}/verify:
+    post:
+      operationId: verifyPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyCaseConfirmation" }
+      responses:
+        "200":
+          description: Ownership verified against the active managed identity and workspace; no fulfilment implied
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+  /workspace/privacy-cases/{id}/cancel:
+    post:
+      operationId: cancelPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyCaseConfirmation" }
+      responses:
+        "200":
+          description: A not-yet-destructive request was cancelled
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+  /workspace/privacy-cases/{id}/result:
+    get:
+      operationId: downloadPrivacyCaseResult
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Private prepared result, with its exact included systems and remaining exclusions
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        "404": { $ref: "#/components/responses/AuthError" }
+  /admin/privacy-cases:
+    get:
+      operationId: listStaffPrivacyCases
+      parameters:
+        - { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
+      responses:
+        "200":
+          description: Privacy-role and fresh-MFA gated queue
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, page, total, pageSize]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/PrivacyCase" } }
+                  page: { type: integer }
+                  total: { type: integer }
+                  pageSize: { type: integer }
+        "403": { $ref: "#/components/responses/AuthError" }
+  /admin/privacy-cases/{id}/action:
+    post:
+      operationId: actOnStaffPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyStaffAction" }
+      responses:
+        "200":
+          description: Audited permitted action; requests and pending provider steps are never reported as confirmed outcomes
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
 components:
   responses:
     WriteLimit:
@@ -812,6 +917,17 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ApiProblem" }
+    ConflictError:
+      description: The request version or processing state changed; reload before retrying
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error: { type: string }
+              currentRevision: { type: integer }
+              requestId: { type: string }
     AuthError:
       description: Validation, access or concurrency error
       content:
@@ -867,6 +983,66 @@ components:
         kind: { type: string, enum: [correction, export, deletion] }
         message: { type: string, minLength: 10, maxLength: 1500 }
         acknowledgement: { type: boolean, enum: [true] }
+        idempotencyKey: { type: string, format: uuid }
+    PrivacyCaseConfirmation:
+      type: object
+      additionalProperties: false
+      required: [expectedVersion, acknowledgement]
+      properties:
+        expectedVersion: { type: integer, minimum: 1 }
+        acknowledgement: { type: boolean, enum: [true] }
+    PrivacyCase:
+      type: object
+      required: [id, workspaceId, reference, kind, message, status, version, assigned, verifiedAt, resultAvailable, resultScope, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        workspaceId: { type: string, format: uuid }
+        reference: { type: string }
+        kind: { type: string, enum: [correction, export, deletion] }
+        message: { type: string }
+        status: { type: string, enum: [awaiting_verification, verified, assigned, in_progress, needs_information, held, partially_fulfilled, fulfilled, rejected, cancelled, failed] }
+        version: { type: integer }
+        assigned: { type: boolean }
+        verifiedAt: { type: string, nullable: true }
+        resultAvailable: { type: boolean }
+        resultScope: { type: string }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+    PrivacyCaseDetail:
+      type: object
+      required: [request, events, steps]
+      properties:
+        request: { $ref: "#/components/schemas/PrivacyCase" }
+        events:
+          type: array
+          items:
+            type: object
+            required: [sequence, action, actorType, reason, createdAt]
+            properties:
+              sequence: { type: integer }
+              action: { type: string }
+              actorType: { type: string, enum: [customer, staff, worker] }
+              reason: { type: string }
+              createdAt: { type: string }
+        steps:
+          type: array
+          items:
+            type: object
+            required: [system, status, detail]
+            properties:
+              system: { type: string }
+              status: { type: string, enum: [pending, running, confirmed, held, failed, not_applicable] }
+              detail: { type: string }
+    PrivacyStaffAction:
+      type: object
+      additionalProperties: false
+      required: [expectedVersion, action, reason]
+      properties:
+        expectedVersion: { type: integer, minimum: 1 }
+        action: { type: string, enum: [claim, request_information, hold, release_hold, reject, prepare_export, record_correction, start_erasure, resume_erasure] }
+        reason: { type: string, minLength: 10, maxLength: 1000 }
+        profileVersionId: { type: string, format: uuid }
+        acknowledgement: { type: boolean }
     CustomerAccount:
       type: object
       required: [workspaceId, privacyRequests]

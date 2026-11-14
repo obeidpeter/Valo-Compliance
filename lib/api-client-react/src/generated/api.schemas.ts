@@ -89,6 +89,125 @@ export interface PrivacyRequestInput {
      */
   message: string;
   acknowledgement: true;
+  idempotencyKey?: string;
+}
+
+export interface PrivacyCaseConfirmation {
+  /** @minimum 1 */
+  expectedVersion: number;
+  acknowledgement: true;
+}
+
+export type PrivacyCaseKind = typeof PrivacyCaseKind[keyof typeof PrivacyCaseKind];
+
+
+export const PrivacyCaseKind = {
+  correction: 'correction',
+  export: 'export',
+  deletion: 'deletion',
+} as const;
+
+export type PrivacyCaseStatus = typeof PrivacyCaseStatus[keyof typeof PrivacyCaseStatus];
+
+
+export const PrivacyCaseStatus = {
+  awaiting_verification: 'awaiting_verification',
+  verified: 'verified',
+  assigned: 'assigned',
+  in_progress: 'in_progress',
+  needs_information: 'needs_information',
+  held: 'held',
+  partially_fulfilled: 'partially_fulfilled',
+  fulfilled: 'fulfilled',
+  rejected: 'rejected',
+  cancelled: 'cancelled',
+  failed: 'failed',
+} as const;
+
+export interface PrivacyCase {
+  id: string;
+  workspaceId: string;
+  reference: string;
+  kind: PrivacyCaseKind;
+  message: string;
+  status: PrivacyCaseStatus;
+  version: number;
+  assigned: boolean;
+  /** @nullable */
+  verifiedAt: string | null;
+  resultAvailable: boolean;
+  resultScope: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PrivacyCaseDetailEventsItemActorType = typeof PrivacyCaseDetailEventsItemActorType[keyof typeof PrivacyCaseDetailEventsItemActorType];
+
+
+export const PrivacyCaseDetailEventsItemActorType = {
+  customer: 'customer',
+  staff: 'staff',
+  worker: 'worker',
+} as const;
+
+export type PrivacyCaseDetailEventsItem = {
+  sequence: number;
+  action: string;
+  actorType: PrivacyCaseDetailEventsItemActorType;
+  reason: string;
+  createdAt: string;
+};
+
+export type PrivacyCaseDetailStepsItemStatus = typeof PrivacyCaseDetailStepsItemStatus[keyof typeof PrivacyCaseDetailStepsItemStatus];
+
+
+export const PrivacyCaseDetailStepsItemStatus = {
+  pending: 'pending',
+  running: 'running',
+  confirmed: 'confirmed',
+  held: 'held',
+  failed: 'failed',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type PrivacyCaseDetailStepsItem = {
+  system: string;
+  status: PrivacyCaseDetailStepsItemStatus;
+  detail: string;
+};
+
+export interface PrivacyCaseDetail {
+  request: PrivacyCase;
+  events: PrivacyCaseDetailEventsItem[];
+  steps: PrivacyCaseDetailStepsItem[];
+}
+
+export type PrivacyStaffActionAction = typeof PrivacyStaffActionAction[keyof typeof PrivacyStaffActionAction];
+
+
+export const PrivacyStaffActionAction = {
+  claim: 'claim',
+  request_information: 'request_information',
+  hold: 'hold',
+  release_hold: 'release_hold',
+  reject: 'reject',
+  prepare_export: 'prepare_export',
+  record_correction: 'record_correction',
+  start_erasure: 'start_erasure',
+  resume_erasure: 'resume_erasure',
+} as const;
+
+export interface PrivacyStaffAction {
+  /** @minimum 1 */
+  expectedVersion: number;
+  action: PrivacyStaffActionAction;
+  /**
+     * @minLength 10
+     * @maxLength 1000
+     */
+  reason: string;
+  profileVersionId?: string;
+  acknowledgement?: boolean;
 }
 
 export interface PrivacyRequestRecord {
@@ -1535,6 +1654,12 @@ export type WriteLimitResponse = {
  */
 export type QuotaErrorResponse = ApiProblem;
 
+export type ConflictErrorResponse = {
+  error: string;
+  currentRevision?: number;
+  requestId?: string;
+};
+
 /**
  * Validation, access or concurrency error
  */
@@ -1605,4 +1730,18 @@ export const ListTasksPageFilter = {
   done: 'done',
   all: 'all',
 } as const;
+
+export type DownloadPrivacyCaseResult200 = { [key: string]: unknown };
+
+export type ListStaffPrivacyCasesParams = {
+  /** @minimum 1 */
+  page?: number;
+};
+
+export type ListStaffPrivacyCases200 = {
+  items: PrivacyCase[];
+  page: number;
+  total: number;
+  pageSize: number;
+};
 

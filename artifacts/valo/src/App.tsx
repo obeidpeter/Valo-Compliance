@@ -22,6 +22,7 @@ import About from '@/screens/about';
 import { Contact, AccountAccess } from '@/screens/contact';
 import { AccountPage, PrivacyPage, PurchasesPage } from '@/screens/account';
 import StaffPage from '@/screens/staff';
+import PrivacyOperations from "@/screens/privacy-operations";
 import Services from '@/screens/services';
 import Pricing from '@/screens/pricing';
 import Help from '@/screens/help';
@@ -211,6 +212,7 @@ function ShellRoutes() {
         <Route path="/workspace/purchases">{() => <RequireAuth><PurchasesPage /></RequireAuth>}</Route>
         <Route path="/workspace/account">{() => <RequireAuth><AccountPage /></RequireAuth>}</Route>
         <Route path="/workspace/privacy">{() => <RequireAuth><PrivacyPage /></RequireAuth>}</Route>
+        <Route path="/staff/privacy">{()=><RequireAuth><PrivacyOperations/></RequireAuth>}</Route>
         <Route path="/staff">{() => <RequireAuth><StaffPage /></RequireAuth>}</Route>
         <Route path="/workspace/documents/:id">{(p) => <RequireAuth><DocumentEditor id={p.id} /></RequireAuth>}</Route>
         <Route component={NotFound} />

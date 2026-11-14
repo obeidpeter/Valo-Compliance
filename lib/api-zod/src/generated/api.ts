@@ -100,7 +100,8 @@ export const requestCustomerPrivacyBodyMessageMax = 1500;
 export const RequestCustomerPrivacyBody = zod.object({
   "kind": zod.enum(['correction', 'export', 'deletion']),
   "message": zod.string().min(requestCustomerPrivacyBodyMessageMin).max(requestCustomerPrivacyBodyMessageMax),
-  "acknowledgement": zod.literal(true)
+  "acknowledgement": zod.literal(true),
+  "idempotencyKey": zod.uuid().optional()
 })
 
 export const RequestCustomerPrivacyResponse = zod.object({
@@ -2856,5 +2857,230 @@ export const ListRemindersResponseItem = zod.object({
   "deliveredAt": zod.string().nullable()
 })
 export const ListRemindersResponse = zod.array(ListRemindersResponseItem)
+
+
+export const ListPrivacyCasesResponseItem = zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListPrivacyCasesResponse = zod.array(ListPrivacyCasesResponseItem)
+
+
+export const GetPrivacyCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetPrivacyCaseResponse = zod.object({
+  "request": zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "events": zod.array(zod.object({
+  "sequence": zod.int(),
+  "action": zod.string(),
+  "actorType": zod.enum(['customer', 'staff', 'worker']),
+  "reason": zod.string(),
+  "createdAt": zod.string()
+})),
+  "steps": zod.array(zod.object({
+  "system": zod.string(),
+  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
+  "detail": zod.string()
+}))
+})
+
+
+export const VerifyPrivacyCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const VerifyPrivacyCaseBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "acknowledgement": zod.literal(true)
+})
+
+export const VerifyPrivacyCaseResponse = zod.object({
+  "request": zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "events": zod.array(zod.object({
+  "sequence": zod.int(),
+  "action": zod.string(),
+  "actorType": zod.enum(['customer', 'staff', 'worker']),
+  "reason": zod.string(),
+  "createdAt": zod.string()
+})),
+  "steps": zod.array(zod.object({
+  "system": zod.string(),
+  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
+  "detail": zod.string()
+}))
+})
+
+
+export const CancelPrivacyCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const CancelPrivacyCaseBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "acknowledgement": zod.literal(true)
+})
+
+export const CancelPrivacyCaseResponse = zod.object({
+  "request": zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "events": zod.array(zod.object({
+  "sequence": zod.int(),
+  "action": zod.string(),
+  "actorType": zod.enum(['customer', 'staff', 'worker']),
+  "reason": zod.string(),
+  "createdAt": zod.string()
+})),
+  "steps": zod.array(zod.object({
+  "system": zod.string(),
+  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
+  "detail": zod.string()
+}))
+})
+
+
+export const DownloadPrivacyCaseResultParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const DownloadPrivacyCaseResultResponse = zod.record(zod.string(), zod.unknown())
+
+
+export const listStaffPrivacyCasesQueryPageDefault = 1;
+
+
+
+export const ListStaffPrivacyCasesQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).default(listStaffPrivacyCasesQueryPageDefault)
+})
+
+export const ListStaffPrivacyCasesResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})),
+  "page": zod.int(),
+  "total": zod.int(),
+  "pageSize": zod.int()
+})
+
+
+export const ActOnStaffPrivacyCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const actOnStaffPrivacyCaseBodyReasonMin = 10;
+export const actOnStaffPrivacyCaseBodyReasonMax = 1000;
+
+
+
+export const ActOnStaffPrivacyCaseBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "action": zod.enum(['claim', 'request_information', 'hold', 'release_hold', 'reject', 'prepare_export', 'record_correction', 'start_erasure', 'resume_erasure']),
+  "reason": zod.string().min(actOnStaffPrivacyCaseBodyReasonMin).max(actOnStaffPrivacyCaseBodyReasonMax),
+  "profileVersionId": zod.uuid().optional(),
+  "acknowledgement": zod.boolean().optional()
+})
+
+export const ActOnStaffPrivacyCaseResponse = zod.object({
+  "request": zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "events": zod.array(zod.object({
+  "sequence": zod.int(),
+  "action": zod.string(),
+  "actorType": zod.enum(['customer', 'staff', 'worker']),
+  "reason": zod.string(),
+  "createdAt": zod.string()
+})),
+  "steps": zod.array(zod.object({
+  "system": zod.string(),
+  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
+  "detail": zod.string()
+}))
+})
 
 

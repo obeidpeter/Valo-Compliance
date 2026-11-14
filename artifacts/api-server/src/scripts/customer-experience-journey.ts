@@ -7,6 +7,7 @@ import {mkdir as ensureReminderDirectory} from "node:fs/promises";
 import { clerkClient } from "@clerk/express";
 import { pool } from "@workspace/db";
 import { GetCustomerAccountResponse,GetDocumentResponse,DownloadWorkspaceDataResponse,GetCustomerPurchasesResponse } from "@workspace/api-zod";
+import {ListPrivacyCasesResponse,GetPrivacyCaseResponse} from "@workspace/api-zod";
 import { z } from "zod";
 import { syntheticDocument } from "../lib/valo-test-fixtures";
 import {synchronizeFinancialBlocks} from "@workspace/valo-core/money";
@@ -25,7 +26,7 @@ async function check(name:string,fn:()=>Promise<void>){
   if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"&&
     !["managed_verified_customer_can_open_private_routes",
       "controlled_support_display_preserves_mixed_full_messages_and_keyboard_mobile",
-      "real_private_privacy_request_reload_and_JSON_download"].includes(name))return;
+      "real_private_privacy_request_reload_and_JSON_download","real_privacy_verification_cancellation_history_and_staff_denial"].includes(name))return;
   if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"&&
     !["managed_verified_customer_can_open_private_routes","real_editor_navigation_financial_restore_undo_and_concurrent_session",
       "real_task_notes_survive_filters_background_refresh_and_revision_conflict",
@@ -425,6 +426,44 @@ try{
     await ensureReminderDirectory("../../generated-artifacts/valo-commerce",{recursive:true});
     await page!.screenshot({path:"../../generated-artifacts/valo-commerce/purchase-history.png",fullPage:true});
   });
+  await check("real_privacy_verification_cancellation_history_and_staff_denial",async()=>{
+    // The request is created through the actual customer API when absent.
+    // Nothing in this group intercepts a customer or staff response.
+    const before=await api("/api/workspace/privacy-cases");expect(before.status).toBe(200);
+    let row=ListPrivacyCasesResponse.parse(before.body)[0];
+    if(!row){
+      const created=await api("/api/workspace/privacy-requests","POST",{kind:"deletion",message:"Synthetic owner request for verification and cancellation only.",
+        acknowledgement:true,idempotencyKey:randomUUID()});
+      expect(created.status).toBe(201);
+      row=ListPrivacyCasesResponse.parse((await api("/api/workspace/privacy-cases")).body)[0];
+    }
+    if(!row)throw Error("Persisted privacy request was not returned.");
+    await page!.goto("/workspace/privacy");
+    const card=page!.getByTestId("privacy-case").filter({hasText:row.reference});
+    await card.getByRole("button",{name:"View request",exact:true}).click();
+    await expect(card).toContainText("awaiting verification");
+    await card.locator('input[type="checkbox"]').check();
+    await card.getByRole("button",{name:"Verify my request",exact:true}).click();
+    await expect(card.locator("strong").first()).toHaveText("verified");
+    const verified=await api(`/api/workspace/privacy-cases/${row.id}`);
+    expect(verified.status).toBe(200);
+    const verifiedValue=GetPrivacyCaseResponse.parse(verified.body);
+    expect(verifiedValue.request.version).toBe(2);
+    expect(verifiedValue.events.map(e=>e.action)).toEqual(["request_received","identity_verified"]);
+    expect((await api(`/api/workspace/privacy-cases/${row.id}/result`)).status).toBe(404);
+    expect((await api("/api/admin/privacy-cases?page=1")).status).toBe(403);
+    await page!.setViewportSize({width:360,height:900});await reflow();
+    await card.getByRole("button",{name:"Cancel before processing",exact:true}).focus();
+    await expect(card.getByRole("button",{name:"Cancel before processing",exact:true})).toBeFocused();
+    await page!.screenshot({path:"generated-artifacts/valo-customer-ux/privacy-processing-mobile.png",fullPage:true});
+    await card.getByRole("button",{name:"Cancel before processing",exact:true}).click();
+    await expect(card.locator("strong").first()).toHaveText("cancelled");
+    await page!.reload();await reflow();
+    await expect(page!.getByTestId("privacy-case").filter({hasText:row.reference})).toContainText("cancelled");
+    const cancelled=await api(`/api/workspace/privacy-cases/${row.id}`);
+    const cancelledValue=GetPrivacyCaseResponse.parse(cancelled.body);
+    expect(cancelledValue.events.length).toBe(3);expect(cancelledValue.request.resultAvailable).toBe(false);
+  });
   await check("real_private_privacy_request_reload_and_JSON_download",async()=>{
     expect(userId).toBeTruthy();await page!.goto("/workspace/privacy");
     await expect(page!.getByTestId("workspace-export-scope")).toContainText("not complete privacy fulfilment");
@@ -437,7 +476,7 @@ try{
     await page!.getByTestId("button-privacy-submit").click();
     await expect(page!.getByTestId("privacy-ack")).toBeVisible();await page!.reload();
     const privacyRequests=GetCustomerAccountResponse.parse((await api("/api/workspace/account")).body).privacyRequests;
-    expect(privacyRequests.length).toBe(1);expect(privacyRequests[0].status).toBe("awaiting_staff");
+    expect(privacyRequests.length).toBe(2);expect(privacyRequests[0].status).toBe("awaiting_staff");
     const download=page!.waitForEvent("download");await page!.getByTestId("button-download-workspace").click();
     const file=await download;expect(file.suggestedFilename()).toMatch(/valo-workspace.*json/);
     const raw=await api("/api/workspace/data-export");expect(raw.status).toBe(200);expect(raw.cache).toContain("no-store");
@@ -565,7 +604,8 @@ finally{
         await deletePrivateFile(row.object_key);
       }catch{cleanupErrors++;process.exitCode=1;}
     }
-    for(const table of["valo_payment_reconciliations","valo_refund_requests","valo_purchase_outbox","valo_entitlements","valo_orders",
+    for(const table of["valo_privacy_events","valo_privacy_tombstones","valo_privacy_cases",
+      "valo_payment_reconciliations","valo_refund_requests","valo_purchase_outbox","valo_entitlements","valo_orders",
       "valo_support_tickets","valo_reminder_outbox","valo_reminder_preferences","valo_tasks","valo_assessments",
       "valo_export_requests","valo_export_objects","valo_file_assets","valo_export_jobs",
       "valo_ai_drafts","valo_document_revisions","valo_documents","valo_profile_versions","valo_events","valo_memberships","valo_workspaces"]){

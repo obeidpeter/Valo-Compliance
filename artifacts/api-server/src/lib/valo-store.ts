@@ -174,16 +174,18 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
   return getExactRevision(actor, id, expectedRevision + 1);
 }
 export async function createTicket(actor: WorkspaceActor, raw: unknown) {
+  return db.transaction(tx=>createTicketInTransaction(tx,actor,raw));
+}
+/** Shared transaction lets a privacy request and its support reference commit together. */
+export async function createTicketInTransaction(tx:Tx,actor:WorkspaceActor,raw:unknown){
   const input = ticketInput.parse(raw);
   const id = randomUUID();
-  await db.transaction(async tx => {
     await authorizeWorkspaceWrite(tx,actor);
     await limitWorkspaceWrite(tx,actor,"support");
     await tx.insert(valoSupportTickets).values({
       id, workspaceId: actor.workspaceId, ...input, consentVersion: "service-sharing-v1", dispatchStatus: "awaiting_staff",
     });
     await event(tx, actor, "support.ticket_saved", id);
-  });
   return {
     reference: `VALO-${id}`, message: "Enquiry received and saved. Awaiting staff review; no appointment or external dispatch has been confirmed.",
     dispatchStatus: "awaiting_staff" as const,

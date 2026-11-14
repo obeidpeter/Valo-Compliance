@@ -1,4 +1,5 @@
 import { randomUUID,createHash } from "node:crypto";
+import {createPrivacyCase} from "./valo-privacy";
 import { and,eq,desc,like } from "drizzle-orm";
 import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoAssessments,valoTasks,valoReminderPreferences,
@@ -47,11 +48,7 @@ export async function customerAccount(actor:WorkspaceActor){
   });
 }
 export async function requestPrivacy(actor:WorkspaceActor,email:string,raw:unknown){
-  const input=RequestCustomerPrivacyBody.strict().parse(raw);
-  const saved=await createTicket(actor,{category:"support",scope:`Privacy request (${input.kind}): ${input.message}`,
-    contactEmail:email,sharingConsent:false});
-  return{reference:saved.reference,message:"Privacy request saved for verification and review. No data has been deleted or provider-wide request completed.",
-    delivery:"not_dispatched" as const};
+  return createPrivacyCase(actor,email,raw);
 }
 export async function workspaceDataExport(actor:WorkspaceActor){
   return db.transaction(async tx=>{

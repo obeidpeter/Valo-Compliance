@@ -15,4 +15,5 @@ export interface PrivacyRequestInput {
      */
   message: string;
   acknowledgement: true;
+  idempotencyKey?: string;
 }

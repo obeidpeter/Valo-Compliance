@@ -38,6 +38,7 @@ import type {
   CommerceOrder,
   CommerceOrderInput,
   CommerceRefundInput,
+  ConflictErrorResponse,
   ContentRegister,
   CustomerAIInput,
   CustomerAIPreview,
@@ -47,6 +48,7 @@ import type {
   CustomerPurchases,
   DocumentInput,
   DocumentUpdate,
+  DownloadPrivacyCaseResult200,
   ExportInput,
   ExportJob,
   ExportRetryInput,
@@ -55,8 +57,14 @@ import type {
   GetStaffOperationsParams,
   HealthStatus,
   ListPublicCatalogueParams,
+  ListStaffPrivacyCases200,
+  ListStaffPrivacyCasesParams,
   ListTasksPageParams,
+  PrivacyCase,
+  PrivacyCaseConfirmation,
+  PrivacyCaseDetail,
   PrivacyRequestInput,
+  PrivacyStaffAction,
   ProfileInput,
   ProofRegister,
   PublicCoverage,
@@ -5249,4 +5257,636 @@ export function useListReminders<TData = Awaited<ReturnType<typeof listReminders
 
 
 
+
+export const getListPrivacyCasesUrl = () => {
+
+
+
+
+  return `/api/workspace/privacy-cases`
+}
+
+export const listPrivacyCases = async ( options?: Parameters<typeof customFetch>[1]): Promise<PrivacyCase[]> => {
+
+  return customFetch<PrivacyCase[]>(getListPrivacyCasesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPrivacyCasesQueryKey = () => {
+    return [
+    `/api/workspace/privacy-cases`
+    ] as const;
+    }
+
+
+export const getListPrivacyCasesQueryOptions = <TData = Awaited<ReturnType<typeof listPrivacyCases>>, TError = ErrorType<AuthErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrivacyCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPrivacyCasesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPrivacyCases>>> = ({ signal }) => listPrivacyCases({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPrivacyCases>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPrivacyCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listPrivacyCases>>>
+export type ListPrivacyCasesQueryError = ErrorType<AuthErrorResponse>
+
+
+export function useListPrivacyCases<TData = Awaited<ReturnType<typeof listPrivacyCases>>, TError = ErrorType<AuthErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrivacyCases>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPrivacyCases>>,
+          TError,
+          Awaited<ReturnType<typeof listPrivacyCases>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPrivacyCases<TData = Awaited<ReturnType<typeof listPrivacyCases>>, TError = ErrorType<AuthErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrivacyCases>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPrivacyCases>>,
+          TError,
+          Awaited<ReturnType<typeof listPrivacyCases>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPrivacyCases<TData = Awaited<ReturnType<typeof listPrivacyCases>>, TError = ErrorType<AuthErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrivacyCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPrivacyCases<TData = Awaited<ReturnType<typeof listPrivacyCases>>, TError = ErrorType<AuthErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPrivacyCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPrivacyCasesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPrivacyCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/privacy-cases/${id}`
+}
+
+export const getPrivacyCase = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<PrivacyCaseDetail> => {
+
+  return customFetch<PrivacyCaseDetail>(getGetPrivacyCaseUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPrivacyCaseQueryKey = (id: string,) => {
+    return [
+    `/api/workspace/privacy-cases/${id}`
+    ] as const;
+    }
+
+
+export const getGetPrivacyCaseQueryOptions = <TData = Awaited<ReturnType<typeof getPrivacyCase>>, TError = ErrorType<AuthErrorResponse>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPrivacyCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPrivacyCaseQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPrivacyCase>>> = ({ signal }) => getPrivacyCase(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPrivacyCase>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPrivacyCaseQueryResult = NonNullable<Awaited<ReturnType<typeof getPrivacyCase>>>
+export type GetPrivacyCaseQueryError = ErrorType<AuthErrorResponse>
+
+
+export function useGetPrivacyCase<TData = Awaited<ReturnType<typeof getPrivacyCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPrivacyCase>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPrivacyCase>>,
+          TError,
+          Awaited<ReturnType<typeof getPrivacyCase>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPrivacyCase<TData = Awaited<ReturnType<typeof getPrivacyCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPrivacyCase>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPrivacyCase>>,
+          TError,
+          Awaited<ReturnType<typeof getPrivacyCase>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPrivacyCase<TData = Awaited<ReturnType<typeof getPrivacyCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPrivacyCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPrivacyCase<TData = Awaited<ReturnType<typeof getPrivacyCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPrivacyCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPrivacyCaseQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getVerifyPrivacyCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/privacy-cases/${id}/verify`
+}
+
+export const verifyPrivacyCase = async (id: string,
+    privacyCaseConfirmation: PrivacyCaseConfirmation, options?: Parameters<typeof customFetch>[1]): Promise<PrivacyCaseDetail> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PrivacyCaseDetail>(getVerifyPrivacyCaseUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(privacyCaseConfirmation)
+  }
+);}
+
+
+
+
+
+export const getVerifyPrivacyCaseMutationKey = () => ['verifyPrivacyCase'] as const;
+
+export const getVerifyPrivacyCaseMutationOptions = <TError = ErrorType<ConflictErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyPrivacyCase>>, TError,VerifyPrivacyCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyPrivacyCase>>, TError,VerifyPrivacyCaseMutationVariables, TContext> => {
+
+const mutationKey = getVerifyPrivacyCaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyPrivacyCase>>, VerifyPrivacyCaseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  verifyPrivacyCase(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyPrivacyCaseMutationResult = NonNullable<Awaited<ReturnType<typeof verifyPrivacyCase>>>
+    export type VerifyPrivacyCaseMutationBody = BodyType<PrivacyCaseConfirmation>
+    export type VerifyPrivacyCaseMutationError = ErrorType<ConflictErrorResponse>
+    export type VerifyPrivacyCaseMutationVariables = {id: string;data: BodyType<PrivacyCaseConfirmation>}
+
+    export const useVerifyPrivacyCase = <TError = ErrorType<ConflictErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyPrivacyCase>>, TError,VerifyPrivacyCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof verifyPrivacyCase>>,
+        TError,
+        VerifyPrivacyCaseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getVerifyPrivacyCaseMutationOptions(options), queryClient);
+    }
+
+export const getCancelPrivacyCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/privacy-cases/${id}/cancel`
+}
+
+export const cancelPrivacyCase = async (id: string,
+    privacyCaseConfirmation: PrivacyCaseConfirmation, options?: Parameters<typeof customFetch>[1]): Promise<PrivacyCaseDetail> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PrivacyCaseDetail>(getCancelPrivacyCaseUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(privacyCaseConfirmation)
+  }
+);}
+
+
+
+
+
+export const getCancelPrivacyCaseMutationKey = () => ['cancelPrivacyCase'] as const;
+
+export const getCancelPrivacyCaseMutationOptions = <TError = ErrorType<ConflictErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelPrivacyCase>>, TError,CancelPrivacyCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelPrivacyCase>>, TError,CancelPrivacyCaseMutationVariables, TContext> => {
+
+const mutationKey = getCancelPrivacyCaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelPrivacyCase>>, CancelPrivacyCaseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  cancelPrivacyCase(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelPrivacyCaseMutationResult = NonNullable<Awaited<ReturnType<typeof cancelPrivacyCase>>>
+    export type CancelPrivacyCaseMutationBody = BodyType<PrivacyCaseConfirmation>
+    export type CancelPrivacyCaseMutationError = ErrorType<ConflictErrorResponse>
+    export type CancelPrivacyCaseMutationVariables = {id: string;data: BodyType<PrivacyCaseConfirmation>}
+
+    export const useCancelPrivacyCase = <TError = ErrorType<ConflictErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelPrivacyCase>>, TError,CancelPrivacyCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof cancelPrivacyCase>>,
+        TError,
+        CancelPrivacyCaseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCancelPrivacyCaseMutationOptions(options), queryClient);
+    }
+
+export const getDownloadPrivacyCaseResultUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/privacy-cases/${id}/result`
+}
+
+export const downloadPrivacyCaseResult = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<DownloadPrivacyCaseResult200> => {
+
+  return customFetch<DownloadPrivacyCaseResult200>(getDownloadPrivacyCaseResultUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadPrivacyCaseResultQueryKey = (id: string,) => {
+    return [
+    `/api/workspace/privacy-cases/${id}/result`
+    ] as const;
+    }
+
+
+export const getDownloadPrivacyCaseResultQueryOptions = <TData = Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError = ErrorType<AuthErrorResponse>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadPrivacyCaseResultQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadPrivacyCaseResult>>> = ({ signal }) => downloadPrivacyCaseResult(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadPrivacyCaseResultQueryResult = NonNullable<Awaited<ReturnType<typeof downloadPrivacyCaseResult>>>
+export type DownloadPrivacyCaseResultQueryError = ErrorType<AuthErrorResponse>
+
+
+export function useDownloadPrivacyCaseResult<TData = Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadPrivacyCaseResult>>,
+          TError,
+          Awaited<ReturnType<typeof downloadPrivacyCaseResult>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadPrivacyCaseResult<TData = Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadPrivacyCaseResult>>,
+          TError,
+          Awaited<ReturnType<typeof downloadPrivacyCaseResult>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadPrivacyCaseResult<TData = Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadPrivacyCaseResult<TData = Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPrivacyCaseResult>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadPrivacyCaseResultQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListStaffPrivacyCasesUrl = (params?: ListStaffPrivacyCasesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/privacy-cases?${stringifiedParams}` : `/api/admin/privacy-cases`
+}
+
+export const listStaffPrivacyCases = async (params?: ListStaffPrivacyCasesParams, options?: Parameters<typeof customFetch>[1]): Promise<ListStaffPrivacyCases200> => {
+
+  return customFetch<ListStaffPrivacyCases200>(getListStaffPrivacyCasesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListStaffPrivacyCasesQueryKey = (params?: ListStaffPrivacyCasesParams,) => {
+    return [
+    `/api/admin/privacy-cases`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListStaffPrivacyCasesQueryOptions = <TData = Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError = ErrorType<AuthErrorResponse>>(params?: ListStaffPrivacyCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStaffPrivacyCasesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStaffPrivacyCases>>> = ({ signal }) => listStaffPrivacyCases(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListStaffPrivacyCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listStaffPrivacyCases>>>
+export type ListStaffPrivacyCasesQueryError = ErrorType<AuthErrorResponse>
+
+
+export function useListStaffPrivacyCases<TData = Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params: undefined |  ListStaffPrivacyCasesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStaffPrivacyCases>>,
+          TError,
+          Awaited<ReturnType<typeof listStaffPrivacyCases>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStaffPrivacyCases<TData = Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListStaffPrivacyCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStaffPrivacyCases>>,
+          TError,
+          Awaited<ReturnType<typeof listStaffPrivacyCases>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStaffPrivacyCases<TData = Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListStaffPrivacyCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStaffPrivacyCases<TData = Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListStaffPrivacyCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStaffPrivacyCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListStaffPrivacyCasesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getActOnStaffPrivacyCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/privacy-cases/${id}/action`
+}
+
+export const actOnStaffPrivacyCase = async (id: string,
+    privacyStaffAction: PrivacyStaffAction, options?: Parameters<typeof customFetch>[1]): Promise<PrivacyCaseDetail> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PrivacyCaseDetail>(getActOnStaffPrivacyCaseUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(privacyStaffAction)
+  }
+);}
+
+
+
+
+
+export const getActOnStaffPrivacyCaseMutationKey = () => ['actOnStaffPrivacyCase'] as const;
+
+export const getActOnStaffPrivacyCaseMutationOptions = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnStaffPrivacyCase>>, TError,ActOnStaffPrivacyCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actOnStaffPrivacyCase>>, TError,ActOnStaffPrivacyCaseMutationVariables, TContext> => {
+
+const mutationKey = getActOnStaffPrivacyCaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actOnStaffPrivacyCase>>, ActOnStaffPrivacyCaseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  actOnStaffPrivacyCase(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActOnStaffPrivacyCaseMutationResult = NonNullable<Awaited<ReturnType<typeof actOnStaffPrivacyCase>>>
+    export type ActOnStaffPrivacyCaseMutationBody = BodyType<PrivacyStaffAction>
+    export type ActOnStaffPrivacyCaseMutationError = ErrorType<AuthErrorResponse | ConflictErrorResponse>
+    export type ActOnStaffPrivacyCaseMutationVariables = {id: string;data: BodyType<PrivacyStaffAction>}
+
+    export const useActOnStaffPrivacyCase = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnStaffPrivacyCase>>, TError,ActOnStaffPrivacyCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actOnStaffPrivacyCase>>,
+        TError,
+        ActOnStaffPrivacyCaseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getActOnStaffPrivacyCaseMutationOptions(options), queryClient);
+    }
 

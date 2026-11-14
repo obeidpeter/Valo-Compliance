@@ -12,7 +12,7 @@ export const valoAccessSupport=pgTable("valo_access_support",{
  * No customer/staff self-enrolment endpoint exists. */
 export const valoStaffAssignments=pgTable("valo_staff_assignments",{
   id:uuid("id").primaryKey(),identityId:text("identity_id").notNull(),
-  role:text("role",{enum:["content","support","finance","system"]}).notNull(),
+  role:text("role",{enum:["content","support","finance","system","privacy"]}).notNull(),
   active:boolean("active").notNull().default(true),grantedBy:text("granted_by").notNull(),
   reason:text("reason").notNull(),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
 },t=>[uniqueIndex("valo_staff_identity_role").on(t.identityId,t.role)]);

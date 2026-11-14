@@ -35,6 +35,7 @@ export default function StaffPage() {
     <div className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
       <p className="eyebrow">Staff</p>
       <h1 className="font-display mt-2 text-4xl">Operations</h1>
+      <Link href="/staff/privacy" className="btn btn-ghost btn-sm mt-4">Privacy request operations</Link>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Support shows the full saved request. Finance actions are available only to authorised finance staff. Customer document bodies are not shown here.</p>
       <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Staff area filters">
         {AREAS.map((a) => (
