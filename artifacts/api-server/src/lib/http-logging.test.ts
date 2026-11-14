@@ -1,14 +1,12 @@
-import test,{after} from "node:test";
+import test from "node:test";
 import assert from "node:assert/strict";
 import {Writable} from "node:stream";
 import {mkdir,writeFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import express from "express";
-import {pool} from "@workspace/db";
 import {createApplicationLogger} from "./logger";
 import {requestLogging} from "./http-logging";
-import {onError} from "../app";
-after(()=>pool.end());
+import {onError} from "./http-errors";
 test("real HTTP request, parser and application error logs omit private markers but retain correlation/status",async()=>{
   const marker="SYNTHETIC_PRIVATE_HTTP_A_B_912836";
   let captured="";

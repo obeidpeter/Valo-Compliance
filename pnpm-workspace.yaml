@@ -30,7 +30,9 @@ catalog:
   wouter: ^3.3.5
   zod: 4.6.7
 
-minimumReleaseAge: 1440
+minimumReleaseAge: 10080
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
 
 minimumReleaseAgeExclude:
   - '@replit/*'
