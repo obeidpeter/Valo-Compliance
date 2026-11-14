@@ -1,8 +1,7 @@
 import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import {createHash} from "node:crypto";
-import {eq} from "drizzle-orm";
-import {db,valoContentVersions} from "@workspace/db";
+import {eq,sql} from "drizzle-orm";
 import {candidateDigest,publicationSchema} from "@workspace/valo-core";
 import {requestDigest} from "./inference-budget";
 import type {FiniteWork} from "./inference-batch-dispatch";
@@ -30,6 +29,7 @@ export async function assertFiniteWorkBindings(work:FiniteWork){
     if(work.lane==="customer"&&work.candidateHash!==work.caseHash)throw Error("CUSTOMER_CASE_BINDING_CHANGED");
   }else if(work.lane!=="publication")throw Error("EVALUATION_CASE_REQUIRED");
   if(b.candidateVersionId){
+    const {db,valoContentVersions}=await import("@workspace/db");
     const[row]=await db.select().from(valoContentVersions).where(eq(valoContentVersions.id,b.candidateVersionId));
     if(!row||["withdrawn","superseded"].includes(row.status)||row.reviewBy.getTime()<=Date.now())throw Error("CANDIDATE_UNAVAILABLE_OR_STALE");
     const bundle=publicationSchema.parse(row.bundle);
@@ -37,7 +37,33 @@ export async function assertFiniteWorkBindings(work:FiniteWork){
       throw Error("CANDIDATE_BINDING_CHANGED");
     actualSources.push(...bundle.sources.map(s=>s.hash));
     if(requestDigest(bundle)!==work.caseHash&&work.lane==="publication")throw Error("PUBLICATION_BUNDLE_CHANGED");
+    if(work.lane==="publication"){
+      if(!b.operationalPlan||!b.historicalCutoff||!Number.isFinite(Date.parse(b.historicalCutoff)))
+        throw Error("OPERATIONAL_PLAN_BINDING_REQUIRED");
+      const [{getPublicationArtifact},{readOperationalInferenceReadiness},{operationalReviewRequests}]=await Promise.all([
+        import("../editorial/publication-artifacts"),import("./inference-operational-ready"),import("../editorial/operational-review")]);
+      const retained=JSON.parse((await getPublicationArtifact(b.operationalPlan)).toString());
+      const current=await readOperationalInferenceReadiness(b.candidateVersionId);
+      if(retained.manifest?.candidateHash!==work.candidateHash||
+        requestDigest(retained.manifest?.serverEvidence)!==requestDigest(current.serverEvidence)||
+        !Number.isFinite(Date.parse(retained.manifest?.expiresAt))||Date.parse(retained.manifest.expiresAt)<=Date.now())
+        throw Error("OPERATIONAL_PLAN_BINDING_CHANGED");
+      const expected=operationalReviewRequests(current.candidate,current.rightsInput,current.provenanceInput,
+        current.exportReport,current.serverEvidence,retained.manifest.preparedAt);
+      if(requestDigest(expected)!==requestDigest(retained.entries)||
+        requestDigest(expected.find(e=>e.role===work.role)?.request)!==requestDigest(work.request))
+        throw Error("OPERATIONAL_PLAN_REQUEST_CHANGED");
+      // Legacy exact-request attempts without a known completion cannot be
+      // redispatched by inventing a new batch id. This historical read does
+      // not charge unrelated prior account usage to the new allocation.
+      const unknown=await db.execute(sql`select id from valo_publication_ai_attempts
+        where candidate_hash=${work.candidateHash} and role=${work.role}
+        and request_hash=${requestDigest(work.request)} and created_at < ${new Date(b.historicalCutoff)}
+        and provider_response_id is null and outcome in ('reserved','failed') limit 1`);
+      if(unknown.rows.length)throw Error("HISTORICAL_EXACT_REQUEST_COMPLETION_UNKNOWN");
+    }
   }else if(work.lane!=="customer")throw Error("CANDIDATE_VERSION_REQUIRED");
   if(work.lane==="checker_challenge"&&!actualSources.length)throw Error("CHECKER_SOURCE_BINDING_REQUIRED");
   if(requestDigest([...actualSources].sort())!==requestDigest([...work.sourceHashes].sort()))throw Error("SOURCE_SET_CHANGED");
 }
+

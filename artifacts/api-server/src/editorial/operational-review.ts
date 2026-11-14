@@ -1,4 +1,4 @@
-import {managedCompletion,managedInferenceLane,assertManagedInferenceAvailable} from "../lib/managed-inference";
+import {managedCompletion,managedInferenceLane,assertManagedInferenceAvailable,withApprovedInferenceRole,hasApprovedInferenceContext} from "../lib/managed-inference";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
 import { z } from "zod";
 import {parseBoundedProviderJSON} from "../lib/provider-output-budget";
@@ -43,12 +43,13 @@ export async function saveOperationalReviewPlan(...args:Parameters<typeof operat
   const manifest={schemaVersion:1,lane:"operational_publication_review",
     candidateHash:args[0].hash,serverEvidence:args[4],preparedAt:entries[0].reviewAsOf,
     expiresAt:new Date(Math.min(reviewBy,Date.parse(entries[0].reviewAsOf)+3600000)).toISOString(),
-    attemptsRequired:2,dailyLimit:6,concurrency:2,automaticRetries:0,
+    attemptsRequired:2,dailyLimit:null,finiteAllocationRequired:true,concurrency:2,automaticRetries:0,
     status:entries.every(e=>e.meter.withinInputCeiling)?"mechanically_planned_not_reserved":"input_size_held",
     entries:entries.map(({request,...metadata})=>metadata),actualBilling:null,
     caution:"This is not a global provider cap, legal review, publication, spending increase or billing estimate."};
   const artifact=await putPublicationArtifact(Buffer.from(JSON.stringify({manifest,entries})),"json");
-  return{manifest,artifact,entries};
+  if(artifact.extension!=="json")throw Error("REVIEW_PLAN_ARTIFACT_TYPE_INVALID");
+  return{manifest,artifact:{...artifact,extension:"json" as const},entries};
 }
 export async function reviewOperationalCandidate(candidate:PublicationBundle["candidate"],rights:unknown,provenance:unknown,exports:unknown,
   serverEvidence:OperationalServerEvidence){
@@ -78,11 +79,21 @@ export async function executeOperationalReviewPlan(plan:Awaited<ReturnType<typeo
   assertManagedInferenceAvailable();
   const ids=await db.transaction(async tx=>{
     await tx.execute(sql`select pg_advisory_xact_lock(747105)`);
-    const count=await tx.execute(sql`select count(*)::int as total from valo_publication_ai_attempts
-      where role <> 'draft' and created_at >= date_trunc('day',now())`);
-    if(Number(count.rows[0]?.total)+2>6)throw hold("OPERATIONAL_REVIEW_DAILY_CAP_REACHED");
+    // An explicitly approved finite allocation replaces the legacy scheduling
+    // throttle for its exact listed work. Historical counts are not reset.
+    if(!hasApprovedInferenceContext()){
+      const count=await tx.execute(sql`select count(*)::int as total from valo_publication_ai_attempts
+        where role <> 'draft' and created_at >= date_trunc('day',now())`);
+      if(Number(count.rows[0]?.total)+2>6)throw hold("OPERATIONAL_REVIEW_DAILY_CAP_REACHED");
+    }
     const reserved=new Map<string,string>();
     for(const entry of plan.entries){
+      const previous=await tx.execute(sql`select id from valo_publication_ai_attempts
+        where candidate_hash=${candidate.hash} and role=${entry.role} and request_hash=${entry.meter.requestHash} limit 1`);
+      // Reuse the exact attempt identity. The durable financial dispatcher
+      // decides whether this is cached settled recovery, safe undispatched
+      // continuation, or an unknown completion that must stay held.
+      if(previous.rows.length){reserved.set(entry.role,String(previous.rows[0]!.id));continue;}
       const rows=await tx.execute(sql`insert into valo_publication_ai_attempts
         (candidate_hash,role,request_hash,request_meter,outcome)
         values(${candidate.hash},${entry.role},${entry.meter.requestHash},${JSON.stringify(entry.meter)}::jsonb,'reserved') returning id`);
@@ -95,9 +106,11 @@ export async function executeOperationalReviewPlan(plan:Awaited<ReturnType<typeo
   const reviews=await batchProcess(plan.entries,async entry=>{
     const {role,request,reviewAsOf,promptHash,promptVersion}=entry;
     const started=performance.now(),id=ids.get(role)!;
-    let received=false;
+    let received=false,outboundAttempted=false;
     try{
-    const response=await managedCompletion(managedInferenceLane("publication"),request,{timeout:45000,maxRetries:0});
+    const response=await withApprovedInferenceRole(role,()=>
+      managedCompletion(managedInferenceLane("publication"),request,{timeout:45000,maxRetries:0,
+        onOutbound:()=>{outboundAttempted=true;}}));
     const usage=providerUsage(response.usage);received=true;
     await db.execute(sql`update valo_publication_ai_attempts set outcome='response_received',
       provider_response_id=${response.id},input_tokens=${usage.inputTokens},output_tokens=${usage.outputTokens}
@@ -108,7 +121,7 @@ export async function executeOperationalReviewPlan(plan:Awaited<ReturnType<typeo
     const output=operationalReviewSchema.parse(parseBoundedProviderJSON(response.choices[0].message.content??""));
     const record={role,candidateHash:candidate.hash,evidenceHash:digest([]),providerResponseId:response.id,
       model:response.model,promptVersion,promptHash,requestHash:entry.meter.requestHash,reviewPlanHash:plan.artifact.hash,
-      receivedOtherVerdict:false,serverEvidence,
+      receivedOtherVerdict:false,serverEvidence,outboundAttempted,
       reviewAsOf,providerCreatedAt:new Date(response.created*1000).toISOString(),
       output,...usage,
       latencyMs:Math.round(performance.now()-started),completedAt:new Date().toISOString()};
@@ -126,3 +139,4 @@ export async function executeOperationalReviewPlan(plan:Awaited<ReturnType<typeo
   },{concurrency:2,retries:0});
   return reviews.filter((review):review is NonNullable<typeof review>=>review!==null);
 }
+

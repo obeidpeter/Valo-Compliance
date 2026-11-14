@@ -1,0 +1,1257 @@
+{
+  "status": "DISABLED_PROPOSAL_ONLY",
+  "ownerApproved": false,
+  "enabled": false,
+  "approvalRowsWritten": 0,
+  "providerCalls": 0,
+  "packageId": "finite-package:46a5933fd296adb648dae1becaaabd835d5b203ce5a5d470887ec74cb27bba37",
+  "packageHash": "46a5933fd296adb648dae1becaaabd835d5b203ce5a5d470887ec74cb27bba37",
+  "package": {
+    "version": 3,
+    "kind": "finite-inference-package",
+    "preparedAt": "2026-11-14T23:07:44.777Z",
+    "policyVersion": "public-gpt-5.4-mini-2026-11-14",
+    "allocation": {
+      "id": "valo-additional-inference-30-20261114-v1",
+      "scope": "additional-new-attempts-only",
+      "capNanoUsd": "30000000000",
+      "environment": "synthetic-development-only",
+      "excludesHistoricalCharges": true,
+      "replacesLegacyPublicationDailySchedule": true
+    },
+    "sourceFiles": [
+      {
+        "path": "docs/registers/content-inventory.json",
+        "sha256": "2d1c3bf46b76f617753429820fe732e695338833e8634bf10cbc7ceace378cc3"
+      },
+      {
+        "path": "docs/content-candidates/r1-content-intake-manifest.json",
+        "sha256": "d3295d27df15a37d40d6b5c84b567c480730a287411b2ef054e7f58b4aa02982"
+      },
+      {
+        "path": "docs/evaluation-candidates/editorial.json",
+        "sha256": "ccb0220ea609c9a69cdd57a8bab81e3d33d8894adbe1b3d223e9132ac19bdc2d"
+      },
+      {
+        "path": "docs/evaluation-candidates/checker.json",
+        "sha256": "83f943bbe4f42b45e99b47671b328630491ac7eb9a12fcba0ae56c3f5529f65e"
+      },
+      {
+        "path": "docs/evaluation-candidates/customer-ai.json",
+        "sha256": "65d51a2b52ab01c70a222a9a02ae84602a53629cc244552cbcc6a0802ca1796b"
+      },
+      {
+        "path": "docs/content-candidates/practical-guide-candidates.md",
+        "sha256": "27a0d146665194f02c46e50a3d81406169200d3859e601714cc78f2f2a034874"
+      },
+      {
+        "path": "docs/content-candidates/industry-content-candidates.md",
+        "sha256": "f0ad13bb78cc4dea8bb6bc22d692e19ee7b280e8dc67b1275ee29b17e4542ac9"
+      }
+    ],
+    "contentIds": [
+      "GUD-01",
+      "GUD-02",
+      "GUD-03",
+      "GUD-04",
+      "GUD-05",
+      "GUD-06",
+      "GUD-07",
+      "GUD-08",
+      "GUD-09",
+      "GUD-10",
+      "GUD-11",
+      "GUD-12",
+      "GUD-13",
+      "GUD-14",
+      "GUD-15",
+      "GUD-16",
+      "GUD-17",
+      "GUD-18",
+      "GUD-19",
+      "GUD-20",
+      "GUD-21",
+      "GUD-22",
+      "GUD-23",
+      "GUD-24",
+      "GUD-25",
+      "GUD-26",
+      "GUD-27",
+      "GUD-28",
+      "GUD-29",
+      "GUD-30",
+      "TPL-01",
+      "TPL-02",
+      "TPL-03",
+      "TPL-04",
+      "TPL-05",
+      "TPL-06",
+      "TPL-07",
+      "TPL-08",
+      "TPL-09",
+      "TPL-10",
+      "TPL-11",
+      "TPL-12",
+      "TPL-13",
+      "TPL-14",
+      "TPL-15",
+      "TPL-16",
+      "TPL-17",
+      "TPL-18",
+      "TPL-19",
+      "TPL-20",
+      "TPL-21",
+      "TPL-22",
+      "TPL-23",
+      "TPL-24",
+      "TPL-25",
+      "TPL-26",
+      "TPL-27",
+      "TPL-28",
+      "TPL-29",
+      "TPL-30",
+      "TPL-31",
+      "TPL-32",
+      "TPL-33",
+      "TPL-34",
+      "TPL-35",
+      "TPL-36",
+      "TPL-37",
+      "TPL-38",
+      "TPL-39",
+      "TPL-40"
+    ],
+    "namedContentSections": [
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C01 — Prepare an invoice from facts you can check",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C01 — Prepare an invoice from facts you can check",
+        "baselineSectionSha256": "6f71be868dd33665668789a5e7610af9eebb1da1a06ab5959357171f3c622758",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C02 — Write a quotation that makes the offer clear",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C02 — Write a quotation that makes the offer clear",
+        "baselineSectionSha256": "2f4f28b6b15ab1e0a3a9de502fe663f689627ec15101f07d5fdd32c87608cbdb",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C03 — Follow up an unpaid invoice with a useful reminder",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C03 — Follow up an unpaid invoice with a useful reminder",
+        "baselineSectionSha256": "01ee9930d7851216e7228f002d31aa956caa857668b8ad1f653aaad7c3d7c1d2",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C04 — Keep an inventory register people can maintain",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C04 — Keep an inventory register people can maintain",
+        "baselineSectionSha256": "a48f3a0ddbab48c817621e7337b80f50dbcb070e1f57c66d67eb7da1b87b3582",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C05 — Prepare an expense claim with a clear record",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C05 — Prepare an expense claim with a clear record",
+        "baselineSectionSha256": "db952eda3368fd25aef043296667b987de24df01d01cf2925c7b7ea90506a1a9",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C06 — Connect purchase orders, deliveries and invoices",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C06 — Connect purchase orders, deliveries and invoices",
+        "baselineSectionSha256": "11ec76188eb6eba3062d98fa12540dca9c69f3520c0af7c3d820bf6cf0adf1e4",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C07 — Turn meeting notes into clear actions",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C07 — Turn meeting notes into clear actions",
+        "baselineSectionSha256": "04bb0e0574abdb81f1e7a5416d526e3512b1cfa021bd8017cf34a1cf3e94722c",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C08 — Record a customer complaint and its resolution",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C08 — Record a customer complaint and its resolution",
+        "baselineSectionSha256": "d69fbaf207423ba22f171c45235c2480b0489ff8626498ba650aafb1a197649c",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C09 — Write a simple operating procedure people can follow",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C09 — Write a simple operating procedure people can follow",
+        "baselineSectionSha256": "fabac09824da6b0d45233db58930bdc9807246c0d572d705fe4f96cb8131b6f8",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C10 — Manage document versions without losing the history",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C10 — Manage document versions without losing the history",
+        "baselineSectionSha256": "d03774d5a8615ad2e104d44ba354c6dbd0e7c6d85785520038d390b280c667e9",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C11 — Hand over work without sharing passwords or losing context",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C11 — Hand over work without sharing passwords or losing context",
+        "baselineSectionSha256": "a56cd3d133040d1695e2bab9fb8de82092eff53bfbfa6b5b379a522314c9ceff",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C12 — Organise business records so you can find the answer",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C12 — Organise business records so you can find the answer",
+        "baselineSectionSha256": "9f4d2fc36072173a7dfa57e72882724b1ea1b8e7474bb58c95905355a03b154b",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#retail/wholesale",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "retail/wholesale",
+        "baselineSectionSha256": "56a7b4b8e3945fb848efe8b7e9e913ad6d25a4986f031dd4fa0352423f6e89fa",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#packaged-food manufacturing",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "packaged-food manufacturing",
+        "baselineSectionSha256": "bd7ff680f983bd3f5299a54a58c396949e529db710308d8527539b9045b6b16b",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#restaurants/hospitality",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "restaurants/hospitality",
+        "baselineSectionSha256": "2db0874897defe70ba5eb653ce4be92cfdd1b16883748b9a8b3d135f0bdf153b",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#agriculture",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "agriculture",
+        "baselineSectionSha256": "a8547f543f4e2aa6cd6cd106a55e41c1bed8e694b32f6aeb33a830b689550e56",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#general manufacturing",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "general manufacturing",
+        "baselineSectionSha256": "bff6d0df32d5b6f5a1bf97fc7f436c286603a9607a86ce456fe6d96c135e1eca",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#logistics/transport",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "logistics/transport",
+        "baselineSectionSha256": "2b5196f10d34ea1201658711d8ae14d745e88a1f2be3a7c2c5581235f438f1b7",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#construction",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "construction",
+        "baselineSectionSha256": "1d35aa034a42bdd3dd32112dfce5547d765b44940de374a44b8c41de9daaa5d4",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#real estate",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "real estate",
+        "baselineSectionSha256": "941b4dfe1410193533b6f5d558593d28dfd1b65eb774f83a033ffefc57e3c5f4",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#technology/software",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "technology/software",
+        "baselineSectionSha256": "45823eb40177e55dedf771bbdf9679abd5c3c3a8b782521338b1a07cd8623f98",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#e-commerce",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "e-commerce",
+        "baselineSectionSha256": "10e32d69f58b983d87be66a38bba072bfb74f4adf7716530e739c4097fe25ae7",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#beauty/personal care",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "beauty/personal care",
+        "baselineSectionSha256": "e6a22028318f8eb41689658c7641ec216df729bb648da0f23d5c0b946d1c97ec",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#fashion/textiles",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "fashion/textiles",
+        "baselineSectionSha256": "56dbe5be3c8fdd50c0d5e6d23060f30cf593344620b37688a086212b346fbcd0",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#healthcare",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "healthcare",
+        "baselineSectionSha256": "2618513c4940e19c16533c9c9c85dfee36ac21a30dd9e7d83987e92bc8f60dec",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#education",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "education",
+        "baselineSectionSha256": "3250e8010dc35677d0d9c33c6347acdde5bd9a78696a8b8205a54cc67c01b130",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#professional services",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "professional services",
+        "baselineSectionSha256": "36c871b16d2c691bdfff14aee24ddc23699ab1fd2bb70e7c83c41febae62fbcf",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#media/creative",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "media/creative",
+        "baselineSectionSha256": "cfae0e71b4b6f52ae6a3d36be4cfba39fb653c9c7bdc2149b31336bfd2c54f2a",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#import/export",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "import/export",
+        "baselineSectionSha256": "1b97a8ad970559584d1649c178ed5858723289cbb7db7434c76b829014552203",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#energy",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "energy",
+        "baselineSectionSha256": "dec4a75b192af7d8815d9bcb5e1bd67bb764190d51c551e692dad482754fd8da",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#financial services",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "financial services",
+        "baselineSectionSha256": "de3eafc8673283053563b9d1bf0f3b0145dfac0aba75b581c93c03a30e564eda",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#other",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "other",
+        "baselineSectionSha256": "3b6e951ee3df1d3c1840fa8eda33899657479a65263edf4defde93236e241274",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#retail/wholesale — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "retail/wholesale — deeper pack",
+        "baselineSectionSha256": "f26660109d93a3269694845b10d60cff2273cdb5b7b35b2ddc0eedb0c5d960e5",
+        "category": "industry-deeper-pack"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#packaged-food manufacturing — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "packaged-food manufacturing — deeper pack",
+        "baselineSectionSha256": "b0d560587962410cfad9da9f35796a6520a1d497bbe9dde713f0701d56c56acf",
+        "category": "industry-deeper-pack"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#restaurants/hospitality — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "restaurants/hospitality — deeper pack",
+        "baselineSectionSha256": "e52a89ba25bc2470f49fe0508f04aff803c7affbe4df5ebf070263dfe74d0dae",
+        "category": "industry-deeper-pack"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#technology/software — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "technology/software — deeper pack",
+        "baselineSectionSha256": "097b703e7cf67b2962fc39d874f6666aafb1fc1d5cfa92132985274c67f2e47d",
+        "category": "industry-deeper-pack"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#professional services — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "professional services — deeper pack",
+        "baselineSectionSha256": "1e8e44c99a5204c4a69448cebf30cfd6a2979ba727aa5e696de2ee946f4a3e68",
+        "category": "industry-deeper-pack"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#beauty/personal care — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "beauty/personal care — deeper pack",
+        "baselineSectionSha256": "dc83e657a63cd42bcfb16df71e1a42fae2980df68d8d2679512f23c5c8181baa",
+        "category": "industry-deeper-pack"
+      }
+    ],
+    "corpora": [
+      {
+        "name": "editorial",
+        "cases": [
+          {
+            "id": "EVAL-EDP-C001",
+            "hash": "0d73ec9da3239226da22136cdd76f312eb1e27c2810b5c669af12d7dfce471b1"
+          },
+          {
+            "id": "EVAL-EDP-C002",
+            "hash": "53e2d42f5bbae1688ccd9c96de53c7786ee33e59c0e5d9951ec68d13fc79c834"
+          },
+          {
+            "id": "EVAL-EDP-C003",
+            "hash": "2990df6c196e264d526b57c66d9a10a51365f0d20665b7c59582877b39278dda"
+          },
+          {
+            "id": "EVAL-EDP-C004",
+            "hash": "e2a4069d396d829a4b4cbd354a690b0c952e350a8a7a55db604ff2821126c2ec"
+          },
+          {
+            "id": "EVAL-EDP-C005",
+            "hash": "2898b27bef0cd27555d00bb4ee28826e6efc28b87b5ed13595148a8cd8beff2c"
+          },
+          {
+            "id": "EVAL-EDP-C006",
+            "hash": "962bcde89568cfb42fcdc25ed403f767867cbca52fa8bc9168173c07b37c58af"
+          },
+          {
+            "id": "EVAL-EDP-C007",
+            "hash": "12673da5d17a1365a0cc366785bb3da04a12c411cecab87d65d1f08ee0c5e900"
+          },
+          {
+            "id": "EVAL-EDP-C008",
+            "hash": "b077c44ea7491d89a8450eee19d3e9c1d101aaecf59155e5a22474f3be4b8fef"
+          },
+          {
+            "id": "EVAL-EDP-C009",
+            "hash": "7e56b8c6be7bb3e6de86851d13d4a2c43bbeb9f47b3924c634d818993bfdaa88"
+          },
+          {
+            "id": "EVAL-EDP-C010",
+            "hash": "a9f591ee218e85beb00764a747f32232efe2095367a3e1e955befb1954bf17f8"
+          },
+          {
+            "id": "EVAL-EDP-C011",
+            "hash": "f368c712f8cab04ac6ea17659755e87c0f74f3916a114a0459781b210ac0c5ff"
+          },
+          {
+            "id": "EVAL-EDP-C012",
+            "hash": "156de07e2ab32c00c29c2877082765d62b913458e1af4a0ce1908cfdeb276140"
+          },
+          {
+            "id": "EVAL-EDP-C013",
+            "hash": "bdbba189f83130f7707dcfe96eddbc32ef62d482ba7ccad17673911884246213"
+          },
+          {
+            "id": "EVAL-EDP-C014",
+            "hash": "d6c25c7e9ba70a87a5d4fba6f2603f69c7a0440791f86957118978ff65f3693e"
+          },
+          {
+            "id": "EVAL-EDP-C015",
+            "hash": "035bc46e32db4e223533617e230d6713417adaa5cb2a06eb33f661122df9e070"
+          },
+          {
+            "id": "EVAL-EDP-C016",
+            "hash": "3da4503b1a12d3794b9e0d4c9fc30c8e4181b93e181f005ded3a336d705ca619"
+          },
+          {
+            "id": "EVAL-EDP-C017",
+            "hash": "6e052d210d9904e364a7ae79595a63ae5b7fdf783fc0ece8c4035dd70c5b5630"
+          },
+          {
+            "id": "EVAL-EDP-C018",
+            "hash": "bd9598bd12020bd6b8ffc4faab60f24e085b14ef0edece6b9137fa54f75995ee"
+          },
+          {
+            "id": "EVAL-EDP-C019",
+            "hash": "a8dc9651e4bef4c87b34b2f2e6489bfeaff7b4fa92d27198424b0c0e58b18ce8"
+          },
+          {
+            "id": "EVAL-EDP-C020",
+            "hash": "1489b482e55db7ee3d818d6d5339710d2ea9283d7227ec7b1259194a66967779"
+          },
+          {
+            "id": "EVAL-EDP-C021",
+            "hash": "8cc157c6b55b175edbeed505d9adef617678b79a6c2f3df431e53af5ee7f41ef"
+          },
+          {
+            "id": "EVAL-EDP-C022",
+            "hash": "9db286f4e8afd64d9c66f066dbd329dc8735b748bc4cc6b3fb446eb0ef460117"
+          },
+          {
+            "id": "EVAL-EDP-C023",
+            "hash": "8c0947faafc1512ee43f07968d74cbf5ac0531b46b33e632344e5406e25ab8fa"
+          },
+          {
+            "id": "EVAL-EDP-C024",
+            "hash": "471aa72354a9406c36cfa96f42be3eb55b340c340b8b1aeab41720b7898fa6a2"
+          },
+          {
+            "id": "EVAL-EDP-C025",
+            "hash": "7adbfe5378e8fc7d2f3709d89c508d69d297c3a8d1249e5062bf867e9ef92a97"
+          },
+          {
+            "id": "EVAL-EDP-C026",
+            "hash": "80b4388bdbee2aeab7caeae651ec335fa518b60b8cd6d59e4118ce5c1e2afde0"
+          },
+          {
+            "id": "EVAL-EDP-C027",
+            "hash": "6deb0838ba23a9b78b9d097fea8b1dbbaa3451ee974d5d98650cb50c6095b91e"
+          },
+          {
+            "id": "EVAL-EDP-C028",
+            "hash": "5d0cd46ddbf95044467d2b20c2b3569007168b52ec1f983dcb633c320c6934d7"
+          },
+          {
+            "id": "EVAL-EDP-C029",
+            "hash": "80f2e00faa609445cc8a2023eecc1d373c7919f84e84c072875ad36a9780238b"
+          },
+          {
+            "id": "EVAL-EDP-C030",
+            "hash": "772fe9b037c4e2ae2254d214be486b147dade2092b337f8ac2583e24720887e1"
+          },
+          {
+            "id": "EVAL-EDP-C031",
+            "hash": "cc989286f445ababc8f4147cb031be08756614728f70dab0ebd4374925972c2d"
+          },
+          {
+            "id": "EVAL-EDP-C032",
+            "hash": "6539878cfab21ba1a59632cdce3a55a7f8eb7c7ca96336a30b218836b3102f9c"
+          },
+          {
+            "id": "EVAL-EDP-C033",
+            "hash": "3cb8c40825fb77ff00aa26c67608f5b493be95114e9ff797a9ea05fbe1d24c7b"
+          },
+          {
+            "id": "EVAL-EDP-C034",
+            "hash": "bd9a058f69e0aceb7c6659ada9141f341cea10390db67a7d9481d72710e50a28"
+          },
+          {
+            "id": "EVAL-EDP-C035",
+            "hash": "1075ec470e13d078dd0f809508085ae59ab7bdbdeb6a133eff7e7ad06d0f1048"
+          },
+          {
+            "id": "EVAL-EDP-C036",
+            "hash": "d5c8b9becfcfa91cfb11cdf126feb196d234ef67a87445e6f3e3f9a70f12e0a6"
+          },
+          {
+            "id": "EVAL-EDP-C037",
+            "hash": "3fa4e46adc6fd185e0be1b6059343a232c86f6024ab0ae37dbce0c062cccc6e7"
+          },
+          {
+            "id": "EVAL-EDP-C038",
+            "hash": "974efb1a43f5d48e95cda8e8e71264169a2431fda8f6500bb4d73fa1f8e249f6"
+          },
+          {
+            "id": "EVAL-EDP-C039",
+            "hash": "ff782825ba0931ddad541c5e45bf5a4dcaa0e843fb161a517d51608ab43259aa"
+          },
+          {
+            "id": "EVAL-EDP-C040",
+            "hash": "296872b4085320953dde9aec067a66f3cf3bce1388fad0ab2a62192754631ebe"
+          },
+          {
+            "id": "EVAL-EDP-C041",
+            "hash": "7618505882c84059b5a71117983d61eb57fa37f25fb28df336089f2026fc9e94"
+          },
+          {
+            "id": "EVAL-EDP-C042",
+            "hash": "5820a1c7c039decc93a436bd41fe714d9a82f8cb4c75c7dae4a78f28f3ab26c0"
+          },
+          {
+            "id": "EVAL-EDP-C043",
+            "hash": "2dc00236866072cacc82de562e87f57e2155fbceb67c8a065b37961c55a5719b"
+          },
+          {
+            "id": "EVAL-EDP-C044",
+            "hash": "b26316589f1afbe5cb7e0369310d9c6d5ffa05642943820f692d2f76f478cf9f"
+          },
+          {
+            "id": "EVAL-EDP-C045",
+            "hash": "c347d96538e09929b19431ddbcd453b745f873ad8e59748c1aabe6a4945b7ead"
+          },
+          {
+            "id": "EVAL-EDP-C046",
+            "hash": "f33d1c0dafb6cdc3b412ac31186692081d54f98b2f34c6c0a19676291e2ad88a"
+          },
+          {
+            "id": "EVAL-EDP-C047",
+            "hash": "9846f6841815584f8d53fbad43a88602e7c242f6ba04acd2d7987bc60ace3690"
+          },
+          {
+            "id": "EVAL-EDP-C048",
+            "hash": "b9be489f24e8a2b85830d75c1fc86545355b80b013e4ef457274af386e30bfa1"
+          },
+          {
+            "id": "EVAL-EDP-C049",
+            "hash": "964afbc9e067655fdac032949627611374ad0e76aad813cee7c0c2df1b4c71f7"
+          },
+          {
+            "id": "EVAL-EDP-C050",
+            "hash": "a35338ea5ed24f592c6e874388e5d7be09f5b797acf7ca87a64cd0d32c2be304"
+          },
+          {
+            "id": "EVAL-EDP-C051",
+            "hash": "1d6d44f01a23d33894a14732bcc40bf0467d2f6a793bdfe9219895938f1a6a81"
+          },
+          {
+            "id": "EVAL-EDP-C052",
+            "hash": "8a6da75be88bcc39fc97f798141702e56eecadce1048b716eca1a022d860ed1f"
+          },
+          {
+            "id": "EVAL-EDP-C053",
+            "hash": "51bc2573f187cf376f27b1590d6970404a535ec015d8ff270071757b359aa453"
+          },
+          {
+            "id": "EVAL-EDP-C054",
+            "hash": "f3a7923a8fec748d9b87b3eef2126272e07d3ed630343d8672a5c1cb8cf5817a"
+          },
+          {
+            "id": "EVAL-EDP-C055",
+            "hash": "7b8b8aafc587a9994edaa89495bc27cccdc56ded3301c781086dd2d8accd374e"
+          },
+          {
+            "id": "EVAL-EDP-C056",
+            "hash": "b69e520b711ea7b99bb2715f66ad2970bff12a4c82c401ba17593aeaac4ac5f9"
+          },
+          {
+            "id": "EVAL-EDP-C057",
+            "hash": "ed82818324be3b13d0d4bf1c91c1df3b37d19a42d8c93f425877445d2a38ab06"
+          },
+          {
+            "id": "EVAL-EDP-C058",
+            "hash": "49f0d8e20aa3bac8e6c0f37d817ef6e4c93299a1d04eed191a6be1eeccb26692"
+          },
+          {
+            "id": "EVAL-EDP-C059",
+            "hash": "2fd63d4bd795754b11c5ae0c569adb28e344da973ea9cf4360ac250082e844cc"
+          },
+          {
+            "id": "EVAL-EDP-C060",
+            "hash": "38c248f2b49eb745b6bc69ac02661d0f822834a0e5986ddda7decec5ea96c6b8"
+          }
+        ]
+      },
+      {
+        "name": "checker",
+        "cases": [
+          {
+            "id": "CHK-CAND-CAMA-001",
+            "hash": "5ff46523963fd51fb0d22842374b67fe64d7684344b15f59fc9557048544b474"
+          },
+          {
+            "id": "CHK-CAND-CAMA-002",
+            "hash": "e93eeb97582459b4936c87166640a6d6d21eeaeedd2c1cb8921d39d7be65d46a"
+          },
+          {
+            "id": "CHK-CAND-CAMA-003",
+            "hash": "355fdf7a1ea3acfbf255b24e7fbc7baa43c9b98755cd84dd48f32d9e7de3308d"
+          },
+          {
+            "id": "CHK-CAND-CAMA-004",
+            "hash": "3e8d3386b655d070d9290aefce5216855b6681b0ab10b1af387504a36e0683e7"
+          },
+          {
+            "id": "CHK-CAND-CAMA-005",
+            "hash": "87d4bf1da824d98f163aefa0ee021f4dd0e886cc2f782c042fca5f4cec666159"
+          },
+          {
+            "id": "CHK-CAND-CAMA-006",
+            "hash": "d77d222b0dc423d7116a7ab7df4c7f58f3e264f0aeffb32d22a08ffc9b704dea"
+          },
+          {
+            "id": "CHK-CAND-CAMA-007",
+            "hash": "1864a34e106e63018a062f43888dec3925c40d0213d63d731aae6ca3d8b7bca7"
+          },
+          {
+            "id": "CHK-CAND-CAMA-008",
+            "hash": "ed6cc74656785143d23f9dca90b65184846a769e238bcde28cdf8eca95fece03"
+          },
+          {
+            "id": "CHK-CAND-CAMA-009",
+            "hash": "32d8926f242b8fc14e227e275c3ae632412c6c26bcab95b559597b7a9ee99ef7"
+          },
+          {
+            "id": "CHK-CAND-CAMA-010",
+            "hash": "f1952458fbf003279f1c57603972f28955586bdf07b1d2dd31da6d9cc171d826"
+          },
+          {
+            "id": "CHK-CAND-CAMA-011",
+            "hash": "91c38478b45e097f38cbc78e8c6a88ae6638b29395790dd4eb078c617e68d43e"
+          },
+          {
+            "id": "CHK-CAND-CAMA-012",
+            "hash": "ee84527a29316e4f23b7e38516ee32d7040074fffc626ecc0698bde3a4e7eeff"
+          },
+          {
+            "id": "CHK-CAND-CAMA-013",
+            "hash": "40b483aee2388f3d7a63c0e1af28b5b482b7950c6a7c03390c1a91588fe8a83f"
+          },
+          {
+            "id": "CHK-CAND-CAMA-014",
+            "hash": "8e8d3a1db0aa60de42acea2912d744ce25ee2597fff2db2303ef2bb2068b5a57"
+          },
+          {
+            "id": "CHK-CAND-CAMA-015",
+            "hash": "1d508f57c54ecddaf54f7ba7ba2d357f9b53d4371f41a0e0a8b178c2d6a50ba2"
+          },
+          {
+            "id": "CHK-CAND-CAMA-016",
+            "hash": "f449cc2b4c5ededde4b5168b65f7d36eb01c129adac5bdd374285b2116ed8bd2"
+          },
+          {
+            "id": "CHK-CAND-CAMA-017",
+            "hash": "8d48f6b0e28eb59d7fbf7d57a0d672c2f3b04007741cf675def64d5a5cd52d9d"
+          },
+          {
+            "id": "CHK-CAND-CAMA-018",
+            "hash": "0df6b313195cefebdbe9120f9ce4171ac3bcb68c3b419a4a5986841c03fdf5de"
+          },
+          {
+            "id": "CHK-CAND-CAMA-019",
+            "hash": "7b6e3de8070616359e001ae988b147959355b077324d6b7462afa3b417c38570"
+          },
+          {
+            "id": "CHK-CAND-CAMA-020",
+            "hash": "5007a69bd7749f991f7b046ff25739da6a57d20cdd63e8fd47733fdc6fc77019"
+          },
+          {
+            "id": "CHK-CAND-NDPA-001",
+            "hash": "7cee33c3e36f748a791bbd5d590c11632101efef26c2b20af6d4fbd62ed9b7be"
+          },
+          {
+            "id": "CHK-CAND-NDPA-002",
+            "hash": "aea258a09dca46c625b56c3fca83648f63fb2967b258fce1f2cc45210a949dff"
+          },
+          {
+            "id": "CHK-CAND-NDPA-003",
+            "hash": "afb78266192d9f89650140a682a1a87f40c4b8b36300d8b4ded03198c15fb1b7"
+          },
+          {
+            "id": "CHK-CAND-NDPA-004",
+            "hash": "a0f4dc0702ea5f645b94298f930754cf8443e7404405116a8a9e5af91ba22f99"
+          },
+          {
+            "id": "CHK-CAND-NDPA-005",
+            "hash": "969f3a2a62a40713c3ae193c552d8c5f01f256d1afb14dfffa1f22e26caa6478"
+          },
+          {
+            "id": "CHK-CAND-NDPA-006",
+            "hash": "042a85dd7f504c0bfdfd2e82fa031a7fc56899d67faa8701b6f05d18317c979e"
+          },
+          {
+            "id": "CHK-CAND-NDPA-007",
+            "hash": "38bae1629921aff1e21094f8e1392c89388b666678f74ef8d33106ea14fbd65c"
+          },
+          {
+            "id": "CHK-CAND-NDPA-008",
+            "hash": "e7643bc960815d3a1367359e66d8c38ca940ac1eb435740ab7aeb7f2e2df6f66"
+          },
+          {
+            "id": "CHK-CAND-NDPA-009",
+            "hash": "9c4b4668b8621e9d278c98b7bda66e58e5a62f87246c983c5f42b0def45c1002"
+          },
+          {
+            "id": "CHK-CAND-NDPA-010",
+            "hash": "aa1e4f174c2e1e0b28f83c38d61d4348b18903b4c57a0bc8f0086e6ecafa111c"
+          },
+          {
+            "id": "CHK-CAND-NDPA-011",
+            "hash": "d8f95be2d590150a6d87d552c3ebd6a265ccd0f57bcf6455c41f2901ba7968b7"
+          },
+          {
+            "id": "CHK-CAND-NDPA-012",
+            "hash": "e0fedfc2ba59e61ee40168a5c704536fe1224abadfae14460b57e16136c4623e"
+          },
+          {
+            "id": "CHK-CAND-NDPA-013",
+            "hash": "364553e1c60ce486127a18a5bb4a84615b45a9bc73653b16a6409c40cd9521e1"
+          },
+          {
+            "id": "CHK-CAND-NDPA-014",
+            "hash": "7cebc4c428373a544c49cd0458ed1d46fb50e7913a178061e45c41ee43458f29"
+          },
+          {
+            "id": "CHK-CAND-NDPA-015",
+            "hash": "6bfbc74df07954007b1629b975a06a6164194164c754097bc3afa19a7613af77"
+          },
+          {
+            "id": "CHK-CAND-NDPA-016",
+            "hash": "5aa643b37080b437e741bf06d30103adebf2ef41dbde8cbdf1fb193e5cbe1b28"
+          },
+          {
+            "id": "CHK-CAND-NDPA-017",
+            "hash": "47b43711e1d38f1e843bad05f12c5c03440995141f57e3870873ec008e1d9171"
+          },
+          {
+            "id": "CHK-CAND-NDPA-018",
+            "hash": "25978eec82cfeea00c0c7e87bd28452a9efff7f51abb2f28ed2b7f0e97d45097"
+          },
+          {
+            "id": "CHK-CAND-NDPA-019",
+            "hash": "3710fec3bfc8805abaf73b1dc70d337e9fe411888002767182c703d8b6f055db"
+          },
+          {
+            "id": "CHK-CAND-NDPA-020",
+            "hash": "eb423367e00769b654b379a00dbff93be2db8cf26d8f24e326e1f2da6de21ed5"
+          },
+          {
+            "id": "CHK-CAND-NTAA-001",
+            "hash": "042ef0baafc1de7506f1ee15c3d9912b5e15420520654d9d985e110e66e16ade"
+          },
+          {
+            "id": "CHK-CAND-NTAA-002",
+            "hash": "099393f3505d5e9a1501e1547a3f943b90d605cd2327dbee4ac45b71fc436b51"
+          },
+          {
+            "id": "CHK-CAND-NTAA-003",
+            "hash": "47b719e973903ce907b917d6ee67fa42cf041a340ab1426f2c86a0a66a06328f"
+          },
+          {
+            "id": "CHK-CAND-NTAA-004",
+            "hash": "bdfa2067bf41b71e35aac537e7b6398374544258c2f156b84386035b10ae12d9"
+          },
+          {
+            "id": "CHK-CAND-NTAA-005",
+            "hash": "27f905674d41bb5a3afffee7db7f855f530c00eb3c09bfe175f4af442de53372"
+          },
+          {
+            "id": "CHK-CAND-NTAA-006",
+            "hash": "e7a2c46702e9bd075378e5284899858fbc0361ca15ccf57a2bd95e91685c8804"
+          },
+          {
+            "id": "CHK-CAND-NTAA-007",
+            "hash": "5e68c3046b6699bad2b4e0ab8cfa52c24abd6f6201723573df339845f2042248"
+          },
+          {
+            "id": "CHK-CAND-NTAA-008",
+            "hash": "3f8f9626fbbab62565bf30b584f402f9d6ce28bfb266fb664ba8b76b4ae2c358"
+          },
+          {
+            "id": "CHK-CAND-NTAA-009",
+            "hash": "54f5e656b30be6d7c04b17b7f413e06dfe1561cd173e3f0a1ee6587fec0d363a"
+          },
+          {
+            "id": "CHK-CAND-NTAA-010",
+            "hash": "9f3bcf772c4712047c3c70a552df03adc4703471c4aedb916a42a75badfca775"
+          },
+          {
+            "id": "CHK-CAND-NTAA-011",
+            "hash": "eaf3a992cdda485ac1268bf95bc9b47d004a1b0914567cdc8fdc85a2068e456f"
+          },
+          {
+            "id": "CHK-CAND-NTAA-012",
+            "hash": "0be03c6e7d85ba88d294cbb7fbae97861a89b4aff0b78fa4889ee5ffa832fda9"
+          },
+          {
+            "id": "CHK-CAND-NTAA-013",
+            "hash": "689f542b7e40fdbe5c35c2169e1be19dd9376e32cd3d6069031bc60ead824afc"
+          },
+          {
+            "id": "CHK-CAND-NTAA-014",
+            "hash": "c502e13774e7ca3ecdd5f9d8edd5ca944a754903c184941dfe5703c67c5be75d"
+          },
+          {
+            "id": "CHK-CAND-NTAA-015",
+            "hash": "9e3a600797804a96461f746981a0e08ddb62be28ab466241e8aee128f8f13e44"
+          },
+          {
+            "id": "CHK-CAND-NTAA-016",
+            "hash": "8d97557ca31f254231d1cdbdf82e8dd61dbc9878d61efd77e1ff9b6ac8692c6b"
+          },
+          {
+            "id": "CHK-CAND-NTAA-017",
+            "hash": "2da69fd950c10df9a55983d20414337d8d0024206918917ca72ed5d9743fc38a"
+          },
+          {
+            "id": "CHK-CAND-NTAA-018",
+            "hash": "d58c25d49f2b56ec564f877e569d6d40091a58f67b467a173e68e071c80cebaf"
+          },
+          {
+            "id": "CHK-CAND-NTAA-019",
+            "hash": "d18b145345329207e95be84273ed2ee2705ea8a59723ee9bd0cfd49c0f597e92"
+          },
+          {
+            "id": "CHK-CAND-NTAA-020",
+            "hash": "842e9c6366fcede534231a3a5fe22e77c5649e6ccb22d53c4f663ccfbae0bb80"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-001",
+            "hash": "4a539cc31a842e8ed12547b752dcefcebb71031c67f31897142a019d509d35f3"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-002",
+            "hash": "6e76968822d3809b0a4ec1fb2e7369203af76eb0c5e406ec2eaabd5a5d3aa7bb"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-003",
+            "hash": "e913dcf085d96e9299ea1e927b4b3c7694783e4aed8ce7885b10a58cb3c0f4fb"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-004",
+            "hash": "266ff7e1061f6e35d8465034938ec027ae43c9436cfd70e973de52901fbbd941"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-005",
+            "hash": "00e97a58c6aeb1601a17613b2bff1e87630085ea5766080eaf9ac0d3dd3303a8"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-006",
+            "hash": "8d03c2afe7bd1aff5f0688782c8b8ee60fbe938b85ab93200a714b140d27f8ed"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-007",
+            "hash": "b073b90136ea02d378eb4ead262a434a2050d7275782dc51d1b364d6940ae128"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-008",
+            "hash": "502ac332968fed17798ff742a6f71ca5f028cb124fc70b50de9c2b2404ebe0f3"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-009",
+            "hash": "f88b74944975870136fc545b5abf2262c3526d623aa8bfaf3a2714c58f52b297"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-010",
+            "hash": "113775cbec4634cbace9619442c30e1f2dbcda38e72b15790b5e75308c6eddb4"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-011",
+            "hash": "e6cbd99ee5a567a47c09947c5930c11565d0f9b94ce2820af168fee044c07d0e"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-012",
+            "hash": "42e3e0bea9baf3fc6d442dc15ad2d04ca32f53d9b5531f5f8be3e164842f066c"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-013",
+            "hash": "f2c8addd4a83d9039aef6d0aca54c6b4aefd8f8ce40de87e4acc0b2209c41242"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-014",
+            "hash": "9dfaa49a0ec967827b30c989cfb3c9e11e28d47d973d9415a9d82ac4b389b859"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-015",
+            "hash": "cca118b69bca3a0aa31aa2beaae9fa72567b247cb9c295410c02228f92153999"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-016",
+            "hash": "e18308abcc48b157abcc0c4cbbf7a97ab4501bb829713464ac642d3e8f148c81"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-017",
+            "hash": "e372daa0ca0a0c77d559d4b2a84ac52883862c86d40f8da92c209e2fbda297f0"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-018",
+            "hash": "adc5ad8f477fad8fb96fabb6bbf62231a34b385bca0aab5ffc72f343f7933dcc"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-019",
+            "hash": "b00e3a0d5fc03a1e9a3650d761e617923bc6883edb9fd21f7c5f993302d1247a"
+          },
+          {
+            "id": "CHK-CAND-NAFDAC-020",
+            "hash": "1815949bec4cd14bcd81e167ca495bdfb279302c112e74f4b435822403be0ce1"
+          }
+        ]
+      },
+      {
+        "name": "customer-ai",
+        "cases": [
+          {
+            "id": "CAI-CAND-INV-01",
+            "hash": "5ed0815c5631dee1032ff6a58b7e18dc708045b6ecf62a6ddaa92acb89ece718"
+          },
+          {
+            "id": "CAI-CAND-INV-02",
+            "hash": "2ebe980fa2a7816331a6e8ce3dcc64f048cee6919577a857404a089f40620c07"
+          },
+          {
+            "id": "CAI-CAND-INV-03",
+            "hash": "15ff3f03b661feaa6145836d38fa68a8f251cae4ae3928803b5a5eae1a495763"
+          },
+          {
+            "id": "CAI-CAND-INV-04",
+            "hash": "56eaf8edd4602074596b8a74d3fffe0fec5149a4fba463ceef64102e8ff6d489"
+          },
+          {
+            "id": "CAI-CAND-INV-05",
+            "hash": "e8ae0af3624b4eb68a624ad8341cad406fcd720a3af710030e6697ad07cf62b0"
+          },
+          {
+            "id": "CAI-CAND-INV-06",
+            "hash": "24fa101929bc5ac1120744c8bfb68ba5ae51e5685cfd8f04501ec5b003585e5e"
+          },
+          {
+            "id": "CAI-CAND-INV-07",
+            "hash": "76705696ca8058b20c2bf82895cf7b352188bf97bad9159ad8c51cfd9b114aa1"
+          },
+          {
+            "id": "CAI-CAND-INV-08",
+            "hash": "ce730ccb456374786dfe76263402f32e1793d24181aa2e11eff8f63b73286791"
+          },
+          {
+            "id": "CAI-CAND-INV-09",
+            "hash": "fe7d9af8b60ff3ac105e3f90ef9e99c9c951c5382a52a2ae0b232601f2252b5b"
+          },
+          {
+            "id": "CAI-CAND-INV-10",
+            "hash": "38b503029209b48c88fafc38a06c4dc3d81e6ed222f18b2f3c6d6ccacb3879e9"
+          },
+          {
+            "id": "CAI-CAND-INV-11",
+            "hash": "c671283ba1a41d7d14bb7c4ead9dd341355e66be2dc1553df28a745e41821284"
+          },
+          {
+            "id": "CAI-CAND-INV-12",
+            "hash": "61e86b28d6442687ec82eef6010e85d61c2e6998beb4c91da601b36a6568209d"
+          },
+          {
+            "id": "CAI-CAND-INV-13",
+            "hash": "cd4cccda486437a30a64fed8eebdd135191259355bc05f45ff325ffd5a78613b"
+          },
+          {
+            "id": "CAI-CAND-INV-14",
+            "hash": "cd66a864b94926fb209e72578dbdd75e0fadb5e4958bbf5f9f6178c90c9635c9"
+          },
+          {
+            "id": "CAI-CAND-INV-15",
+            "hash": "2b7c5f621af60a1becfca12d9505b53f6692e7f9c5b49b51995c18d51aafa300"
+          },
+          {
+            "id": "CAI-CAND-QUO-01",
+            "hash": "27aeace4842577bf5639e8e23bda8432715cdc6af6dd7af81496e81e36e86c5a"
+          },
+          {
+            "id": "CAI-CAND-QUO-02",
+            "hash": "cde8179fe20f711602f4a9162b401e5c2facaa40e91002bec3e9a0d93bfbdb63"
+          },
+          {
+            "id": "CAI-CAND-QUO-03",
+            "hash": "aad5709a2ff7001452a9c8564d4934a73e75e7b124c99192932d3765c9798916"
+          },
+          {
+            "id": "CAI-CAND-QUO-04",
+            "hash": "aebae379d741c2ae9487f8972286f685c4c13dcb0cc69f006429185ebc949c73"
+          },
+          {
+            "id": "CAI-CAND-QUO-05",
+            "hash": "2b3c1f103f092ec41118e4a91bb01392dd1117d23f53c49e78930f9fababbc78"
+          },
+          {
+            "id": "CAI-CAND-QUO-06",
+            "hash": "7000959bc80fc7484f8980477417735e84a7ac563eee3dc8d49477bc6c6ac82a"
+          },
+          {
+            "id": "CAI-CAND-QUO-07",
+            "hash": "f3e65c5f4b0f8cd2761371734e85d87164884e845a5abdcae05ed95fb7713480"
+          },
+          {
+            "id": "CAI-CAND-QUO-08",
+            "hash": "0e408412deafbd303aca91171ae96808f32fdb1bf8faa351d58788d2fcc8e980"
+          },
+          {
+            "id": "CAI-CAND-QUO-09",
+            "hash": "37a86ea261837a9b403cb3120b5e4430afdb841f148563e412620be2d284630e"
+          },
+          {
+            "id": "CAI-CAND-QUO-10",
+            "hash": "eaefefc5e5361c2b5582719db62eaea94825fb6a510f85af48ae660f595d164e"
+          },
+          {
+            "id": "CAI-CAND-QUO-11",
+            "hash": "dc429dd5c3302cc864412a1d23cc76b18d38a22de9fd87921a3cbbb07deeba78"
+          },
+          {
+            "id": "CAI-CAND-QUO-12",
+            "hash": "3b15772571a8c16450ae4810e93e2381d1c24fba4bc506c45b5262c47ec8cd3e"
+          },
+          {
+            "id": "CAI-CAND-QUO-13",
+            "hash": "def0ef34924b39606f51b243861f4a8cf3472f77f704efd28c6040ef555b8c1d"
+          },
+          {
+            "id": "CAI-CAND-QUO-14",
+            "hash": "1f47729dfbb17497167b832ab7db17428cdbf00f9122a7fd4ac4dda673126fc6"
+          },
+          {
+            "id": "CAI-CAND-QUO-15",
+            "hash": "a32fce38c3ce28b2f8f567f5d7f3253f429a633f28e353850873b173769b6a7e"
+          },
+          {
+            "id": "CAI-CAND-REM-01",
+            "hash": "55441dbf1e6bf7eb4743fc6f49afb44ba142c93b3c139eecdd77d1bacd82beb9"
+          },
+          {
+            "id": "CAI-CAND-REM-02",
+            "hash": "25cba3951197563e01695f5c685ec3dfec418b4e5c6bba41dc2f6059ccd997cf"
+          },
+          {
+            "id": "CAI-CAND-REM-03",
+            "hash": "a4e30ea09603a569f8e48b94946a69a7551cbfa8dccbd61541bfbbc4a66c41c3"
+          },
+          {
+            "id": "CAI-CAND-REM-04",
+            "hash": "2ec13e18ccc6c73a8c4cd01300e3bbc11f5f2d568af76427995c1674ae38c8fc"
+          },
+          {
+            "id": "CAI-CAND-REM-05",
+            "hash": "b3f72b6599a3809e4e10756cac8dbc66fcb369e6ddc51c0aa54b76d166eaae98"
+          },
+          {
+            "id": "CAI-CAND-REM-06",
+            "hash": "7829453e2b783295bfe68cd616eb8379650a8e0797a049fa6e3d1986238f350e"
+          },
+          {
+            "id": "CAI-CAND-REM-07",
+            "hash": "2d88cb388726a9ff85c08126ea370089f45f01eb4c1bb86b0de88cd0b64a231d"
+          },
+          {
+            "id": "CAI-CAND-REM-08",
+            "hash": "7b8bff9211c4f6f2562353767d2f70b80de77501e19e38d1c5f1dce61b48093f"
+          },
+          {
+            "id": "CAI-CAND-REM-09",
+            "hash": "e53fb057eb6229db5d80747d5499e1fe16521bfaf082b2b64d77541c9e61a675"
+          },
+          {
+            "id": "CAI-CAND-REM-10",
+            "hash": "c98ea41d97f1e6a37078b40e5a3276ccbea18d5e820476946de5705f883c8bda"
+          },
+          {
+            "id": "CAI-CAND-REM-11",
+            "hash": "9ae8b03761d714d49596413c71e2ddb586e1000bb08eb2becc273ac5e3d23fe6"
+          },
+          {
+            "id": "CAI-CAND-REM-12",
+            "hash": "4c7f20014a555b9c9cc42cb40dbc798892bddc85a9dcd88a9b1b05b3acd5b40f"
+          },
+          {
+            "id": "CAI-CAND-REM-13",
+            "hash": "0c05dec25fbfaf2494be8e3ff67535eb5bef993b45f4db461568ce27c9d66af0"
+          },
+          {
+            "id": "CAI-CAND-REM-14",
+            "hash": "599f74470babe78d7ab51a59af47d1e209dfb95587e314d2dd5ddc5b29fe0b58"
+          },
+          {
+            "id": "CAI-CAND-REM-15",
+            "hash": "fc77ef962b7c335acb96bbf48dfa31fd7ee813b40376b905ac8ca71662414132"
+          },
+          {
+            "id": "CAI-CAND-PRO-01",
+            "hash": "b247f73bbc637ac56c9ab927fb91d070564208ecf54931f04e449f8d565a12f8"
+          },
+          {
+            "id": "CAI-CAND-PRO-02",
+            "hash": "1a0a292a388a5a683a19f67b04b4620f3e25da099152ad150590ba54f89a1355"
+          },
+          {
+            "id": "CAI-CAND-PRO-03",
+            "hash": "fe67f089d3a7fcd1a0d659f9bc9abc6a99ef26cf7045fa230e47bc66fc33c8b5"
+          },
+          {
+            "id": "CAI-CAND-PRO-04",
+            "hash": "ecea6592849d238a1f7476ec18cc75b7f27d3a359267663f55d74696f3b17646"
+          },
+          {
+            "id": "CAI-CAND-PRO-05",
+            "hash": "c7851e81d986c9ba3390f8835b5657bc388f009eb59238d4d4e2bae6c48f00f2"
+          },
+          {
+            "id": "CAI-CAND-PRO-06",
+            "hash": "e2e54e93035400509a1bb7016aa92ce7251aa6a61d5832fe0367f7c72fe28e05"
+          },
+          {
+            "id": "CAI-CAND-PRO-07",
+            "hash": "b636f734688f9fdf73ecc42827ee48f4b0e6d424d57eaf7062dc4b76393173b6"
+          },
+          {
+            "id": "CAI-CAND-PRO-08",
+            "hash": "584fe68f54875e3ef3803e39426a1b4ee6d923eee78560cd5cb684b543c50ac2"
+          },
+          {
+            "id": "CAI-CAND-PRO-09",
+            "hash": "27ae5efa4675edad20c6083657ff2fa940d9b82ecd1c3743ef17a85932cc0946"
+          },
+          {
+            "id": "CAI-CAND-PRO-10",
+            "hash": "0c404986cd34fa135c4900afa25c2a5c6a6b8e679db509a50ccc5156e66894c3"
+          },
+          {
+            "id": "CAI-CAND-PRO-11",
+            "hash": "e5c2111f25c42ecb18b5baad794cd84588ea2f11be16718035d91875f07fbdd7"
+          },
+          {
+            "id": "CAI-CAND-PRO-12",
+            "hash": "0a1f60a77fb8801c48f59f04b6e2cd91ab8add65d41c1b010b23d7e1d098082e"
+          },
+          {
+            "id": "CAI-CAND-PRO-13",
+            "hash": "4c3d52235749b98ce7cd3152773f214cd10af9677ea2574f4f9612722bcf42c0"
+          },
+          {
+            "id": "CAI-CAND-PRO-14",
+            "hash": "e7fc19b3c874601fbe2aac73ae3c5bb5c495a0a5f959fc4ab3e00e9addc059a0"
+          },
+          {
+            "id": "CAI-CAND-PRO-15",
+            "hash": "5731374008f8881007c635dffbfab85fdcfa3c406b0c7cc2d913896dc23ec522"
+          }
+        ]
+      }
+    ],
+    "laneAttemptLimits": {
+      "publication": 216,
+      "editorial_evaluation": 68,
+      "checker_challenge": 80,
+      "customer": 94
+    },
+    "allowedRoles": [
+      "factual",
+      "challenge",
+      "customer"
+    ],
+    "supportedPreparers": [
+      "operational-template-pair-v1"
+    ],
+    "holds": [
+      "Only the existing TPL-07 exact operational review preparer is executable in this revision.",
+      "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
+      "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt."
+    ]
+  },
+  "proposedApprovalLifetimeHours": 24,
+  "expirySemantics": "The owner-approved record fixes its expiry. Every child expires no later than its parent and retained review plan. Revocation stops every new dispatch, including already reserved work. Valid in-flight usage is still accounted.",
+  "scopeNotice": "One up-to-$30 additional inference allocation for 108 actual content units (70 canonical intake IDs plus 12 practical guides, 20 industry landing sections and six deeper packs) and the original 80/60/60 case rosters. Named sections use actual source headings, not invented runtime UUIDs. Same-identity candidate revisions still require real eligibility checks; original evaluation corpus bytes stay pinned. Prior unknown charges, tax, Agent usage, hosting and other projects are excluded. Completion of all allowed work is not promised.",
+  "delegationNotice": "Once this package is actually approved, the server may admit exact immutable submanifests within its scope without asking for per-item spending or publication approval. Current implementation only prepares the original TPL-07 operational pair.",
+  "currentExecutableCeiling": {
+    "attempts": 2,
+    "worstCaseNanoUsd": "741100800",
+    "actualRuntimePlanPrepared": false
+  },
+  "actualSourceCounts": {
+    "canonicalIntakeIds": 70,
+    "namedSourceSections": 38,
+    "totalContentUnits": 108,
+    "corpora": [
+      {
+        "name": "editorial",
+        "cases": 60
+      },
+      {
+        "name": "checker",
+        "cases": 80
+      },
+      {
+        "name": "customer-ai",
+        "cases": 60
+      }
+    ]
+  }
+}
