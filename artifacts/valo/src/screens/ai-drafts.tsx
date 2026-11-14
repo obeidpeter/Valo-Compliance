@@ -51,6 +51,7 @@ export function AIDraftCompose() {
   const [fin, setFin] = useState<FinancialInput | null>(emptyFinancial('invoice'));
   const [finKey, setFinKey] = useState(0);
   const [consent, setConsent] = useState(false);
+  const [draftingInstruction, setDraftingInstruction] = useState('');
   const [key, setKey] = useState(uuid);
   const [touched, setTouched] = useState(false);
   const [manualErr, setManualErr] = useState<string | null>(null);
@@ -68,7 +69,7 @@ export function AIDraftCompose() {
 
   function build(): CustomerAIInput | null {
     if (!fin) return null;
-    return { task, tone, ...fields, issuerName: fields.issuerName.trim(), recipientName: fields.recipientName.trim(), documentNumber: fields.documentNumber.trim(), contextLines: selected.slice(0, 20), financialInput: { ...fin, kind: task }, processingConsent: consent, idempotencyKey: key };
+    return { task, tone, ...fields, issuerName: fields.issuerName.trim(), recipientName: fields.recipientName.trim(), documentNumber: fields.documentNumber.trim(), contextLines: selected.slice(0, 20), draftingInstruction, financialInput: { ...fin, kind: task }, processingConsent: consent, idempotencyKey: key };
   }
 
   function submitAI(e: FormEvent) {
@@ -165,6 +166,13 @@ export function AIDraftCompose() {
             </ul>
             {lines.length < 20 && <button type="button" className="btn btn-ghost btn-sm mt-3" onClick={() => setLines([...lines, { text: '', send: true }])} data-testid="button-add-note"><Plus className="h-4 w-4" />Add note</button>}
             <p className="hint">{selected.length} of 20 notes selected for the AI request.</p>
+            <label className="mt-4 block">
+              <span className="text-sm font-medium">Optional drafting instruction</span>
+              <textarea className="field mt-2" rows={2} maxLength={1000} value={draftingInstruction}
+                aria-describedby="drafting-instruction-help" onChange={(e) => setDraftingInstruction(e.target.value)}
+                placeholder="For example, group the delivery notes under Scope." />
+            </label>
+            <p id="drafting-instruction-help" className="hint">This guides organisation only and is not copied into your document. Enter names, amounts and dates in their fields; put business content in the notes above.</p>
           </Section>
 
           <Section n="4" title="Financial details" hint="Calculated by Valo in whole kobo, never by the AI provider.">
@@ -178,11 +186,11 @@ export function AIDraftCompose() {
           <UsageCard usage={usage} />
           <div className="surface p-5" data-testid="panel-ai-submit">
             <p className="eyebrow">What leaves Valo</p>
-            <p className="mt-2 text-sm leading-relaxed">Only the document type, tone and the notes you ticked, with obvious identifiers such as phone numbers and emails redacted first. Your profile, workspace and history are not sent.</p>
+            <p className="mt-2 text-sm leading-relaxed">Only the document type, tone, optional drafting instruction and the notes you ticked, with obvious identifiers such as phone numbers and emails redacted first. Your profile, workspace and history are not sent.</p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Automatic redaction is incomplete. Read your notes and do not enter confidential or real customer data in this development build.</p>
             <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-sidebar p-3 text-sm">
               <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[hsl(155_42%_21%)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="checkbox-ai-consent" />
-              <span>I agree to these selected notes being processed by the AI provider.</span>
+              <span>I agree to these selected notes and the optional drafting instruction being processed by the AI provider.</span>
             </label>
             {touched && !consent && <p className="hint !text-destructive">Consent is needed for the AI draft only. A manual draft does not need it.</p>}
             {aiErr && (

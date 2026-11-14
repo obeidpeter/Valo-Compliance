@@ -293,6 +293,11 @@ export interface CustomerAIInput {
      * @items.maxLength 1000
      */
   contextLines: string[];
+  /**
+     * Optional untrusted organisation preference; never copied into the business document or used to supply missing business facts.
+     * @maxLength 1000
+     */
+  draftingInstruction?: string;
   financialInput: FinancialInput;
   processingConsent: boolean;
   idempotencyKey: string;

@@ -1615,6 +1615,8 @@ export const createCustomerAIDraftBodyContextLinesItemMax = 1000;
 
 export const createCustomerAIDraftBodyContextLinesMax = 20;
 
+export const createCustomerAIDraftBodyDraftingInstructionMax = 1000;
+
 export const createCustomerAIDraftBodyFinancialInputLinesItemDescriptionMax = 200;
 
 export const createCustomerAIDraftBodyFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
@@ -1643,6 +1645,7 @@ export const CreateCustomerAIDraftBody = zod.object({
   "issueDate": zod.string().regex(createCustomerAIDraftBodyIssueDateRegExp),
   "dueDate": zod.string().regex(createCustomerAIDraftBodyDueDateRegExp),
   "contextLines": zod.array(zod.string().min(1).max(createCustomerAIDraftBodyContextLinesItemMax)).max(createCustomerAIDraftBodyContextLinesMax),
+  "draftingInstruction": zod.string().max(createCustomerAIDraftBodyDraftingInstructionMax).optional().describe('Optional untrusted organisation preference; never copied into the business document or used to supply missing business facts.'),
   "financialInput": zod.object({
   "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
   "lines": zod.array(zod.object({
