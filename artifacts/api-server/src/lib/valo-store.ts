@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { and, desc, eq, sql } from "drizzle-orm";
 import {
   db, valoWorkspaces, valoMemberships, valoProfileVersions, valoDocuments,
-  valoDocumentRevisions, valoSupportTickets, valoEvents,
+  valoDocumentRevisions, valoSupportTickets, valoEvents, valoPrivacyTombstones,
 } from "@workspace/db";
 import { sha256 } from "@workspace/valo-core";
 import { documentInput, documentUpdate, profileInput, ticketInput } from "./valo-validation";
@@ -22,6 +22,9 @@ export async function authorizeWorkspaceWrite(tx:Tx,actor:WorkspaceActor){
   const[member]=await tx.select().from(valoMemberships).where(and(
     eq(valoMemberships.workspaceId,actor.workspaceId),eq(valoMemberships.identityId,actor.identityId))).for("share");
   if(!member||member.active!=="yes")throw new ValoProblem(403,"Active workspace membership is required. No changes were saved.");
+  const[deleted]=await tx.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
+    .where(eq(valoPrivacyTombstones.workspaceId,actor.workspaceId)).limit(1);
+  if(deleted)throw new ValoProblem(403,"Workspace deletion is recorded. No changes were saved.");
 }
 async function limitWorkspaceWrite(tx:Tx,actor:WorkspaceActor,operation:"profile"|"document"|"support"){
   const key=quotaSubjectHash(process.env.SESSION_SECRET,"user",actor.identityId);
@@ -39,12 +42,18 @@ export async function resolveWorkspace(identityId: string): Promise<WorkspaceAct
   return db.transaction(async tx => {
     const [existing] = await tx.select().from(valoMemberships).where(eq(valoMemberships.identityId, identityId));
     if (existing) {
+      const[deleted]=await tx.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
+        .where(eq(valoPrivacyTombstones.workspaceId,existing.workspaceId)).limit(1);
+      if(deleted)throw new ValoProblem(403,"Workspace deletion is recorded. Access cannot be recreated.");
       if (existing.active !== "yes") throw new ValoProblem(403, "Workspace membership is suspended");
       return { workspaceId: existing.workspaceId, identityId };
     }
     await tx.insert(valoWorkspaces).values({ id: randomUUID(), ownerIdentityId: identityId })
       .onConflictDoNothing({ target: valoWorkspaces.ownerIdentityId });
     const [workspace] = await tx.select().from(valoWorkspaces).where(eq(valoWorkspaces.ownerIdentityId, identityId));
+    const[deleted]=await tx.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
+      .where(eq(valoPrivacyTombstones.workspaceId,workspace.id)).limit(1);
+    if(deleted)throw new ValoProblem(403,"Workspace deletion is recorded. Access cannot be recreated.");
     await tx.insert(valoMemberships).values({
       id: randomUUID(), workspaceId: workspace.id, identityId, role: "owner", active: "yes",
     }).onConflictDoNothing({ target: valoMemberships.identityId });

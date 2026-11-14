@@ -17,6 +17,8 @@ import {ListPrivacyCasesResponse,GetPrivacyCaseResponse,VerifyPrivacyCaseRespons
   ListStaffPrivacyCasesResponse,ActOnStaffPrivacyCaseResponse} from "@workspace/api-zod";
 import {listPrivacyCases,customerPrivacyDetail,confirmPrivacyCase,listStaffPrivacyCases} from "../lib/valo-privacy";
 import {processPrivacyAction,privacyPreparedResult} from "../lib/valo-privacy-processing";
+import {db} from "@workspace/db";
+import {requirePrivacyStaff,type PrivacyStaffActor} from "../lib/valo-privacy";
 export const publicAccessRouter=Router();
 publicAccessRouter.post("/public/access-support",sameOriginMutation,async(req,res)=>{
   res.set("Cache-Control","private, no-store");
@@ -56,7 +58,7 @@ customerAccessRouter.get("/workspace/privacy-cases/:id/result",async(req,res)=>{
   res.json(await privacyPreparedResult(res.locals.valoActor,id));
 });
 export const staffOperationsRouter=Router();
-async function financeIdentity(req:Request){
+async function verifiedStaffSession(req:Request){
   const auth=getAuth(req);
   if(!auth.userId||!auth.sessionId)throw new ValoProblem(401,"Sign in to a staff account.");
   const[session,user]=await Promise.all([clerkClient.sessions.getSession(auth.sessionId),clerkClient.users.getUser(auth.userId)]);
@@ -64,6 +66,10 @@ async function financeIdentity(req:Request){
   if(session.status!=="active"||session.userId!==user.id||user.banned||user.locked||primary?.verification?.status!=="verified")
     throw new ValoProblem(403,"An active verified staff session is required.");
   const actor={identityId:user.id,recentMfa:auth.has({reverification:"strict_mfa"}),verifiedAt:Date.now()};
+  return actor;
+}
+async function financeIdentity(req:Request){
+  const actor=await verifiedStaffSession(req);
   await assertFinanceActor(actor);return actor;
 }
 staffOperationsRouter.use("/admin/refunds",(_req,res,next)=>{res.set("Cache-Control","private, no-store");next();});
@@ -77,14 +83,27 @@ staffOperationsRouter.post("/admin/refunds/:id/reconcile",sameOriginMutation,asy
   ReconcileFinanceRefundBody.strict().parse(req.body);
   res.json(ReconcileFinanceRefundResponse.parse(await reconcileFinanceRefund(await financeIdentity(req),z.string().uuid().parse(req.params.id))));
 });
-staffOperationsRouter.use("/admin/privacy-cases",(_req,res,next)=>{res.set("Cache-Control","private, no-store");next();});
-staffOperationsRouter.get("/admin/privacy-cases",async(req,res)=>{
+/** The production identity resolver always reads Clerk's live session. A
+ * controlled HTTP harness can inject a synthetic resolver while exercising
+ * the exact route, same-origin middleware and real database role guard. */
+export function createPrivacyOperationsRouter(authenticate:(req:Request)=>Promise<PrivacyStaffActor>=verifiedStaffSession){
+const router=Router();
+router.use((_req,res,next)=>{res.set("Cache-Control","private, no-store");next();});
+const privacyActor=async(req:Request)=>{
+  const actor=await authenticate(req);
+  await db.transaction(tx=>requirePrivacyStaff(tx,actor));
+  return actor;
+};
+router.get("/",async(req,res)=>{
   const page=z.coerce.number().int().min(1).max(100000).default(1).parse(req.query.page);
-  res.json(ListStaffPrivacyCasesResponse.parse(await listStaffPrivacyCases(await financeIdentity(req),page)));
+  res.json(ListStaffPrivacyCasesResponse.parse(await listStaffPrivacyCases(await privacyActor(req),page)));
 });
-staffOperationsRouter.post("/admin/privacy-cases/:id/action",sameOriginMutation,async(req,res)=>{
-  res.json(ActOnStaffPrivacyCaseResponse.parse(await processPrivacyAction(await financeIdentity(req),z.string().uuid().parse(req.params.id),req.body)));
+router.post("/:id/action",sameOriginMutation,async(req,res)=>{
+  res.json(ActOnStaffPrivacyCaseResponse.parse(await processPrivacyAction(await privacyActor(req),z.string().uuid().parse(req.params.id),req.body)));
 });
+return router;
+}
+staffOperationsRouter.use("/admin/privacy-cases",createPrivacyOperationsRouter());
 staffOperationsRouter.get("/admin/operations",async(req,res)=>{
   res.set("Cache-Control","private, no-store");
   const auth=getAuth(req);

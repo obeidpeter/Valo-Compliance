@@ -5,7 +5,7 @@ import {db,pool,valoPrivacyErasureObjects,valoPrivacyCases,valoPrivacyEvents,val
   valoWorkspaces,valoMemberships,valoStaffAssignments,valoStaffAccessAudit,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoSupportTickets,valoEvents,valoAIDrafts} from "@workspace/db";
 import {eq,inArray,sql} from "drizzle-orm";
-import {resolveWorkspace,saveProfile,createDocument} from "./valo-store";
+import {resolveWorkspace,saveProfile,createDocument,authorizeWorkspaceWrite} from "./valo-store";
 import {syntheticProfile,syntheticDocument} from "./valo-test-fixtures";
 import {createPrivacyCase,confirmPrivacyCase,simpleStaffPrivacyAction} from "./valo-privacy";
 import {processPrivacyErasure,replayErasureObjects,replayErasedApplication} from "./valo-privacy-erasure";
@@ -87,7 +87,8 @@ test("resumable physical development erasure with retained exclusions and replay
     });
     await t.test("restored membership and late-written objects are re-deleted from retained tombstones",async()=>{
       await db.update(valoMemberships).set({active:"yes"}).where(eq(valoMemberships.workspaceId,a.workspaceId));
-      await createDocument(a,syntheticDocument);
+      await assert.rejects(()=>db.transaction(tx=>authorizeWorkspaceWrite(tx,a)),{status:403});
+      await db.insert(valoDocuments).values({id:randomUUID(),workspaceId:a.workspaceId});
       const removed:string[]=[];
       const replay=await replayErasureObjects(id,async key=>{removed.push(key);});
       assert.equal(replay.deleted,1);assert.deepEqual(removed,[key]);
@@ -132,6 +133,11 @@ test("resumable physical development erasure with retained exclusions and replay
         if(oldNode===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=oldNode;
         if(oldDeployment===undefined)delete process.env.REPLIT_DEPLOYMENT;else process.env.REPLIT_DEPLOYMENT=oldDeployment;
       }
+    });
+    await t.test("even a deleted membership cannot recreate an identity with a deletion tombstone",async()=>{
+      await db.delete(valoMemberships).where(eq(valoMemberships.workspaceId,a.workspaceId));
+      await assert.rejects(()=>resolveWorkspace(a.identityId),{status:403});
+      assert.equal((await db.select().from(valoMemberships).where(eq(valoMemberships.workspaceId,a.workspaceId))).length,0);
     });
   }finally{
     if(storageKey)await deletePrivateFile(storageKey);

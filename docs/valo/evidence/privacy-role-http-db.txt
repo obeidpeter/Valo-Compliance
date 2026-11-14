@@ -1,0 +1,33 @@
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (17.712983ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (45.705611ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (54.439642ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (508.011175ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (70.275901ms)
+  ✔ native private storage deletion and repeated late-write replay remove actual synthetic bytes (1237.489832ms)
+  ✔ a cross-workspace key in a corrupted object journal is never deleted (29.918245ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (1.815596ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (89.941238ms)
+✔ resumable physical development erasure with retained exclusions and replay (2476.165568ms)
+▶ development PostgreSQL tenant, concurrency, history and durable-ticket proof
+  ✔ server membership resolution is idempotent and tenants are separate (16.15524ms)
+  ✔ profile correction appends history, preserves declined marketing and rejects stale saves (184.196139ms)
+  ✔ document and revision identifiers cannot expose a different tenant (16.541872ms)
+  ✔ two concurrent tabs produce exactly one new revision and one conflict (45.78834ms)
+  ✔ restore appends a new revision without rewriting the original (32.090131ms)
+  ✔ enquiry acknowledgement follows a durable save, not an appointment or email claim (18.404495ms)
+  ✔ suspended membership is not automatically restored (9.415345ms)
+✔ development PostgreSQL tenant, concurrency, history and durable-ticket proof (580.372207ms)
+▶ actual HTTP privacy routes apply an independent privacy role and fresh MFA
+  ✔ privacy-only identity can read and claim; finance-only cannot (139.908741ms)
+  ✔ revoked and stale-MFA privacy identities fail on the HTTP route (27.917696ms)
+  ✔ hostile origin never reaches the privacy mutation (6.509952ms)
+✔ actual HTTP privacy routes apply an independent privacy role and fresh MFA (405.189372ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7057.889988
