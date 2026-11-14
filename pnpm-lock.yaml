@@ -186,6 +186,9 @@ importers:
       '@opentelemetry/api':
         specifier: 1.10.0
         version: 1.10.0
+      '@replit/connectors-sdk':
+        specifier: ^0.7.0
+        version: 0.7.0
       '@replit/object-storage':
         specifier: 1.0.0
         version: 1.0.0

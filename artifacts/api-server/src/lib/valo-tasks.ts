@@ -6,8 +6,9 @@ import { CreateTaskBody,UpdateTaskBody,DeleteTaskBody,SaveReminderPreferencesBod
 import { z } from "zod";
 import { ValoProblem,type WorkspaceActor } from "./valo-store";
 import { assessmentRow,serializeAssessment,workspaceTransaction,workspaceEvent,releasedRegistry,type WorkspaceTx } from "./valo-assessments";
+import {reminderEmailConfiguration,automaticReminderDeliveryReady} from "./valo-reminder-resend";
 
-const emailBlocker="Transactional email provider and verified sender are not configured. No reminder has been delivered.";
+const emailBlocker="Development email needs an approved sender and an owner-controlled test recipient. Preferences are saved; inbox delivery has not been verified.";
 const taskInput=CreateTaskBody.strict().refine(i=>Boolean(i.title.trim()),"A title is required")
   .refine(i=>i.dueDate===null||z.string().date().safeParse(i.dueDate).success,"Invalid calendar date")
   .refine(i=>i.dueDate===null||i.dateConfirmed,"Confirm a date before scheduling a reminder")
@@ -31,7 +32,7 @@ async function findTask(tx:WorkspaceTx,actor:WorkspaceActor,id:string){
   return row;
 }
 async function cancelOutstanding(tx:WorkspaceTx,actor:WorkspaceActor,taskId?:string,reason="PREFERENCES_CHANGED"){
-  await tx.update(valoReminderOutbox).set({status:"cancelled",reason}).where(and(
+  await tx.update(valoReminderOutbox).set({status:"cancelled",reason,leaseToken:null,leaseUntil:null,nextAttemptAt:null}).where(and(
     eq(valoReminderOutbox.workspaceId,actor.workspaceId),ne(valoReminderOutbox.status,"sent"),
     taskId?eq(valoReminderOutbox.taskId,taskId):undefined));
 }
@@ -127,7 +128,11 @@ export async function getReminderPreferences(actor:WorkspaceActor){
   return workspaceTransaction(actor,async tx=>{
     const[row]=await tx.select().from(valoReminderPreferences).where(eq(valoReminderPreferences.workspaceId,actor.workspaceId));
     return GetReminderPreferencesResponse.parse({enabled:row?.enabled??false,offsets:row?.offsets??[1],
-      revision:row?.revision??0,timezone:"Africa/Lagos",deliveryAvailable:false,deliveryBlocker:emailBlocker});
+      revision:row?.revision??0,timezone:"Africa/Lagos",
+      deliveryAvailable:automaticReminderDeliveryReady(),
+      deliveryBlocker:automaticReminderDeliveryReady()?
+        "Development test delivery only. Provider acceptance is not inbox delivery.":
+        reminderEmailConfiguration()?"Automatic reminder dispatch is paused. Preferences are saved; inbox delivery is unverified.":emailBlocker});
   });
 }
 export async function saveReminderPreferences(actor:WorkspaceActor,raw:unknown){
@@ -153,5 +158,6 @@ export async function saveReminderPreferences(actor:WorkspaceActor,raw:unknown){
 export async function listReminders(actor:WorkspaceActor){
   return workspaceTransaction(actor,async tx=>ListRemindersResponse.parse((await tx.select().from(valoReminderOutbox)
     .where(eq(valoReminderOutbox.workspaceId,actor.workspaceId)).orderBy(desc(valoReminderOutbox.createdAt)).limit(200))
-    .map(row=>({...row,scheduledAt:row.scheduledAt.toISOString(),deliveredAt:row.deliveredAt?.toISOString()??null}))));
+    .map(row=>({...row,scheduledAt:row.scheduledAt.toISOString(),deliveredAt:row.deliveredAt?.toISOString()??null,
+      nextAttemptAt:row.nextAttemptAt?.toISOString()??null,lastAttemptAt:row.lastAttemptAt?.toISOString()??null}))));
 }

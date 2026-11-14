@@ -1,6 +1,9 @@
 # Valo Compliance — Valo Platform
 
 Latest implementation checkpoint:
+[forty exact-ID draft bodies, measured review requests and crash-recoverable reminders](docs/valo/content-intake-reminder-checkpoint.md).
+
+Previous implementation checkpoint:
 [patched validation, exact-ID source intake and measured private exports](docs/valo/validator-publication-checkpoint.md).
 
 This is partial development, not complete R1/R2 acceptance. No eligible content,

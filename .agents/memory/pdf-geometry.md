@@ -19,3 +19,14 @@ matching can therefore produce false holds even when every source word exists.
 **How to apply:** Retain field/disclosure completeness, geometry and checksum
 checks. Record bounded, versioned reader normalization rather than relaxing
 material-content requirements or rewriting historical failure evidence.
+
+Wrapped table cells can interleave in layout-mode extraction even when raw-mode
+extraction retains each cell's text. Check both content and page geometry before
+classifying that as renderer loss.
+
+**Why:** Single-reader-order checks produced false holds on valid tables;
+whitespace folding also merged page-counter digits into numbered headings.
+
+**How to apply:** Retain both reader outputs and exact content checks. Remove
+only known running matter at its original line boundaries, before folding
+whitespace; never strip arbitrary numbered text to force a match.

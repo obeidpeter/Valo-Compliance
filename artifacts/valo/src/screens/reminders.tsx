@@ -17,9 +17,22 @@ const offsetLabel = (n: number) => (n === 0 ? 'On the due date' : n === 1 ? '1 d
 const STATUS: Record<ReminderRecordStatus, { label: string; tone: string; desc: string }> = {
   held: { label: 'Held', tone: 'pill-ochre', desc: 'Not sent: delivery is not available.' },
   pending: { label: 'Pending', tone: 'pill-ink', desc: 'Scheduled, not yet sent.' },
-  sent: { label: 'Sent', tone: 'pill-forest', desc: 'Delivered.' },
+  sent: { label: 'Accepted by provider', tone: 'pill-forest', desc: 'The email provider accepted this message. Delivery to your inbox has not been confirmed.' },
   cancelled: { label: 'Cancelled', tone: 'pill-ink', desc: 'Will not be sent.' },
-  failed: { label: 'Failed', tone: 'pill-ochre', desc: 'Delivery was attempted and failed.' },
+  failed: { label: 'Not confirmed', tone: 'pill-ochre', desc: 'Provider acceptance was not confirmed. A retry uses the same message reference, not a new message.' },
+};
+const REASONS:Record<string,string>={
+  EMAIL_PROVIDER_NOT_CONFIGURED:'New delivery attempts are paused. Your preference and task are saved; no inbox delivery has been confirmed.',
+  EMAIL_REPLAY_WINDOW_EXPIRED:'The previous outcome is unconfirmed and its safe retry window has ended. Delivery is paused to avoid a duplicate. Your task is saved.',
+  EMAIL_FIRST_ATTEMPT_UNKNOWN:'The first attempt time could not be verified. Delivery is paused to avoid a duplicate. Contact support; your task is saved.',
+  TASK_REVIEW_REQUIRED:'Review this task before reminders can resume.',
+  EMAIL_DISPATCH_IN_PROGRESS:'An email attempt is in progress. Inbox delivery has not been confirmed.',
+  REMINDERS_OPTED_OUT:'Reminders were turned off before dispatch.',
+  TASK_NO_LONGER_SCHEDULED:'This task no longer has an active confirmed reminder date.',
+  SCHEDULE_CHANGED:'The confirmed date or selected timing changed.',
+  SOURCE_NO_LONGER_ELIGIBLE:'The supporting guidance needs review. No statutory reminder will be sent from it.',
+  PREFERENCES_CHANGED:'Your reminder preferences changed.',
+  TASK_CHANGED:'The task changed; this earlier reminder was cancelled.',
 };
 
 export default function RemindersPage() {
@@ -156,7 +169,12 @@ export default function RemindersPage() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{taskTitle.get(r.taskId) ?? 'Archived or unavailable task'}</p>
                         <p className="mt-0.5 font-mono text-xs text-muted-foreground">scheduled {formatDate(r.scheduledAt)}{r.deliveredAt ? ' · delivered ' + formatDate(r.deliveredAt) : ''}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{r.reason ?? s.desc}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{r.reason==='EMAIL_ATTEMPT_LIMIT_REACHED'
+                          ?'Delivery paused after five attempts. Your task and due date are unchanged.'
+                          :r.reason==='EMAIL_ACCEPTANCE_UNCONFIRMED'?s.desc:r.reason?REASONS[r.reason]??'This reminder is paused. Contact support for details.':s.desc}</p>
+                        {r.reason==='EMAIL_ATTEMPT_LIMIT_REACHED'&&<a href="/help" className="mt-1 inline-block text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4">Contact support</a>}
+                        {r.lastAttemptAt&&<p className="mt-1 text-xs text-muted-foreground">Attempts: {r.attempts} · Last attempt {formatDate(r.lastAttemptAt)}</p>}
+                        {r.nextAttemptAt&&<p className="mt-1 text-xs text-muted-foreground">{r.reason==='EMAIL_DISPATCH_IN_PROGRESS'?'If interrupted, recovery is available after ':'Retry after '}{formatDate(r.nextAttemptAt)} if reminders are still enabled.</p>}
                       </div>
                       <span className={'pill w-fit ' + s.tone}><span className="dot" />{s.label}</span>
                     </li>

@@ -785,6 +785,12 @@ export interface ReminderRecord {
   taskId: string;
   scheduledAt: string;
   status: ReminderRecordStatus;
+  /** @minimum 0 */
+  attempts: number;
+  /** @nullable */
+  nextAttemptAt: string | null;
+  /** @nullable */
+  lastAttemptAt: string | null;
   /** @nullable */
   reason: string | null;
   /** @nullable */

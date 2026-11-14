@@ -22,4 +22,9 @@ export const insertValoContentVersionSchema=createInsertSchema(valoContentVersio
 export const valoPublicationAiAttempts=pgTable("valo_publication_ai_attempts",{
   id:bigserial("id",{mode:"number"}).primaryKey(),candidateHash:text("candidate_hash").notNull(),
   role:text("role").notNull(),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
+  requestHash:text("request_hash"),requestMeter:jsonb("request_meter"),
+  outcome:text("outcome").notNull().default("legacy_unmetered"),
+  providerResponseId:text("provider_response_id"),inputTokens:integer("input_tokens"),
+  outputTokens:integer("output_tokens"),errorCode:text("error_code"),
+  completedAt:timestamp("completed_at",{withTimezone:true}),
 });

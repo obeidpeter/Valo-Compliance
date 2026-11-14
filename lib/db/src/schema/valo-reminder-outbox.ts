@@ -8,6 +8,10 @@ export const valoReminderOutbox=pgTable("valo_reminder_outbox",{
   scheduledAt:timestamp("scheduled_at",{withTimezone:true}).notNull(),
   status:text("status").notNull(),reason:text("reason"),attempts:integer("attempts").notNull().default(0),
   providerMessageId:text("provider_message_id"),deliveredAt:timestamp("delivered_at",{withTimezone:true}),
+  nextAttemptAt:timestamp("next_attempt_at",{withTimezone:true}),
+  lastAttemptAt:timestamp("last_attempt_at",{withTimezone:true}),
+  firstAttemptAt:timestamp("first_attempt_at",{withTimezone:true}),
+  leaseToken:uuid("lease_token"),leaseUntil:timestamp("lease_until",{withTimezone:true}),
   createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
 },t=>[
   uniqueIndex("valo_reminder_idempotency_unique").on(t.workspaceId,t.idempotencyKey),

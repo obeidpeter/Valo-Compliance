@@ -1,6 +1,10 @@
 # Current operational publication refinement
 
-**Current implementation evidence:** [patched validation, exact source intake
+**Current implementation evidence:** [40 source-bound draft bodies, review meters
+and recoverable reminder delivery](content-intake-reminder-checkpoint.md).
+These are executed partial checks, not content publication or R1/R2 acceptance.
+
+Previous implementation evidence: [patched validation, exact source intake
 and re-executed export checks](validator-publication-checkpoint.md). Saved hashes
 and real private exports survived the native validator upgrade. Corrected TPL-07
 passed both export inspections but received no new reviews because the existing

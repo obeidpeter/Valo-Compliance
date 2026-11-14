@@ -2635,11 +2635,18 @@ export const SaveReminderPreferencesResponse = zod.object({
 })
 
 
+export const listRemindersResponseAttemptsMin = 0;
+
+
+
 export const ListRemindersResponseItem = zod.object({
   "id": zod.string(),
   "taskId": zod.string(),
   "scheduledAt": zod.string(),
   "status": zod.enum(['held', 'pending', 'sent', 'cancelled', 'failed']),
+  "attempts": zod.int().min(listRemindersResponseAttemptsMin),
+  "nextAttemptAt": zod.string().nullable(),
+  "lastAttemptAt": zod.string().nullable(),
   "reason": zod.string().nullable(),
   "deliveredAt": zod.string().nullable()
 })

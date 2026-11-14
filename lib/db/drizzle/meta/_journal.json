@@ -85,6 +85,27 @@
       "when": 1794615542751,
       "tag": "0011_commerce_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794640000000,
+      "tag": "0012_editorial_usage_meter",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794640000001,
+      "tag": "0013_reminder_delivery_retry",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794640000002,
+      "tag": "0014_reminder_replay_window",
+      "breakpoints": true
     }
   ]
 }

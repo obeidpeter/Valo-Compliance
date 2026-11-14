@@ -1178,12 +1178,15 @@ components:
         deliveryBlocker: { type: [string, "null"] }
     ReminderRecord:
       type: object
-      required: [id, taskId, scheduledAt, status, reason, deliveredAt]
+      required: [id, taskId, scheduledAt, status, reason, deliveredAt, attempts, nextAttemptAt, lastAttemptAt]
       properties:
         id: { type: string }
         taskId: { type: string }
         scheduledAt: { type: string }
         status: { type: string, enum: [held, pending, sent, cancelled, failed] }
+        attempts: { type: integer, minimum: 0 }
+        nextAttemptAt: { type: string, nullable: true }
+        lastAttemptAt: { type: string, nullable: true }
         reason: { type: [string, "null"] }
         deliveredAt: { type: [string, "null"] }
     SourceEvidenceRegister:

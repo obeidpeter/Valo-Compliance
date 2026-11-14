@@ -29,6 +29,13 @@ try{
       'orderTable',to_regclass('public.valo_orders') IS NOT NULL,
       'receiptOutbox',to_regclass('public.valo_purchase_outbox') IS NOT NULL,
       'dailyReconciliation',to_regclass('public.valo_payment_reconciliations') IS NOT NULL,
+      'editorialRequestMeter',EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+        AND table_name='valo_publication_ai_attempts' AND column_name='request_meter'),
+      'durableReminderLease',EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+        AND table_name='valo_reminder_outbox' AND column_name='lease_token'),
+      'firstReminderAttempt',EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+        AND table_name='valo_reminder_outbox' AND column_name='first_attempt_at'),
+      'journalledMigrations',(SELECT count(*) FROM drizzle.__drizzle_migrations),
       'noSeedOrders',(SELECT count(*)=0 FROM valo_orders),
       'noSeedPrices',(SELECT count(*)=0 FROM valo_prices),
       'tenantForeignKeys',(SELECT count(*) FROM pg_constraint WHERE conname IN
@@ -40,7 +47,9 @@ try{
   const checked=JSON.parse(invariants.stdout.trim());
   if(!checked.orderTable||!checked.receiptOutbox||!checked.dailyReconciliation||!checked.noSeedOrders||
     !checked.noSeedPrices||checked.tenantForeignKeys!==4||!checked.publisherCannotReadOrders||
-    !checked.publisherCannotWriteOrders||!checked.publisherCannotWritePrices)throw Error("CLEAN_MIGRATION_INVARIANT_FAILED");
+    !checked.publisherCannotWriteOrders||!checked.publisherCannotWritePrices||!checked.editorialRequestMeter||
+    !checked.durableReminderLease||!checked.firstReminderAttempt||checked.journalledMigrations<15)
+    throw Error("CLEAN_MIGRATION_INVARIANT_FAILED");
   report.invariants=checked;report.disasterRecoveryProved=false;report.productionCompatibilityProved=false;
 }catch(error){
   report.failed=true;report.failure=error instanceof Error?error.message.split("\n")[0].slice(0,200):"LOCAL_PROOF_FAILED";

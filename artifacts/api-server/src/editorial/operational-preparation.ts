@@ -77,25 +77,32 @@ export async function prepareInventoryRelease(snapshotPath:string){
   const checks=operationalMechanicalChecks({candidate,policy,provenance:content.provenance,
     provenanceArtifactHash:provenance.hash,rights,applicability,snapshot,now});
   let reviewed:Awaited<ReturnType<typeof reviewOperationalCandidate>>=[];
+  let reviewPlan:unknown=null;
   let providerFailure:string|null=!exportReport.passed?"OPERATIONAL_EXPORT_VALIDATION_FAILED":
     checks.some(check=>check.result!=="pass")?"OPERATIONAL_MECHANICAL_VALIDATION_FAILED":null;
+  const {evidence:includedInPermissions,...permissionScope}=applicability.record;
   try{if(!providerFailure)reviewed=await reviewOperationalCandidate(candidate,
     {permissions:rights.permissions,conclusion:rights.conclusion,customerLicenceAccepted:false,
-      actualProviderTerms:snapshot.pages.filter((p:{url:string})=>applicability.record.evidence.some(e=>e.url===p.url)),
+      // Review the applicable actual quoted passages, not full unrelated
+      // provider pages or all 70 intake rows. Full snapshots remain private,
+      // hash-bound evidence and have already been checked above.
       actualExecutionReceipt:authored?.receipt,environmentEvidence:{developmentOnly:true,
-        providerPermissionScope:applicability.record,sourceFileHashVerified:true,
+        providerPermissionScope:permissionScope,sourceFileHashVerified:true,
         runtimeGuard:"NODE_ENV=development and no REPLIT_DEPLOYMENT; publication endpoints are not exposed to customers",
         policy:policy,scope:"Free synthetic evaluation; no sales or commercial licence granted"}},
     {authoringRoute:content.provenance.authoringRoute,sourceHash:content.provenance.hash,
-      originalItem:content.original,actualAuthoringNote:content.provenance.note,authoringNoteHash:content.provenance.noteHash,
+      originalItem:content.original,actualAuthoringAttribution:intake?.authoringAttribution??content.provenance.note,
+      authoringNoteHash:content.provenance.noteHash,
       adaptation:content.provenance.transformation,upstreamModelAndRunNotRecorded:!authored},exportReport,
-    {candidateHash:candidate.hash,sourceCheckedAt:candidate.sourceCheckDate,sourceHash:content.provenance.hash,
+    {candidateHash:candidate.hash,policyHash:policy.hash,sourceCheckedAt:candidate.sourceCheckDate,sourceHash:content.provenance.hash,
       provenanceArtifactHash:provenance.hash,rightsArtifactHash:rightsRef.hash,exportReportArtifactHash:reportRef.hash,
       providerSnapshotHash:snapshotRef.hash,authoringRoute:rights.authoringRoute,
       sourceAttribution:"Provided authoring note; not independent certification of upstream authorship",
       performedChecks:["Original source file SHA-256 matches the retained note","Provider passages occur in the exact retrieved full-page hashes",
         "DOCX/PDF generated from the exact canonical candidate and inspected before review"]});
+    if(!providerFailure&&reviewed.length!==2)providerFailure="OPERATIONAL_REVIEW_INCOMPLETE";
   }catch(error){
+    reviewPlan=(error as {reviewPlan?:unknown})?.reviewPlan??null;
     providerFailure=error instanceof Error&&/^[A-Z_]{3,80}$/.test(error.message)?
       error.message:"OPERATIONAL_REVIEW_PROVIDER_FAILURE";
   }
@@ -129,7 +136,7 @@ export async function prepareInventoryRelease(snapshotPath:string){
   const eligibility=evaluatePublication(bundle);
   const release=eligibility.decision==="eligible"?await publishOperationalVersion(id):
     {...await recordActualPublicationHold(id,providerFailure??undefined),decision:"held"};
-  return{id,version,candidateHash:candidate.hash,policyHash:policy.hash,eligibility,release,
+  return{id,version,candidateHash:candidate.hash,policyHash:policy.hash,eligibility,release,reviewPlan,
     reviews:reviewed.map(r=>({role:r.record.role,providerResponseId:r.record.providerResponseId,model:r.record.model,
       verdict:r.record.output.verdict,findings:r.record.output.findings,missingEvidence:r.record.output.missingEvidence})),
     exportReport,attestations,rightsScope: rights.conclusion,commercialLicenceAccepted:false,providerFailure};
