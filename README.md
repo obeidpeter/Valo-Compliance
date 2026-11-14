@@ -1,6 +1,19 @@
 # Valo Compliance — Valo Platform
 
-## Latest development checkpoint — inference held, not launch acceptance
+## Latest development checkpoint — source challenges retained, not accepted rules
+
+The original 80-case checker corpus is unchanged. The new exact-source-bound
+run executed 80: **72 matched authored labels, eight disagreed**. All failures
+remain visible. **112 engineering controls passed**, including ten focused
+clarification controls; these are not 112 legal acceptance cases. No rule,
+manifest, customer assessment, reminder or model call was created.
+
+See the [source-challenge checkpoint](docs/valo/source-checker-challenge-checkpoint.md)
+and [versioned actual results](docs/valo/evidence/source-checker-80-challenged-evaluation-v1.json).
+Independent preparation is recorded separately from a formal provider receipt.
+R1/R2 remain incomplete; inference/public launch/live payments remain off.
+
+## Inference-budget checkpoint — held, not launch acceptance
 
 The shared $30 managed-inference allocation is a **disabled proposal**, not
 spending authority. New application model calls are held before outbound

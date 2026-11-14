@@ -13,7 +13,7 @@ const marker = z.object({ status: z.enum(["unknown", "unanswered", "not_applicab
 const flag = z.union([z.boolean(), marker]).optional();
 const text = z.union([z.string().min(1).max(300), marker]).optional();
 const privacy = z.object({
-  processesPersonalData: flag, controllerRole: text, collectionMethod: text,
+  processesPersonalData: flag, controllerRole: text, collectionMethod: text, newCollectionEvent: flag,
   operatesInNigeria: flag, processingOccursInNigeria: flag, dataSubjectsInNigeria: flag,
   controllerDomiciledInNigeria: flag, controllerResidentInNigeria: flag, processorConnectionInNigeria: flag,
   processingPurpose: text, commercialUse: flag, privacyRightsViolationIndicated: flag,
@@ -62,7 +62,13 @@ export function evaluateSourceCandidateOffline(id: Id, rawFacts: unknown, assess
     details: Record<string, unknown> = {}) => {
     const body = { candidateId: id, candidateVersion: binding.candidateVersion, bindingHash: binding.bindingHash,
       sourceVersionHashes: binding.sourceVersionHashes, inputHash: digest(rawFacts ?? null), assessmentDate,
-      label, reason, missingFacts: questions, details,
+      label, reason, missingFacts: questions, details: {
+        assessedProposition: id === remainingSourceCandidateIds[0]
+          ? "Controller information/privacy-policy relevance; new collection timing assessed separately."
+          : id === remainingSourceCandidateIds[1]
+            ? "Narrow Nigerian-company return candidate, not all tax returns or withholding treatment."
+            : "National product-registration relevance including conditional exceptions, not local-manufacturer route eligibility.",
+        ...details } as Record<string,unknown>,
       availability: "offline_candidate_only", eligibleForCustomerUse: false, releasedManifestId: null,
       createRegistrationTask: false, automaticStatutoryDeadline: null, automaticReminder: false,
       stateAndLocalCoverage: "not_evaluated",
@@ -116,6 +122,11 @@ export function evaluateSourceCandidateOffline(id: Id, rawFacts: unknown, assess
     if (f.section3Exception === "legal_claim_asserted")
       return finish("May apply", "The asserted legal-claim exception needs its necessity and scope checked under section 3(2); it is not a blanket privacy exemption.",
         [missing("exceptionScopeConfirmed", f.exceptionScopeConfirmed)]);
+    if (f.processingPurpose === "household_and_commercial_promotions" && f.newCollectionEvent !== true)
+      return finish("Likely relevant", "Commercial reuse does not retain the solely-household exception. Section 27(3) privacy-policy relevance is separate from section 27(1): reuse alone does not establish a new direct collection or its timing.",
+        [], { solelyHouseholdExceptionSupported: false, privacyPolicyRelevance: "Likely relevant",
+          newCollectionEventEstablished: false, section27_1CollectionTiming: "not established",
+          reuseTimingNotDetermined: true });
     if (!["direct", "indirect"].includes(String(f.collectionMethod)))
       return finish("More information needed", "Confirm whether collection is direct or indirect.",
         [missing("collectionMethod", f.collectionMethod)]);
@@ -136,14 +147,22 @@ export function evaluateSourceCandidateOffline(id: Id, rawFacts: unknown, assess
       return finish("Not indicated by these answers", "This positively identified Nigerian-company return candidate does not decide an individual's tax-return duties.");
     if (f.legalForm === "ordinary_unincorporated_partnership")
       return finish("More information needed", "Section 147 includes associations; lack of CAMA incorporation alone does not establish this tax-definition exclusion.",
-        [missing("classificationUnderNtaaSection147", undefined)]);
+        [missing("classificationUnderNtaaSection147", undefined)],
+        { section147Classification: "unresolved", companyReturnOwedDetermined: false });
     if (f.legalForm === "foreign_company") {
+      if (f.incorporatedInNigeria === true)
+        return finish("More information needed", "The foreign-company label conflicts with the Nigerian-incorporation answer; reconcile actual formation facts, not a tax-residence conclusion.",
+          [missing("formationFacts", undefined)]);
       if (f.effectiveManagementCountry === "Nigeria")
         return finish("May apply", "Foreign incorporation alone does not settle Nigerian-company status under section 147; effective management/control needs verification.",
-          [missing("managementStatusVerification", f.managementStatusVerification)]);
+          [missing("managementStatusVerification", f.managementStatusVerification)],
+          { incorporatedOutsideNigeriaDeclared: true, incorporationFactBasis: "supplied foreign_company legal form",
+            taxResidenceClassification: "unresolved", section147Classification: "unresolved" });
       if (f.effectiveManagementCountry === "outside_Nigeria" && f.nonresident === true)
         return finish("Not indicated by these answers", "This domestic-company candidate is not indicated by the supplied nonresident/outside-management facts. Nonresident returns and final-withholding classification are not decided.",
-          [], { finalWithholdingClassificationVerified: false });
+          [], { finalWithholdingClassificationVerified: false, nonresidentReturnDetermined: false,
+            withholdingTreatment: "not established by a stipulated conclusion",
+            domesticCandidateExclusionOnly: true });
       return finish("More information needed", "Confirm residence and effective management before selecting the applicable return branch.",
         [missing("effectiveManagementCountry", f.effectiveManagementCountry)]);
     }

@@ -11,6 +11,18 @@ import { bindRemainingSourceCandidates } from "../editorial/source-candidate-bin
 
 const { binding, provenance, corpus } = bindBusinessNameCandidate();
 const families = bindRemainingSourceCandidates();
+const challengePath="docs/valo/source-checker-challenges-v1.json";
+const workspaceRoot=fileURLToPath(new URL("../../../../",import.meta.url));
+const challengeBytes=readFileSync(resolve(workspaceRoot,challengePath));
+const challenge=JSON.parse(challengeBytes.toString("utf8"));
+if(challenge.formalPipelineProviderReceipt!==false||challenge.acceptedOracleReplacement!==false||
+  challenge.originalCorpusPath!=="docs/evaluation-candidates/checker.json")
+  throw Error("Preparation cannot masquerade as a provider receipt or accepted oracle");
+const independentPreparation={path:challengePath,sha256:createHash("sha256").update(challengeBytes).digest("hex"),
+  version:challenge.version,formalPipelineProviderReceipt:false,acceptedOracleReplacement:false,
+  originalCorpusSha256:createHash("sha256").update(readFileSync(resolve(workspaceRoot,challenge.originalCorpusPath))).digest("hex")};
+if(independentPreparation.originalCorpusSha256!==challenge.originalCorpusSha256)
+  throw Error("Original corpus changed; preserve it and version any proposed adaptation separately");
 const results = corpus.cases.map(c => {
   const isCama = c.sourceCandidateID === "CAND-CAMA-814-BUSINESS-NAME";
   const family = families[c.sourceCandidateID];
@@ -40,7 +52,9 @@ const results = corpus.cases.map(c => {
       ["More information needed", "May apply"].includes(actual.label),
   };
   return { caseId: c.caseID, executed: true, status: Object.values(checks).every(Boolean) ? "passed" : "failed",
-    expectedLabel: expected, actual, checks };
+    expectedLabel: expected, actual, checks,
+    independentPreparationFindings:challenge.findings.filter((f:{caseIds?:string[];caseFamily?:string})=>
+      f.caseIds?.includes(c.caseID)||(f.caseFamily&&c.caseID.startsWith("CHK-CAND-CAMA-"))) };
 });
 const executed = results.filter(r => r.executed);
 const failures = executed.filter(r => r.status === "failed");
@@ -55,9 +69,10 @@ if (controlsPath) {
   const ids = new Set(text.match(/CHK-CAND-(?:CAMA|NDPA|NTAA|NAFDAC)-\d{3}/gu));
   if (!total || passes !== total || failed !== 0 || ids.size !== 80)
     throw new Error("Actual passing controls for all 80 authored input IDs must be retained");
-  const target = new URL("../../../../docs/valo/evidence/source-checker-controls.raw.txt", import.meta.url);
-  writeFileSync(target, bytes);
-  engineeringControls = { path: "docs/valo/evidence/source-checker-controls.raw.txt",
+  const retainedPath=relative(workspaceRoot,resolve(controlsPath));
+  if(!retainedPath.startsWith("docs/valo/evidence/"))
+    throw Error("Persist controls under docs/valo/evidence before binding; historical receipts are never overwritten");
+  engineeringControls = { path: retainedPath,
     sha256: createHash("sha256").update(bytes).digest("hex"), tapRecords: total, acceptedLegalCases: 0 };
 }
 const harnessFiles = [
@@ -66,6 +81,7 @@ const harnessFiles = [
   new URL("../editorial/source-candidate-bindings.ts", import.meta.url).href,
   new URL("../editorial/business-name-candidate-evaluation.test.ts", import.meta.url).href,
   new URL("../editorial/source-candidate-evaluation.test.ts", import.meta.url).href,
+  new URL("../editorial/source-review-clarifications.test.ts", import.meta.url).href,
 ].map(url => ({ path: relative(fileURLToPath(new URL("../../../../", import.meta.url)), fileURLToPath(url)),
   hash: createHash("sha256").update(readFileSync(new URL(url))).digest("hex") }));
 const report = {
@@ -75,11 +91,12 @@ const report = {
   codeBinding: "Exact source/algorithm/corpus file hashes below bind this working-tree run; base commit alone is not the new code revision.",
   ...provenance, bindingHash: binding.bindingHash,
   additionalFamilyBindings: families,
-  harnessFiles, engineeringControls,
+  harnessFiles, engineeringControls, independentPreparation,
   summary: { authoredCases: corpus.cases.length, executed: executed.length,
     passed: executed.length - failures.length, failed: failures.length,
     unexecuted: results.length - executed.length,
     formal80CaseAcceptance: false, independentChallengeExecuted: false,
+    independentPreparationRecorded:true,formalPipelineOracleChallengeReceipt:false,
     customerAi60Acceptance: false, editorial60Acceptance: false,
     realProviderCalls: 0, publishedRules: 0 },
   limitations: [

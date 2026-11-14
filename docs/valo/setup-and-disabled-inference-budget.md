@@ -22,6 +22,10 @@ be regenerated to manufacture provenance. The combined figure mathematically
 requires the 4,096 customer full-input ceiling. Using 32,000 for every slot would
 cost $30.6632832 with uplift and does **not** fit $30.
 
+If a legitimate case needs more complete input or output, hold that case and
+revise its allocation/estimate before authorisation. Never truncate necessary
+source, schema or instructions to manufacture a passing bound.
+
 The application uses integer nanodollars: 750 per input token, 4,500 per output
 token; uplift is rounded upward. No cache discount, refund or free failed call
 is assumed. Every retry needs another slot and worst-case reservation. One
@@ -65,7 +69,7 @@ other projects or externally initiated calls.
 | Merchant test | Valo-owned Paystack **test** account; approved sandbox price/licence/refund policy; test credential through Secrets; merchant's active timestamped signing-secret or legacy mode; test webhook URL/configuration | Verify raw-body mode/rotation/no downgrade, actual sandbox initialise/verify/refund/reconcile, timeout/race/dispute and durable receipt evidence. Controlled transports are not settlements. No live key accepted for these tests. |
 | Owned email test | Verified Valo sender/domain and authentication; the selected verified owner's recipient/identity; specific approval for one bounded test | Confirm integration sender verification and actual acceptance/delivery event; default off, development-only, owner-only guards remain. No automatic backlog dispatch or messages to other people. Controlled events do not prove delivery. |
 | Production/privacy | Actual providers/regions, agreements, transfer assessment, retention/deletion/backup policy and named accountable owners | Separate environment configuration, worker/storage access, reviewed migration/adoption, production-shaped restore/rollback/RPO/RTO, data lifecycle, monitoring and security/privacy evidence. Native backup retention is not assumed to meet 35 days. No real confidential customer data yet. |
-| Independent testing | Consenting beta participants and independent security/privacy/accessibility reviewers; scope and approval for any external/live tests | Working supervised journeys, measured outcomes and retained defects; not fabricated participants, certification or specialist content approval. R1 gates precede R2 activation. |
+| Independent testing | Consenting beta participants, named accountable owners and approval for sensitive privacy/production or external/live tests | A separate AI technical security/privacy assessment may provide independent evidence; external human hiring is not required. Coding agents cannot approve their own security work. Routine scans alone are not that assessment. Accessibility/usability evidence and genuine participant outcomes remain required. R1 gates precede R2 activation. |
 | Inference | Explicit bounded approval only after the above token/pricing/legacy proofs; optional reduction of allocation if prior cost exceeds headroom | Full-request attestation, verified actual tier/region price bound, pilot reconciliation and reviewed dispatcher activation remain absent. No quota increase is authorised by this checklist. |
 
 Do not paste secret values into chat or documents. Use the existing authorised

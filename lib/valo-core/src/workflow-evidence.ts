@@ -207,8 +207,8 @@ export function partialWorkflowEvidence(id:string){
     hash:"3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521",result:"fail" as const};
   // Eight disagreements against the unchanged original oracle remain failures.
   // Passing isolation controls do not convert them into RUL-008 acceptance.
-  const sourceCandidateOracle={kind:"test" as const,path:"docs/valo/evidence/source-checker-80-candidate-evaluation.json",
-    hash:"9f65bdfa78d6b5a1a1b8d39b402a91e7175aabd068fffd428c6c33698718468f",result:"fail" as const};
+   const sourceCandidateOracle={kind:"test" as const,path:"docs/valo/evidence/source-checker-80-challenged-evaluation-v1.json",
+     hash:"39904883d50a7d42d760c0809e4defe699a9e204d0d76f7d16eb438a847d263b",result:"fail" as const};
   const supportScopeProof={kind:"test" as const,path:"docs/valo/evidence/support-privacy-scope.json",
     hash:"e4f24a99bec91a603344c76963ee9ccab83aae4c447b33130ae12f9014fe53e4",result:"pass" as const};
   // Private question-led drafts do not make catalogue masters eligible.
@@ -254,7 +254,9 @@ export function partialWorkflowEvidence(id:string){
         "artifacts/api-server/src/scripts/source-checker-evaluation.ts",
         "artifacts/api-server/src/scripts/capture-ndpa-passages.ts",
         "artifacts/api-server/src/editorial/business-name-candidate-evaluation.test.ts",
-        "artifacts/api-server/src/editorial/source-candidate-evaluation.test.ts"],record:sourceCandidateOracle},
+         "artifacts/api-server/src/editorial/source-candidate-evaluation.test.ts",
+         "artifacts/api-server/src/editorial/source-review-clarifications.test.ts",
+         "docs/valo/source-checker-challenges-v1.json"],record:sourceCandidateOracle},
     {ids:["SEC-003","SEC-007","AI-002","AI-009","EDT-002","EDT-006","NFR-009","NFR-011"],
       paths:["artifacts/api-server/src/lib/provider-output-budget.ts","artifacts/api-server/src/lib/valo-revision-codec.ts",
         "artifacts/api-server/src/lib/valo-revision-codec.test.ts","artifacts/api-server/src/scripts/zod-upgrade-proof.ts",

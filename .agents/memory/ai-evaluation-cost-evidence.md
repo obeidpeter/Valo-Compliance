@@ -39,5 +39,9 @@ and schemas included) and actual price/region bounds before activation. A byte
 estimate plus protocol allowance is not tokenization proof. Synthetic enabled
 budget fixtures are not approval.
 
+If necessary full-request context exceeds its proposed bound, hold the case and
+revise the estimate before authorisation; never truncate needed evidence,
+instructions or schema to manufacture a passing bound.
+
 **Why:** The user explicitly authorised budget preparation only, while retaining
 the existing limits and prohibiting new identities or alternate-lane evasion.

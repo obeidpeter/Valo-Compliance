@@ -91,3 +91,19 @@ checkpoints and a reported missing-specification blocker.
 
 **How to apply:** Incorporate normal source history, preserve exact acceptance
 criteria and report executed implementation evidence separately from acceptance.
+
+A separate AI technical security/privacy assessment may provide independent
+evidence. Do not invent an external human auditor or specialist-hiring
+prerequisite. Coding agents cannot approve their own security work; routine
+scans are not the entire assessment. Sensitive privacy/production decisions
+remain with the owner.
+
+Preserve the original authored checker corpus and expected outcomes. Retain
+source-supported disagreements instead of forcing every expectation to pass;
+version clarifications separately. Independently supplied preparation is not a
+formal pipeline provider receipt or accepted oracle replacement.
+
+**Why:** The user explicitly challenged authored expectations and required honest
+disputed outcomes without changing the acceptance target to manufacture a pass.
+
+**Why:** The user explicitly clarified the independent-assessment requirement.
