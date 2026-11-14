@@ -11,6 +11,7 @@ export type AssessmentItemLabel = typeof AssessmentItemLabel[keyof typeof Assess
 
 export const AssessmentItemLabel = {
   Likely_relevant: 'Likely relevant',
+  May_apply: 'May apply',
   More_information_needed: 'More information needed',
   Not_indicated_by_these_answers: 'Not indicated by these answers',
 } as const;

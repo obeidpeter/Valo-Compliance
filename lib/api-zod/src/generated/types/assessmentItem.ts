@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AssessmentItemLabel } from './assessmentItemLabel';
+import type { MissingAnswerState } from './missingAnswerState';
 import type { RuleJurisdiction } from './ruleJurisdiction';
 import type { RuleSource } from './ruleSource';
 
@@ -16,6 +17,11 @@ export interface AssessmentItem {
   title: string;
   label: AssessmentItemLabel;
   reason: string;
+  assessedProposition?: string;
+  factsNotice?: string;
+  sourceReviewHold?: string;
+  sourceLinkedTaskEligible?: boolean;
+  missingAnswerStates?: MissingAnswerState[];
   missingFacts: string[];
   matchedFacts: string[];
   nextStep: string;

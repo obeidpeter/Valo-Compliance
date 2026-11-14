@@ -84,3 +84,28 @@ silently adopt old unsigned inventories: they need independently authenticated
 post-cutoff evidence or must remain held. The existing production recovery,
 external-provider deletion, full retention inventory and owner decisions remain
 outside this partial synthetic-content capability.
+
+## Executed synthetic CI checkpoint
+
+At code commit `b77b2b14704ab8332511c3ce979dd231a509fab7`, GitHub CI applied
+registered migration 0022 to an empty disposable PostgreSQL service. The focused
+erasure suite passed 15 tests, failed 0 and explicitly skipped 1 genuine native
+Replit storage case because its runtime prerequisite was unavailable. This run
+executed the delayed `executeExport` upload, SIGKILL-before-acknowledgement replay,
+23-object/235-row continuation, hold/role revocation, historical/current key
+failure, corrupt audit/completion and one-data-connection concurrency regressions.
+
+The standard PostgreSQL suite passed 100 tests with the same one native skip;
+write security passed 12/12, commerce 15/15 and refunds 17/17. Full source typecheck,
+the 10 pure privacy test records, foundation units, static security and dependency/
+redacted-secret checks passed. The overall foundation job still failed in the
+separately owned inference-budget/customer-AI unit tests due to eager database
+imports without DATABASE_URL. Those failures are not waived or reported green.
+
+Independent source review at `b127edf1451614fa897376b32b1139340d7f7be5` found no
+remaining blocker within the synthetic scope; subsequent changes registered
+migration/tests and corrected only a test pg-config type error. Native Replit
+object storage, the full pg-boss export worker and production recovery remain
+unverified and outside this controlled transport proof. A normal merge of the
+reviewed rich-checker branch follows this checkpoint; its combined CI must be
+read separately rather than assuming the earlier run covers the merge.
