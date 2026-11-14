@@ -3,6 +3,9 @@
 This is a partial development checkpoint, not completion or acceptance of R1,
 R2, any whole requirement or a release gate. The visible product remains **Valo**.
 The existing private application and repository history are preserved.
+Implementation revision: `61c42a44dd0b40d34732f3aae50aa0efcc603d8b`.
+The subsequent register refresh binds all 127 original requirement rows to this
+code revision without accepting any whole requirement.
 
 ## Implemented changes
 
