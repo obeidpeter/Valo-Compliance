@@ -188,10 +188,12 @@ test("refund lifecycle: actual development PostgreSQL and controlled provider, n
         assert.equal((await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,order))).length,0);
       }
     });
-    await t.test("dispute observations cannot replace a separately revoked or suspended grant",async()=>{
-      for(const status of["revoked","suspended"]){
-        const order=await fixture(b),[before]=await db.select().from(valoOrders).where(eq(valoOrders.id,order));
-        await db.update(valoEntitlements).set({status}).where(eq(valoEntitlements.orderId,order));
+    await t.test("dispute observations preserve separately suspended grants and reversed orders",async()=>{
+      for(const orderStatus of["verified_success","reversed"]){
+        const order=await fixture(b);
+        await db.update(valoOrders).set({status:orderStatus}).where(eq(valoOrders.id,order));
+        const[before]=await db.select().from(valoOrders).where(eq(valoOrders.id,order));
+        await db.update(valoEntitlements).set({status:"suspended"}).where(eq(valoEntitlements.orderId,order));
         const[grant]=await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order));
         const providerId=String(++idCounter),raw={id:providerId,domain:"test",status:"pending",resolution:null,refund_amount:null,currency:"NGN",
           transaction:{id:before.providerTransactionId,domain:"test",reference:before.reference,amount:10000,currency:"NGN"}};
