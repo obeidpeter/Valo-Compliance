@@ -86,22 +86,22 @@ try {
 }
 const context = await browser.newContext({ acceptDownloads: true, viewport: { width: 375, height: 812 }, isMobile: true });
 await context.addCookies([{ name: 'fixture-owner', value: 'owner-a', url: origin, httpOnly: true, sameSite: 'Lax' }]);
-await context.addInitScript(() => {
-  const guard = (name: string) => { throw new Error(`App attempted forbidden export transport: ${name}`); };
-  window.fetch = (() => guard('fetch')) as typeof window.fetch;
+await context.addInitScript({content: `
+  const guard = (name) => { throw new Error('App attempted forbidden export transport: ' + name); };
+  window.fetch = () => guard('fetch');
   window.Blob = new Proxy(window.Blob, { construct: () => guard('Blob') });
   URL.createObjectURL = () => guard('createObjectURL');
   const parse = JSON.parse;
-  JSON.parse = (text: string, reviver?: Parameters<typeof JSON.parse>[1]) => {
+  JSON.parse = (text, reviver) => {
     if (text.includes('"schemaVersion":2') && text.includes('"data"')) return guard('full export JSON parsing');
     return parse(text, reviver);
   };
   const stringify = JSON.stringify;
-  JSON.stringify = ((value: unknown, ...options: unknown[]) => {
+  JSON.stringify = (value, ...options) => {
     if (value && typeof value === 'object' && 'workspaceId' in value && 'data' in value) return guard('full export JSON stringification');
     return Reflect.apply(stringify, JSON, [value, ...options]);
-  }) as typeof JSON.stringify;
-});
+  };
+`});
 const page = await context.newPage();
 const errors: string[] = [];
 let downloads = 0;
@@ -117,7 +117,7 @@ const checks: string[] = [];
 try {
   await open();
   await page.keyboard.press('Tab');
-  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('data-testid')), 'button-download-workspace');
+  assert.equal(await page.evaluate("document.activeElement?.getAttribute('data-testid')"), 'button-download-workspace');
   const received = page.waitForEvent('download');
   await page.keyboard.press('Enter');
   const download = await received;
@@ -133,7 +133,7 @@ try {
   assert.doesNotMatch(raw, /storageLocator|another-tenant/);
   assert.match(await page.getByRole('status').innerText(), /Download requested; check browser downloads/);
   assert.doesNotMatch(await page.locator('body').innerText(), /Downloaded\.|Download complete/);
-  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  assert.equal(await page.evaluate("document.documentElement.scrollWidth <= innerWidth"), true);
   await page.screenshot({ path: join(evidence, 'workspace-data-download-mobile.png'), fullPage: true });
   checks.push('6001-row >8MB cookie-authenticated native attachment; keyboard activation; mobile width; no app fetch/Blob/object URL/JSON parsing');
 

@@ -5,7 +5,7 @@ type DownloadClaims={userId:string|null;sessionId:string|null};
 type SessionReader={
   session:(id:string)=>Promise<{status:string;userId:string}>;
   user:(id:string)=>Promise<{id:string;banned:boolean;locked:boolean;primaryEmailAddressId:string|null;
-    emailAddresses:{id:string;verification:{status:string}|null}[]}>;
+    emailAddresses:readonly {id:string;verification:{status:string}|null}[]}>;
 };
 
 /** Re-read the original request's session immediately before file release.
