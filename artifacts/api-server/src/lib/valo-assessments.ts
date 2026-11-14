@@ -3,7 +3,7 @@ import { and,desc,eq } from "drizzle-orm";
 import { db,valoAssessments,valoMemberships,valoWorkspaces,valoProfileVersions,valoRuleReleases,valoEvents } from "@workspace/db";
 import { CreateAssessmentBody,GetAssessmentResponse,CompareAssessmentsResponse,PreviewAssessmentBody } from "@workspace/api-zod";
 import { assess,canonical,checkerFactsSchema,digest,evaluatePublication,factsFromProfile,ruleSchema,
-  publicationSchema,type CheckerFacts } from "@workspace/valo-core";
+  publicationSchema,changedCheckerFactPaths,sourceFamilyBindingMatches,type CheckerFacts } from "@workspace/valo-core";
 import { z } from "zod";
 import { ValoProblem,type WorkspaceActor } from "./valo-store";
 
@@ -37,7 +37,7 @@ export async function releasedRegistry(tx:WorkspaceTx|typeof db,now:Date){
     if(rule.success&&bundle.success&&row.status==="published"){
       const r=rule.data,b=bundle.data,{manifestHash:_,...reviewedRule}=r;
       eligible=r.id===row.ruleId&&r.version===row.version&&r.status==="published"&&
-        r.provenance==="editorial_release"&&r.requirementVersionId===b.candidate.id&&
+        r.provenance==="editorial_release"&&(!r.evaluator||sourceFamilyBindingMatches(r.evaluator))&&r.requirementVersionId===b.candidate.id&&
         b.candidate.contentClass==="sourced_guidance"&&b.candidate.body===canonical(reviewedRule)&&
         r.manifestHash===row.manifestHash&&row.manifestHash===digest(b.manifest)&&
         evaluatePublication(b,now).decision==="eligible"&&
@@ -64,8 +64,15 @@ export async function runAssessment(facts:CheckerFacts,asOfDate:string,tx:Worksp
   return{...body,resultHash:digest(body)};
 }
 export async function previewAssessment(raw:unknown){
+  const facts=checkerFactsSchema.parse(z.object({facts:z.unknown()}).parse(raw).facts);
+  if(facts.rich?.businessName!==undefined)throw new ValoProblem(401,"Sign in to check optional business-name facts. Anonymous checks do not accept name details.");
   const input=PreviewAssessmentBody.strict().parse(raw);
-  return runAssessment(checkerFactsSchema.parse(input.facts),input.asOfDate);
+  return runAssessment(facts,input.asOfDate);
+}
+export async function previewWorkspaceAssessment(actor:WorkspaceActor,raw:unknown){
+  const facts=checkerFactsSchema.parse(z.object({facts:z.unknown()}).parse(raw).facts);
+  const input=PreviewAssessmentBody.strict().parse(raw);
+  return workspaceTransaction(actor,tx=>runAssessment(facts,input.asOfDate,tx));
 }
 export function serializeAssessment(row:typeof valoAssessments.$inferSelect){
   const result=GetAssessmentResponse.parse({id:row.id,profileRevision:row.profileRevision,
@@ -76,6 +83,8 @@ export function serializeAssessment(row:typeof valoAssessments.$inferSelect){
   return result;
 }
 export async function createAssessment(actor:WorkspaceActor,raw:unknown){
+  const supplied=z.object({facts:z.unknown().optional()}).parse(raw).facts;
+  const suppliedFacts=supplied===undefined?undefined:checkerFactsSchema.parse(supplied);
   const input=CreateAssessmentBody.strict().refine(i=>i.saveConsent,"Saving requires explicit consent").parse(raw);
   return workspaceTransaction(actor,async tx=>{
     const[workspace]=await tx.select().from(valoWorkspaces).where(eq(valoWorkspaces.id,actor.workspaceId));
@@ -84,7 +93,7 @@ export async function createAssessment(actor:WorkspaceActor,raw:unknown){
     const[profile]=await tx.select().from(valoProfileVersions).where(and(
       eq(valoProfileVersions.workspaceId,actor.workspaceId),eq(valoProfileVersions.revision,workspace.profileRevision)));
     if(!input.facts&&!profile)throw new ValoProblem(422,"Complete a business profile or provide questionnaire answers first");
-    const facts=input.facts?checkerFactsSchema.parse(input.facts):factsFromProfile(profile.profile);
+    const facts=suppliedFacts??factsFromProfile(profile.profile);
     const result=await runAssessment(facts,input.asOfDate,tx);
     const id=randomUUID();
     const[row]=await tx.insert(valoAssessments).values({id,workspaceId:actor.workspaceId,
@@ -117,7 +126,7 @@ export async function compareAssessments(actor:WorkspaceActor,id:string,previous
     const after=new Map(current.result.items.map(i=>[i.ruleId,i]));
     return CompareAssessmentsResponse.parse({
       previousId,currentId:id,
-      changedFacts:Object.keys(current.facts).filter(k=>canonical(Reflect.get(previous.facts,k))!==canonical(Reflect.get(current.facts,k))),
+      changedFacts:changedCheckerFactPaths(previous.facts,current.facts),
       addedRuleIds:[...after.keys()].filter(k=>!before.has(k)),
       removedRuleIds:[...before.keys()].filter(k=>!after.has(k)),
       changedRuleIds:[...after.keys()].filter(k=>before.has(k)&&digest(before.get(k))!==digest(after.get(k))),

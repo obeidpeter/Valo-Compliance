@@ -6,14 +6,18 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Answer } from './answer';
+import type { CheckerFactsFactsVersion } from './checkerFactsFactsVersion';
 import type { CheckerFactsState } from './checkerFactsState';
 import type { CheckerFactsTurnoverBand } from './checkerFactsTurnoverBand';
 import type { CheckerFactsTurnoverCurrency } from './checkerFactsTurnoverCurrency';
 import type { CheckerFactsTurnoverMetric } from './checkerFactsTurnoverMetric';
 import type { CheckerFactsTurnoverPeriod } from './checkerFactsTurnoverPeriod';
+import type { RichCheckerFacts } from './richCheckerFacts';
 import type { UnknownAnswer } from './unknownAnswer';
 
 export interface CheckerFacts {
+  factsVersion?: CheckerFactsFactsVersion;
+  rich?: RichCheckerFacts;
   /** @maxLength 80 */
   legalForm: string;
   /** @maxLength 80 */

@@ -5,16 +5,11 @@ import type { AssessmentItem, AssessmentResult } from '@workspace/api-client-rea
 import { Notice } from '@/components/states';
 import { factLabel } from '@/lib/checker';
 import { cn } from '@/lib/utils';
-
-const ORDER = ['Likely relevant', 'More information needed', 'Not indicated by these answers'] as const;
-const TONE: Record<string, string> = {
-  'Likely relevant': 'pill-forest',
-  'More information needed': 'pill-ochre',
-  'Not indicated by these answers': 'pill-ink',
-};
+import { ANSWER_STATE_LABELS, RESULT_LABELS, RESULT_TONES } from '@/lib/rich-checker';
 
 export function AssessmentResultView({ result, itemAction }: { result: AssessmentResult; itemAction?: (item: AssessmentItem) => ReactNode }) {
-  const groups = ORDER.map((l) => ({ label: l, items: result.items.filter((i) => i.label === l) })).filter((g) => g.items.length);
+  const labels = [...RESULT_LABELS, ...new Set(result.items.map(i => i.label).filter(label => !(RESULT_LABELS as readonly string[]).includes(label)))];
+  const groups = labels.map((label) => ({ label, items: result.items.filter((i) => i.label === label) })).filter((g) => g.items.length);
   return (
     <div className="grid gap-6" data-testid="assessment-result">
       <div className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted-foreground">
@@ -37,7 +32,7 @@ export function AssessmentResultView({ result, itemAction }: { result: Assessmen
       ) : (
         groups.map((g) => (
           <section key={g.label} aria-label={g.label}>
-            <div className="mb-3 flex items-center gap-3"><span className={cn('pill', TONE[g.label])}><span className="dot" />{g.label}</span><span className="text-xs text-muted-foreground">{g.items.length}</span></div>
+            <div className="mb-3 flex items-center gap-3"><span className={cn('pill', RESULT_TONES[g.label] ?? 'pill-ink')}><span className="dot" />{g.label}</span><span className="text-xs text-muted-foreground">{g.items.length}</span></div>
             <ul className="grid gap-3">{g.items.map((it) => <Item key={it.ruleId} item={it} action={itemAction?.(it)} />)}</ul>
           </section>
         ))
@@ -77,6 +72,8 @@ export function AssessmentResultView({ result, itemAction }: { result: Assessmen
 
 function Item({ item, action }: { item: AssessmentItem; action?: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const detail = item;
+  const missingStates = new Map(detail.missingAnswerStates?.map(answer => [answer.field, answer.state]));
   const jur = [item.jurisdiction.level, item.jurisdiction.state, item.jurisdiction.lga].filter(Boolean).join(' / ');
   return (
     <li className="surface overflow-hidden" data-testid={'card-item-' + item.ruleId}>
@@ -88,9 +85,11 @@ function Item({ item, action }: { item: AssessmentItem; action?: ReactNode }) {
           </div>
           {action}
         </div>
+        {detail.assessedProposition && <p className="mt-3 text-sm"><span className="text-muted-foreground">Question assessed: </span>{detail.assessedProposition}</p>}
+        {detail.factsNotice && <p className="mt-2 rounded-lg bg-secondary px-3 py-2 text-xs leading-relaxed" data-testid={'facts-notice-' + item.ruleId}>{detail.factsNotice}</p>}
         <p className="mt-3 text-sm leading-relaxed text-foreground/85">{item.reason}</p>
         {item.missingFacts.length > 0 && (
-          <p className="mt-3 text-sm"><span className="text-muted-foreground">Missing: </span>{item.missingFacts.map(factLabel).join(', ')}</p>
+          <ul className="mt-3 grid gap-1 text-sm" aria-label="Answers still needed">{item.missingFacts.map(field => <li key={field}><span className="text-muted-foreground">{factLabel(field)}: </span>{missingStates.has(field) ? ANSWER_STATE_LABELS[missingStates.get(field)!] : 'Not supplied'}</li>)}</ul>
         )}
         {item.nextStep && <p className="mt-2 text-sm"><span className="text-muted-foreground">Next step: </span>{item.nextStep}</p>}
         {item.sources.length > 0 && (
@@ -117,3 +116,4 @@ function Item({ item, action }: { item: AssessmentItem; action?: ReactNode }) {
     </li>
   );
 }
+

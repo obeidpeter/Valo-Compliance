@@ -1,0 +1,37 @@
+Observed local focused validation
+UTC: 2026-11-14T22:36:47.677195+00:00
+
+$ node --import tsx --test lib/valo-core/src/checker-rich.test.ts artifacts/valo/src/lib/rich-checker.test.ts
+
+✔ rich review preserves known false, omitted answers and all three explicit states (3.306642ms)
+✔ changing the operator preserves partner and name answers, and editing a field preserves other groups (1.268779ms)
+✔ review and comparisons address nested partners and removed rich facts without object text (0.693887ms)
+✔ submission removes unfinished blank name rows without inventing answers or clearing conditional details (0.965407ms)
+✔ all four result labels are represented and server task restrictions override likely relevance (0.17667ms)
+✔ exact names stay literal across review and grouped comparison (0.174052ms)
+✔ old v1 result/hash and generated saved response remain unchanged (8.433476ms)
+✔ v2 preserves known false, absence and all three marker states through request/save schemas (9.142078ms)
+✔ version and client evidence injection are rejected without source policy coercion (1.015933ms)
+✔ four outcomes traverse the real engine and generated response contract in private fixture mode (21.199122ms)
+✔ all partners matter; unknown appointment and unknown exception facts do not become a negative (8.270523ms)
+✔ household context never fills an omitted purpose or upgrades uncertainty into exemption (4.95869ms)
+✔ unknown operator and derived exception questions map back to actual supplied answers (3.059263ms)
+✔ period and product questions retain their narrow scope without an automatic date or duplicate application (3.853195ms)
+✔ source-family implementation, publication, period and freshness gates fail closed (3.281808ms)
+✔ comparison identifies removed and changed nested answers without flattening marker states (0.887605ms)
+✔ original source candidate bytes remain bound and unchanged (0.460622ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 561.715499
+
+exit=0
+
+$ node_modules/.bin/tsc --noEmit --target es2022 --module esnext --moduleResolution bundler --skipLibCheck --strict --types node lib/valo-core/src/checker.ts lib/valo-core/src/checker-rich.ts lib/valo-core/src/checker-rich.test.ts lib/api-client-react/src/generated/api.schemas.ts lib/api-zod/src/generated/api.ts
+
+
+exit=0

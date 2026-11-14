@@ -2701,6 +2701,54 @@ export const GetCustomerAIUsageResponse = zod.object({
 })
 
 
+export const previewAssessmentBodyFactsRichBusinessNameTrueSurnameOneMax = 300;
+
+export const previewAssessmentBodyFactsRichBusinessNameTrueForenamesOneItemMax = 150;
+
+export const previewAssessmentBodyFactsRichBusinessNameTrueForenamesOneMax = 20;
+
+export const previewAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneItemMax = 150;
+
+export const previewAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneMax = 20;
+
+export const previewAssessmentBodyFactsRichBusinessNameBusinessNameOneMax = 300;
+
+export const previewAssessmentBodyFactsRichBusinessNameCorporateNameOneMax = 300;
+
+export const previewAssessmentBodyFactsRichBusinessNamePartnersOneItemSurnameOneMax = 300;
+
+export const previewAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneItemMax = 150;
+
+export const previewAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneMax = 20;
+
+export const previewAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax = 150;
+
+export const previewAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax = 20;
+
+export const previewAssessmentBodyFactsRichBusinessNamePartnersOneItemCorporateNameOneMax = 300;
+
+export const previewAssessmentBodyFactsRichBusinessNamePartnersOneMax = 30;
+
+export const previewAssessmentBodyFactsRichPrivacyProcessingPurposeOneMax = 300;
+
+export const previewAssessmentBodyFactsRichPrivacyExceptionSupportingFactsOneMax = 300;
+
+export const previewAssessmentBodyFactsRichPrivacyDataCategoriesOneItemMax = 150;
+
+export const previewAssessmentBodyFactsRichPrivacyDataCategoriesOneMax = 20;
+
+export const previewAssessmentBodyFactsRichTaxEffectiveManagementCountryOneMax = 300;
+
+export const previewAssessmentBodyFactsRichTaxManagementStatusVerificationOneMax = 300;
+
+export const previewAssessmentBodyFactsRichTaxOnlyNigeriaIncomeOneMax = 300;
+
+export const previewAssessmentBodyFactsRichTaxFinalTaxTreatmentOneMax = 300;
+
+export const previewAssessmentBodyFactsRichTaxCompanyStatusOneMax = 300;
+
+export const previewAssessmentBodyFactsRichTaxAccountingPeriodStartOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
+export const previewAssessmentBodyFactsRichTaxAccountingPeriodEndOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
 export const previewAssessmentBodyFactsLegalFormMax = 80;
 
 export const previewAssessmentBodyFactsRegistrationStatusMax = 80;
@@ -2725,6 +2773,307 @@ export const previewAssessmentBodyAsOfDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2
 
 export const PreviewAssessmentBody = zod.object({
   "facts": zod.object({
+  "factsVersion": zod.enum(['checker-facts-v2']).optional(),
+  "rich": zod.object({
+  "businessName": zod.object({
+  "legalForm": zod.union([zod.enum(['individual', 'firm', 'company', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "hasPlaceOfBusinessInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "carryingOnBusiness": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueSurname": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichBusinessNameTrueSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueForenames": zod.union([zod.array(zod.string().min(1).max(previewAssessmentBodyFactsRichBusinessNameTrueForenamesOneItemMax)).max(previewAssessmentBodyFactsRichBusinessNameTrueForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(previewAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneItemMax)).max(previewAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessName": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichBusinessNameBusinessNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichBusinessNameCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "partners": zod.union([zod.array(zod.object({
+  "type": zod.union([zod.enum(['individual', 'corporation']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "surname": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichBusinessNamePartnersOneItemSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "forenames": zod.union([zod.array(zod.string().min(1).max(previewAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneItemMax)).max(previewAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(previewAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax)).max(previewAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichBusinessNamePartnersOneItemCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+})).max(previewAssessmentBodyFactsRichBusinessNamePartnersOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatorRole": zod.union([zod.enum(['proprietor', 'manager', 'receiver', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentAuthority": zod.union([zod.enum(['court', 'private_contract', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "namingAssessment": zod.union([zod.object({
+  "onlyAddedWordsIndicateSuccession": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "otherBrandAddition": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "sameSurnameAllPartners": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyAdditionIsPluralS": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessNameRegistered": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "privacy": zod.object({
+  "processesPersonalData": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerRole": zod.union([zod.enum(['controller', 'processor_only', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "collectionMethod": zod.union([zod.enum(['direct', 'indirect', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "newCollectionEvent": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOccursInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectsInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerDomiciledInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerResidentInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processorConnectionInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingPurpose": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichPrivacyProcessingPurposeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "privacyRightsViolationIndicated": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "section3Exception": zod.union([zod.enum(['none', 'personal_household', 'legal_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "determinesPurposesAndMeans": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownPurposeReuse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectAlreadyInformed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+}),zod.literal("claimed_not_verified")]).optional(),
+  "indirectNoticeException": zod.union([zod.enum(['none', 'disproportionate_effort_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionScopeConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionSupportingFacts": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichPrivacyExceptionSupportingFactsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataCategories": zod.union([zod.array(zod.string().min(1).max(previewAssessmentBodyFactsRichPrivacyDataCategoriesOneItemMax)).max(previewAssessmentBodyFactsRichPrivacyDataCategoriesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "automatedDecisionMaking": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "profiling": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "tax": zod.object({
+  "legalForm": zod.union([zod.enum(['company', 'company_limited_by_guarantee', 'foreign_company', 'individual_business_name', 'ordinary_unincorporated_partnership', 'incorporated_trustees', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedAsCompany": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "effectiveManagementCountry": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichTaxEffectiveManagementCountryOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "managementStatusVerification": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichTaxManagementStatusVerificationOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "nonresident": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyNigeriaIncome": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichTaxOnlyNigeriaIncomeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "finalTaxTreatment": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichTaxFinalTaxTreatmentOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "companyStatus": zod.union([zod.string().min(1).max(previewAssessmentBodyFactsRichTaxCompanyStatusOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodStart": zod.union([zod.string().regex(previewAssessmentBodyFactsRichTaxAccountingPeriodStartOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodEnd": zod.union([zod.string().regex(previewAssessmentBodyFactsRichTaxAccountingPeriodEndOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "product": zod.object({
+  "productCategory": zod.union([zod.enum(['processed_food', 'cosmetic', 'claimed_cosmetic', 'water', 'drug', 'drug_product', 'medical_device', 'live_fish', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "manufacturesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyOfRegulatedProducts": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "activity": zod.union([zod.enum(['manufacture', 'resale_only', 'own_brand_repackaging', 'import_and_distribute', 'service_use_only', 'sample_for_registration', 'sample_for_registration_only', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "productRegistration": zod.union([zod.enum(['current_for_product_and_manufacturer', 'supplier_registration_claimed', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownBrandOrRepackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOrPackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "drugOrMedicalUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "therapeuticClaims": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "specialSamplePermit": zod.union([zod.enum(['permit_held', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitScopeMatchesActivity": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitConditionsSatisfied": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationCoversExactProductAndManufacturer": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationConditionsChanged": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional()
+}).optional(),
   "legalForm": zod.string().max(previewAssessmentBodyFactsLegalFormMax),
   "registrationStatus": zod.string().max(previewAssessmentBodyFactsRegistrationStatusMax),
   "activities": zod.union([zod.array(zod.string().min(1).max(previewAssessmentBodyFactsActivitiesOneItemMax)).max(previewAssessmentBodyFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
@@ -2757,8 +3106,15 @@ export const PreviewAssessmentResponse = zod.object({
   "ruleVersion": zod.int(),
   "requirementVersionId": zod.string(),
   "title": zod.string(),
-  "label": zod.enum(['Likely relevant', 'More information needed', 'Not indicated by these answers']),
+  "label": zod.enum(['Likely relevant', 'May apply', 'More information needed', 'Not indicated by these answers']),
   "reason": zod.string(),
+  "assessedProposition": zod.string().optional(),
+  "factsNotice": zod.string().optional(),
+  "sourceLinkedTaskEligible": zod.boolean().optional(),
+  "missingAnswerStates": zod.array(zod.object({
+  "field": zod.string(),
+  "state": zod.enum(['unknown', 'unanswered', 'not_applicable'])
+})).optional(),
   "missingFacts": zod.array(zod.string()),
   "matchedFacts": zod.array(zod.string()),
   "nextStep": zod.string(),
@@ -2790,6 +3146,499 @@ export const PreviewAssessmentResponse = zod.object({
 })
 
 
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNameTrueSurnameOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNameTrueForenamesOneItemMax = 150;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNameTrueForenamesOneMax = 20;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneItemMax = 150;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneMax = 20;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNameBusinessNameOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNameCorporateNameOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemSurnameOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneItemMax = 150;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneMax = 20;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax = 150;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax = 20;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemCorporateNameOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneMax = 30;
+
+export const previewWorkspaceAssessmentBodyFactsRichPrivacyProcessingPurposeOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichPrivacyExceptionSupportingFactsOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichPrivacyDataCategoriesOneItemMax = 150;
+
+export const previewWorkspaceAssessmentBodyFactsRichPrivacyDataCategoriesOneMax = 20;
+
+export const previewWorkspaceAssessmentBodyFactsRichTaxEffectiveManagementCountryOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichTaxManagementStatusVerificationOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichTaxOnlyNigeriaIncomeOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichTaxFinalTaxTreatmentOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichTaxCompanyStatusOneMax = 300;
+
+export const previewWorkspaceAssessmentBodyFactsRichTaxAccountingPeriodStartOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
+export const previewWorkspaceAssessmentBodyFactsRichTaxAccountingPeriodEndOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
+export const previewWorkspaceAssessmentBodyFactsLegalFormMax = 80;
+
+export const previewWorkspaceAssessmentBodyFactsRegistrationStatusMax = 80;
+
+export const previewWorkspaceAssessmentBodyFactsActivitiesOneItemMax = 120;
+
+export const previewWorkspaceAssessmentBodyFactsActivitiesOneMax = 10;
+
+export const previewWorkspaceAssessmentBodyFactsProductTypesOneItemMax = 120;
+
+export const previewWorkspaceAssessmentBodyFactsProductTypesOneMax = 10;
+
+export const previewWorkspaceAssessmentBodyFactsLgaMax = 100;
+
+export const previewWorkspaceAssessmentBodyFactsEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
+export const previewWorkspaceAssessmentBodyFactsTurnoverYearRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4})$');
+export const previewWorkspaceAssessmentBodyFactsTurnoverAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const previewWorkspaceAssessmentBodyFactsTurnoverPeriodStartRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const previewWorkspaceAssessmentBodyFactsTurnoverPeriodEndRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+export const previewWorkspaceAssessmentBodyAsOfDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const PreviewWorkspaceAssessmentBody = zod.object({
+  "facts": zod.object({
+  "factsVersion": zod.enum(['checker-facts-v2']).optional(),
+  "rich": zod.object({
+  "businessName": zod.object({
+  "legalForm": zod.union([zod.enum(['individual', 'firm', 'company', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "hasPlaceOfBusinessInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "carryingOnBusiness": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueSurname": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichBusinessNameTrueSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueForenames": zod.union([zod.array(zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichBusinessNameTrueForenamesOneItemMax)).max(previewWorkspaceAssessmentBodyFactsRichBusinessNameTrueForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneItemMax)).max(previewWorkspaceAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessName": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichBusinessNameBusinessNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichBusinessNameCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "partners": zod.union([zod.array(zod.object({
+  "type": zod.union([zod.enum(['individual', 'corporation']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "surname": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "forenames": zod.union([zod.array(zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneItemMax)).max(previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax)).max(previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneItemCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+})).max(previewWorkspaceAssessmentBodyFactsRichBusinessNamePartnersOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatorRole": zod.union([zod.enum(['proprietor', 'manager', 'receiver', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentAuthority": zod.union([zod.enum(['court', 'private_contract', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "namingAssessment": zod.union([zod.object({
+  "onlyAddedWordsIndicateSuccession": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "otherBrandAddition": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "sameSurnameAllPartners": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyAdditionIsPluralS": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessNameRegistered": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "privacy": zod.object({
+  "processesPersonalData": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerRole": zod.union([zod.enum(['controller', 'processor_only', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "collectionMethod": zod.union([zod.enum(['direct', 'indirect', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "newCollectionEvent": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOccursInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectsInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerDomiciledInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerResidentInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processorConnectionInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingPurpose": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichPrivacyProcessingPurposeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "privacyRightsViolationIndicated": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "section3Exception": zod.union([zod.enum(['none', 'personal_household', 'legal_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "determinesPurposesAndMeans": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownPurposeReuse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectAlreadyInformed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+}),zod.literal("claimed_not_verified")]).optional(),
+  "indirectNoticeException": zod.union([zod.enum(['none', 'disproportionate_effort_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionScopeConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionSupportingFacts": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichPrivacyExceptionSupportingFactsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataCategories": zod.union([zod.array(zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichPrivacyDataCategoriesOneItemMax)).max(previewWorkspaceAssessmentBodyFactsRichPrivacyDataCategoriesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "automatedDecisionMaking": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "profiling": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "tax": zod.object({
+  "legalForm": zod.union([zod.enum(['company', 'company_limited_by_guarantee', 'foreign_company', 'individual_business_name', 'ordinary_unincorporated_partnership', 'incorporated_trustees', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedAsCompany": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "effectiveManagementCountry": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichTaxEffectiveManagementCountryOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "managementStatusVerification": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichTaxManagementStatusVerificationOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "nonresident": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyNigeriaIncome": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichTaxOnlyNigeriaIncomeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "finalTaxTreatment": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichTaxFinalTaxTreatmentOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "companyStatus": zod.union([zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsRichTaxCompanyStatusOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodStart": zod.union([zod.string().regex(previewWorkspaceAssessmentBodyFactsRichTaxAccountingPeriodStartOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodEnd": zod.union([zod.string().regex(previewWorkspaceAssessmentBodyFactsRichTaxAccountingPeriodEndOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "product": zod.object({
+  "productCategory": zod.union([zod.enum(['processed_food', 'cosmetic', 'claimed_cosmetic', 'water', 'drug', 'drug_product', 'medical_device', 'live_fish', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "manufacturesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyOfRegulatedProducts": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "activity": zod.union([zod.enum(['manufacture', 'resale_only', 'own_brand_repackaging', 'import_and_distribute', 'service_use_only', 'sample_for_registration', 'sample_for_registration_only', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "productRegistration": zod.union([zod.enum(['current_for_product_and_manufacturer', 'supplier_registration_claimed', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownBrandOrRepackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOrPackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "drugOrMedicalUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "therapeuticClaims": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "specialSamplePermit": zod.union([zod.enum(['permit_held', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitScopeMatchesActivity": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitConditionsSatisfied": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationCoversExactProductAndManufacturer": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationConditionsChanged": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional()
+}).optional(),
+  "legalForm": zod.string().max(previewWorkspaceAssessmentBodyFactsLegalFormMax),
+  "registrationStatus": zod.string().max(previewWorkspaceAssessmentBodyFactsRegistrationStatusMax),
+  "activities": zod.union([zod.array(zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsActivitiesOneItemMax)).max(previewWorkspaceAssessmentBodyFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
+  "productTypes": zod.union([zod.array(zod.string().min(1).max(previewWorkspaceAssessmentBodyFactsProductTypesOneItemMax)).max(previewWorkspaceAssessmentBodyFactsProductTypesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]).optional(),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
+  "lga": zod.string().max(previewWorkspaceAssessmentBodyFactsLgaMax),
+  "employees": zod.string().regex(previewWorkspaceAssessmentBodyFactsEmployeesRegExp),
+  "turnoverBand": zod.enum(['under_5m', '5m_to_25m', '25m_to_100m', 'over_100m', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverYear": zod.string().regex(previewWorkspaceAssessmentBodyFactsTurnoverYearRegExp),
+  "turnoverMetric": zod.enum(['gross_revenue', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverCurrency": zod.enum(['NGN', 'unknown', 'unanswered', 'not_applicable']),
+  "turnoverPeriod": zod.enum(['annual', 'monthly', 'quarterly', 'unknown', 'unanswered', 'not_applicable']).optional(),
+  "turnoverAmountKobo": zod.string().regex(previewWorkspaceAssessmentBodyFactsTurnoverAmountKoboRegExp).nullish(),
+  "turnoverPeriodStart": zod.string().regex(previewWorkspaceAssessmentBodyFactsTurnoverPeriodStartRegExp).optional(),
+  "turnoverPeriodEnd": zod.string().regex(previewWorkspaceAssessmentBodyFactsTurnoverPeriodEndRegExp).optional(),
+  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable'])
+}),
+  "asOfDate": zod.string().regex(previewWorkspaceAssessmentBodyAsOfDateRegExp)
+})
+
+export const PreviewWorkspaceAssessmentResponse = zod.object({
+  "schemaVersion": zod.string(),
+  "asOfDate": zod.string(),
+  "rulesetVersion": zod.string(),
+  "items": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "ruleVersion": zod.int(),
+  "requirementVersionId": zod.string(),
+  "title": zod.string(),
+  "label": zod.enum(['Likely relevant', 'May apply', 'More information needed', 'Not indicated by these answers']),
+  "reason": zod.string(),
+  "assessedProposition": zod.string().optional(),
+  "factsNotice": zod.string().optional(),
+  "sourceLinkedTaskEligible": zod.boolean().optional(),
+  "missingAnswerStates": zod.array(zod.object({
+  "field": zod.string(),
+  "state": zod.enum(['unknown', 'unanswered', 'not_applicable'])
+})).optional(),
+  "missingFacts": zod.array(zod.string()),
+  "matchedFacts": zod.array(zod.string()),
+  "nextStep": zod.string(),
+  "jurisdiction": zod.object({
+  "level": zod.enum(['federal', 'state', 'lga']),
+  "state": zod.string().optional(),
+  "lga": zod.string().optional()
+}),
+  "sources": zod.array(zod.object({
+  "id": zod.string(),
+  "url": zod.string(),
+  "title": zod.string(),
+  "locator": zod.string(),
+  "quote": zod.string(),
+  "snapshotHash": zod.string()
+})),
+  "relatedTemplateIds": zod.array(zod.string())
+})),
+  "unanswered": zod.array(zod.string()),
+  "gaps": zod.array(zod.string()),
+  "recommendedTemplateIds": zod.array(zod.string()),
+  "officialRoutes": zod.array(zod.object({
+  "title": zod.string(),
+  "url": zod.string()
+})),
+  "notice": zod.string(),
+  "sourceBackedRecommendations": zod.int(),
+  "resultHash": zod.string()
+})
+
+
+export const listAssessmentsResponseFactsRichBusinessNameTrueSurnameOneMax = 300;
+
+export const listAssessmentsResponseFactsRichBusinessNameTrueForenamesOneItemMax = 150;
+
+export const listAssessmentsResponseFactsRichBusinessNameTrueForenamesOneMax = 20;
+
+export const listAssessmentsResponseFactsRichBusinessNameRecognizedAbbreviationsOneItemMax = 150;
+
+export const listAssessmentsResponseFactsRichBusinessNameRecognizedAbbreviationsOneMax = 20;
+
+export const listAssessmentsResponseFactsRichBusinessNameBusinessNameOneMax = 300;
+
+export const listAssessmentsResponseFactsRichBusinessNameCorporateNameOneMax = 300;
+
+export const listAssessmentsResponseFactsRichBusinessNamePartnersOneItemSurnameOneMax = 300;
+
+export const listAssessmentsResponseFactsRichBusinessNamePartnersOneItemForenamesOneItemMax = 150;
+
+export const listAssessmentsResponseFactsRichBusinessNamePartnersOneItemForenamesOneMax = 20;
+
+export const listAssessmentsResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax = 150;
+
+export const listAssessmentsResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax = 20;
+
+export const listAssessmentsResponseFactsRichBusinessNamePartnersOneItemCorporateNameOneMax = 300;
+
+export const listAssessmentsResponseFactsRichBusinessNamePartnersOneMax = 30;
+
+export const listAssessmentsResponseFactsRichPrivacyProcessingPurposeOneMax = 300;
+
+export const listAssessmentsResponseFactsRichPrivacyExceptionSupportingFactsOneMax = 300;
+
+export const listAssessmentsResponseFactsRichPrivacyDataCategoriesOneItemMax = 150;
+
+export const listAssessmentsResponseFactsRichPrivacyDataCategoriesOneMax = 20;
+
+export const listAssessmentsResponseFactsRichTaxEffectiveManagementCountryOneMax = 300;
+
+export const listAssessmentsResponseFactsRichTaxManagementStatusVerificationOneMax = 300;
+
+export const listAssessmentsResponseFactsRichTaxOnlyNigeriaIncomeOneMax = 300;
+
+export const listAssessmentsResponseFactsRichTaxFinalTaxTreatmentOneMax = 300;
+
+export const listAssessmentsResponseFactsRichTaxCompanyStatusOneMax = 300;
+
+export const listAssessmentsResponseFactsRichTaxAccountingPeriodStartOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
+export const listAssessmentsResponseFactsRichTaxAccountingPeriodEndOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
 export const listAssessmentsResponseFactsLegalFormMax = 80;
 
 export const listAssessmentsResponseFactsRegistrationStatusMax = 80;
@@ -2815,6 +3664,307 @@ export const ListAssessmentsResponseItem = zod.object({
   "id": zod.string(),
   "profileRevision": zod.int().nullable(),
   "facts": zod.object({
+  "factsVersion": zod.enum(['checker-facts-v2']).optional(),
+  "rich": zod.object({
+  "businessName": zod.object({
+  "legalForm": zod.union([zod.enum(['individual', 'firm', 'company', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "hasPlaceOfBusinessInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "carryingOnBusiness": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueSurname": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichBusinessNameTrueSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueForenames": zod.union([zod.array(zod.string().min(1).max(listAssessmentsResponseFactsRichBusinessNameTrueForenamesOneItemMax)).max(listAssessmentsResponseFactsRichBusinessNameTrueForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(listAssessmentsResponseFactsRichBusinessNameRecognizedAbbreviationsOneItemMax)).max(listAssessmentsResponseFactsRichBusinessNameRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessName": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichBusinessNameBusinessNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichBusinessNameCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "partners": zod.union([zod.array(zod.object({
+  "type": zod.union([zod.enum(['individual', 'corporation']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "surname": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichBusinessNamePartnersOneItemSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "forenames": zod.union([zod.array(zod.string().min(1).max(listAssessmentsResponseFactsRichBusinessNamePartnersOneItemForenamesOneItemMax)).max(listAssessmentsResponseFactsRichBusinessNamePartnersOneItemForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(listAssessmentsResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax)).max(listAssessmentsResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichBusinessNamePartnersOneItemCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+})).max(listAssessmentsResponseFactsRichBusinessNamePartnersOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatorRole": zod.union([zod.enum(['proprietor', 'manager', 'receiver', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentAuthority": zod.union([zod.enum(['court', 'private_contract', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "namingAssessment": zod.union([zod.object({
+  "onlyAddedWordsIndicateSuccession": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "otherBrandAddition": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "sameSurnameAllPartners": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyAdditionIsPluralS": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessNameRegistered": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "privacy": zod.object({
+  "processesPersonalData": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerRole": zod.union([zod.enum(['controller', 'processor_only', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "collectionMethod": zod.union([zod.enum(['direct', 'indirect', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "newCollectionEvent": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOccursInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectsInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerDomiciledInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerResidentInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processorConnectionInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingPurpose": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichPrivacyProcessingPurposeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "privacyRightsViolationIndicated": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "section3Exception": zod.union([zod.enum(['none', 'personal_household', 'legal_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "determinesPurposesAndMeans": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownPurposeReuse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectAlreadyInformed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+}),zod.literal("claimed_not_verified")]).optional(),
+  "indirectNoticeException": zod.union([zod.enum(['none', 'disproportionate_effort_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionScopeConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionSupportingFacts": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichPrivacyExceptionSupportingFactsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataCategories": zod.union([zod.array(zod.string().min(1).max(listAssessmentsResponseFactsRichPrivacyDataCategoriesOneItemMax)).max(listAssessmentsResponseFactsRichPrivacyDataCategoriesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "automatedDecisionMaking": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "profiling": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "tax": zod.object({
+  "legalForm": zod.union([zod.enum(['company', 'company_limited_by_guarantee', 'foreign_company', 'individual_business_name', 'ordinary_unincorporated_partnership', 'incorporated_trustees', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedAsCompany": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "effectiveManagementCountry": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichTaxEffectiveManagementCountryOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "managementStatusVerification": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichTaxManagementStatusVerificationOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "nonresident": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyNigeriaIncome": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichTaxOnlyNigeriaIncomeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "finalTaxTreatment": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichTaxFinalTaxTreatmentOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "companyStatus": zod.union([zod.string().min(1).max(listAssessmentsResponseFactsRichTaxCompanyStatusOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodStart": zod.union([zod.string().regex(listAssessmentsResponseFactsRichTaxAccountingPeriodStartOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodEnd": zod.union([zod.string().regex(listAssessmentsResponseFactsRichTaxAccountingPeriodEndOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "product": zod.object({
+  "productCategory": zod.union([zod.enum(['processed_food', 'cosmetic', 'claimed_cosmetic', 'water', 'drug', 'drug_product', 'medical_device', 'live_fish', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "manufacturesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyOfRegulatedProducts": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "activity": zod.union([zod.enum(['manufacture', 'resale_only', 'own_brand_repackaging', 'import_and_distribute', 'service_use_only', 'sample_for_registration', 'sample_for_registration_only', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "productRegistration": zod.union([zod.enum(['current_for_product_and_manufacturer', 'supplier_registration_claimed', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownBrandOrRepackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOrPackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "drugOrMedicalUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "therapeuticClaims": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "specialSamplePermit": zod.union([zod.enum(['permit_held', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitScopeMatchesActivity": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitConditionsSatisfied": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationCoversExactProductAndManufacturer": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationConditionsChanged": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional()
+}).optional(),
   "legalForm": zod.string().max(listAssessmentsResponseFactsLegalFormMax),
   "registrationStatus": zod.string().max(listAssessmentsResponseFactsRegistrationStatusMax),
   "activities": zod.union([zod.array(zod.string().min(1).max(listAssessmentsResponseFactsActivitiesOneItemMax)).max(listAssessmentsResponseFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
@@ -2844,8 +3994,15 @@ export const ListAssessmentsResponseItem = zod.object({
   "ruleVersion": zod.int(),
   "requirementVersionId": zod.string(),
   "title": zod.string(),
-  "label": zod.enum(['Likely relevant', 'More information needed', 'Not indicated by these answers']),
+  "label": zod.enum(['Likely relevant', 'May apply', 'More information needed', 'Not indicated by these answers']),
   "reason": zod.string(),
+  "assessedProposition": zod.string().optional(),
+  "factsNotice": zod.string().optional(),
+  "sourceLinkedTaskEligible": zod.boolean().optional(),
+  "missingAnswerStates": zod.array(zod.object({
+  "field": zod.string(),
+  "state": zod.enum(['unknown', 'unanswered', 'not_applicable'])
+})).optional(),
   "missingFacts": zod.array(zod.string()),
   "matchedFacts": zod.array(zod.string()),
   "nextStep": zod.string(),
@@ -2880,6 +4037,54 @@ export const ListAssessmentsResponseItem = zod.object({
 export const ListAssessmentsResponse = zod.array(ListAssessmentsResponseItem)
 
 
+export const createAssessmentBodyFactsRichBusinessNameTrueSurnameOneMax = 300;
+
+export const createAssessmentBodyFactsRichBusinessNameTrueForenamesOneItemMax = 150;
+
+export const createAssessmentBodyFactsRichBusinessNameTrueForenamesOneMax = 20;
+
+export const createAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneItemMax = 150;
+
+export const createAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneMax = 20;
+
+export const createAssessmentBodyFactsRichBusinessNameBusinessNameOneMax = 300;
+
+export const createAssessmentBodyFactsRichBusinessNameCorporateNameOneMax = 300;
+
+export const createAssessmentBodyFactsRichBusinessNamePartnersOneItemSurnameOneMax = 300;
+
+export const createAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneItemMax = 150;
+
+export const createAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneMax = 20;
+
+export const createAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax = 150;
+
+export const createAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax = 20;
+
+export const createAssessmentBodyFactsRichBusinessNamePartnersOneItemCorporateNameOneMax = 300;
+
+export const createAssessmentBodyFactsRichBusinessNamePartnersOneMax = 30;
+
+export const createAssessmentBodyFactsRichPrivacyProcessingPurposeOneMax = 300;
+
+export const createAssessmentBodyFactsRichPrivacyExceptionSupportingFactsOneMax = 300;
+
+export const createAssessmentBodyFactsRichPrivacyDataCategoriesOneItemMax = 150;
+
+export const createAssessmentBodyFactsRichPrivacyDataCategoriesOneMax = 20;
+
+export const createAssessmentBodyFactsRichTaxEffectiveManagementCountryOneMax = 300;
+
+export const createAssessmentBodyFactsRichTaxManagementStatusVerificationOneMax = 300;
+
+export const createAssessmentBodyFactsRichTaxOnlyNigeriaIncomeOneMax = 300;
+
+export const createAssessmentBodyFactsRichTaxFinalTaxTreatmentOneMax = 300;
+
+export const createAssessmentBodyFactsRichTaxCompanyStatusOneMax = 300;
+
+export const createAssessmentBodyFactsRichTaxAccountingPeriodStartOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
+export const createAssessmentBodyFactsRichTaxAccountingPeriodEndOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
 export const createAssessmentBodyFactsLegalFormMax = 80;
 
 export const createAssessmentBodyFactsRegistrationStatusMax = 80;
@@ -2905,6 +4110,307 @@ export const createAssessmentBodyAsOfDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}
 
 export const CreateAssessmentBody = zod.object({
   "facts": zod.object({
+  "factsVersion": zod.enum(['checker-facts-v2']).optional(),
+  "rich": zod.object({
+  "businessName": zod.object({
+  "legalForm": zod.union([zod.enum(['individual', 'firm', 'company', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "hasPlaceOfBusinessInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "carryingOnBusiness": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueSurname": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichBusinessNameTrueSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueForenames": zod.union([zod.array(zod.string().min(1).max(createAssessmentBodyFactsRichBusinessNameTrueForenamesOneItemMax)).max(createAssessmentBodyFactsRichBusinessNameTrueForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(createAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneItemMax)).max(createAssessmentBodyFactsRichBusinessNameRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessName": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichBusinessNameBusinessNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichBusinessNameCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "partners": zod.union([zod.array(zod.object({
+  "type": zod.union([zod.enum(['individual', 'corporation']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "surname": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichBusinessNamePartnersOneItemSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "forenames": zod.union([zod.array(zod.string().min(1).max(createAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneItemMax)).max(createAssessmentBodyFactsRichBusinessNamePartnersOneItemForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(createAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax)).max(createAssessmentBodyFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichBusinessNamePartnersOneItemCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+})).max(createAssessmentBodyFactsRichBusinessNamePartnersOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatorRole": zod.union([zod.enum(['proprietor', 'manager', 'receiver', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentAuthority": zod.union([zod.enum(['court', 'private_contract', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "namingAssessment": zod.union([zod.object({
+  "onlyAddedWordsIndicateSuccession": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "otherBrandAddition": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "sameSurnameAllPartners": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyAdditionIsPluralS": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessNameRegistered": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "privacy": zod.object({
+  "processesPersonalData": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerRole": zod.union([zod.enum(['controller', 'processor_only', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "collectionMethod": zod.union([zod.enum(['direct', 'indirect', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "newCollectionEvent": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOccursInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectsInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerDomiciledInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerResidentInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processorConnectionInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingPurpose": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichPrivacyProcessingPurposeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "privacyRightsViolationIndicated": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "section3Exception": zod.union([zod.enum(['none', 'personal_household', 'legal_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "determinesPurposesAndMeans": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownPurposeReuse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectAlreadyInformed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+}),zod.literal("claimed_not_verified")]).optional(),
+  "indirectNoticeException": zod.union([zod.enum(['none', 'disproportionate_effort_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionScopeConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionSupportingFacts": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichPrivacyExceptionSupportingFactsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataCategories": zod.union([zod.array(zod.string().min(1).max(createAssessmentBodyFactsRichPrivacyDataCategoriesOneItemMax)).max(createAssessmentBodyFactsRichPrivacyDataCategoriesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "automatedDecisionMaking": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "profiling": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "tax": zod.object({
+  "legalForm": zod.union([zod.enum(['company', 'company_limited_by_guarantee', 'foreign_company', 'individual_business_name', 'ordinary_unincorporated_partnership', 'incorporated_trustees', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedAsCompany": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "effectiveManagementCountry": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichTaxEffectiveManagementCountryOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "managementStatusVerification": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichTaxManagementStatusVerificationOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "nonresident": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyNigeriaIncome": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichTaxOnlyNigeriaIncomeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "finalTaxTreatment": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichTaxFinalTaxTreatmentOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "companyStatus": zod.union([zod.string().min(1).max(createAssessmentBodyFactsRichTaxCompanyStatusOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodStart": zod.union([zod.string().regex(createAssessmentBodyFactsRichTaxAccountingPeriodStartOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodEnd": zod.union([zod.string().regex(createAssessmentBodyFactsRichTaxAccountingPeriodEndOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "product": zod.object({
+  "productCategory": zod.union([zod.enum(['processed_food', 'cosmetic', 'claimed_cosmetic', 'water', 'drug', 'drug_product', 'medical_device', 'live_fish', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "manufacturesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyOfRegulatedProducts": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "activity": zod.union([zod.enum(['manufacture', 'resale_only', 'own_brand_repackaging', 'import_and_distribute', 'service_use_only', 'sample_for_registration', 'sample_for_registration_only', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "productRegistration": zod.union([zod.enum(['current_for_product_and_manufacturer', 'supplier_registration_claimed', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownBrandOrRepackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOrPackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "drugOrMedicalUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "therapeuticClaims": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "specialSamplePermit": zod.union([zod.enum(['permit_held', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitScopeMatchesActivity": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitConditionsSatisfied": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationCoversExactProductAndManufacturer": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationConditionsChanged": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional()
+}).optional(),
   "legalForm": zod.string().max(createAssessmentBodyFactsLegalFormMax),
   "registrationStatus": zod.string().max(createAssessmentBodyFactsRegistrationStatusMax),
   "activities": zod.union([zod.array(zod.string().min(1).max(createAssessmentBodyFactsActivitiesOneItemMax)).max(createAssessmentBodyFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
@@ -2930,6 +4436,54 @@ export const CreateAssessmentBody = zod.object({
   "saveConsent": zod.boolean()
 })
 
+export const createAssessmentResponseFactsRichBusinessNameTrueSurnameOneMax = 300;
+
+export const createAssessmentResponseFactsRichBusinessNameTrueForenamesOneItemMax = 150;
+
+export const createAssessmentResponseFactsRichBusinessNameTrueForenamesOneMax = 20;
+
+export const createAssessmentResponseFactsRichBusinessNameRecognizedAbbreviationsOneItemMax = 150;
+
+export const createAssessmentResponseFactsRichBusinessNameRecognizedAbbreviationsOneMax = 20;
+
+export const createAssessmentResponseFactsRichBusinessNameBusinessNameOneMax = 300;
+
+export const createAssessmentResponseFactsRichBusinessNameCorporateNameOneMax = 300;
+
+export const createAssessmentResponseFactsRichBusinessNamePartnersOneItemSurnameOneMax = 300;
+
+export const createAssessmentResponseFactsRichBusinessNamePartnersOneItemForenamesOneItemMax = 150;
+
+export const createAssessmentResponseFactsRichBusinessNamePartnersOneItemForenamesOneMax = 20;
+
+export const createAssessmentResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax = 150;
+
+export const createAssessmentResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax = 20;
+
+export const createAssessmentResponseFactsRichBusinessNamePartnersOneItemCorporateNameOneMax = 300;
+
+export const createAssessmentResponseFactsRichBusinessNamePartnersOneMax = 30;
+
+export const createAssessmentResponseFactsRichPrivacyProcessingPurposeOneMax = 300;
+
+export const createAssessmentResponseFactsRichPrivacyExceptionSupportingFactsOneMax = 300;
+
+export const createAssessmentResponseFactsRichPrivacyDataCategoriesOneItemMax = 150;
+
+export const createAssessmentResponseFactsRichPrivacyDataCategoriesOneMax = 20;
+
+export const createAssessmentResponseFactsRichTaxEffectiveManagementCountryOneMax = 300;
+
+export const createAssessmentResponseFactsRichTaxManagementStatusVerificationOneMax = 300;
+
+export const createAssessmentResponseFactsRichTaxOnlyNigeriaIncomeOneMax = 300;
+
+export const createAssessmentResponseFactsRichTaxFinalTaxTreatmentOneMax = 300;
+
+export const createAssessmentResponseFactsRichTaxCompanyStatusOneMax = 300;
+
+export const createAssessmentResponseFactsRichTaxAccountingPeriodStartOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
+export const createAssessmentResponseFactsRichTaxAccountingPeriodEndOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
 export const createAssessmentResponseFactsLegalFormMax = 80;
 
 export const createAssessmentResponseFactsRegistrationStatusMax = 80;
@@ -2955,6 +4509,307 @@ export const CreateAssessmentResponse = zod.object({
   "id": zod.string(),
   "profileRevision": zod.int().nullable(),
   "facts": zod.object({
+  "factsVersion": zod.enum(['checker-facts-v2']).optional(),
+  "rich": zod.object({
+  "businessName": zod.object({
+  "legalForm": zod.union([zod.enum(['individual', 'firm', 'company', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "hasPlaceOfBusinessInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "carryingOnBusiness": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueSurname": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichBusinessNameTrueSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueForenames": zod.union([zod.array(zod.string().min(1).max(createAssessmentResponseFactsRichBusinessNameTrueForenamesOneItemMax)).max(createAssessmentResponseFactsRichBusinessNameTrueForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(createAssessmentResponseFactsRichBusinessNameRecognizedAbbreviationsOneItemMax)).max(createAssessmentResponseFactsRichBusinessNameRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessName": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichBusinessNameBusinessNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichBusinessNameCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "partners": zod.union([zod.array(zod.object({
+  "type": zod.union([zod.enum(['individual', 'corporation']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "surname": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichBusinessNamePartnersOneItemSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "forenames": zod.union([zod.array(zod.string().min(1).max(createAssessmentResponseFactsRichBusinessNamePartnersOneItemForenamesOneItemMax)).max(createAssessmentResponseFactsRichBusinessNamePartnersOneItemForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(createAssessmentResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax)).max(createAssessmentResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichBusinessNamePartnersOneItemCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+})).max(createAssessmentResponseFactsRichBusinessNamePartnersOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatorRole": zod.union([zod.enum(['proprietor', 'manager', 'receiver', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentAuthority": zod.union([zod.enum(['court', 'private_contract', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "namingAssessment": zod.union([zod.object({
+  "onlyAddedWordsIndicateSuccession": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "otherBrandAddition": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "sameSurnameAllPartners": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyAdditionIsPluralS": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessNameRegistered": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "privacy": zod.object({
+  "processesPersonalData": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerRole": zod.union([zod.enum(['controller', 'processor_only', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "collectionMethod": zod.union([zod.enum(['direct', 'indirect', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "newCollectionEvent": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOccursInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectsInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerDomiciledInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerResidentInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processorConnectionInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingPurpose": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichPrivacyProcessingPurposeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "privacyRightsViolationIndicated": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "section3Exception": zod.union([zod.enum(['none', 'personal_household', 'legal_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "determinesPurposesAndMeans": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownPurposeReuse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectAlreadyInformed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+}),zod.literal("claimed_not_verified")]).optional(),
+  "indirectNoticeException": zod.union([zod.enum(['none', 'disproportionate_effort_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionScopeConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionSupportingFacts": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichPrivacyExceptionSupportingFactsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataCategories": zod.union([zod.array(zod.string().min(1).max(createAssessmentResponseFactsRichPrivacyDataCategoriesOneItemMax)).max(createAssessmentResponseFactsRichPrivacyDataCategoriesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "automatedDecisionMaking": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "profiling": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "tax": zod.object({
+  "legalForm": zod.union([zod.enum(['company', 'company_limited_by_guarantee', 'foreign_company', 'individual_business_name', 'ordinary_unincorporated_partnership', 'incorporated_trustees', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedAsCompany": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "effectiveManagementCountry": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichTaxEffectiveManagementCountryOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "managementStatusVerification": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichTaxManagementStatusVerificationOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "nonresident": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyNigeriaIncome": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichTaxOnlyNigeriaIncomeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "finalTaxTreatment": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichTaxFinalTaxTreatmentOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "companyStatus": zod.union([zod.string().min(1).max(createAssessmentResponseFactsRichTaxCompanyStatusOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodStart": zod.union([zod.string().regex(createAssessmentResponseFactsRichTaxAccountingPeriodStartOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodEnd": zod.union([zod.string().regex(createAssessmentResponseFactsRichTaxAccountingPeriodEndOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "product": zod.object({
+  "productCategory": zod.union([zod.enum(['processed_food', 'cosmetic', 'claimed_cosmetic', 'water', 'drug', 'drug_product', 'medical_device', 'live_fish', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "manufacturesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyOfRegulatedProducts": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "activity": zod.union([zod.enum(['manufacture', 'resale_only', 'own_brand_repackaging', 'import_and_distribute', 'service_use_only', 'sample_for_registration', 'sample_for_registration_only', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "productRegistration": zod.union([zod.enum(['current_for_product_and_manufacturer', 'supplier_registration_claimed', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownBrandOrRepackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOrPackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "drugOrMedicalUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "therapeuticClaims": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "specialSamplePermit": zod.union([zod.enum(['permit_held', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitScopeMatchesActivity": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitConditionsSatisfied": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationCoversExactProductAndManufacturer": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationConditionsChanged": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional()
+}).optional(),
   "legalForm": zod.string().max(createAssessmentResponseFactsLegalFormMax),
   "registrationStatus": zod.string().max(createAssessmentResponseFactsRegistrationStatusMax),
   "activities": zod.union([zod.array(zod.string().min(1).max(createAssessmentResponseFactsActivitiesOneItemMax)).max(createAssessmentResponseFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
@@ -2984,8 +4839,15 @@ export const CreateAssessmentResponse = zod.object({
   "ruleVersion": zod.int(),
   "requirementVersionId": zod.string(),
   "title": zod.string(),
-  "label": zod.enum(['Likely relevant', 'More information needed', 'Not indicated by these answers']),
+  "label": zod.enum(['Likely relevant', 'May apply', 'More information needed', 'Not indicated by these answers']),
   "reason": zod.string(),
+  "assessedProposition": zod.string().optional(),
+  "factsNotice": zod.string().optional(),
+  "sourceLinkedTaskEligible": zod.boolean().optional(),
+  "missingAnswerStates": zod.array(zod.object({
+  "field": zod.string(),
+  "state": zod.enum(['unknown', 'unanswered', 'not_applicable'])
+})).optional(),
   "missingFacts": zod.array(zod.string()),
   "matchedFacts": zod.array(zod.string()),
   "nextStep": zod.string(),
@@ -3023,6 +4885,54 @@ export const GetAssessmentParams = zod.object({
   "id": zod.uuid()
 })
 
+export const getAssessmentResponseFactsRichBusinessNameTrueSurnameOneMax = 300;
+
+export const getAssessmentResponseFactsRichBusinessNameTrueForenamesOneItemMax = 150;
+
+export const getAssessmentResponseFactsRichBusinessNameTrueForenamesOneMax = 20;
+
+export const getAssessmentResponseFactsRichBusinessNameRecognizedAbbreviationsOneItemMax = 150;
+
+export const getAssessmentResponseFactsRichBusinessNameRecognizedAbbreviationsOneMax = 20;
+
+export const getAssessmentResponseFactsRichBusinessNameBusinessNameOneMax = 300;
+
+export const getAssessmentResponseFactsRichBusinessNameCorporateNameOneMax = 300;
+
+export const getAssessmentResponseFactsRichBusinessNamePartnersOneItemSurnameOneMax = 300;
+
+export const getAssessmentResponseFactsRichBusinessNamePartnersOneItemForenamesOneItemMax = 150;
+
+export const getAssessmentResponseFactsRichBusinessNamePartnersOneItemForenamesOneMax = 20;
+
+export const getAssessmentResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax = 150;
+
+export const getAssessmentResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax = 20;
+
+export const getAssessmentResponseFactsRichBusinessNamePartnersOneItemCorporateNameOneMax = 300;
+
+export const getAssessmentResponseFactsRichBusinessNamePartnersOneMax = 30;
+
+export const getAssessmentResponseFactsRichPrivacyProcessingPurposeOneMax = 300;
+
+export const getAssessmentResponseFactsRichPrivacyExceptionSupportingFactsOneMax = 300;
+
+export const getAssessmentResponseFactsRichPrivacyDataCategoriesOneItemMax = 150;
+
+export const getAssessmentResponseFactsRichPrivacyDataCategoriesOneMax = 20;
+
+export const getAssessmentResponseFactsRichTaxEffectiveManagementCountryOneMax = 300;
+
+export const getAssessmentResponseFactsRichTaxManagementStatusVerificationOneMax = 300;
+
+export const getAssessmentResponseFactsRichTaxOnlyNigeriaIncomeOneMax = 300;
+
+export const getAssessmentResponseFactsRichTaxFinalTaxTreatmentOneMax = 300;
+
+export const getAssessmentResponseFactsRichTaxCompanyStatusOneMax = 300;
+
+export const getAssessmentResponseFactsRichTaxAccountingPeriodStartOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
+export const getAssessmentResponseFactsRichTaxAccountingPeriodEndOneRegExp = new RegExp('^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$');
 export const getAssessmentResponseFactsLegalFormMax = 80;
 
 export const getAssessmentResponseFactsRegistrationStatusMax = 80;
@@ -3048,6 +4958,307 @@ export const GetAssessmentResponse = zod.object({
   "id": zod.string(),
   "profileRevision": zod.int().nullable(),
   "facts": zod.object({
+  "factsVersion": zod.enum(['checker-facts-v2']).optional(),
+  "rich": zod.object({
+  "businessName": zod.object({
+  "legalForm": zod.union([zod.enum(['individual', 'firm', 'company', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "hasPlaceOfBusinessInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "carryingOnBusiness": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueSurname": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichBusinessNameTrueSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "trueForenames": zod.union([zod.array(zod.string().min(1).max(getAssessmentResponseFactsRichBusinessNameTrueForenamesOneItemMax)).max(getAssessmentResponseFactsRichBusinessNameTrueForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(getAssessmentResponseFactsRichBusinessNameRecognizedAbbreviationsOneItemMax)).max(getAssessmentResponseFactsRichBusinessNameRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessName": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichBusinessNameBusinessNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichBusinessNameCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "partners": zod.union([zod.array(zod.object({
+  "type": zod.union([zod.enum(['individual', 'corporation']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "surname": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichBusinessNamePartnersOneItemSurnameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "forenames": zod.union([zod.array(zod.string().min(1).max(getAssessmentResponseFactsRichBusinessNamePartnersOneItemForenamesOneItemMax)).max(getAssessmentResponseFactsRichBusinessNamePartnersOneItemForenamesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "recognizedAbbreviations": zod.union([zod.array(zod.string().min(1).max(getAssessmentResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneItemMax)).max(getAssessmentResponseFactsRichBusinessNamePartnersOneItemRecognizedAbbreviationsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "corporateName": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichBusinessNamePartnersOneItemCorporateNameOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+})).max(getAssessmentResponseFactsRichBusinessNamePartnersOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatorRole": zod.union([zod.enum(['proprietor', 'manager', 'receiver', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentAuthority": zod.union([zod.enum(['court', 'private_contract', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "appointmentConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "namingAssessment": zod.union([zod.object({
+  "onlyAddedWordsIndicateSuccession": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "otherBrandAddition": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "sameSurnameAllPartners": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyAdditionIsPluralS": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "businessNameRegistered": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "privacy": zod.object({
+  "processesPersonalData": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerRole": zod.union([zod.enum(['controller', 'processor_only', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "collectionMethod": zod.union([zod.enum(['direct', 'indirect', 'mixed', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "newCollectionEvent": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "operatesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOccursInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectsInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerDomiciledInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "controllerResidentInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processorConnectionInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingPurpose": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichPrivacyProcessingPurposeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "privacyRightsViolationIndicated": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "section3Exception": zod.union([zod.enum(['none', 'personal_household', 'legal_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "determinesPurposesAndMeans": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownPurposeReuse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataSubjectAlreadyInformed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+}),zod.literal("claimed_not_verified")]).optional(),
+  "indirectNoticeException": zod.union([zod.enum(['none', 'disproportionate_effort_claim', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionScopeConfirmed": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "exceptionSupportingFacts": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichPrivacyExceptionSupportingFactsOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "dataCategories": zod.union([zod.array(zod.string().min(1).max(getAssessmentResponseFactsRichPrivacyDataCategoriesOneItemMax)).max(getAssessmentResponseFactsRichPrivacyDataCategoriesOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "automatedDecisionMaking": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "profiling": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "tax": zod.object({
+  "legalForm": zod.union([zod.enum(['company', 'company_limited_by_guarantee', 'foreign_company', 'individual_business_name', 'ordinary_unincorporated_partnership', 'incorporated_trustees', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "incorporatedAsCompany": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "effectiveManagementCountry": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichTaxEffectiveManagementCountryOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "managementStatusVerification": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichTaxManagementStatusVerificationOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "nonresident": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "onlyNigeriaIncome": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichTaxOnlyNigeriaIncomeOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "finalTaxTreatment": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichTaxFinalTaxTreatmentOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "companyStatus": zod.union([zod.string().min(1).max(getAssessmentResponseFactsRichTaxCompanyStatusOneMax),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodStart": zod.union([zod.string().regex(getAssessmentResponseFactsRichTaxAccountingPeriodStartOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "accountingPeriodEnd": zod.union([zod.string().regex(getAssessmentResponseFactsRichTaxAccountingPeriodEndOneRegExp),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional(),
+  "product": zod.object({
+  "productCategory": zod.union([zod.enum(['processed_food', 'cosmetic', 'claimed_cosmetic', 'water', 'drug', 'drug_product', 'medical_device', 'live_fish', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "manufacturesInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyInNigeria": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "commercialSupplyOfRegulatedProducts": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "activity": zod.union([zod.enum(['manufacture', 'resale_only', 'own_brand_repackaging', 'import_and_distribute', 'service_use_only', 'sample_for_registration', 'sample_for_registration_only', 'other']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "productRegistration": zod.union([zod.enum(['current_for_product_and_manufacturer', 'supplier_registration_claimed', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "ownBrandOrRepackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "processingOrPackaging": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "drugOrMedicalUse": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "therapeuticClaims": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "specialSamplePermit": zod.union([zod.enum(['permit_held', 'none']),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitScopeMatchesActivity": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "permitConditionsSatisfied": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationCoversExactProductAndManufacturer": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional(),
+  "registrationConditionsChanged": zod.union([zod.boolean(),zod.object({
+  "status": zod.enum(['unknown', 'unanswered', 'not_applicable']),
+  "value": zod.null()
+})]).optional()
+}).optional()
+}).optional(),
   "legalForm": zod.string().max(getAssessmentResponseFactsLegalFormMax),
   "registrationStatus": zod.string().max(getAssessmentResponseFactsRegistrationStatusMax),
   "activities": zod.union([zod.array(zod.string().min(1).max(getAssessmentResponseFactsActivitiesOneItemMax)).max(getAssessmentResponseFactsActivitiesOneMax),zod.enum(['unknown', 'unanswered', 'not_applicable'])]),
@@ -3077,8 +5288,15 @@ export const GetAssessmentResponse = zod.object({
   "ruleVersion": zod.int(),
   "requirementVersionId": zod.string(),
   "title": zod.string(),
-  "label": zod.enum(['Likely relevant', 'More information needed', 'Not indicated by these answers']),
+  "label": zod.enum(['Likely relevant', 'May apply', 'More information needed', 'Not indicated by these answers']),
   "reason": zod.string(),
+  "assessedProposition": zod.string().optional(),
+  "factsNotice": zod.string().optional(),
+  "sourceLinkedTaskEligible": zod.boolean().optional(),
+  "missingAnswerStates": zod.array(zod.object({
+  "field": zod.string(),
+  "state": zod.enum(['unknown', 'unanswered', 'not_applicable'])
+})).optional(),
   "missingFacts": zod.array(zod.string()),
   "matchedFacts": zod.array(zod.string()),
   "nextStep": zod.string(),

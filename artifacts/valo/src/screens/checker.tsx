@@ -4,16 +4,18 @@ import { useUser } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, Check, Loader2, Plus, RotateCcw, ShieldCheck, UserRound, X } from 'lucide-react';
 import {
-  usePreviewAssessment, useCreateAssessment, useGetWorkspace,
+  usePreviewAssessment, usePreviewWorkspaceAssessment, useCreateAssessment, useGetWorkspace,
   getGetWorkspaceQueryKey, getListAssessmentsQueryKey,
   CheckerFactsState, CheckerFactsTurnoverBand, CheckerFactsTurnoverMetric, CheckerFactsTurnoverCurrency, CheckerFactsTurnoverPeriod,
   type CheckerFacts, type AssessmentResult, type Answer,
 } from '@workspace/api-client-react';
 import { AssessmentResultView } from '@/components/assessment-result';
+import { RichCheckerFields } from '@/components/rich-checker-fields';
+import { richStep, type RichCheckerFacts } from '@/lib/rich-checker';
 import { Notice } from '@/components/states';
 import { describeError } from '@/lib/api';
 import {
-  EMPTY_FACTS, MARKER_LABEL, LEGAL_FORMS, REG_STATUSES, ANSWER_OPTIONS, FACT_ORDER,
+  EMPTY_FACTS, MARKER_LABEL, LEGAL_FORMS, REG_STATUSES, ANSWER_OPTIONS, reviewFacts,
   factsFromProfile, finaliseFacts, needsProducts, nairaToKobo, koboToNaira, isMarker, lagosToday, live, valueLabel, factLabel, displayFact,
   type Marker,
 } from '@/lib/checker';
@@ -29,13 +31,15 @@ const opts = (vals: string[]): Opt[] => vals.map((v) => ({ value: v, label: valu
 export default function Checker() {
   const currentAccount=useAccountEpoch();
   const { isSignedIn } = useUser();
-  const [facts, setFacts] = useState<CheckerFacts>(EMPTY_FACTS);
+  const [facts, setFacts] = useState<RichCheckerFacts>(EMPTY_FACTS);
   const [step, setStep] = useState(0);
   const [result, setResult] = useState<{ r: AssessmentResult; sig: string } | null>(null);
   const [prefilledRev, setPrefilledRev] = useState<number | null>(null);
   const [amountText, setAmountText] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
-  const preview = usePreviewAssessment();
+  const publicPreview = usePreviewAssessment();
+  const workspacePreview = usePreviewWorkspaceAssessment();
+  const preview = isSignedIn ? workspacePreview : publicPreview;
 
   const ws = useGetWorkspace({ query: { enabled: !!isSignedIn, queryKey: getGetWorkspaceQueryKey(), ...live } });
   const profile = isSignedIn ? ws.data?.profile ?? null : null;
@@ -47,14 +51,15 @@ export default function Checker() {
 
   function prefill() {
     if (!ws.data?.profile) return;
-    setFacts(factsFromProfile(ws.data.profile));
+    setFacts(current => ({ ...factsFromProfile(ws.data!.profile!), ...(current.rich ? { factsVersion: current.factsVersion, rich: current.rich } : {}) }));
     setAmountText('');
+    setAmountError(null);
     setPrefilledRev(ws.data.profileRevision);
     setStep(0);
   }
 
   function reset() {
-    setFacts(EMPTY_FACTS); setAmountText(''); setAmountError(null); setResult(null); setPrefilledRev(null); setStep(0); preview.reset();
+    setFacts(EMPTY_FACTS); setAmountText(''); setAmountError(null); setResult(null); setPrefilledRev(null); setStep(0); publicPreview.reset(); workspacePreview.reset();
   }
 
   function run() {
@@ -62,10 +67,20 @@ export default function Checker() {
     preview.mutate({ data: body }, { onSuccess: (r) => {if(currentAccount())setResult({ r, sig: JSON.stringify(final) });} });
   }
 
-  function go(n: number) {
+  function go(n: number, field?: string) {
     if (step === 3 && n > 3 && amountText && amountError) return;
     setStep(n);
-    requestAnimationFrame(() => document.getElementById('checker-step')?.focus());
+    requestAnimationFrame(() => {
+      if (field?.startsWith('rich.')) {
+        const [, section, key, index, partnerKey] = field.split('.');
+        const details = document.querySelector<HTMLDetailsElement>(`[data-testid="rich-section-${section}"]`);
+        if (details) details.open = true;
+        const prefix = key === 'partners' ? `rich-partner-${index}-${partnerKey}` : key === 'namingAssessment' ? `rich-naming-${index}` : `rich-${section}-${key}`;
+        const input = document.getElementById(`${prefix}-state`);
+        if (input) { input.focus(); return; }
+      }
+      document.getElementById('checker-step')?.focus();
+    });
   }
 
   const err = preview.error ? describeError(preview.error) : null;
@@ -114,12 +129,15 @@ export default function Checker() {
                 <Choice name="legalForm" label="How is the business set up?" value={facts.legalForm} options={[...opts(LEGAL_FORMS), ...m('unknown', 'unanswered')]} onChange={(v) => set('legalForm', v)} />
                 <Choice name="registrationStatus" label="Is it registered with the CAC?" value={facts.registrationStatus} options={[...opts(REG_STATUSES), ...m('unknown', 'unanswered')]} onChange={(v) => set('registrationStatus', v)} />
                 {!isSignedIn && <p className="hint">We never ask for your business name here.</p>}
+                {isSignedIn && <RichCheckerFields section="businessName" facts={facts} onChange={setFacts} />}
+                <RichCheckerFields section="tax" facts={facts} onChange={setFacts} />
               </>}
               {step === 1 && <>
                 <ListOrMarker name="activities" label="What does the business do?" hint="In your own words, up to 10." value={facts.activities} onChange={(v) => set('activities', v)} placeholder="e.g. Selling fabric wholesale" />
                 <Choice name="manufacturing" label="Do you manufacture or process goods?" value={facts.manufacturing} options={ansOpts()} onChange={(v) => set('manufacturing', v as Answer)} />
                 <Choice name="importing" label="Do you import goods into Nigeria?" value={facts.importing} options={ansOpts()} onChange={(v) => set('importing', v as Answer)} />
                 {needsProducts(facts) && <ListOrMarker name="productTypes" label="Which product types?" hint="Asked because you manufacture or import." value={facts.productTypes ?? 'unanswered'} onChange={(v) => set('productTypes', v)} placeholder="e.g. Packaged snacks" />}
+                <RichCheckerFields section="product" facts={facts} onChange={setFacts} />
               </>}
               {step === 2 && <>
                 <Choice name="premises" label="Do you operate from physical premises?" value={facts.premises} options={ansOpts()} onChange={(v) => set('premises', v as Answer)} />
@@ -161,7 +179,7 @@ export default function Checker() {
                     render={(v, s) => <input id="turnoverPeriodEnd" type="date" className="field" value={v} onChange={(e) => s(e.target.value || 'unanswered')} />} />
                 </div>
               </>}
-              {step === 4 && <Choice name="personalData" label="Do you collect or keep customer or staff personal data?" hint="Names, phone numbers, addresses, ID numbers and similar." value={facts.personalData} options={ansOpts()} onChange={(v) => set('personalData', v as Answer)} />}
+              {step === 4 && <><Choice name="personalData" label="Do you collect or keep customer or staff personal data?" hint="Names, phone numbers, addresses, ID numbers and similar." value={facts.personalData} options={ansOpts()} onChange={(v) => set('personalData', v as Answer)} /><RichCheckerFields section="privacy" facts={facts} onChange={setFacts} /></>}
               {step === 5 && <Review facts={final} onEdit={go} />}
             </div>
 
@@ -273,22 +291,21 @@ function ListOrMarker({ name, label, hint, value, onChange, placeholder }: { nam
 
 const STEP_OF: Record<string, number> = { legalForm: 0, registrationStatus: 0, activities: 1, productTypes: 1, manufacturing: 1, importing: 1, premises: 2, state: 2, lga: 2, personalData: 4 };
 
-function Review({ facts, onEdit }: { facts: CheckerFacts; onEdit: (n: number) => void }) {
-  const rec = facts as unknown as Record<string, unknown>;
+function Review({ facts, onEdit }: { facts: RichCheckerFacts; onEdit: (n: number, field?: string) => void }) {
   return (
     <dl className="grid gap-0 text-sm" data-testid="list-review">
-      {FACT_ORDER.filter((k) => k in rec).map((k) => (
+      {reviewFacts(facts).map(([k, value]) => (
         <div key={k} className="grid grid-cols-[1fr_auto] items-baseline gap-x-4 border-t border-border py-2.5 sm:grid-cols-[14rem_1fr_auto]">
           <dt className="text-muted-foreground">{factLabel(k)}</dt>
-          <dd className={cn('col-start-1 row-start-2 sm:col-start-2 sm:row-start-1', isMarker(rec[k]) || rec[k] === null ? 'italic text-muted-foreground' : '')}>{displayFact(k, rec[k])}</dd>
-          <button type="button" className="col-start-2 row-span-2 row-start-1 text-xs font-medium text-primary underline-offset-2 hover:underline sm:col-start-3 sm:row-span-1" onClick={() => onEdit(STEP_OF[k] ?? 3)}>Edit</button>
+          <dd className={cn('col-start-1 row-start-2 break-words sm:col-start-2 sm:row-start-1', isMarker(value) || value === null ? 'italic text-muted-foreground' : '')}>{displayFact(k, value)}</dd>
+          <button type="button" aria-label={'Edit ' + factLabel(k)} className="col-start-2 row-span-2 row-start-1 text-xs font-medium text-primary underline-offset-2 hover:underline sm:col-start-3 sm:row-span-1" onClick={() => onEdit(k.startsWith('rich.') ? richStep(k) : STEP_OF[k] ?? 3, k)}>Edit</button>
         </div>
       ))}
     </dl>
   );
 }
 
-function SavePanel({ facts, profileRevision, hasProfile, stale }: { facts: CheckerFacts; profileRevision: number; hasProfile: boolean; stale: boolean }) {
+function SavePanel({ facts, profileRevision, hasProfile, stale }: { facts: RichCheckerFacts; profileRevision: number; hasProfile: boolean; stale: boolean }) {
   const qc = useQueryClient();
   const [, setLocation] = useLocation();
   const [consent, setConsent] = useState(false);
@@ -320,7 +337,7 @@ function SavePanel({ facts, profileRevision, hasProfile, stale }: { facts: Check
         </label>
         <label className={cn('flex gap-3 rounded-xl border p-4 text-sm', !hasProfile ? 'cursor-not-allowed opacity-60' : 'cursor-pointer', mode === 'profile' ? 'border-primary bg-accent/50' : 'border-border')}>
           <input type="radio" name="save-mode" className="mt-0.5 accent-[hsl(155_42%_21%)]" disabled={!hasProfile} checked={mode === 'profile'} onChange={() => setMode('profile')} data-testid="radio-save-profile" />
-          <span><span className="font-medium">My saved profile, revision {profileRevision}</span><span className="block text-muted-foreground">{hasProfile ? 'The server re-checks using that exact revision. If the profile has changed since, saving stops.' : 'No saved profile yet.'}</span></span>
+          <span><span className="font-medium">My saved profile, revision {profileRevision}</span><span className="block text-muted-foreground">{hasProfile ? 'The server re-checks using that exact revision. This choice excludes the optional details entered above. If the profile has changed since, saving stops.' : 'No saved profile yet.'}</span></span>
         </label>
       </fieldset>
       <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm">
@@ -339,3 +356,4 @@ function SavePanel({ facts, profileRevision, hasProfile, stale }: { facts: Check
     </div>
   );
 }
+

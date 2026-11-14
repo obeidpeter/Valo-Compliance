@@ -16,6 +16,13 @@ router.post("/checker/preview",async(req,res):Promise<void>=>{
     code:"CHECKER_RATE_LIMIT",error:"Too many checker requests. Your unsaved answers remain in this tab; retry after the indicated delay."});return;}
   res.json(PreviewAssessmentResponse.parse(await assessments.previewAssessment(req.body)));
 });
+// Mounted behind the shared verified-workspace and same-origin boundaries.
+router.post("/workspace/checker/preview",async(req,res):Promise<void>=>{
+  res.set("Cache-Control","private, no-store");
+  const quota=await consumeQuota("anonymous-read",quotaSubjectHash(process.env.SESSION_SECRET,"user",res.locals.valoActor.identityId));
+  if(!quota.allowed){res.set("Retry-After",String(quota.retryAfter));res.status(429).json({code:"CHECKER_RATE_LIMIT",error:"Too many checker requests. Your unsaved answers remain in this tab."});return;}
+  res.json(PreviewAssessmentResponse.parse(await assessments.previewWorkspaceAssessment(res.locals.valoActor,req.body)));
+});
 router.get("/workspace/assessments",async(_req,res):Promise<void>=>{
   res.json(ListAssessmentsResponse.parse(await assessments.listAssessments(res.locals.valoActor)));
 });

@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { digest } from "./publication";
+import { richCheckerFactsSchema, sourceFamilyReleaseSchema, sourceFamilyBindingMatches,
+  evaluateReleasedSourceFamily, type RichAnswerState } from "./checker-rich";
 
 export const unknownAnswers = ["unknown","unanswered","not_applicable"] as const;
 const unknown = z.enum(unknownAnswers);
 const answer = z.enum(["yes","no",...unknownAnswers]);
-export const checkerFactsSchema = z.object({
+export const legacyCheckerFactsSchema = z.object({
   legalForm:z.string().max(80),registrationStatus:z.string().max(80),
   activities:z.union([z.array(z.string().min(1).max(120)).max(10),unknown]),
   productTypes:z.union([z.array(z.string().min(1).max(120)).max(10),unknown]).default("unanswered"),
@@ -20,9 +22,18 @@ export const checkerFactsSchema = z.object({
   turnoverPeriodEnd:z.union([z.string().date(),unknown]).default("unanswered"),
   premises:answer,manufacturing:answer,importing:answer,personalData:answer,
 }).strict();
+export const checkerFactsSchema = legacyCheckerFactsSchema.extend({
+  factsVersion:z.literal("checker-facts-v2").optional(), rich:richCheckerFactsSchema.optional(),
+}).strict().superRefine((facts,ctx)=>{
+  if(facts.rich!==undefined&&facts.factsVersion!=="checker-facts-v2")
+    ctx.addIssue({code:"custom",path:["factsVersion"],message:"Rich answers require their explicit facts version"});
+  const tax=facts.rich?.tax;
+  if(typeof tax?.accountingPeriodStart==="string"&&typeof tax.accountingPeriodEnd==="string"&&tax.accountingPeriodStart>tax.accountingPeriodEnd)
+    ctx.addIssue({code:"custom",path:["rich","tax","accountingPeriodEnd"],message:"The accounting period end must not precede its start"});
+});
 export type CheckerFacts=z.infer<typeof checkerFactsSchema>;
-export const factNames=Object.keys(checkerFactsSchema.shape) as (keyof CheckerFacts)[];
-const field=z.enum(factNames as [keyof CheckerFacts,...(keyof CheckerFacts)[]]);
+export const factNames=Object.keys(legacyCheckerFactsSchema.shape) as (keyof z.infer<typeof legacyCheckerFactsSchema>)[];
+const field=z.enum(factNames as [keyof z.infer<typeof legacyCheckerFactsSchema>,...(keyof z.infer<typeof legacyCheckerFactsSchema>)[]]);
 const scalar=z.union([z.string().max(160),z.number().int().safe(),z.boolean()]);
 export const predicateSchema=z.object({
   field,op:z.enum(["eq","in","exists","lt","lte","gt","gte"]),
@@ -56,15 +67,20 @@ export const ruleSchema=z.object({
     id:z.string().min(1),url:z.string().url().startsWith("https://"),title:z.string().min(1),
     locator:z.string().min(1),quote:z.string().min(1),snapshotHash:z.string().regex(/^[a-f0-9]{64}$/),
   }).strict()).min(1),
-  condition:conditionSchema,reason:z.string().min(1).max(1000),
+  condition:conditionSchema.optional(),evaluator:sourceFamilyReleaseSchema.optional(),reason:z.string().min(1).max(1000),
   nextStep:z.string().min(1).max(1000),relatedTemplateIds:z.array(z.string()).max(20),
-}).strict();
+}).strict().superRefine((rule,ctx)=>{
+  if(Boolean(rule.condition)===Boolean(rule.evaluator))ctx.addIssue({code:"custom",message:"Exactly one deterministic rule condition or versioned source-family evaluator is required"});
+  if(rule.evaluator&&rule.jurisdiction.level!=="federal")ctx.addIssue({code:"custom",message:"Source-family v1 evaluates only its named national proposition"});
+});
 export type ReleasedRule=z.infer<typeof ruleSchema>;
 type Truth="true"|"false"|"unknown";
 export type RuleItem={
   ruleId:string;ruleVersion:number;requirementVersionId:string;title:string;
-  label:"Likely relevant"|"More information needed"|"Not indicated by these answers";
+  label:"Likely relevant"|"May apply"|"More information needed"|"Not indicated by these answers";
   reason:string;missingFacts:string[];matchedFacts:string[];nextStep:string;
+  missingAnswerStates?:{field:string;state:RichAnswerState}[];assessedProposition?:string;
+  sourceLinkedTaskEligible?:boolean;factsNotice?:string;
   jurisdiction:ReleasedRule["jurisdiction"];sources:ReleasedRule["sources"];relatedTemplateIds:string[];
 };
 const absent=(v:unknown)=>v===undefined||v===null||v===""||
@@ -148,6 +164,7 @@ export function assess(facts:CheckerFacts,rules:ReleasedRule[],asOfDate:string,e
     if(Date.parse(r.reviewBy)<=evaluatedAt.getTime()||Date.parse(r.sourceCheckedAt)>evaluatedAt.getTime())hold="Evidence is stale or not yet checked";
     if(r.validFrom>asOfDate||(r.validTo!==null&&r.validTo<=asOfDate))hold="Outside effective period";
     if((activeCounts.get(r.id)??0)>1)hold="Conflicting released versions require editorial resolution";
+    if(r.evaluator&&!sourceFamilyBindingMatches(r.evaluator))hold="The released evaluator version does not match this implementation";
     eligibility[key]=hold??"eligible";
     if(hold){held.push({ruleId:r.id,reason:hold});continue;}
     let scope:Truth="true",scopeMissing:string[]=[];
@@ -161,8 +178,15 @@ export function assess(facts:CheckerFacts,rules:ReleasedRule[],asOfDate:string,e
         else if(f.lga!==r.jurisdiction.lga)scope="false";
       }
     }
-    const results=r.condition.predicates.map(p=>predicate(f,p,asOfDate));
-    const truth:Truth=scope==="false"?"false":r.condition.mode==="all"?
+    if(r.evaluator){
+      const outcome=evaluateReleasedSourceFamily(r.evaluator,f.rich,{manifestHash:r.manifestHash,version:r.version,sources:r.sources,asOfDate});
+      items.push({ruleId:r.id,ruleVersion:r.version,requirementVersionId:r.requirementVersionId,title:r.title,
+        ...outcome,jurisdiction:r.jurisdiction,sources:r.sources,relatedTemplateIds:r.relatedTemplateIds});
+      continue;
+    }
+    const condition=r.condition!;
+    const results=condition.predicates.map(p=>predicate(f,p,asOfDate));
+    const truth:Truth=scope==="false"?"false":condition.mode==="all"?
       results.some(p=>p.truth==="false")?"false":scope==="unknown"||results.some(p=>p.truth==="unknown")?"unknown":"true":
       scope==="true"&&results.some(p=>p.truth==="true")?"true":
       scope==="unknown"||results.some(p=>p.truth==="unknown")?"unknown":"false";
@@ -170,7 +194,7 @@ export function assess(facts:CheckerFacts,rules:ReleasedRule[],asOfDate:string,e
       label:truth==="true"?"Likely relevant":truth==="unknown"?"More information needed":"Not indicated by these answers",
       reason:truth==="false"?"These answers did not indicate this scoped rule. This is not a legal exemption.":r.reason,
       missingFacts:truth==="unknown"?uniq([...scopeMissing,...results.flatMap(p=>p.missing)]):[],
-      matchedFacts:truth==="true"?uniq(r.condition.predicates.filter((_,i)=>results[i].truth==="true").map(p=>p.field)):[],
+      matchedFacts:truth==="true"?uniq(condition.predicates.filter((_,i)=>results[i].truth==="true").map(p=>p.field)):[],
       nextStep:truth==="unknown"?"Answer the missing questions or confirm with the named authority.":r.nextStep,
       jurisdiction:r.jurisdiction,sources:r.sources,relatedTemplateIds:r.relatedTemplateIds});
   }
@@ -182,8 +206,8 @@ export function assess(facts:CheckerFacts,rules:ReleasedRule[],asOfDate:string,e
     "High-impact healthcare, financial services and energy activities require activity-specific released evidence.",
     ...held.map(h=>`${h.ruleId}: ${h.reason}`),
   ];
-  const result={schemaVersion:"checker-v1",asOfDate,rulesetVersion,items,unanswered,gaps,
-    recommendedTemplateIds:uniq(items.filter(i=>i.label==="Likely relevant").flatMap(i=>i.relatedTemplateIds)),
+  const result={schemaVersion:f.factsVersion==="checker-facts-v2"||parsedRules.some(r=>r.evaluator)?"checker-v2":"checker-v1",asOfDate,rulesetVersion,items,unanswered,gaps,
+    recommendedTemplateIds:uniq(items.filter(i=>i.label==="Likely relevant"&&i.sourceLinkedTaskEligible!==false).flatMap(i=>i.relatedTemplateIds)),
     officialRoutes:[{title:"Corporate Affairs Commission service discovery",url:"https://icrp.cac.gov.ng/"}],
     notice:"Conditional source-governed guidance, not legal certification. Unknown answers never establish exemption.",
     sourceBackedRecommendations:items.filter(i=>i.label==="Likely relevant").length};

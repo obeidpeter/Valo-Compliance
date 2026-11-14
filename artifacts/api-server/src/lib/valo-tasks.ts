@@ -69,7 +69,7 @@ export async function createTask(actor:WorkspaceActor,raw:unknown){
     if(input.assessmentId){
       const saved=serializeAssessment(await assessmentRow(tx,actor,input.assessmentId));
       if(input.ruleId){
-        const item=saved.result.items.find(i=>i.ruleId===input.ruleId&&i.label==="Likely relevant");
+        const item=saved.result.items.find(i=>i.ruleId===input.ruleId&&i.label==="Likely relevant"&&i.sourceLinkedTaskEligible!==false);
         if(!item)throw new ValoProblem(422,"Only an eligible recommendation in this saved assessment can create a source-linked task");
         const current=await releasedRegistry(tx,new Date());
         if(!current.rules.some(r=>r.id===item.ruleId&&r.version===item.ruleVersion))
