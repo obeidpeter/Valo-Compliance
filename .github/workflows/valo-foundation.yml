@@ -39,6 +39,14 @@ jobs:
         run: pnpm run typecheck
       - name: Run foundation unit tests
         run: pnpm --filter @workspace/scripts test:valo
+      - name: Install standard PDF readers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+      - name: Install the locked Playwright Chromium
+        run: |
+          pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
+          echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Run API input-safety tests
         run: pnpm --filter @workspace/api-server test:valo
       - name: Build the Next.js application

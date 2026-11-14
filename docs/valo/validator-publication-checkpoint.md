@@ -67,6 +67,8 @@ rejection. Commercial licence acceptance and sales remain false.
 The dependency result is not an independent security assessment or a claim
 that all vulnerabilities are absent. The historical failed export attempts
 and actual v7/v8 reports remain alongside the successful regression evidence.
+CI explicitly installs Poppler and the locked Playwright Chromium for the new
+real-format tests; configuring those steps is not a claim that remote CI passed.
 
 All relevant development workflows restarted successfully. The public Valo
 homepage rendered with the exact hero. Signed-in UI was not reverified in this
