@@ -1,3 +1,4 @@
+export * from "./valo-inference-budget";
 export * from "./valo-customer-access";
 export * from "./valo-privacy";
 // Export your models here. Add one export per file

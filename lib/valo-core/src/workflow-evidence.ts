@@ -189,6 +189,10 @@ const groups = [
       "artifacts/api-server/src/editorial/model-adapter.ts"],record:editorialHold},
 ];
 export function partialWorkflowEvidence(id:string){
+  // Disabled preparation and synthetic enabled-ledger controls are not live
+  // provider token/cost proof or acceptance of the whole requirement.
+  const inferencePreparation={kind:"test" as const,path:"docs/valo/evidence/inference-budget-checkpoint.json",
+    hash:"098241257fc0991485be0bed5c0d5fecccf02d3f963257b09945bbaf5a0426de",result:"fail" as const};
   // "fail" here means the complete formal corpus has not met acceptance.
   // Case-bound controls and a declared follow-up are not sixty-case passes.
   const customerSource60={kind:"test" as const,path:"docs/valo/evidence/customer-source60-runtime-results.json",
@@ -215,6 +219,11 @@ export function partialWorkflowEvidence(id:string){
   const privacyCaseProof={kind:"test" as const,path:"docs/valo/evidence/privacy-cases-checkpoint.json",
     hash:"352688315e3166dcbd4df5d15e26bec46de12be8b018fec3bdc22f5c85149f1e",result:"pass" as const};
   const currentValidation=[
+    {ids:["AI-007","AI-009","SEC-005","EDP-009","NFR-010","OPS-003"],
+      paths:["artifacts/api-server/src/lib/inference-budget.ts","artifacts/api-server/src/lib/inference-budget-store.ts",
+        "artifacts/api-server/src/lib/managed-inference.ts","artifacts/api-server/src/scripts/inference-budget-proposal.ts",
+        "lib/db/drizzle/0018_inference_budget.sql","docs/valo/setup-and-disabled-inference-budget.md"],
+      record:inferencePreparation},
     {ids:["AI-001","AI-002","AI-003","AI-005","AI-006","AI-008","AI-009"],
       paths:["artifacts/api-server/src/scripts/customer-source-suite.ts","artifacts/api-server/src/lib/valo-customer-case-binding.ts",
         "artifacts/api-server/src/lib/valo-source-acceptance.test.ts"],record:customerSource60},

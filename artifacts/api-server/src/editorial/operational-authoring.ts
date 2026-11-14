@@ -1,4 +1,4 @@
-import { openai } from "@workspace/integrations-openai-ai-server";
+import {managedCompletion,assertManagedInferenceAvailable} from "../lib/managed-inference";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -7,6 +7,7 @@ import { sha256,digest } from "@workspace/valo-core";
 import { putPublicationArtifact } from "./publication-artifacts";
 import { originalFormSchema,formMarkdown } from "./operational-authoring-contract";
 export async function recordOriginalAuthoring(){
+  assertManagedInferenceAvailable();
   const prompt="Write five short original paragraphs for a blank optional inventory-record form. No copying or quoting any document. Purpose and optional operational instructions for register details, item/unit/location records, stock receipts/issues/adjustments, and physical counts/discrepancies. No invented user facts, names, quantities, computed values, laws, duties, tax, fees, legal validity, ownership assurance, safety certification, provider rights or platform capability statements. Keep instructions optional internal business practice, not legal requirements. Do not introduce a formula or mandatory retention period. All actual facts will be blank fields supplied separately. Return the exact JSON schema.";
   await db.transaction(async tx=>{
     await tx.execute(sql`select pg_advisory_xact_lock(747105)`);
@@ -15,7 +16,7 @@ export async function recordOriginalAuthoring(){
     await tx.execute(sql`insert into valo_publication_ai_attempts(candidate_hash,role) values(${digest(prompt)} ,'draft')`);
   });
   const schema=z.toJSONSchema(originalFormSchema,{target:"draft-7"});delete schema.$schema;
-  const response=await openai.chat.completions.create({
+  const response=await managedCompletion("publication",{
     model:"gpt-5.4-mini",max_completion_tokens:8192,
     messages:[{role:"system",content:"You are a bounded original operational-form author. No tools or customer context. Do not publish, review yourself or change policy."},{role:"user",content:prompt}],
     response_format:{type:"json_schema",json_schema:{name:"original_inventory_prose",strict:true,schema}},

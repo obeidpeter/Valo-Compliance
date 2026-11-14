@@ -1,13 +1,14 @@
-import { openai } from "@workspace/integrations-openai-ai-server";
+import {managedCompletion,assertManagedInferenceAvailable} from "../lib/managed-inference";
 import { z } from "zod";
 import { parseBoundedProviderJSON } from "../lib/provider-output-budget";
 import { candidateSchema,reviewSchema,editorialModel,systemPrompt,type EditorialRole } from "./pipeline-contract";
 import { draftSelectionSchema,resolveDraftSelection } from "./citation-selection";
 export async function callEditorialModel(role:EditorialRole,input:unknown){
+  assertManagedInferenceAvailable();
   const schema=role==="draft"?draftSelectionSchema:reviewSchema;
   const jsonSchema=z.toJSONSchema(schema,{target:"draft-7"});delete jsonSchema.$schema;
   const started=performance.now();
-  const response=await openai.chat.completions.create({
+  const response=await managedCompletion("publication",{
     model:editorialModel,max_completion_tokens:8192,
     messages:[{role:"system",content:systemPrompt(role)},{role:"user",content:JSON.stringify(input)}],
     response_format:{type:"json_schema",json_schema:{name:role==="draft"?"valo_editorial_candidate":"valo_editorial_review",strict:true,schema:jsonSchema}},

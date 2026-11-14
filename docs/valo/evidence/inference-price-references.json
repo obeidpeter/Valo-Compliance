@@ -1,0 +1,24 @@
+{
+  "retrievedDate": "2026-11-14",
+  "sources": [
+    {
+      "url": "https://developers.openai.com/api/docs/models/gpt-5.4-mini",
+      "observation": "Public text pricing: $0.75 uncached input and $4.50 output per million tokens; actual managed billing not verified."
+    },
+    {
+      "url": "https://developers.openai.com/api/docs/pricing",
+      "observation": "Qualifying regional/data residency endpoints have a 10% uplift."
+    },
+    {
+      "url": "https://developers.openai.com/api/reference/resources/responses/subresources/input_tokens/methods/count",
+      "observation": "Documents Responses input counts. Full current chat-completion/proxy instruction/schema equivalence is unverified."
+    },
+    {
+      "url": "https://docs.replit.com/features/integrations/replit-ai-integrations",
+      "observation": "Official Replit documentation search states managed usage is charged at public API prices through credits; not account-specific billing evidence."
+    }
+  ],
+  "providerRequestsMade": 0,
+  "rawPageBytesRetained": false,
+  "notRegulatoryPublicationEvidence": true
+}

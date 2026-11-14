@@ -2,7 +2,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
 import {fork} from "node:child_process";
-import {and,eq,inArray} from "drizzle-orm";
+import {and,eq,inArray,sql} from "drizzle-orm";
 import {db,pool,valoContentVersions,valoPrices,valoOrders,valoEntitlements,valoRefundRequests,valoRefundTransitions,
   valoPurchaseOutbox,valoPaymentDisputes,valoEvents,valoMemberships,valoWorkspaces,valoStaffAssignments,
   valoStaffAccessAudit,valoDocumentRevisions,valoDocuments} from "@workspace/db";
@@ -13,6 +13,7 @@ import {assertRefundMatch,refundBalance,type RefundProvider} from "./valo-refund
 import {storeVerifiedDispute} from "./valo-payment-disputes";
 import {purchases} from "./valo-commerce";
 import {financeHeldFixture} from "./valo-finance-test-fixture";
+import {quotaSubjectHash} from "./valo-quota";
 
 test("refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",{timeout:90000},async t=>{
   assert.equal(process.env.NODE_ENV,"development");assert.equal(Boolean(process.env.PAYSTACK_SECRET_KEY),false);
@@ -172,8 +173,18 @@ test("refund lifecycle: actual development PostgreSQL and controlled provider, n
       assert.equal((await purchases(a)).orders.find(o=>o.id===order),undefined);
       assert.equal((await purchases(b)).orders.find(o=>o.id===order)?.disputeStatus,"resolved");
     });
-    await t.test("the eleventh successful-write attempt is durably limited without losing saved history",async()=>{
+    await t.test("an explicitly exhausted refund counter blocks writes without losing saved history",async()=>{
       const order=await fixture(),before=(await purchases(a)).orders.reduce((n,o)=>n+o.refunds.length,0);
+      // Do not infer the current window's usage from unrelated earlier cases.
+      // This negative fixture lowers remaining allowance for THIS synthetic
+      // actor only. Cover the next window too to avoid a minute-rollover flake.
+      const subject=quotaSubjectHash(process.env.SESSION_SECRET,"user",a.identityId);
+      await db.execute(sql`insert into valo_rate_buckets(bucket,subject_hash,window_started_at,used_count,expires_at)
+        select 'refund-create',${subject},stamp,10,stamp+interval '2 minutes'
+        from (select date_trunc('minute',statement_timestamp())+i*interval '1 minute' as stamp
+          from generate_series(0,1) as i) as windows
+        on conflict(bucket,subject_hash,window_started_at)
+        do update set used_count=greatest(valo_rate_buckets.used_count,10)`);
       await assert.rejects(requestOrderRefund(a,order,payload(1)),(e:unknown)=>
         e instanceof store.ValoProblem&&e.status===429&&Boolean(e.retryAfter));
       assert.equal((await purchases(a)).orders.reduce((n,o)=>n+o.refunds.length,0),before);

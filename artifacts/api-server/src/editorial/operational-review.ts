@@ -1,4 +1,4 @@
-import { openai } from "@workspace/integrations-openai-ai-server";
+import {managedCompletion,assertManagedInferenceAvailable} from "../lib/managed-inference";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
 import { z } from "zod";
 import {parseBoundedProviderJSON} from "../lib/provider-output-budget";
@@ -75,6 +75,7 @@ export async function executeOperationalReviewPlan(plan:Awaited<ReturnType<typeo
   }
   const hold=(code:string)=>Object.assign(Error(code),{reviewPlan:{manifest:plan.manifest,artifact:plan.artifact}});
   if(plan.manifest.status!=="mechanically_planned_not_reserved")throw hold("OPERATIONAL_REVIEW_INPUT_CEILING_REACHED");
+  assertManagedInferenceAvailable();
   const ids=await db.transaction(async tx=>{
     await tx.execute(sql`select pg_advisory_xact_lock(747105)`);
     const count=await tx.execute(sql`select count(*)::int as total from valo_publication_ai_attempts
@@ -96,7 +97,7 @@ export async function executeOperationalReviewPlan(plan:Awaited<ReturnType<typeo
     const started=performance.now(),id=ids.get(role)!;
     let received=false;
     try{
-    const response=await openai.chat.completions.create(request,{timeout:45000,maxRetries:0});
+    const response=await managedCompletion("publication",request,{timeout:45000,maxRetries:0});
     const usage=providerUsage(response.usage);received=true;
     await db.execute(sql`update valo_publication_ai_attempts set outcome='response_received',
       provider_response_id=${response.id},input_tokens=${usage.inputTokens},output_tokens=${usage.outputTokens}

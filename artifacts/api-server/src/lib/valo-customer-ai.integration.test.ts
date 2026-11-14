@@ -74,13 +74,15 @@ test("development AI persistence, private ownership, atomic acceptance and quota
       assert.equal(recovered.status,"manual_fallback");assert.equal(recovered.providerCalls,null);
       assert.equal(recovered.modelUsed,null);
     });
-    await t.test("concurrent requests respect the development workspace ceiling without model success",async()=>{
+    await t.test("disabled shared spending gate rejects concurrent requests without consuming daily allowance",async()=>{
       let adapterCalls=0;
       const requests=await Promise.all(Array.from({length:34},()=>createCustomerAIDraft(a,{
         ...customerAICases[0]!.input,idempotencyKey:randomUUID(),
       },async()=>{adapterCalls++;throw Error("Controlled negative transport, never a real provider call");})));
-      assert.equal(adapterCalls,30);assert.ok(requests.every(p=>p.status==="manual_fallback"&&p.providerCalls===0));
-      assert.equal((await customerAIUsage(a)).workspaceUsed,30);
+      assert.equal(adapterCalls,0);assert.ok(requests.every(p=>p.status==="manual_fallback"&&p.providerCalls===0));
+      assert.equal((await customerAIUsage(a)).workspaceUsed,0);
+      assert.equal((await customerAIUsage(a)).workspaceDailyLimit,30);
+      assert.equal((await customerAIUsage(a)).enabled,false);
       assert.equal((await customerAIUsage(b)).workspaceUsed,0);
     });
   }finally{

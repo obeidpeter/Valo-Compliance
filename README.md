@@ -1,5 +1,24 @@
 # Valo Compliance — Valo Platform
 
+## Latest development checkpoint — inference held, not launch acceptance
+
+The shared $30 managed-inference allocation is a **disabled proposal**, not
+spending authority. New application model calls are held before outbound
+dispatch; saved previews, private drafts/exports and manual editing remain
+available. Earlier real-provider evidence is historical, not a claim that new
+generation is currently enabled. Daily/identity limits were not increased.
+
+See [the setup checklist and exact budget prerequisites](docs/valo/setup-and-disabled-inference-budget.md)
+and [executed, source-bound evidence](docs/valo/evidence/inference-budget-checkpoint.json).
+Current checks: API 172 pass / 1 skip; database 62 pass; controlled commerce 15,
+refund lifecycle 17, refund adapter 5 and email/privacy controls 10 pass;
+workspace typecheck and 19 isolated clean migrations pass. These are engineering
+checks, **not** formal 80/60/60 acceptance. R1/R2 remain incomplete/unaccepted;
+eligible publications/rules remain zero. Public launch/live payments stay off.
+
+Existing development migration history remains unadopted: only the reviewed
+additive budget delta was applied, without fabricating earlier journal entries.
+
 Latest privacy checkpoint: [verified requests, staff operations and scoped private results](docs/valo/privacy-cases-checkpoint.md).
 These are working partial processing flows, not completed erasure, provider-wide privacy fulfilment or accepted R1/R2.
 

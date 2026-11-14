@@ -1,0 +1,102 @@
+{
+  "recordedAt": "2026-11-14T17:59:45.716Z",
+  "proposal": {
+    "id": "valo-managed-inference-30-v1",
+    "model": "gpt-5.4-mini",
+    "enabled": false,
+    "ownerApproved": false,
+    "priceVersion": "public-gpt-5.4-mini-2026-11-14",
+    "capNanoUsd": "30000000000",
+    "inputNanoUsdPerToken": 750,
+    "outputNanoUsdPerToken": 4500,
+    "upliftBps": 1000,
+    "lanes": {
+      "publication": {
+        "slots": 216,
+        "input": 32000,
+        "output": 8192
+      },
+      "editorial_evaluation": {
+        "slots": 68,
+        "input": 32000,
+        "output": 8192
+      },
+      "checker_challenge": {
+        "slots": 80,
+        "input": 32000,
+        "output": 8192
+      },
+      "customer": {
+        "slots": 94,
+        "input": 4096,
+        "output": 8192
+      }
+    },
+    "tokenizationVerified": false,
+    "managedPriceUpperBoundVerified": false
+  },
+  "totals": {
+    "lanes": [
+      {
+        "lane": "publication",
+        "slots": 216,
+        "baseNanoUsd": "13146624000",
+        "upliftNanoUsd": "14461286400"
+      },
+      {
+        "lane": "editorial_evaluation",
+        "slots": 68,
+        "baseNanoUsd": "4138752000",
+        "upliftNanoUsd": "4552627200"
+      },
+      {
+        "lane": "checker_challenge",
+        "slots": 80,
+        "baseNanoUsd": "4869120000",
+        "upliftNanoUsd": "5356032000"
+      },
+      {
+        "lane": "customer",
+        "slots": 94,
+        "baseNanoUsd": "3753984000",
+        "upliftNanoUsd": "4129382400"
+      }
+    ],
+    "baseNanoUsd": "25908480000",
+    "upliftNanoUsd": "28499328000"
+  },
+  "sourceCounts": {
+    "publicationAttempts": 11,
+    "editorialRuns": 15,
+    "customerDraftRows": 74
+  },
+  "imported": {
+    "imported": 0,
+    "duplicates": 57,
+    "entries": 57,
+    "unbounded": 20,
+    "knownUsageEstimateNanoUsd": "61027725",
+    "priorUseReconciled": false
+  },
+  "developmentDeltaApplied": false,
+  "existingDevelopmentHistoryAdopted": false,
+  "productionMigrationApplied": false,
+  "codeHashes": {
+    "artifacts/api-server/src/lib/inference-budget.ts": "d9922ce7ffef20792559810a99fd17556e4349499963c157d7c6fe07dec7176e",
+    "artifacts/api-server/src/lib/managed-inference.ts": "343541885b5821a49d476b81acc8252a9d07139ac8d6d7fd6d889e12bfeb76f1",
+    "artifacts/api-server/src/lib/inference-budget-store.ts": "50a39cdd9d518c450dd3b365134bcf2a88096affe40de28555ce3140a90b229e"
+  },
+  "providerCalls": 0,
+  "quotasChanged": false,
+  "identitiesCreated": 0,
+  "activationAvailable": false,
+  "actualBillingVerified": false,
+  "tokenCounterIntegrationVerified": false,
+  "holds": [
+    "OWNER_SPEND_APPROVAL_ABSENT",
+    "FULL_CHAT_REQUEST_TOKENIZATION_UNPROVED",
+    "MANAGED_REGION_PRICE_BOUND_UNVERIFIED",
+    "PILOT_BILLING_AND_COVERAGE_UNRECONCILED"
+  ],
+  "notice": "Reported tokens give a provisional uncached-price estimate, not a billing receipt. Unknown/time-out/unmetered prior attempts are held without assuming zero. No finite remaining guarantee until reconciliation. This is application inference only, excluding tax, hosting, Agent usage and other projects."
+}

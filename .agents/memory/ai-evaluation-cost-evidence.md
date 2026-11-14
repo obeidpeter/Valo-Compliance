@@ -31,3 +31,13 @@ earlier on unrelated missing data. Use the existing evaluation identity and limi
 
 **Why:** The user repeatedly required these distinctions; safe preflight behavior
 must not be miscounted as completed generation or the intended failure test.
+
+The $30 all-lane managed-inference ceiling is a **disabled proposal**, not
+permission to spend or increase daily/identity limits. Reconcile prior pilot
+usage and unknown charges; prove full-request input tokenization (instructions
+and schemas included) and actual price/region bounds before activation. A byte
+estimate plus protocol allowance is not tokenization proof. Synthetic enabled
+budget fixtures are not approval.
+
+**Why:** The user explicitly authorised budget preparation only, while retaining
+the existing limits and prohibiting new identities or alternate-lane evasion.
