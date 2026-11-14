@@ -50,6 +50,20 @@
       "when": 1794608085075,
       "tag": "0006_customer_ai_drafting",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794615542747,
+      "tag": "0007_operational_publication",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794615542748,
+      "tag": "0008_operational_authoring_budget",
+      "breakpoints": true
     }
   ]
 }

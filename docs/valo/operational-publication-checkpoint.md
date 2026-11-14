@@ -70,3 +70,11 @@ Migrations 0007/0008 were applied only in development. Replit publishing does no
 copy their functions, triggers, roles and grants automatically. Production
 migration/worker/recovery/privacy/security gates remain unproved and deployment
 is not authorised.
+
+The first pushed CI runs failed because the two SQL files had not been entered
+in Drizzle's migration journal. The journal and a regression check were added;
+the failed runs are not passing evidence. The existing development database was
+bootstrapped through reviewed SQL and has no Drizzle migration ledger. Do not run
+an empty-database migration command against it or fabricate adoption history.
+Existing-database baseline/adoption and production migration ownership remain
+explicit operational work; fresh synthetic CI checks the journalled path.
