@@ -88,6 +88,7 @@ export class FiniteInferenceDispatcher{
     const lane=await this.store.mutate("batch-authority-checked",async(s,c)=>{
       const {manifest}=await this.batch(c,batchId),work=manifest.works.find(w=>w.key===key);
       if(!work)throw Error("WORK_NOT_ALLOWLISTED");
+      if(work.retryOf)throw Error("RETRY_REQUIRES_PRIMARY_CONTEXT");
       await this.recheckBindings(work);
       return{state:s,value:work.lane};
     });

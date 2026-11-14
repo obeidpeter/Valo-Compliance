@@ -141,6 +141,9 @@ test("default managed entry and customer organizer use actual finite dispatch an
   });
   await t.test("actual default customer organizer uses two separately approved attempts after invalid schema",async()=>{
     const batch=prepare({retry:true}),before=sdkCalls;responses.push("{}",JSON.stringify({opening:"none",sections:[]}));
+    await assert.rejects(()=>withApprovedInferenceWork(batch.id,`${batch.id}:attempt-2`,
+      ()=>managedCompletion("customer",request,{timeout:18000,maxRetries:0})),/RETRY_REQUIRES_PRIMARY_CONTEXT/);
+    assert.equal(sdkCalls,before);
     const result=await withApprovedInferenceWork(batch.id,batch.key,()=>organizeCustomerDraft(input));
     assert.equal(sdkCalls-before,2);assert.equal(result.failureCode,null);assert.ok(result.plan);
     assert.deepEqual(result.runs.map(r=>r.outcome),["invalid_structured_plan","validated"]);
