@@ -1,0 +1,13 @@
+▶ recorded synthetic receipt recovery, no provider verification or messages
+  ✔ missing maintenance opt-in and missing recorded grant both fail closed (13.721189ms)
+  ✔ concurrent repair produces one held receipt and one audit without reactivating the grant (120.493527ms)
+  ✔ retries preserve the original receipt; other tenants cannot read it (54.597364ms)
+✔ recorded synthetic receipt recovery, no provider verification or messages (333.928041ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3146.909612

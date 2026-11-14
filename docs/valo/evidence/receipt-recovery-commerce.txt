@@ -1,0 +1,25 @@
+▶ controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication
+  ✔ held content and browser price/currency additions cannot create an order (70.274518ms)
+  ✔ saved controlled order is not a receipt or entitlement; no browser-success grant exists (27.918524ms)
+  ✔ other tenants cannot read a receipt, refresh, checkout, settle or request a refund (32.406175ms)
+  ✔ mismatched amount and workspace never grant; data outside test mode is rejected (6.328833ms)
+  ✔ concurrent controlled callback/webhook results grant one entitlement, one receipt outbox and one settlement event (124.382739ms)
+  ✔ verified retries repair missing grant and receipt atomically once, without unsuspending a grant (113.197969ms)
+  ✔ receipt/licence history is private and independent of a later price edit (15.100599ms)
+  ✔ duplicate refund requests persist once without completing a refund or deleting owned work (35.451482ms)
+  ✔ a failed fulfilment constraint rolls back settlement and outbox atomically (15.132608ms)
+  ✔ pending, abandoned and failed provider controls do not grant; a late success can recover (88.91692ms)
+  ✔ reversal suspends reuse without deleting financial or customer history (62.935487ms)
+  ✔ membership revoked while settlement waits on an order lock prevents the eventual customer write (104.789854ms)
+  ✔ durable event deduplication ignores whitespace and delivery retries without retaining card data (11.736612ms)
+{"scope":"Controlled database payment mechanics, not Paystack execution","realProviderCalls":0,"publishedFixtures":0,"priceApproval":false,"livePayments":false}
+  ✔ no merchant setup means no provider calls, false match, consumed event attempt or claimed delivery (16.020663ms)
+✔ controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication (820.807833ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3609.382102

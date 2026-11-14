@@ -1,12 +1,13 @@
 import { randomUUID,createHash } from "node:crypto";
-import { and,desc,eq,sql } from "drizzle-orm";
-import { db,valoPrices,valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentEvents,valoEvents,valoPaymentReconciliations,valoPaymentDisputes } from "@workspace/db";
+import { and,desc,eq,sql,inArray } from "drizzle-orm";
+import { db,valoPrices,valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentEvents,valoEvents,valoPaymentReconciliations,valoPaymentDisputes,valoWorkspaces } from "@workspace/db";
 import { z } from "zod";
 import { liveOperationalVersions } from "./valo-released-content";
 import { authorizeWorkspaceWrite,ValoProblem,type WorkspaceActor } from "./valo-store";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { assertOrderMatch,paystack,verifiedTransaction,sandboxPaymentsConfigured,type VerifiedTransaction } from "./valo-paystack-contract";
 import { trustedSiteOrigin } from "./valo-site-origin";
+import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import { CreateCommerceOrderBody,RequestCommerceRefundBody } from "@workspace/api-zod";
 import {requestOrderRefund,refundView,handleRefundEvent} from "./valo-refunds";
 import {syncDispute} from "./valo-payment-disputes";
@@ -32,7 +33,8 @@ function display(order:typeof valoOrders.$inferSelect,refunds:(typeof valoRefund
 }
 async function originalReceiptExists(tx:Tx,orderId:string,workspaceId:string){
   const[row]=await tx.select({id:valoEvents.id}).from(valoEvents).where(and(
-    eq(valoEvents.workspaceId,workspaceId),eq(valoEvents.entityId,orderId),eq(valoEvents.action,"payment.verified_success"))).limit(1);
+    eq(valoEvents.workspaceId,workspaceId),eq(valoEvents.entityId,orderId),
+    inArray(valoEvents.action,["payment.verified_success","payment.synthetic_receipt_recovered"]))).limit(1);
   return!!row;
 }
 async function presentOrder(tx:Tx,order:typeof valoOrders.$inferSelect){
@@ -186,6 +188,36 @@ async function repairVerifiedFulfilment(tx:Tx,order:typeof valoOrders.$inferSele
     repaired=true;
   }
   if(repaired)await audit(tx,order.workspaceId,actorId,"payment.fulfilment_repaired",order.id);
+}
+/** Explicit maintenance of retained synthetic refund fixtures, not provider
+ * verification. Uses the same locked, unique, audited fulfilment repair but
+ * refuses to manufacture a missing grant or an actual settlement. No HTTP route.
+ * Recovered messages stay held even if delivery is configured later. */
+export async function recoverSyntheticPurchaseReceipt(id:string){
+  assertDevelopmentRuntime();
+  if(process.env.VALO_SYNTHETIC_RECEIPT_RECOVERY!=="owned-recorded-fixtures-only")
+    throw new ValoProblem(403,"Explicit synthetic receipt maintenance is required.");
+  return db.transaction(async tx=>{
+    const[order]=await tx.select().from(valoOrders).where(eq(valoOrders.id,id)).for("update");
+    if(!order)throw new ValoProblem(404,"Order not found.");
+    const[workspace]=await tx.select().from(valoWorkspaces).where(eq(valoWorkspaces.id,order.workspaceId));
+    const[grant]=await tx.select().from(valoEntitlements).where(and(eq(valoEntitlements.orderId,id),
+      eq(valoEntitlements.workspaceId,order.workspaceId),eq(valoEntitlements.contentVersionId,order.line.contentVersionId)));
+    if(!workspace?.ownerIdentityId.startsWith("synthetic-refund-")||order.requestedBy!==workspace.ownerIdentityId||
+      !order.reference.startsWith("valo-test-")||order.line.title!=="Controlled order"||
+      order.line.licenceVersion!=="synthetic-only"||order.currency!=="NGN"||
+      !Number.isSafeInteger(order.amountKobo)||order.amountKobo<=0||
+      order.status!=="verified_success"||!order.providerTransactionId||!grant)
+      throw new ValoProblem(409,"This row is not an eligible retained synthetic fixture. No receipt, entitlement or payment state was changed.");
+    const[prior]=await tx.select().from(valoPurchaseOutbox).where(and(eq(valoPurchaseOutbox.orderId,id),
+      eq(valoPurchaseOutbox.kind,"purchase_receipt")));
+    if(prior)return {repaired:false,receiptId:prior.id,deliveryStatus:prior.status,realProviderVerification:false};
+    await repairVerifiedFulfilment(tx,order,"service:synthetic-receipt-recovery");
+    const[receipt]=await tx.update(valoPurchaseOutbox).set({status:"held_synthetic_recovery"}).where(and(
+      eq(valoPurchaseOutbox.orderId,id),eq(valoPurchaseOutbox.kind,"purchase_receipt"))).returning();
+    await audit(tx,order.workspaceId,"service:synthetic-receipt-recovery","payment.synthetic_receipt_recovered",id);
+    return {repaired:true,receiptId:receipt.id,deliveryStatus:receipt.status,realProviderVerification:false};
+  });
 }
 export async function requestRefund(actor:WorkspaceActor,id:string,raw:unknown){
   return requestOrderRefund(actor,id,raw);
