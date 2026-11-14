@@ -24,7 +24,7 @@ function UserMenu() {
     <div className="flex items-center gap-2">
       <Link href="/workspace" className="btn btn-primary btn-sm" data-testid="link-workspace">Workspace</Link>
       <span className="hidden h-9 w-9 place-items-center rounded-full bg-secondary text-sm font-medium sm:grid" title={user?.primaryEmailAddress?.emailAddress ?? ''}>{initials}</span>
-      <button type="button" className="btn btn-ghost btn-sm !px-2.5" aria-label="Sign out" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="button-signout">
+      <button type="button" className="btn btn-ghost btn-sm !px-2.5" aria-label="Sign out" title="Save changes before signing out. Unsaved forms are cleared for privacy." onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="button-signout">
         <LogOut className="h-4 w-4" />
       </button>
     </div>

@@ -18,6 +18,7 @@ import {
   type Marker,
 } from '@/lib/checker';
 import { cn } from '@/lib/utils';
+import {useAccountEpoch} from '@/components/account-state-boundary';
 
 const STEPS = ['Business', 'Activities', 'Location', 'Size and turnover', 'Data', 'Review'];
 
@@ -26,6 +27,7 @@ const m = (...ks: Marker[]): Opt[] => ks.map((k) => ({ value: k, label: MARKER_L
 const opts = (vals: string[]): Opt[] => vals.map((v) => ({ value: v, label: valueLabel(v) }));
 
 export default function Checker() {
+  const currentAccount=useAccountEpoch();
   const { isSignedIn } = useUser();
   const [facts, setFacts] = useState<CheckerFacts>(EMPTY_FACTS);
   const [step, setStep] = useState(0);
@@ -57,7 +59,7 @@ export default function Checker() {
 
   function run() {
     const body = { facts: final, asOfDate: lagosToday() };
-    preview.mutate({ data: body }, { onSuccess: (r) => setResult({ r, sig: JSON.stringify(final) }) });
+    preview.mutate({ data: body }, { onSuccess: (r) => {if(currentAccount())setResult({ r, sig: JSON.stringify(final) });} });
   }
 
   function go(n: number) {

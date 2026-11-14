@@ -8,6 +8,7 @@ import {
   type Profile,
 } from '@workspace/api-client-react';
 import { useToast } from '@/hooks/use-toast';
+import {useAccountEpoch} from '@/components/account-state-boundary';
 import { ErrorState, Notice, Skel } from '@/components/states';
 import { describeError } from '@/lib/api';
 import { WorkspaceNav } from '@/components/workspace-nav';
@@ -21,6 +22,7 @@ const EMPTY: Profile = {
 const label = (s: string) => ({ unknown: 'Unknown', unanswered: 'Not answered yet', not_applicable: 'Not applicable', NGN: 'Naira (NGN)', under_5m: 'Under N5m', '5m_to_25m': 'N5m to N25m', '25m_to_100m': 'N25m to N100m', over_100m: 'Over N100m' } as Record<string, string>)[s] ?? s.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 
 export default function ProfilePage() {
+  const currentAccount=useAccountEpoch();
   const qc = useQueryClient();
   const { toast } = useToast();
   const ws = useGetWorkspace({ query: { enabled: true, queryKey: getGetWorkspaceQueryKey() } });
@@ -53,11 +55,12 @@ export default function ProfilePage() {
     if (Object.keys(errors).length || !ws.data) return;
     save.mutate({ data: { expectedRevision: ws.data.profileRevision, profile: { ...p, businessName: p.businessName.trim(), activities: acts, state: p.state, lga: p.lga.trim() } } }, {
       onSuccess: (next) => {
+        if(!currentAccount())return;
         setConflict(false);
         qc.setQueryData(getGetWorkspaceQueryKey(), next);
         toast({ title: 'Profile saved', description: 'Saved as revision ' + next.profileRevision + '.' });
       },
-      onError: (err) => { if (describeError(err).kind === 'conflict') setConflict(true); },
+      onError: (err) => { if (currentAccount()&&describeError(err).kind === 'conflict') setConflict(true); },
     });
   }
 

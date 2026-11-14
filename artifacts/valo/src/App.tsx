@@ -1,8 +1,8 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import { ClerkProvider, SignIn, SignUp, Show, useClerk } from '@clerk/react';
+import { type ReactNode } from 'react';
+import { ClerkProvider, SignIn, SignUp, Show, useAuth, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
-import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
+import {AccountStateBoundary} from '@/components/account-state-boundary';
 import { Link, Redirect, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -55,18 +55,6 @@ if (!clerkPubKey) {
   throw new Error('Missing Clerk publishable key (VITE_CLERK_PUBLISHABLE_KEY / CLERK_PUBLISHABLE_KEY).');
 }
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: (count, err) => {
-        const s = (err as { status?: number })?.status;
-        if (s && s >= 400 && s < 500) return false;
-        return count < 2;
-      },
-    },
-  },
-});
 
 const clerkAppearance = {
   theme: shadcn,
@@ -158,23 +146,15 @@ function SignUpPage() {
   );
 }
 
-function ClerkQueryClientCacheInvalidator() {
-  const { addListener } = useClerk();
-  const qc = useQueryClient();
-  const prevUserIdRef = useRef<string | null | undefined>(undefined);
-
-  useEffect(() => {
-    const unsubscribe = addListener(({ user }) => {
-      const userId = user?.id ?? null;
-      if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
-        qc.clear();
-      }
-      prevUserIdRef.current = userId;
-    });
-    return unsubscribe;
-  }, [addListener, qc]);
-
-  return null;
+function ClerkAccountState({children}:{children:ReactNode}) {
+  const auth=useAuth(),user=useUser();
+  const coherent=auth.isLoaded&&user.isLoaded&&(auth.userId?user.user?.id===auth.userId:user.user===null);
+  // Initial SDK loading must not block free public content. Known incoherent
+  // account state is different: hide it until both identity views agree.
+  const publicOnlyLoading=(!auth.isLoaded||!user.isLoaded)&&!auth.userId&&!user.user;
+  const key=coherent?`${auth.userId??"anonymous"}/${auth.sessionId??"none"}/${user.user?.primaryEmailAddress?.verification.status??"none"}`:
+    publicOnlyLoading?"unresolved":null;
+  return <AccountStateBoundary identityKey={key}>{children}</AccountStateBoundary>;
 }
 
 function HomeRedirect() {
@@ -256,8 +236,7 @@ function ClerkProviderWithRoutes() {
       routerPush={(to) => setLocation(stripBase(to))}
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
-      <QueryClientProvider client={queryClient}>
-        <ClerkQueryClientCacheInvalidator />
+      <ClerkAccountState>
         <TooltipProvider>
           <Switch>
             <Route path="/sign-in/*?" component={SignInPage} />
@@ -266,7 +245,7 @@ function ClerkProviderWithRoutes() {
           </Switch>
           <Toaster />
         </TooltipProvider>
-      </QueryClientProvider>
+      </ClerkAccountState>
     </ClerkProvider>
   );
 }
