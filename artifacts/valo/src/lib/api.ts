@@ -1,4 +1,6 @@
 import type { CanonicalDocument, DocumentBlock } from '@workspace/api-client-react';
+import {guidedDataFromBlocks,guidedDataIssues,guidedRenderableBlocks} from '@workspace/valo-core/guided-runtime';
+import {GUIDED_SPECS_V1} from '@workspace/valo-core/guided-specs';
 
 type MaybeApiError = { status?: number; data?: unknown; message?: string };
 
@@ -61,11 +63,22 @@ export const FIELD_LABELS: Record<keyof CanonicalDocument['fields'], string> = {
 
 export function missingFields(content: CanonicalDocument): string[] {
   const out: string[] = [];
-  (Object.keys(FIELD_LABELS) as (keyof CanonicalDocument['fields'])[]).forEach((k) => {
-    if (!content.fields[k]?.trim()) out.push(FIELD_LABELS[k]);
-  });
-  if (!content.blocks.some((b) => b.text.trim() || b.rows.some((r) => r.some((c) => c.trim())))) out.push('Body text');
-  const body=content.blocks.flatMap(b=>[b.text,...b.rows.flat()]).join("\n");
+  let visible=content.blocks;
+  try{
+    const answers=guidedDataFromBlocks(content.blocks);
+    if(answers){
+      const spec=GUIDED_SPECS_V1[answers.templateId];
+      for(const [key,message] of Object.entries(guidedDataIssues(spec,answers)))
+        out.push(`${spec.fields.find(f=>f.id===key)?.label??key}: ${message}`);
+      visible=guidedRenderableBlocks(content);
+    }else{
+      (Object.keys(FIELD_LABELS) as (keyof CanonicalDocument['fields'])[]).forEach((k) => {
+        if (!content.fields[k]?.trim()) out.push(FIELD_LABELS[k]);
+      });
+      if (!content.blocks.some((b) => b.text.trim() || b.rows.some((r) => r.some((c) => c.trim())))) out.push('Body text');
+    }
+  }catch{return["The saved guided layout is unsupported or altered. Restore a valid revision; do not treat it as complete."];}
+  const body=visible.flatMap(b=>[b.text,...b.rows.flat()]).join("\n");
   const placeholders=[...new Set(body.match(/\[[^\]\n]{0,140}\]|\{\{[^}\n]{1,140}\}\}|_{3,}/g)??[])];
   if(placeholders.length)out.push(`Possible unresolved template placeholders (${placeholders.length}): ${placeholders.slice(0,5).join(", ")}`);
   return out;

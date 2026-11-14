@@ -1,6 +1,7 @@
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, Header, Footer, PageNumber, WidthType } from "docx";
 import { chromium } from "playwright";
 import { documentInput } from "./valo-validation";
+import {GUIDED_PREFIX,guidedRenderableBlocks} from "@workspace/valo-core/guided-runtime";
 
 export const RENDER_VERSION = "manual-draft-1";
 export const DRAFT_NOTICE = "INCOMPLETE BUSINESS DRAFT — user-provided information. Not verified payment proof, official approval or legal advice.";
@@ -18,29 +19,31 @@ export function controlledHtml(raw: unknown, revision: number,mode:"business_dra
   const e = escapeHtml;
   const font = content.formatting.font === "serif" ? "Georgia, serif" : "Arial, sans-serif";
   const colour = content.formatting.accent === "forest" ? "#214d3b" : "#292724";
-  const blocks = content.blocks.map(block => block.type === "table"
+  const fields=content.blocks.some(b=>b.id.startsWith(GUIDED_PREFIX))?[["Notes",content.fields.notes]]:Object.entries(content.fields);
+  const blocks = guidedRenderableBlocks(content).map(block => block.type === "table"
     ? `<table><tbody>${block.rows.map(row => `<tr>${row.map(cell => `<td>${e(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>`
     : block.type === "list" ? `<ul>${block.text.split("\n").map(line => `<li>${e(line)}</li>`).join("")}</ul>`
     : `<p>${e(block.text)}</p>`).join("");
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${e(title)}</title><style>
   @page{size:A4;margin:25mm 18mm}body{font:11pt ${font};color:#292724;overflow-wrap:anywhere}h1{color:${colour};font-size:23pt}p,li,td{white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin:14pt 0}td{border:1px solid #aaa;padding:7pt;vertical-align:top}tr{break-inside:avoid}.notice{border:1px solid #b6ac94;padding:10pt;color:#675c3b;font-size:9pt}.field{margin:5pt 0}thead{display:table-header-group}</style></head><body>
   <div class="notice">${notice}</div><h1>${e(title)}</h1><p>Valo · Saved revision ${revision}</p>
-  ${Object.entries(content.fields).map(([key,value])=>`<div class="field"><strong>${e(key)}:</strong> ${e(value || "[Not supplied]")}</div>`).join("")}
+  ${fields.map(([key,value])=>`<div class="field"><strong>${e(key)}:</strong> ${e(value || "[Not supplied]")}</div>`).join("")}
   ${blocks}</body></html>`;
 }
 export async function renderDocument(raw: unknown, format: "docx" | "pdf", revision: number,mode:"business_draft"|"template_sample"="business_draft"): Promise<Buffer> {
   const notice=mode==="template_sample"?TEMPLATE_NOTICE:DRAFT_NOTICE;
   const { title, content } = documentInput.parse(raw);
+  const fields=content.blocks.some(b=>b.id.startsWith(GUIDED_PREFIX))?[["Notes",content.fields.notes]]:Object.entries(content.fields);
   if (format === "docx") {
     const children: (Paragraph | Table)[] = [
       new Paragraph({ text: notice }),
       new Paragraph({ heading: "Title", children:[new TextRun({text:title,color:content.formatting.accent === "forest" ? "214d3b" : "292724"})] }),
       new Paragraph(`Valo · Saved revision ${revision}`),
-      ...Object.entries(content.fields).map(([key,value]) => new Paragraph({ children: [
+      ...fields.map(([key,value]) => new Paragraph({ children: [
         new TextRun({ text: `${key}: `, bold: true }), new TextRun(value || "[Not supplied]"),
       ] })),
     ];
-    for (const block of content.blocks) {
+    for (const block of guidedRenderableBlocks(content)) {
       if (block.type === "table" && block.rows.length)
         children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: block.rows.map(row =>
           new TableRow({ cantSplit: true, children: (row.length ? row : [""]).map(text => new TableCell({ children: [new Paragraph(text)] })) })) }));

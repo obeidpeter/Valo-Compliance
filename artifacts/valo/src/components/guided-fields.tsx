@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Info, Plus, Trash2 } from 'lucide-react';
 import type { GuidedData, GuidedField, GuidedSpec, GuidedTable } from '@workspace/valo-core/guided';
+import {guidedDataIssues,guidedFieldIssue,guidedVisible} from '@workspace/valo-core/guided-runtime';
 import { cn } from '@/lib/utils';
 
 /**
@@ -10,9 +11,6 @@ import { cn } from '@/lib/utils';
  * Money is entered as whole kobo (integer string); NGN is shown as a live, decimal-safe reading.
  */
 
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
-const INT = /^(0|[1-9]\d{0,8})$/;
-const QTY = /^(0|[1-9]\d{0,6})(\.\d{1,3})?$/;
 const KOBO = /^(0|[1-9]\d{0,23})$/;
 
 export function koboToNgnDisplay(k: string): string | null {
@@ -22,54 +20,17 @@ export function koboToNgnDisplay(k: string): string | null {
   return 'NGN ' + naira.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + s.slice(-2);
 }
 
-function validDate(v: string) {
-  if (!DATE.test(v)) return false;
-  const [y, m, d] = v.split('-').map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
-}
-
 export function checkField(f: GuidedField, raw: string | undefined): string | null {
-  const v = raw ?? '';
-  const t = v.trim();
-  if (!t) {
-    if (!f.required) return null;
-    return f.type === 'acknowledgement' ? 'Confirm this to continue.' : f.type === 'select' ? 'Choose an option.' : 'This is required.';
-  }
-  switch (f.type) {
-    case 'date': return validDate(t) ? null : 'Enter a real date (YYYY-MM-DD).';
-    case 'integer': return INT.test(t) ? null : 'Whole number only, no commas or decimals.';
-    case 'quantity': return QTY.test(t) && Number(t) > 0 ? null : 'Positive number, up to 3 decimal places.';
-    case 'money_kobo': return KOBO.test(t) ? null : 'Whole kobo only: digits, no commas, points or symbols. 100 kobo = NGN 1.00.';
-    case 'select': return f.options?.some((o) => o.value === v) ? null : 'Choose one of the listed options.';
-    case 'acknowledgement': return v === 'yes' ? null : 'Confirm this to continue.';
-    default: return null;
-  }
+  return guidedFieldIssue(f,raw);
 }
 
-export function isVisible(f: GuidedField, values: Record<string, string>) {
-  return !f.when || (values[f.when.field] ?? '') === f.when.equals;
+export function isVisible(f: Pick<GuidedField,"when">, values: Record<string, string>) {
+  return guidedVisible(f,values);
 }
 
 /** Issues keyed by field id, or `table:rowIndex:columnId` for table cells. Hidden fields are skipped. */
 export function guidedIssues(spec: GuidedSpec, value: GuidedData): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const f of spec.fields) {
-    if (!isVisible(f, value.values)) continue;
-    const e = checkField(f, value.values[f.id]);
-    if (e) out[f.id] = e;
-  }
-  for (const t of spec.tables) {
-    const rows = value.tables[t.id] ?? [];
-    if (rows.length < t.minRows) out[t.id] = `Add at least ${t.minRows} ${t.minRows === 1 ? 'row' : 'rows'}.`;
-    if (rows.length > t.maxRows) out[t.id] = `No more than ${t.maxRows} rows.`;
-    rows.forEach((r, i) => t.columns.forEach((c) => {
-      if (!isVisible(c, { ...value.values, ...r })) return;
-      const e = checkField(c, r[c.id]);
-      if (e) out[`${t.id}:${i}:${c.id}`] = e;
-    }));
-  }
-  return out;
+  return guidedDataIssues(spec,value);
 }
 
 type Props = { spec: GuidedSpec; value: GuidedData; onChange: (next: GuidedData) => void; disabled?: boolean; onValidityChange?: (issues: Record<string, string>) => void };
@@ -123,6 +84,9 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
           <span className="dot" />{total ? `${total} ${total === 1 ? 'answer needs' : 'answers need'} attention` : 'All shown answers are complete'}
         </p>
       </header>
+      {Object.entries(issues).filter(([key])=>!spec.fields.some(f=>f.id===key)&&
+        !spec.tables.some(t=>t.id===key)&&!key.includes(":")).map(([key,message])=>
+          <p key={key} role="alert" className="text-sm text-destructive" data-testid={`guided-issue-${key}`}>{message}</p>)}
 
       {spec.notices.length > 0 && (
         <ul className="grid gap-2 rounded-2xl border border-[hsl(38_50%_82%)] bg-[hsl(var(--ochre-soft))] p-4 text-sm" data-testid="list-guided-notices">
@@ -149,7 +113,7 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
         </fieldset>
       )}
 
-      {spec.tables.map((t) => (
+      {spec.tables.filter(t=>isVisible(t,value.values)).map((t) => (
         <TableEditor key={t.id} table={t} rows={value.tables[t.id] ?? []} values={value.values} issues={issues} disabled={disabled}
           onRows={(rows, focus) => { pendingFocus.current = focus; setRows(t.id, rows); }} />
       ))}

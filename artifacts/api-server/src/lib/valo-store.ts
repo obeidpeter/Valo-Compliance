@@ -8,6 +8,7 @@ import {
 import { sha256 } from "@workspace/valo-core";
 import { documentInput, documentUpdate, profileInput, ticketInput } from "./valo-validation";
 import { z } from "zod";
+import {guidedDataFromBlocks} from "@workspace/valo-core/guided-runtime";
 import { consumeQuota,quotaPolicy,quotaSubjectHash } from "./valo-quota";
 
 import {ValoProblem} from "./valo-problem";
@@ -156,11 +157,15 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
     await authorizeWorkspaceWrite(tx,actor);
     if (document.currentRevision !== expectedRevision)
       throw new ValoProblem(409, "Document changed in another tab. Your text was not overwritten; compare with the latest revision.", document.currentRevision);
-    const[current]=await tx.select({content:valoDocumentRevisions.content}).from(valoDocumentRevisions)
+    const[current]=await tx.select({title:valoDocumentRevisions.title,content:valoDocumentRevisions.content}).from(valoDocumentRevisions)
       .where(and(eq(valoDocumentRevisions.documentId,id),eq(valoDocumentRevisions.workspaceId,actor.workspaceId),
         eq(valoDocumentRevisions.revision,expectedRevision)));
     if(current?.content.financialInput&&!input.content.financialInput)
       throw new ValoProblem(422,"Keep the guided financial model. Create a separate blank draft for unrestricted free-form content.");
+    const oldGuided=current?guidedDataFromBlocks(documentInput.parse(current).content.blocks):null;
+    const nextGuided=guidedDataFromBlocks(input.content.blocks);
+    if(oldGuided&&oldGuided.templateId!==nextGuided?.templateId)
+      throw new ValoProblem(422,"Keep this draft's versioned guided form. Create a separate blank draft instead of removing required questions.");
     await limitWorkspaceWrite(tx,actor,"document");
     await appendRevision(tx, actor, id, expectedRevision + 1, input);
     await tx.update(valoDocuments).set({ currentRevision: expectedRevision + 1, updatedAt: new Date() })

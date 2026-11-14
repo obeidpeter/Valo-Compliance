@@ -10,13 +10,18 @@ import { GetCustomerAccountResponse,GetDocumentResponse,DownloadWorkspaceDataRes
 import { z } from "zod";
 import { syntheticDocument } from "../lib/valo-test-fixtures";
 import {synchronizeFinancialBlocks} from "@workspace/valo-core/money";
+import {runGuidedCustomerJourneys} from "./customer-guided-journeys";
+import {deletePrivateFile} from "../lib/valo-private-storage";
 const checks:{name:string;status:string;diagnostic?:string}[]=[];
 const run=randomUUID(),email=`valo-ux-${run}+clerk_test@example.com`;
 let browser:Browser|undefined,page:Page|undefined,userId:string|undefined,workspaceId:string|undefined;
 let unknownAck:string|undefined,phase="guard";
 const ownIntakeIds:string[]=[];
 const ownCommercePriceIds:string[]=[];
+let guidedDetails:unknown[]=[];
 async function check(name:string,fn:()=>Promise<void>){
+  if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="guided"&&
+    name!=="managed_verified_customer_can_open_private_routes"&&!name.startsWith("real_guided_"))return;
   if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"&&
     !["managed_verified_customer_can_open_private_routes",
       "controlled_support_display_preserves_mixed_full_messages_and_keyboard_mobile",
@@ -39,7 +44,7 @@ async function check(name:string,fn:()=>Promise<void>){
       alerts:Array.from(document.querySelectorAll('[role="alert"]')).slice(0,4).map(e=>e.textContent?.slice(0,350)),
       overflow:Array.from(document.querySelectorAll("main *")).filter(e=>e.getBoundingClientRect().right>innerWidth+1)
         .slice(0,5).map(e=>({tag:e.tagName,class:String(e.className)}))})`).catch(()=>null);
-    const location=error instanceof Error?error.stack?.split("\n").find(line=>/customer-experience-journey\.ts:\d/.test(line)):undefined;
+    const location=error instanceof Error?error.stack?.split("\n").find(line=>/customer-(experience-journey|guided-journeys)\.ts:\d/.test(line)):undefined;
     checks.push({name,status:"fail",diagnostic:JSON.stringify({state:safe??"Unavailable; raw form details suppressed",location})});process.exitCode=1;
   }
 }
@@ -262,6 +267,8 @@ try{
       await expect(page!.locator("main")).not.toContainText("Something went wrong");
     }
   });
+  if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="guided"&&userId&&workspaceId)
+    guidedDetails=await runGuidedCustomerJourneys(page!,api,check);
   await check("controlled_support_display_preserves_mixed_full_messages_and_keyboard_mobile",async()=>{
     // The customer really signs in, and really lacks staff permission. Only the
     // display payload below is intercepted; this is NOT a staff/MFA proof.
@@ -551,8 +558,16 @@ finally{
   await browser?.close();
   for(const id of ownIntakeIds)await pool.query("DELETE FROM valo_access_support WHERE id=$1",[id]).catch(()=>{cleanupErrors++;process.exitCode=1;});
   if(workspaceId){
+    const assets=await pool.query("SELECT object_key FROM valo_file_assets WHERE workspace_id=$1",[workspaceId]);
+    for(const row of assets.rows){
+      try{
+        if(!row.object_key.startsWith(`valo/development/${workspaceId}/`))throw Error("OWN_PRIVATE_OBJECT_REQUIRED");
+        await deletePrivateFile(row.object_key);
+      }catch{cleanupErrors++;process.exitCode=1;}
+    }
     for(const table of["valo_payment_reconciliations","valo_refund_requests","valo_purchase_outbox","valo_entitlements","valo_orders",
       "valo_support_tickets","valo_reminder_outbox","valo_reminder_preferences","valo_tasks","valo_assessments",
+      "valo_export_requests","valo_export_objects","valo_file_assets","valo_export_jobs",
       "valo_ai_drafts","valo_document_revisions","valo_documents","valo_profile_versions","valo_events","valo_memberships","valo_workspaces"]){
       await pool.query(`DELETE FROM ${table} WHERE ${table==="valo_workspaces"?"id":"workspace_id"}=$1`,[workspaceId])
         .catch(()=>{cleanupErrors++;process.exitCode=1;});
@@ -561,16 +576,21 @@ finally{
   for(const id of ownCommercePriceIds)
     await pool.query("DELETE FROM valo_prices WHERE id=$1",[id]).catch(()=>{cleanupErrors++;process.exitCode=1;});
   await pool.end();
-  await writeFile(fileURLToPath(new URL(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"?
+  await writeFile(fileURLToPath(new URL(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="guided"?
+    "../../../../generated-artifacts/valo-customer-ux/browser-guided.json":
+    process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"?
     "../../../../generated-artifacts/valo-customer-ux/browser-support-details.json":
     "../../../../generated-artifacts/valo-customer-ux/browser.json",import.meta.url)),JSON.stringify({
-    checkedAt:new Date().toISOString(),syntheticDevelopmentOnly:true,checks,
-    selection:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"?"managed-identity-support-details-and-privacy-scope":
+    checkedAt:new Date().toISOString(),syntheticDevelopmentOnly:true,checks,guidedDetails,
+    selection:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="guided"?"managed-identity-twelve-private-guided-drafts":
+      process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"?"managed-identity-support-details-and-privacy-scope":
       process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"?"managed-identity-editor-safety":
       process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"?"managed-identity-commerce-only":
       process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?"managed-identity-reminder-only":"full-existing-journey",
     actualManagedIdentityUsed:Boolean(userId),realEmailDeliveryClaimed:false,actualNewPublications:0,
-    fixtureDisclosure:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"?
+    fixtureDisclosure:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="guided"?
+      "Actual managed synthetic customer verification, twelve private answer-form layouts, actual typed UI answers, saved/reloaded revisions and private durable export requests. No application response interception, published catalogue master, professional review, real email or commerce execution. Word/PDF checks use mechanical readers, not an actual Microsoft Word/manual assistive-technology session.":
+      process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"?
       "Actual managed synthetic customer verification, private routes, saved privacy ticket and workspace JSON download. The real staff API denied this customer. ONLY the staff display payload was intercepted with synthetic mixed request records for full-message, XSS, keyboard and mobile checks. No actual authorised staff/MFA session, privacy fulfilment, provider-wide export or erasure was proven. No messages sent.":
       process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"?
       "Actual managed synthetic verified identity, application API and PostgreSQL. Two real browser tabs; one PATCH delayed then released unchanged to order a revision conflict. No forged API responses, provider sends, AI calls or payment calls.":

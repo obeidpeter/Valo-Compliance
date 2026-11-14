@@ -1,5 +1,6 @@
 import { CreateDocumentBody, SaveBusinessProfileBody, SaveDocumentBody, CreateSupportTicketBody } from "@workspace/api-zod";
 import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
+import {guidedContentConsistent} from "@workspace/valo-core/guided-runtime";
 
 export const nigerianStates = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", "Cross River", "Delta", "Ebonyi",
@@ -33,14 +34,19 @@ function financialsValid(input:{content:Parameters<typeof synchronizeFinancialBl
   try{return JSON.stringify(synchronizeFinancialBlocks(input.content).blocks)===JSON.stringify(input.content.blocks);}
   catch{return false;}
 }
+function guidedValid(input:{content:Parameters<typeof guidedContentConsistent>[0]}){
+  try{return guidedContentConsistent(input.content);}catch{return false;}
+}
 export const documentInput = CreateDocumentBody.strict()
   .refine(i => Boolean(i.title.trim()), "Title must not be blank")
   .refine(contentValid, "Invalid or inconsistent calendar dates, or duplicate section identifiers")
-  .refine(financialsValid,"Financial rows must match the supplied structured amounts. Use the financial fields to recalculate.");
+  .refine(financialsValid,"Financial rows must match the supplied structured amounts. Use the financial fields to recalculate.")
+  .refine(guidedValid,"Guided question layout or calculated output changed. Keep the versioned questions and recalculate from the supplied answers.");
 export const documentUpdate = SaveDocumentBody.strict()
   .refine(i => Number.isSafeInteger(i.expectedRevision), "Expected revision must be an integer")
   .refine(i => Boolean(i.title.trim()), "Title must not be blank")
   .refine(contentValid, "Invalid or inconsistent calendar dates, or duplicate section identifiers")
-  .refine(financialsValid,"Financial rows must match the supplied structured amounts. Use the financial fields to recalculate.");
+  .refine(financialsValid,"Financial rows must match the supplied structured amounts. Use the financial fields to recalculate.")
+  .refine(guidedValid,"Guided question layout or calculated output changed. Keep the versioned questions and recalculate from the supplied answers.");
 export const ticketInput = CreateSupportTicketBody.strict()
   .refine(i => i.category === "support" || i.sharingConsent, "Service enquiries require explicit contact-sharing consent");

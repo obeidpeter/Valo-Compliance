@@ -16,6 +16,9 @@ import { synchronizeFinancialBlocks } from '@workspace/valo-core/money';
 import type { FinancialInput } from '@workspace/api-client-react';
 import {useUnsavedNavigation} from '@/lib/use-unsaved-navigation';
 import {UnsavedNavigationDialog} from '@/components/unsaved-navigation-dialog';
+import {GuidedFields} from '@/components/guided-fields';
+import {GUIDED_SPECS_V1} from '@workspace/valo-core/guided-specs';
+import {GUIDED_PREFIX,guidedDataFromBlocks,compileGuidedContent,guidedRenderableBlocks} from '@workspace/valo-core/guided-runtime';
 
 type Snapshot = { title: string; content: CanonicalDocument };
 type SaveState = 'idle' | 'dirty' | 'saving' | 'saved' | 'error' | 'conflict' | 'blocked';
@@ -239,6 +242,10 @@ export default function DocumentEditor({ id }: { id: string }) {
   }
 
   const missing = missingFields(content);
+  let guided:ReturnType<typeof guidedDataFromBlocks>=null;
+  let guidedError="";
+  try{guided=guidedDataFromBlocks(content.blocks);}catch{guidedError="The saved guided layout cannot be safely loaded. Restore a valid revision rather than removing its required questions.";}
+  const manualBlocks=content.blocks.filter(b=>!b.id.startsWith(GUIDED_PREFIX));
   const setFields = (k: keyof CanonicalDocument['fields'], v: string) => update({ title, content: { ...content, fields: { ...content.fields, [k]: v } } });
   const setBlocks = (blocks: DocumentBlock[]) => update({ title, content: { ...content, blocks } });
   const addBlock = (type: DocumentBlockType) => setBlocks([...content.blocks, { id: newBlockId(), type, text: '', rows: type === 'table' ? [['', ''], ['', '']] : [] }]);
@@ -302,6 +309,9 @@ export default function DocumentEditor({ id }: { id: string }) {
             </div>
           ) : (
             <div className="surface p-5 sm:p-8" role="tabpanel" id="editor-edit-panel" aria-labelledby="editor-tab-edit" tabIndex={0}>
+              {guidedError&&<p role="alert" className="mb-5 text-sm text-destructive">{guidedError}</p>}
+              {guided?<GuidedFields spec={GUIDED_SPECS_V1[guided.templateId]} value={guided}
+                disabled={!!guidedError} onChange={next=>update({title,content:compileGuidedContent(next,content) as CanonicalDocument})}/>:<>
               <p className="eyebrow mb-4">Key details</p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {(['issuerName', 'recipientName', 'documentNumber'] as const).map((k) => (
@@ -313,6 +323,7 @@ export default function DocumentEditor({ id }: { id: string }) {
                   ))}
                 </div>
               </div>
+              </>}
 
               {content.financialInput && (
                 <div className="mt-10 rounded-2xl border border-border bg-sidebar/50 p-4 sm:p-5" data-testid="panel-financial">
@@ -330,10 +341,10 @@ export default function DocumentEditor({ id }: { id: string }) {
 
               <p className="eyebrow mb-4 mt-10">Body</p>
               <ol className="grid gap-3">
-                {content.blocks.map((b, i) => (
-                  <BlockEditor key={b.id} block={b} index={i} count={content.blocks.length}
+                {manualBlocks.map((b, i) => (
+                  <BlockEditor key={b.id} block={b} index={i} count={manualBlocks.length}
                     onChange={(nb) => setBlocks(content.blocks.map((x) => (x.id === b.id ? nb : x)))}
-                    onMove={(dir) => { const a = [...content.blocks]; const j = i + dir; [a[i], a[j]] = [a[j], a[i]]; setBlocks(a); }}
+                    onMove={(dir) => { const a = [...content.blocks]; const from=a.findIndex(x=>x.id===b.id),j=a.findIndex(x=>x.id===manualBlocks[i+dir]?.id); if(from>=0&&j>=0){[a[from], a[j]] = [a[j], a[from]]; setBlocks(a);} }}
                     onDelete={() => setBlocks(content.blocks.filter((x) => x.id !== b.id))} />
                 ))}
               </ol>
@@ -466,17 +477,18 @@ function IconBtn({ label, disabled, onClick, children }: { label: string; disabl
 function DocPreview({ title, content, revision }: { title: string; content: CanonicalDocument; revision: number }) {
   const accent = content.formatting.accent === 'forest' ? 'hsl(155 42% 21%)' : 'hsl(30 8% 14%)';
   const f = content.fields;
+  const guidedLayout=content.blocks.some(b=>b.id.startsWith(GUIDED_PREFIX));
   return (
     <article className={cn('surface mx-auto min-w-0 w-full max-w-[46rem] px-7 py-10 shadow-[var(--shadow-lg)] sm:px-14 sm:py-14', content.formatting.font === 'serif' ? 'font-display' : 'font-sans')} style={{overflowWrap:'anywhere'}} data-testid="preview-doc">
       <div className="h-1 w-16 rounded-full" style={{ background: accent }} />
       <h2 className="mt-6 text-3xl leading-tight" style={{ color: accent }}>{title}</h2>
-      <dl className="mt-6 grid gap-x-8 gap-y-2 font-sans text-sm sm:grid-cols-2">
+      {!guidedLayout&&<dl className="mt-6 grid gap-x-8 gap-y-2 font-sans text-sm sm:grid-cols-2">
         {(['issuerName', 'recipientName', 'documentNumber', 'issueDate', 'dueDate'] as const).map((k) => (
           <div key={k} className="flex min-w-0 flex-wrap justify-between gap-3 border-b border-border py-1.5"><dt className="text-muted-foreground">{FIELD_LABELS[k]}</dt><dd className={cn('min-w-0',f[k] ? '' : 'italic text-[hsl(38_60%_35%)]')}>{f[k] || 'Missing'}</dd></div>
         ))}
-      </dl>
+      </dl>}
       <div className="mt-8 grid gap-4 text-[1.05rem] leading-relaxed">
-        {content.blocks.map((b,index) => b.type === 'list' ? (
+        {guidedRenderableBlocks(content).map((b,index) => b.type === 'list' ? (
           <ul key={b.id} className="list-disc pl-6">{b.text.split('\n').filter((l) => l.trim()).map((l, i) => <li key={i}>{l}</li>)}</ul>
         ) : b.type === 'table' ? (
           <div key={b.id} className="preview-table min-w-0 overflow-x-auto" role="region" aria-label={'Document table '+(index+1)} tabIndex={0}>

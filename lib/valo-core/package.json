@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts", "./money": "./src/money.ts", "./customer-document": "./src/customer-document.ts", "./guided": "./src/guided.ts", "./checker-business-name": "./src/checker-business-name.ts", "./checker-source-candidates": "./src/checker-source-candidates.ts" },
+  "exports": { ".": "./src/index.ts", "./money": "./src/money.ts", "./customer-document": "./src/customer-document.ts", "./guided": "./src/guided.ts", "./guided-specs": "./src/guided-specs-v1.ts", "./guided-runtime": "./src/guided-runtime-v1.ts", "./checker-business-name": "./src/checker-business-name.ts", "./checker-source-candidates": "./src/checker-source-candidates.ts" },
   "dependencies": { "zod": "catalog:" },
   "devDependencies": { "@types/node": "catalog:" }
 }
