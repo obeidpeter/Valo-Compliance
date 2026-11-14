@@ -1,0 +1,42 @@
+{
+  "suite": "supplied-customer-AI-source-pilot",
+  "sourceCommit": "9a5dcc9dea19febbc99a44366d82e87684b313d3",
+  "executedAt": "2026-11-14T11:35:25.442Z",
+  "sourceFile": "docs/evaluation-candidates/customer-ai.json",
+  "sourceSHA256": "8c828ad115a855da9d725aaa8ecb76d91e36daa4a9142571c0a45d306ec995e2",
+  "executed": 2,
+  "passed": 0,
+  "failed": 2,
+  "budgetBefore": {
+    "workspace": 0,
+    "workspaceDailyLimit": 30,
+    "global": 2,
+    "globalDailyLimit": 120
+  },
+  "sameExistingEvaluationTenant": true,
+  "actualBilling": null,
+  "identityAndHTTPMiddlewareTested": false,
+  "AI008Accepted": false,
+  "full60CaseSuiteExecuted": false,
+  "R1Accepted": false,
+  "R2Accepted": false,
+  "limits": "Two exact supplied candidates through real server services. Invoice requires actual provider receipts; quotation must ask for its absent date without calling AI. Both save/edit/reload and deliberately watermarked private exports. Not browser identity, all four task quality, sixty-case acceptance, publication or legal accuracy.",
+  "results": [
+    {
+      "caseID": "CAI-CAND-INV-01",
+      "status": "fail",
+      "failedAt": "real-private-exports",
+      "previewId": "0c63f870-3505-49e9-8f0f-f5fda67ad0fc",
+      "newProviderAttempts": 1,
+      "error": "The expression evaluated to a falsy value:"
+    },
+    {
+      "caseID": "CAI-CAND-QUO-01",
+      "status": "fail",
+      "failedAt": "real-private-exports",
+      "previewId": "6279d544-83e4-47ef-803f-8109b65e998a",
+      "newProviderAttempts": 0,
+      "error": "The expression evaluated to a falsy value:"
+    }
+  ]
+}

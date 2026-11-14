@@ -1,4 +1,7 @@
 import { financialBlocks,recordedBalance,type FinancialInput } from "./money";
+export function customerComposerNotes(lines:readonly {text:string;send:boolean}[],mode:"ai"|"manual"){
+  return lines.filter(line=>mode==="manual"||line.send).map(line=>line.text.trim()).filter(Boolean).slice(0,20);
+}
 export type CustomerTask=FinancialInput["kind"];
 export type CustomerDraftInput={
   task:CustomerTask;tone:"neutral"|"polite"|"firm";issuerName:string;recipientName:string;documentNumber:string;

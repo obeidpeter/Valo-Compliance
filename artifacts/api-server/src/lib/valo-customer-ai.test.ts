@@ -2,12 +2,19 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFile } from "node:fs/promises";
 import { financialBlocks,lineTotal } from "@workspace/valo-core/money";
-import { buildBusinessDraft } from "@workspace/valo-core/customer-document";
+import { buildBusinessDraft,customerComposerNotes } from "@workspace/valo-core/customer-document";
 import { customerAICases } from "./valo-customer-ai-fixtures";
 import { customerAIInput,customerProviderPayload,missingCustomerFields,unsupportedCustomerInput,hashAI } from "./valo-customer-ai-domain";
 import { organizeCustomerDraft } from "./valo-customer-ai-model";
 import { documentInput } from "./valo-validation";
 const input=()=>structuredClone(customerAICases[0]!.input);
+test("manual drafting preserves notes withheld from AI instead of silently dropping them",()=>{
+  const lines=[{text:" Shared scope ",send:true},{text:" Private manual note ",send:false},{text:" ",send:true}];
+  assert.deepEqual(customerComposerNotes(lines,"ai"),["Shared scope"]);
+  assert.deepEqual(customerComposerNotes(lines,"manual"),["Shared scope","Private manual note"]);
+  const i={...input(),contextLines:customerComposerNotes(lines,"manual")};
+  assert.ok(JSON.stringify(buildBusinessDraft(i,null).content).includes("Private manual note"));
+});
 for(const task of ["invoice","quotation","payment_reminder","business_proposal"])
   test(`${task} manual fallback preserves supplied facts without AI consent`,()=>{
     const source=structuredClone(customerAICases.find(c=>c.task===task)!.input);source.processingConsent=false;

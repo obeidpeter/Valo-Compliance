@@ -8,7 +8,7 @@ import {
   CustomerAITask, CustomerAIInputTone,
   type CustomerAIInput, type CustomerAIPreview, type CustomerAIUsage, type CanonicalDocument, type FinancialInput,
 } from '@workspace/api-client-react';
-import { buildBusinessDraft } from '@workspace/valo-core/customer-document';
+import { buildBusinessDraft, customerComposerNotes } from '@workspace/valo-core/customer-document';
 import { synchronizeFinancialBlocks } from '@workspace/valo-core/money';
 import { WorkspaceNav } from '@/components/workspace-nav';
 import { FinancialFields, FINANCIAL_BLOCK_IDS, emptyFinancial } from '@/components/financial-fields';
@@ -61,7 +61,7 @@ export function AIDraftCompose() {
     setTask(t); setFin(emptyFinancial(t)); setFinKey((k) => k + 1); setKey(uuid());
   }
 
-  const selected = lines.map((l) => l.text.trim()).filter((s, i) => s && lines[i].send);
+  const selected = customerComposerNotes(lines, 'ai');
   const lineTooLong = lines.some((l) => l.text.length > 1000);
   const problems: string[] = [];
   if (!fin) problems.push('Fix the amounts in Financial details.');
@@ -92,7 +92,7 @@ export function AIDraftCompose() {
     const input = build();
     if (!input || problems.length) return;
     let draft: ReturnType<typeof buildBusinessDraft>;
-    try { draft = buildBusinessDraft({ ...input }, null); } catch (er) { setManualErr('These details could not be assembled: ' + (er as Error).message); return; }
+    try { draft = buildBusinessDraft({ ...input, contextLines: customerComposerNotes(lines, 'manual') }, null); } catch (er) { setManualErr('These details could not be assembled: ' + (er as Error).message); return; }
     manual.mutate({ data: { title: draft.title || TASK_LABEL[task], content: draft.content as CanonicalDocument } }, {
       onSuccess: (doc) => {
         qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
@@ -152,7 +152,7 @@ export function AIDraftCompose() {
             </div>
           </Section>
 
-          <Section n="3" title="Notes to organise" hint="One fact per note. Untick a note to keep it out of the AI request; it still goes into a manual draft.">
+          <Section n="3" title="Notes to organise" hint="One fact per note. Unticked notes are not sent or included in the AI preview. A manual draft keeps all your notes.">
             <ul className="grid gap-2">
               {lines.map((l, i) => (
                 <li key={i} className="flex gap-2">

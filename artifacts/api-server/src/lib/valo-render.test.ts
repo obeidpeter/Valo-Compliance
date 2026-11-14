@@ -3,6 +3,15 @@ import assert from "node:assert/strict";
 import { unzipSync, strFromU8 } from "fflate";
 import { controlledHtml, renderDocument, DRAFT_NOTICE } from "./valo-render";
 import { syntheticDocument } from "./valo-test-fixtures";
+import { readerContainsText } from "./valo-reader-checks";
+
+test("reader comparison tolerates extraction spacing, never changed parties, currency or money",()=>{
+  assert.equal(readerContainsText("Fictional BusinessA","Fictional Business A"),true);
+  assert.equal(readerContainsText("Fictional BusinessB","Fictional Business A"),false);
+  assert.equal(readerContainsText("₦37,000.00","₦37,001.00"),false);
+  assert.equal(readerContainsText("$37,000.00","₦37,000.00"),false);
+  assert.equal(readerContainsText("anything"," "),false);
+});
 
 test("controlled HTML treats markup, local-file and metadata addresses as inert text",()=>{
   const input = structuredClone(syntheticDocument);

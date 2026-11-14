@@ -11,6 +11,7 @@ import { customerPromptVersion,customerNoticeVersion,hashAI,customerProviderPayl
 import { resolveWorkspace,getDocument,listRevisions,saveDocument } from "../lib/valo-store";
 import { requestExport,getExport,downloadExport } from "../lib/valo-exports";
 import { documentInput } from "../lib/valo-validation";
+import { readerContainsText } from "../lib/valo-reader-checks";
 const exec=promisify(callbackExec);
 type SourceCase={caseID:string;task:"invoice"|"quotation";userInput:string;
   suppliedFacts:{parties:{business:string;customer:string};reference?:string;issueDate?:string;dueDate?:string;
@@ -112,10 +113,11 @@ async function main(){
         const {stdout:text}=format==="docx"?await exec("unzip",["-p",path,"word/document.xml"]):
           await exec("pdftotext",["-raw",path,"-"]);
         const flat=text.replace(/<[^>]+>/g," ").replace(/\s+/g," ");
-        assert.ok(flat.includes(f.parties.business)&&flat.includes(f.parties.customer));
-        assert.ok(flat.includes(expected),"Private export lost the actual source-case subtotal");
+        assert.ok(readerContainsText(flat,f.parties.business)&&readerContainsText(flat,f.parties.customer),
+          "Private export lost a party's non-whitespace characters");
+        assert.ok(readerContainsText(flat,expected),"Private export lost the actual source-case subtotal");
         files.push({format,bytes:file.bytes.length,checksum:createHash("sha256").update(file.bytes).digest("hex"),
-          authorisedDownloadPassed:true,readerContentPassed:true});
+          authorisedDownloadPassed:true,readerContentPassed:true,readerWhitespaceNormalised:true});
       }
       results.push({caseID:fixture.caseID,caseHash:hashAI(fixture),status:"pass",previewId,previewStatus:preview.status,
         missingFields:preview.missingFields,promptVersion:stored.promptVersion,reusedExactPreview:!!old,
