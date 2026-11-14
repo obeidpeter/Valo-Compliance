@@ -46,6 +46,11 @@ const businessNameEvidence={
   hash:"8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",result:"pass" as const,
 };
 const groups = [
+  {ids:["SEC-003","SEC-007","NFR-009","OPS-007"],
+    paths:["artifacts/api-server/src/app.ts","artifacts/api-server/src/lib/request-complexity.test.ts",
+      "artifacts/api-server/src/scripts/parser-regression-checkpoint.ts"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/parser-regression.json",
+      hash:"882a261cf412fdbccc67f6fa9f24fc694f1095348e907cbeab5f3f944de08960",result:"pass" as const}},
   {ids:["DOC-001","EDT-002","EDT-006","ADM-005"],
     paths:["artifacts/api-server/src/editorial/original-content-adapter.ts",
       "artifacts/api-server/src/editorial/original-content-adapter.test.ts",

@@ -1,0 +1,47 @@
+{
+  "executedAt": "2026-11-14T03:51:09.668Z",
+  "scope": "Synthetic development process, dependency graph and repository generator configuration; no production exploit or release acceptance",
+  "advisory": "https://github.com/expressjs/body-parser/security/advisories/GHSA-27r3-jxmh-p828",
+  "express": "5.3.0",
+  "bodyParser": "2.4.0",
+  "runtime": {
+    "node": "v24.22.1",
+    "builtinUndici": "7.30.1"
+  },
+  "tests": {
+    "tests": 15,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "tapHash": "d9f4933e75aaad18adf026d1278edd0901cbfd7336dedfea0a342cd7ba9d9f83"
+  },
+  "controls": [
+    "Compressed JSON rejected before decompression",
+    "API health and IPC liveness checked after every hostile/error case",
+    "Normal uncompressed JSON reaches authentication and is denied exactly 401 without identity",
+    "128 KiB, structural limits and malformed-JSON behavior retained"
+  ],
+  "undici": {
+    "observedApiProductionDependencyPath": null,
+    "generatorDependencyPath": "Legend: production dependency, optional only, dev only\n\n@workspace/api-spec@0.0.0 /home/runner/workspace/lib/api-spec (PRIVATE)\n\ndevDependencies:\norval 8.47.0\n├─┬ @scalar/json-magic 0.16.1\n│ └── undici 7.30.1\n└─┬ @scalar/openapi-parser 0.29.22\n  └─┬ @scalar/json-magic 0.19.1\n    └── undici 8.12.3\n",
+    "generatorUsesLocalRepositorySpec": true,
+    "generatorConfig": "lib/api-spec/orval.config.ts",
+    "generatorCodegenRepeatedInThisReport": false,
+    "productionFilesystemInventoryPerformed": false,
+    "productionExploitObserved": false,
+    "limitations": "Logical dependency/import paths are not proof that development tooling is absent from a deployed filesystem. Node built-in fetch is separately inventoried, not inferred from npm dependencies."
+  },
+  "sourceHashes": {
+    "artifacts/api-server/src/app.ts": "25a3e37475ae7824fbb49e9d1c88221b2bbae149c49312a31ff48b579a86978f",
+    "artifacts/api-server/src/lib/request-complexity.test.ts": "b0e92265d029e45e99c3d361d311bfb726c871994cf14b49593ca37349abcd34",
+    "artifacts/api-server/src/scripts/request-budget-child.ts": "29b35d35536eab7ae54edbc9a3d080acff3ba93a86bc7ffc02f4a29fc753cb58",
+    "artifacts/api-server/src/scripts/parser-regression-checkpoint.ts": "9f70e8aebe7ddb2eb1266d414cb774a588136289bbdcfc37472902558caee929",
+    "lib/api-spec/package.json": "ceb13d7bba34db7cc16e36d5a823272ebdc1e75b1b8c19d8ecfd2be973c187a7",
+    "lib/api-spec/orval.config.ts": "c8c5abc36e3fcdd8963de8473007ff6d08027788ec780ced570a1e579df25539",
+    "pnpm-lock.yaml": "6619e71d2cd0fb76cc55c6d1610123a5a64fe83bd22055436b1468e6a039bde0"
+  },
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false,
+  "r1Accepted": false,
+  "r2Accepted": false
+}
