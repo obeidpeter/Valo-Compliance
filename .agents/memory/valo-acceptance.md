@@ -73,6 +73,14 @@ how the roadmap estimates must be interpreted.
 **How to apply:** Preserve the phase order and measured gates, but never turn the
 illustrative calendar or proposed staffing into committed dates, spend or approvals.
 
+Synchronize independently verifiable substantive code checkpoints as vertical
+customer journeys become usable, rather than waiting for the entire project.
+
+**Why:** The user explicitly requested incremental, reviewable implementation.
+
+**How to apply:** Preserve normal feature-branch history, actual execution evidence
+and the existing draft pull request; never treat synchronization as acceptance.
+
 Do not re-request the original source documents or call them missing before
 checking their recorded repository branch. Specification transfers add to the
 same build; they do not restart it. Continue actual P0 customer/editorial

@@ -4,8 +4,8 @@ import { BlockList } from "node:net";
 import { allSourceLeads } from "@workspace/valo-core";
 export const MAX_SOURCE_BYTES=8*1024*1024;
 export const MAX_INSTRUMENT_BYTES=32*1024*1024;
-/** Only the two identified authoritative PDFs receive the larger bounded ingestion profile. */
-export const sourceBodyLimit=(id:string)=>id==="S02"||id==="SV-010"?MAX_INSTRUMENT_BYTES:MAX_SOURCE_BYTES;
+/** Larger ingestion is confined to explicitly identified authoritative instruments. */
+export const sourceBodyLimit=(id:string)=>["S02","SV-010","NIPC-BFA-2022","NCC-COPYRIGHT"].includes(id)?MAX_INSTRUMENT_BYTES:MAX_SOURCE_BYTES;
 export class SourceFailure extends Error {
   constructor(public code:string){super(code);}
 }

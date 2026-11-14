@@ -12,7 +12,9 @@ test("coordinating mappings and resolutions do not become implementation or cont
   assert.equal(r.repositoryCorrection.remoteSourceSyncConfirmed,false);
 });
 test("additional source leads deduplicate URLs without changing the 24 original IDs",()=>{
-  assert.equal(finalSourceContext.references.length,24);assert.equal(allSourceLeads.length,28);
-  assert.equal(new Set(allSourceLeads.map(s=>s.url)).size,28);
+  assert.equal(finalSourceContext.references.length,24);assert.equal(allSourceLeads.length,31);
+  assert.equal(new Set(allSourceLeads.map(s=>s.url)).size,31);
+  for(const id of ["CAC-BN-PROCESS","NIPC-BFA-2022","NCC-COPYRIGHT"])
+    assert.equal(allSourceLeads.filter(s=>s.id===id).length,1);
   assert.equal(allSourceLeads.find(s=>s.id==="SV-010")?.url,"https://icrp.cac.gov.ng/assets/docs/CAMA-NOTE%20FINAL-FULL-VERSION.pdf");
 });

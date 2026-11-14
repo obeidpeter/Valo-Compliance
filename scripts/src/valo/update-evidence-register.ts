@@ -3,7 +3,7 @@ import { readFile,writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { requirements,requirementStatus } from "@workspace/valo-core";
+import { requirements,requirementStatus,workItemsForRequirement } from "@workspace/valo-core";
 
 const revision=process.argv[2]??execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim();
 assert.match(revision,/^[a-f0-9]{40}$/);
@@ -28,6 +28,7 @@ for(const row of register.requirements){
   row.evidence_code_revision=revision;
   row.acceptance_status=requirementStatus(implemented);
   row.remaining_acceptance_blockers=implemented.blockers;
+  row.work_items=workItemsForRequirement(row.id);
 }
 register.specification_baseline_status??=register.status;
 register.status="partial_development_not_release_accepted";

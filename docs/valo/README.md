@@ -1,6 +1,7 @@
 # Current operational publication refinement
 
-Current implementation status is in [the export recovery and accessibility checkpoint](export-recovery-accessibility-checkpoint.md).
+Current source preparation is in [the business-name evidence checkpoint](business-name-evidence-checkpoint.md).
+The [export recovery and accessibility checkpoint](export-recovery-accessibility-checkpoint.md) records the preceding feature verification.
 The [customer-experience checkpoint](customer-experience-checkpoint.md) records its earlier source and results.
 The [preceding security checkpoint](security-checkpoint.md) remains retained evidence, not a claim that all release gates passed.
 Older dated sections and incident records below describe their original

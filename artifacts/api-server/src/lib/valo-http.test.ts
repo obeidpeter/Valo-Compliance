@@ -15,6 +15,11 @@ test("running development HTTP API fails closed and reports factual release stat
     const body=GetSourceEvidenceResponse.parse(raw);
     assert.deepEqual(body.references.filter(r=>/^S\d{2}$/.test(r.id)).map(r=>r.id),Array.from({length:24},(_,i)=>`S${String(i+1).padStart(2,"0")}`));
     assert.equal(body.references.filter(r=>r.id.startsWith("SV-")).length,4);
+    for(const id of ["CAC-BN-PROCESS","NIPC-BFA-2022","NCC-COPYRIGHT"]){
+      const source=body.references.find(r=>r.id===id);
+      assert.ok(source&&source.status==="retrieved_unreviewed"&&source.rawStored&&source.textStored);
+      assert.match(source.textChecksum??"",/^[a-f0-9]{64}$/);
+    }
     assert.match(body.handoverSummary,/871899483093363ec69d765e2d16fa1d88e0836e/);
     assert.match(body.handoverSummary,/local application branch/);
     assert.match(body.handoverSummary,/not application-source upload/);
@@ -109,7 +114,7 @@ test("running development HTTP API fails closed and reports factual release stat
     assert.ok(body.rows.every(r => r.status !== "published"));
     assert.deepEqual(body.rows.find(r => r.id === "REG-G01")!.relatedIds, ["REG-D01"]);
   });
-  await t.test("the original UAT and gate register does not claim execution or sign-offs", async () => {
+  await t.test("the UAT and gate register distinguishes partial execution from acceptance", async () => {
     const response = await fetch(`${base}/api/development/proof`);
     assert.equal(response.status, 200);
     const body = await response.json() as {
@@ -123,7 +128,7 @@ test("running development HTTP API fails closed and reports factual release stat
     assert.deepEqual(body.gates.map(g => g.id), ["G0","G1","G2","G3","G4","G5"]);
     assert.ok(body.gates.every(g => g.status !== "accepted" && g.approvers));
     assert.ok(body.uatPackages.every(p => !p.accepted && p.requiredEvidence));
-    assert.ok(body.suites.every(s => s.executedCases === 0 && !s.accepted));
+    assert.ok(body.suites.every(s => Number.isInteger(s.executedCases) && s.executedCases >= 0 && !s.accepted));
     assert.equal(body.r1Accepted || body.r2Unlocked || body.publicLaunchEnabled, false);
     assert.ok(body.releaseControls.some(c => c.text.includes("cannot waive failed mandatory evidence gates")));
   });

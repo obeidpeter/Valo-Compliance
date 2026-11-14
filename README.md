@@ -1,6 +1,9 @@
 # Valo Compliance — Valo Platform
 
 Latest implementation checkpoint:
+[narrow CAC business-name source preparation](docs/valo/business-name-evidence-checkpoint.md).
+
+Previous implementation checkpoint:
 [export crash recovery, correct pagination and accessible/mobile editing](docs/valo/export-recovery-accessibility-checkpoint.md).
 
 Previous customer routes, signed-out access support, privacy requests and staff-read checkpoint:
