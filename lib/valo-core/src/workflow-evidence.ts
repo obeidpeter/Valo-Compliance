@@ -35,7 +35,7 @@ const customerSecurity={
 };
 const customerExperience={
   kind:"test" as const,path:"docs/valo/evidence/customer-experience-checkpoint.json",
-  hash:"0f5faf6a00a2412ea753753b11492865aceb17d42837fb60651efbf45fbc4999",result:"pass" as const,
+  hash:"e98ffe46ae88f05f6bb8aa3d253170e0f81e7e421a7591b7667d32d7f4ea81d7",result:"pass" as const,
 };
 const groups = [
   {ids:["WEB-001","WEB-002","IAM-001","PRO-002","DOC-002","DOC-003","DOC-004","DOC-005",

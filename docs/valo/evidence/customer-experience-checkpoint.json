@@ -64,27 +64,27 @@
       "sha256": "663c1941e66762b3cceec53111b9ce4a307a9d7c5be404544b285b6c1181fc2f"
     },
     {
-      "path": "docs/valo/evidence/customer-experience/types-final.log",
+      "path": "docs/valo/evidence/customer-experience/types-final.txt",
       "sha256": "ba0130e4c1ce10c9b900b86bd79da6c401689a632c20277ec7a959204618f331"
     },
     {
-      "path": "docs/valo/evidence/customer-experience/foundation.log",
+      "path": "docs/valo/evidence/customer-experience/foundation.txt",
       "sha256": "8166f868a625dc9f34a82d4c8db03d693730fedbf5d4fe5fc7c0bd2fd774730b"
     },
     {
-      "path": "docs/valo/evidence/customer-experience/units.log",
+      "path": "docs/valo/evidence/customer-experience/units.txt",
       "sha256": "90c5c1ed5369368e8539360351e746f2ef114aaed172779a34cbbcf4d7cab41d"
     },
     {
-      "path": "docs/valo/evidence/customer-experience/database-final.log",
+      "path": "docs/valo/evidence/customer-experience/database-final.txt",
       "sha256": "da05c7c44994aa8b4a67e34ebaf6244cd02839ac11efffa583ace8dbcb04d2f2"
     },
     {
-      "path": "docs/valo/evidence/customer-experience/publication-regression.log",
+      "path": "docs/valo/evidence/customer-experience/publication-regression.txt",
       "sha256": "358ae326fff486eb577704f87f8c5ffa944273979ada465ea362d172222c4c0b"
     },
     {
-      "path": "docs/valo/evidence/customer-experience/migration.log",
+      "path": "docs/valo/evidence/customer-experience/migration.txt",
       "sha256": "bfc76117151965e727a761a4ed37873bda1a3d7584cf658531d9f069091667ef"
     }
   ],

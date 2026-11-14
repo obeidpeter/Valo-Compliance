@@ -1,0 +1,25 @@
+
+> @workspace/api-server@0.0.0 test:valo-publication /home/runner/workspace/artifacts/api-server
+> tsx --test src/editorial/operational-publication.integration.test.ts
+
+▶ actual development publication boundaries (no synthetic success substituted for release)
+  ✔ retained exact owner-scoped policy (3.673617ms)
+  ✔ actual held reviews do not become a released record (56.98749ms)
+  ✔ bounded publisher refuses the actual failed candidate (6.530127ms)
+  ✔ drafter cannot change publication state (7.013878ms)
+  ✔ publisher database role cannot read private customer drafts (4.38696ms)
+  ✔ publisher cannot change policy (4.913895ms)
+  ✔ exact version payload is immutable even on the development owner connection (10.290404ms)
+  ✔ drafter cannot insert directly into published state (3.771492ms)
+  ✔ failed candidate has no new master download (5.752631ms)
+  ✔ withdrawal cannot turn a held candidate into fabricated historical publication (4.460728ms)
+  ✔ source policy is append-only (2.966431ms)
+✔ actual development publication boundaries (no synthetic success substituted for release) (155.56071ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2667.014696

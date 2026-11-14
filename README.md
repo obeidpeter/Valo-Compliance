@@ -2,6 +2,7 @@
 
 Current customer routes, signed-out access support, privacy requests and staff-read checkpoint:
 [working behavior, executed checks and remaining limitations](docs/valo/customer-experience-checkpoint.md).
+The repository remains private. Older checkpoint and incident sections are historical; the linked current checkpoint is not a production-readiness declaration.
 
 Prior security/correctness work:
 [trust boundaries, durable write caps, revocation races, live counts and rights](docs/valo/security-checkpoint.md).
