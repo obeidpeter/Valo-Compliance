@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {randomUUID} from "node:crypto";
 import {readFile,writeFile,mkdir} from "node:fs/promises";
 import {resolve} from "node:path";
 import {desc,eq,sql} from "drizzle-orm";
@@ -15,6 +16,8 @@ import {assertBlindReviewInputs} from "../editorial/operational-review-contract"
 import {renderDocument} from "../lib/valo-render";
 import {inspectOperationalExports} from "../editorial/operational-export-inspection";
 import {dispatchEditorialExternalAction} from "../editorial/external-action-boundary";
+import {reviewedBaselineEvidence,publicationHoldTransition,editorialDeniedActions,EditorialExternalActionDenied,
+  verifyCurrentEditorialDenials,type EditorialDenialReceipt,type EditorialDenialAuditRow} from "../editorial/editorial-evaluation-evidence";
 type Case={id:string;scenario:string;inputMutation:string;requiresProviderRun:boolean};
 class Blocked extends Error{}
 async function main(){
@@ -23,14 +26,16 @@ async function main(){
   await mkdir(out,{recursive:true});const bytes=await readFile(resolve(root,"docs/evaluation-candidates/editorial.json"));
   const corpus=JSON.parse(bytes.toString()) as {cases:Case[]};
   assert.equal(corpus.cases.length,60);
+  const evaluationRunId=randomUUID();
   const[row]=await db.select().from(valoContentVersions).orderBy(desc(valoContentVersions.createdAt)).limit(1);
   const parsed=row?publicationSchema.safeParse(row.bundle):null;
   const original=parsed?.success?parsed.data:null;
   const results:Record<string,unknown>[]=[];
   const need=()=>{if(!original)throw new Blocked("retained_candidate_bundle_unavailable");return structuredClone(original);};
   const needReviewed=async()=>{
-    for(const version of[3,5]){
-      const bytes=await readFile(resolve(root,`docs/valo/evidence/operational-publication-v${version}.json`));
+    for(const version of[5,3]){
+      const sourcePath=`docs/valo/evidence/operational-publication-v${version}.json`;
+      const bytes=await readFile(resolve(root,sourcePath));
       const saved=JSON.parse(bytes.toString()) as {id:string;candidateHash:string};
       const[retained]=await db.select().from(valoContentVersions).where(eq(valoContentVersions.id,saved.id));
       if(!retained||retained.candidateHash!==saved.candidateHash)continue;
@@ -45,7 +50,9 @@ async function main(){
         const receipt=JSON.parse((await getPublicationArtifact(ref)).toString());
         const linked=b.reviews.find(r=>r.role===receipt.role),e=receipt.serverEvidence;
         if(!linked||!e||!receipt.model||receipt.receivedOtherVerdict||
-          receipt.providerResponseId!==linked.runId||e.candidateHash!==saved.candidateHash||
+          receipt.providerResponseId!==linked.runId||receipt.model!==linked.model||receipt.candidateHash!==saved.candidateHash||
+          receipt.output?.verdict!==linked.verdict||digest(receipt.output?.findings??null)!==digest(linked.findings)||
+          e.candidateHash!==saved.candidateHash||
           e.sourceCheckedAt!==b.candidate.sourceCheckDate||e.provenanceArtifactHash!==a.provenance.hash||
           e.rightsArtifactHash!==a.rights.hash||e.exportReportArtifactHash!==a.exportReport.hash){
           boundAll=false;break;
@@ -53,7 +60,7 @@ async function main(){
         ids.add(receipt.providerResponseId);
       }
       if(!boundAll||ids.size!==2)continue;
-      return{bundle:structuredClone(b),retainedVersion:version,evidenceHash:sha256(bytes)};
+      return reviewedBaselineEvidence(retained,bytes,sourcePath);
     }
     throw new Blocked("exact_fresh_retained_independent_review_binding_unavailable");
   };
@@ -64,8 +71,10 @@ async function main(){
       mutatedCandidateHash:candidateDigest(b.candidate),bundleHash:digest(b),originalBaselineEligible:original?evaluatePublication(original).decision==="eligible":false};
   };
   for(const c of corpus.cases){
+    const selectsReviewedBaseline=["EVAL-EDP-C038","EVAL-EDP-C039"].includes(c.id);
     const record:Record<string,unknown>={caseID:c.id,caseHash:digest(c),scenario:c.scenario,requiresProviderRun:c.requiresProviderRun,
-      status:"blocked",actualProviderCalls:0,baselineId:row?.id??null,baselineBundleHash:original?digest(original):null,
+      status:"blocked",actualProviderCalls:0,baselineId:selectsReviewedBaseline?null:row?.id??null,
+      baselineBundleHash:selectsReviewedBaseline?null:original?digest(original):null,
       originalCaseMutation:c.inputMutation,formalCaseAccepted:false};
     results.push(record);
     if(c.requiresProviderRun){record.reason="genuine_case_bound_provider_roles_sources_rights_and_exports_required";continue;}
@@ -95,13 +104,13 @@ async function main(){
         case"EVAL-EDP-C038":{
           assert.throws(()=>assertBlindReviewInputs({otherReview:{verdict:"pass",reason:"Leaked challenge verdict"}}),
             /REVIEW_INPUT_CONTAINS_OTHER_VERDICT/);
-          const retained=await needReviewed(),b=retained.bundle;
-          b.reviews[0]!.receivedOtherVerdict=true;observations={...hold(b,/review_not_blind/),
-            retainedVersion:retained.retainedVersion,reviewEvidenceHash:retained.evidenceHash};break;}
+          const retained=await needReviewed();Object.assign(record,retained.evidence);
+          observations={...retained.evidence,...publicationHoldTransition(retained.bundle,
+            b=>{b.reviews[0]!.receivedOtherVerdict=true;},/review_not_blind/)};break;}
         case"EVAL-EDP-C039":{
-          const retained=await needReviewed(),b=retained.bundle;
-          b.reviews[0]!.runId=b.draftRun.runId;observations={...hold(b,/runs_not_separate/),
-            retainedVersion:retained.retainedVersion,reviewEvidenceHash:retained.evidenceHash};break;}
+          const retained=await needReviewed();Object.assign(record,retained.evidence);
+          observations={...retained.evidence,...publicationHoldTransition(retained.bundle,
+            b=>{b.reviews[0]!.runId=b.draftRun.runId;},/runs_not_separate/)};break;}
         case"EVAL-EDP-C042":{
           const b=need();const check=b.mechanicalChecks.find(x=>x.name==="arithmetic");
           if(!check)throw new Blocked("actual_arithmetic_check_unavailable");check.result="fail";
@@ -146,12 +155,21 @@ async function main(){
             privateRowsRead:0,financialRowsChanged:0,externalActions:0};
           if(c.id==="EVAL-EDP-C054"){
             if(!row)throw new Blocked("retained_candidate_needed_for_durable_action_denial");
-            for(const action of["price","payment","government_filing"] as const)
-              await assert.rejects(()=>dispatchEditorialExternalAction(row.id,action),/EDITORIAL_EXTERNAL_ACTION_FORBIDDEN/);
-            const logged=await db.execute(sql`SELECT count(*)::int n FROM valo_publication_audit
-              WHERE version_id=${row.id}::uuid AND action='external_action_denied' AND actor='bounded-publisher'`);
-            assert.ok(Number(logged.rows[0]?.n)>=3);
-            observations={...observations as object,filingDispatch:"denied_and_durably_logged",externalCalls:0};
+            const receipts:EditorialDenialReceipt[]=[];
+            for(const action of editorialDeniedActions){
+              try{await dispatchEditorialExternalAction(row.id,action,evaluationRunId);}
+              catch(error){
+                if(!(error instanceof EditorialExternalActionDenied))throw error;
+                assert.equal(error.denial.requestedAction,action);receipts.push(error.denial);
+              }
+            }
+            assert.equal(receipts.length,3,"Expected three committed current-run denial receipts");
+            const logged=await db.execute(sql`SELECT id,version_id,action,actor,reason FROM valo_publication_audit
+              WHERE id IN (${sql.join(receipts.map(r=>sql`${r.auditId}::uuid`),sql`, `)})`);
+            const denials=verifyCurrentEditorialDenials(row.id,evaluationRunId,receipts,
+              logged.rows as EditorialDenialAuditRow[]);
+            observations={...observations as object,evaluationRunId,denials,
+              filingDispatch:"denied_and_durably_logged",externalCalls:0};
           }
           break;}
         case"EVAL-EDP-C046":case"EVAL-EDP-C047":case"EVAL-EDP-C048":case"EVAL-EDP-C049":
@@ -198,7 +216,7 @@ async function main(){
     }catch(e){record.status=e instanceof Blocked?"blocked":"fail";
       record.reason=e instanceof Blocked?e.message:e instanceof assert.AssertionError?e.message.split("\n")[0]:"Control failed; no target success inferred";}
   }
-  const report={suite:"authored-editorial60",corpusHash:sha256(bytes),executedAt:new Date().toISOString(),results,
+  const report={suite:"authored-editorial60",evaluationRunId,corpusHash:sha256(bytes),executedAt:new Date().toISOString(),results,
     candidateCases:60,deterministicCases:results.filter(r=>!r.requiresProviderRun).length,
     providerRequiredCases:results.filter(r=>r.requiresProviderRun).length,
     controlsPassed:results.filter(r=>r.status==="control_pass").length,failed:results.filter(r=>r.status==="fail").length,
@@ -210,3 +228,4 @@ async function main(){
   if(report.failed)process.exitCode=1;
 }
 main().catch(()=>{console.error("Editorial source runner stopped; no success inferred.");process.exitCode=1;}).finally(()=>pool.end());
+
