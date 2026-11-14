@@ -1,0 +1,28 @@
+[
+  {
+    "id": "ntaa_nass_2025",
+    "url": "https://nass.gov.ng/documents/download/11250",
+    "finalURL": "https://nass.gov.ng/documents/download/11250",
+    "httpStatus": 200,
+    "retrievedAt": "2026-11-14T08:40:31.890360+00:00",
+    "bytes": 291016,
+    "rawSHA256": "eb3ea717052f48492cc6441ad23f9e7ac2ad4782395db1c391580cc1adef20e2",
+    "textSHA256": "b757435a53c2a865103da01db5da2dafc6eb6893e632791f8d22b52f3009707f",
+    "rawPath": "analysis/registration_tax_sources/ntaa_nass_2025.pdf",
+    "textPath": "analysis/registration_tax_sources/ntaa_nass_2025.txt",
+    "textExtraction": "pdftotext -layout"
+  },
+  {
+    "id": "ntaa_nrs_2025",
+    "url": "https://www.nrs.gov.ng/uploads/NIGERIA_TAX_ADMINISTRATION_ACT_2025_8c945071a7.pdf",
+    "finalURL": "https://www.nrs.gov.ng/uploads/NIGERIA_TAX_ADMINISTRATION_ACT_2025_8c945071a7.pdf",
+    "httpStatus": 200,
+    "retrievedAt": "2026-11-14T08:40:58.697095+00:00",
+    "bytes": 27677259,
+    "rawSHA256": "956092e5ec5aad8e8b9cda47d6dbb6bde4dacf1000e59df6fe73a5fc12abc403",
+    "textSHA256": "20909dd96a5c2f91d7f6287f1def824263870db5167d3f6c0b54fe8e5e68beaa",
+    "rawPath": "analysis/registration_tax_sources/ntaa_nrs_2025.pdf",
+    "textPath": "analysis/registration_tax_sources/ntaa_nrs_2025.txt",
+    "textExtraction": "pdftotext -layout"
+  }
+]
