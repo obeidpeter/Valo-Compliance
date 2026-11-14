@@ -1,6 +1,28 @@
 # Valo Compliance — Valo Platform
 
-## Latest development checkpoint — source challenges retained, not accepted rules
+## Latest development checkpoint — export and account boundaries
+
+Development exports, recovery, queue construction and worker dispatch now require
+explicit development and no nonempty deployment marker. Account/session changes
+abort old requests and clear copied forms, caches and toasts; native cross-tab
+session-end messages and current API session loss also clear the private subtree.
+Ordinary same-account profile navigation offers save/discard/stay.
+
+Executed: **45 runtime-boundary controls**, **13 controlled browser checks**,
+**62 development database tests**, **10 real development private-export tests**,
+API **172 pass / 1 skip**, and workspace typecheck. The browser used actual
+components with controlled identities/API responses, not new real Clerk
+two-account acceptance. Positive exports used real PostgreSQL, App Storage,
+DOCX/PDF rendering and worker restart; this is not production recovery proof.
+The 127-row traceability refresh and its engineering suite also passed **166
+checks**, preserving exact source requirements and unaccepted release gates.
+
+See [the checkpoint and limitations](docs/valo/runtime-boundary-security-checkpoint.md)
+and [exact source/log evidence](docs/valo/evidence/runtime-boundary-security-checkpoint.json).
+R1/R2 remain incomplete and unaccepted. No spending, quota increase, content
+release, public launch or live payments was enabled.
+
+## Source challenges retained, not accepted rules
 
 The original 80-case checker corpus is unchanged. The new exact-source-bound
 run executed 80: **72 matched authored labels, eight disagreed**. All failures

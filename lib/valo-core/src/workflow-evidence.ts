@@ -188,6 +188,12 @@ const groups = [
     paths:["artifacts/api-server/src/editorial/citation-selection.ts","artifacts/api-server/src/editorial/pipeline.ts",
       "artifacts/api-server/src/editorial/model-adapter.ts"],record:editorialHold},
 ];
+// Exact executed controls on development code. Not a new managed-identity
+// acceptance run, deployed-worker proof, or independent security approval.
+const runtimeBoundaries={
+  kind:"test" as const,path:"docs/valo/evidence/runtime-boundary-security-checkpoint.json",
+  hash:"9de691b87e2b6890e79faac16d6bb51a099d85a0f4a160afbfc881d0a8309ac6",result:"pass" as const,
+};
 export function partialWorkflowEvidence(id:string){
   // Disabled preparation and synthetic enabled-ledger controls are not live
   // provider token/cost proof or acceptance of the whole requirement.
@@ -268,7 +274,15 @@ export function partialWorkflowEvidence(id:string){
         "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
         "artifacts/api-server/src/editorial/publication-publisher.ts"],record:exactSourcePublication},
   ];
-  const matching=[...groups,...currentValidation].filter(g=>g.ids.includes(id));
+  const matching=[...groups,...currentValidation,{
+    ids:["IAM-001","IAM-002","IAM-003","PRO-001","PRO-002","EDT-004","EDT-006","EDT-007","EDT-008",
+      "WRK-001","OPS-002","OPS-007","SEC-001","SEC-006","NFR-007","NFR-009"],
+    paths:["artifacts/api-server/src/lib/valo-development-runtime.ts","artifacts/api-server/src/lib/valo-export-queue.ts",
+      "artifacts/api-server/src/lib/valo-export-recovery.ts","artifacts/api-server/src/workers/export-worker.ts",
+      "lib/api-client-react/src/request-scope.ts","lib/api-client-react/src/custom-fetch.ts",
+      "artifacts/valo/src/components/account-state-boundary.tsx","artifacts/valo/src/screens/profile.tsx",
+      "artifacts/api-server/src/scripts/account-switch-browser.ts"],record:runtimeBoundaries,
+  }].filter(g=>g.ids.includes(id));
   return{paths:[...new Set(matching.flatMap(g=>g.paths))],
     records:[...new Map(matching.map(g=>[g.record.path,g.record])).values()]};
 }

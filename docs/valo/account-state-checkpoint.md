@@ -1,5 +1,12 @@
 # Account transition privacy regression
 
+**Historical initial checkpoint.** The later
+[runtime-boundary checkpoint](runtime-boundary-security-checkpoint.md) adds
+request cancellation, cross-tab session-end handling, scoped notifications,
+profile save/discard navigation and 13 executed controlled browser checks.
+The original evidence and limitations below are retained, not presented as the
+latest implementation inventory.
+
 Application implementation: `92fadef424e625b31840441b5bde157c6c480134`.
 This follows the independent source review of `3596655`; that review did not
 review these new changes. **This is not independent security acceptance.**

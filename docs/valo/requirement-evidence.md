@@ -1,5 +1,9 @@
 # Partial implementation-to-test links
 
+The [runtime-boundary checkpoint](runtime-boundary-security-checkpoint.md) adds
+exact-source-bound development export and account-state regressions. These are
+partial links in the live 127-row register, not whole-requirement acceptance.
+
 **Historical initial P0 summary below.** Its remainder column is not the current
 completion inventory. Use the live 127-row `implementation-evidence.json`
 register and the latest README checkpoint links, including the refund lifecycle
