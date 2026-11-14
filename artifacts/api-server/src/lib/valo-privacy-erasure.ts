@@ -1,102 +1,166 @@
 import {randomUUID} from "node:crypto";
-import {and,eq,sql} from "drizzle-orm";
-import {db,valoPrivacyTombstones,valoWorkspaces,valoMemberships,valoExportJobs,
-  valoExportObjects,valoFileAssets} from "@workspace/db";
+import {and,eq,sql,lte,asc} from "drizzle-orm";
+import {db,pool,valoPrivacyTombstones,valoPrivacyEvents,valoWorkspaces,valoMemberships,valoExportJobs,
+  valoExportObjects} from "@workspace/db";
 import {ActOnStaffPrivacyCaseBody} from "@workspace/api-zod";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import {deletePrivateFile} from "./valo-private-storage";
-import {quotaSubjectHash} from "./valo-quota";
 import {privacyKey,privacySigner} from "./valo-privacy-keys";
+import {quotaSubjectHash} from "./valo-quota";
+import {assertErasureObjectScope,inventoryHasher,signErasureSeal,verifyErasureSeal,erasureSealHash,
+  assertSealedInventory,startReplay,signReplayState,verifyReplayState,type ErasureSeal,type ReplayState} from "./valo-erasure-seal";
 import {ValoProblem} from "./valo-problem";
 import {assertPrivacyVersion} from "./valo-privacy-state";
-import {readPrivacyCase,requirePrivacyStaff,privacyChange,privacyDetail,type PrivacyStaffActor} from "./valo-privacy";
+import {readPrivacyCase,requirePrivacyStaff,privacyChange,privacyDetail,type PrivacyStaffActor,type PrivacyRow} from "./valo-privacy";
 
-// Static reviewed order: remove FK children before parents. Financial records,
-// support/privacy requests and security/audit evidence are explicit exclusions.
-// These exclusions are pending retention review, NOT a claim of statutory holds.
 const phases=[
   "valo_reminder_outbox","valo_tasks","valo_assessments","valo_ai_drafts",
   "valo_export_requests","valo_file_assets","valo_export_objects","valo_export_jobs",
   "valo_document_revisions","valo_documents","valo_profile_versions","valo_reminder_preferences",
 ] as const;
-const scope="development-application-content-erasure-v1";
+const scope="development-application-content-erasure-v2";
 type Input=ReturnType<typeof ActOnStaffPrivacyCaseBody.parse>;
 type DeleteObject=(key:string)=>Promise<void>;
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
-function assertObjectScope(workspaceId:string,key:string){
-  if(!key.startsWith(`valo/development/${workspaceId}/`)||
-    !/^valo\/development\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.(docx|pdf)$/.test(key))
-    throw new ValoProblem(409,"Private-object deletion scope could not be verified.");
+type Tombstone=typeof valoPrivacyTombstones.$inferSelect;
+
+/** Session advisory lock prevents two erasure/replay runners owning one case.
+ * Hold/revoke operations do not take this lock and remain available during I/O.
+ * Process/connection death releases it; every new dispatch still rechecks case
+ * authority. Object deletion is idempotent if an old request later completes. */
+async function withErasureLock<T>(caseId:string,fn:()=>Promise<T>){
+  assertDevelopmentRuntime();const c=await pool.connect();
+  try{
+    const r=await c.query("SELECT pg_try_advisory_lock(hashtextextended($1,217)) AS held",[caseId]);
+    if(!r.rows[0]?.held)throw new ValoProblem(409,"This erasure/recovery batch is already running. Reload its recorded progress.");
+    return await fn();
+  }finally{
+    await c.query("SELECT pg_advisory_unlock(hashtextextended($1,217))",[caseId]).catch(()=>{});
+    c.release();
+  }
+}
+async function sealOf(tx:Tx,t:Tombstone){
+  const version=(t.erasureSeal as {keyVersion?:unknown}|null)?.keyVersion;
+  if(typeof version!=="string")throw Error("ERASURE_SEAL_INVALID");
+  return verifyErasureSeal(t.erasureSeal,{caseId:t.caseId,workspaceId:t.workspaceId,
+    identityHash:t.identityHash,identityKeyVersion:t.keyVersion},await privacyKey(tx,version));
+}
+async function progressOf(tx:Tx,raw:unknown,seal:ErasureSeal){
+  const version=(raw as {keyVersion?:unknown}|null)?.keyVersion;
+  if(typeof version!=="string")throw Error("ERASURE_REPLAY_STATE_INVALID");
+  return verifyReplayState(raw,seal,phases.length,await privacyKey(tx,version));
+}
+async function signSeal(tx:Tx,input:Omit<ErasureSeal,"keyVersion"|"mac">){
+  return signErasureSeal(input,await privacySigner(tx));
+}
+async function readTombstone(tx:Tx,caseId:string){
+  const[t]=await tx.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,caseId)).for("update");
+  if(!t)throw new ValoProblem(404,"A retained signed deletion journal is required.");
+  return {t,seal:await sealOf(tx,t)};
+}
+/** Full exact inventory verification uses bounded memory. It precedes object
+ * dispatch, and the DB trigger forbids key insert/update/delete after sealing. */
+async function inventory(tx:Tx,t:Tombstone){
+  const h=inventoryHasher(t.workspaceId);let cursor="";
+  for(;;){
+    const page=await tx.execute<{workspace_id:string;object_key:string}>(sql`SELECT workspace_id,object_key
+      FROM valo_privacy_erasure_objects WHERE case_id=${t.caseId}::uuid AND object_key>${cursor}
+      ORDER BY object_key LIMIT 250`);
+    for(const row of page.rows){
+      if(row.workspace_id!==t.workspaceId)throw Error("ERASURE_INVENTORY_WORKSPACE_CHANGED");
+      h.add(row.object_key);cursor=row.object_key;
+    }
+    if(page.rows.length<250)return h.finish();
+  }
+}
+async function verifyInventory(tx:Tx,t:Tombstone,seal:ErasureSeal){
+  if(!seal.inventoryHash)throw new ValoProblem(409,"The exact erasure inventory has not been sealed.");
+  const actual=await inventory(tx,t);
+  assertSealedInventory(seal,actual);
+}
+function assertProcessing(row:PrivacyRow,actor:PrivacyStaffActor,version?:number){
+  if(version!==undefined)assertPrivacyVersion(row.version,version);
+  if(row.kind!=="deletion"||!row.verifiedAt||row.assignedIdentityId!==actor.identityId)
+    throw new ValoProblem(403,"A verified deletion request assigned to this privacy operator is required.");
+  if(!["assigned","in_progress","failed","partially_fulfilled"].includes(row.status))
+    throw new ValoProblem(409,"The case is held or unavailable. Explicitly release its hold before processing.");
 }
 async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[number]){
-  if(section==="valo_ai_drafts"){
-    // Usage/cost/quota receipts must survive content deletion. Never turn an
-    // already incurred provider call into a free call by removing its ledger.
-    return tx.execute(sql`UPDATE valo_ai_drafts SET preview='{}'::jsonb,plan=NULL,
-      accepted_document_id=NULL,status='privacy_erased',updated_at=now()
-      WHERE ctid IN (SELECT ctid FROM valo_ai_drafts WHERE workspace_id=${workspaceId}::uuid
-      AND status<>'privacy_erased' LIMIT 100)`);
-  }
+  if(section==="valo_ai_drafts")return tx.execute(sql`UPDATE valo_ai_drafts SET preview='{}'::jsonb,plan=NULL,
+    accepted_document_id=NULL,status='privacy_erased',updated_at=now()
+    WHERE ctid IN (SELECT ctid FROM valo_ai_drafts WHERE workspace_id=${workspaceId}::uuid
+    AND status<>'privacy_erased' LIMIT 100)`);
   const table=sql.identifier(section);
   return tx.execute(sql`DELETE FROM ${table} WHERE ctid IN
     (SELECT ctid FROM ${table} WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
 }
-
-/** Development capability only. A verified assigned request plus explicit
- * acknowledgement is necessary. This does not enable production deletion or
- * assert that any provider has fulfilled an external erasure request. */
-export async function processPrivacyErasure(actor:PrivacyStaffActor,id:string,input:Input,
-  remove:DeleteObject=deletePrivateFile){
-  assertDevelopmentRuntime();
+async function recordObjectOutcome(caseId:string,workspaceId:string,key:string,deleted:boolean){
+  // An already-dispatched result remains true after a role revocation/hold.
+  // Recording it does not authorize the next deletion or alter case status.
+  const r=await db.execute(sql`UPDATE valo_privacy_erasure_objects SET status=${deleted?"deleted":"failed"},
+    attempts=attempts+1,updated_at=now() WHERE case_id=${caseId}::uuid
+    AND workspace_id=${workspaceId}::uuid AND object_key=${key}`);
+  if(r.rowCount!==1)throw Error("ERASURE_OUTCOME_JOURNAL_UNAVAILABLE");
+}
+export async function processPrivacyErasure(actor:PrivacyStaffActor,id:string,input:Input,remove:DeleteObject=deletePrivateFile){
+  return withErasureLock(id,()=>processErasure(actor,id,input,remove));
+}
+async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remove:DeleteObject){
   const start=await db.transaction(async tx=>{
-    await requirePrivacyStaff(tx,actor);
-    let row=await readPrivacyCase(tx,id);
-    assertPrivacyVersion(row.version,input.expectedVersion);
-    if(row.kind!=="deletion"||!row.verifiedAt||row.assignedIdentityId!==actor.identityId)
-      throw new ValoProblem(403,"A verified deletion request assigned to this privacy operator is required.");
-    if(input.acknowledgement!==true)throw new ValoProblem(422,"Explicitly acknowledge irreversible application-content erasure and the retained exclusions.");
-    if(!["assigned","in_progress","failed","partially_fulfilled"].includes(row.status))
-      throw new ValoProblem(409,"Resolve the recorded hold or request state before erasure.");
+    await requirePrivacyStaff(tx,actor);let row=await readPrivacyCase(tx,id);
+    assertProcessing(row,actor,input.expectedVersion);
+    if(input.acknowledgement!==true)throw new ValoProblem(422,"Explicitly acknowledge irreversible application-content erasure and retained exclusions.");
     const[w]=await tx.select().from(valoWorkspaces).where(eq(valoWorkspaces.id,row.workspaceId)).for("update");
-    if(!w||! /^(synthetic-|privacy-fixture-)/.test(w.ownerIdentityId))
-      throw new ValoProblem(409,"This development erasure capability accepts explicitly synthetic workspaces only. Production policy and provider deletion are not enabled.");
+    if(!w||!/^(synthetic-|privacy-fixture-)/.test(w.ownerIdentityId))
+      throw new ValoProblem(409,"Only explicitly synthetic development workspaces are eligible. Production/provider deletion is not enabled.");
     if(row.erasurePhase==="not_started"){
-      if(input.action!=="start_erasure")throw new ValoProblem(409,"Begin the explicitly acknowledged erasure first.");
-      const signer=await privacySigner(tx);
-      await tx.insert(valoPrivacyTombstones).values({id:randomUUID(),workspaceId:row.workspaceId,caseId:row.id,
-        identityHash:quotaSubjectHash(signer.key,"user",w.ownerIdentityId),keyVersion:signer.version,phase:scope});
-      // Revocations serialize against every membership-authorized commit.
+      if(input.action!=="start_erasure")throw new ValoProblem(409,"Begin the acknowledged erasure first.");
+      const signer=await privacySigner(tx),identityKeyVersion=signer.version,
+        identityHash=quotaSubjectHash(signer.key,"user",w.ownerIdentityId);
+      const erasureSeal=signErasureSeal({version:2,caseId:id,workspaceId:row.workspaceId,identityHash,identityKeyVersion,
+        scope,synthetic:true,inventoryHash:null,inventoryCount:0,completedEventHash:null},signer);
+      await tx.insert(valoPrivacyTombstones).values({id:randomUUID(),workspaceId:row.workspaceId,caseId:id,
+        identityHash,keyVersion:identityKeyVersion,phase:scope,erasureSeal});
       await tx.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,row.workspaceId));
       row=await privacyChange(tx,row,{identityId:actor.identityId,type:"staff"},"erasure_quarantined",input.reason,{
         status:"in_progress",erasurePhase:"quarantined",resultJson:null,
-        resultScope:"Application-content erasure started. Access is revoked. Financial, support/privacy and audit records are retained pending policy review; external providers are not erased.",
+        resultScope:"Development application erasure started; access revoked. Financial, support/privacy, audit, backup and external-provider scope remains unfulfilled.",
         steps:row.steps.map(s=>s.system==="application"||s.system==="private_files"?
-          {...s,status:"running",detail:"Resumable development erasure; no whole-account fulfilment is claimed."}:s)});
-    }else if(input.action!=="resume_erasure")throw new ValoProblem(409,"Erasure already began. Resume with the current request version.");
-    return {workspaceId:row.workspaceId,version:row.version,phase:row.erasurePhase};
+          {...s,status:"running",detail:"Resumable synthetic erasure; no complete account/provider fulfilment is claimed."}:s)});
+    }else{
+      if(input.action!=="resume_erasure")throw new ValoProblem(409,"Resume the existing erasure with its current version.");
+      await readTombstone(tx,id); // Missing historical keys or unsigned journals hold closed.
+    }
+    return{workspaceId:row.workspaceId,version:row.version,phase:row.erasurePhase};
   });
-  // Do not hold a transaction over object-store I/O. The case lock below fences
-  // competing completions; delete is idempotent, and ledger keys survive purge.
+  if(start.phase==="application_erased")return db.transaction(async tx=>{
+    await requirePrivacyStaff(tx,actor);const row=await readPrivacyCase(tx,id);assertProcessing(row,actor,start.version);
+    return privacyDetail(tx,row);
+  });
   if(start.phase==="objects"){
+    const expected=await db.transaction(async tx=>{
+      await requirePrivacyStaff(tx,actor);assertProcessing(await readPrivacyCase(tx,id),actor,start.version);
+      const {t,seal}=await readTombstone(tx,id);await verifyInventory(tx,t,seal);return erasureSealHash(seal);
+    });
     const pending=await db.execute<{object_key:string}>(sql`SELECT object_key FROM valo_privacy_erasure_objects
-      WHERE case_id=${id}::uuid AND workspace_id=${start.workspaceId}::uuid AND status<>'deleted'
-      ORDER BY object_key LIMIT 10`);
+      WHERE case_id=${id}::uuid AND status<>'deleted' ORDER BY object_key LIMIT 10`);
     for(const object of pending.rows){
-      let deleted=false;
-      try{assertObjectScope(start.workspaceId,object.object_key);await remove(object.object_key);deleted=true;}catch{/* Safely retry the same key; never invent success. */}
-      await db.execute(sql`UPDATE valo_privacy_erasure_objects SET status=${deleted?"deleted":"failed"},
-        attempts=attempts+1,updated_at=now() WHERE case_id=${id}::uuid
-        AND workspace_id=${start.workspaceId}::uuid AND object_key=${object.object_key}`);
+      // Recheck before EACH call, outside the previous object's network wait.
+      await db.transaction(async tx=>{
+        await requirePrivacyStaff(tx,actor);assertProcessing(await readPrivacyCase(tx,id),actor,start.version);
+        const {seal}=await readTombstone(tx,id);
+        if(erasureSealHash(seal)!==expected)throw Error("ERASURE_SEAL_CHANGED");
+        assertErasureObjectScope(start.workspaceId,object.object_key);
+      });
+      let deleted=false;try{await remove(object.object_key);deleted=true;}catch{/* Keep an actual retryable failure. */}
+      await recordObjectOutcome(id,start.workspaceId,object.object_key,deleted);
     }
   }
   return db.transaction(async tx=>{
-    await requirePrivacyStaff(tx,actor);let row=await readPrivacyCase(tx,id);
-    assertPrivacyVersion(row.version,start.version);
-    if(row.assignedIdentityId!==actor.identityId)throw new ValoProblem(403,"Assignment changed; no completion was recorded.");
-    let next=start.phase,detail="Private-object deletion remains pending. Failed keys are retryable; no affected bytes are claimed deleted.";
+    await requirePrivacyStaff(tx,actor);let row=await readPrivacyCase(tx,id);assertProcessing(row,actor,start.version);
+    const journal=await readTombstone(tx,id);
+    let next=start.phase,detail="Private-object deletion remains pending; failed keys are retryable.";
     if(start.phase==="quarantined"){
-      // Membership revocation was committed in the preceding transaction.
-      // Never wait on job locks while holding exclusive membership locks.
       await tx.update(valoExportJobs).set({status:"failed",queueId:randomUUID(),errorCode:"PRIVACY_ERASURE",
         updatedAt:new Date()}).where(eq(valoExportJobs.workspaceId,row.workspaceId));
       await tx.update(valoExportObjects).set({state:"cleanup"}).where(eq(valoExportObjects.workspaceId,row.workspaceId));
@@ -105,72 +169,133 @@ export async function processPrivacyErasure(actor:PrivacyStaffActor,id:string,in
         SELECT workspace_id,${row.id}::uuid,object_key FROM valo_export_objects WHERE workspace_id=${row.workspaceId}::uuid
         UNION SELECT workspace_id,${row.id}::uuid,object_key FROM valo_file_assets WHERE workspace_id=${row.workspaceId}::uuid
         ON CONFLICT DO NOTHING`);
-      next="objects";detail="Pending export generations were fenced and reminders disabled. Private-object keys were durably captured after access revocation.";
+      const exact=await inventory(tx,journal.t);
+      await tx.update(valoPrivacyTombstones).set({erasureSeal:await signSeal(tx,{...journal.seal,
+        inventoryHash:exact.hash,inventoryCount:exact.count})}).where(eq(valoPrivacyTombstones.id,journal.t.id));
+      next="objects";detail="Export generations fenced; the complete exact object inventory is signed and immutable.";
     }else if(start.phase==="objects"){
       const count=await tx.execute<{remaining:number}>(sql`SELECT count(*)::int AS remaining FROM valo_privacy_erasure_objects
         WHERE case_id=${id}::uuid AND status<>'deleted'`);
-      if(count.rows[0]?.remaining===0){next=phases[0];detail="All captured private-object deletes were acknowledged. Object tombstones are retained for recovery replay.";}
+      if(count.rows[0]?.remaining===0){next=phases[0];detail="Captured delete calls acknowledged. Signed keys remain scheduled for repeated late-upload cleanup.";}
     }else if((phases as readonly string[]).includes(start.phase)){
-      // CTID selection stays within this locked transaction and static table
-      // allowlist. A crash rolls back the batch; retries never need a cursor.
       const result=await eraseSection(tx,row.workspaceId,start.phase as typeof phases[number]);
       if((result.rowCount??0)<100)next=phases[phases.indexOf(start.phase as typeof phases[number])+1]??"application_erased";
-      detail=`Removed ${result.rowCount??0} rows from the current scoped application section. Remaining sections and exclusions are not claimed complete.`;
-    }else if(start.phase!=="application_erased")throw new ValoProblem(409,"Unknown erasure phase. Processing is held.");
+      detail=`Removed ${result.rowCount??0} rows from this application section; retained/external exclusions remain.`;
+    }else throw new ValoProblem(409,"Unknown erasure phase; processing is held.");
     const done=next==="application_erased";
     if(done)await tx.update(valoWorkspaces).set({profileRevision:0}).where(eq(valoWorkspaces.id,row.workspaceId));
     row=await privacyChange(tx,row,{identityId:actor.identityId,type:"staff"},"erasure_batch_recorded",input.reason,{
       erasurePhase:next,status:done?"partially_fulfilled":"in_progress",
-      resultScope:done?"Named application content and captured private objects erased in development. Membership remains revoked. Financial, support/privacy, audit, managed identity, backups and external-provider outcomes remain held; this is not complete account deletion.":row.resultScope,
+      resultScope:done?"Scoped synthetic application rows erased; captured object deletes acknowledged with durable repeated late-write cleanup. Outstanding provider/write uncertainty, retained financial/support/privacy/audit data, managed identity and backups are not complete account deletion.":row.resultScope,
       steps:row.steps.map(s=>s.system==="application"?{...s,status:done?"confirmed":"running",detail}:
-        s.system==="private_files"?{...s,status:next!=="objects"&&next!=="quarantined"?"confirmed":"running",detail:next!=="objects"&&next!=="quarantined"?
-          "Captured object deletions acknowledged; durable keys retained for restore/late-write replay.":detail}:
-        s.system==="identity_verification"?s:{...s,status:"held",detail:"Retained or external scope has not been fulfilled. No legal-retention duration or external deletion is asserted."})});
+        s.system==="private_files"?{...s,status:next==="objects"||next==="quarantined"?"running":"held",
+          detail:"Captured deletions are recorded; signed object keys outlive job rows for repeated cleanup. Future completion of an interrupted upload is not claimed impossible."}:
+        s.system==="identity_verification"?s:{...s,status:"held",detail:"Retained/external scope has not been fulfilled; no legal-retention duration or provider deletion is asserted."})});
+    if(done)await tx.update(valoPrivacyTombstones).set({
+      erasureSeal:await signSeal(tx,{...journal.seal,completedEventHash:row.lastEventHash}),replayState:null,nextReplayAt:new Date(),
+    }).where(eq(valoPrivacyTombstones.id,journal.t.id));
     return privacyDetail(tx,row);
   });
 }
-
-/** Run against the restored environment using the retained post-cutoff journal.
- * Importing that journal is a recovery-owner operation; this does not pretend
- * a tombstone absent from an old backup can reappear without it. */
-export async function replayErasureObjects(caseId:string,remove:DeleteObject=deletePrivateFile){
-  assertDevelopmentRuntime();
-  const[tombstone]=await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,caseId));
-  if(!tombstone)throw new ValoProblem(404,"A retained deletion tombstone is required.");
-  const[workspace]=await db.select().from(valoWorkspaces).where(eq(valoWorkspaces.id,tombstone.workspaceId));
-  const historicalKey=await db.transaction(tx=>privacyKey(tx,tombstone.keyVersion));
-  if(!workspace||!/^(synthetic-|privacy-fixture-)/.test(workspace.ownerIdentityId)||
-    quotaSubjectHash(historicalKey,"user",workspace.ownerIdentityId)!==tombstone.identityHash)
-    throw new ValoProblem(409,"Recovery workspace does not match the retained synthetic deletion journal.");
-  await db.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,tombstone.workspaceId));
-  const rows=await db.execute<{workspace_id:string;object_key:string}>(sql`SELECT workspace_id,object_key
-    FROM valo_privacy_erasure_objects WHERE case_id=${caseId}::uuid AND workspace_id=${tombstone.workspaceId}::uuid ORDER BY object_key`);
-  let deleted=0,failed=0;
-  for(const row of rows.rows){
-    await db.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,row.workspace_id));
-    try{assertObjectScope(tombstone.workspaceId,row.object_key);await remove(row.object_key);deleted++;}catch{failed++;}
-  }
-  return {deleted,failed,externalSystemsFulfilled:false};
+async function replayReady(tx:Tx,caseId:string,verifyObjects=false){
+  const row=await readPrivacyCase(tx,caseId),{t,seal}=await readTombstone(tx,caseId);
+  if(row.workspaceId!==t.workspaceId||row.kind!=="deletion"||!row.verifiedAt||row.erasurePhase!=="application_erased"||
+    !["partially_fulfilled","fulfilled"].includes(row.status)||!seal.completedEventHash||!seal.inventoryHash||
+    !/^(synthetic-|privacy-fixture-)/.test(row.requesterIdentityId)||
+    quotaSubjectHash(await privacyKey(tx,seal.identityKeyVersion),"user",row.requesterIdentityId)!==seal.identityHash)
+    throw new ValoProblem(409,"Only an authenticated completed synthetic scope may replay. Unfinished or held cases require privacy operations.");
+  const[event]=await tx.select({id:valoPrivacyEvents.id}).from(valoPrivacyEvents).where(and(
+    eq(valoPrivacyEvents.caseId,caseId),eq(valoPrivacyEvents.workspaceId,t.workspaceId),
+    eq(valoPrivacyEvents.eventHash,seal.completedEventHash),eq(valoPrivacyEvents.action,"erasure_batch_recorded"))).limit(1);
+  if(!event)throw new ValoProblem(409,"The completion receipt is absent from the authenticated case history.");
+  if(verifyObjects)await verifyInventory(tx,t,seal);
+  return{row,t,seal};
 }
-
-/** Bounded physical re-erasure after importing the authenticated post-cutoff
- * deletion journal. Repeat until remaining=false. No email/refund/charge path. */
-export async function replayErasedApplication(caseId:string,remove:DeleteObject=deletePrivateFile){
-  const objects=await replayErasureObjects(caseId,remove);
-  if(objects.failed)return {...objects,remaining:true,applicationRowsRemoved:0};
+async function persistReplay(t:Tombstone,input:Omit<ReplayState,"keyVersion"|"mac">,done=false){
   return db.transaction(async tx=>{
-    const[tombstone]=await tx.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,caseId)).for("update");
-    if(!tombstone)throw new ValoProblem(404,"Deletion journal is unavailable.");
-    const row=await readPrivacyCase(tx,caseId);
-    if(row.workspaceId!==tombstone.workspaceId||row.erasurePhase!=="application_erased")
-      throw new ValoProblem(409,"Only a completed scoped application erasure can be physically replayed. Resume unfinished requests through privacy operations.");
-    let applicationRowsRemoved=0,remaining=false;
-    for(const section of phases){
-      const result=await eraseSection(tx,tombstone.workspaceId,section);
-      applicationRowsRemoved+=result.rowCount??0;
-      if((result.rowCount??0)>=100){remaining=true;break;}
-    }
-    if(!remaining)await tx.update(valoWorkspaces).set({profileRevision:0}).where(eq(valoWorkspaces.id,tombstone.workspaceId));
-    return {...objects,remaining,applicationRowsRemoved};
+    const state=signReplayState(input,await privacySigner(tx));
+    await tx.update(valoPrivacyTombstones).set({replayState:state,
+      nextReplayAt:new Date(Date.now()+(done?3_600_000:0)),updatedAt:new Date()}).where(eq(valoPrivacyTombstones.id,t.id));
+    return state;
   });
+}
+async function replay(caseId:string,mode:ReplayState["mode"],remove:DeleteObject){
+  let {t,seal,state}=await db.transaction(async tx=>{
+    const ready=await replayReady(tx,caseId);
+    let state=ready.t.replayState?await progressOf(tx,ready.t.replayState,ready.seal):null;
+    if(state&&state.phase!=="done"&&state.mode!==mode)throw new ValoProblem(409,"Another recovery mode has unfinished recorded progress.");
+    if(!state||state.phase==="done")state=startReplay(ready.seal,mode,await privacySigner(tx));
+    if(state.phase==="objects")await verifyInventory(tx,ready.t,ready.seal);
+    await tx.update(valoPrivacyTombstones).set({replayState:state}).where(eq(valoPrivacyTombstones.id,ready.t.id));
+    await tx.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,ready.t.workspaceId));
+    return{...ready,state};
+  });
+  let deleted=0,failed=0,applicationRowsRemoved=0;
+  if(state.phase==="objects"){
+    const rows=await db.execute<{object_key:string}>(sql`SELECT object_key FROM valo_privacy_erasure_objects
+      WHERE case_id=${caseId}::uuid AND object_key>${state.cursor} ORDER BY object_key LIMIT 10`);
+    for(const object of rows.rows){
+      await db.transaction(async tx=>{
+        const now=await replayReady(tx,caseId);
+        if(erasureSealHash(now.seal)!==state.sealHash)throw Error("ERASURE_SEAL_CHANGED");
+        assertErasureObjectScope(t.workspaceId,object.object_key);
+      });
+      let ok=false;try{await remove(object.object_key);ok=true;deleted++;}catch{failed++;}
+      await recordObjectOutcome(caseId,t.workspaceId,object.object_key,ok);
+      if(!ok)return{deleted,failed,remaining:true,applicationRowsRemoved,externalSystemsFulfilled:false};
+      state=await persistReplay(t,{...state,cursor:object.object_key});
+    }
+    if(rows.rows.length<10){
+      state=await persistReplay(t,{...state,phase:mode==="application"?0:"done"},mode==="objects");
+    }
+    return{deleted,failed,remaining:state.phase!=="done",applicationRowsRemoved,externalSystemsFulfilled:false};
+  }
+  if(typeof state.phase==="number"){
+    const phase=state.phase;
+    await db.transaction(async tx=>{
+      const now=await replayReady(tx,caseId);
+      const persisted=await progressOf(tx,now.t.replayState,now.seal);
+      if(persisted.mac!==state.mac)throw new ValoProblem(409,"Recovery progress changed.");
+      // One bounded application section; no object inventory rescan/redelete.
+      const result=await eraseSection(tx,t.workspaceId,phases[phase]!);applicationRowsRemoved=result.rowCount??0;
+      if(applicationRowsRemoved<100)state=signReplayState({...state,phase:phase+1===phases.length?"done":phase+1},await privacySigner(tx));
+      await tx.update(valoPrivacyTombstones).set({replayState:state,
+        nextReplayAt:new Date(Date.now()+(state.phase==="done"?3_600_000:0))}).where(eq(valoPrivacyTombstones.id,t.id));
+      if(state.phase==="done")await tx.update(valoWorkspaces).set({profileRevision:0}).where(eq(valoWorkspaces.id,t.workspaceId));
+    });
+  }
+  return{deleted,failed,remaining:state.phase!=="done",applicationRowsRemoved,externalSystemsFulfilled:false};
+}
+export async function replayErasureObjects(caseId:string,remove:DeleteObject=deletePrivateFile){
+  return withErasureLock(caseId,()=>replay(caseId,"objects",remove));
+}
+export async function replayErasedApplication(caseId:string,remove:DeleteObject=deletePrivateFile){
+  return withErasureLock(caseId,()=>replay(caseId,"application",remove));
+}
+/** Existing export-worker reconciliation calls this bounded service. Tombstone
+ * keys survive export-row deletion and are revisited even after process death. */
+export async function reconcileErasedObjects(remove:DeleteObject=deletePrivateFile,caseId?:string){
+  assertDevelopmentRuntime();
+  const due=await db.select().from(valoPrivacyTombstones).where(and(lte(valoPrivacyTombstones.nextReplayAt,new Date()),
+    caseId?eq(valoPrivacyTombstones.caseId,caseId):undefined))
+    .orderBy(asc(valoPrivacyTombstones.nextReplayAt),asc(valoPrivacyTombstones.id)).limit(5);
+  let cleaned=0,failed=0,held=0;
+  for(const t of due){
+    try{
+      await db.transaction(async tx=>{
+        const seal=await sealOf(tx,t);
+        if(!seal.completedEventHash)throw Error("ERASURE_INCOMPLETE");
+        if(t.replayState){const s=await progressOf(tx,t.replayState,seal);if(s.mode==="application"&&s.phase!=="done")throw Error("APPLICATION_REPLAY_ACTIVE");}
+      });
+      const result=await replayErasureObjects(t.caseId,remove);cleaned+=result.deleted;failed+=result.failed;
+      if(result.failed)await db.update(valoPrivacyTombstones).set({nextReplayAt:new Date(Date.now()+60_000)})
+        .where(eq(valoPrivacyTombstones.id,t.id));
+    }catch{
+      held++;
+      // Held legacy/corrupt cases cannot starve the bounded queue forever.
+      await db.update(valoPrivacyTombstones).set({nextReplayAt:new Date(Date.now()+60_000)})
+        .where(eq(valoPrivacyTombstones.id,t.id));
+    } // Hold/corruption/missing keys never authorize a storage call.
+  }
+  return{cleaned,failed,held};
 }

@@ -35,10 +35,15 @@ export const valoPrivacyTombstones=pgTable("valo_privacy_tombstones",{
   id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),caseId:uuid("case_id").notNull().unique(),
   identityHash:text("identity_hash").notNull(),phase:text("phase").notNull(),
   keyVersion:text("key_version").notNull().default("session-derived-v1"),
+  erasureSeal:jsonb("erasure_seal").$type<object>(),
+  replayState:jsonb("replay_state").$type<object>(),
+  nextReplayAt:timestamp("next_replay_at",{withTimezone:true}).notNull().defaultNow(),
   privateObjectKey:text("private_object_key"),checksum:text("checksum"),
   createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
   updatedAt:timestamp("updated_at",{withTimezone:true}).notNull().defaultNow(),
-},t=>[index("valo_privacy_tombstone_workspace").on(t.workspaceId)]);
+},t=>[index("valo_privacy_tombstone_workspace").on(t.workspaceId),
+  index("valo_privacy_tombstone_identity").on(t.identityHash),
+  index("valo_privacy_tombstone_replay").on(t.nextReplayAt)]);
 // Intentionally independent of export-job/file FKs: deletion instructions must
 // outlive the private document records they remove.
 export const valoPrivacyErasureObjects=pgTable("valo_privacy_erasure_objects",{

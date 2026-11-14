@@ -54,5 +54,12 @@ export async function reconcileExportOrphans(jobId?:string){
         nextCleanupAt:new Date(Date.now()+delay)}).where(eq(valoExportObjects.objectKey,object.objectKey));
     });
   }
-  return{cleaned,failed};
+  // Completed privacy journals outlive the export-job FK chain. They must be
+  // revisited by the same running worker, including after a killed uploader.
+  if(!jobId){
+    const {reconcileErasedObjects}=await import("./valo-privacy-erasure");
+    const erased=await reconcileErasedObjects();
+    return{cleaned:cleaned+erased.cleaned,failed:failed+erased.failed,privacyHeld:erased.held};
+  }
+  return{cleaned,failed,privacyHeld:0};
 }

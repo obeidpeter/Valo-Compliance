@@ -1,7 +1,7 @@
 import {serializeRevision} from "./valo-revision-codec";
 import { randomUUID } from "node:crypto";
 import { and, eq, ne, desc } from "drizzle-orm";
-import { db, valoMemberships, valoDocuments, valoDocumentRevisions, valoExportJobs, valoExportRequests, valoFileAssets, valoExportObjects, valoEvents } from "@workspace/db";
+import { db, valoMemberships, valoDocuments, valoDocumentRevisions, valoExportJobs, valoExportRequests, valoFileAssets, valoExportObjects, valoEvents, valoPrivacyTombstones } from "@workspace/db";
 import { CreateDocumentExportBody, CreateDocumentExportResponse } from "@workspace/api-zod";
 import { sha256 } from "@workspace/valo-core";
 import { ValoProblem,authorizeWorkspaceWrite, type WorkspaceActor } from "./valo-store";
@@ -22,6 +22,9 @@ export async function assertExportActor(actor: WorkspaceActor, connection: typeo
     eq(valoMemberships.workspaceId, actor.workspaceId), eq(valoMemberships.identityId, actor.identityId),
     eq(valoMemberships.active, "yes"), eq(valoMemberships.role, "owner")));
   if (!membership) throw new ValoProblem(404, "Export not found or access revoked");
+  const[erased]=await connection.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
+    .where(eq(valoPrivacyTombstones.workspaceId,actor.workspaceId)).limit(1);
+  if(erased)throw new ValoProblem(404,"Export not found or access revoked");
 }
 function publicJob(job: typeof valoExportJobs.$inferSelect, asset?: typeof valoFileAssets.$inferSelect | null) {
   return CreateDocumentExportResponse.parse({
@@ -79,6 +82,7 @@ export async function requestExport(actor: WorkspaceActor, documentId: string, k
       eq(valoExportJobs.workspaceId, actor.workspaceId), eq(valoExportJobs.revisionId, revision.id),
       eq(valoExportJobs.format, input.format), eq(valoExportJobs.renderVersion, RENDER_VERSION)));
     if (!existing) throw new Error("EXPORT_TRANSACTION_FAILED");
+    await authorizeWorkspaceWrite(tx,actor);
     await tx.insert(valoExportRequests).values({ workspaceId:actor.workspaceId, key, jobId:existing.id, fingerprint }).onConflictDoNothing();
     const [request] = await tx.select().from(valoExportRequests).where(and(eq(valoExportRequests.workspaceId, actor.workspaceId), eq(valoExportRequests.key,key)));
     if (request?.fingerprint !== fingerprint) throw new ValoProblem(409, "Idempotency-Key was already used for a different revision or format.");
@@ -96,6 +100,7 @@ export async function retryExport(actor: WorkspaceActor, id: string) {
     await assertExportActor(actor,tx);
     const [job] = await tx.select().from(valoExportJobs).where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,actor.workspaceId))).for("update");
     if (!job) throw new ValoProblem(404,"Export not found");
+    await authorizeWorkspaceWrite(tx,actor);
     if (job.status !== "failed") return;
     if (job.retryCycles >= 3) throw new ValoProblem(409,"Retry limit reached. Your saved draft is safe; contact support.");
     await tx.update(valoExportJobs).set({ status:"queued", attempts:0, leaseRecoveries:0,retryCycles:job.retryCycles+1, queueId:randomUUID(), errorCode:null, updatedAt:new Date() })
@@ -117,7 +122,8 @@ export async function downloadExport(actor: WorkspaceActor, id: string) {
 export type ExportStage="claiming"|"claimed"|"rendering"|"uploading"|"uploaded"|"completing"|"completed";
 /** Internal instrumentation used by the kill/restart harness; never supplied by API or queue data. */
 export async function executeExport(id: string, workspaceId: string, queueId: string,
-  onStage?:(stage:ExportStage)=>Promise<void>) {
+  onStage?:(stage:ExportStage)=>Promise<void>,
+  storage:{write:typeof writePrivateFile;remove:typeof deletePrivateFile}={write:writePrivateFile,remove:deletePrivateFile}) {
   developmentExportsOnly();
   const job = await db.transaction(async tx => {
     const [row] = await tx.select().from(valoExportJobs).where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,workspaceId))).for("update");
@@ -170,7 +176,7 @@ export async function executeExport(id: string, workspaceId: string, queueId: st
       await authorizeWorkspaceWrite(tx,actor);
       await tx.insert(valoExportObjects).values({objectKey,workspaceId,jobId:id,queueId,state:"pending"});
     });
-    const stored = await writePrivateFile(objectKey,bytes,()=>onStage?.("uploading")??Promise.resolve());
+    const stored = await storage.write(objectKey,bytes,()=>onStage?.("uploading")??Promise.resolve());
     await onStage?.("uploaded");
     const committed = await db.transaction(async tx => {
       const [current] = await tx.select().from(valoExportJobs).where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,workspaceId))).for("update");
@@ -180,6 +186,7 @@ export async function executeExport(id: string, workspaceId: string, queueId: st
       const [membership] = await tx.select().from(valoMemberships).where(and(eq(valoMemberships.workspaceId,workspaceId),
         eq(valoMemberships.identityId,actor.identityId),eq(valoMemberships.active,"yes"),eq(valoMemberships.role,"owner"))).for("update");
       if (!membership) throw new Error("EXPORT_ACCESS_REVOKED");
+      await authorizeWorkspaceWrite(tx,actor);
       await tx.insert(valoFileAssets).values({id:assetId,workspaceId,jobId:id,objectKey,...stored,mime:exportMime[job.format]});
       await tx.update(valoExportObjects).set({state:"retained"}).where(eq(valoExportObjects.objectKey,objectKey));
       await tx.update(valoExportJobs).set({status:"ready",errorCode:null,updatedAt:new Date()}).where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,workspaceId)));
@@ -188,13 +195,27 @@ export async function executeExport(id: string, workspaceId: string, queueId: st
       return true;
     });
     if (committed) temporaryKey = null;
-    else await deletePrivateFile(objectKey);
+    else await storage.remove(objectKey);
     await onStage?.("completed");
   } catch (error) {
     if (temporaryKey) {
-      const orphan=await db.update(valoExportObjects).set({state:"cleanup",nextCleanupAt:new Date()})
-        .where(and(eq(valoExportObjects.objectKey,temporaryKey),ne(valoExportObjects.state,"retained"))).returning();
-      if(orphan.length)try { await deletePrivateFile(temporaryKey); } catch { /* Durable reservation remains in the cleanup queue. */ }
+      const key=temporaryKey;
+      const cleanup=await db.transaction(async tx=>{
+        // Wait for any ambiguous metadata commit before deciding ownership.
+        await tx.select({id:valoExportJobs.id}).from(valoExportJobs)
+          .where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,workspaceId))).for("update");
+        const[asset]=await tx.select({id:valoFileAssets.id}).from(valoFileAssets)
+          .where(and(eq(valoFileAssets.workspaceId,workspaceId),eq(valoFileAssets.objectKey,key))).limit(1);
+        if(asset)return false;
+        await tx.update(valoExportObjects).set({state:"cleanup",nextCleanupAt:new Date()})
+          .where(and(eq(valoExportObjects.objectKey,key),ne(valoExportObjects.state,"retained")));
+        // Erasure may already have removed the job and reservation. Its sealed
+        // independent journal captured this key before those rows were purged.
+        await tx.update(valoPrivacyTombstones).set({nextReplayAt:new Date()})
+          .where(eq(valoPrivacyTombstones.workspaceId,workspaceId));
+        return true;
+      });
+      if(cleanup)try{await storage.remove(key);}catch{/* Both orphan/recovery journals survive for retry. */}
     }
     const message = error instanceof Error ? error.message : "";
     const safe = error instanceof ValoProblem && error.status === 404 ? "EXPORT_ACCESS_REVOKED" :

@@ -45,6 +45,7 @@ async function dispatch() {
     await recoverAbandonedExports();
     const cleanup=await reconcileExportOrphans();
     if(cleanup.failed)logger.error({event:"export.orphan_cleanup_failed",count:cleanup.failed});
+    if(cleanup.privacyHeld)logger.error({event:"privacy.erasure_replay_held",count:cleanup.privacyHeld});
     // This durable table is the transactional outbox. Stable queue IDs make retries harmless.
     const pending = await db.select().from(valoExportJobs).where(eq(valoExportJobs.status,"queued")).limit(25);
     for (const job of pending)
