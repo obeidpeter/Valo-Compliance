@@ -1,4 +1,4 @@
-import {managedCompletion,assertManagedInferenceAvailable} from "../lib/managed-inference";
+import {managedCompletion,managedInferenceLane,assertManagedInferenceAvailable} from "../lib/managed-inference";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
 import { z } from "zod";
 import {parseBoundedProviderJSON} from "../lib/provider-output-budget";
@@ -97,7 +97,7 @@ export async function executeOperationalReviewPlan(plan:Awaited<ReturnType<typeo
     const started=performance.now(),id=ids.get(role)!;
     let received=false;
     try{
-    const response=await managedCompletion("publication",request,{timeout:45000,maxRetries:0});
+    const response=await managedCompletion(managedInferenceLane("publication"),request,{timeout:45000,maxRetries:0});
     const usage=providerUsage(response.usage);received=true;
     await db.execute(sql`update valo_publication_ai_attempts set outcome='response_received',
       provider_response_id=${response.id},input_tokens=${usage.inputTokens},output_tokens=${usage.outputTokens}

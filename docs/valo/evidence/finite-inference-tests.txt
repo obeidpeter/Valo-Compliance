@@ -1,0 +1,35 @@
+▶ durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls
+  ✔ disabled durable authority and missing allowlist cannot dispatch (18.891305ms)
+  ✔ authorized controlled work really dispatches and settles; unchanged result reuses without a call (72.338179ms)
+  ✔ review pair reserves atomically and charges its actual editorial lane (137.53683ms)
+  ✔ changed request, source bindings, expiry and forged manifest stop before transport (68.943421ms)
+  ✔ timeout keeps the whole reservation, duplicates cannot redispatch and new retry consumes another slot (85.556104ms)
+  ✔ concurrency two and duplicate runs cover every lane under one locked ledger (113.851615ms)
+  ✔ policy adoption keeps old usage and all unresolved liability instead of resetting history (23.19361ms)
+  ✔ unreconciled historic liabilities and depleted ceiling hold all further calls (46.372914ms)
+✔ durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls (772.920326ms)
+✔ isolated PostgreSQL global ledger serializes races and preserves unknown/retry liability (2079.077078ms)
+✔ exact proposal arithmetic and implicit customer 4096-token bound (1.505013ms)
+✔ real dispatch is disabled with no switch or SDK access (1.4732ms)
+✔ all four current application dispatch sites use the shared held transport (37.113162ms)
+✔ byte estimates, changed instructions/schema and insufficient proofs cannot admit (1.29522ms)
+✔ unknown pilot and unreconciled usage hold all lanes, import is idempotent (1.659016ms)
+✔ reservation precedes dispatch, timeout keeps maximum and cannot be cancelled (0.90686ms)
+✔ settlement is exact/idempotent, never releases unknown on elapsed time (1.148826ms)
+✔ duplicate identity binds the entire request and scope (0.360307ms)
+✔ atomic serialized racing reservations stop at lane limits without overspend (43.434731ms)
+✔ depleted global allowance overrides every lane and prior pilot consumes headroom (1.11211ms)
+✔ reported bound breaches suspend admission; malformed/negative balances fail closed (1.06194ms)
+✔ whole-context fallback rounds upward and needs no exact tokenization (0.559378ms)
+✔ finite context batch stops safely without requiring all 458 attempts or a daily delay (9.984879ms)
+✔ independent pair reservation is all-or-nothing and binds exact distinct requests (0.878266ms)
+✔ concurrency two includes unknown outcomes, with no timeout release or automatic retry (0.630245ms)
+✔ fallback does not admit tools, multiple completions or streaming (1.454695ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4712.566079
