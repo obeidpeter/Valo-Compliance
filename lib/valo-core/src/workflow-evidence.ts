@@ -275,6 +275,16 @@ export function partialWorkflowEvidence(id:string){
         "artifacts/api-server/src/editorial/publication-publisher.ts"],record:exactSourcePublication},
   ];
   const operationalEvidence=[
+    {ids:["PRV-003","PRO-002","SEC-001","WRK-001"],
+      paths:["artifacts/api-server/src/lib/valo-customer-access.ts","artifacts/api-server/src/lib/valo-privacy-processing.ts",
+        "artifacts/api-server/src/scripts/privacy-data-browser.ts","artifacts/valo/src/screens/account.tsx"],
+      record:{kind:"test" as const,path:"docs/valo/evidence/privacy-data-v2-checkpoint.json",
+        hash:"9f0e49a0651654f9c1acfe08134714bc7b7e5157281bbe385105ccc0b7ca0260",result:"pass" as const}},
+    {ids:["OPS-005","SEC-003","SEC-007","NFR-011"],
+      paths:["artifacts/api-server/src/lib/http-errors.ts","artifacts/api-server/src/lib/http-logging.test.ts",
+        "scripts/src/valo/merge-static.sh","scripts/src/valo/merge-static.test.ts",".github/workflows/valo-foundation.yml"],
+      record:{kind:"test" as const,path:"docs/valo/evidence/ci-runtime-checkpoint.json",
+        hash:"17bb5b38c2a58cb5a39cfcb4463b10f9acace27640f8e358f28dfeda3fd3fafd",result:"pass" as const}},
     {ids:["OPS-003","OPS-007","OPS-008","PRV-003","NFR-005","SEC-001"],
       paths:["artifacts/api-server/src/scripts/isolated-recovery.ts","artifacts/api-server/src/lib/valo-recovery-controls.ts",
         "artifacts/api-server/src/lib/valo-recovery-effects.ts"],

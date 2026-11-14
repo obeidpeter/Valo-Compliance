@@ -50,3 +50,16 @@ response envelope) are retained separately, not counted as product or provider
 quality results. The real privacy-cases API returns an array.
 
 No email, payment, AI inference or external erasure is executed by these checks.
+
+## Code gaps versus external dependencies
+
+No new credentials or owner decision is needed for this bounded application JSON
+download. Full streaming access for large workspaces and the resumable physical
+erasure processor remain implementation gaps, not completed features held only
+by credentials.
+
+Full coordinated access also needs the actual identity/processor data and
+appropriate provider access; none is represented as retrieved here. Production
+privacy/retention/region decisions, supported recovery retention and sensitive
+deployment authorization remain separate. Real merchant transactions and
+verified-sender/owner-only email execution were not attempted in this unit.
