@@ -48,7 +48,8 @@ export async function saveOperationalReviewPlan(...args:Parameters<typeof operat
     entries:entries.map(({request,...metadata})=>metadata),actualBilling:null,
     caution:"This is not a global provider cap, legal review, publication, spending increase or billing estimate."};
   const artifact=await putPublicationArtifact(Buffer.from(JSON.stringify({manifest,entries})),"json");
-  return{manifest,artifact,entries};
+  if(artifact.extension!=="json")throw Error("REVIEW_PLAN_ARTIFACT_TYPE_INVALID");
+  return{manifest,artifact:{...artifact,extension:"json" as const},entries};
 }
 export async function reviewOperationalCandidate(candidate:PublicationBundle["candidate"],rights:unknown,provenance:unknown,exports:unknown,
   serverEvidence:OperationalServerEvidence){

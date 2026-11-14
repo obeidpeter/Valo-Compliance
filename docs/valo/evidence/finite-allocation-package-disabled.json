@@ -4,12 +4,12 @@
   "enabled": false,
   "approvalRowsWritten": 0,
   "providerCalls": 0,
-  "packageId": "finite-package:81144d74c4f5f630631544fad1d1738cdcadfea368c7a30269814ac6cf4de979",
-  "packageHash": "81144d74c4f5f630631544fad1d1738cdcadfea368c7a30269814ac6cf4de979",
+  "packageId": "finite-package:46a5933fd296adb648dae1becaaabd835d5b203ce5a5d470887ec74cb27bba37",
+  "packageHash": "46a5933fd296adb648dae1becaaabd835d5b203ce5a5d470887ec74cb27bba37",
   "package": {
     "version": 3,
     "kind": "finite-inference-package",
-    "preparedAt": "2026-11-14T23:03:22.860Z",
+    "preparedAt": "2026-11-14T23:07:44.777Z",
     "policyVersion": "public-gpt-5.4-mini-2026-11-14",
     "allocation": {
       "id": "valo-additional-inference-30-20261114-v1",
@@ -39,6 +39,14 @@
       {
         "path": "docs/evaluation-candidates/customer-ai.json",
         "sha256": "65d51a2b52ab01c70a222a9a02ae84602a53629cc244552cbcc6a0802ca1796b"
+      },
+      {
+        "path": "docs/content-candidates/practical-guide-candidates.md",
+        "sha256": "27a0d146665194f02c46e50a3d81406169200d3859e601714cc78f2f2a034874"
+      },
+      {
+        "path": "docs/content-candidates/industry-content-candidates.md",
+        "sha256": "f0ad13bb78cc4dea8bb6bc22d692e19ee7b280e8dc67b1275ee29b17e4542ac9"
       }
     ],
     "contentIds": [
@@ -112,6 +120,274 @@
       "TPL-38",
       "TPL-39",
       "TPL-40"
+    ],
+    "namedContentSections": [
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C01 — Prepare an invoice from facts you can check",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C01 — Prepare an invoice from facts you can check",
+        "baselineSectionSha256": "6f71be868dd33665668789a5e7610af9eebb1da1a06ab5959357171f3c622758",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C02 — Write a quotation that makes the offer clear",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C02 — Write a quotation that makes the offer clear",
+        "baselineSectionSha256": "2f4f28b6b15ab1e0a3a9de502fe663f689627ec15101f07d5fdd32c87608cbdb",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C03 — Follow up an unpaid invoice with a useful reminder",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C03 — Follow up an unpaid invoice with a useful reminder",
+        "baselineSectionSha256": "01ee9930d7851216e7228f002d31aa956caa857668b8ad1f653aaad7c3d7c1d2",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C04 — Keep an inventory register people can maintain",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C04 — Keep an inventory register people can maintain",
+        "baselineSectionSha256": "a48f3a0ddbab48c817621e7337b80f50dbcb070e1f57c66d67eb7da1b87b3582",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C05 — Prepare an expense claim with a clear record",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C05 — Prepare an expense claim with a clear record",
+        "baselineSectionSha256": "db952eda3368fd25aef043296667b987de24df01d01cf2925c7b7ea90506a1a9",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C06 — Connect purchase orders, deliveries and invoices",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C06 — Connect purchase orders, deliveries and invoices",
+        "baselineSectionSha256": "11ec76188eb6eba3062d98fa12540dca9c69f3520c0af7c3d820bf6cf0adf1e4",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C07 — Turn meeting notes into clear actions",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C07 — Turn meeting notes into clear actions",
+        "baselineSectionSha256": "04bb0e0574abdb81f1e7a5416d526e3512b1cfa021bd8017cf34a1cf3e94722c",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C08 — Record a customer complaint and its resolution",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C08 — Record a customer complaint and its resolution",
+        "baselineSectionSha256": "d69fbaf207423ba22f171c45235c2480b0489ff8626498ba650aafb1a197649c",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C09 — Write a simple operating procedure people can follow",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C09 — Write a simple operating procedure people can follow",
+        "baselineSectionSha256": "fabac09824da6b0d45233db58930bdc9807246c0d572d705fe4f96cb8131b6f8",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C10 — Manage document versions without losing the history",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C10 — Manage document versions without losing the history",
+        "baselineSectionSha256": "d03774d5a8615ad2e104d44ba354c6dbd0e7c6d85785520038d390b280c667e9",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C11 — Hand over work without sharing passwords or losing context",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C11 — Hand over work without sharing passwords or losing context",
+        "baselineSectionSha256": "a56cd3d133040d1695e2bab9fb8de82092eff53bfbfa6b5b379a522314c9ceff",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C12 — Organise business records so you can find the answer",
+        "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+        "heading": "GUIDE-C12 — Organise business records so you can find the answer",
+        "baselineSectionSha256": "9f4d2fc36072173a7dfa57e72882724b1ea1b8e7474bb58c95905355a03b154b",
+        "category": "practical-guide"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#retail/wholesale",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "retail/wholesale",
+        "baselineSectionSha256": "56a7b4b8e3945fb848efe8b7e9e913ad6d25a4986f031dd4fa0352423f6e89fa",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#packaged-food manufacturing",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "packaged-food manufacturing",
+        "baselineSectionSha256": "bd7ff680f983bd3f5299a54a58c396949e529db710308d8527539b9045b6b16b",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#restaurants/hospitality",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "restaurants/hospitality",
+        "baselineSectionSha256": "2db0874897defe70ba5eb653ce4be92cfdd1b16883748b9a8b3d135f0bdf153b",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#agriculture",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "agriculture",
+        "baselineSectionSha256": "a8547f543f4e2aa6cd6cd106a55e41c1bed8e694b32f6aeb33a830b689550e56",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#general manufacturing",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "general manufacturing",
+        "baselineSectionSha256": "bff6d0df32d5b6f5a1bf97fc7f436c286603a9607a86ce456fe6d96c135e1eca",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#logistics/transport",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "logistics/transport",
+        "baselineSectionSha256": "2b5196f10d34ea1201658711d8ae14d745e88a1f2be3a7c2c5581235f438f1b7",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#construction",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "construction",
+        "baselineSectionSha256": "1d35aa034a42bdd3dd32112dfce5547d765b44940de374a44b8c41de9daaa5d4",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#real estate",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "real estate",
+        "baselineSectionSha256": "941b4dfe1410193533b6f5d558593d28dfd1b65eb774f83a033ffefc57e3c5f4",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#technology/software",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "technology/software",
+        "baselineSectionSha256": "45823eb40177e55dedf771bbdf9679abd5c3c3a8b782521338b1a07cd8623f98",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#e-commerce",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "e-commerce",
+        "baselineSectionSha256": "10e32d69f58b983d87be66a38bba072bfb74f4adf7716530e739c4097fe25ae7",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#beauty/personal care",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "beauty/personal care",
+        "baselineSectionSha256": "e6a22028318f8eb41689658c7641ec216df729bb648da0f23d5c0b946d1c97ec",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#fashion/textiles",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "fashion/textiles",
+        "baselineSectionSha256": "56dbe5be3c8fdd50c0d5e6d23060f30cf593344620b37688a086212b346fbcd0",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#healthcare",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "healthcare",
+        "baselineSectionSha256": "2618513c4940e19c16533c9c9c85dfee36ac21a30dd9e7d83987e92bc8f60dec",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#education",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "education",
+        "baselineSectionSha256": "3250e8010dc35677d0d9c33c6347acdde5bd9a78696a8b8205a54cc67c01b130",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#professional services",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "professional services",
+        "baselineSectionSha256": "36c871b16d2c691bdfff14aee24ddc23699ab1fd2bb70e7c83c41febae62fbcf",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#media/creative",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "media/creative",
+        "baselineSectionSha256": "cfae0e71b4b6f52ae6a3d36be4cfba39fb653c9c7bdc2149b31336bfd2c54f2a",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#import/export",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "import/export",
+        "baselineSectionSha256": "1b97a8ad970559584d1649c178ed5858723289cbb7db7434c76b829014552203",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#energy",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "energy",
+        "baselineSectionSha256": "dec4a75b192af7d8815d9bcb5e1bd67bb764190d51c551e692dad482754fd8da",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#financial services",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "financial services",
+        "baselineSectionSha256": "de3eafc8673283053563b9d1bf0f3b0145dfac0aba75b581c93c03a30e564eda",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#other",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "other",
+        "baselineSectionSha256": "3b6e951ee3df1d3c1840fa8eda33899657479a65263edf4defde93236e241274",
+        "category": "industry-landing"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#retail/wholesale — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "retail/wholesale — deeper pack",
+        "baselineSectionSha256": "f26660109d93a3269694845b10d60cff2273cdb5b7b35b2ddc0eedb0c5d960e5",
+        "category": "industry-deeper-pack"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#packaged-food manufacturing — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "packaged-food manufacturing — deeper pack",
+        "baselineSectionSha256": "b0d560587962410cfad9da9f35796a6520a1d497bbe9dde713f0701d56c56acf",
+        "category": "industry-deeper-pack"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#restaurants/hospitality — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "restaurants/hospitality — deeper pack",
+        "baselineSectionSha256": "e52a89ba25bc2470f49fe0508f04aff803c7affbe4df5ebf070263dfe74d0dae",
+        "category": "industry-deeper-pack"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#technology/software — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "technology/software — deeper pack",
+        "baselineSectionSha256": "097b703e7cf67b2962fc39d874f6666aafb1fc1d5cfa92132985274c67f2e47d",
+        "category": "industry-deeper-pack"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#professional services — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "professional services — deeper pack",
+        "baselineSectionSha256": "1e8e44c99a5204c4a69448cebf30cfd6a2979ba727aa5e696de2ee946f4a3e68",
+        "category": "industry-deeper-pack"
+      },
+      {
+        "identity": "docs/content-candidates/industry-content-candidates.md#beauty/personal care — deeper pack",
+        "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+        "heading": "beauty/personal care — deeper pack",
+        "baselineSectionSha256": "dc83e657a63cd42bcfb16df71e1a42fae2980df68d8d2679512f23c5c8181baa",
+        "category": "industry-deeper-pack"
+      }
     ],
     "corpora": [
       {
@@ -952,7 +1228,7 @@
   },
   "proposedApprovalLifetimeHours": 24,
   "expirySemantics": "The owner-approved record fixes its expiry. Every child expires no later than its parent and retained review plan. Revocation stops every new dispatch, including already reserved work. Valid in-flight usage is still accounted.",
-  "scopeNotice": "One up-to-$30 additional inference allocation for the frozen content inventory and original 80/60/60 case rosters. It excludes prior unknown account charges, tax, Agent usage, hosting and other projects. Unsupported preparers remain held; no completion of all allowed work is promised.",
+  "scopeNotice": "One up-to-$30 additional inference allocation for 108 actual content units (70 canonical intake IDs plus 12 practical guides, 20 industry landing sections and six deeper packs) and the original 80/60/60 case rosters. Named sections use actual source headings, not invented runtime UUIDs. Same-identity candidate revisions still require real eligibility checks; original evaluation corpus bytes stay pinned. Prior unknown charges, tax, Agent usage, hosting and other projects are excluded. Completion of all allowed work is not promised.",
   "delegationNotice": "Once this package is actually approved, the server may admit exact immutable submanifests within its scope without asking for per-item spending or publication approval. Current implementation only prepares the original TPL-07 operational pair.",
   "currentExecutableCeiling": {
     "attempts": 2,
@@ -960,7 +1236,9 @@
     "actualRuntimePlanPrepared": false
   },
   "actualSourceCounts": {
-    "contentIds": 70,
+    "canonicalIntakeIds": 70,
+    "namedSourceSections": 38,
+    "totalContentUnits": 108,
     "corpora": [
       {
         "name": "editorial",

@@ -6,7 +6,7 @@ import {pool} from "@workspace/db";
 import {InferenceBudgetStore} from "./inference-budget-store";
 import {FiniteInferenceDispatcher,type FiniteWork,type FiniteManifest} from "./inference-batch-dispatch";
 import {inferenceProposal,additionalInferenceAllocation,requestDigest,budgetUsed,tokenCost,emptyBudget} from "./inference-budget";
-import {prepareFiniteAllocationPackage,allocationPackageId,registerPreparedInferenceSubmanifest} from "./inference-allocation-package";
+import {prepareFiniteAllocationPackage,allocationPackageId,registerPreparedInferenceSubmanifest,readApprovedFiniteAllocationPackage} from "./inference-allocation-package";
 import type {ManagedCompletionResult} from "./managed-inference";
 
 test("durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls",{
@@ -32,12 +32,13 @@ test("durable finite batch dispatch — isolated PostgreSQL and controlled trans
     choices:[{finish_reason:"stop",message:{content:"{}"}}],usage:{prompt_tokens:120,completion_tokens:40,total_tokens:160}});
   const dispatcher=new FiniteInferenceDispatcher(store,async()=>{sends++;return response();},
     async()=>{if(!bindingValid)throw Error("ACTUAL_BINDING_CHANGED");});
-  const seed=async(works:FiniteWork[],enabled=true,expires=new Date(Date.now()+3600000),forged=false)=>{
-    const id=`controlled-${randomUUID()}`,manifest:FiniteManifest={version:2,policyVersion:inferenceProposal.priceVersion,preparedAt:new Date().toISOString(),allocation:{...additionalInferenceAllocation},works};
+  const seed=async(works:FiniteWork[],enabled=true,expires=new Date(Date.now()+3600000),forged=false,
+    clock?:{preparedAt:string;approvedAt:Date})=>{
+    const id=`controlled-${randomUUID()}`,manifest:FiniteManifest={version:2,policyVersion:inferenceProposal.priceVersion,preparedAt:clock?.preparedAt??new Date().toISOString(),allocation:{...additionalInferenceAllocation},works};
     await pool.query(`INSERT INTO "${schema}".valo_inference_batches
       (id,policy_hash,manifest_hash,manifest,enabled,approved_by,approval_reference,approved_at,expires_at)
-      VALUES($1,$2,$3,$4,$5,'controlled-fixture-not-owner','isolated-test-only',now(),$6)`,
-      [id,requestDigest(inferenceProposal),forged?requestDigest("forged"):requestDigest(manifest),JSON.stringify(manifest),enabled,expires]);
+      VALUES($1,$2,$3,$4,$5,'controlled-fixture-not-owner','isolated-test-only',$7,$6)`,
+      [id,requestDigest(inferenceProposal),forged?requestDigest("forged"):requestDigest(manifest),JSON.stringify(manifest),enabled,expires,clock?.approvedAt??new Date()]);
     return id;
   };
   const state=()=>store.mutate("inspect",s=>({state:s,value:s}));
@@ -58,6 +59,15 @@ test("durable finite batch dispatch — isolated PostgreSQL and controlled trans
       assert.equal(s.entries[0]!.reserved,tokenCost(400000,8192).toString());
       assert.equal(budgetUsed(s),tokenCost(120,40));
       const before=sends;assert.equal((await run(dispatcher,id,w)).id,r.id);assert.equal(sends,before);
+    });
+    await t.test("PostgreSQL Date timestamps preserve millisecond approval order",async()=>{
+      await reset();const epoch=Math.floor(Date.now()/1000)*1000-2000;
+      const good=work("timestamp-good"),goodId=await seed([good],true,new Date(Date.now()+3600000),false,
+        {preparedAt:new Date(epoch+123).toISOString(),approvedAt:new Date(epoch+789)});
+      await run(dispatcher,goodId,good);
+      const bad=work("timestamp-reversed"),badId=await seed([bad],true,new Date(Date.now()+3600000),false,
+        {preparedAt:new Date(epoch+789).toISOString(),approvedAt:new Date(epoch+123)}),before=sends;
+      await assert.rejects(()=>run(dispatcher,badId,bad),/MANIFEST_INVALID/);assert.equal(sends,before);
     });
     await t.test("review pair reserves atomically and charges its actual editorial lane",async()=>{
       await reset();
@@ -184,6 +194,7 @@ test("durable finite batch dispatch — isolated PostgreSQL and controlled trans
           (id,policy_hash,manifest_hash,manifest,enabled,approved_by,approval_reference,approved_at,expires_at)
           VALUES($1,$2,$3,$4,true,'controlled-owner-fixture','controlled-package-approval',now(),$5)`,
           [packageId,requestDigest(inferenceProposal),requestDigest(pkg),JSON.stringify(pkg),expires]);
+        assert.equal(allocationPackageId((await readApprovedFiniteAllocationPackage(pool,packageId,schema)).pkg),packageId);
         const pair=(suffix:string)=>[work(`package-f-${suffix}`,"publication",`package-pair-${suffix}`,"factual"),
           work(`package-c-${suffix}`,"publication",`package-pair-${suffix}`,"challenge")].map(w=>({...w,
             bindings:{...w.bindings,candidateVersionId:candidateId,corpus:null,caseId:null,

@@ -19,6 +19,8 @@ export const additionalInferenceAllocation={
   replacesLegacyPublicationDailySchedule:true,
 } as const;
 export const acceptedInferenceModels=new Set(["gpt-5.4-mini","gpt-5.4-mini-2026-03-17"]);
+export const inferenceTimestamp=(value:unknown):number=>value instanceof Date?value.getTime():
+  typeof value==="string"?Date.parse(value):Number.NaN;
 export const requestDigest=(x:unknown):string=>{
   const canonical=(v:unknown):unknown=>Array.isArray(v)?v.map(canonical):v&&typeof v==="object"?
     Object.fromEntries(Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([k,x])=>[k,canonical(x)])):v;

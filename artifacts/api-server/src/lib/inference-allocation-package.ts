@@ -1,29 +1,43 @@
 import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import {createHash} from "node:crypto";
-import {additionalInferenceAllocation,inferenceProposal,requestDigest} from "./inference-budget";
+import {additionalInferenceAllocation,inferenceProposal,inferenceTimestamp,requestDigest} from "./inference-budget";
 import type {FiniteManifest,FiniteWork} from "./inference-batch-dispatch";
 import type {InferenceBudgetStore} from "./inference-budget-store";
 const root=resolve(import.meta.dirname,"../../../..");
 const sha=(bytes:Buffer)=>createHash("sha256").update(bytes).digest("hex");
 type SourceRef={path:string;sha256:string};
+type NamedContentSection={identity:string;sourcePath:string;heading:string;baselineSectionSha256:string;
+  category:"practical-guide"|"industry-landing"|"industry-deeper-pack"};
 export type FiniteAllocationPackage={version:3;kind:"finite-inference-package";preparedAt:string;
   policyVersion:string;allocation:typeof additionalInferenceAllocation;
-  sourceFiles:SourceRef[];contentIds:string[];
+  sourceFiles:SourceRef[];contentIds:string[];namedContentSections:NamedContentSection[];
   corpora:{name:"editorial"|"checker"|"customer-ai";cases:{id:string;hash:string}[]}[];
   laneAttemptLimits:{publication:216;editorial_evaluation:68;checker_challenge:80;customer:94};
   allowedRoles:readonly["factual","challenge","customer"];
   supportedPreparers:readonly string[];
   holds:string[]};
 const scopePaths=["docs/registers/content-inventory.json","docs/content-candidates/r1-content-intake-manifest.json",
-  "docs/evaluation-candidates/editorial.json","docs/evaluation-candidates/checker.json","docs/evaluation-candidates/customer-ai.json"] as const;
+  "docs/evaluation-candidates/editorial.json","docs/evaluation-candidates/checker.json","docs/evaluation-candidates/customer-ai.json",
+  "docs/content-candidates/practical-guide-candidates.md","docs/content-candidates/industry-content-candidates.md"] as const;
+function namedSections(path:string,body:string):NamedContentSection[]{
+  const headers=[...body.matchAll(/^#{1,3} .+$/gm)];
+  return headers.flatMap((match,index):NamedContentSection[]=>{
+    const heading=match[0].replace(/^#+ /,""),isGuide=path===scopePaths[5]&&/^## GUIDE-C\d{2} — /.test(match[0]);
+    const industry=path===scopePaths[6]&&match[0].startsWith("### ");
+    if(!isGuide&&!industry)return[];
+    return[{identity:`${path}#${heading}`,sourcePath:path,heading,
+      baselineSectionSha256:sha(Buffer.from(body.slice(match.index,headers[index+1]?.index??body.length))),
+      category:isGuide?"practical-guide":heading.endsWith(" — deeper pack")?"industry-deeper-pack":"industry-landing"}];
+  });
+}
 /** Reads the actual finite inventory/corpora. Scope is not readiness: unfinished
  * preparers remain held, and actual source/rights/currentness gates still run. */
 export async function prepareFiniteAllocationPackage(now=new Date()):Promise<FiniteAllocationPackage>{
   const sources=await Promise.all(scopePaths.map(async path=>{const bytes=await readFile(resolve(root,path));
-    return{path,sha256:sha(bytes),value:JSON.parse(bytes.toString())};}));
+    return{path,sha256:sha(bytes),body:bytes.toString(),value:path.endsWith(".json")?JSON.parse(bytes.toString()):null};}));
   const intake=sources[1]!.value as {templates:{id:string}[];guidance:{id:string}[]};
-  const corpora=sources.slice(2).map(source=>{
+  const corpora=sources.slice(2,5).map(source=>{
     const name=source.path.split("/").at(-1)!.replace(".json","") as FiniteAllocationPackage["corpora"][number]["name"];
     const cases=(source.value as {cases:Record<string,unknown>[]}).cases.map(row=>{
       const id=row.id??row.caseID??row.caseId??row.scenarioId??row.scenarioID;
@@ -33,9 +47,12 @@ export async function prepareFiniteAllocationPackage(now=new Date()):Promise<Fin
       throw Error("PACKAGE_CORPUS_CHANGED");
     return{name,cases};
   });
+  const sections=sources.slice(5).flatMap(source=>namedSections(source.path,source.body));
+  for(const[category,count]of Object.entries({"practical-guide":12,"industry-landing":20,"industry-deeper-pack":6}))
+    if(sections.filter(s=>s.category===category).length!==count)throw Error("PACKAGE_CONTENT_SECTIONS_CHANGED");
   return{version:3,kind:"finite-inference-package",preparedAt:now.toISOString(),policyVersion:inferenceProposal.priceVersion,
     allocation:{...additionalInferenceAllocation},sourceFiles:sources.map(({path,sha256})=>({path,sha256})),
-    contentIds:[...new Set([...intake.templates,...intake.guidance].map(c=>c.id))].sort(),corpora,
+    contentIds:[...new Set([...intake.templates,...intake.guidance].map(c=>c.id))].sort(),namedContentSections:sections,corpora,
     laneAttemptLimits:{publication:216,editorial_evaluation:68,checker_challenge:80,customer:94},
     allowedRoles:["factual","challenge","customer"],supportedPreparers:["operational-template-pair-v1"],
     holds:["Only the existing TPL-07 exact operational review preparer is executable in this revision.",
@@ -50,6 +67,11 @@ export function validateAllocationPackage(value:FiniteAllocationPackage){
     requestDigest(value.allowedRoles)!==requestDigest(["factual","challenge","customer"])||
     !Array.isArray(value.contentIds)||!value.contentIds.length||new Set(value.contentIds).size!==value.contentIds.length||
     value.sourceFiles.length!==scopePaths.length||value.sourceFiles.some((f,i)=>f.path!==scopePaths[i]||!/^[a-f0-9]{64}$/.test(f.sha256)))
+    throw Error("ALLOCATION_PACKAGE_INVALID");
+  if(!Array.isArray(value.namedContentSections)||value.namedContentSections.length!==38||
+    new Set(value.namedContentSections.map(s=>s.identity)).size!==38||value.namedContentSections.some(s=>
+      s.sourcePath!==scopePaths[5]&&s.sourcePath!==scopePaths[6]||
+      s.identity!==`${s.sourcePath}#${s.heading}`||!/^[a-f0-9]{64}$/.test(s.baselineSectionSha256)))
     throw Error("ALLOCATION_PACKAGE_INVALID");
   for(const[name,count]of Object.entries({editorial:60,checker:80,"customer-ai":60})){
     const corpus=value.corpora.filter(c=>c.name===name);
@@ -75,22 +97,34 @@ async function packageRow(c:import("pg").PoolClient,schema:string,id:string,admi
   if(!row||!row.approved_by||row.approved_by==="finite-package-delegate"||!row.approval_reference||!row.approved_at||
     admitting&&!row.enabled)throw Error("ALLOCATION_PACKAGE_NOT_AUTHORIZED");
   const pkg=row.manifest as FiniteAllocationPackage;validateAllocationPackage(pkg);
-  const approvedAt=Date.parse(row.approved_at),expiresAt=Date.parse(row.expires_at);
+  const approvedAt=inferenceTimestamp(row.approved_at),expiresAt=inferenceTimestamp(row.expires_at);
   if(row.policy_hash!==requestDigest(inferenceProposal)||row.manifest_hash!==requestDigest(pkg)||
     id!==allocationPackageId(pkg)||!Number.isFinite(approvedAt)||!Number.isFinite(expiresAt)||
     approvedAt>Date.now()||Date.parse(pkg.preparedAt)>approvedAt||admitting&&expiresAt<=Date.now())
     throw Error("ALLOCATION_PACKAGE_EXPIRED_OR_CHANGED");
   if(admitting){
-    for(const source of pkg.sourceFiles)if(sha(await readFile(resolve(root,source.path)))!==source.sha256)
-      throw Error("ALLOCATION_PACKAGE_SOURCE_CHANGED");
+    const actual=await Promise.all(pkg.sourceFiles.map(async source=>({source,bytes:await readFile(resolve(root,source.path))})));
+    // The original evaluation oracle remains byte-pinned. Content scope is
+    // its named identity; routine same-identity candidate revisions still need
+    // full real readiness checks but do not require another spending approval.
+    for(const {source,bytes}of actual.slice(2,5))if(sha(bytes)!==source.sha256)throw Error("ALLOCATION_PACKAGE_SOURCE_CHANGED");
+    const intake=JSON.parse(actual[1]!.bytes.toString()) as {templates:{id:string}[];guidance:{id:string}[]};
+    const ids=new Set([...intake.templates,...intake.guidance].map(x=>x.id));
+    if(pkg.contentIds.some(id=>!ids.has(id)))throw Error("ALLOCATION_PACKAGE_CONTENT_IDENTITY_CHANGED");
+    const sections=actual.slice(5).flatMap(x=>namedSections(x.source.path,x.bytes.toString()));
+    if(pkg.namedContentSections.some(s=>!sections.some(current=>current.identity===s.identity)))
+      throw Error("ALLOCATION_PACKAGE_CONTENT_IDENTITY_CHANGED");
   }
   return{row,pkg};
 }
 /** Reuse the existing immutable package for fresh exact submanifests. A new
  * child timestamp never creates a new owner-approval requirement. */
-export async function readApprovedFiniteAllocationPackage(pool:Pick<import("pg").Pool,"connect">,id:string){
+export async function readApprovedFiniteAllocationPackage(pool:Pick<import("pg").Pool,"connect">,id:string,schema="public"){
+  if(!/^[a-z_][a-z0-9_]*$/.test(schema))throw Error("INVALID_LEDGER_SCHEMA");
   const c=await pool.connect();
-  try{await c.query("BEGIN READ ONLY");const {pkg,row}=await packageRow(c,"public",id,true);
+  // PostgreSQL row locks require an ordinary transaction. This path performs
+  // only reads; it neither writes approval nor modifies the package.
+  try{await c.query("BEGIN");const {pkg,row}=await packageRow(c,schema,id,true);
     await c.query("COMMIT");return{pkg,expiresAt:new Date(row.expires_at).toISOString()};
   }catch(error){await c.query("ROLLBACK");throw error;}finally{c.release();}
 }
@@ -101,8 +135,8 @@ export async function assertDelegatedBatchAuthority(c:import("pg").PoolClient,sc
   const {row,pkg}=await packageRow(c,schema,id,admitting);
   if(child.approved_by!=="finite-package-delegate"||child.approval_reference!==`delegate:${requestDigest({packageId:id,
       packageHash:row.manifest_hash,manifestHash:child.manifest_hash})}`||
-    Date.parse(String(child.approved_at))<Date.parse(row.approved_at)||
-    Date.parse(String(child.expires_at))>Date.parse(row.expires_at))throw Error("DELEGATED_APPROVAL_BINDING_INVALID");
+    inferenceTimestamp(child.approved_at)<inferenceTimestamp(row.approved_at)||
+    inferenceTimestamp(child.expires_at)>inferenceTimestamp(row.expires_at))throw Error("DELEGATED_APPROVAL_BINDING_INVALID");
   if(admitting){
     for(const work of child.manifest.works){
       const content=work.bindings.candidateVersionId?(await c.query(`SELECT template_id FROM "${schema}".valo_content_versions WHERE id=$1`,
@@ -122,7 +156,7 @@ export async function registerPreparedInferenceSubmanifest(store:InferenceBudget
   return store.mutate("finite-submanifest-admitted",async(s,c)=>{
     const {row,pkg}=await packageRow(c,store.schemaName(),manifest.packageId!,true);
     const expiry=Date.parse(expiresAt);
-    if(!Number.isFinite(expiry)||expiry<=Date.now()||expiry>Date.parse(row.expires_at))throw Error("SUBMANIFEST_EXPIRY_INVALID");
+    if(!Number.isFinite(expiry)||expiry<=Date.now()||expiry>inferenceTimestamp(row.expires_at))throw Error("SUBMANIFEST_EXPIRY_INVALID");
     for(const work of manifest.works){
       const content=work.bindings.candidateVersionId?(await c.query(`SELECT template_id FROM "${store.schemaName()}".valo_content_versions WHERE id=$1`,
         [work.bindings.candidateVersionId])).rows[0]?.template_id:null;

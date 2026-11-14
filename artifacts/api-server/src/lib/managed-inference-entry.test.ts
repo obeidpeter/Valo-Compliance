@@ -103,13 +103,13 @@ test("default managed entry and customer organizer use actual finite dispatch an
     }),taxAmountKobo:null,taxLabel:"",discountKobo:null,amountDueKobo:null},processingConsent:true,
     idempotencyKey:"33333333-3333-4333-8333-333333333333"});
   const request=customerCompletionRequest(customerProviderPayload(input));
-  const caseHash=requestDigest(source),sourceHash=createHash("sha256").update(bytes).digest("hex");
+  const caseId=source.caseID,caseHash=requestDigest(source),sourceHash=createHash("sha256").update(bytes).digest("hex");
   let batchNumber=0;
   function prepare(options:{retry?:boolean;modify?:(work:FiniteWork)=>void}={}){
     const id=`controlled-entry-${++batchNumber}`,key=`${id}:attempt-1`;
     const work:FiniteWork={key,lane:"customer",role:"customer",pair:null,candidateHash:caseHash,caseHash,
       sourceHashes:[sourceHash],request:structuredClone(request),bindings:{candidateVersionId:null,
-        corpus:"customer-ai",caseId:source.caseID,sourceFiles:[{path,sha256:sourceHash}]}};
+        corpus:"customer-ai",caseId,sourceFiles:[{path,sha256:sourceHash}]}};
     options.modify?.(work);
     const works=[work];if(options.retry)works.push({...structuredClone(work),key:`${id}:attempt-2`,retryOf:key});
     const manifest:FiniteManifest={version:2,policyVersion:inferenceProposal.priceVersion,

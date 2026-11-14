@@ -11,7 +11,8 @@ const work=():FiniteWork=>({key:"controlled-factual",lane:"publication",role:"fa
 test("package freezes actual inventory and the original three case rosters without approving them",async()=>{
   const pkg=await prepareFiniteAllocationPackage();validateAllocationPackage(pkg);
   assert.ok(pkg.contentIds.includes("TPL-07"));assert.deepEqual(pkg.corpora.map(c=>c.cases.length),[60,80,60]);
-  assert.deepEqual(pkg.allocation,additionalInferenceAllocation);assert.equal(pkg.sourceFiles.length,5);
+  assert.equal(pkg.contentIds.length+pkg.namedContentSections.length,108);assert.equal(pkg.namedContentSections.length,38);
+  assert.deepEqual(pkg.allocation,additionalInferenceAllocation);assert.equal(pkg.sourceFiles.length,7);
   assert.equal(allocationPackageId(pkg),`finite-package:${requestDigest(pkg)}`);
   assert.deepEqual(pkg.supportedPreparers,["operational-template-pair-v1"]);
   assert.equal("approved" in pkg,false);

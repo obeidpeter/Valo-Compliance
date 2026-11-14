@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {closePrivacyErasureLocks} from "../lib/valo-privacy-erasure";
 import { db, pool, valoExportJobs } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { exportQueue, EXPORT_QUEUE } from "../lib/valo-export-queue";
@@ -34,17 +35,20 @@ await boss.work(EXPORT_QUEUE, {batchSize:1,pollingIntervalSeconds:1}, async jobs
   }
 });
 let dispatching = false;
+let dispatchIdle:Promise<void>=Promise.resolve();
 let reminderCheckedAt=0;
 let operationalCheckedAt=0;
 async function dispatch() {
   developmentExportsOnly();
   if (dispatching) return;
   dispatching = true;
+  let finishDispatch!:()=>void;dispatchIdle=new Promise(resolve=>{finishDispatch=resolve;});
   try {
     try{
     await recoverAbandonedExports();
     const cleanup=await reconcileExportOrphans();
     if(cleanup.failed)logger.error({event:"export.orphan_cleanup_failed",count:cleanup.failed});
+    if(cleanup.privacyHeld)logger.error({event:"privacy.erasure_replay_held",count:cleanup.privacyHeld});
     // This durable table is the transactional outbox. Stable queue IDs make retries harmless.
     const pending = await db.select().from(valoExportJobs).where(eq(valoExportJobs.status,"queued")).limit(25);
     for (const job of pending)
@@ -59,7 +63,6 @@ async function dispatch() {
     }
   } catch { logger.error({event:"export.dispatch_failed"}); }
   finally {
-    dispatching = false;
     try{
       await recordWorkerHeartbeat();
       if(Date.now()-operationalCheckedAt>=60000){
@@ -67,6 +70,7 @@ async function dispatch() {
         await recordOperationalAlerts(await collectOperationalSample(text=>{const config={text,query_timeout:1500};return pool.query(config);}));
       }
     }catch{logger.error({event:"operations.internal_probe_failed"});}
+    dispatching=false;finishDispatch();
   }
 }
 await dispatch();
@@ -78,6 +82,8 @@ async function stop() {
   stopping = true;
   clearInterval(timer);
   await boss.stop({graceful:true,timeout:60000});
+  await dispatchIdle;
+  await closePrivacyErasureLocks();
   await pool.end();
 }
 process.on("SIGTERM",()=>{void stop();});

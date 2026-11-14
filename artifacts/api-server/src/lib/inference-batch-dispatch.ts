@@ -1,6 +1,6 @@
 import {AsyncLocalStorage} from "node:async_hooks";
 import {InferenceBudgetStore} from "./inference-budget-store";
-import {inferenceProposal,additionalInferenceAllocation,acceptedInferenceModels,requestDigest,reserveBudget,reserveReviewPair,
+import {inferenceProposal,additionalInferenceAllocation,acceptedInferenceModels,inferenceTimestamp,requestDigest,reserveBudget,reserveReviewPair,
   transitionBudget,settleBudget,type BudgetLane,type BudgetState,type ReserveInput} from "./inference-budget";
 import type {ManagedCompletionResult,ManagedRequest} from "./managed-inference";
 import {assertDelegatedBatchAuthority} from "./inference-allocation-package";
@@ -26,7 +26,7 @@ export class FiniteInferenceDispatcher{
     const row=r.rows[0];
     if(!row||!row.approved_by||!row.approval_reference||!row.approved_at||admitting&&!row.enabled)
       throw Error("INFERENCE_BATCH_NOT_AUTHORIZED");
-    const now=Date.now(),approvedAt=Date.parse(row.approved_at),expiresAt=Date.parse(row.expires_at);
+    const now=Date.now(),approvedAt=inferenceTimestamp(row.approved_at),expiresAt=inferenceTimestamp(row.expires_at);
     if(!Number.isFinite(approvedAt)||!Number.isFinite(expiresAt)||approvedAt>now||
       admitting&&expiresAt<=now)throw Error("INFERENCE_BATCH_EXPIRED");
     const manifest=row.manifest as FiniteManifest;
@@ -169,7 +169,7 @@ export class FiniteInferenceDispatcher{
             ...(!acceptedInferenceModels.has(result.model)?{suspended:true,
               unboundedPrior:[...new Set([...s.unboundedPrior,`unknown-priced-response:${admission.key}:${requestDigest({id:result.id,model:result.model})}`])]}:{})},value:false};
         const resultHash=requestDigest(result),state=settleBudget(s,admission.key,{input:u.prompt_tokens,output:u.completion_tokens,
-          responseId:result.id,resultRef:resultHash,freshUntil:Date.parse(row.expires_at)});
+          responseId:result.id,resultRef:resultHash,freshUntil:inferenceTimestamp(row.expires_at)});
         if(state.entries.find(e=>e.runKey===admission.key)?.status!=="settled")return{state,value:false};
         await c.query(`UPDATE "${this.store.schemaName()}".valo_inference_batches
           SET results=jsonb_set(results,ARRAY[$2],$3::jsonb) WHERE id=$1`,[ctx.batchId,ctx.key,JSON.stringify(result)]);

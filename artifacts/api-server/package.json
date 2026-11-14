@@ -42,7 +42,9 @@
     "test:valo-sources": "tsx --test src/editorial/source-controls.test.ts src/editorial/business-name-evidence.test.ts",
     "test:valo-source-db": "tsx --test src/editorial/source-store.integration.test.ts",
     "queue:apply-development": "tsx src/scripts/queue-migration.ts apply-development",
-    "test:valo-finite-entry": "node --experimental-test-module-mocks --import tsx --test src/lib/inference-manifest.test.ts src/lib/inference-allocation-package.test.ts src/lib/inference-history-reconciliation.test.ts src/lib/managed-inference-entry.test.ts"
+    "test:valo-erasure-controls": "node --import tsx --test src/lib/valo-erasure-seal.test.ts src/lib/valo-erasure-lock.test.ts",
+    "test:valo-erasure-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts",
+    "test:valo-finite-entry": "node --experimental-test-module-mocks --import tsx --test src/lib/inference-manifest.test.ts src/lib/inference-allocation-package.test.ts src/lib/inference-history-reconciliation.test.ts src/lib/managed-inference-entry.test.ts src/lib/managed-operational-recovery.test.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",
