@@ -50,7 +50,7 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
   };
   const exportJob=async(f:Fixture)=>{
     const created=await requestExport(f.owner,f.document.id,randomUUID(),{
-      revisionId:f.document.revisionId,format:"pdf",acknowledgeDraft:true});
+      revisionId:f.document.revisionId,format:"docx",acknowledgeDraft:true});
     const[job]=await db.select().from(valoExportJobs).where(eq(valoExportJobs.id,created.id));return job;
   };
   const assertWrongCurrentKey=async(run:(remove:(key:string)=>Promise<void>)=>Promise<unknown>,caseId:string)=>{

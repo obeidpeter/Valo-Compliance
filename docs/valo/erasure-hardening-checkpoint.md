@@ -68,12 +68,16 @@ The full pg-boss worker and native-storage regressions remain separate. Current-
 
 ## Required integration before merge
 
-Register `pending_privacy_erasure_hardening.sql` under the next available
-migration number without rewriting the existing journal. Apply it only to the
-reviewed disposable/development target, validate schema parity and the trigger,
-then run the new `valo-erasure-hardening.integration.test.ts`, the updated
-erasure integration tests, privacy key/HTTP regressions, export tests, complete
-typecheck and CI. Add the new tests to the appropriate standard suites.
+Migration `0022_privacy_erasure_hardening.sql` is registered after 0021 without
+rewriting history. Focused `test:valo-erasure-controls` and `test:valo-erasure-db`
+scripts are registered as separate CI steps; the latter uses explicitly synthetic
+PostgreSQL fixtures and controlled DOCX upload transport, with no browser or native
+storage credentials. The genuine native storage case reports its missing runtime
+prerequisite separately rather than skipping the portable controls.
+
+Apply only to the reviewed disposable/development target; validate schema parity,
+the trigger, new erasure tests, privacy key/HTTP regressions, export tests, complete
+typecheck and CI. Native Replit storage/full-worker verification remains separate.
 
 Independent destructive-path review is required before integration. Do not
 silently adopt old unsigned inventories: they need independently authenticated

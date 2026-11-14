@@ -1,4 +1,4 @@
--- Integration must assign the next journal index; no automatic startup DDL.
+-- Registered migration 0022; no automatic startup DDL.
 -- Existing unsigned journals are intentionally held, never silently attested.
 ALTER TABLE valo_privacy_tombstones
   ADD COLUMN erasure_seal jsonb,
