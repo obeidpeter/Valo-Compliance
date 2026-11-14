@@ -46,6 +46,15 @@ const businessNameEvidence={
   hash:"8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",result:"pass" as const,
 };
 const groups = [
+  {ids:["AI-001","AI-002","AI-003","AI-005","AI-008","AI-009","EDT-002","EDT-003","EDT-005","EDT-006","EDT-007","EDT-008","WRK-001"],
+    paths:["artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
+      "artifacts/api-server/src/lib/valo-customer-ai-model.ts",
+      "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "artifacts/api-server/src/scripts/customer-ai-source-pilot.ts",
+      "artifacts/api-server/src/lib/valo-reader-checks.ts",
+      "lib/valo-core/src/customer-document.ts","artifacts/valo/src/screens/ai-drafts.tsx"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/customer-instruction-checkpoint.json",
+      hash:"c4aaf315072fa06ea6c5ece312fd620bf05c19f89d8120b7d800ad7832c14952",result:"pass" as const}},
   {ids:["DOC-001","EDT-006","EDP-004","EDP-006","EDP-007","AI-007","WRK-003","WRK-004","NFR-009","OPS-003"],
     paths:["artifacts/api-server/src/editorial/operational-intake.ts",
       "artifacts/api-server/src/editorial/operational-review.ts",

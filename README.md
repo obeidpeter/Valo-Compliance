@@ -1,6 +1,9 @@
 # Valo Compliance — Valo Platform
 
 Latest implementation checkpoint:
+[separate AI instructions, preserved manual notes and two supplied cases through private exports](docs/valo/customer-ai-source-checkpoint.md).
+
+Earlier implementation checkpoint:
 [forty exact-ID draft bodies, measured review requests and crash-recoverable reminders](docs/valo/content-intake-reminder-checkpoint.md).
 
 Previous implementation checkpoint:

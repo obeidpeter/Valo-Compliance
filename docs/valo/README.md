@@ -1,6 +1,9 @@
 # Current operational publication refinement
 
-**Current implementation evidence:** [40 source-bound draft bodies, review meters
+**Current implementation evidence:** [bounded AI instructions, manual-note preservation
+and two supplied customer cases through private exports](customer-ai-source-checkpoint.md).
+
+Earlier implementation evidence: [40 source-bound draft bodies, review meters
 and recoverable reminder delivery](content-intake-reminder-checkpoint.md).
 These are executed partial checks, not content publication or R1/R2 acceptance.
 
