@@ -67,6 +67,22 @@ test("controlled PostgreSQL commerce mechanics — NOT real Paystack execution o
       const audit=await db.select().from(valoEvents).where(and(eq(valoEvents.entityId,order.id),eq(valoEvents.action,"payment.verified_success")));
       assert.equal(audit.length,1);
     });
+    await t.test("verified retries repair missing grant and receipt atomically once, without unsuspending a grant",async()=>{
+      const repair=await fixture(),data=response(repair);
+      await commerce.settleVerifiedOrder(repair.id,data);
+      await db.delete(valoEntitlements).where(eq(valoEntitlements.orderId,repair.id));
+      await db.delete(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,repair.id));
+      await Promise.all([commerce.settleVerifiedOrder(repair.id,data),commerce.settleVerifiedOrder(repair.id,data)]);
+      assert.equal((await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,repair.id))).length,1);
+      assert.equal((await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,repair.id))).length,1);
+      assert.equal((await db.select().from(valoEvents).where(and(eq(valoEvents.entityId,repair.id),
+        eq(valoEvents.action,"payment.fulfilment_repaired")))).length,1);
+      await db.update(valoEntitlements).set({status:"suspended"}).where(eq(valoEntitlements.orderId,repair.id));
+      await db.delete(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,repair.id));
+      await commerce.settleVerifiedOrder(repair.id,data);
+      assert.equal((await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,repair.id)))[0].status,"suspended");
+      assert.equal((await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,repair.id))).length,1);
+    });
     await t.test("receipt/licence history is private and independent of a later price edit",async()=>{
       await db.update(valoPrices).set({amountKobo:99999,licenceText:"A later test price"}).where(eq(valoPrices.id,priceId));
       const receipt=await commerce.purchaseReceipt(a,order.id);
@@ -100,6 +116,10 @@ test("controlled PostgreSQL commerce mechanics — NOT real Paystack execution o
     });
     await t.test("reversal suspends reuse without deleting financial or customer history",async()=>{
       await commerce.settleVerifiedOrder(order.id,{...verified,status:"reversed"});
+      const receipt=await commerce.purchaseReceipt(a,order.id);
+      assert.equal(receipt.status,"reversed");assert.equal(receipt.amountKobo,order.amountKobo);
+      assert.equal(receipt.licenceText,fixtureLine.licenceText);assert.equal(receipt.receiptReference,`VALO-TEST-${order.reference}`);
+      assert.equal((await commerce.purchases(a)).orders.find(o=>o.id===order.id)?.receiptReference,receipt.receiptReference);
       const[grant]=await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order.id));
       assert.equal(grant.status,"suspended");assert.equal((await commerce.purchases(a)).orders.find(o=>o.id===order.id)!.status,"reversed");
       await assert.rejects(commerce.startCheckout(a,order.id,"synthetic@example.test"),{status:409});

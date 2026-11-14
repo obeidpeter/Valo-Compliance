@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts", "./money": "./src/money.ts", "./customer-document": "./src/customer-document.ts" },
+  "exports": { ".": "./src/index.ts", "./money": "./src/money.ts", "./customer-document": "./src/customer-document.ts", "./guided": "./src/guided.ts" },
   "dependencies": { "zod": "catalog:" },
   "devDependencies": { "@types/node": "catalog:" }
 }

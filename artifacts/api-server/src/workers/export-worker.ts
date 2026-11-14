@@ -9,6 +9,7 @@ import { recoverAbandonedExports,reconcileExportOrphans } from "../lib/valo-expo
 import { processPaymentEvents,reconcilePayments } from "../lib/valo-commerce";
 import {processRefundQueue} from "../lib/valo-refunds";
 import {reconcileKnownDisputes} from "../lib/valo-payment-disputes";
+import {dispatchOperationalJobs} from "../lib/valo-operational-dispatch";
 
 developmentExportsOnly();
 const payload = z.object({ jobId:z.string().uuid(),workspaceId:z.string().uuid() }).strict();
@@ -35,6 +36,7 @@ async function dispatch() {
   if (dispatching) return;
   dispatching = true;
   try {
+    try{
     await recoverAbandonedExports();
     const cleanup=await reconcileExportOrphans();
     if(cleanup.failed)logger.error({event:"export.orphan_cleanup_failed",count:cleanup.failed});
@@ -42,13 +44,13 @@ async function dispatch() {
     const pending = await db.select().from(valoExportJobs).where(eq(valoExportJobs.status,"queued")).limit(25);
     for (const job of pending)
       await boss.send(EXPORT_QUEUE, {jobId:job.id,workspaceId:job.workspaceId},{id:job.queueId});
+    }catch{logger.error({event:"export.dispatch_failed"});}
     if(Date.now()-reminderCheckedAt>=60000){
-      await reconcileDueReminders();
-      await processPaymentEvents();
-      await processRefundQueue();
-      await reconcileKnownDisputes();
-      await reconcilePayments();
       reminderCheckedAt=Date.now();
+      const failures=await dispatchOperationalJobs({reminders:()=>reconcileDueReminders(),
+        paymentEvents:()=>processPaymentEvents(),refunds:()=>processRefundQueue(),
+        disputes:()=>reconcileKnownDisputes(),paymentReconciliation:()=>reconcilePayments()});
+      for(const domain of failures)logger.error({event:"operational.dispatch_failed",domain});
     }
   } catch { logger.error({event:"export.dispatch_failed"}); }
   finally { dispatching = false; }

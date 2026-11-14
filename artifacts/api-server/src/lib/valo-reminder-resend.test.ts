@@ -21,7 +21,7 @@ test("real sending is disabled without complete development-only settings",()=>{
 test("only the selected verified workspace owner's allowlisted email can reach transport",async()=>{
   let calls=0;
   for(const recipient of [null,"other@synthetic.invalid"]){
-    const sender=createResendReminderSender(config,async()=>{calls++;return Response.json({id});},async()=>recipient);
+    const sender=createResendReminderSender(config,async()=>{calls++;return Response.json({id});},async()=>recipient,env);
     await assert.rejects(()=>sender.send(input),/RECIPIENT_NOT_AUTHORIZED/);
   }
   assert.equal(calls,0);
@@ -31,7 +31,7 @@ test("controlled acceptance preserves one bounded provider key and minimal stabl
   const sender=createResendReminderSender(config,async(path,options)=>{
     assert.equal(path,"/emails");assert.equal(options.method,"POST");assert.equal(options.signal,input.signal);
     requests.push(options);return Response.json({id});
-  },async()=>config.recipient);
+   },async()=>config.recipient,env);
   assert.deepEqual(await sender.send(input),{providerMessageId:id});
   await sender.send({...input,title:"RENAMED PRIVATE TITLE"});
   assert.equal(requests[0].body,requests[1].body);
@@ -49,7 +49,21 @@ test("controlled provider rate failure, oversized data and invalid acknowledgeme
     new Response("untrusted response",{status:429}),
     new Response("x".repeat(8193)),Response.json({id:"not-a-provider-id"}),
   ]){
-    const sender=createResendReminderSender(config,async()=>response,async()=>config.recipient);
+    const sender=createResendReminderSender(config,async()=>response,async()=>config.recipient,env);
     await assert.rejects(()=>sender.send(input));
   }
+});
+test("every nonempty deployment marker and production reject before transport, including after sender construction",async()=>{
+  let calls=0;
+  const runtime:NodeJS.ProcessEnv={...env};
+  const sender=createResendReminderSender(config,async()=>{calls++;return Response.json({id});},async()=>config.recipient,runtime);
+  for(const marker of ["1","0","false","true","production"," ","\t"]){
+    runtime.REPLIT_DEPLOYMENT=marker;
+    assert.equal(reminderEmailConfiguration(runtime),null);
+    assert.equal(automaticReminderDeliveryReady({...runtime,VALO_EMAIL_OUTBOX_ENABLED:"development-test"}),false);
+    await assert.rejects(()=>sender.send(input),/EMAIL_DEVELOPMENT_ONLY/);
+  }
+  delete runtime.REPLIT_DEPLOYMENT;runtime.NODE_ENV="production";
+  await assert.rejects(()=>sender.send(input),/EMAIL_DEVELOPMENT_ONLY/);
+  assert.equal(calls,0);
 });

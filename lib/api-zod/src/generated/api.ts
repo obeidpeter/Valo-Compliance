@@ -2671,6 +2671,40 @@ export const CompareAssessmentsResponse = zod.object({
 })
 
 
+export const listTasksPageQueryPageDefault = 1;
+export const listTasksPageQueryPageMax = 100000;
+
+export const listTasksPageQueryFilterDefault = `open`;
+
+export const ListTasksPageQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).max(listTasksPageQueryPageMax).default(listTasksPageQueryPageDefault),
+  "filter": zod.enum(['open', 'done', 'all']).default(listTasksPageQueryFilterDefault)
+})
+
+export const ListTasksPageResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "notes": zod.string(),
+  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
+  "revision": zod.int(),
+  "dueDate": zod.string().nullable(),
+  "dateConfirmed": zod.boolean(),
+  "assessmentId": zod.string().nullable(),
+  "ruleId": zod.string().nullable(),
+  "needsReview": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})),
+  "total": zod.int(),
+  "openCount": zod.int(),
+  "filteredTotal": zod.int(),
+  "page": zod.int(),
+  "pageSize": zod.int(),
+  "hasNext": zod.boolean()
+})
+
+
 export const ListTasksResponseItem = zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -2783,6 +2817,7 @@ export const GetReminderPreferencesResponse = zod.object({
 })
 
 
+export const saveReminderPreferencesBodyOffsetsMin = 0;
 export const saveReminderPreferencesBodyOffsetsMax = 4;
 
 export const saveReminderPreferencesBodyExpectedRevisionMin = 0;
@@ -2791,7 +2826,7 @@ export const saveReminderPreferencesBodyExpectedRevisionMin = 0;
 
 export const SaveReminderPreferencesBody = zod.object({
   "enabled": zod.boolean(),
-  "offsets": zod.array(zod.union([zod.literal(0),zod.literal(1),zod.literal(3),zod.literal(7),zod.literal(14)])).min(1).max(saveReminderPreferencesBodyOffsetsMax),
+  "offsets": zod.array(zod.union([zod.literal(0),zod.literal(1),zod.literal(3),zod.literal(7),zod.literal(14)])).min(saveReminderPreferencesBodyOffsetsMin).max(saveReminderPreferencesBodyOffsetsMax),
   "expectedRevision": zod.int().min(saveReminderPreferencesBodyExpectedRevisionMin)
 })
 

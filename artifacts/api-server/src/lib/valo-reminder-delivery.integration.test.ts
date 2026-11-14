@@ -6,7 +6,7 @@ import {eq} from "drizzle-orm";
 import {db,pool,valoReminderOutbox,valoReminderPreferences,valoTasks,valoEvents,valoMemberships,valoWorkspaces} from "@workspace/db";
 import {resolveWorkspace} from "./valo-store";
 import {createTask,saveReminderPreferences,reminderInstant} from "./valo-tasks";
-import {processReminder,reminderRetryAt} from "./valo-reminder-worker";
+import {processReminder,reminderRetryAt,reconcileDueReminders} from "./valo-reminder-worker";
 test("durable reminder delivery controls; controlled transport, not real email",{
   skip:process.env.VALO_RUN_DB_TESTS!=="synthetic-development-only",
 },async t=>{
@@ -21,6 +21,32 @@ test("durable reminder delivery controls; controlled transport, not real email",
   }
   try{
     await saveReminderPreferences(actor,{enabled:true,offsets:[1],expectedRevision:0});
+    await t.test("turning reminders off needs no selected offset and cancels before dispatch",async()=>{
+      const prefs=(await db.select().from(valoReminderPreferences).where(eq(valoReminderPreferences.workspaceId,actor.workspaceId)))[0];
+      await saveReminderPreferences(actor,{enabled:false,offsets:[],expectedRevision:prefs.revision});
+      const off=(await db.select().from(valoReminderPreferences).where(eq(valoReminderPreferences.workspaceId,actor.workspaceId)))[0];
+      assert.equal(off.enabled,false);assert.deepEqual(off.offsets,[]);
+      await assert.rejects(saveReminderPreferences(actor,{enabled:true,offsets:[],expectedRevision:off.revision}));
+      await saveReminderPreferences(actor,{enabled:true,offsets:[1],expectedRevision:off.revision});
+    });
+    await t.test("twenty-five held source reminders cannot starve an eligible later reminder",async()=>{
+      const ids:string[]=[];
+      for(let i=0;i<26;i++){
+        const taskId=randomUUID(),id=(i===25?"ffffffff":"00000000")+randomUUID().slice(8);ids.push(id);
+        await db.insert(valoTasks).values({id:taskId,workspaceId:actor.workspaceId,actorId:actor.identityId,title:"Controlled fairness fixture",notes:"",
+          dueDate:due,dateConfirmed:true,ruleId:i<25?"controlled-unreleased-rule":null,ruleVersion:i<25?1:null});
+        await db.insert(valoReminderOutbox).values({id,workspaceId:actor.workspaceId,taskId,
+          idempotencyKey:`${taskId}/${due}/1`,scheduledAt:reminderInstant(due,1),status:"pending"});
+      }
+      let calls=0;
+      const sender={send:async()=>{calls++;return{providerMessageId:"controlled-fair-ack"};}};
+      const first=await reconcileDueReminders(sender,{workspaceId:actor.workspaceId},now);
+      assert.equal(first.checked,25);assert.equal(calls,0);
+      assert.equal((await row(ids[0])).status,"held");assert.ok((await row(ids[0])).nextAttemptAt!>now);
+      const second=await reconcileDueReminders(sender,{workspaceId:actor.workspaceId},now);
+      assert.equal(second.checked,1);assert.equal(calls,1);assert.equal((await row(ids[25])).status,"sent");
+      assert.equal((await row(ids[25])).deliveredAt,null);
+    });
     await t.test("no configured provider holds the reminder and consumes no attempt",async()=>{
       const r=await fresh();assert.equal(await processReminder(actor.workspaceId,r.id,null,now),"held");
       assert.equal((await row(r.id)).attempts,0);assert.equal((await row(r.id)).deliveredAt,null);
@@ -106,7 +132,8 @@ test("durable reminder delivery controls; controlled transport, not real email",
     await t.test("opt-out before dispatch cancels failed work without sending",async()=>{
       const r=await fresh();
       await processReminder(actor.workspaceId,r.id,{send:async()=>{throw Error("CONTROLLED_UNAVAILABLE");}},now);
-      await saveReminderPreferences(actor,{enabled:false,offsets:[1],expectedRevision:1});
+      const current=(await db.select().from(valoReminderPreferences).where(eq(valoReminderPreferences.workspaceId,actor.workspaceId)))[0];
+      await saveReminderPreferences(actor,{enabled:false,offsets:[1],expectedRevision:current.revision});
       let calls=0;
       assert.equal(await processReminder(actor.workspaceId,r.id,{send:async()=>{calls++;return{providerMessageId:"must-not-call"};}},new Date(+now+120000)),"cancelled");
       assert.equal(calls,0);assert.equal((await row(r.id)).nextAttemptAt,null);

@@ -14,6 +14,8 @@ import { DocumentExports } from '@/components/document-exports';
 import { FinancialFields, FINANCIAL_BLOCK_IDS } from '@/components/financial-fields';
 import { synchronizeFinancialBlocks } from '@workspace/valo-core/money';
 import type { FinancialInput } from '@workspace/api-client-react';
+import {useUnsavedNavigation} from '@/lib/use-unsaved-navigation';
+import {UnsavedNavigationDialog} from '@/components/unsaved-navigation-dialog';
 
 type Snapshot = { title: string; content: CanonicalDocument };
 type SaveState = 'idle' | 'dirty' | 'saving' | 'saved' | 'error' | 'conflict' | 'blocked';
@@ -39,6 +41,10 @@ export default function DocumentEditor({ id }: { id: string }) {
   const [restoring, setRestoring] = useState<number | null>(null);
   const [finDraft, setFinDraft] = useState<FinancialInput | null>(null);
   const [finKey, setFinKey] = useState(0);
+  const [finDirty,setFinDirty]=useState(false);
+  const financialDirty=useRef(false),financialValue=useRef<FinancialInput|null>(null);
+  const leaveAfterSave=useRef(false);
+  const[leaveError,setLeaveError]=useState("");
 
   const initFor = useRef<string | null>(null);
   const baseRev = useRef(0);
@@ -47,6 +53,13 @@ export default function DocumentEditor({ id }: { id: string }) {
   const lastPush = useRef(0);
   const inFlight = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigation=useUnsavedNavigation(()=>financialDirty.current||inFlight.current||
+    !!latest.current&&ser(latest.current)!==lastSaved.current);
+  const navigationRef=useRef(navigation);navigationRef.current=navigation;
+  const resetFinancial=useCallback((next:CanonicalDocument)=>{
+    financialDirty.current=false;financialValue.current=next.financialInput??null;
+    setFinDirty(false);setFinDraft(next.financialInput??null);setFinKey(key=>key+1);
+  },[]);
 
   const adopt = useCallback((d: BusinessDocument) => {
     baseRev.current = d.revision;
@@ -55,10 +68,11 @@ export default function DocumentEditor({ id }: { id: string }) {
     latest.current = snap;
     setTitle(d.title);
     setContent(d.content);
+    resetFinancial(d.content);
     setHistory([]);
     setConflictRev(null);
     setState('saved');
-  }, []);
+  }, [resetFinancial]);
 
   useEffect(() => {
     if (doc.data && initFor.current !== id) {
@@ -88,10 +102,14 @@ export default function DocumentEditor({ id }: { id: string }) {
           if (latest.current && ser(latest.current) !== sent) {
             setState('dirty');
             timer.current = setTimeout(doSaveRef.current, AUTOSAVE_MS);
-          } else setState('saved');
+          } else{
+            setState('saved');
+            if(leaveAfterSave.current&&!financialDirty.current){leaveAfterSave.current=false;navigationRef.current.proceed();}
+          }
         },
         onError: (e) => {
           inFlight.current = false;
+          leaveAfterSave.current=false;
           const de = describeError(e);
           if (de.kind === 'conflict') { setConflictRev(de.currentRevision ?? null); setState('conflict'); }
           else { setErrMsg(de.message); setState('error'); }
@@ -119,21 +137,16 @@ export default function DocumentEditor({ id }: { id: string }) {
   }
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-  useEffect(() => {
-    const warn = (e: BeforeUnloadEvent) => {
-      if (latest.current && ser(latest.current) !== lastSaved.current) { e.preventDefault(); e.returnValue = ''; }
-    };
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, []);
-
   function undo() {
+    if(inFlight.current)return;
+    if(financialDirty.current&&!window.confirm("Discard unapplied financial inputs and undo the last document edit?"))return;
     setHistory((h) => {
       if (!h.length) return h;
       const prev = h[h.length - 1];
       latest.current = prev;
       setTitle(prev.title);
       setContent(prev.content);
+      resetFinancial(prev.content);
       lastPush.current = 0;
       if (state !== 'conflict') {
         setState(ser(prev) === lastSaved.current ? 'saved' : 'dirty');
@@ -143,11 +156,29 @@ export default function DocumentEditor({ id }: { id: string }) {
       return h.slice(0, -1);
     });
   }
+  function applyFinancial(){
+    if(!latest.current||!financialValue.current){
+      setLeaveError("Correct the financial fields before saving. Your typed values are still here.");return false;
+    }
+    const next={...latest.current,content:synchronizeFinancialBlocks({...latest.current.content,financialInput:financialValue.current}) as CanonicalDocument};
+    update(next);resetFinancial(next.content);setLeaveError("");return true;
+  }
+  function saveEverything(leave=false){
+    if(state==="conflict"){setLeaveError("Resolve the revision conflict before saving and leaving.");return;}
+    if(financialDirty.current&&!applyFinancial())return;
+    leaveAfterSave.current=leave;
+    if(timer.current)clearTimeout(timer.current);
+    if(leave&&!inFlight.current&&latest.current&&ser(latest.current)===lastSaved.current){
+      leaveAfterSave.current=false;navigation.proceed();return;
+    }
+    doSaveRef.current();
+  }
+  const manualSave=useRef(saveEverything);manualSave.current=saveEverything;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); if (timer.current) clearTimeout(timer.current); doSaveRef.current(); }
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); manualSave.current(); }
       if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey && !(target && /INPUT|TEXTAREA/.test(target.tagName))) { e.preventDefault(); undoRef.current(); }
     };
     window.addEventListener('keydown', onKey);
@@ -172,7 +203,8 @@ export default function DocumentEditor({ id }: { id: string }) {
 
   function restore(r: BusinessDocument) {
     if (!latest.current) return;
-    if (ser(latest.current) !== lastSaved.current && !window.confirm('You have unsaved changes. Restoring will replace them in the editor. Continue?')) return;
+    if(inFlight.current)return;
+    if ((financialDirty.current||ser(latest.current) !== lastSaved.current) && !window.confirm('You have unsaved changes, including unapplied financial inputs. Restoring will replace them. Continue?')) return;
     if (timer.current) clearTimeout(timer.current);
     setRestoring(r.revision);
     inFlight.current = true;
@@ -214,9 +246,12 @@ export default function DocumentEditor({ id }: { id: string }) {
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
+      <UnsavedNavigationDialog open={navigation.blocked} busy={state==="saving"} onSave={()=>saveEverything(true)}
+        onStay={()=>{leaveAfterSave.current=false;setLeaveError("");navigation.stay();}}
+        onDiscard={()=>{if(timer.current)clearTimeout(timer.current);navigation.proceed();}} error={leaveError||undefined}/>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link href="/workspace" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground" data-testid="link-back"><ArrowLeft className="h-4 w-4" /> Workspace</Link>
-        <SaveIndicator state={state} rev={baseRev.current} onRetry={() => doSaveRef.current()} />
+        <SaveIndicator state={finDirty?'dirty':state} rev={baseRev.current} onRetry={() => saveEverything()} />
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -282,10 +317,13 @@ export default function DocumentEditor({ id }: { id: string }) {
               {content.financialInput && (
                 <div className="mt-10 rounded-2xl border border-border bg-sidebar/50 p-4 sm:p-5" data-testid="panel-financial">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="eyebrow">Financial details</p><span className="text-xs text-muted-foreground">Totals in whole kobo; tables update when applied</span></div>
-                  <FinancialFields key={'fin-' + finKey} idPrefix="doc" value={content.financialInput} onChange={setFinDraft} />
+                  <FinancialFields key={'fin-' + finKey} idPrefix="doc" value={content.financialInput}
+                    onChange={value=>{financialValue.current=value;setFinDraft(value);}}
+                    onDirtyChange={dirty=>{financialDirty.current=dirty;setFinDirty(dirty);if(dirty){financialValue.current=null;setFinDraft(null);}}}/>
+                  {finDirty&&<p role="status" className="hint !text-destructive" data-testid="status-financial-unsaved">Unapplied financial changes — not saved. Apply or save them before exporting or leaving.</p>}
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <button type="button" className="btn btn-primary btn-sm" disabled={!finDraft || JSON.stringify(finDraft) === JSON.stringify(content.financialInput)} onClick={() => { if (finDraft) update({ title, content: synchronizeFinancialBlocks({ ...content, financialInput: finDraft }) as CanonicalDocument }); }} data-testid="button-apply-financial">Apply financial changes</button>
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFinKey((k) => k + 1)} data-testid="button-reset-financial">Reset</button>
+                    <button type="button" className="btn btn-primary btn-sm" disabled={!finDirty || !finDraft || JSON.stringify(finDraft) === JSON.stringify(content.financialInput)} onClick={applyFinancial} data-testid="button-apply-financial">Apply financial changes</button>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => {if(!financialDirty.current||window.confirm("Discard unapplied financial inputs?"))resetFinancial(content);}} data-testid="button-reset-financial">Reset</button>
                   </div>
                 </div>
               )}
@@ -322,7 +360,7 @@ export default function DocumentEditor({ id }: { id: string }) {
             <p className="eyebrow">Missing details</p>
             {missing.length ? (
               <ul className="mt-3 grid gap-1.5 text-sm">{missing.map((m) => <li key={m} className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--ochre))]" />{m}</li>)}</ul>
-            ) : <p className="mt-3 flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-primary" /> All details filled in</p>}
+            ) : <p className="mt-3 flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-primary" /> Checked fields supplied — review the whole draft</p>}
             <p className="hint mt-3">Incomplete drafts save normally. Nothing is filled in for you.</p>
           </div>
           <div className="surface p-5" data-testid="card-revisions">
@@ -347,7 +385,7 @@ export default function DocumentEditor({ id }: { id: string }) {
             <p className="hint mt-3">Restoring saves that content as a new revision. Older history stays intact.</p>
           </div>
           <DocumentExports documentId={id} revisionId={doc.data.revisionId} revisionNumber={doc.data.revision}
-            disabled={!['idle','saved'].includes(state)} />
+            disabled={finDirty||!['idle','saved'].includes(state)} />
         </aside>
       </div>
     </div>

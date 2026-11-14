@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and,desc,eq,isNull,ne } from "drizzle-orm";
+import { and,desc,eq,isNull,ne,sql } from "drizzle-orm";
 import { valoTasks,valoReminderPreferences,valoReminderOutbox } from "@workspace/db";
 import { CreateTaskBody,UpdateTaskBody,DeleteTaskBody,SaveReminderPreferencesBody,
   GetReminderPreferencesResponse,CreateTaskResponse,ListRemindersResponse } from "@workspace/api-zod";
@@ -84,6 +84,27 @@ export async function createTask(actor:WorkspaceActor,raw:unknown){
     return taskDto(row);
   });
 }
+export async function listTasksPage(actor:WorkspaceActor,raw:unknown){
+  const query=z.object({page:z.coerce.number().int().min(1).max(100000).default(1),
+    filter:z.enum(["open","done","all"]).default("open")}).strict().parse(raw);
+  return workspaceTransaction(actor,async tx=>{
+    const owned=and(eq(valoTasks.workspaceId,actor.workspaceId),isNull(valoTasks.deletedAt));
+    const[counts]=await tx.select({total:sql<number>`count(*)::int`,
+      openCount:sql<number>`count(*) filter (where ${valoTasks.state}<>'completed_by_user')::int`}).from(valoTasks).where(owned);
+    const filteredTotal=query.filter==="all"?counts.total:query.filter==="open"?counts.openCount:counts.total-counts.openCount;
+    const pageSize=20;
+    const rows=await tx.select().from(valoTasks).where(and(owned,
+      query.filter==="all"?undefined:query.filter==="done"?eq(valoTasks.state,"completed_by_user"):ne(valoTasks.state,"completed_by_user")))
+      .orderBy(desc(valoTasks.updatedAt),desc(valoTasks.id)).limit(pageSize).offset((query.page-1)*pageSize);
+    const registry=await releasedRegistry(tx,new Date());
+    for(const row of rows)if(row.ruleId&&!registry.rules.some(r=>r.id===row.ruleId&&r.version===row.ruleVersion)&&!row.needsReview){
+      await tx.update(valoTasks).set({needsReview:true}).where(and(eq(valoTasks.id,row.id),eq(valoTasks.workspaceId,actor.workspaceId)));
+      row.needsReview=true;await cancelOutstanding(tx,actor,row.id,"SOURCE_NO_LONGER_ELIGIBLE");
+    }
+    return{items:rows.map(taskDto),total:counts.total,openCount:counts.openCount,filteredTotal,page:query.page,pageSize,
+      hasNext:query.page*pageSize<filteredTotal};
+  });
+}
 export async function listTasks(actor:WorkspaceActor){
   return workspaceTransaction(actor,async tx=>{
     const rows=await tx.select().from(valoTasks).where(and(eq(valoTasks.workspaceId,actor.workspaceId),
@@ -136,7 +157,8 @@ export async function getReminderPreferences(actor:WorkspaceActor){
   });
 }
 export async function saveReminderPreferences(actor:WorkspaceActor,raw:unknown){
-  const input=SaveReminderPreferencesBody.strict().refine(i=>new Set(i.offsets).size===i.offsets.length,
+  const input=SaveReminderPreferencesBody.strict().refine(i=>!i.enabled||i.offsets.length>0,
+    "Choose a reminder timing when reminders are enabled").refine(i=>new Set(i.offsets).size===i.offsets.length,
     "Reminder offsets must be distinct").parse(raw);
   await workspaceTransaction(actor,async tx=>{
     const[old]=await tx.select().from(valoReminderPreferences).where(eq(valoReminderPreferences.workspaceId,actor.workspaceId));

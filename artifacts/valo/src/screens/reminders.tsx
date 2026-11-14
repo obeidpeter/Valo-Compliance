@@ -54,7 +54,7 @@ export default function RemindersPage() {
     if (prefs.data && !init.current) {
       init.current = true;
       setEnabled(prefs.data.enabled);
-      setOffsets((prefs.data.offsets.filter((o) => (OFFSETS as number[]).includes(o)) as Offset[]).slice(0, 4).length ? (prefs.data.offsets as Offset[]).slice(0, 4) : [1]);
+      setOffsets((prefs.data.offsets.filter((o) => (OFFSETS as number[]).includes(o)) as Offset[]).slice(0, 4));
       setRev(prefs.data.revision);
     }
   }, [prefs.data]);
@@ -70,7 +70,7 @@ export default function RemindersPage() {
   function submit(e: FormEvent) {
     e.preventDefault();
     setErr(null); setSavedNote(false);
-    if (offsets.length < 1) { setErr('Choose at least one timing.'); return; }
+    if (enabled&&offsets.length < 1) { setErr('Choose at least one timing while reminders are on.'); return; }
     save.mutate({ data: { enabled, offsets, expectedRevision: rev } }, {
       onSuccess: (p) => {
         setRev(p.revision); setConflict(false); setSavedNote(true);
@@ -98,6 +98,7 @@ export default function RemindersPage() {
       <WorkspaceNav />
       <div className="reveal"><p className="eyebrow">Due-date reminders</p><h1 className="font-display mt-2 text-4xl">Reminders</h1></div>
       <p className="mt-3 max-w-2xl text-muted-foreground">Off unless you turn them on. Reminders only apply to tasks with a due date you confirmed.</p>
+      <p role="note" className="hint mt-3">Development-only delivery: sending stays off unless an approved sender and the specifically authorized verified owner recipient are configured. Provider acceptance is not inbox delivery.</p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.15fr]">
         <section aria-labelledby="pref-h">

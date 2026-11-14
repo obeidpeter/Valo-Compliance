@@ -65,6 +65,9 @@ export function missingFields(content: CanonicalDocument): string[] {
     if (!content.fields[k]?.trim()) out.push(FIELD_LABELS[k]);
   });
   if (!content.blocks.some((b) => b.text.trim() || b.rows.some((r) => r.some((c) => c.trim())))) out.push('Body text');
+  const body=content.blocks.flatMap(b=>[b.text,...b.rows.flat()]).join("\n");
+  const placeholders=[...new Set(body.match(/\[[^\]\n]{0,140}\]|\{\{[^}\n]{1,140}\}\}|_{3,}/g)??[])];
+  if(placeholders.length)out.push(`Possible unresolved template placeholders (${placeholders.length}): ${placeholders.slice(0,5).join(", ")}`);
   return out;
 }
 

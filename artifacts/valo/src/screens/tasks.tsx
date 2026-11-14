@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState,useRef,useCallback,useEffect } from 'react';
 import { Link } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { Archive, CalendarDays, CheckCircle2, ListTodo, Loader2, Pencil, Plus } from 'lucide-react';
 import {
-  useListTasks, useCreateTask, useUpdateTask, useDeleteTask,
+  useCreateTask, useUpdateTask, useDeleteTask,
   getListTasksQueryKey, getListRemindersQueryKey,
-  TaskState, type WorkspaceTask,
+  useListTasksPage,getListTasksPageQueryKey,TaskState, type WorkspaceTask,type TaskPage,
 } from '@workspace/api-client-react';
 import { WorkspaceNav } from '@/components/workspace-nav';
 import { TaskForm, emptyDraft, type TaskDraft } from '@/components/task-form';
@@ -14,6 +14,8 @@ import { describeError, formatDate } from '@/lib/api';
 import { live } from '@/lib/checker';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import {useUnsavedNavigation} from '@/lib/use-unsaved-navigation';
+import {UnsavedNavigationDialog} from '@/components/unsaved-navigation-dialog';
 
 const STATE_LABEL: Record<TaskState, string> = {
   not_started: 'Not started',
@@ -26,22 +28,39 @@ type Filter = 'open' | 'done' | 'all';
 
 export default function TasksPage() {
   const qc = useQueryClient();
-  const tasks = useListTasks({ query: { queryKey: getListTasksQueryKey(), ...live } });
   const [filter, setFilter] = useState<Filter>('open');
+  const[page,setPage]=useState(1),[editEpoch,setEditEpoch]=useState(0);
+  const[pinned,setPinned]=useState<Record<string,WorkspaceTask>>({});
+  const pinnedRef=useRef(pinned);
+  const pin=useCallback((editing:boolean,task:WorkspaceTask)=>{
+    if(editing&&pinnedRef.current[task.id]||!editing&&!pinnedRef.current[task.id])return;
+    const next={...pinnedRef.current};if(editing)next[task.id]=task;else delete next[task.id];
+    pinnedRef.current=next;setPinned(next);
+  },[]);
+  const tasks=useListTasksPage({page,filter},{query:{queryKey:getListTasksPageQueryKey({page,filter}),...live}});
   const [newOpen, setNewOpen] = useState(false);
   const [newDraft, setNewDraft] = useState<TaskDraft>(emptyDraft());
+  const newDraftRef=useRef(newDraft);newDraftRef.current=newDraft;
+  const navigation=useUnsavedNavigation(()=>Object.keys(pinnedRef.current).length>0||
+    JSON.stringify(newDraftRef.current)!==JSON.stringify(emptyDraft()));
   const create = useCreateTask();
   const { toast } = useToast();
 
   const rows = useMemo(() => {
-    const all = [...(tasks.data ?? [])].sort((a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999') || b.updatedAt.localeCompare(a.updatedAt));
-    return all.filter((t) => filter === 'all' || (filter === 'done' ? t.state === 'completed_by_user' : t.state !== 'completed_by_user'));
-  }, [tasks.data, filter]);
+    const all=[...(tasks.data?.items??[])];
+    for(const task of Object.values(pinned))if(!all.some(row=>row.id===task.id))all.push(task);
+    return all;
+  }, [tasks.data, pinned]);
+  function changeView(nextFilter:Filter,nextPage:number){
+    if(Object.keys(pinnedRef.current).length&&!window.confirm("Discard unsaved task edits and change this view? Cancel to return and save them."))return;
+    pinnedRef.current={};setPinned({});setEditEpoch(value=>value+1);setFilter(nextFilter);setPage(nextPage);
+  }
 
   function createTask() {
     create.mutate({ data: { title: newDraft.title.trim(), notes: newDraft.notes, dueDate: newDraft.dueDate || null, dateConfirmed: !!newDraft.dueDate && newDraft.dateConfirmed, assessmentId: null, ruleId: null } }, {
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: getListTasksQueryKey() });
+        qc.invalidateQueries({queryKey:getListTasksPageQueryKey()});
         qc.invalidateQueries({ queryKey: getListRemindersQueryKey() });
         setNewDraft(emptyDraft()); setNewOpen(false); create.reset();
         toast({ title: 'Task created' });
@@ -49,11 +68,13 @@ export default function TasksPage() {
     });
   }
 
-  const total = tasks.data?.length ?? 0;
-  const open = tasks.data?.filter((t) => t.state !== 'completed_by_user').length ?? 0;
+  const total = tasks.data?.total ?? 0;
+  const open = tasks.data?.openCount ?? 0;
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-12 lg:px-8">
+      <UnsavedNavigationDialog open={navigation.blocked} busy={create.isPending} saveLabel="Return to save tasks"
+        onSave={()=>navigation.stay()} onStay={()=>navigation.stay()} onDiscard={()=>navigation.proceed()}/>
       <WorkspaceNav />
       <div className="reveal flex flex-wrap items-end justify-between gap-4">
         <div><p className="eyebrow">Personal tasks</p><h1 className="font-display mt-2 text-4xl">Tasks</h1></div>
@@ -71,26 +92,37 @@ export default function TasksPage() {
       )}
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-        <div role="tablist" aria-label="Filter tasks" className="inline-flex rounded-full border border-border bg-card p-1">
+        <div role="group" aria-label="Filter tasks" className="inline-flex rounded-full border border-border bg-card p-1">
           {(['open', 'done', 'all'] as Filter[]).map((f) => (
-            <button key={f} role="tab" aria-selected={filter === f} type="button" onClick={() => setFilter(f)} className={cn('rounded-full px-4 py-1.5 text-sm capitalize', filter === f ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground')} data-testid={'tab-' + f}>{f}</button>
+            <button key={f} aria-pressed={filter === f} type="button" onClick={() => changeView(f,1)} className={cn('rounded-full px-4 py-1.5 text-sm capitalize focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring', filter === f ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground')} data-testid={'tab-' + f}>{f}</button>
           ))}
         </div>
         {tasks.isSuccess && <span className="font-mono text-xs text-muted-foreground">{open} open / {total} total</span>}
       </div>
 
+      <div className="mt-3 flex justify-end">
+        <button type="button" className="btn btn-ghost btn-sm" disabled={tasks.isFetching}
+          onClick={()=>tasks.refetch()} data-testid="button-refresh-tasks">{tasks.isFetching?"Refreshing…":"Refresh tasks"}</button>
+      </div>
       <div className="mt-4">
-        {tasks.isLoading ? <div className="grid gap-3">{[0, 1, 2].map((i) => <Skel key={i} className="h-24" />)}</div>
-          : tasks.isError ? <ErrorState error={tasks.error} onRetry={() => tasks.refetch()} />
+        {tasks.isError&&rows.length>0&&<p role="alert" className="mb-3 text-sm text-destructive">Refresh failed. Your open edits are still here; retry without closing them.</p>}
+        {tasks.isLoading&&!rows.length ? <div className="grid gap-3">{[0, 1, 2].map((i) => <Skel key={i} className="h-24" />)}</div>
+          : tasks.isError&&!rows.length ? <ErrorState error={tasks.error} onRetry={() => tasks.refetch()} />
           : rows.length === 0 ? (
             <EmptyState mark={<ListTodo className="h-5 w-5 text-muted-foreground" />} title={total === 0 ? 'No tasks yet' : 'Nothing in this view'}
               action={total === 0 ? <><button type="button" className="btn btn-primary" onClick={() => setNewOpen(true)}>Write a task</button><Link href="/workspace/assessments" className="btn btn-ghost">From an assessment</Link></> : undefined}>
               {total === 0 ? 'Add anything you need to remember. Tasks work even where Valo has no released rules for your situation.' : 'Try another filter.'}
             </EmptyState>
           ) : (
-            <ul className="grid gap-3">{rows.map((t) => <TaskRow key={t.id} task={t} />)}</ul>
+            <ul className="grid gap-3">{rows.map((t) => <TaskRow key={`${editEpoch}-${t.id}`} task={t} onEditing={pin}/>)}</ul>
           )}
       </div>
+      {!!Object.keys(pinned).length&&<p role="status" className="hint">Open edits are kept here even when background results change. Save or discard them before changing pages.</p>}
+      {tasks.isSuccess&&<nav aria-label="Task pages" className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <button type="button" className="btn btn-ghost btn-sm" disabled={page===1} onClick={()=>changeView(filter,page-1)} data-testid="button-task-prev">Previous</button>
+        <span className="text-sm" data-testid="text-task-total">Page {page} · {tasks.data.filteredTotal} matching tasks · {tasks.data.total} total</span>
+        <button type="button" className="btn btn-ghost btn-sm" disabled={!tasks.data.hasNext} onClick={()=>changeView(filter,page+1)} data-testid="button-task-next">Next</button>
+      </nav>}
     </div>
   );
 }
@@ -99,16 +131,18 @@ function toDraft(t: WorkspaceTask): TaskDraft {
   return { title: t.title, notes: t.notes, dueDate: t.dueDate ?? '', dateConfirmed: t.dateConfirmed };
 }
 
-function TaskRow({ task }: { task: WorkspaceTask }) {
+function TaskRow({ task,onEditing }: { task: WorkspaceTask;onEditing:(editing:boolean,task:WorkspaceTask)=>void }) {
   const qc = useQueryClient();
   const refresh = () => Promise.all([
     qc.invalidateQueries({ queryKey: getListTasksQueryKey() }),
+    qc.invalidateQueries({queryKey:getListTasksPageQueryKey()}),
     qc.invalidateQueries({ queryKey: getListRemindersQueryKey() }),
   ]);
   const update = useUpdateTask({mutation:{
     onMutate:()=>qc.cancelQueries({queryKey:getListTasksQueryKey()}),
     onSuccess:(saved)=>{
       qc.setQueryData<WorkspaceTask[]>(getListTasksQueryKey(),old=>old?.map(row=>row.id===saved.id?saved:row));
+      qc.setQueriesData<TaskPage>({queryKey:getListTasksPageQueryKey()},old=>old?{...old,items:old.items.map(row=>row.id===saved.id?saved:row)}:old);
       return refresh();
     },
   }});
@@ -120,6 +154,7 @@ function TaskRow({ task }: { task: WorkspaceTask }) {
     },
   }});
   const [editing, setEditing] = useState(false);
+  useEffect(()=>{onEditing(editing,task);return()=>onEditing(false,task);},[editing,task.id,onEditing]);
   const [draft, setDraft] = useState<TaskDraft | null>(null);
   const [baseRev, setBaseRev] = useState(task.revision);
   const [conflict, setConflict] = useState<number | null>(null);
@@ -168,7 +203,7 @@ function TaskRow({ task }: { task: WorkspaceTask }) {
           )}
           <TaskForm idPrefix={'edit-' + task.id} draft={draft} onChange={setDraft} onSubmit={() => saveEdit()} pending={update.isPending} submitLabel="Save changes"
             extra={err ? <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{err.message}</p> : undefined}
-            footer={<button type="button" className="btn btn-ghost btn-sm" onClick={() => { setEditing(false); setDraft(null); setConflict(null); update.reset(); }}>Cancel</button>} />
+            footer={<button type="button" className="btn btn-ghost btn-sm" onClick={() => { setEditing(false); setDraft(null); setConflict(null); update.reset(); }}>Discard edits</button>} />
         </>
       ) : (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">

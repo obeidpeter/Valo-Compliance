@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { PreviewAssessmentResponse,ListAssessmentsResponse,CreateAssessmentResponse,GetAssessmentResponse,
-  ListTasksResponse,CreateTaskResponse,UpdateTaskResponse,ListRemindersResponse,
+  ListTasksResponse,ListTasksPageResponse,CreateTaskResponse,UpdateTaskResponse,ListRemindersResponse,
   GetReminderPreferencesResponse,SaveReminderPreferencesResponse,CompareAssessmentsResponse } from "@workspace/api-zod";
 import * as assessments from "../lib/valo-assessments";
 import * as tasks from "../lib/valo-tasks";
@@ -30,6 +30,9 @@ router.get("/workspace/assessments/:id/compare/:previousId",async(req,res):Promi
 });
 router.get("/workspace/tasks",async(_req,res):Promise<void>=>{
   res.json(ListTasksResponse.parse(await tasks.listTasks(res.locals.valoActor)));
+});
+router.get("/workspace/tasks/page",async(req,res):Promise<void>=>{
+  res.json(ListTasksPageResponse.parse(await tasks.listTasksPage(res.locals.valoActor,req.query)));
 });
 router.post("/workspace/tasks",async(req,res):Promise<void>=>{
   res.status(201).json(CreateTaskResponse.parse(await tasks.createTask(res.locals.valoActor,req.body)));

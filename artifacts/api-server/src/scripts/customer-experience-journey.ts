@@ -9,6 +9,7 @@ import { pool } from "@workspace/db";
 import { GetCustomerAccountResponse,GetDocumentResponse,DownloadWorkspaceDataResponse,GetCustomerPurchasesResponse } from "@workspace/api-zod";
 import { z } from "zod";
 import { syntheticDocument } from "../lib/valo-test-fixtures";
+import {synchronizeFinancialBlocks} from "@workspace/valo-core/money";
 const checks:{name:string;status:string;diagnostic?:string}[]=[];
 const run=randomUUID(),email=`valo-ux-${run}+clerk_test@example.com`;
 let browser:Browser|undefined,page:Page|undefined,userId:string|undefined,workspaceId:string|undefined;
@@ -16,6 +17,10 @@ let unknownAck:string|undefined,phase="guard";
 const ownIntakeIds:string[]=[];
 const ownCommercePriceIds:string[]=[];
 async function check(name:string,fn:()=>Promise<void>){
+  if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"&&
+    !["managed_verified_customer_can_open_private_routes","real_editor_navigation_financial_restore_undo_and_concurrent_session",
+      "real_task_notes_survive_filters_background_refresh_and_revision_conflict",
+      "real_reminder_optout_without_offsets_survives_reload"].includes(name))return;
   if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"&&
     !["managed_verified_customer_can_open_private_routes","real_manual_reminder_records_past_due_dates_and_mobile_keyboard_flow"].includes(name))return;
   if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"&&
@@ -86,6 +91,67 @@ try{
     await expect(page!).toHaveURL(/type=guidance/);
     await page!.unroute("**/api/public/catalogue*");
   });
+  async function editorSafetyJourney(){
+    const input=structuredClone(syntheticDocument);
+    input.title="Synthetic editor safety";
+    input.content=synchronizeFinancialBlocks({...input.content,financialInput:{
+      kind:"invoice" as const,lines:[{description:"Synthetic goods",quantity:"1",unitPriceKobo:"10000"}],
+      taxAmountKobo:null,taxLabel:"",discountKobo:null,amountDueKobo:null,
+    }});
+    input.content.blocks.push({id:"unresolved-party",type:"paragraph",text:"Counterparty: [Counterparty address]",rows:[]});
+    input.content=synchronizeFinancialBlocks(input.content);
+    const created=await api("/api/workspace/documents","POST",input);expect(created.status).toBe(201);
+    const saved=GetDocumentResponse.parse(created.body),url=`/workspace/documents/${saved.id}`,endpoint=`/api/workspace/documents/${saved.id}`;
+    await page!.goto(url);await expect(page!.getByTestId("input-title")).toHaveValue(input.title);
+    await expect(page!.getByTestId("card-missing")).toContainText("unresolved template placeholders");
+    await expect(page!.getByText("All details filled in",{exact:true})).toHaveCount(0);
+    await page!.getByTestId("input-title").fill("Synthetic saved before leaving");
+    await page!.getByTestId("link-back").click();await expect(page!.getByRole("dialog")).toBeVisible();
+    await page!.getByTestId("button-stay-editor").click();
+    await expect(page!.getByTestId("input-title")).toHaveValue("Synthetic saved before leaving");
+    await page!.getByTestId("link-back").click();await page!.getByTestId("button-save-leave").click();
+    await expect(page!).toHaveURL(/\/workspace$/);
+    expect(GetDocumentResponse.parse((await api(endpoint)).body).title).toBe("Synthetic saved before leaving");
+    await page!.goto(url);await page!.getByTestId("input-doc-price-0").fill("250.00");
+    await expect(page!.getByTestId("status-financial-unsaved")).toBeVisible();
+    expect(GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0].unitPriceKobo).toBe("10000");
+    await page!.getByTestId("link-back").click();await page!.getByTestId("button-save-leave").click();
+    await expect(page!).toHaveURL(/\/workspace$/);
+    expect(GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0].unitPriceKobo).toBe("25000");
+    await page!.goto(url);await page!.getByTestId("input-doc-price-0").fill("12x");
+    await page!.getByTestId("link-back").click();await page!.getByTestId("button-save-leave").click();
+    await expect(page!.getByRole("dialog")).toContainText("Correct the financial fields");
+    await page!.getByTestId("button-stay-editor").click();await expect(page!.getByTestId("input-doc-price-0")).toHaveValue("12x");
+    await page!.getByTestId("link-back").click();await page!.getByTestId("button-discard-leave").click();
+    await expect(page!).toHaveURL(/\/workspace$/);
+    expect(GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0].unitPriceKobo).toBe("25000");
+    await page!.goto(url);await page!.getByTestId("input-doc-price-0").fill("999.00");
+    page!.once("dialog",dialog=>dialog.accept());await page!.getByTestId("button-restore-1").click();
+    await expect(page!.getByTestId("input-doc-price-0")).toHaveValue("100");
+    await expect(page!.getByTestId("button-apply-financial")).toBeDisabled();
+    await page!.getByTestId("input-doc-price-0").fill("200.00");await page!.getByTestId("button-apply-financial").click();
+    await page!.getByTestId("button-undo").click();await expect(page!.getByTestId("input-doc-price-0")).toHaveValue("100");
+    await expect.poll(async()=>GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0].unitPriceKobo).toBe("10000");
+    const other=await page!.context().newPage();
+    try{
+      await other.goto(url);await expect(other.getByTestId("input-doc-price-0")).toHaveValue("100");
+      let release:(()=>Promise<void>)|undefined;
+      await page!.route("**"+endpoint,async route=>{
+        if(route.request().method()!=="PATCH")return route.continue();
+        release=()=>route.continue();
+      });
+      await page!.getByTestId("input-title").fill("Synthetic local conflict");
+      await expect.poll(()=>Boolean(release),{timeout:20000}).toBe(true);
+      await other.getByTestId("input-doc-price-0").fill("300.00");await other.getByTestId("button-apply-financial").click();
+      await other.keyboard.press("Control+s");
+      await expect.poll(async()=>GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0].unitPriceKobo).toBe("30000");
+      await release!();await page!.unroute("**"+endpoint);
+      await expect(page!.getByTestId("button-load-theirs")).toBeVisible();
+      page!.once("dialog",dialog=>dialog.accept());await page!.getByTestId("button-load-theirs").click();
+      await expect(page!.getByTestId("input-doc-price-0")).toHaveValue("300");
+      await expect(page!.getByTestId("button-apply-financial")).toBeDisabled();
+    }finally{await other.close();}
+  }
   await check("real_mobile_menu_keyboard_focus_and360px_public_routes",async()=>{
     await page!.setViewportSize({width:360,height:800});
     for(const path of["/","/about","/contact","/account-access","/help","/library","/resources","/industries"]){
@@ -191,6 +257,60 @@ try{
       await page!.goto(path);await expect(page!.locator("main h1").first()).toBeVisible();
       await expect(page!.locator("main")).not.toContainText("Something went wrong");
     }
+  });
+  await check("real_editor_navigation_financial_restore_undo_and_concurrent_session",editorSafetyJourney);
+  await check("real_task_notes_survive_filters_background_refresh_and_revision_conflict",async()=>{
+    const body={title:"Synthetic notes safety",notes:"Original synthetic notes",dueDate:null,dateConfirmed:false,assessmentId:null,ruleId:null};
+    const created=await api("/api/workspace/tasks","POST",body);expect(created.status).toBe(201);
+    const task=created.body as {id:string;revision:number};
+    await page!.goto("/workspace/tasks");
+    await page!.getByRole("button",{name:"Edit",exact:true}).first().click();
+    const notes=page!.locator("textarea").first();await notes.fill("Unsaved synthetic task notes");
+    page!.once("dialog",dialog=>dialog.dismiss());await page!.getByTestId("tab-done").click();
+    await expect(notes).toHaveValue("Unsaved synthetic task notes");
+    let refreshed=false;
+    const observe=async(response:import("playwright").Response)=>{
+      if(response.url().includes("/api/workspace/tasks/page")&&response.request().method()==="GET"&&response.status()===200){
+        const value=await response.json().catch(()=>null);
+        if(value?.items?.some((item:{id:string;revision:number})=>item.id===task.id&&item.revision>task.revision))refreshed=true;
+      }
+    };
+    page!.on("response",observe);
+    try{
+      const updated=await api(`/api/workspace/tasks/${task.id}`,"PATCH",{title:body.title,notes:"Authoritative synthetic notes",
+        dueDate:null,dateConfirmed:false,state:"not_started",expectedRevision:task.revision});
+      expect(updated.status).toBe(200);
+      // A real background query refresh through the customer control; no timer
+      // or headless-tab visibility assumptions and no substituted response.
+      await page!.getByTestId("button-refresh-tasks").click();
+      await expect.poll(()=>refreshed,{timeout:10000}).toBe(true);
+      await expect(notes).toHaveValue("Unsaved synthetic task notes");
+      const conflict=page!.waitForResponse(response=>response.url().endsWith(`/api/workspace/tasks/${task.id}`)&&response.request().method()==="PATCH");
+      await page!.getByRole("button",{name:"Save changes",exact:true}).click();expect((await conflict).status()).toBe(409);
+      await expect(page!.getByText("This task changed elsewhere",{exact:true})).toBeVisible();
+      await expect(notes).toHaveValue("Unsaved synthetic task notes");
+      page!.once("dialog",dialog=>dialog.accept());await page!.getByTestId("tab-done").click();
+      await page!.getByTestId("tab-all").click();await expect(page!.getByText("Authoritative synthetic notes",{exact:true})).toBeVisible();
+      await expect(page!.getByTestId("button-task-next")).toBeDisabled();
+      await expect(page!.getByTestId("text-task-total")).toContainText("1 total");
+    }finally{page!.off("response",observe);}
+  });
+  await check("real_reminder_optout_without_offsets_survives_reload",async()=>{
+    await page!.goto("/workspace/reminders");
+    await expect(page!.getByRole("note")).toContainText("Development-only delivery");
+    await page!.getByTestId("switch-enabled").focus();await page!.keyboard.press("Space");
+    await expect(page!.getByTestId("switch-enabled")).toBeChecked();
+    await page!.getByTestId("checkbox-offset-1").focus();await page!.keyboard.press("Space");
+    await expect(page!.getByTestId("checkbox-offset-1")).not.toBeChecked();
+    await page!.getByTestId("switch-enabled").focus();await page!.keyboard.press("Space");
+    await expect(page!.getByTestId("switch-enabled")).not.toBeChecked();
+    const preferenceSave=page!.waitForResponse(response=>response.url().endsWith("/api/workspace/reminder-preferences")&&
+      !["GET","OPTIONS"].includes(response.request().method()));
+    await page!.getByTestId("button-save-prefs").click();expect((await preferenceSave).status()).toBe(200);
+    const preferences=(await api("/api/workspace/reminder-preferences")).body as {enabled:boolean;offsets:number[]};
+    expect(preferences.enabled).toBe(false);expect(preferences.offsets).toEqual([]);
+    await page!.reload();await expect(page!.getByTestId("switch-enabled")).not.toBeChecked();
+    await expect(page!.getByTestId("checkbox-offset-1")).not.toBeChecked();
   });
   await check("real_private_purchase_history_empty_state_mobile_and_api_controls",async()=>{
     expect(workspaceId).toBeTruthy();
@@ -383,10 +503,13 @@ finally{
   await pool.end();
   await writeFile(fileURLToPath(new URL("../../../../generated-artifacts/valo-customer-ux/browser.json",import.meta.url)),JSON.stringify({
     checkedAt:new Date().toISOString(),syntheticDevelopmentOnly:true,checks,
-    selection:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"?"managed-identity-commerce-only":
+    selection:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"?"managed-identity-editor-safety":
+      process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"?"managed-identity-commerce-only":
       process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?"managed-identity-reminder-only":"full-existing-journey",
     actualManagedIdentityUsed:Boolean(userId),realEmailDeliveryClaimed:false,actualNewPublications:0,
-    fixtureDisclosure:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"?
+    fixtureDisclosure:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"?
+      "Actual managed synthetic verified identity, application API and PostgreSQL. Two real browser tabs; one PATCH delayed then released unchanged to order a revision conflict. No forged API responses, provider sends, AI calls or payment calls.":
+      process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"?
       "An unpaid controlled order/licence fixture was saved in the actual database and displayed through authenticated APIs; it was not a released product, price approval or real payment. All owned fixture records were removed.":
       process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?
       "No intercepted content fixture groups were executed in this managed-identity/reminder subset.":

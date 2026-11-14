@@ -811,6 +811,16 @@ export interface WorkspaceTask {
   updatedAt: string;
 }
 
+export interface TaskPage {
+  items: WorkspaceTask[];
+  total: number;
+  openCount: number;
+  filteredTotal: number;
+  page: number;
+  pageSize: number;
+  hasNext: boolean;
+}
+
 export type ReminderPreferencesInputOffsetsItem = typeof ReminderPreferencesInputOffsetsItem[keyof typeof ReminderPreferencesInputOffsetsItem];
 
 
@@ -825,7 +835,7 @@ export const ReminderPreferencesInputOffsetsItem = {
 export interface ReminderPreferencesInput {
   enabled: boolean;
   /**
-     * @minItems 1
+     * @minItems 0
      * @maxItems 4
      */
   offsets: ReminderPreferencesInputOffsetsItem[];
@@ -1576,5 +1586,23 @@ export const ListPublicCatalogueType = {
   template: 'template',
   guidance: 'guidance',
   service: 'service',
+} as const;
+
+export type ListTasksPageParams = {
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
+  page?: number;
+  filter?: ListTasksPageFilter;
+};
+
+export type ListTasksPageFilter = typeof ListTasksPageFilter[keyof typeof ListTasksPageFilter];
+
+
+export const ListTasksPageFilter = {
+  open: 'open',
+  done: 'done',
+  all: 'all',
 } as const;
 

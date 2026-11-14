@@ -1,6 +1,12 @@
 # Valo Compliance — Valo Platform
 
 Latest implementation checkpoint:
+[customer edit safety, paginated task totals, reminder fairness and original receipt recovery](docs/valo/customer-safety-reliability-checkpoint.md).
+This remains partial development, not full R1/R2 implementation or acceptance.
+The forty-template/thirty-guidance content inputs are not thereby published;
+the separate source-backed 80/60/60 acceptance suites and R1/R2 gates are not accepted.
+
+Earlier implementation checkpoint:
 [account-scoped component state and seven controlled browser regressions](docs/valo/account-state-checkpoint.md).
 
 Earlier implementation checkpoint:

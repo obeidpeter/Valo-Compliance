@@ -22,17 +22,22 @@ async function limit(tx:Tx,actor:WorkspaceActor){
     if(!q.allowed)throw new ValoProblem(429,`Purchase request limit reached. Retry in ${q.retryAfter} seconds; saved orders are unchanged.`,undefined,q.retryAfter);
   }
 }
-function display(order:typeof valoOrders.$inferSelect,refunds:(typeof valoRefundRequests.$inferSelect)[]=[],disputeStatus:string|null=null){
+function display(order:typeof valoOrders.$inferSelect,refunds:(typeof valoRefundRequests.$inferSelect)[]=[],disputeStatus:string|null=null,originalReceipt=false){
   return{id:order.id,reference:order.reference,title:order.line.title,amountKobo:order.amountKobo,currency:order.currency,
     status:order.status,createdAt:order.createdAt.toISOString(),lastCheckedAt:order.lastCheckedAt?.toISOString()??null,
     licenceVersion:order.line.licenceVersion,licenceText:order.line.licenceText,taxTreatment:order.line.taxTreatment,
     contentVersionId:order.line.contentVersionId,refundStatus:refunds[0]?.status??null,
     refunds:refunds.map(refundView),...refundBalance(order.amountKobo,refunds),refundPolicy:TEST_REFUND_POLICY,disputeStatus,
-    receiptReference:order.providerTransactionId&&order.status==="verified_success"?`VALO-TEST-${order.reference}`:null};
+    receiptReference:order.providerTransactionId&&(order.status==="verified_success"||originalReceipt)?`VALO-TEST-${order.reference}`:null};
+}
+async function originalReceiptExists(tx:Tx,orderId:string,workspaceId:string){
+  const[row]=await tx.select({id:valoEvents.id}).from(valoEvents).where(and(
+    eq(valoEvents.workspaceId,workspaceId),eq(valoEvents.entityId,orderId),eq(valoEvents.action,"payment.verified_success"))).limit(1);
+  return!!row;
 }
 async function presentOrder(tx:Tx,order:typeof valoOrders.$inferSelect){
   const[dispute]=await tx.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.orderId,order.id)).orderBy(desc(valoPaymentDisputes.checkedAt));
-  return display(order,await tx.select().from(valoRefundRequests).where(eq(valoRefundRequests.orderId,order.id)).orderBy(desc(valoRefundRequests.createdAt)),dispute?.status??null);
+  return display(order,await tx.select().from(valoRefundRequests).where(eq(valoRefundRequests.orderId,order.id)).orderBy(desc(valoRefundRequests.createdAt)),dispute?.status??null,await originalReceiptExists(tx,order.id,order.workspaceId));
 }
 export async function commerceProducts(){
   const released=await liveOperationalVersions(),ids=new Set(released
@@ -47,8 +52,10 @@ export async function purchases(actor:WorkspaceActor){
     const orders=await tx.select().from(valoOrders).where(eq(valoOrders.workspaceId,actor.workspaceId)).orderBy(desc(valoOrders.createdAt)).limit(100);
     const refunds=await tx.select().from(valoRefundRequests).where(eq(valoRefundRequests.workspaceId,actor.workspaceId)).orderBy(desc(valoRefundRequests.createdAt));
     const disputes=await tx.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.workspaceId,actor.workspaceId)).orderBy(desc(valoPaymentDisputes.checkedAt));
+    const originalReceipts=new Set((await tx.select({id:valoEvents.entityId}).from(valoEvents).where(and(
+      eq(valoEvents.workspaceId,actor.workspaceId),eq(valoEvents.action,"payment.verified_success")))).map(e=>e.id));
     return{available:true,livePaymentsEnabled:false,message:"No live payments. Only server-verified Paystack test transactions can grant test purchases. Saved orders do not prove payment.",
-      orders:orders.map(o=>display(o,refunds.filter(r=>r.orderId===o.id),disputes.find(d=>d.orderId===o.id)?.status??null)),products:await commerceProducts()};
+       orders:orders.map(o=>display(o,refunds.filter(r=>r.orderId===o.id),disputes.find(d=>d.orderId===o.id)?.status??null,originalReceipts.has(o.id))),products:await commerceProducts()};
   });
 }
 export async function createOrder(actor:WorkspaceActor,raw:unknown){
@@ -124,7 +131,10 @@ export async function settleVerifiedOrder(id:string,data:VerifiedTransaction,act
     if(order.status==="reversed"&&data.status!=="reversed")
       throw new ValoProblem(409,"A reversed payment requires audited staff reconciliation; it cannot be reactivated by a replay.");
     if(order.providerTransactionId&&order.providerTransactionId!==data.id)throw new ValoProblem(409,"A different provider transaction is already attached. Staff reconciliation is required.");
-    if(order.status==="verified_success"&&data.status==="success")return presentOrder(tx,order);
+    if(order.status==="verified_success"&&data.status==="success"){
+      await repairVerifiedFulfilment(tx,order,actor?.identityId??"service:paystack-verifier");
+      return presentOrder(tx,order);
+    }
     const status=data.status==="success"?"verified_success":data.status==="reversed"?"reversed":
       ["failed","abandoned"].includes(data.status)?data.status:"pending";
     // Never silently downgrade a completed purchase on a transient/pending response.
@@ -150,11 +160,32 @@ export async function refreshOrder(actor:WorkspaceActor,id:string){
 export async function purchaseReceipt(actor:WorkspaceActor,id:string){
   return db.transaction(async tx=>{
     const order=await ownedOrder(tx,actor,id);
-    if(order.status!=="verified_success"||!order.providerTransactionId)throw new ValoProblem(409,"There is no verified successful purchase receipt for this order.");
+    if(!order.providerTransactionId||order.status!=="verified_success"&&!(await originalReceiptExists(tx,id,order.workspaceId)))
+      throw new ValoProblem(409,"There is no recorded verified original purchase receipt for this order.");
     const[delivery]=await tx.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,id));
     return{...await presentOrder(tx,order),notice:"Paystack test-mode Valo purchase receipt. Not a live payment, customer-generated business invoice, government receipt or official tax invoice.",
       deliveryStatus:delivery?.status??"not_queued"};
   });
+}
+/** Called only after canonical transaction verification under the order lock.
+ * Never unsuspend an existing grant or bypass refund/dispute decisions. */
+async function repairVerifiedFulfilment(tx:Tx,order:typeof valoOrders.$inferSelect,actorId:string){
+  const[grant]=await tx.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order.id));
+  const[receipt]=await tx.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,order.id));
+  let repaired=false;
+  if(!grant){
+    const[refund]=await tx.select({id:valoRefundRequests.id}).from(valoRefundRequests).where(eq(valoRefundRequests.orderId,order.id)).limit(1);
+    const[dispute]=await tx.select({id:valoPaymentDisputes.id}).from(valoPaymentDisputes).where(eq(valoPaymentDisputes.orderId,order.id)).limit(1);
+    if(!refund&&!dispute){
+      await tx.insert(valoEntitlements).values({id:randomUUID(),workspaceId:order.workspaceId,orderId:order.id,
+        contentVersionId:order.line.contentVersionId}).onConflictDoNothing();repaired=true;
+    }
+  }
+  if(!receipt){
+    await tx.insert(valoPurchaseOutbox).values({id:randomUUID(),workspaceId:order.workspaceId,orderId:order.id}).onConflictDoNothing();
+    repaired=true;
+  }
+  if(repaired)await audit(tx,order.workspaceId,actorId,"payment.fulfilment_repaired",order.id);
 }
 export async function requestRefund(actor:WorkspaceActor,id:string,raw:unknown){
   return requestOrderRefund(actor,id,raw);
@@ -217,9 +248,12 @@ export async function reconcilePayments(){
       if(!order)throw new Error("ORDER_MISSING");
       await settleVerifiedOrder(order.id,await paystack.verify(order.reference));
       const[grant]=await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order.id));
+      const[receipt]=await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,order.id));
       const[current]=await db.select().from(valoOrders).where(eq(valoOrders.id,order.id));
-      const gap=current.status==="verified_success"&&grant?.status!=="active";
-      await db.update(valoPaymentReconciliations).set({status:gap?"needs_review":"matched",finding:gap?"ENTITLEMENT_DIFFERENCE":null}).where(eq(valoPaymentReconciliations.id,job.id));
+      const gaps=current.status==="verified_success"?[
+        ...(grant?.status!=="active"?["ENTITLEMENT_DIFFERENCE"]:[]),...(!receipt?["RECEIPT_OUTBOX_MISSING"]:[]),
+      ]:[];
+      await db.update(valoPaymentReconciliations).set({status:gaps.length?"needs_review":"matched",finding:gaps.join(";")||null}).where(eq(valoPaymentReconciliations.id,job.id));
     }catch{
       await db.execute(sql`update valo_payment_reconciliations set attempts=LEAST(attempts+1,3),
         status=case when attempts>=2 then 'needs_review' else 'pending' end,

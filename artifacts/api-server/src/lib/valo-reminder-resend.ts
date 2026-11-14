@@ -10,19 +10,20 @@ type Config={from:string;recipient:string;origin:string};
 type Proxy=(path:string,options:{method:string;body:string;headers:Record<string,string>;signal:AbortSignal})=>Promise<Response>;
 export function reminderEmailConfiguration(env:NodeJS.ProcessEnv=process.env):Config|null{
   // This adapter cannot enable production email or arbitrary-recipient sending.
-  if(env.NODE_ENV!=="development"||env.REPLIT_DEPLOYMENT==="1"||env.VALO_EMAIL_MODE!=="development-test")return null;
+  if(env.NODE_ENV!=="development"||!!env.REPLIT_DEPLOYMENT||env.VALO_EMAIL_MODE!=="development-test")return null;
   const from=envelope.safeParse(env.VALO_EMAIL_FROM),to=envelope.safeParse(env.VALO_EMAIL_TEST_RECIPIENT);
   const origin=trustedSiteOrigin(env);
   if(!from.success||!to.success||!origin?.startsWith("https://"))return null;
   return{from:from.data,recipient:to.data.toLowerCase(),origin};
 }
 export function createResendReminderSender(config:Config,proxy:Proxy,
-  verifiedRecipient:(identityId:string)=>Promise<string|null>):ReminderSender{
+  verifiedRecipient:(identityId:string)=>Promise<string|null>,env:NodeJS.ProcessEnv=process.env):ReminderSender{
   return{
     // Resend retains idempotency keys for 24 hours. Stop conservatively before
     // expiry: an unknown old outcome must never become a fresh send.
     replayWindowMs:23*60*60*1000,
     async send(input){
+      if(env.NODE_ENV!=="development"||!!env.REPLIT_DEPLOYMENT)throw Error("EMAIL_DEVELOPMENT_ONLY");
       const recipient=await verifiedRecipient(input.ownerIdentityId);
       if(!recipient||recipient.toLowerCase()!==config.recipient)throw Error("EMAIL_TEST_RECIPIENT_NOT_AUTHORIZED");
       const key=`valo-reminder-v1-${sha256(input.idempotencyKey)}`;

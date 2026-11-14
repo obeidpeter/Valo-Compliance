@@ -46,6 +46,18 @@ const businessNameEvidence={
   hash:"8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",result:"pass" as const,
 };
 const groups = [
+  {ids:["EDT-003","EDT-004","EDT-005","WRK-001","WRK-002","WRK-003","WRK-004","PAY-005","PAY-007","PAY-009","NFR-009","OPS-002"],
+    paths:["artifacts/valo/src/screens/document-editor.tsx","artifacts/valo/src/components/financial-fields.tsx",
+      "artifacts/valo/src/lib/use-unsaved-navigation.ts","artifacts/valo/src/components/unsaved-navigation-dialog.tsx",
+      "artifacts/valo/src/screens/tasks.tsx","artifacts/valo/src/screens/reminders.tsx",
+      "artifacts/api-server/src/lib/valo-commerce.ts","artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+      "artifacts/api-server/src/lib/valo-tasks.ts","artifacts/api-server/src/lib/valo-task-pages.integration.test.ts",
+      "artifacts/api-server/src/lib/valo-reminder-worker.ts","artifacts/api-server/src/lib/valo-reminder-delivery.integration.test.ts",
+      "artifacts/api-server/src/lib/valo-reminder-resend.ts","artifacts/api-server/src/lib/valo-reminder-resend.test.ts",
+      "artifacts/api-server/src/lib/valo-operational-dispatch.ts","artifacts/api-server/src/lib/valo-operational-dispatch.test.ts",
+      "artifacts/api-server/src/scripts/customer-experience-journey.ts","scripts/src/valo/customer-safety-checkpoint.ts"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/customer-safety-reliability.json",
+      hash:"e2dda563fe540052e3bbea4ff9f3d0f2cebab4757f458797bfce36ba1430652c",result:"pass" as const}},
   {ids:["AI-001","AI-002","AI-003","AI-005","AI-008","AI-009","EDT-002","EDT-003","EDT-005","EDT-006","EDT-007","EDT-008","WRK-001"],
     paths:["artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
       "artifacts/api-server/src/lib/valo-customer-ai-model.ts",

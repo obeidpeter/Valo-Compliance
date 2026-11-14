@@ -76,23 +76,26 @@ export function emptyFinancial(kind: FinancialInput['kind']): FinancialInput {
  * Typed financial editor. Emits a valid FinancialInput (or null with errors) on every change.
  * Remount with a new `key` to reset from a different source value.
  */
-export function FinancialFields({ value, idPrefix, onChange }: { value: FinancialInput; idPrefix: string; onChange: (v: FinancialInput | null) => void }) {
+export function FinancialFields({ value, idPrefix, onChange,onDirtyChange }: { value: FinancialInput; idPrefix: string; onChange: (v: FinancialInput | null) => void;onDirtyChange?:(dirty:boolean)=>void }) {
   const [t, setT] = useState<Text>(() => {
     const x = toText(value);
     if ((value.kind === 'invoice' || value.kind === 'quotation') && x.lines.length && value.lines.every((l) => l.unitPriceKobo === '0' && !l.description)) x.lines = x.lines.map((l) => ({ ...l, price: '' }));
     return x;
   });
   const [touched, setTouched] = useState(false);
+  const originalText=useRef(JSON.stringify(t)),dirtyCallback=useRef(onDirtyChange);dirtyCallback.current=onDirtyChange;
+  const textSignature=JSON.stringify(t);
+  useEffect(()=>{dirtyCallback.current?.(textSignature!==originalText.current);},[textSignature]);
   const r = useMemo(() => parse(value.kind, t), [value.kind, t]);
   const cb = useRef(onChange); cb.current = onChange;
   const sig = JSON.stringify(r.value);
-  useEffect(() => { cb.current(r.value); }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { cb.current(r.value); }, [sig,textSignature]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const kind = value.kind;
   const usesLines = kind !== 'payment_reminder';
   const showDue = kind === 'payment_reminder' || (kind === 'business_proposal' && t.lines.length === 0);
   const e = (k: string) => (touched ? r.errors[k] : undefined);
-  const up = (patch: Partial<Text>) => { setTouched(true); setT((o) => ({ ...o, ...patch })); };
+  const up = (patch: Partial<Text>) => { dirtyCallback.current?.(true);setTouched(true); setT((o) => ({ ...o, ...patch })); };
   const upLine = (i: number, patch: Partial<LineText>) => up({ lines: t.lines.map((l, j) => (j === i ? { ...l, ...patch } : l)) });
 
   return (
@@ -104,7 +107,7 @@ export function FinancialFields({ value, idPrefix, onChange }: { value: Financia
             {t.lines.map((l, i) => (
               <li key={i} className="grid gap-2 rounded-xl border border-border bg-sidebar/60 p-3 sm:grid-cols-[1fr_6rem_9rem_auto] sm:items-start">
                 <Cell id={`${idPrefix}-desc-${i}`} label="Description" err={e('d' + i)}><input id={`${idPrefix}-desc-${i}`} className="field" maxLength={200} value={l.description} onChange={(ev) => upLine(i, { description: ev.target.value })} data-testid={`input-${idPrefix}-desc-${i}`} /></Cell>
-                <Cell id={`${idPrefix}-qty-${i}`} label="Qty" err={e('q' + i)}><input id={`${idPrefix}-qty-${i}`} inputMode="decimal" className="field" value={l.quantity} onChange={(ev) => upLine(i, { quantity: ev.target.value.replace(/[^0-9.]/g, '') })} data-testid={`input-${idPrefix}-qty-${i}`} /></Cell>
+                <Cell id={`${idPrefix}-qty-${i}`} label="Qty" err={e('q' + i)}><input id={`${idPrefix}-qty-${i}`} inputMode="decimal" className="field" value={l.quantity} onChange={(ev) => upLine(i, { quantity: ev.target.value })} data-testid={`input-${idPrefix}-qty-${i}`} /></Cell>
                 <Cell id={`${idPrefix}-price-${i}`} label="Unit price (NGN)" err={e('p' + i)}><input id={`${idPrefix}-price-${i}`} inputMode="decimal" className="field" value={l.price} placeholder="0.00" onChange={(ev) => upLine(i, { price: ev.target.value })} data-testid={`input-${idPrefix}-price-${i}`} /></Cell>
                 <button type="button" aria-label={'Remove line ' + (i + 1)} className="btn btn-ghost btn-sm !px-2.5 sm:mt-6" disabled={kind !== 'business_proposal' && t.lines.length === 1} onClick={() => up({ lines: t.lines.filter((_, j) => j !== i) })} data-testid={`button-${idPrefix}-remove-line-${i}`}><X className="h-4 w-4" /></button>
               </li>

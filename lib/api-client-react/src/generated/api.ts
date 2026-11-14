@@ -55,6 +55,7 @@ import type {
   GetStaffOperationsParams,
   HealthStatus,
   ListPublicCatalogueParams,
+  ListTasksPageParams,
   PrivacyRequestInput,
   ProfileInput,
   ProofRegister,
@@ -76,6 +77,7 @@ import type {
   StartCommerceCheckout200,
   TaskArchiveInput,
   TaskInput,
+  TaskPage,
   TaskUpdate,
   TicketInput,
   TicketReceipt,
@@ -4523,6 +4525,107 @@ export function useCompareAssessments<TData = Awaited<ReturnType<typeof compareA
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getCompareAssessmentsQueryOptions(id,previousId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListTasksPageUrl = (params?: ListTasksPageParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/workspace/tasks/page?${stringifiedParams}` : `/api/workspace/tasks/page`
+}
+
+export const listTasksPage = async (params?: ListTasksPageParams, options?: Parameters<typeof customFetch>[1]): Promise<TaskPage> => {
+
+  return customFetch<TaskPage>(getListTasksPageUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTasksPageQueryKey = (params?: ListTasksPageParams,) => {
+    return [
+    `/api/workspace/tasks/page`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListTasksPageQueryOptions = <TData = Awaited<ReturnType<typeof listTasksPage>>, TError = ErrorType<unknown>>(params?: ListTasksPageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasksPage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTasksPageQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTasksPage>>> = ({ signal }) => listTasksPage(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTasksPage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListTasksPageQueryResult = NonNullable<Awaited<ReturnType<typeof listTasksPage>>>
+export type ListTasksPageQueryError = ErrorType<unknown>
+
+
+export function useListTasksPage<TData = Awaited<ReturnType<typeof listTasksPage>>, TError = ErrorType<unknown>>(
+ params: undefined |  ListTasksPageParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasksPage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTasksPage>>,
+          TError,
+          Awaited<ReturnType<typeof listTasksPage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTasksPage<TData = Awaited<ReturnType<typeof listTasksPage>>, TError = ErrorType<unknown>>(
+ params?: ListTasksPageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasksPage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTasksPage>>,
+          TError,
+          Awaited<ReturnType<typeof listTasksPage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTasksPage<TData = Awaited<ReturnType<typeof listTasksPage>>, TError = ErrorType<unknown>>(
+ params?: ListTasksPageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasksPage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTasksPage<TData = Awaited<ReturnType<typeof listTasksPage>>, TError = ErrorType<unknown>>(
+ params?: ListTasksPageParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasksPage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListTasksPageQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

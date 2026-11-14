@@ -51,7 +51,7 @@ export async function processReminder(workspaceId:string,id:string,sender:Remind
     const eligible=await eligibleReminder(tx,workspaceId,row,now);
     if(eligible.reason){
       await tx.update(valoReminderOutbox).set({status:eligible.status,reason:eligible.reason,
-        leaseToken:null,leaseUntil:null,nextAttemptAt:null})
+        leaseToken:null,leaseUntil:null,nextAttemptAt:eligible.status==="held"?new Date(+now+15*60000):null})
         .where(and(eq(valoReminderOutbox.workspaceId,workspaceId),eq(valoReminderOutbox.id,id)));
       return eligible.status;
     }
@@ -63,14 +63,14 @@ export async function processReminder(workspaceId:string,id:string,sender:Remind
     }
     if(!sender){
       await tx.update(valoReminderOutbox).set({status:"held",reason:"EMAIL_PROVIDER_NOT_CONFIGURED",
-        leaseToken:null,leaseUntil:null,nextAttemptAt:null})
+        leaseToken:null,leaseUntil:null,nextAttemptAt:new Date(+now+15*60000)})
         .where(and(eq(valoReminderOutbox.workspaceId,workspaceId),eq(valoReminderOutbox.id,id)));return"held";
     }
     if(sender.replayWindowMs&&row.attempts>0&&
       (!row.firstAttemptAt||+row.firstAttemptAt>+now||+now-+row.firstAttemptAt>=sender.replayWindowMs)){
       await tx.update(valoReminderOutbox).set({status:"held",
         reason:row.firstAttemptAt&&+row.firstAttemptAt<=+now?"EMAIL_REPLAY_WINDOW_EXPIRED":"EMAIL_FIRST_ATTEMPT_UNKNOWN",
-        leaseToken:null,leaseUntil:null,nextAttemptAt:null}).where(eq(valoReminderOutbox.id,id));
+        leaseToken:null,leaseUntil:null,nextAttemptAt:eligible.status==="held"?new Date(+now+15*60000):null}).where(eq(valoReminderOutbox.id,id));
       return"held";
     }
     const token=randomUUID(),leaseUntil=new Date(+now+30000);
@@ -91,7 +91,7 @@ export async function processReminder(workspaceId:string,id:string,sender:Remind
     const eligible=await eligibleReminder(tx,workspaceId,row,now);
     if(eligible.reason){
       await tx.update(valoReminderOutbox).set({status:eligible.status,reason:eligible.reason,
-        leaseToken:null,leaseUntil:null,nextAttemptAt:null}).where(eq(valoReminderOutbox.id,id));
+        leaseToken:null,leaseUntil:null,nextAttemptAt:eligible.status==="held"?new Date(+now+15*60000):null}).where(eq(valoReminderOutbox.id,id));
       return eligible.status;
     }
     if(!sender||!eligible.task?.dueDate)throw new ValoProblem(503,"Reminder dispatch context missing");
@@ -120,19 +120,21 @@ export async function processReminder(workspaceId:string,id:string,sender:Remind
   });
 }
 /** Database outbox is durable; polling is only a wake-up, never an in-memory job queue. */
-export async function reconcileDueReminders(sender:ReminderSender|null=configuredReminderSender()){
+export async function reconcileDueReminders(sender:ReminderSender|null=configuredReminderSender(),scope?:{workspaceId:string},now=new Date()){
   const due=await db.select({id:valoReminderOutbox.id,workspaceId:valoReminderOutbox.workspaceId}).from(valoReminderOutbox)
     .where(and(inArray(valoReminderOutbox.status,["pending","held","failed"]),
+      ...(scope?[eq(valoReminderOutbox.workspaceId,scope.workspaceId)]:[]),
       sql`coalesce(${valoReminderOutbox.reason},'') not in ('EMAIL_REPLAY_WINDOW_EXPIRED','EMAIL_FIRST_ATTEMPT_UNKNOWN')`,
       or(lt(valoReminderOutbox.attempts,reminderAttemptLimit),
-        and(isNotNull(valoReminderOutbox.leaseToken),lte(valoReminderOutbox.leaseUntil,new Date()))),
-      lte(valoReminderOutbox.scheduledAt,new Date()),
-      or(isNull(valoReminderOutbox.nextAttemptAt),lte(valoReminderOutbox.nextAttemptAt,new Date())))).limit(25);
+        and(isNotNull(valoReminderOutbox.leaseToken),lte(valoReminderOutbox.leaseUntil,now))),
+      lte(valoReminderOutbox.scheduledAt,now),
+      or(isNull(valoReminderOutbox.nextAttemptAt),lte(valoReminderOutbox.nextAttemptAt,now))))
+    .orderBy(sql`${valoReminderOutbox.nextAttemptAt} asc nulls first`,valoReminderOutbox.scheduledAt,valoReminderOutbox.id).limit(25);
   let providerCalls=0;
   const counted:ReminderSender|null=sender?{replayWindowMs:sender.replayWindowMs,
     send:async input=>{providerCalls++;return sender.send(input);}}:null;
   let failures=0;
-  for(const row of due)try{await processReminder(row.workspaceId,row.id,counted);}catch{failures++;}
+  for(const row of due)try{await processReminder(row.workspaceId,row.id,counted,now);}catch{failures++;}
   if(failures)throw Error(`REMINDER_BATCH_PARTIALLY_FAILED_${failures}`);
   return{checked:due.length,providerCalls,emailConfigured:sender!==null};
 }

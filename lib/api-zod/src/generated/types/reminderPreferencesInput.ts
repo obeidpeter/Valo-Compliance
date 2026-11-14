@@ -10,7 +10,7 @@ import type { ReminderPreferencesInputOffsetsItem } from './reminderPreferencesI
 export interface ReminderPreferencesInput {
   enabled: boolean;
   /**
-     * @minItems 1
+     * @minItems 0
      * @maxItems 4
      */
   offsets: ReminderPreferencesInputOffsetsItem[];
