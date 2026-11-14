@@ -1,12 +1,12 @@
 # External completion decisions
 
-Current private-development decision packet, reviewed against commit `ab793f2e2495903aefff1271c89a1c30a39b028b` on 14 November 2026. This replaces the obsolete schedule and token estimates in earlier revisions; those revisions remain in Git history. Engineering and release acceptance are separate. No approval, spend, production deployment or external communication is recorded by this document.
+Current private-development decision packet, updated on 14 November 2026. The corrected frozen package and conditional preparer coverage are tracked in [PR21](https://github.com/obeidpeter/Valo-Compliance/pull/21). This replaces the obsolete schedule and token estimates in earlier revisions; those revisions remain in Git history. Engineering and release acceptance are separate. No approval, spend, production deployment or external communication is recorded by this document.
 
 ## Finite additional inference proposal
 
 Proposed authorization: **up to US$30 of additional application inference before tax, for 24 hours from approval**, shared across the immutable package below. It excludes historical charges, Replit Agent development, hosting, subscriptions, other projects and unrelated calls. It is not a total project budget or a promise that every item will finish for $30.
 
-Package: `finite-package:46a5933fd296adb648dae1becaaabd835d5b203ce5a5d470887ec74cb27bba37`.
+Package: `finite-package:3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8`.
 
 [The disabled package](../valo/evidence/finite-allocation-package-disabled.json) binds 108 actual content units and the original 60 editorial, 80 checker and 60 customer-AI evaluation cases to repository source hashes. Its maximum attempt counts are:
 
@@ -19,7 +19,9 @@ Package: `finite-package:46a5933fd296adb648dae1becaaabd835d5b203ce5a5d470887ec74
 
 These are scope ceilings, not a reservation of every slot, a forecast of necessary calls or evidence that every preparer is implemented. Deterministic negative cases and valid unchanged evidence need no new billable call.
 
-**Current executable coverage at the reviewed commit:** the original TPL-07 publication pair only. Its maximum reservation is **$0.7411008**. The repository proposal does not establish that a current native Replit plan has been prepared, or that the underlying candidate passes all source, rights and export gates. The remaining preparers and full corpus execution remain engineering work.
+**Current conditional preparation coverage:** TPL-01 through TPL-11. Each must have a saved candidate and independently checked actual source, rights, mechanical and final-export evidence before an exact review pair can be prepared. A pair reserves at most **$0.7411008**. The corrected artifact records **zero confirmed native-runtime pairs**; source support is not proof that eleven candidates are ready. The remaining 29 template IDs, other content routes and full evaluation preparation/execution remain outstanding.
+
+The earlier frozen proposal's seven source-file hashes did not match repository bytes because local copies had added newlines. The corrected artifact uses byte-exact source files, rechecks all named sections and retains all original 200 case hashes and 70 canonical content IDs. No authority had been approved, so no paid dispatch was authorized against the invalid proposal. A registered regression verifies the frozen package against the actual repository sources.
 
 The implemented policy reserves **$0.3705504 per attempt**, based on the named model's 400,000-token context capacity counted conservatively as input, plus 8,192 completion tokens and the retained 10% price uplift. These are reservation inputs, not additive usable context limits. This deliberately conservative reservation does not rely on a byte count being an exact token count. Actual valid returned usage settles the reservation. Pending or unknown outcomes keep their full reservation and occupy a concurrency slot. Invalid usage is not returned downstream; bounded unknown liability does not by itself suspend unrelated work if budget and another slot remain. An unexpected model or an unbounded/explicit suspension condition stops further admission. At the full reserved amount, 80 attempts fit into an otherwise unused $30 allocation; settling smaller actual usage can make more slots available. No completion count is guaranteed.
 
@@ -44,6 +46,6 @@ No secret value belongs in chat or repository documentation. Configuration shoul
 
 ## Verification and remaining acceptance
 
-The integrated checkpoint passed [all four CI jobs](https://github.com/obeidpeter/Valo-Compliance/actions/runs/43653607973), including typecheck, controlled API/browser tests, synthetic PostgreSQL isolation, isolated restore, build and security checks. This proves the executed engineering checks, not full R1/R2 acceptance.
+The prior integrated baseline passed [all four CI jobs](https://github.com/obeidpeter/Valo-Compliance/actions/runs/43653607973), including typecheck, controlled API/browser tests, synthetic PostgreSQL isolation, isolated restore, build and security checks. This proves the executed engineering checks, not full R1/R2 acceptance.
 
-The published eligible catalogue, original source-backed 80/60/60 suites, remaining commerce/privacy/export work, native and production verification, and gated R2 implementation remain incomplete. The checker corpus still retains eight source disagreements; engineering fixtures are not a replacement oracle. See the [finite completion checkpoint](../valo/finite-inference-completion-checkpoint.md) for implementation detail.
+The published eligible catalogue, original source-backed 80/60/60 suites, remaining commerce/privacy/export work, native and production verification, and gated R2 implementation remain incomplete. The checker corpus still retains eight source disagreements; engineering fixtures are not a replacement oracle. See the [preparer coverage checkpoint](../valo/operational-preparer-coverage-checkpoint.md) and PR21 for the subsequent source correction, exact validation results and implementation limits.

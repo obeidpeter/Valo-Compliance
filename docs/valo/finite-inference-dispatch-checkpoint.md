@@ -2,7 +2,7 @@
 
 Private development only. No enabled owner authority, paid execution, publication or release acceptance is claimed.
 
-The current implementation is described in the [finite completion checkpoint](finite-inference-completion-checkpoint.md); the [decision packet](../reviews/external-completion-decisions-2026-11-14.md) records the concrete additional-inference proposal. This file supersedes earlier dispatcher status while preserving its history in Git.
+The integrated caller implementation is described in the [finite completion checkpoint](finite-inference-completion-checkpoint.md), with subsequent [conditional preparer coverage](operational-preparer-coverage-checkpoint.md); the [decision packet](../reviews/external-completion-decisions-2026-11-14.md) records the concrete additional-inference proposal. This file supersedes earlier dispatcher status while preserving its history in Git.
 
 ## Integrated behavior
 
@@ -16,7 +16,9 @@ The full-context reservation is $0.3705504 per attempt. Concurrency is two; ther
 
 At integrated commit `ab793f2e2495903aefff1271c89a1c30a39b028b`, [all four CI jobs passed](https://github.com/obeidpeter/Valo-Compliance/actions/runs/43653607973). The finite caller/package/history/recovery group, controlled adapter paths and actual disposable PostgreSQL tests ran as part of that checkpoint.
 
-The package freezes 108 actual content units and the original 200 evaluation cases, but only the TPL-07 publication preparer is executable at that commit. A current exact native Replit plan remains unconfirmed. The package and all new-spending authority remain disabled; unsupported candidates and unready evidence remain held.
+The corrected package freezes 108 actual content units and the original 200 evaluation cases. Subsequent [PR21](https://github.com/obeidpeter/Valo-Compliance/pull/21) adds conditional TPL-01 through TPL-11 preparation and corrects the earlier artifact's seven mismatched source-file hashes. Its frozen-artifact regression checks exact source bytes, all original cases and named sections. The corrected package ID is `finite-package:3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8`.
+
+A current exact native Replit plan remains unconfirmed: the artifact records zero prepared runtime pairs. Supported IDs do not establish saved candidate readiness. The package and all new-spending authority remain disabled; unsupported candidates and unready evidence remain held.
 
 Historical reconciliation is read-only and cannot certify the account balance. The last retained import had 57 potential-charge records, including 20 unresolved/unbounded records. These remain preserved separately from the proposed additional allocation. They are not assumed free, and the additional proposal is not represented as a cap on past charges.
 
