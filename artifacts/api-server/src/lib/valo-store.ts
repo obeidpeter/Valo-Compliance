@@ -40,6 +40,10 @@ function event(tx: Tx, actor: WorkspaceActor, action: string, entityId: string, 
 /** Called only after identity verification; callers cannot choose a workspace. */
 export async function resolveWorkspace(identityId: string): Promise<WorkspaceActor> {
   return db.transaction(async tx => {
+    const identityHash=quotaSubjectHash(process.env.SESSION_SECRET,"user",identityId);
+    const[erasedIdentity]=await tx.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
+      .where(eq(valoPrivacyTombstones.identityHash,identityHash)).limit(1);
+    if(erasedIdentity)throw new ValoProblem(403,"Identity deletion is recorded. Access cannot be recreated.");
     const [existing] = await tx.select().from(valoMemberships).where(eq(valoMemberships.identityId, identityId));
     if (existing) {
       const[deleted]=await tx.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)

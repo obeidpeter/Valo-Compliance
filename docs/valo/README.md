@@ -1,4 +1,13 @@
-# Current operational publication refinement
+# Current development state — still not accepted
+
+Current partial results: [independent privacy HTTP and deletion-history
+boundaries](privacy-role-and-tombstone-checkpoint.md), [connected but disabled
+finite inference](finite-inference-dispatch-checkpoint.md) and [corrected
+editorial controls](editorial-boundary-corrections.md). Public eligibility and
+formal R1/R2 acceptance have not been established. The older checkpoints below
+remain historical evidence and do not supersede these limits.
+
+# Historical operational publication refinement
 
 **Current implementation evidence:** [bounded AI instructions, manual-note preservation
 and two supplied customer cases through private exports](customer-ai-source-checkpoint.md).

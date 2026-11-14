@@ -1,5 +1,20 @@
 # Valo — setup checklist and disabled inference proposal
 
+## Current implementation update
+
+The [finite dispatcher is now connected](finite-inference-dispatch-checkpoint.md)
+to reservation, actual managed transport, settlement, reuse and unknown-outcome
+accounting. Durable expiring approval and an immutable exact work manifest are
+required; there is no caller-boolean or environment activation switch.
+Twenty historical liabilities still lack exact charge receipts, so admission
+remains held and no available balance is asserted. Preparing the final bounded
+work manifest remains code/data work, not an owner approval prerequisite that
+has already been satisfied. No spend, quota change or approval is implied.
+
+Earlier sections below are retained preparation evidence; their statements
+that the transport has no success path or dispatcher implementation are
+superseded by this update.
+
 ## Current refinement: whole-context fallback, still disabled
 
 The finite batch can reserve the verified named model's entire 400,000-token

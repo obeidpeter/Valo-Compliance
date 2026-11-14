@@ -35,7 +35,12 @@ test("recorded synthetic receipt recovery, no provider verification or messages"
       contentVersionId:version.id,status:"suspended"});
     const before=(await db.select().from(valoOrders).where(eq(valoOrders.id,orderId)))[0];
     await t.test("concurrent repair produces one held receipt and one audit without reactivating the grant",async()=>{
+      await db.insert(valoPurchaseOutbox).values({id:randomUUID(),workspaceId:actor.workspaceId,orderId,
+        kind:"refund_status",status:"held_controlled_fixture"});
       const results=await Promise.all(Array.from({length:8},()=>recoverSyntheticPurchaseReceipt(orderId)));
+      const messages=await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,orderId));
+      assert.equal(messages.filter(x=>x.kind==="purchase_receipt").length,1);
+      assert.equal(messages.find(x=>x.kind==="refund_status")?.status,"held_controlled_fixture");
       assert.equal(results.filter(r=>r.repaired).length,1);
       assert.equal(new Set(results.map(r=>r.receiptId)).size,1);
       assert.ok(results.every(r=>r.deliveryStatus==="held_synthetic_recovery"));

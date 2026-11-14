@@ -1,5 +1,24 @@
 # Valo Compliance — Valo Platform
 
+## Current tested units — R1/R2 still unaccepted
+
+The private development branch now includes independent privacy-role HTTP
+authorization, deletion-history checks that stop workspace recreation, resumable
+synthetic development erasure and a connected finite-inference dispatcher.
+The inference batch remains disabled: 57 historical charge records are
+preserved, 20 liabilities remain unresolved, and no remaining balance is claimed.
+
+Latest executed groups: 22/22 privacy/session/erasure/workspace checks; 26/26
+budget unit/database checks; editorial source corpus 14 controlled passes,
+0 failures, 46 blocked (no new provider calls or publications). These are
+partial development checks, not formal 80/60/60 acceptance or production proof.
+
+See [privacy boundaries](docs/valo/privacy-role-and-tombstone-checkpoint.md),
+[finite inference](docs/valo/finite-inference-dispatch-checkpoint.md) and
+[editorial corrections](docs/valo/editorial-boundary-corrections.md).
+Live payments, external messages, public launch and confidential real data
+remain off. The earlier checkpoints below are historical, not current claims.
+
 ## Latest development checkpoint — scoped customer data and working CI
 
 The customer JSON download now includes workspace-scoped export/file metadata

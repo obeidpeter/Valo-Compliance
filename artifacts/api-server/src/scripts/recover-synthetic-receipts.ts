@@ -39,7 +39,10 @@ try{
     repaired:receipts.length,failed:failures.length,remaining:remaining.rows[0].count,orderHistoryUnchanged:true,
     orderHistoryHash:hash(after.rows),receiptsHeld:true,concurrentAndRepeatedRepair:true,
     providerCalls:0,emailSends:0,realSettlements:0,R1Accepted:false,R2Accepted:false};
-  await writeFile(resolve(import.meta.dirname,"../../../../docs/valo/evidence/synthetic-receipt-recovery.json"),JSON.stringify(report,null,2)+"\n");
+  const evidence=resolve(import.meta.dirname,"../../../../docs/valo/evidence");
+  const name=`synthetic-receipt-recovery-${Date.now()}.json`;
+  await writeFile(resolve(evidence,name),JSON.stringify(report,null,2)+"\n",{flag:"wx"});
+  // Keep the first reported run untouched; later observations are separate.
   process.stdout.write(JSON.stringify(report)+"\n");
   if(failures.length)process.exitCode=1;
 }finally{await pool.end();}

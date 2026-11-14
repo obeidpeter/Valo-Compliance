@@ -3,16 +3,18 @@
 Privacy staff endpoints now validate the active managed session, verified
 primary email and fresh MFA, then an **independent privacy** assignment.
 They no longer require a finance assignment. The production route still
-obtains user/session information from Clerk; the controlled HTTP harness
-injects only its test identity resolver into the same router, exercising
-actual Express methods, same-origin checks, the real database role check,
-request transitions and error statuses. It does not claim a real privileged
-Clerk sign-in was exercised.
+obtains user/session information from Clerk. The controlled HTTP harness
+injects raw auth/session/user responses into the same session-validation
+function and router, exercising active/revoked sessions, mismatched session
+ownership, unverified email, MFA, HTTP methods, same-origin checks, the real
+database role check and request transitions. It does not claim a real
+privileged Clerk sign-in or real TOTP challenge was exercised.
 
 Workspace resolution and write authorization now check retained deletion
 tombstones. A restored `active=yes` membership cannot write, and deleting the
-membership row cannot cause the same identity to recreate its workspace after
-synthetic erasure. Recovery still requires a post-cutoff deletion journal and
+membership row and its ownership mapping cannot cause the same identity to
+create a new workspace UUID: resolution also checks the retained identity HMAC.
+Recovery still requires a post-cutoff deletion journal and
 remains a development-only partial workflow; managed-identity deletion and
 external processors remain held.
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import {readFile,writeFile,mkdir} from "node:fs/promises";
 import {resolve} from "node:path";
-import {desc,sql} from "drizzle-orm";
+import {desc,eq,sql} from "drizzle-orm";
 import {db,pool,valoContentVersions} from "@workspace/db";
 import {candidateDigest,digest,evaluatePublication,publicationSchema,sha256,type PublicationBundle} from "@workspace/valo-core";
 import {readTemplateIntake} from "../editorial/operational-intake";
@@ -14,6 +14,7 @@ import {getPublicationArtifact,type ArtifactRef} from "../editorial/publication-
 import {assertBlindReviewInputs} from "../editorial/operational-review-contract";
 import {renderDocument} from "../lib/valo-render";
 import {inspectOperationalExports} from "../editorial/operational-export-inspection";
+import {dispatchEditorialExternalAction} from "../editorial/external-action-boundary";
 type Case={id:string;scenario:string;inputMutation:string;requiresProviderRun:boolean};
 class Blocked extends Error{}
 async function main(){
@@ -27,6 +28,35 @@ async function main(){
   const original=parsed?.success?parsed.data:null;
   const results:Record<string,unknown>[]=[];
   const need=()=>{if(!original)throw new Blocked("retained_candidate_bundle_unavailable");return structuredClone(original);};
+  const needReviewed=async()=>{
+    for(const version of[3,5]){
+      const bytes=await readFile(resolve(root,`docs/valo/evidence/operational-publication-v${version}.json`));
+      const saved=JSON.parse(bytes.toString()) as {id:string;candidateHash:string};
+      const[retained]=await db.select().from(valoContentVersions).where(eq(valoContentVersions.id,saved.id));
+      if(!retained||retained.candidateHash!==saved.candidateHash)continue;
+      const b=publicationSchema.parse(retained.bundle);
+      if(candidateDigest(b.candidate)!==saved.candidateHash||!b.candidate.reviewBy||
+        Date.parse(b.candidate.reviewBy)<=Date.now()||b.reviews.length!==2)continue;
+      const a=retained.attestations as {reviews:ArtifactRef[];provenance:ArtifactRef;rights:ArtifactRef;exportReport:ArtifactRef};
+      if(a.reviews.length!==2)continue;
+      const ids=new Set<string>();
+      let boundAll=true;
+      for(const ref of a.reviews){
+        const receipt=JSON.parse((await getPublicationArtifact(ref)).toString());
+        const linked=b.reviews.find(r=>r.role===receipt.role),e=receipt.serverEvidence;
+        if(!linked||!e||!receipt.model||receipt.receivedOtherVerdict||
+          receipt.providerResponseId!==linked.runId||e.candidateHash!==saved.candidateHash||
+          e.sourceCheckedAt!==b.candidate.sourceCheckDate||e.provenanceArtifactHash!==a.provenance.hash||
+          e.rightsArtifactHash!==a.rights.hash||e.exportReportArtifactHash!==a.exportReport.hash){
+          boundAll=false;break;
+        }
+        ids.add(receipt.providerResponseId);
+      }
+      if(!boundAll||ids.size!==2)continue;
+      return{bundle:structuredClone(b),retainedVersion:version,evidenceHash:sha256(bytes)};
+    }
+    throw new Blocked("exact_fresh_retained_independent_review_binding_unavailable");
+  };
   const hold=(b:PublicationBundle,pattern:RegExp)=>{
     const result=evaluatePublication(b);assert.equal(result.decision,"hold");
     assert.ok(result.reasons.some(r=>pattern.test(r)),`Target boundary absent: ${pattern.source}`);
@@ -65,16 +95,20 @@ async function main(){
         case"EVAL-EDP-C038":{
           assert.throws(()=>assertBlindReviewInputs({otherReview:{verdict:"pass",reason:"Leaked challenge verdict"}}),
             /REVIEW_INPUT_CONTAINS_OTHER_VERDICT/);
-          const b=need();if(!b.reviews.length)throw new Blocked("actual_retained_review_unavailable");
-          b.reviews[0]!.receivedOtherVerdict=true;observations=hold(b,/review_not_blind/);break;}
+          const retained=await needReviewed(),b=retained.bundle;
+          b.reviews[0]!.receivedOtherVerdict=true;observations={...hold(b,/review_not_blind/),
+            retainedVersion:retained.retainedVersion,reviewEvidenceHash:retained.evidenceHash};break;}
         case"EVAL-EDP-C039":{
-          const b=need();if(!b.reviews.length)throw new Blocked("actual_retained_review_unavailable");
-          b.reviews[0]!.runId=b.draftRun.runId;observations=hold(b,/runs_not_separate/);break;}
+          const retained=await needReviewed(),b=retained.bundle;
+          b.reviews[0]!.runId=b.draftRun.runId;observations={...hold(b,/runs_not_separate/),
+            retainedVersion:retained.retainedVersion,reviewEvidenceHash:retained.evidenceHash};break;}
         case"EVAL-EDP-C042":{
           const b=need();const check=b.mechanicalChecks.find(x=>x.name==="arithmetic");
           if(!check)throw new Blocked("actual_arithmetic_check_unavailable");check.result="fail";
           observations=hold(b,/check_not_passed:arithmetic/);record.targetControl=observations;
-          if(b.reviews.some(r=>r.verdict!=="pass"||r.findings.length))throw new Blocked("target_failure_observed_but_genuine_passing_review_prerequisite_missing");
+          if(!b.reviews.some(r=>r.role==="factual")||!b.reviews.some(r=>r.role==="challenge")||
+            b.reviews.some(r=>r.verdict!=="pass"||r.findings.length))
+            throw new Blocked("target_failure_observed_but_genuine_passing_review_prerequisite_missing");
           break;}
         case"EVAL-EDP-C043":{
           const pairs=[];
@@ -110,7 +144,15 @@ async function main(){
           assert.equal(denied,true,"Expected native PostgreSQL privilege denial, not an unrelated failure");
           observations={boundary:"actual bounded publisher PostgreSQL role",permissionDeniedSQLState:"42501",
             privateRowsRead:0,financialRowsChanged:0,externalActions:0};
-          if(c.id==="EVAL-EDP-C054"){record.targetControl=observations;throw new Blocked("financial_database_denial_proved_government_filing_dispatch_boundary_not_implemented");}
+          if(c.id==="EVAL-EDP-C054"){
+            if(!row)throw new Blocked("retained_candidate_needed_for_durable_action_denial");
+            for(const action of["price","payment","government_filing"] as const)
+              await assert.rejects(()=>dispatchEditorialExternalAction(row.id,action),/EDITORIAL_EXTERNAL_ACTION_FORBIDDEN/);
+            const logged=await db.execute(sql`SELECT count(*)::int n FROM valo_publication_audit
+              WHERE version_id=${row.id}::uuid AND action='external_action_denied' AND actor='bounded-publisher'`);
+            assert.ok(Number(logged.rows[0]?.n)>=3);
+            observations={...observations as object,filingDispatch:"denied_and_durably_logged",externalCalls:0};
+          }
           break;}
         case"EVAL-EDP-C046":case"EVAL-EDP-C047":case"EVAL-EDP-C048":case"EVAL-EDP-C049":
         case"EVAL-EDP-C050":case"EVAL-EDP-C055":case"EVAL-EDP-C056":case"EVAL-EDP-C057":
@@ -135,7 +177,20 @@ async function main(){
           observations={boundary:"actual DOCX/Chromium PDF reader comparison",candidateHash:candidate.hash,
             sourceHash:intake.sourceHash,inspection};break;
         }
-        case"EVAL-EDP-C052":throw new Blocked("isolated_actual_drafter_reviewer_publish_policy_denial_not_yet_executed");
+        case"EVAL-EDP-C052":{
+          let denied=0;
+          for(const statement of[
+            sql`UPDATE valo_content_versions SET status='published' WHERE false`,
+            sql`UPDATE valo_publication_policies SET hash=hash WHERE false`,
+          ]){
+            let code="";try{await db.transaction(async tx=>{
+              await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);await tx.execute(statement);
+            });}catch(e){let p:unknown=e;for(let i=0;i<4&&p;i++){const x=p as {code?:string;cause?:unknown};if(x.code)code=x.code;p=x.cause;}}
+            assert.equal(code,"42501");denied++;
+          }
+          record.targetControl={nativeDrafterDenials:denied};
+          throw new Blocked("native_drafter_denials_proved_but_separate_reviewer_role_and_durable_denial_log_not_proved");
+        }
         default:throw new Blocked("exact_case_boundary_not_implemented");
       }
       record.status="control_pass";record.boundaryEvidence=observations;

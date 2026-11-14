@@ -164,7 +164,8 @@ export async function purchaseReceipt(actor:WorkspaceActor,id:string){
     const order=await ownedOrder(tx,actor,id);
     if(!order.providerTransactionId||order.status!=="verified_success"&&!(await originalReceiptExists(tx,id,order.workspaceId)))
       throw new ValoProblem(409,"There is no recorded verified original purchase receipt for this order.");
-    const[delivery]=await tx.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,id));
+    const[delivery]=await tx.select().from(valoPurchaseOutbox).where(and(eq(valoPurchaseOutbox.orderId,id),
+      eq(valoPurchaseOutbox.kind,"purchase_receipt")));
     return{...await presentOrder(tx,order),notice:"Paystack test-mode Valo purchase receipt. Not a live payment, customer-generated business invoice, government receipt or official tax invoice.",
       deliveryStatus:delivery?.status??"not_queued"};
   });
@@ -173,7 +174,8 @@ export async function purchaseReceipt(actor:WorkspaceActor,id:string){
  * Never unsuspend an existing grant or bypass refund/dispute decisions. */
 async function repairVerifiedFulfilment(tx:Tx,order:typeof valoOrders.$inferSelect,actorId:string){
   const[grant]=await tx.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order.id));
-  const[receipt]=await tx.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,order.id));
+  const[receipt]=await tx.select().from(valoPurchaseOutbox).where(and(eq(valoPurchaseOutbox.orderId,order.id),
+    eq(valoPurchaseOutbox.kind,"purchase_receipt")));
   let repaired=false;
   if(!grant){
     const[refund]=await tx.select({id:valoRefundRequests.id}).from(valoRefundRequests).where(eq(valoRefundRequests.orderId,order.id)).limit(1);
@@ -280,7 +282,8 @@ export async function reconcilePayments(){
       if(!order)throw new Error("ORDER_MISSING");
       await settleVerifiedOrder(order.id,await paystack.verify(order.reference));
       const[grant]=await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order.id));
-      const[receipt]=await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,order.id));
+      const[receipt]=await db.select().from(valoPurchaseOutbox).where(and(eq(valoPurchaseOutbox.orderId,order.id),
+        eq(valoPurchaseOutbox.kind,"purchase_receipt")));
       const[current]=await db.select().from(valoOrders).where(eq(valoOrders.id,order.id));
       const gaps=current.status==="verified_success"?[
         ...(grant?.status!=="active"?["ENTITLEMENT_DIFFERENCE"]:[]),...(!receipt?["RECEIPT_OUTBOX_MISSING"]:[]),

@@ -1,5 +1,27 @@
 # Recovery of retained synthetic purchase receipts
 
+## Current correction and execution
+
+The later investigation found that all 18 remaining rows met the retained
+fixture checks. The actual bug was a lookup that treated **any** notification
+for an order as its purchase receipt. Existing refund notifications therefore
+prevented repair. Calling these 18 rows strict fixture refusals was not an
+accurate diagnosis. The first run and its failures remain retained below.
+
+The ordinary fulfilment repair, reconciliation and customer receipt lookups
+now explicitly select `purchase_receipt`. A concurrent regression creates a
+separate held refund notification first, creates exactly one purchase receipt,
+and preserves the refund notice, order fields and suspended grant. Targeted
+receipt/commerce tests passed **19/19**, with no skips.
+
+The normal scoped recovery then observed **18 missing**, repaired **18**,
+recorded **zero failures and zero remaining**, and preserved the before/after
+order-history hash. A second execution observed **zero missing** and changed
+nothing. The 76 earlier repaired plus these 18 clear the observed 94-row gap;
+these are controlled synthetic receipts held from delivery, not real payment
+settlements. New timestamped evidence files preserve both executions without
+overwriting the original failed report. Provider calls and email sends: zero.
+
 `recoverSyntheticPurchaseReceipt` is an internal development maintenance
 capability, not an HTTP route, payment verifier or finance-role bypass for real
 orders. It requires explicit non-deployed development, a separate maintenance

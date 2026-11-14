@@ -6,7 +6,7 @@ import {eq,inArray} from "drizzle-orm";
 import {db,pool,valoStaffAssignments,valoPrivacyCases,valoPrivacyEvents,valoPrivacyTombstones,
   valoPrivacyErasureObjects,valoStaffAccessAudit,valoWorkspaces,valoMemberships,
   valoSupportTickets,valoEvents} from "@workspace/db";
-import {createPrivacyOperationsRouter} from "./valo-customer-access";
+import {createPrivacyOperationsRouter,makeVerifiedStaffSession} from "./valo-customer-access";
 import {createPrivacyCase,confirmPrivacyCase} from "../lib/valo-privacy";
 import {resolveWorkspace,ValoProblem} from "../lib/valo-store";
 
@@ -16,13 +16,18 @@ test("actual HTTP privacy routes apply an independent privacy role and fresh MFA
   assert.equal(process.env.NODE_ENV,"development");assert.ok(!process.env.REPLIT_DEPLOYMENT);
   const tag=randomUUID(),owner=await resolveWorkspace(`synthetic-http-privacy-${tag}`);
   const roles=["privacy","finance","revoked","stale"].map(x=>`synthetic-http-${x}-${tag}`);
+  let sessionRevoked=false,emailVerified=true,sessionMismatch=false;
   const app=express();
   app.use(express.json());
-  app.use("/admin/privacy-cases",createPrivacyOperationsRouter(async req=>{
-    const id=req.header("x-test-identity");
-    if(!id||!roles.includes(id))throw new ValoProblem(401,"Missing controlled test session.");
-    return{identityId:id,recentMfa:!id.includes("stale"),verifiedAt:Date.now()};
-  }));
+  app.use("/admin/privacy-cases",createPrivacyOperationsRouter(makeVerifiedStaffSession({
+    auth:req=>{
+      const raw=req.header("x-test-identity"),id=raw&&roles.includes(raw)?raw:null;
+      return{userId:id,sessionId:id?`controlled-session:${id}`:null,has:()=>Boolean(id&&!id.includes("stale"))};
+    },
+    session:async id=>({status:sessionRevoked?"revoked":"active",userId:sessionMismatch?"different-user":id.slice("controlled-session:".length)}),
+    user:async id=>({id,banned:false,locked:false,primaryEmailAddressId:"controlled-primary",
+      emailAddresses:[{id:"controlled-primary",verification:{status:emailVerified?"verified":"unverified"}}]}),
+  })));
   app.use((err:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{
     res.status(err instanceof ValoProblem?err.status:503).json({error:err instanceof Error?err.message:"unavailable"});
   });
@@ -63,6 +68,9 @@ test("actual HTTP privacy routes apply an independent privacy role and fresh MFA
     await t.test("revoked and stale-MFA privacy identities fail on the HTTP route",async()=>{
       assert.equal((await request(roles[2])).status,403);
       assert.equal((await request(roles[3])).status,403);
+      sessionRevoked=true;assert.equal((await request(roles[0])).status,403);sessionRevoked=false;
+      emailVerified=false;assert.equal((await request(roles[0])).status,403);emailVerified=true;
+      sessionMismatch=true;assert.equal((await request(roles[0])).status,403);sessionMismatch=false;
       await db.update(valoStaffAssignments).set({active:false}).where(eq(valoStaffAssignments.identityId,roles[0]));
       assert.equal((await request(roles[0])).status,403);
     });

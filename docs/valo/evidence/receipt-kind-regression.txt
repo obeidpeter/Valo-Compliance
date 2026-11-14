@@ -1,0 +1,30 @@
+▶ controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication
+  ✔ held content and browser price/currency additions cannot create an order (98.301539ms)
+  ✔ saved controlled order is not a receipt or entitlement; no browser-success grant exists (31.449244ms)
+  ✔ other tenants cannot read a receipt, refresh, checkout, settle or request a refund (55.964707ms)
+  ✔ mismatched amount and workspace never grant; data outside test mode is rejected (9.393397ms)
+  ✔ concurrent controlled callback/webhook results grant one entitlement, one receipt outbox and one settlement event (129.204548ms)
+  ✔ verified retries repair missing grant and receipt atomically once, without unsuspending a grant (81.38065ms)
+  ✔ receipt/licence history is private and independent of a later price edit (20.498293ms)
+  ✔ duplicate refund requests persist once without completing a refund or deleting owned work (28.778076ms)
+  ✔ a failed fulfilment constraint rolls back settlement and outbox atomically (12.630855ms)
+  ✔ pending, abandoned and failed provider controls do not grant; a late success can recover (89.893542ms)
+  ✔ reversal suspends reuse without deleting financial or customer history (68.400656ms)
+  ✔ membership revoked while settlement waits on an order lock prevents the eventual customer write (24.476018ms)
+  ✔ durable event deduplication ignores whitespace and delivery retries without retaining card data (10.885908ms)
+{"scope":"Controlled database payment mechanics, not Paystack execution","realProviderCalls":0,"publishedFixtures":0,"priceApproval":false,"livePayments":false}
+  ✔ no merchant setup means no provider calls, false match, consumed event attempt or claimed delivery (18.17156ms)
+✔ controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication (853.465577ms)
+▶ recorded synthetic receipt recovery, no provider verification or messages
+  ✔ missing maintenance opt-in and missing recorded grant both fail closed (16.248767ms)
+  ✔ concurrent repair produces one held receipt and one audit without reactivating the grant (135.472103ms)
+  ✔ retries preserve the original receipt; other tenants cannot read it (65.097157ms)
+✔ recorded synthetic receipt recovery, no provider verification or messages (375.763503ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4305.949686

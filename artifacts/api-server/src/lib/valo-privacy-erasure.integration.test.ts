@@ -136,6 +136,10 @@ test("resumable physical development erasure with retained exclusions and replay
     });
     await t.test("even a deleted membership cannot recreate an identity with a deletion tombstone",async()=>{
       await db.delete(valoMemberships).where(eq(valoMemberships.workspaceId,a.workspaceId));
+      // Simulate no remaining ownership mapping; the post-cutoff identity
+      // journal must stop creation of a different workspace UUID as well.
+      await db.update(valoWorkspaces).set({ownerIdentityId:`synthetic-anonymised-${randomUUID()}`})
+        .where(eq(valoWorkspaces.id,a.workspaceId));
       await assert.rejects(()=>resolveWorkspace(a.identityId),{status:403});
       assert.equal((await db.select().from(valoMemberships).where(eq(valoMemberships.workspaceId,a.workspaceId))).length,0);
     });

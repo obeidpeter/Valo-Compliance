@@ -58,16 +58,27 @@ customerAccessRouter.get("/workspace/privacy-cases/:id/result",async(req,res)=>{
   res.json(await privacyPreparedResult(res.locals.valoActor,id));
 });
 export const staffOperationsRouter=Router();
-async function verifiedStaffSession(req:Request){
-  const auth=getAuth(req);
+type StaffSessionDependencies={
+  auth:(req:Request)=>{userId:string|null;sessionId:string|null;has:(check:{reverification:"strict_mfa"})=>boolean};
+  session:(id:string)=>Promise<{status:string;userId:string}>;
+  user:(id:string)=>Promise<{id:string;banned:boolean;locked:boolean;primaryEmailAddressId:string|null;
+    emailAddresses:{id:string;verification:{status:string}|null}[]}>;
+};
+export function makeVerifiedStaffSession(deps:StaffSessionDependencies={
+  auth:getAuth,session:id=>clerkClient.sessions.getSession(id),user:id=>clerkClient.users.getUser(id),
+}){
+return async(req:Request):Promise<PrivacyStaffActor>=>{
+  const auth=deps.auth(req);
   if(!auth.userId||!auth.sessionId)throw new ValoProblem(401,"Sign in to a staff account.");
-  const[session,user]=await Promise.all([clerkClient.sessions.getSession(auth.sessionId),clerkClient.users.getUser(auth.userId)]);
+  const[session,user]=await Promise.all([deps.session(auth.sessionId),deps.user(auth.userId)]);
   const primary=user.emailAddresses.find(e=>e.id===user.primaryEmailAddressId);
   if(session.status!=="active"||session.userId!==user.id||user.banned||user.locked||primary?.verification?.status!=="verified")
     throw new ValoProblem(403,"An active verified staff session is required.");
   const actor={identityId:user.id,recentMfa:auth.has({reverification:"strict_mfa"}),verifiedAt:Date.now()};
   return actor;
+};
 }
+const verifiedStaffSession=makeVerifiedStaffSession();
 async function financeIdentity(req:Request){
   const actor=await verifiedStaffSession(req);
   await assertFinanceActor(actor);return actor;
