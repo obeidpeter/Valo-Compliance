@@ -3,6 +3,9 @@
 This is **partial R1 development**, not acceptance of RUL-008, R1, R2 or a release gate.
 The new algorithms run only in an isolated offline evaluation. The customer
 assessment API still requires eligible released rules; none was created by this work.
+Implementation revision: `c9b059583881382dad7b53fad6a951d02af4df73`.
+The subsequent register refresh records the failing original-oracle comparison
+against this saved code; it does not accept a whole requirement.
 
 ## Actual implementation
 
