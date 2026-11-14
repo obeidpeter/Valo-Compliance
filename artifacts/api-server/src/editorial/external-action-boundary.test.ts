@@ -41,7 +41,7 @@ test("actual editorial denial boundary returns only committed current-run action
   }
   assert.equal(persisted.length,6);assert.equal(new Set(persisted.map(row=>row.id)).size,6);
   for(const failure of ["insert","commit"] as const){
-    fail=failure;const before=persisted.length;
+    fail=failure;const before:number=persisted.length;
     await assert.rejects(()=>dispatchEditorialExternalAction(versionId,"price",randomUUID()),(error:unknown)=>{
       assert.ok(error instanceof Error);assert.ok(!(error instanceof EditorialExternalActionDenied));
       assert.match(error.message,/CONTROLLED_(INSERT|COMMIT)_FAILURE/);return true;
