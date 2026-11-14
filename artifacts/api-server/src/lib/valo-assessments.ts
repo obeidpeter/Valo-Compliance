@@ -50,8 +50,22 @@ export async function releasedRegistry(tx:WorkspaceTx|typeof db,now:Date){
   }
   return{rules,trusted,excluded,stateHash:digest(states.sort((a,b)=>canonical(a).localeCompare(canonical(b))))};
 }
+export function currentAssessmentDate(now:Date){
+  return new Date(now.getTime()+3600000).toISOString().slice(0,10);
+}
+/** A saved recommendation is historical evidence, not authority for a new task.
+ * Reuse the assessment engine's current-date, freshness, implementation and
+ * conflicting-version gates against the server-owned registry. Never rewrite
+ * the saved facts/result or infer eligibility from reminder preferences. */
+export function currentSourceTaskRecommendation(facts:unknown,
+  registry:Pick<Awaited<ReturnType<typeof releasedRegistry>>,"rules"|"trusted">,
+  ruleId:string,ruleVersion:number,now:Date){
+  return assess(checkerFactsSchema.parse(facts),registry.rules,currentAssessmentDate(now),now,{trustedManifestHashes:registry.trusted})
+    .items.find(item=>item.ruleId===ruleId&&item.ruleVersion===ruleVersion&&
+      item.label==="Likely relevant"&&item.sourceLinkedTaskEligible!==false);
+}
 export async function runAssessment(facts:CheckerFacts,asOfDate:string,tx:WorkspaceTx|typeof db=db,now=new Date()){
-  const todayLagos=new Date(now.getTime()+3600000).toISOString().slice(0,10);
+  const todayLagos=currentAssessmentDate(now);
   if(asOfDate>todayLagos)throw new ValoProblem(422,"Future-dated assessments are not available.");
   if(/^\d{4}-\d{2}-\d{2}$/.test(facts.turnoverPeriodStart)&&/^\d{4}-\d{2}-\d{2}$/.test(facts.turnoverPeriodEnd)&&facts.turnoverPeriodStart>facts.turnoverPeriodEnd)
     throw new ValoProblem(422,"The turnover period end must not precede its start.");

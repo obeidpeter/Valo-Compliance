@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { digest } from "./publication";
 import { richCheckerFactsSchema, sourceFamilyReleaseSchema, sourceFamilyBindingMatches,
-  evaluateReleasedSourceFamily, type RichAnswerState } from "./checker-rich";
+  evaluateReleasedSourceFamily, type MissingQuestionState } from "./checker-rich";
 
 export const unknownAnswers = ["unknown","unanswered","not_applicable"] as const;
 const unknown = z.enum(unknownAnswers);
@@ -79,8 +79,8 @@ export type RuleItem={
   ruleId:string;ruleVersion:number;requirementVersionId:string;title:string;
   label:"Likely relevant"|"May apply"|"More information needed"|"Not indicated by these answers";
   reason:string;missingFacts:string[];matchedFacts:string[];nextStep:string;
-  missingAnswerStates?:{field:string;state:RichAnswerState}[];assessedProposition?:string;
-  sourceLinkedTaskEligible?:boolean;factsNotice?:string;
+  missingAnswerStates?:{field:string;state:MissingQuestionState}[];assessedProposition?:string;
+  sourceLinkedTaskEligible?:boolean;factsNotice?:string;sourceReviewHold?:string;
   jurisdiction:ReleasedRule["jurisdiction"];sources:ReleasedRule["sources"];relatedTemplateIds:string[];
 };
 const absent=(v:unknown)=>v===undefined||v===null||v===""||

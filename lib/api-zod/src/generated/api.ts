@@ -3110,10 +3110,11 @@ export const PreviewAssessmentResponse = zod.object({
   "reason": zod.string(),
   "assessedProposition": zod.string().optional(),
   "factsNotice": zod.string().optional(),
+  "sourceReviewHold": zod.string().optional(),
   "sourceLinkedTaskEligible": zod.boolean().optional(),
   "missingAnswerStates": zod.array(zod.object({
   "field": zod.string(),
-  "state": zod.enum(['unknown', 'unanswered', 'not_applicable'])
+  "state": zod.enum(['unknown', 'unanswered', 'not_applicable', 'review'])
 })).optional(),
   "missingFacts": zod.array(zod.string()),
   "matchedFacts": zod.array(zod.string()),
@@ -3555,10 +3556,11 @@ export const PreviewWorkspaceAssessmentResponse = zod.object({
   "reason": zod.string(),
   "assessedProposition": zod.string().optional(),
   "factsNotice": zod.string().optional(),
+  "sourceReviewHold": zod.string().optional(),
   "sourceLinkedTaskEligible": zod.boolean().optional(),
   "missingAnswerStates": zod.array(zod.object({
   "field": zod.string(),
-  "state": zod.enum(['unknown', 'unanswered', 'not_applicable'])
+  "state": zod.enum(['unknown', 'unanswered', 'not_applicable', 'review'])
 })).optional(),
   "missingFacts": zod.array(zod.string()),
   "matchedFacts": zod.array(zod.string()),
@@ -3998,10 +4000,11 @@ export const ListAssessmentsResponseItem = zod.object({
   "reason": zod.string(),
   "assessedProposition": zod.string().optional(),
   "factsNotice": zod.string().optional(),
+  "sourceReviewHold": zod.string().optional(),
   "sourceLinkedTaskEligible": zod.boolean().optional(),
   "missingAnswerStates": zod.array(zod.object({
   "field": zod.string(),
-  "state": zod.enum(['unknown', 'unanswered', 'not_applicable'])
+  "state": zod.enum(['unknown', 'unanswered', 'not_applicable', 'review'])
 })).optional(),
   "missingFacts": zod.array(zod.string()),
   "matchedFacts": zod.array(zod.string()),
@@ -4843,10 +4846,11 @@ export const CreateAssessmentResponse = zod.object({
   "reason": zod.string(),
   "assessedProposition": zod.string().optional(),
   "factsNotice": zod.string().optional(),
+  "sourceReviewHold": zod.string().optional(),
   "sourceLinkedTaskEligible": zod.boolean().optional(),
   "missingAnswerStates": zod.array(zod.object({
   "field": zod.string(),
-  "state": zod.enum(['unknown', 'unanswered', 'not_applicable'])
+  "state": zod.enum(['unknown', 'unanswered', 'not_applicable', 'review'])
 })).optional(),
   "missingFacts": zod.array(zod.string()),
   "matchedFacts": zod.array(zod.string()),
@@ -5292,10 +5296,11 @@ export const GetAssessmentResponse = zod.object({
   "reason": zod.string(),
   "assessedProposition": zod.string().optional(),
   "factsNotice": zod.string().optional(),
+  "sourceReviewHold": zod.string().optional(),
   "sourceLinkedTaskEligible": zod.boolean().optional(),
   "missingAnswerStates": zod.array(zod.object({
   "field": zod.string(),
-  "state": zod.enum(['unknown', 'unanswered', 'not_applicable'])
+  "state": zod.enum(['unknown', 'unanswered', 'not_applicable', 'review'])
 })).optional(),
   "missingFacts": zod.array(zod.string()),
   "matchedFacts": zod.array(zod.string()),

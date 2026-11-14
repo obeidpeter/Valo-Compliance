@@ -5,9 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { UnknownAnswer } from './unknownAnswer';
+import type { MissingAnswerStateState } from './missingAnswerStateState';
 
 export interface MissingAnswerState {
   field: string;
-  state: UnknownAnswer;
+  state: MissingAnswerStateState;
 }

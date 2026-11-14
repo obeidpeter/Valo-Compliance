@@ -91,6 +91,7 @@ export * from './listTasksPageFilter';
 export * from './listTasksPageParams';
 export * from './managementFile';
 export * from './missingAnswerState';
+export * from './missingAnswerStateState';
 export * from './officialRoute';
 export * from './privacyCase';
 export * from './privacyCaseConfirmation';

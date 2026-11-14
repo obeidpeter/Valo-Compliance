@@ -70,6 +70,7 @@ test("version and client evidence injection are rejected without source policy c
   ])assert.equal(checkerFactsSchema.safeParse({...legacy,factsVersion:"checker-facts-v2",...injected}).success,false);
   assert.equal(checkerFactsSchema.safeParse({...legacy,factsVersion:"checker-facts-v2",rich:{tax:{accountingPeriodStart:"2026-02-01",accountingPeriodEnd:"2026-01-01"}}}).success,false);
   assert.equal(checkerFactsSchema.safeParse({...legacy,factsVersion:"checker-facts-v2",rich:{tax:{accountingPeriodStart:"2026-02-30"}}}).success,false);
+  assert.equal(checkerFactsSchema.safeParse({...legacy,factsVersion:"checker-facts-v2",rich:{businessName:{partners:Array.from({length:30},()=>({surname:"Example",forenames:Array.from({length:20},()=>"x".repeat(150))}))}}}).success,false);
 });
 
 test("four outcomes traverse the real engine and generated response contract in private fixture mode",()=>{
@@ -168,4 +169,77 @@ test("original source candidate bytes remain bound and unchanged",()=>{
     const hash=createHash("sha256").update(readFileSync(new URL(`../../../../lib/valo-core/src/${file}`,import.meta.url))).digest("hex");
     assert.equal(hash,sourceFamilyAlgorithmHashes[key]);
   }
+});
+
+
+test("composite privacy questions preserve each original marker and target actual facts",()=>{
+  const result=evaluate("privacy",{privacy:{processesPersonalData:true,operatesInNigeria:true,
+    processingPurpose:"solely_personal_household",section3Exception:"personal_household",
+    commercialUse:marker("unknown"),privacyRightsViolationIndicated:marker("not_applicable")}});
+  assert.deepEqual(result.items[0].missingAnswerStates,[
+    {field:"rich.privacy.commercialUse",state:"unknown"},
+    {field:"rich.privacy.privacyRightsViolationIndicated",state:"not_applicable"}]);
+  const one=evaluate("privacy",{privacy:{processesPersonalData:true,operatesInNigeria:true,
+    processingPurpose:"solely_personal_household",section3Exception:"personal_household",
+    commercialUse:false,privacyRightsViolationIndicated:marker("unknown")}});
+  assert.deepEqual(one.items[0].missingFacts,["rich.privacy.privacyRightsViolationIndicated"]);
+});
+
+test("contradictory formation and personal-data facts ask for review without changing known answers",()=>{
+  const input=facts({tax:{legalForm:"foreign_company",incorporatedInNigeria:true}});
+  const result=assess(input,[fixture("tax")],asOfDate,now,{fixtureMode:true});
+  assert.deepEqual(result.items[0].missingAnswerStates,[{field:"rich.tax.legalForm",state:"review"},{field:"rich.tax.incorporatedInNigeria",state:"review"}]);
+  assert.equal(input.rich!.tax!.incorporatedInNigeria,true);
+  const data=evaluate("privacy",{privacy:{processesPersonalData:false,dataCategories:["employee_name"],profiling:true}});
+  assert.deepEqual(data.items[0].missingFacts,["rich.privacy.processesPersonalData","rich.privacy.dataCategories","rich.privacy.profiling"]);
+  assert.ok(data.items[0].missingAnswerStates?.every(m=>m.state==="review"));
+  assert.deepEqual(PreviewAssessmentResponse.parse(result),result);
+});
+
+test("authority-only classifications are explicit source holds without invented customer questions",()=>{
+  for(const result of [
+    evaluate("tax",{tax:{legalForm:"ordinary_unincorporated_partnership"}}),
+    evaluate("privacy",{privacy:{processesPersonalData:true,operatesInNigeria:true,controllerRole:"controller",collectionMethod:"indirect"}}),
+  ]){
+    const item=result.items[0];
+    assert.deepEqual(item.missingFacts,[]);assert.deepEqual(item.missingAnswerStates,[]);
+    assert.match(item.sourceReviewHold!,/Valo needs source review/);
+    assert.equal(item.sourceLinkedTaskEligible,false);
+    assert.deepEqual(PreviewAssessmentResponse.parse(result),result);
+  }
+});
+
+test("indirect supporting circumstances remain answerable but cannot certify an exception",()=>{
+  const base={processesPersonalData:true,operatesInNigeria:true,controllerRole:"controller",collectionMethod:"indirect",indirectNoticeException:"disproportionate_effort_claim"} as const;
+  const missing=evaluate("privacy",{privacy:{...base,exceptionSupportingFacts:marker("unknown")}}).items[0];
+  assert.deepEqual(missing.missingAnswerStates,[{field:"rich.privacy.exceptionSupportingFacts",state:"unknown"}]);
+  const supplied=evaluate("privacy",{privacy:{...base,exceptionSupportingFacts:"An old supplier record has no current contact route."}}).items[0];
+  assert.deepEqual(supplied.missingFacts,[]);assert.match(supplied.sourceReviewHold!,/supplied indirect-collection circumstances/);
+  assert.equal(supplied.sourceLinkedTaskEligible,false);
+});
+
+test("product composite questions retain markers and separate permit authority review",()=>{
+  const result=evaluate("product",{product:{productCategory:"cosmetic",activity:"sample_for_registration_only",
+    specialSamplePermit:marker("unknown"),permitScopeMatchesActivity:marker("not_applicable"),permitConditionsSatisfied:marker("unanswered")}}).items[0];
+  assert.deepEqual(result.missingAnswerStates,[{field:"rich.product.specialSamplePermit",state:"unknown"},
+    {field:"rich.product.permitScopeMatchesActivity",state:"not_applicable"},{field:"rich.product.permitConditionsSatisfied",state:"unanswered"}]);
+  assert.match(result.sourceReviewHold!,/permit's authority/);assert.equal(result.sourceLinkedTaskEligible,false);
+  const activity=evaluate("product",{product:{productCategory:"cosmetic",manufacturesInNigeria:marker("unknown"),activity:marker("not_applicable"),commercialSupplyInNigeria:false}}).items[0];
+  assert.deepEqual(activity.missingAnswerStates,[{field:"rich.product.manufacturesInNigeria",state:"unknown"},{field:"rich.product.activity",state:"not_applicable"}]);
+});
+
+test("unsupported succession composition points to real name facts and a source-review hold",()=>{
+  const item=evaluate("businessName",{businessName:{...nameBase,trueForenames:["Ada"],
+    namingAssessment:{onlyAddedWordsIndicateSuccession:true,otherBrandAddition:false}}}).items[0];
+  assert.deepEqual(item.missingFacts,["rich.businessName.businessName","rich.businessName.namingAssessment.onlyAddedWordsIndicateSuccession","rich.businessName.namingAssessment.otherBrandAddition"]);
+  assert.match(item.sourceReviewHold!,/succession-name composition/);assert.equal(item.sourceLinkedTaskEligible,false);
+});
+
+
+test("known unsupported classifications cannot be fixed by asserting a legal conclusion",()=>{
+  const tax=evaluate("tax",{tax:{legalForm:"foreign_company",incorporatedInNigeria:false,effectiveManagementCountry:"outside_Nigeria"}}).items[0];
+  assert.deepEqual(tax.missingFacts,[]);assert.match(tax.sourceReviewHold!,/does not establish tax residence/);
+  const names=evaluate("businessName",{businessName:{legalForm:"firm",hasPlaceOfBusinessInNigeria:true,carryingOnBusiness:true,businessName:"Example Partnership",operatorRole:"proprietor",partners:[{type:"corporation",corporateName:"Example Limited"},{type:"individual",surname:"Example",forenames:["Ada"]}]}}).items[0];
+  assert.deepEqual(names.missingFacts,[]);assert.match(names.sourceReviewHold!,/corporate-partner firms/);
+  assert.equal(names.sourceLinkedTaskEligible,false);
 });

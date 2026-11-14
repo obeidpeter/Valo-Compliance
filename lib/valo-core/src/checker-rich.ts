@@ -62,9 +62,15 @@ export const richProductSchema = z.object({
 export const richCheckerFactsSchema = z.object({
   businessName: richBusinessNameSchema.optional(), privacy: richPrivacySchema.optional(),
   tax: richTaxSchema.optional(), product: richProductSchema.optional(),
-}).strict();
+}).strict().superRefine((groups,ctx)=>{
+  // Reserve room for internal factual normalization below the unchanged
+  // candidate algorithms' 40,000-character limit. Reject before evaluation.
+  for(const [family,answers] of Object.entries(groups))if(answers!==undefined&&JSON.stringify(answers).length>39_000)
+    ctx.addIssue({code:"custom",path:[family],message:"These optional details are too long. Shorten this section before checking."});
+});
 export type RichCheckerFacts = z.infer<typeof richCheckerFactsSchema>;
 export type RichAnswerState = z.infer<typeof richAnswerMarkerSchema>["status"];
+export type MissingQuestionState = RichAnswerState | "review";
 
 /** These fingerprints bind the existing unchanged candidate implementations.
  * A released rule also binds its exact source passages through publication EDP.
@@ -153,26 +159,85 @@ export function evaluateReleasedSourceFamily(binding: SourceFamilyRelease, rich:
   }
   const aliases: Record<string,string> = {"individual.surname":"trueSurname", "individual.forenames":"trueForenames", "individual.recognizedAbbreviations":"recognizedAbbreviations"};
   const read = (path:string):unknown => path.split(".").reduce<unknown>((v,k)=>v&&typeof v==="object"?Reflect.get(v,k):undefined,raw);
-  const missingAnswerStates = missingFacts.flatMap(m => {
-    const paths = m.field === "section814Exception"
-      ? ["operatorRole","namingAssessment.onlyAddedWordsIndicateSuccession","namingAssessment.onlyAdditionIsPluralS"]
-        .filter(p=>read(p)===undefined||isMarker(read(p)))
-      : [aliases[m.field]??m.field];
-    return (paths.length?paths:["namingAssessment"]).map(field=>({field:prefix+field,state:isMarker(read(field))?stateOf(read(field)):read(field)===undefined?"unanswered" as const:m.state}));
-  });
+  const unanswered = (path:string) => read(path) === undefined || isMarker(read(path));
+  const holds = new Set<string>();
+  const questions = new Map<string,MissingQuestionState>();
+  const schemas = {businessName:richBusinessNameSchema,privacy:richPrivacySchema,tax:richTaxSchema,product:richProductSchema};
+  const knownPath = (path:string) => Object.hasOwn(schemas[binding.family].shape,path) || binding.family === "businessName" &&
+    (/^partners\.\d+\.(type|surname|forenames|recognizedAbbreviations|corporateName)$/.test(path) ||
+     /^namingAssessment\.(onlyAddedWordsIndicateSuccession|otherBrandAddition|sameSurnameAllPartners|onlyAdditionIsPluralS)$/.test(path));
+  const add = (path:string) => {
+    if(!knownPath(path)){ holds.add("Valo needs source review before this question can be resolved; no customer answer can certify it.");return; }
+    // A group marker applies to its children too. Known conflicting facts are
+    // marked for review; they are never relabelled as an unanswered assertion.
+    const ancestors=path.split(".").map((_,i,parts)=>parts.slice(0,i+1).join("."));
+    const markerPath=ancestors.find(p=>isMarker(read(p)));
+    const actualPath=markerPath??path,value=read(actualPath);
+    questions.set(prefix+actualPath,isMarker(value)?value.status:value===undefined?"unanswered":"review");
+  };
+  for(const m of missingFacts){
+    let paths:string[];
+    switch(m.field){
+      case "processesPersonalData/dataClassification":
+        paths=["processesPersonalData",...(["dataCategories","profiling","automatedDecisionMaking"].filter(p=>read(p)!==undefined))];break;
+      case "commercialUse/privacyRightsViolationIndicated":
+        paths=["commercialUse","privacyRightsViolationIndicated"].filter(unanswered);
+        if(!paths.length)holds.add("The supplied circumstances do not establish the household exception. Valo needs source review; this is not a request for you to approve an exemption.");break;
+      case "verifiedIndirectCollectionException":
+        paths=[];holds.add("Valo needs source review of any indirect-collection exception and its scope. Your answers cannot certify that an exception applies.");break;
+      case "classificationUnderNtaaSection147":
+        paths=[];holds.add("Valo needs source review of this entity's classification under the applicable tax definition. No company-return conclusion is established.");break;
+      case "formationFacts":paths=["legalForm","incorporatedInNigeria"];break;
+      case "legalForm/incorporationRecordType":paths=["legalForm","incorporatedAsCompany"];break;
+      case "effectiveManagementCountry":
+        paths=unanswered(m.field)?[m.field]:[];
+        if(!paths.length)holds.add("Valo needs source review of the supplied management location and applicable entity classification; a location answer does not establish tax residence.");break;
+      case "managementStatusVerification":
+        paths=unanswered(m.field)?[m.field]:[];
+        holds.add("Valo needs source review of the management facts and applicable entity classification; the presence of records does not decide tax residence.");break;
+      case "exceptionScopeConfirmed":
+        paths=unanswered(m.field)?[m.field]:[];
+        holds.add("Valo needs source review of the legal-claim context, necessity and scope. Checking circumstances is not approval of an exemption.");break;
+      case "exceptionSupportingFacts":
+        paths=unanswered(m.field)?[m.field]:[];
+        if(!paths.length)holds.add("Valo needs source review of the supplied indirect-collection circumstances; describing them does not establish an exception.");break;
+      case "productCategory/processingClassification":paths=["productCategory","processingOrPackaging","drugOrMedicalUse"];break;
+      case "samplePermitAuthorityAndScope":
+        paths=["specialSamplePermit","permitScopeMatchesActivity","permitConditionsSatisfied"].filter(unanswered);
+        holds.add("Valo needs source review of the sample permit's authority and product scope. A claimed permit does not establish commercial-supply permission.");break;
+      case "manufacturesInNigeria/activity":
+        paths=["manufacturesInNigeria","activity","commercialSupplyInNigeria"].filter(unanswered);
+        if(!paths.length)paths=["manufacturesInNigeria","activity","commercialSupplyInNigeria"];break;
+      case "section814Exception":
+        paths=["operatorRole","namingAssessment.onlyAddedWordsIndicateSuccession","namingAssessment.onlyAdditionIsPluralS"].filter(unanswered);
+        if(!paths.length)holds.add("Valo needs source review of the naming exception for the supplied facts.");break;
+      case "operatorRole/appointmentAuthority/appointmentConfirmed":
+        paths=["operatorRole","appointmentAuthority","appointmentConfirmed"].filter(unanswered);break;
+      case "namingAssessment.successionNameComposition":
+        paths=["businessName","namingAssessment.onlyAddedWordsIndicateSuccession","namingAssessment.otherBrandAddition"];
+        holds.add("Valo needs source review of the succession-name composition. Review the actual name and wording; do not certify a legal exception.");break;
+      default:
+        if(binding.family === "businessName" && /^partners\.\d+\.type$/.test(m.field) && read(m.field) === "corporation"){
+          paths=[];holds.add("Valo needs a separately supported source rule for corporate-partner firms. Do not change an accurate partner type to obtain a result.");
+        }else paths=[aliases[m.field]??m.field];
+    }
+    paths.forEach(add);
+  }
+  const missingAnswerStates=[...questions].map(([field,state])=>({field,state}));
+  const sourceReviewHold=holds.size?[...holds].join(" "):undefined;
   const existingRegistration = binding.family === "businessName" ? rich?.businessName?.businessNameRegistered === true :
     binding.family === "product" && ["current_for_product_and_manufacturer", "supplier_registration_claimed"].includes(String(rich?.product?.productRegistration));
-  const nextStep = label === "More information needed" || label === "May apply"
+  const nextStep = sourceReviewHold ? "Review any factual questions below. This result remains held for Valo source review; no source-linked action is available." : label === "More information needed" || label === "May apply"
     ? "Review the unanswered facts and the source's conditions before choosing an action."
     : existingRegistration ? "Check the exact existing record and its continuing conditions; do not create a duplicate application."
     : label === "Likely relevant" ? "Review this scoped requirement and the official source before choosing your next step."
     : "This answer concerns only the stated question; check other requirements and local coverage separately.";
   return {
-    label, reason, missingAnswerStates,
+    label, reason, missingAnswerStates, ...(sourceReviewHold?{sourceReviewHold}:{}),
     missingFacts: missingAnswerStates.map(m => m.field),
     matchedFacts: "matchedFacts" in outcome ? outcome.matchedFacts.map(f => prefix + f) : [],
     assessedProposition: propositions[binding.family], nextStep,
-    sourceLinkedTaskEligible: label === "Likely relevant" && !existingRegistration,
+    sourceLinkedTaskEligible: label === "Likely relevant" && !existingRegistration && !sourceReviewHold,
     factsNotice: "Based on your stated facts; records, permissions and source exceptions have not been independently verified.",
   };
 }

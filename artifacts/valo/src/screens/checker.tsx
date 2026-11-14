@@ -11,7 +11,7 @@ import {
 } from '@workspace/api-client-react';
 import { AssessmentResultView } from '@/components/assessment-result';
 import { RichCheckerFields } from '@/components/rich-checker-fields';
-import { richStep, type RichCheckerFacts } from '@/lib/rich-checker';
+import { richQuestionTarget, richStep, type RichCheckerFacts } from '@/lib/rich-checker';
 import { Notice } from '@/components/states';
 import { describeError } from '@/lib/api';
 import {
@@ -68,16 +68,19 @@ export default function Checker() {
   }
 
   function go(n: number, field?: string) {
-    if (step === 3 && n > 3 && amountText && amountError) return;
-    setStep(n);
+    const target = field ? richQuestionTarget(field) : undefined;
+    const nextStep = target?.step ?? n;
+    if (step === 3 && nextStep > 3 && amountText && amountError) return;
+    setStep(nextStep);
     requestAnimationFrame(() => {
-      if (field?.startsWith('rich.')) {
-        const [, section, key, index, partnerKey] = field.split('.');
-        const details = document.querySelector<HTMLDetailsElement>(`[data-testid="rich-section-${section}"]`);
-        if (details) details.open = true;
-        const prefix = key === 'partners' ? `rich-partner-${index}-${partnerKey}` : key === 'namingAssessment' ? `rich-naming-${index}` : `rich-${section}-${key}`;
-        const input = document.getElementById(`${prefix}-state`);
-        if (input) { input.focus(); return; }
+      if (target) {
+        const details = document.querySelector<HTMLDetailsElement>(`[data-testid="rich-section-${target.section}"]`);
+        if (details) {
+          details.open = true;
+          const primary = document.getElementById(target.id);
+          const input = primary && !primary.matches(':disabled') ? primary : target.fallbackId ? document.getElementById(target.fallbackId) : null;
+          if (input) { input.focus(); return; }
+        }
       }
       document.getElementById('checker-step')?.focus();
     });
@@ -201,7 +204,12 @@ export default function Checker() {
                 <h2 className="font-display text-3xl">Results</h2>
                 {stale && <span className="pill pill-ochre" data-testid="status-stale">Answers changed since this result. Check again.</span>}
               </div>
-              <AssessmentResultView result={result.r} />
+              <AssessmentResultView result={result.r} questionAction={field => {
+                const target = richQuestionTarget(field);
+                return target && (target.section !== 'businessName' || isSignedIn)
+                  ? <button type="button" className="btn btn-ghost btn-sm" aria-label={`Review ${factLabel(field)}`} onClick={() => go(target.step, field)}>Review answer</button>
+                  : null;
+              }} />
               {isSignedIn
                 ? <SavePanel facts={final} profileRevision={ws.data?.profileRevision ?? 0} hasProfile={!!profile} stale={!!stale} />
                 : <Notice className="mt-6" tone="ink" title="Want to keep this?">Nothing here has been saved. <Link href="/sign-up" className="font-medium underline">Open a workspace</Link> to save a consented copy and turn items into tasks.</Notice>}

@@ -2678,7 +2678,7 @@ components:
       required: [field, state]
       properties:
         field: { type: string }
-        state: { $ref: "#/components/schemas/UnknownAnswer" }
+        state: { type: string, enum: [unknown, unanswered, not_applicable, review] }
     CheckerFacts:
       type: object
       additionalProperties: false
@@ -2761,6 +2761,7 @@ components:
         reason: { type: string }
         assessedProposition: { type: string }
         factsNotice: { type: string }
+        sourceReviewHold: { type: string }
         sourceLinkedTaskEligible: { type: boolean }
         missingAnswerStates: { type: array, items: { $ref: "#/components/schemas/MissingAnswerState" } }
         missingFacts: { type: array, items: { type: string } }

@@ -5,9 +5,9 @@ import type { AssessmentItem, AssessmentResult } from '@workspace/api-client-rea
 import { Notice } from '@/components/states';
 import { factLabel } from '@/lib/checker';
 import { cn } from '@/lib/utils';
-import { ANSWER_STATE_LABELS, RESULT_LABELS, RESULT_TONES } from '@/lib/rich-checker';
+import { MISSING_ANSWER_STATE_LABELS, RESULT_LABELS, RESULT_TONES } from '@/lib/rich-checker';
 
-export function AssessmentResultView({ result, itemAction }: { result: AssessmentResult; itemAction?: (item: AssessmentItem) => ReactNode }) {
+export function AssessmentResultView({ result, itemAction, questionAction }: { result: AssessmentResult; itemAction?: (item: AssessmentItem) => ReactNode; questionAction?: (field: string) => ReactNode }) {
   const labels = [...RESULT_LABELS, ...new Set(result.items.map(i => i.label).filter(label => !(RESULT_LABELS as readonly string[]).includes(label)))];
   const groups = labels.map((label) => ({ label, items: result.items.filter((i) => i.label === label) })).filter((g) => g.items.length);
   return (
@@ -33,7 +33,7 @@ export function AssessmentResultView({ result, itemAction }: { result: Assessmen
         groups.map((g) => (
           <section key={g.label} aria-label={g.label}>
             <div className="mb-3 flex items-center gap-3"><span className={cn('pill', RESULT_TONES[g.label] ?? 'pill-ink')}><span className="dot" />{g.label}</span><span className="text-xs text-muted-foreground">{g.items.length}</span></div>
-            <ul className="grid gap-3">{g.items.map((it) => <Item key={it.ruleId} item={it} action={itemAction?.(it)} />)}</ul>
+            <ul className="grid gap-3">{g.items.map((it) => <Item key={it.ruleId} item={it} action={itemAction?.(it)} questionAction={questionAction} />)}</ul>
           </section>
         ))
       )}
@@ -70,7 +70,7 @@ export function AssessmentResultView({ result, itemAction }: { result: Assessmen
   );
 }
 
-function Item({ item, action }: { item: AssessmentItem; action?: ReactNode }) {
+function Item({ item, action, questionAction }: { item: AssessmentItem; action?: ReactNode; questionAction?: (field: string) => ReactNode }) {
   const [open, setOpen] = useState(false);
   const detail = item;
   const missingStates = new Map(detail.missingAnswerStates?.map(answer => [answer.field, answer.state]));
@@ -89,8 +89,12 @@ function Item({ item, action }: { item: AssessmentItem; action?: ReactNode }) {
         {detail.factsNotice && <p className="mt-2 rounded-lg bg-secondary px-3 py-2 text-xs leading-relaxed" data-testid={'facts-notice-' + item.ruleId}>{detail.factsNotice}</p>}
         <p className="mt-3 text-sm leading-relaxed text-foreground/85">{item.reason}</p>
         {item.missingFacts.length > 0 && (
-          <ul className="mt-3 grid gap-1 text-sm" aria-label="Answers still needed">{item.missingFacts.map(field => <li key={field}><span className="text-muted-foreground">{factLabel(field)}: </span>{missingStates.has(field) ? ANSWER_STATE_LABELS[missingStates.get(field)!] : 'Not supplied'}</li>)}</ul>
+          <ul className="mt-3 grid gap-2 text-sm" aria-label="Answers to provide or review">{item.missingFacts.map(field => <li key={field} className="flex flex-wrap items-center justify-between gap-2"><span><span className="text-muted-foreground">{factLabel(field)}: </span>{missingStates.has(field) ? MISSING_ANSWER_STATE_LABELS[missingStates.get(field)!] : 'Not supplied'}</span>{questionAction?.(field)}</li>)}</ul>
         )}
+        {item.sourceReviewHold && <div className="mt-3 rounded-xl border border-border p-3 text-sm" role="note" aria-label="Source review needed" data-testid={'source-review-hold-' + item.ruleId}>
+          <p className="font-medium">Source review needed</p>
+          <p className="mt-1 leading-relaxed">{item.sourceReviewHold}</p>
+        </div>}
         {item.nextStep && <p className="mt-2 text-sm"><span className="text-muted-foreground">Next step: </span>{item.nextStep}</p>}
         {item.sources.length > 0 && (
           <button type="button" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary" aria-expanded={open} onClick={() => setOpen((o) => !o)} data-testid={'button-sources-' + item.ruleId}>

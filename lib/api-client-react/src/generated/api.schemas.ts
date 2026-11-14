@@ -1159,18 +1159,19 @@ export interface RichCheckerFacts {
   product?: RichCheckerFactsProduct;
 }
 
-export type UnknownAnswer = typeof UnknownAnswer[keyof typeof UnknownAnswer];
+export type MissingAnswerStateState = typeof MissingAnswerStateState[keyof typeof MissingAnswerStateState];
 
 
-export const UnknownAnswer = {
+export const MissingAnswerStateState = {
   unknown: 'unknown',
   unanswered: 'unanswered',
   not_applicable: 'not_applicable',
+  review: 'review',
 } as const;
 
 export interface MissingAnswerState {
   field: string;
-  state: UnknownAnswer;
+  state: MissingAnswerStateState;
 }
 
 export type CheckerFactsFactsVersion = typeof CheckerFactsFactsVersion[keyof typeof CheckerFactsFactsVersion];
@@ -1265,6 +1266,15 @@ export const CheckerFactsTurnoverPeriod = {
   annual: 'annual',
   monthly: 'monthly',
   quarterly: 'quarterly',
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type UnknownAnswer = typeof UnknownAnswer[keyof typeof UnknownAnswer];
+
+
+export const UnknownAnswer = {
   unknown: 'unknown',
   unanswered: 'unanswered',
   not_applicable: 'not_applicable',
@@ -1374,6 +1384,7 @@ export interface AssessmentItem {
   reason: string;
   assessedProposition?: string;
   factsNotice?: string;
+  sourceReviewHold?: string;
   sourceLinkedTaskEligible?: boolean;
   missingAnswerStates?: MissingAnswerState[];
   missingFacts: string[];

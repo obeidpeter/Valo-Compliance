@@ -19,6 +19,7 @@ export interface AssessmentItem {
   reason: string;
   assessedProposition?: string;
   factsNotice?: string;
+  sourceReviewHold?: string;
   sourceLinkedTaskEligible?: boolean;
   missingAnswerStates?: MissingAnswerState[];
   missingFacts: string[];

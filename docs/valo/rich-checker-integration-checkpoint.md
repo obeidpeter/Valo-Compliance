@@ -8,7 +8,7 @@ The optional questionnaire captures business-name, privacy, company-period and p
 
 Anonymous checks do not ask for or accept the business-name namespace. Signed-in preview uses `/workspace/checker/preview`, behind the existing verified workspace and same-origin middleware. It checks membership in the repository transaction and does not persist preview inputs. The public and private preview paths have strict core validation before generated DTO parsing, so browser-supplied source policy or eligibility fields are rejected rather than silently stripped.
 
-Results render all four labels, including a May-apply-only result. Scoped propositions, missing-answer states and an assertion notice are shown. A server-disallowed source-linked task is unavailable even if an item is likely relevant. Existing asserted registration does not generate a duplicate application task. No deadlines are invented.
+Results render all four labels, including a May-apply-only result. Composite source questions map to actual customer fields and preserve each marker. Known contradictory answers are marked for review without rewriting the answer. Unresolved authority or classification issues appear as explicit Valo source-review holds rather than invented questions. Missing factual questions have validated links to their mounted controls; supporting privacy circumstances have a bounded input that warns against personal/sensitive details. Scoped propositions, missing-answer states and an assertion notice are shown. A server-disallowed source-linked task is unavailable even if an item is likely relevant. Existing asserted registration does not generate a duplicate application task. No deadlines are invented.
 
 ## Source-bound execution
 
@@ -19,9 +19,10 @@ Unknown role and household-purpose omissions cannot silently establish an except
 ## Observed validation
 
 - Real Orval 8.47.0 generation completed from the OpenAPI contract.
-- 17 focused Node tests passed: 11 engine/contract tests and 6 UI helper tests. The retained raw output is [rich-checker-focused-validation.txt](evidence/rich-checker-focused-validation.txt).
-- Strict TypeScript validation of the changed core, focused tests and generated schema modules passed. The command and exit status are in the same log.
+- 26 focused Node tests passed: 18 engine/contract tests and 8 UI helper tests. The retained raw output is [rich-checker-focused-validation.txt](evidence/rich-checker-focused-validation.txt).
+- Strict TypeScript validation of the changed core, focused tests, generated schema modules and existing predicate fixture helper passed. The actual composite core project build also passed. The command and exit status are in the same log.
 - A separate focused UI TypeScript check passed using actual generated API, core, React and query types, plus temporary declarations for unavailable external UI packages. This is not a full application build. Four changed TSX files also parsed through esbuild.
+- All 80 existing synthetic predicate-engineering fixtures passed after a type-only `NonNullable` correction for optional rule conditions. These are a separate suite from the original source oracle.
 - The old no-rule v1 fixture was run with the unchanged base engine; its hash remains `4d106813d86b2e328264d113807beea64666854d9692d44bae553af03802ea04`.
 - Tests execute four-label source-family behavior only with explicitly marked in-memory synthetic fixtures. Production execution rejects those fixtures; tests do not create publication evidence.
 
@@ -36,3 +37,14 @@ Browser checks remain unrun: mobile layout, keyboard and screen-reader labels, o
 No paid AI, PSP call, email, deployment, database migration or release action was performed. Package/lock/CI, budget, privacy and receipt implementation files are outside this branch's scope.
 
 CI follow-up: the first commit exposed a composite TypeScript project-boundary error because the contract test was placed in the core source project. It has been moved to `artifacts/api-server/src/lib/valo-checker-rich.test.ts`, which already owns both API-schema and core dependencies. No package scripts, dependency files or CI configuration were changed. Run this test explicitly with the UI helper test when integrating.
+
+Independent-review follow-up: seven engine/contract regressions cover composite marker preservation, known contradictory facts, authority-only holds, supporting circumstances, sample-permit scope, succession names and unsupported classification. Two UI regressions cover mounted targets and rejection of internal aliases. No source candidate implementation or source-oracle expectation was changed.
+
+GitHub CI at `a94598425b6ba9a9defcc68c8e55522b5c2e4ca0` passed library/API-server/UI typechecks before finding the predicate fixture helper type alias addressed here. Its PostgreSQL job failed on the pre-existing native-private-storage configuration in the privacy-erasure suite; no privacy/storage/CI file was changed by this branch. The final head requires its own checks; earlier results are not final-head acceptance.
+
+
+Task-creation correction: before any source-linked task insert, the service now reassesses the immutable saved facts with the current server-owned registry, current Lagos assessment date and current time. This reuses the engine's trust, implementation, freshness, effective-period and conflicting-version gates, independent of reminder settings and due dates. The saved historical snapshot is not rewritten. A current result must still be likely relevant and permit the source-linked action.
+
+`artifacts/api-server/src/lib/valo-task-source-guard.integration.test.ts` adds an isolated PostgreSQL service test with positive legacy behavior, ten current-rule denial variants, effect/rollback checks, reminders-on and reminders-off paths, ownership/injection checks and manual-task fallback. It controls only the registry dependency through Node's test-process module mocking; it never creates publication rows. Local discovery skipped this database test because a disposable PostgreSQL environment was unavailable. Its cases are authored, not claimed passed. Run explicitly with `VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test artifacts/api-server/src/lib/valo-task-source-guard.integration.test.ts` against a loopback disposable database.
+
+The task guard received a separate implementation review before this checkpoint. That review is not database execution or publication approval. Concurrent registry withdrawal is not proven by the test-process registry mock; integrated verification must examine the currently unlocked registry read and transaction ordering.

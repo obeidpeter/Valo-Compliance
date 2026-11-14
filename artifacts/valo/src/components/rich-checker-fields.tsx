@@ -70,6 +70,7 @@ const PRIVACY_FIELDS: Field[] = [
   flag('dataSubjectAlreadyInformed', 'Has the person already been given information about this use?'),
   select('indirectNoticeException', 'For indirect collection, has an effort-related concern been raised?', [['none', 'No such concern'], ['disproportionate_effort_claim', 'Concern about the effort of contacting people'], ['other', 'Another concern']], 'This does not establish that a notice exception applies.'),
   flag('exceptionScopeConfirmed', 'Have the particular circumstances behind the stated context been checked?', 'This records a factual check, not approval of a legal exception.'),
+  { key: 'exceptionSupportingFacts', label: 'What factual circumstances support the stated context or contacting concern?', hint: 'Describe circumstances only. Do not include names, contact details or other personal or sensitive information. This does not establish a legal exception.' },
 ];
 const PRODUCT_FIELDS: Field[] = [
   select('productCategory', 'Which description fits the particular product?', [['processed_food', 'Processed food'], ['cosmetic', 'Cosmetic'], ['claimed_cosmetic', 'Described as cosmetic, with classification unresolved'], ['water', 'Water'], ['drug', 'Drug'], ['medical_device', 'Medical device'], ['live_fish', 'Live fish'], ['other', 'Another product']]),
@@ -118,7 +119,7 @@ function AnswerField({ field, value, onChange, prefix }: { field: Field; value: 
         <button type="button" className="btn btn-ghost !px-3" aria-label={`Remove ${field.label.toLowerCase()} ${index + 1}`} onClick={() => onChange(values.filter((_, position) => position !== index))}><X className="h-4 w-4" /></button>
       </div>)}
       <button type="button" className="btn btn-ghost btn-sm w-fit" disabled={values.length >= 20} onClick={() => onChange([...values, ''])}><Plus className="h-4 w-4" />Add an entry</button>
-    </div> : <input id={id} className="field" type={field.kind === 'date' ? 'date' : 'text'} aria-label={field.label} value={typeof value === 'string' ? value : ''} maxLength={300} onChange={event => onChange(event.target.value || undefined)} data-testid={`input-${id}`} />)}
+    </div> : <input id={id} className="field" type={field.kind === 'date' ? 'date' : 'text'} aria-label={field.label} aria-describedby={field.hint ? `${id}-hint` : undefined} value={typeof value === 'string' ? value : ''} maxLength={300} onChange={event => onChange(event.target.value || undefined)} data-testid={`input-${id}`} />)}
   </fieldset>;
 }
 
@@ -134,7 +135,7 @@ export function RichCheckerFields({ section, facts, onChange }: { section: RichS
   const naming = answers.namingAssessment && typeof answers.namingAssessment === 'object' && !Array.isArray(answers.namingAssessment) && !isRichMarker(answers.namingAssessment) ? answers.namingAssessment : {};
   const partners = Array.isArray(answers.partners) ? answers.partners.filter((partner): partner is RichSectionAnswers => !!partner && typeof partner === 'object' && !Array.isArray(partner) && !isRichMarker(partner)) : [];
   return <details className="rounded-2xl border border-border p-4 sm:p-5" data-testid={`rich-section-${section}`}>
-    <summary className="cursor-pointer font-medium">{title}</summary>
+    <summary id={`rich-${section}-summary`} className="cursor-pointer font-medium">{title}</summary>
     <p className="mb-6 mt-3 text-sm leading-relaxed text-muted-foreground">Answer only what you know. Leaving a field untouched, skipping it, and saying you do not know remain different answers. Changing another answer does not erase these details.</p>
     {section === 'businessName' && <p className="mb-6 rounded-xl bg-secondary p-3 text-sm">Name details are optional and available while signed in. They are sent for this check; a private assessment is stored only when you explicitly agree to save it. Do not enter identity numbers or upload records here.</p>}
     <Fields fields={fields} answers={answers} onChange={set} prefix={`rich-${section}`} />
@@ -148,7 +149,7 @@ export function RichCheckerFields({ section, facts, onChange }: { section: RichS
             set('partners', partners.map((old, i) => i === index ? next : old));
           }} />
         </div>)}
-        <button type="button" className="btn btn-ghost btn-sm w-fit" disabled={partners.length >= 30} onClick={() => set('partners', [...partners, {}])}><Plus className="h-4 w-4" />Add partner</button>
+        <button id="rich-partners-add" type="button" className="btn btn-ghost btn-sm w-fit" disabled={partners.length >= 30} onClick={() => set('partners', [...partners, {}])}><Plus className="h-4 w-4" />Add partner</button>
         {answers.partners !== undefined && <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => set('partners', undefined)}>Clear partner answers</button>}
       </fieldset>
       <div className="mt-8"><h3 className="label mb-4">How the name is composed</h3><Fields fields={NAMING_FIELDS} answers={naming} prefix="rich-naming" onChange={(key, value) => { const next = { ...naming }; if (value === undefined) delete next[key]; else next[key] = value; set('namingAssessment', Object.keys(next).length ? next : undefined); }} /></div>

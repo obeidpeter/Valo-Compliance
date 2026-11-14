@@ -18,6 +18,7 @@ export const RESULT_TONES: Record<string, string> = {
 export const ANSWER_STATE_LABELS: Record<AnswerState, string> = {
   unknown: 'I do not know', unanswered: 'Skipped for now', not_applicable: 'Not applicable',
 };
+export const MISSING_ANSWER_STATE_LABELS = { ...ANSWER_STATE_LABELS, review: 'Review this answer' };
 export const SECTION_LABELS: Record<RichSection, string> = {
   businessName: 'Business name', privacy: 'Personal data', tax: 'Company facts', product: 'Products and activities',
 };
@@ -61,10 +62,45 @@ export function richReviewEntries(facts: unknown): [string, unknown][] {
   return entries;
 }
 
+const QUESTION_FIELDS = {
+  businessName: ['legalForm', 'hasPlaceOfBusinessInNigeria', 'carryingOnBusiness', 'businessName', 'trueSurname', 'trueForenames', 'recognizedAbbreviations', 'corporateName', 'operatorRole', 'appointmentAuthority', 'appointmentConfirmed', 'businessNameRegistered'],
+  privacy: ['processesPersonalData', 'dataCategories', 'automatedDecisionMaking', 'profiling', 'controllerRole', 'determinesPurposesAndMeans', 'ownPurposeReuse', 'collectionMethod', 'newCollectionEvent', 'operatesInNigeria', 'processingOccursInNigeria', 'dataSubjectsInNigeria', 'controllerDomiciledInNigeria', 'controllerResidentInNigeria', 'processorConnectionInNigeria', 'processingPurpose', 'commercialUse', 'privacyRightsViolationIndicated', 'section3Exception', 'dataSubjectAlreadyInformed', 'indirectNoticeException', 'exceptionScopeConfirmed', 'exceptionSupportingFacts'],
+  tax: ['legalForm', 'incorporatedAsCompany', 'incorporatedInNigeria', 'effectiveManagementCountry', 'managementStatusVerification', 'companyStatus', 'accountingPeriodStart', 'accountingPeriodEnd'],
+  product: ['productCategory', 'manufacturesInNigeria', 'commercialSupplyInNigeria', 'commercialSupplyOfRegulatedProducts', 'activity', 'ownBrandOrRepackaging', 'processingOrPackaging', 'drugOrMedicalUse', 'therapeuticClaims', 'productRegistration', 'registrationCoversExactProductAndManufacturer', 'registrationConditionsChanged', 'specialSamplePermit', 'permitScopeMatchesActivity', 'permitConditionsSatisfied'],
+} as const satisfies { [S in RichSection]: readonly (keyof NonNullable<RichAnswers[S]>)[] };
+const NAMING_QUESTION_FIELDS = ['onlyAddedWordsIndicateSuccession', 'otherBrandAddition', 'sameSurnameAllPartners', 'onlyAdditionIsPluralS'];
+const PARTNER_QUESTION_FIELDS = ['type', 'surname', 'forenames', 'recognizedAbbreviations', 'corporateName'];
+const LIST_QUESTION_FIELDS = ['trueForenames', 'recognizedAbbreviations', 'forenames', 'dataCategories'];
+type RichQuestionTarget = { section: RichSection; step: number; id: string; fallbackId?: string };
+const arrayIndex = (value: string | undefined, limit: number) => value !== undefined && /^(0|[1-9]\d*)$/.test(value) && Number(value) < limit;
+
+/** Only fields with customer controls have targets. Legal review aliases do not. */
+export function richQuestionTarget(path: string): RichQuestionTarget | undefined {
+  const [root, sectionKey, ...parts] = path.split('.');
+  if (root !== 'rich' || !Object.hasOwn(QUESTION_FIELDS, sectionKey ?? '')) return undefined;
+  const section = sectionKey as RichSection;
+  const step = section === 'privacy' ? 4 : section === 'product' ? 1 : 0;
+  const target = (id: string, fallbackId?: string): RichQuestionTarget => ({ section, step, id, ...(fallbackId ? { fallbackId } : {}) });
+  if (!parts.length) return target(`rich-${section}-summary`);
+  const [key, index, child, listIndex] = parts;
+  if (section === 'businessName' && key === 'partners') {
+    if (parts.length === 1) return target('rich-partners-add', 'rich-partner-0-type-state');
+    if (!arrayIndex(index, 30)) return undefined;
+    if (parts.length === 2) return target(`rich-partner-${index}-type-state`, 'rich-partners-add');
+    if (!PARTNER_QUESTION_FIELDS.includes(child) || (parts.length !== 3 && !(parts.length === 4 && LIST_QUESTION_FIELDS.includes(child) && arrayIndex(listIndex, 20)))) return undefined;
+    return target(`rich-partner-${index}-${child}-state`, 'rich-partners-add');
+  }
+  if (section === 'businessName' && key === 'namingAssessment') {
+    if (parts.length === 1) return target('rich-naming-onlyAddedWordsIndicateSuccession-state');
+    return parts.length === 2 && NAMING_QUESTION_FIELDS.includes(index) ? target(`rich-naming-${index}-state`) : undefined;
+  }
+  if (!(QUESTION_FIELDS[section] as readonly string[]).includes(key)) return undefined;
+  if (parts.length !== 1 && !(parts.length === 2 && LIST_QUESTION_FIELDS.includes(key) && arrayIndex(index, 20))) return undefined;
+  return target(`rich-${section}-${key}-state`);
+}
+
 export function richStep(path: string): number {
-  if (path.startsWith('rich.product')) return 1;
-  if (path.startsWith('rich.privacy')) return 4;
-  return 0;
+  return richQuestionTarget(path)?.step ?? 0;
 }
 
 /** Omitted fields remain omitted. Only an explicit selection creates a marker. */

@@ -8,7 +8,7 @@ export const baseFacts:CheckerFacts=checkerFactsSchema.parse({
   turnoverPeriod:"annual",turnoverPeriodStart:"2025-01-01",turnoverPeriodEnd:"2025-12-31",
   turnoverAmountKobo:"1000000000",premises:"yes",manufacturing:"no",importing:"no",personalData:"yes",
 });
-type Predicate=ReleasedRule["condition"]["predicates"][number];
+type Predicate=NonNullable<ReleasedRule["condition"]>["predicates"][number];
 type Expected="likely"|"unknown"|"not_indicated"|"held"|"reject";
 export type RuleFixture={id:string;name:string;facts:CheckerFacts;rules:ReleasedRule[];expected:Expected;
   fixtureMode:boolean;asOfDate:string;expectedMissing?:string};

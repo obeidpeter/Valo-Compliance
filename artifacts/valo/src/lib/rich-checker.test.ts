@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { EMPTY_FACTS, displayFact, finaliseFacts, reviewFacts } from './checker';
-import { canCreateSourceTask, factAtPath, RESULT_LABELS, updateRichAnswer, type RichCheckerFacts } from './rich-checker';
+import { ANSWER_STATES, MISSING_ANSWER_STATE_LABELS, canCreateSourceTask, factAtPath, RESULT_LABELS, richQuestionTarget, updateRichAnswer, type RichCheckerFacts } from './rich-checker';
 
 test('rich review preserves known false, omitted answers and all three explicit states', () => {
   const facts: RichCheckerFacts = { ...EMPTY_FACTS, factsVersion: 'checker-facts-v2', rich: { privacy: {
@@ -72,4 +73,38 @@ test('exact names stay literal across review and grouped comparison', () => {
   assert.equal(displayFact('rich.businessName.legalForm', 'individual'), 'Individual');
   assert.equal(displayFact('rich.privacy.dataCategories', ['employee_name', 'bank_account']), 'Employee name; Bank account');
   assert.match(displayFact('rich.businessName', { businessName: 'aCME_Services' }), /aCME_Services/);
+});
+
+test('rich question targets cover every declared customer control, including support facts', () => {
+  const source = readFileSync(new URL('../components/rich-checker-fields.tsx', import.meta.url), 'utf8');
+  const groups = [
+    ['BUSINESS', 'businessName', 'rich-businessName', 0], ['PRIVACY', 'privacy', 'rich-privacy', 4],
+    ['TAX', 'tax', 'rich-tax', 0], ['PRODUCT', 'product', 'rich-product', 1],
+    ['NAMING', 'businessName.namingAssessment', 'rich-naming', 0],
+    ['PARTNER', 'businessName.partners.0', 'rich-partner-0', 0],
+  ] as const;
+  for (const [group, path, prefix, step] of groups) {
+    const definitions = source.match(new RegExp(`const ${group}_FIELDS: Field\\[\\] = \\[([\\s\\S]*?)\\n\\];`))?.[1];
+    assert.ok(definitions, `${group} controls are declared`);
+    const keys = [...definitions.matchAll(/(?:flag|select)\('([^']+)'|key: '([^']+)'/g)].map(match => match[1] ?? match[2]);
+    assert.ok(keys.length > 0);
+    for (const key of keys) {
+      const target = richQuestionTarget(`rich.${path}.${key}`);
+      assert.equal(target?.id, `${prefix}-${key}-state`, `${path}.${key}`);
+      assert.equal(target?.step, step);
+    }
+  }
+  assert.equal(richQuestionTarget('rich.privacy.exceptionSupportingFacts')?.id, 'rich-privacy-exceptionSupportingFacts-state');
+});
+
+test('group and indexed question targets have real fallbacks while review aliases have no target', () => {
+  for (const section of ['businessName', 'privacy', 'tax', 'product']) assert.equal(richQuestionTarget(`rich.${section}`)?.id, `rich-${section}-summary`);
+  assert.equal(richQuestionTarget('rich.businessName.partners')?.id, 'rich-partners-add');
+  assert.deepEqual(richQuestionTarget('rich.businessName.partners.29'), { section: 'businessName', step: 0, id: 'rich-partner-29-type-state', fallbackId: 'rich-partners-add' });
+  assert.equal(richQuestionTarget('rich.businessName.namingAssessment')?.id, 'rich-naming-onlyAddedWordsIndicateSuccession-state');
+  assert.equal(richQuestionTarget('rich.businessName.partners.0.forenames.1')?.id, 'rich-partner-0-forenames-state');
+  assert.equal(richQuestionTarget('rich.privacy.dataCategories.0')?.id, 'rich-privacy-dataCategories-state');
+  for (const path of ['rich.businessName.section814Exception', 'rich.businessName.individual.surname', 'rich.businessName.namingAssessment.successionNameComposition', 'rich.privacy.verifiedIndirectCollectionException', 'rich.tax.classificationUnderNtaaSection147', 'rich.product.samplePermitAuthorityAndScope', 'rich.product.manufacturesInNigeria/activity', 'rich.businessName.partners.30.surname', 'rich.businessName.partners.01.surname', 'rich.privacy.dataCategories.20', 'rich.privacy.commercialUse.0', 'rich.privacy.sourceContext', 'rich.missing.fact']) assert.equal(richQuestionTarget(path), undefined, path);
+  assert.deepEqual(ANSWER_STATES, ['unknown', 'unanswered', 'not_applicable']);
+  assert.equal(MISSING_ANSWER_STATE_LABELS.review, 'Review this answer');
 });
