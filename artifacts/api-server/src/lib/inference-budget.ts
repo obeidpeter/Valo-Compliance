@@ -11,6 +11,16 @@ export const inferenceProposal={
     capacityEvidence:"owner-transmitted-independent-budget-review",capacityVerified:true},
   batch:{concurrency:2,completions:1,tools:false,automaticRetries:0,dailySchedule:null},
 } as const;
+/** One additional allocation for this work package, shared across every batch.
+ * It does not claim to cap historical account charges or the project budget. */
+export const additionalInferenceAllocation={
+  id:"valo-additional-inference-30-20261114-v1",scope:"additional-new-attempts-only",
+  capNanoUsd:"30000000000",environment:"synthetic-development-only",excludesHistoricalCharges:true,
+  replacesLegacyPublicationDailySchedule:true,
+} as const;
+export const acceptedInferenceModels=new Set(["gpt-5.4-mini","gpt-5.4-mini-2026-03-17"]);
+export const inferenceTimestamp=(value:unknown):number=>value instanceof Date?value.getTime():
+  typeof value==="string"?Date.parse(value):Number.NaN;
 export const requestDigest=(x:unknown):string=>{
   const canonical=(v:unknown):unknown=>Array.isArray(v)?v.map(canonical):v&&typeof v==="object"?
     Object.fromEntries(Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([k,x])=>[k,canonical(x)])):v;
@@ -43,7 +53,7 @@ export type BudgetAuthority={enabled:boolean;ownerApproved:boolean;tokenizationV
 export type FullRequestProof={requestHash:string;model:string;inputTokens:number;method:"provider-attested-full-request";
   attestationHash:string;includesInstructionsAndSchema:true};
 export type ReserveInput={runKey:string;lane:BudgetLane;request:unknown;bindingHash:string;scopeHash:string;
-  proof:FullRequestProof|null;now:number;reservationMode?:"attested"|"whole-context"};
+  proof:FullRequestProof|null;now:number;reservationMode?:"attested"|"whole-context";allowResultReuse?:boolean};
 export function budgetUsed(s:BudgetState){
   validateBudgetState(s);
   return s.entries.reduce((sum,e)=>sum+BigInt(e.status==="settled"?e.charged:e.status==="cancelled"?"0":e.reserved),0n);
@@ -75,7 +85,7 @@ export function reserveBudget(s:BudgetState,a:BudgetAuthority,i:ReserveInput){
   if(old&&!same(old))throw Error("RUN_BINDING_CONFLICT");
   // Retrieval incurs no new inference. Caller must still authorise the
   // referenced resource and check content withdrawal/deletion independently.
-  const reuse=s.entries.find(e=>same(e)&&e.status==="settled"&&!e.legacy&&e.resultRef&&(e.freshUntil??0)>i.now);
+  const reuse=i.allowResultReuse===false?undefined:s.entries.find(e=>same(e)&&e.status==="settled"&&!e.legacy&&e.resultRef&&(e.freshUntil??0)>i.now);
   if(reuse)return{state:s,dispatch:false as const,reuse:reuse.resultRef!};
   if(!a.enabled||!a.ownerApproved)throw Error("INFERENCE_BUDGET_DISABLED");
   if(s.suspended||!s.priorUseReconciled||s.unboundedPrior.length)throw Error("PRIOR_CHARGES_UNRECONCILED");
@@ -127,6 +137,10 @@ export function transitionBudget(s:BudgetState,key:string,action:"dispatch"|"unk
   validateBudgetState(s);
   const e=s.entries.find(e=>e.runKey===key);if(!e)throw Error("RESERVATION_MISSING");
   const target=action==="dispatch"?"dispatched":action==="unknown"?"unknown":"cancelled";
+  // Reservation is not a permanent permission to spend. A sibling's bound
+  // breach, reconciliation hold or suspension must stop already-reserved work.
+  if(action==="dispatch"&&(s.suspended||!s.priorUseReconciled||s.unboundedPrior.length))
+    throw Error("PRIOR_CHARGES_UNRECONCILED");
   if(e.status===target)return s;
   if(action==="dispatch"&&s.entries.filter(x=>!x.legacy&&["dispatched","unknown"].includes(x.status)).length>=
     inferenceProposal.batch.concurrency)throw Error("INFERENCE_CONCURRENCY_EXHAUSTED");
@@ -158,7 +172,7 @@ export function importPilotUsage(s:BudgetState,rows:PilotUsage[]){
   for(const r of rows){
     const key=`pilot:${requestDigest(r.sourceKey)}`;
     if(next.entries.some(e=>e.runKey===key)){duplicates++;continue;}
-    const known=r.model?.startsWith("gpt-5.4-mini")&&Number.isSafeInteger(r.input)&&r.input!>=0&&
+    const known=!!r.model&&acceptedInferenceModels.has(r.model)&&Number.isSafeInteger(r.input)&&r.input!>=0&&
       Number.isSafeInteger(r.output)&&r.output!>=0&&r.responseId;
     if(r.responseId){
       const duplicate=next.entries.find(e=>e.responseId===r.responseId);
@@ -179,3 +193,4 @@ export function importPilotUsage(s:BudgetState,rows:PilotUsage[]){
   next.priorUseReconciled=false;validateBudgetState(next);
   return{state:next,imported,duplicates};
 }
+

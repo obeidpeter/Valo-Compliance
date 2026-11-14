@@ -1,56 +1,80 @@
-import {readFile,writeFile} from "node:fs/promises";
+import {readFile,writeFile,mkdir} from "node:fs/promises";
+import {randomUUID,createHash} from "node:crypto";
 import {resolve} from "node:path";
 import {pool} from "@workspace/db";
 import {assertDevelopmentRuntime} from "../lib/valo-development-runtime";
-import {InferenceBudgetStore} from "../lib/inference-budget-store";
-import {inferenceProposal,requestDigest,budgetUsed,type BudgetState} from "../lib/inference-budget";
+import {inferenceProposal,additionalInferenceAllocation,requestDigest,budgetUsed,type BudgetState} from "../lib/inference-budget";
+import {getPublicationArtifact,type ArtifactRef} from "../editorial/publication-artifacts";
+import {proposeHistoricalReceiptResolutions,type HistoricalArtifactInput,type HistoricalPublicationAttempt}
+  from "../lib/inference-history-reconciliation";
+const sha256=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
+
+/** Read-only history preparation. This command never creates migrations,
+ * adopts a policy, modifies accounting rows, enables a batch or calls an AI. */
 async function main(){
   assertDevelopmentRuntime();
   const root=resolve(import.meta.dirname,"../../../..");
   if(process.env.VALO_PREPARE_FINITE_INFERENCE!=="reviewed-disabled-development-only")throw Error("EXPLICIT_PREPARATION_REQUIRED");
   const c=await pool.connect();
+  let history:{policy_hash:string;state:BudgetState},attempts:HistoricalPublicationAttempt[],approved:number;
   try{
-    await c.query("BEGIN");await c.query("SELECT pg_advisory_xact_lock(747110)");
-    const exists=await c.query("SELECT to_regclass('public.valo_inference_batches') as name");
-    if(!exists.rows[0].name){
-      const ddl=await readFile(resolve(root,"lib/db/drizzle/0020_inference_batch_authorization.sql"),"utf8");
-      await c.query(ddl.replaceAll("--> statement-breakpoint",""));
-    }
+    await c.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
+    const selected=await c.query("SELECT policy_hash,state FROM valo_inference_budgets WHERE id=$1",[inferenceProposal.id]);
+    if(!selected.rows[0])throw Error("EXISTING_USAGE_LEDGER_REQUIRED");
+    history=selected.rows[0];
+    const rows=await c.query(`SELECT id::text,candidate_hash,role,
+      to_jsonb(a)->>'request_hash' AS request_hash,provider_response_id,input_tokens,output_tokens
+      FROM valo_publication_ai_attempts a`);
+    attempts=rows.rows.map(r=>({id:r.id,candidateHash:r.candidate_hash,role:r.role,requestHash:r.request_hash??null,
+      responseId:r.provider_response_id??null,inputTokens:r.input_tokens??null,outputTokens:r.output_tokens??null}));
+    approved=Number((await c.query("SELECT count(*)::int n FROM valo_inference_batches WHERE enabled")).rows[0].n);
     await c.query("COMMIT");
-  }catch(e){await c.query("ROLLBACK");throw e;}finally{c.release();}
-  const old=(await pool.query("SELECT policy_hash,state FROM valo_inference_budgets WHERE id=$1",[inferenceProposal.id])).rows[0];
-  if(!old)throw Error("EXISTING_USAGE_LEDGER_REQUIRED");
-  const before=requestDigest(old.state);
-  const store=new InferenceBudgetStore(pool);
-  const adoption=await store.adoptPolicy(old.policy_hash,"owner-transmitted-context-fallback-and-finite-limits; controlled-dispatch-implementation");
-  const state=old.state as BudgetState,retained=new Map<string,unknown>(),notes=[];
-  for(const v of[1,2,3,4,5,6,8]){
+  }catch(error){await c.query("ROLLBACK");throw error;}finally{c.release();}
+  const artifacts:HistoricalArtifactInput[]=[],sourceNotes:Record<string,unknown>[]=[];
+  for(const version of[1,2,3,4,5,6,8]){
+    const path=`docs/valo/evidence/operational-publication-v${version}.json`;
+    let report:{candidateHash?:string;attestations?:{reviews?:ArtifactRef[]}},bytes:Buffer;
     try{
-      const bytes=await readFile(resolve(root,`docs/valo/evidence/operational-publication-v${v}.json`));
-      const report=JSON.parse(bytes.toString()) as {reviews?:{providerResponseId?:string;model?:string}[]};
-      for(const r of report.reviews??[])if(r.providerResponseId)retained.set(r.providerResponseId,{model:r.model});
-      notes.push({version:v,fileHash:requestDigest(bytes.toString()),reviews:(report.reviews??[]).length});
-    }catch{notes.push({version:v,unavailable:true});}
+      bytes=await readFile(resolve(root,path));report=JSON.parse(bytes.toString("utf8"));
+    }catch{sourceNotes.push({version,path,unavailable:true});continue;}
+    const refs=report?.attestations?.reviews??[];
+    if(!report||typeof report!=="object"||!Array.isArray(refs)||typeof report.candidateHash!=="string"||!/^[a-f0-9]{64}$/.test(report.candidateHash)){
+      sourceNotes.push({version,path,sourceReportSha256:sha256(bytes),reason:"HISTORY_REPORT_REFERENCE_INVALID"});continue;
+    }
+    let verifiedDownloads=0;
+    for(const ref of refs){
+      try{
+        if(!ref||ref.extension!=="json")throw Error("HISTORY_RESPONSE_ARTIFACT_REQUIRED");
+        // Actual private bytes, never model/usage copied from the public summary.
+        const actual=await getPublicationArtifact(ref);
+        artifacts.push({ref:{...ref,extension:"json"},bytes:actual,reportCandidateHash:report.candidateHash,
+          sourceReportSha256:sha256(bytes)});verifiedDownloads++;
+      }catch(error){sourceNotes.push({version,path,artifactId:ref?.id??"unknown",
+        reason:error instanceof Error&&/^[A-Z_]{3,100}$/.test(error.message)?error.message:"HISTORY_ARTIFACT_UNAVAILABLE"});}
+    }
+    sourceNotes.push({version,path,sourceReportSha256:sha256(bytes),retainedReferences:refs.length,verifiedDownloads});
   }
-  const known=state.entries.filter(e=>e.status==="settled").length;
-  const unknown=state.entries.filter(e=>e.status==="unknown");
-  const linked=unknown.filter(e=>e.responseId&&retained.has(e.responseId)).length;
-  // No guessed candidate/role/time join can replace a provider receipt linked
-  // to the exact charged attempt. Preserve unresolved entries and hard hold.
-  const readback=(await pool.query("SELECT state FROM valo_inference_budgets WHERE id=$1",[inferenceProposal.id])).rows[0].state;
-  if(requestDigest(readback)!==before)throw Error("POLICY_ADOPTION_CHANGED_USAGE");
-  const approved=(await pool.query("SELECT count(*)::int n FROM valo_inference_batches WHERE enabled")).rows[0].n;
-  const report={executedAt:new Date().toISOString(),policyAdoption:adoption,historyHash:before,
-    potentialChargeRecords:state.entries.length,reportedUsageRecords:known,unknownRecords:unknown.length,
-    unboundedLiabilities:state.unboundedPrior.length,provisionalReportedCostNanoUsd:budgetUsed(state).toString(),
-    retainedReviewReceipts:retained.size,unknownExactReceiptLinks:linked,sourceNotes:notes,
-    reconciliation:"Unresolved historic attempts retain a hard admission hold. No missing usage is zeroed; reported tokens are not an invoice.",
-    availableBalance:null,approvedEnabledBatches:approved,ownerApproval:false,providerCalls:0,quotaChanges:false,
-    fallbackPerAttemptNanoUsd:"370550400",allProviderPathsShared:true,productionMigration:false,
-    nativeTriggerPublishing:"Requires reviewed bootstrap; managed schema publication cannot be assumed to copy functions/triggers.",
-  };
-  await writeFile(resolve(root,"docs/valo/evidence/finite-inference-preparation.json"),JSON.stringify(report,null,2)+"\n");
-  console.log(JSON.stringify({potentialCharges:state.entries.length,unknown:unknown.length,unbounded:state.unboundedPrior.length,
-    unknownExactReceiptLinks:linked,enabledBatches:approved,historyUnchanged:true,availableBalance:null,providerCalls:0}));
+  const reconciliation=proposeHistoricalReceiptResolutions(history!.state,attempts!,artifacts);
+  const readback=(await pool.query("SELECT state FROM valo_inference_budgets WHERE id=$1",[inferenceProposal.id])).rows[0]?.state;
+  const state=history!.state;
+  const report={executedAt:new Date().toISOString(),historyHash:requestDigest(state),
+    historyPolicyHash:history!.policy_hash,snapshotStillCurrent:readback!==undefined&&requestDigest(readback)===requestDigest(state),
+    potentialChargeRecords:state.entries.length,reportedUsageRecords:state.entries.filter(e=>e.status==="settled").length,
+    unknownRecords:state.entries.filter(e=>e.status==="unknown").length,unboundedLiabilities:state.unboundedPrior.length,
+    provisionalReportedCostNanoUsd:budgetUsed(state).toString(),sourceNotes,reconciliation,
+    historyModified:false,databaseWrites:0,providerCalls:0,ownerApproval:false,approvedEnabledBatches:approved!,
+    additionalAllocation:additionalInferenceAllocation,newAllocationEnabledByThisReport:false,
+    separation:"Historical unknowns remain recorded and undisclosed billing is not treated as free. An explicitly approved additional allocation covers only newly authorized work; it does not cap total account charges.",
+    missingCoverage:"This operational review reconciliation does not resolve unsupported drafting, editorial or customer receipts.",
+    availableBalance:null,productionMigration:false};
+  const directory=resolve(root,"generated-artifacts/valo-completion/inference-budget");
+  await mkdir(directory,{recursive:true,mode:0o700});
+  const path=resolve(directory,`history-reconciliation-proposal-${randomUUID()}.json`);
+  await writeFile(path,JSON.stringify(report,null,2)+"\n",{flag:"wx",mode:0o600});
+  console.log(JSON.stringify({potentialCharges:state.entries.length,unknown:report.unknownRecords,
+    verifiedRetainedArtifacts:reconciliation.verifiedRetainedArtifacts,proposedResolutions:reconciliation.proposed.length,
+    unresolvedPublicationAttempts:reconciliation.unresolved.length,snapshotStillCurrent:report.snapshotStillCurrent,
+    databaseWrites:0,providerCalls:0,ownerApproval:false,report:path}));
 }
-main().catch(e=>{console.error(e instanceof Error?e.message:"FINITE_PREPARATION_FAILED");process.exitCode=1;}).finally(()=>pool.end());
+main().catch(error=>{console.error(error instanceof Error&&/^[A-Z_]{3,100}$/.test(error.message)?error.message:
+  "FINITE_HISTORY_PREPARATION_FAILED");process.exitCode=1;}).finally(()=>pool.end());

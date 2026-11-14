@@ -89,6 +89,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
+      - name: Prove finite inference scope, actual callers and disabled entry without network
+        run: pnpm --filter @workspace/api-server test:valo-finite-entry
       - name: Prove rich checker contracts, factual states and UI helper targets
         run: pnpm --filter @workspace/api-server test:valo-rich-checker
       - name: Prove signed erasure inventory and isolated lock controls
