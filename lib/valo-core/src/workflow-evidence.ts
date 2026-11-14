@@ -41,7 +41,16 @@ const exportRecovery={
   kind:"test" as const,path:"docs/valo/evidence/export-recovery-checkpoint.json",
   hash:"79d87f0bff23cea6800e48d1519b10747e7b8eb46ff4208c7cadc7b4b5ae0c47",result:"pass" as const,
 };
+const businessNameEvidence={
+  kind:"test" as const,path:"docs/valo/evidence/business-name/checkpoint.json",
+  hash:"8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",result:"pass" as const,
+};
 const groups = [
+  {ids:["EDP-002","EDP-005","EDP-006","CMP-004","ADM-003"],
+    paths:["artifacts/api-server/src/editorial/business-name-evidence.ts",
+      "artifacts/api-server/src/scripts/ingest-business-name.ts","artifacts/api-server/src/scripts/prepare-business-name.ts",
+      "artifacts/api-server/src/editorial/business-name-evidence.test.ts",
+      "lib/valo-core/src/research-source-leads.ts"],record:businessNameEvidence},
   {ids:["EDT-003","EDT-006","EDT-007","EDT-008","DOC-002","SEC-001","OPS-002","OPS-007","NFR-006","NFR-007","NFR-009"],
     paths:["artifacts/api-server/src/lib/valo-export-recovery.ts","artifacts/api-server/src/lib/valo-exports.ts",
       "artifacts/api-server/src/workers/export-worker.ts","artifacts/api-server/src/lib/valo-export-recovery.integration.test.ts",

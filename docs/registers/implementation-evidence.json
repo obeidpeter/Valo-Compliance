@@ -49,10 +49,19 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -102,10 +111,19 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -136,10 +154,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -170,10 +197,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -235,10 +271,26 @@
         "artifacts/valo/src/screens/staff.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -278,10 +330,26 @@
       "implementation_paths": [
         "artifacts/api-server/src/middlewares/valo-identity.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -347,10 +415,26 @@
         "lib/valo-core/src/money.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -408,10 +492,26 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -466,10 +566,26 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -531,10 +647,26 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -589,10 +721,26 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -663,10 +811,33 @@
         "artifacts/api-server/src/editorial/rights-applicability.ts",
         "lib/valo-core/src/coverage.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -714,10 +885,33 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -765,10 +959,33 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -816,10 +1033,33 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -862,10 +1102,26 @@
         "artifacts/api-server/src/editorial/rights-applicability.ts",
         "lib/valo-core/src/coverage.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -897,10 +1153,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -932,10 +1204,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -967,10 +1255,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1003,10 +1307,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1063,10 +1383,26 @@
         "lib/valo-core/src/money.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1128,10 +1464,26 @@
         "artifacts/valo/src/screens/profile.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1199,10 +1551,26 @@
         "lib/valo-core/src/money.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1238,10 +1606,26 @@
         "artifacts/api-server/src/lib/valo-validation.ts",
         "artifacts/valo/src/screens/document-editor.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1311,10 +1695,26 @@
         "artifacts/valo/src/screens/profile.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1383,10 +1783,26 @@
         "artifacts/valo/src/screens/profile.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1456,10 +1872,26 @@
         "artifacts/valo/src/screens/profile.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1502,10 +1934,26 @@
         "artifacts/api-server/src/lib/valo-render.ts",
         "artifacts/api-server/src/lib/valo-render.test.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1538,10 +1986,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1592,10 +2056,26 @@
         "lib/valo-core/src/customer-document.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1646,10 +2126,26 @@
         "lib/valo-core/src/customer-document.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1708,10 +2204,26 @@
         "lib/valo-core/src/money.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1755,10 +2267,26 @@
         "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
         "lib/valo-core/src/customer-document.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1810,10 +2338,26 @@
         "artifacts/api-server/src/lib/valo-customer-ai.integration.test.ts",
         "lib/valo-core/src/money.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1857,10 +2401,26 @@
         "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
         "lib/valo-core/src/customer-document.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1912,10 +2472,26 @@
         "artifacts/api-server/src/lib/valo-customer-ai.integration.test.ts",
         "lib/valo-core/src/money.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -1959,10 +2535,26 @@
         "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
         "lib/valo-core/src/customer-document.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2013,10 +2605,26 @@
         "lib/valo-core/src/customer-document.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2047,10 +2655,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2091,10 +2715,26 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2137,10 +2777,26 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2172,20 +2828,47 @@
       "evidence": [
         {
           "kind": "test",
+          "path": "docs/valo/evidence/business-name/checkpoint.json",
+          "hash": "8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/customer-security-checkpoint.json",
           "hash": "70f2ee336e7590fceba90ea4bfa6d54affb707fd4d33fb6e5bb8afaf47673711",
           "result": "pass"
         }
       ],
       "implementation_paths": [
+        "artifacts/api-server/src/editorial/business-name-evidence.ts",
+        "artifacts/api-server/src/scripts/ingest-business-name.ts",
+        "artifacts/api-server/src/scripts/prepare-business-name.ts",
+        "artifacts/api-server/src/editorial/business-name-evidence.test.ts",
+        "lib/valo-core/src/research-source-leads.ts",
         "artifacts/api-server/src/lib/valo-released-content.ts",
         "artifacts/api-server/src/editorial/rights-applicability.ts",
         "lib/valo-core/src/coverage.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2216,10 +2899,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2260,10 +2959,26 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2304,10 +3019,26 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2338,10 +3069,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2372,10 +3119,33 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2417,10 +3187,19 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2462,10 +3241,19 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2507,10 +3295,19 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2552,10 +3349,26 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2597,10 +3410,19 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2642,10 +3464,19 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2696,10 +3527,19 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2741,10 +3581,26 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2788,10 +3644,19 @@
         "artifacts/api-server/src/lib/valo-reminder-worker.ts",
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2849,10 +3714,26 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2903,10 +3784,26 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -2957,10 +3854,33 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3011,10 +3931,33 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3048,10 +3991,26 @@
       "implementation_paths": [
         "artifacts/valo/src/screens/workspace.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3111,10 +4070,40 @@
         "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
         "artifacts/api-server/src/lib/valo-proxy-security.test.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/3",
+          "title": "Checker, tasks and four customer AI workflows",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3147,10 +4136,26 @@
       "implementation_paths": [
         "artifacts/valo/src/screens/services.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3184,10 +4189,26 @@
         "artifacts/valo/src/components/ticket-form.tsx",
         "lib/db/src/schema/valo-support.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3218,10 +4239,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3252,10 +4289,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3287,10 +4333,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3322,10 +4384,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3357,10 +4435,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3392,10 +4486,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3427,10 +4537,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3462,10 +4588,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3497,10 +4639,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3532,10 +4690,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3567,10 +4741,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3602,10 +4792,26 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/7",
+          "title": "Gated R2 growth",
+          "release": "R2",
+          "relation": "gated_future_extension_not_R1_acceptance",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3653,10 +4859,19 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3701,10 +4916,19 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3732,17 +4956,38 @@
         ]
       },
       "risk": "Client-side role hiding and mutable audit histories are insufficient.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/business-name/checkpoint.json",
+          "hash": "8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",
+          "result": "pass"
+        }
+      ],
       "implementation_paths": [
         "artifacts/api-server/src/editorial/source-register.ts",
-        "artifacts/valo/src/components/source-evidence.tsx"
+        "artifacts/valo/src/components/source-evidence.tsx",
+        "artifacts/api-server/src/editorial/business-name-evidence.ts",
+        "artifacts/api-server/src/scripts/ingest-business-name.ts",
+        "artifacts/api-server/src/scripts/prepare-business-name.ts",
+        "artifacts/api-server/src/editorial/business-name-evidence.test.ts",
+        "lib/valo-core/src/research-source-leads.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3774,10 +5019,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3822,10 +5076,19 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3857,10 +5120,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3892,10 +5164,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3927,10 +5208,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -3978,10 +5268,19 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4028,10 +5327,19 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4065,6 +5373,12 @@
       "evidence": [
         {
           "kind": "test",
+          "path": "docs/valo/evidence/business-name/checkpoint.json",
+          "hash": "8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
           "hash": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e",
           "result": "pass"
@@ -4074,14 +5388,28 @@
         "artifacts/api-server/src/editorial/source-capture.ts",
         "docs/valo/evidence/part6-source-retrieval.json",
         "artifacts/api-server/src/editorial/source-store.integration.test.ts",
+        "artifacts/api-server/src/editorial/business-name-evidence.ts",
+        "artifacts/api-server/src/scripts/ingest-business-name.ts",
+        "artifacts/api-server/src/scripts/prepare-business-name.ts",
+        "artifacts/api-server/src/editorial/business-name-evidence.test.ts",
+        "lib/valo-core/src/research-source-leads.ts",
         "artifacts/api-server/src/editorial/citation-selection.ts",
         "artifacts/api-server/src/editorial/pipeline.ts",
         "artifacts/api-server/src/editorial/model-adapter.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4138,10 +5466,19 @@
         "artifacts/api-server/src/editorial/citation-selection.ts",
         "artifacts/api-server/src/editorial/model-adapter.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4198,10 +5535,19 @@
         "artifacts/api-server/src/editorial/citation-selection.ts",
         "artifacts/api-server/src/editorial/pipeline.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4230,16 +5576,37 @@
         ]
       },
       "risk": "Model confidence, agreement, elapsed time and owner override cannot waive mandatory publication evidence.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [
-        "lib/valo-core/src/publication.ts"
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/business-name/checkpoint.json",
+          "hash": "8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",
+          "result": "pass"
+        }
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "implementation_paths": [
+        "lib/valo-core/src/publication.ts",
+        "artifacts/api-server/src/editorial/business-name-evidence.ts",
+        "artifacts/api-server/src/scripts/ingest-business-name.ts",
+        "artifacts/api-server/src/scripts/prepare-business-name.ts",
+        "artifacts/api-server/src/editorial/business-name-evidence.test.ts",
+        "lib/valo-core/src/research-source-leads.ts"
+      ],
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4273,6 +5640,12 @@
       "evidence": [
         {
           "kind": "test",
+          "path": "docs/valo/evidence/business-name/checkpoint.json",
+          "hash": "8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/operational-publication-checkpoint.json",
           "hash": "01219ace3b66985d259fb2bba2f53b97c5029406d1bafa826de1c49ed9d74c7e",
           "result": "fail"
@@ -4287,6 +5660,11 @@
       "implementation_paths": [
         "artifacts/api-server/src/editorial/pipeline-contract.ts",
         "artifacts/api-server/src/editorial/pipeline-contract.test.ts",
+        "artifacts/api-server/src/editorial/business-name-evidence.ts",
+        "artifacts/api-server/src/scripts/ingest-business-name.ts",
+        "artifacts/api-server/src/scripts/prepare-business-name.ts",
+        "artifacts/api-server/src/editorial/business-name-evidence.test.ts",
+        "lib/valo-core/src/research-source-leads.ts",
         "artifacts/api-server/src/editorial/operational-policy.ts",
         "artifacts/api-server/src/editorial/operational-preparation.ts",
         "artifacts/api-server/src/editorial/publication-publisher.ts",
@@ -4296,10 +5674,19 @@
         "artifacts/api-server/src/editorial/pipeline.ts",
         "artifacts/api-server/src/editorial/model-adapter.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4355,10 +5742,19 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4393,10 +5789,19 @@
       "implementation_paths": [
         "lib/valo-core/src/publication.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4445,10 +5850,19 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4483,10 +5897,19 @@
       "implementation_paths": [
         "lib/valo-core/src/publication.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4521,10 +5944,19 @@
       "implementation_paths": [
         "lib/valo-core/src/publication.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4580,10 +6012,19 @@
         "artifacts/api-server/src/editorial/citation-selection.ts",
         "artifacts/api-server/src/editorial/model-adapter.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/4",
+          "title": "Eligible editorial publication and usable content",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4615,10 +6056,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4672,10 +6122,19 @@
         "artifacts/valo/src/screens/document-editor.tsx",
         "artifacts/valo/src/screens/profile.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4717,10 +6176,19 @@
         "lib/db/drizzle/0002_fresh_alice.sql",
         "lib/db/drizzle/pg-boss-development.sql"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4752,10 +6220,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4787,10 +6264,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4822,10 +6308,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4880,10 +6375,19 @@
         "artifacts/valo/src/screens/document-editor.tsx",
         "artifacts/valo/src/screens/profile.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -4915,10 +6419,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5023,10 +6536,19 @@
         "lib/valo-core/src/money.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5058,10 +6580,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5109,10 +6640,19 @@
         "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
         "artifacts/api-server/src/lib/valo-proxy-security.test.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5154,10 +6694,19 @@
         "artifacts/api-server/src/lib/valo-render.ts",
         "artifacts/api-server/src/lib/valo-render.test.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5219,10 +6768,19 @@
         "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
         "artifacts/api-server/src/lib/valo-proxy-security.test.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5254,10 +6812,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5289,10 +6856,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5324,10 +6900,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5362,11 +6947,12 @@
         "docs/registers/final-source-context.json",
         "docs/valo/part6-sources-and-retention.md"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
-      ]
+      ],
+      "work_items": []
     },
     {
       "id": "PRV-002",
@@ -5397,11 +6983,12 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
-      ]
+      ],
+      "work_items": []
     },
     {
       "id": "PRV-003",
@@ -5448,10 +7035,26 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/5",
+          "title": "Sandbox commerce and operations",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        },
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5483,10 +7086,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5518,10 +7130,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5553,10 +7174,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5588,10 +7218,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5623,10 +7262,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5688,10 +7336,19 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5766,10 +7423,19 @@
         "artifacts/valo/src/screens/staff.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5826,10 +7492,19 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5911,10 +7586,19 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5946,10 +7630,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     },
     {
@@ -5981,10 +7674,19 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+      "evidence_code_revision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
+      ],
+      "work_items": [
+        {
+          "url": "https://github.com/obeidpeter/Valo-Compliance/issues/6",
+          "title": "Security, recovery and customer journey corrections",
+          "release": "R1",
+          "relation": "implementation_and_review",
+          "status": "external_tracking_not_release_acceptance"
+        }
       ]
     }
   ],
@@ -6147,11 +7849,11 @@
   ],
   "specification_baseline_status": "implementation unverified",
   "execution_register": {
-    "generatedAt": "2026-11-14T02:27:34.605Z",
-    "codeRevision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+    "generatedAt": "2026-11-14T02:50:39.357Z",
+    "codeRevision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
     "formalRequirements": 127,
     "sourceRegister": "docs/registers/requirements.json",
-    "rowsWithPartialExecutionEvidence": 73,
+    "rowsWithPartialExecutionEvidence": 75,
     "r1Accepted": false,
     "r2Accepted": false,
     "publicLaunchEnabled": false,
