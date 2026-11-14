@@ -1,0 +1,40 @@
+{
+  "startedAt": "2026-11-14T19:16:37.129Z",
+  "scope": "disposable local synthetic PostgreSQL and local fixture objects",
+  "managedDatabaseRead": false,
+  "productionRestoreProved": false,
+  "appStorageRestoreProved": false,
+  "externalCredentialsInherited": false,
+  "externalMessagesSent": 0,
+  "charges": 0,
+  "refunds": 0,
+  "deletionScope": "Access quarantine/tombstone replay; physical application/provider erasure is NOT fulfilled",
+  "retention35Days": "unresolved",
+  "checks": {
+    "exactSnapshotCutoff": true,
+    "sourceDatabaseRejectedAsReplayTarget": true,
+    "alteredJournalRejected": true,
+    "idempotentDeletionTombstoneAndRevocationReplay": true,
+    "publisherCannotReadPrivateRevisions": true,
+    "tenantObjectChecksums": 3,
+    "tamperedObjectDetected": true,
+    "quarantinedDeletionObjectRemovedIdempotently": true,
+    "customerAccess": {
+      "revokedIdentitiesDenied": 2,
+      "activeDocumentRecovered": 1,
+      "crossTenantDenied": 1
+    }
+  },
+  "phase": "completed",
+  "cutoffAt": "2026-11-14T19:16:43.459Z",
+  "localWalCutoff": "0/1E94618",
+  "dumpElapsedMs": 76,
+  "snapshotHash": "77fe7da74d8388ee9c0c2303822fa22e5711143a27ee3fcedb2cd606895df4fb",
+  "restoreStartedAt": "2026-11-14T19:16:43.543Z",
+  "restoreCompletedAt": "2026-11-14T19:16:45.259Z",
+  "restoreAndValidationElapsedMs": 1716,
+  "recoveryCutoffAgeMs": 1800,
+  "passed": true,
+  "elapsedMs": 8303,
+  "completedAt": "2026-11-14T19:16:45.427Z"
+}

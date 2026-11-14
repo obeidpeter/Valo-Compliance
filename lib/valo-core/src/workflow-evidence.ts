@@ -274,7 +274,24 @@ export function partialWorkflowEvidence(id:string){
         "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
         "artifacts/api-server/src/editorial/publication-publisher.ts"],record:exactSourcePublication},
   ];
-  const matching=[...groups,...currentValidation,{
+  const operationalEvidence=[
+    {ids:["OPS-003","OPS-007","OPS-008","PRV-003","NFR-005","SEC-001"],
+      paths:["artifacts/api-server/src/scripts/isolated-recovery.ts","artifacts/api-server/src/lib/valo-recovery-controls.ts",
+        "artifacts/api-server/src/lib/valo-recovery-effects.ts"],
+      record:{kind:"test" as const,path:"docs/valo/evidence/isolated-development-recovery.json",
+        hash:"cd8da446017d188166f4373263be550604057ad54a6b8123d3d9400231186c01",result:"pass" as const}},
+    {ids:["OPS-005","SEC-003","SEC-007","SEC-008","NFR-010"],
+      paths:[".github/workflows/valo-foundation.yml","scripts/src/valo/merge-security.ts","scripts/src/valo/merge-static.sh",
+        "artifacts/api-server/src/lib/http-logging.ts","artifacts/api-server/src/lib/logger.ts"],
+      record:{kind:"test" as const,path:"docs/valo/evidence/merge-security-native-scans.json",
+        hash:"51b1ddcaaade4485620119a53007aae09336f81c50bf744d89e1243224c83d01",result:"fail" as const}},
+    {ids:["OPS-002","PAY-007","SEC-008","NFR-010"],
+      paths:["artifacts/api-server/src/lib/valo-operations.ts","artifacts/api-server/src/scripts/operations-probe.ts",
+        "artifacts/api-server/src/workers/export-worker.ts"],
+      record:{kind:"test" as const,path:"docs/valo/evidence/merge-live-operations.json",
+        hash:"999668399283a3fbed88b971234a5f7264a8d23dd1b9b54741ed47978e55d111",result:"fail" as const}},
+  ];
+  const matching=[...groups,...currentValidation,...operationalEvidence,{
     ids:["IAM-001","IAM-002","IAM-003","PRO-001","PRO-002","EDT-004","EDT-006","EDT-007","EDT-008",
       "WRK-001","OPS-002","OPS-007","SEC-001","SEC-006","NFR-007","NFR-009"],
     paths:["artifacts/api-server/src/lib/valo-development-runtime.ts","artifacts/api-server/src/lib/valo-export-queue.ts",

@@ -64,3 +64,13 @@ hook would falsely turn task approval into database-change approval.
 **How to apply:** Keep dependency/type validation separate from explicit,
 reviewed SQL application and database postconditions. Hook success is not
 schema acceptance; never weaken the schema guard to make a merge succeed.
+
+Keep the proposed 35-day rolling recovery target unresolved until a demonstrably
+supported design meets it or the owner explicitly approves a specification change.
+A local synthetic restore is not production PITR or App Storage recovery evidence.
+
+**Why:** The user explicitly prohibited relabelling the native documented maximum
+of 28 days as 35 days, or treating development restore timing as production proof.
+
+**How to apply:** State the actual target, cutoff, elapsed time, permissions and
+object-store scope. Access quarantine/tombstone replay is not physical erasure.

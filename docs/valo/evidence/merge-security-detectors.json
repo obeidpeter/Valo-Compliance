@@ -1,0 +1,34 @@
+{
+  "recordedAt": "2026-11-14T19:36:32.408Z",
+  "scope": "tracked full Git history and frozen-lock dependency audit",
+  "rawSecretsRetained": false,
+  "detectorCanaries": true,
+  "dependencyEngineCanary": {
+    "detected": true,
+    "scope": "audit-only generated lock; no package installed",
+    "counts": {
+      "critical": 0,
+      "high": 2,
+      "moderate": 2,
+      "low": 0,
+      "info": 0
+    }
+  },
+  "dependencies": {
+    "status": "pass",
+    "counts": {
+      "critical": 0,
+      "high": 0,
+      "moderate": 0,
+      "low": 0,
+      "info": 0
+    },
+    "findings": []
+  },
+  "secrets": {
+    "status": "pass",
+    "count": 0,
+    "findings": []
+  },
+  "passed": true
+}

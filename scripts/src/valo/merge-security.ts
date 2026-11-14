@@ -27,6 +27,16 @@ try{
   const dependencyCanary=dependencySummary({metadata:{vulnerabilities:{high:1}},advisories:{fixture:{id:0,
     module_name:"synthetic-detector-canary",severity:"high",title:canary}}});
   assert.equal(dependencyCanary.status,"blocked");assert.ok(!JSON.stringify(dependencyCanary).includes(canary));
+  // Audit-only lock fixture: never install, import or execute this old package.
+  // Exercise pnpm/the registry itself, not just our result formatter.
+  const dependencyDir=join(dir,"dependency-canary");await mkdir(dependencyDir);
+  await writeFile(join(dependencyDir,"package.json"),JSON.stringify({name:"valo-audit-only-canary",private:true,dependencies:{lodash:"4.17.20"}}));
+  await writeFile(join(dependencyDir,"pnpm-lock.yaml"),"lockfileVersion: '9.0'\nimporters:\n  .:\n    dependencies:\n      lodash:\n        specifier: 4.17.20\n        version: 4.17.20\npackages:\n  lodash@4.17.20:\n    resolution: {}\nsnapshots:\n  lodash@4.17.20: {}\n");
+  const engineCanary=await run("pnpm",["audit","--json"],dependencyDir);
+  const engineResult=dependencySummary(JSON.parse(engineCanary.stdout));
+  assert.notEqual(engineCanary.code,0,"DEPENDENCY_ENGINE_CANARY_MUST_FAIL");
+  assert.equal(engineResult.status,"blocked","REGISTRY_MUST_DETECT_KNOWN_VULNERABLE_LOCK_FIXTURE");
+  report.dependencyEngineCanary={detected:true,scope:"audit-only generated lock; no package installed",counts:engineResult.counts};
   report.detectorCanaries=true;
   const audit=await run("pnpm",["audit","--json"]);
   report.dependencies=dependencySummary(JSON.parse(audit.stdout));
