@@ -2,10 +2,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { assess, checkerFactsSchema, ruleSchema, type CheckerFacts, type ReleasedRule } from "./checker";
-import { changedCheckerFactPaths, sourceFamilyAlgorithmHashes, type RichCheckerFacts } from "./checker-rich";
-import { digest } from "./publication";
-import { PreviewAssessmentBody, PreviewAssessmentResponse, GetAssessmentResponse } from "../../api-zod/src/generated/api";
+import { assess, checkerFactsSchema, ruleSchema, type CheckerFacts, type ReleasedRule } from "@workspace/valo-core";
+import { changedCheckerFactPaths, sourceFamilyAlgorithmHashes, type RichCheckerFacts } from "@workspace/valo-core";
+import { digest } from "@workspace/valo-core";
+import { PreviewAssessmentBody, PreviewAssessmentResponse, GetAssessmentResponse } from "@workspace/api-zod";
 
 const now = new Date("2026-11-14T12:00:00Z");
 const asOfDate = "2026-11-14";
@@ -165,7 +165,7 @@ test("comparison identifies removed and changed nested answers without flattenin
 
 test("original source candidate bytes remain bound and unchanged",()=>{
   for(const[file,key]of [["checker-business-name.ts","businessName"],["checker-source-candidates.ts","privacy"]] as const){
-    const hash=createHash("sha256").update(readFileSync(new URL(file,import.meta.url))).digest("hex");
+    const hash=createHash("sha256").update(readFileSync(new URL(`../../../../lib/valo-core/src/${file}`,import.meta.url))).digest("hex");
     assert.equal(hash,sourceFamilyAlgorithmHashes[key]);
   }
 });

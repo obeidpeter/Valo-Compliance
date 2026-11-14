@@ -19,7 +19,7 @@ Unknown role and household-purpose omissions cannot silently establish an except
 ## Observed validation
 
 - Real Orval 8.47.0 generation completed from the OpenAPI contract.
-- 17 focused Node tests passed: 11 core/contract tests and 6 UI helper tests. The retained raw output is [rich-checker-focused-validation.txt](evidence/rich-checker-focused-validation.txt).
+- 17 focused Node tests passed: 11 engine/contract tests and 6 UI helper tests. The retained raw output is [rich-checker-focused-validation.txt](evidence/rich-checker-focused-validation.txt).
 - Strict TypeScript validation of the changed core, focused tests and generated schema modules passed. The command and exit status are in the same log.
 - A separate focused UI TypeScript check passed using actual generated API, core, React and query types, plus temporary declarations for unavailable external UI packages. This is not a full application build. Four changed TSX files also parsed through esbuild.
 - The old no-rule v1 fixture was run with the unchanged base engine; its hash remains `4d106813d86b2e328264d113807beea64666854d9692d44bae553af03802ea04`.
@@ -34,3 +34,5 @@ Replit/CI must run the full application build and database/HTTP tests at the int
 Browser checks remain unrun: mobile layout, keyboard and screen-reader labels, opening/focusing a missing nested field, signed-out/in transitions, preserved answers, review/edit/re-preview/save/history/compare and all four result groups. Confirm an empty eligible registry still presents honest coverage-unavailable guidance. No rendered or cross-browser evidence is claimed.
 
 No paid AI, PSP call, email, deployment, database migration or release action was performed. Package/lock/CI, budget, privacy and receipt implementation files are outside this branch's scope.
+
+CI follow-up: the first commit exposed a composite TypeScript project-boundary error because the contract test was placed in the core source project. It has been moved to `artifacts/api-server/src/lib/valo-checker-rich.test.ts`, which already owns both API-schema and core dependencies. No package scripts, dependency files or CI configuration were changed. Run this test explicitly with the UI helper test when integrating.
