@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 const DOWNLOAD_PATH = '/api/workspace/data-export';
 const GENERIC_ERROR = 'The download could not be started. Check your sign-in and try again.';
@@ -36,7 +36,9 @@ export function WorkspaceDataDownload({ timeoutMs = 120_000 }: { timeoutMs?: num
     request.frame.remove();
   }, []);
 
-  useEffect(() => {
+  // The frame lives outside React's tree: remove it synchronously when an
+  // account boundary unmounts this component, before another account paints.
+  useLayoutEffect(() => {
     window.addEventListener('pagehide', stop);
     return () => { window.removeEventListener('pagehide', stop); stop(); };
   }, [stop]);
