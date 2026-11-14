@@ -8,6 +8,9 @@ import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-ident
 import * as store from "../lib/valo-store";
 import requirementsRouter from "./valo-requirements";
 import customerAIRouter from "./valo-customer-ai";
+import { releasedCatalogue,releasedTemplate,createReleasedTemplateDraft,readReleasedMaster } from "../lib/valo-released-content";
+import { exportMime } from "../lib/valo-render";
+import { GetReleasedTemplateResponse } from "@workspace/api-zod";
 
 const router = Router();
 router.get("/development/source-evidence",async (_req,res):Promise<void>=>{
@@ -18,17 +21,23 @@ router.get("/development/source-evidence",async (_req,res):Promise<void>=>{
 router.get("/public/coverage", (_req, res) => {
   res.json(GetPublicCoverageResponse.parse(coveragePlan()));
 });
-router.get("/public/catalogue", (req, res) => {
+router.get("/public/catalogue", async (req, res) => {
   const query = ListPublicCatalogueQueryParams.parse(req.query);
-  // There are NO approved public records yet. Held metadata and private
-  // documents are never searched, previewed or returned as released content.
-  res.json({ items: [], total: 0, page: query.page ?? 1, heldTemplates: catalogueSummary.baselineIdentified });
+  // Consult live eligibility on every request; never search held/private records.
+  res.set("Cache-Control","no-store");
+  res.json(await releasedCatalogue(query));
 });
-router.get("/public/status", (_req, res) => {
+router.get("/public/templates/:slug",async(req,res)=>{
+  res.set("Cache-Control","no-store");res.json(GetReleasedTemplateResponse.parse(await releasedTemplate(z.string().max(100).parse(req.params.slug))));
+});
+router.get("/public/recommendations",async(_req,res)=>{
+  res.set("Cache-Control","no-store");res.json(await releasedCatalogue());
+});
+router.get("/public/status", async (_req, res) => {
   const state = readiness();
   res.json({
     receivedRequirements: state.receivedFormalRequirements, expectedRequirements: state.expectedFormalRequirements,
-    publishedTemplates: catalogueSummary.published, p0Passed: false, r2Unlocked: false, livePaymentsEnabled: false,
+    publishedTemplates: (await releasedCatalogue()).total, p0Passed: false, r2Unlocked: false, livePaymentsEnabled: false,
     notice: "Development only. Synthetic data only. R1 gates have not passed; unreviewed content, live payments and public launch remain disabled.",
   });
 });
@@ -42,7 +51,7 @@ router.get("/development/proof", (_req, res) => {
   res.setHeader("Cache-Control", "no-store");
   res.json(GetProofRegisterResponse.parse(readiness()));
 });
-router.get("/development/content", (_req, res) => {
+router.get("/development/content", async (_req, res) => {
   if (process.env.NODE_ENV === "production") { res.sendStatus(404); return; }
   res.setHeader("Cache-Control", "no-store");
   const c = contentReadiness();
@@ -50,7 +59,7 @@ router.get("/development/content", (_req, res) => {
     rows: contentTraceRows(),
     industries: c.industryTaxonomy, deeperPacks: c.deeperPacks,
     identifiedTemplates: c.summary.identifiedIncludingProposals,
-    regulatoryRows: c.summary.regulatoryRows, publishedTemplates: 0,
+    regulatoryRows: c.summary.regulatoryRows, publishedTemplates: (await releasedCatalogue()).total,
     notice: `${c.summary.notice} 78 canonical research keys remain after the explicit SCUML alias only; other umbrella overlaps remain. Neither figure counts distinct published entries.`,
     overlaps:c.overlaps, ...expansionReadiness(),
   }));
@@ -73,4 +82,15 @@ router.post("/workspace/support", async (req, res) => { res.status(201).json(awa
 // Mounted after the shared server identity, workspace and CSRF boundary above.
 router.use(requirementsRouter);
 router.use(customerAIRouter);
+router.post("/workspace/templates/:id/draft",async(req,res)=>{
+  res.set("Cache-Control","private, no-store");
+  res.status(201).json(await createReleasedTemplateDraft(res.locals.valoActor,z.string().uuid().parse(req.params.id)));
+});
+router.get("/workspace/templates/:id/files/:format",async(req,res)=>{
+  const format=z.enum(["docx","pdf"]).parse(req.params.format);
+  const asset=await readReleasedMaster(z.string().uuid().parse(req.params.id),format);
+  res.set({"Content-Type":exportMime[format],"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff",
+    "Content-Disposition":`attachment; filename="${asset.templateId}-v${asset.version}.${format}"`});
+  res.send(asset.bytes);
+});
 export default router;

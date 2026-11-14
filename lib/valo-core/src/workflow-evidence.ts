@@ -21,7 +21,17 @@ const editorialHold = {
   kind:"test" as const,path:"docs/valo/evidence/p0-editorial-provider-proof.json",
   hash:"50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e",result:"pass" as const,
 };
+// Real independent checks FAILED eligibility. Never present this as a successful
+// publication/withdrawal proof or as completion of the 60-case editorial suite.
+const operationalPublication = {
+  kind:"test" as const,path:"docs/valo/evidence/operational-publication-checkpoint.json",
+  hash:"01219ace3b66985d259fb2bba2f53b97c5029406d1bafa826de1c49ed9d74c7e",result:"fail" as const,
+};
 const groups = [
+  {ids:["EDP-001","EDP-003","EDP-004","EDP-006","EDP-007","EDP-009","EDP-012","ADM-002","ADM-005","DOC-001"],
+    paths:["artifacts/api-server/src/editorial/operational-policy.ts","artifacts/api-server/src/editorial/operational-preparation.ts",
+      "artifacts/api-server/src/editorial/publication-publisher.ts","artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
+      "lib/db/drizzle/0007_operational_publication.sql"],record:operationalPublication},
   {ids:["RUL-001","RUL-002","RUL-003","RUL-004","RUL-005","RUL-006","RUL-008","CMP-002","CMP-003","CMP-006","CMP-007"],
     paths:["lib/valo-core/src/checker.ts","artifacts/valo/src/screens/checker.tsx"],record:rules},
   {ids:["PRO-001","PRO-003","RUL-007","RUL-009","WRK-001","WRK-002","WRK-003","WRK-004","SEC-001","NFR-008","NFR-009"],

@@ -1,10 +1,12 @@
 import { pgTable, uuid, integer, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
+import { valoContentVersions } from "./valo-publication";
 
 export const valoDocuments = pgTable("valo_documents", {
   id: uuid("id").primaryKey(),
   workspaceId: uuid("workspace_id").notNull().references(() => valoWorkspaces.id),
+  templateVersionId: uuid("template_version_id").references(()=>valoContentVersions.id),
   currentRevision: integer("current_revision").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

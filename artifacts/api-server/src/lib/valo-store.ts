@@ -67,7 +67,7 @@ function serialize(document: typeof valoDocuments.$inferSelect, revision: typeof
   return {
     id: document.id, revisionId: revision.id, title: revision.title, revision: revision.revision, content: revision.content,
     contentHash: revision.contentHash, createdAt: document.createdAt.toISOString(), updatedAt: revision.createdAt.toISOString(),
-    status: "business_draft" as const, templateVersion: null,
+    status: "business_draft" as const, templateVersion: document.templateVersionId ?? null,
   };
 }
 export async function listDocuments(actor: WorkspaceActor) {

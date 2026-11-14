@@ -21,7 +21,7 @@ export default function Library() {
   useEffect(() => setDraft(q), [q]);
 
   const params: ListPublicCatalogueParams = { type, page, ...(q ? { q } : {}), ...(industry ? { industry } : {}) };
-  const cat = useListPublicCatalogue(params, { query: { enabled: true, queryKey: getListPublicCatalogueQueryKey(params) } });
+  const cat = useListPublicCatalogue(params, { query: { enabled: true, queryKey: getListPublicCatalogueQueryKey(params), refetchInterval: 15000, refetchOnWindowFocus: true } });
   const coverage = useGetPublicCoverage({ query:{retry:false,staleTime:60000} });
   const unknownIndustry = !!industry && !coverage.data?.industries.some(i => i.slug === industry);
 
@@ -44,7 +44,7 @@ export default function Library() {
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <PageHeader eyebrow="Library" title="Released templates and sourced guidance">
-        Only items that have passed source and rights review appear here. Search links are shareable.
+        Only items released in this development build appear here. Business documents are not legal guidance. Search links are shareable.
       </PageHeader>
 
       <form onSubmit={submit} className="surface grid gap-3 p-3 sm:grid-cols-[1fr_auto_auto] sm:items-center" role="search">
@@ -80,10 +80,12 @@ export default function Library() {
             <p className="mb-4 text-sm text-muted-foreground" data-testid="text-result-count">{d.total} result{d.total === 1 ? '' : 's'}</p>
             <ul className="grid gap-3">
               {d.items.map((it) => (
-                <li key={it.id} className="surface p-5" data-testid={'card-item-' + it.id}>
+                <li key={it.id} data-testid={'card-item-' + it.id}>
+                  <Link href={'/library/' + encodeURIComponent(it.slug)} className="surface block p-5 transition-colors hover:bg-secondary/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" data-testid={'link-item-' + it.slug}>
                   <div className="flex flex-wrap items-center gap-2"><span className="pill pill-forest">{it.type}</span><span className="pill pill-ink">{it.industry}</span></div>
                   <p className="font-display mt-3 text-xl">{it.title}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{it.summary}</p>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -103,7 +105,7 @@ export default function Library() {
             </EmptyState>
             {d && d.heldTemplates > 0 && (
               <Notice title={d.heldTemplates + ' baseline templates are held'}>
-                They are waiting for source, rights and professional review, so their titles and text are not shown here. Held is not approved.
+                They are waiting for source and rights checks, so their titles and text are not shown here. Held is not released.
               </Notice>
             )}
           </div>

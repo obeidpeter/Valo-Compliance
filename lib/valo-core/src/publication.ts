@@ -25,6 +25,9 @@ export const publicationSchema = z.object({
     scope: nonempty, limitations: nonempty, assumptions: z.array(nonempty),
     unresolvedMaterialIssues: z.array(nonempty), missingEvidence: z.array(nonempty),
     sourceCheckDate: date, disclosure: z.literal(disclosure),
+    evidenceMode: z.enum(["regulatory", "original_operational"]).optional(),
+    legalScopeStatus: z.enum(["verified", "unverified", "not_applicable"]).optional(),
+    reviewBy: date.optional(),
     claims: z.array(z.object({
       text: nonempty, kind: z.enum(["source_statement", "interpretation", "optional_practice"]),
       sourceId: nonempty, quote: nonempty, locator: nonempty,
@@ -37,7 +40,7 @@ export const publicationSchema = z.object({
     retrievedAt: date, freshUntil: date, effectiveFrom: date, effectiveTo: date.nullable(),
     status: z.enum(["approved", "held", "withdrawn"]), operativeTextConfirmed: z.boolean(),
     amendmentsResolved: z.boolean(),
-  }).strict()).min(1),
+  }).strict()),
   rights: z.object({
     status: z.enum(["cleared", "unknown", "denied"]), evidence: nonempty,
     evidenceHash: hash, commercialUse: z.boolean(),
@@ -47,6 +50,9 @@ export const publicationSchema = z.object({
     allowedClasses: z.array(nonempty), jurisdictions: z.array(nonempty),
     risks: z.array(nonempty), officialHosts: z.array(nonempty).min(1),
     blockedActivities: z.array(nonempty),
+    originalOperationalIds: z.array(nonempty).optional(),
+    authorityRefs: z.array(z.object({ path: nonempty, hash, quote: nonempty }).strict()).optional(),
+    developmentOnly: z.boolean().optional(),
   }).strict(),
   draftRun: run,
   reviews: z.array(run.extend({
@@ -120,6 +126,18 @@ export function evaluatePublication(input: unknown, now = new Date()) {
   fail(!b.policy.jurisdictions.includes(c.jurisdiction), "jurisdiction_outside_policy");
   fail(!b.policy.risks.includes(c.risk), "risk_outside_policy");
   fail(c.unresolvedMaterialIssues.length > 0 || c.missingEvidence.length > 0, "material_uncertainty");
+  const operational = c.evidenceMode === "original_operational";
+  if (operational) {
+    fail(c.contentClass !== "general_template" || c.risk !== "general" ||
+      c.claims.length !== 0 || c.legalScopeStatus !== "not_applicable" ||
+      !b.policy.originalOperationalIds?.includes(c.id), "operational_scope_not_cleared");
+    fail(!b.policy.authorityRefs?.length, "operational_authority_missing");
+    fail(!c.reviewBy || Date.parse(c.reviewBy) <= timestamp, "operational_review_expired_or_missing");
+    fail(b.sources.length !== 0, "operational_form_must_not_borrow_regulatory_evidence");
+  } else {
+    fail(b.sources.length === 0, "regulatory_sources_required");
+    fail(c.legalScopeStatus !== "verified", "legal_scope_unverified");
+  }
   fail(Date.parse(c.sourceCheckDate) > timestamp, "source_check_in_future");
   fail(/lawyer approved|professionally verified|guaranteed compliant/i.test(c.body), "unsupported_professional_claim");
   fail(b.rights.status !== "cleared" || !b.rights.commercialUse, "rights_not_cleared");

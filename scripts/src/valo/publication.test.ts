@@ -36,7 +36,7 @@ function fixture(): PublicationBundle {
       contentClass: "general_template", jurisdiction: "NG", risk: "general",
       scope: "Synthetic validator testing only", limitations: "Not content for publication",
       assumptions: [], unresolvedMaterialIssues: [], missingEvidence: [],
-      sourceCheckDate: "2026-11-12T00:00:00Z", disclosure,
+      sourceCheckDate: "2026-11-12T00:00:00Z", disclosure,legalScopeStatus:"verified",
       claims: [{ text: "Record supplied date", kind: "source_statement",
         sourceId: "synthetic-source", quote: "record the supplied date", locator: "synthetic provision", numbers: [] }],
     },
@@ -74,6 +74,42 @@ function rebind(b: PublicationBundle) {
     exportsHash: digest(b.exports), status: "eligible",
   };
 }
+function operationalFixture(){
+  const b=fixture();
+  b.candidate.id="TPL-07";b.candidate.claims=[];b.sources=[];
+  b.candidate.evidenceMode="original_operational";b.candidate.legalScopeStatus="not_applicable";
+  b.candidate.reviewBy="2026-12-13T00:00:00Z";
+  b.policy.originalOperationalIds=["TPL-07"];
+  b.policy.authorityRefs=[{path:"synthetic-owner-policy.test",hash:sha256("unit authority"),quote:"Synthetic scope; not actual owner approval"}];
+  b.policy.developmentOnly=true;
+  const{hash:ignored,...policy}=b.policy;b.policy.hash=digest(policy);
+  for(const r of[b.draftRun,...b.reviews])r.evidenceHash=digest([]);
+  rebind(b);return b;
+}
+test("original operational eligibility fixture requires no decorative regulatory citation",()=>{
+  assert.equal(evaluatePublication(operationalFixture(),now).decision,"eligible");
+});
+for(const[name,mutate,reason]of [
+  ["unknown legal scope",(b:PublicationBundle)=>{b.candidate.legalScopeStatus="unverified";},"operational_scope_not_cleared"],
+  ["unset legal scope",(b:PublicationBundle)=>{delete b.candidate.legalScopeStatus;},"operational_scope_not_cleared"],
+  ["stale review",(b:PublicationBundle)=>{b.candidate.reviewBy="2026-11-12T00:00:00Z";},"operational_review_expired_or_missing"],
+  ["missing review date",(b:PublicationBundle)=>{delete b.candidate.reviewBy;},"operational_review_expired_or_missing"],
+  ["missing owner authority",(b:PublicationBundle)=>{b.policy.authorityRefs=[];},"operational_authority_missing"],
+  ["unlisted form",(b:PublicationBundle)=>{b.candidate.id="TPL-29";},"operational_scope_not_cleared"],
+  ["tax classification",(b:PublicationBundle)=>{b.candidate.risk="tax";},"operational_scope_not_cleared"],
+  ["missing rights",(b:PublicationBundle)=>{b.rights.status="unknown";},"rights_not_cleared"],
+  ["missing PDF",(b:PublicationBundle)=>{b.exports=b.exports.filter(e=>e.format!=="pdf");},"export_not_passed:pdf"],
+  ["held challenge",(b:PublicationBundle)=>{b.reviews.find(r=>r.role==="challenge")!.verdict="hold";},"review_not_clear:challenge"],
+  ["altered body",(b:PublicationBundle)=>{b.candidate.body+=" Altered";},"candidate_hash_mismatch"],
+]as const)test(`original operational policy rejects ${name}`,()=>{
+  const b=operationalFixture();mutate(b);
+  const result=evaluatePublication(b,now);assert.equal(result.decision,"hold");assert.ok(result.reasons.includes(reason));
+});
+test("regulatory content cannot use the operational no-citation path",()=>{
+  const b=fixture();b.sources=[];delete b.candidate.legalScopeStatus;
+  const result=evaluatePublication(b,now);
+  assert.ok(result.reasons.includes("regulatory_sources_required"));assert.ok(result.reasons.includes("legal_scope_unverified"));
+});
 test("canonical hashing is property-order independent", () => {
   assert.equal(digest({ a: 1, b: 2 }), digest({ b: 2, a: 1 }));
   assert.notEqual(digest([1, 2]), digest([2, 1]));

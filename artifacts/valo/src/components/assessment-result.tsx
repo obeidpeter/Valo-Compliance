@@ -1,3 +1,4 @@
+import { OperationalAids } from './operational-aids';
 import { useState, type ReactNode } from 'react';
 import { ChevronDown, ExternalLink, Quote } from 'lucide-react';
 import type { AssessmentItem, AssessmentResult } from '@workspace/api-client-react';
@@ -69,6 +70,7 @@ export function AssessmentResultView({ result, itemAction }: { result: Assessmen
           </ul>
         </div>
       )}
+      <OperationalAids />
     </div>
   );
 }

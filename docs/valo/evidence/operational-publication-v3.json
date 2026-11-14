@@ -1,0 +1,112 @@
+{
+  "executedAt": "2026-11-14T00:00:48.796Z",
+  "id": "9eec6628-28b3-468f-9d02-3f8bb3229d8d",
+  "version": 3,
+  "candidateHash": "4492e9af3581d1b2afdcc2617b785844a1df8dfc30db8d89d9742590bcc4793c",
+  "policyHash": "dfa73f081effb374f07b64595e44f8557fd9c4c0ee1e173ae4b1f117f3d1fd82",
+  "eligibility": {
+    "decision": "hold",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_not_clear:factual",
+      "review_not_clear:challenge"
+    ]
+  },
+  "release": {
+    "id": "9eec6628-28b3-468f-9d02-3f8bb3229d8d",
+    "decision": "held"
+  },
+  "reviews": [
+    {
+      "role": "factual",
+      "providerResponseId": "chatcmpl-EjvUCJsdBD8xLgevfca9g4gZygp6W",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "verdict": "hold",
+      "findings": [
+        "The disclosure states the source/provenance was checked at 2026-11-14T00:00:33.550Z and that the release is AI drafted/reviewed, but the candidate also presents exact provenance and authorship assertions as if independently verified. The record includes untrusted upstream metadata and an unrecorded upstream model/run must not be treated as independently verified; the disclosure needs to be narrowed to what was actually evidenced in the supplied authoring note and hashes.",
+        "The rights section quotes provider terms and concludes with broad statements about retained provider records and outputs, but no authoritative evidence is supplied that these specific terms or permissions establish any customer sales licence, exclusivity, or copyright/non-infringement guarantee. Those implications remain unsupported and should be explicitly limited.",
+        "The candidate includes a definitive provenance claim: 'Source/provenance checked' and 'Provider-source and authoring records are retained.' The supplied materials show internal records and hashes, but not independent verification of all upstream records beyond the provided authoring note/item/hash trail. That scope should be corrected to avoid overclaiming provenance verification."
+      ],
+      "missingEvidence": [
+        "Authoritative evidence that the exact upstream provider-source and authoring records were independently verified beyond the supplied authoring note, source hash, and execution receipt.",
+        "Evidence supporting any implication that provider terms confer exclusivity, copyright clearance, non-infringement assurance, or accepted Valo customer sales/licence terms for this output.",
+        "A narrower provenance statement that matches only the supplied hashes and recorded server AI authoring receipt, without asserting broader independent verification."
+      ]
+    },
+    {
+      "role": "challenge",
+      "providerResponseId": "chatcmpl-EjvUDQXDRcK0ptoPVqg7LPeTSzbKN",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "verdict": "hold",
+      "findings": [
+        "The review relies on provenance and authoring claims that are not independently verifiable from the supplied actual authoring note/item/file hashes. In particular, the statement that the output is a recorded original server AI output and that the upstream model/run was not recorded should not be treated as independently verified without the underlying authoritative execution artifact. This is a material provenance blocker because the reviewer must verify narrow attribution against the supplied actual authoring note/item/file hashes only.",
+        "The template’s disclosure line says it was 'not reviewed by a Nigerian legal, tax or sector specialist,' but the surrounding metadata and rights text include multiple legal-adjacent assertions about scope, non-applicability, and licensing. The review cannot accept those as verified operative conclusions without authoritative evidence; the material uncertainty remains unresolved.",
+        "The candidate includes 'AI drafted and reviewed' and 'Source/provenance checked' language that could be read as a stronger assurance than the evidence supports. Since the supplied source/provenance is explicitly untrusted and no independent verification artifact is provided, this is overstated certainty and must be held."
+      ],
+      "missingEvidence": [
+        "Authoritative execution record or equivalent immutable artifact showing the original server run tied to the cited source hash and authoring note hash, sufficient to independently verify the claimed provenance and that no upstream model/run record is omitted.",
+        "Independent verification that the cited 'Source/provenance checked' timestamp and 'recorded original server AI output' claim correspond to the supplied actual authoring note/item/file hashes, not just metadata assertions embedded in the submission.",
+        "An operative, authoritative basis for treating the legal-adjacent scope/limitation statements as verified conclusions rather than unverified drafting language."
+      ]
+    }
+  ],
+  "exportReport": {
+    "candidateHash": "4492e9af3581d1b2afdcc2617b785844a1df8dfc30db8d89d9742590bcc4793c",
+    "passed": true,
+    "hashes": {
+      "docx": "f23b182527f89fe2ab704328a371590a07c9c6c61882bcd990744c5905076746",
+      "pdf": "67975e7fdf0ffd331a04f3d5c7fafb7e06aea28e12780088093bb33a19b240e9"
+    },
+    "checks": [
+      "Actual DOCX ZIP/XML parsed; required text present",
+      "Actual Chromium A4 PDF parsed with pdftotext; required text present",
+      "Renderer network disabled"
+    ],
+    "manualWordApplicationReview": false,
+    "manualAccessibilityReview": false
+  },
+  "attestations": {
+    "provenance": {
+      "id": "a3f8e5ee-c0ad-4602-8466-01de126fec40",
+      "hash": "d3b98753a0851f36a817bf72e22f7f804156c189f7e8eaf9baf744c2f53d53ac",
+      "extension": "json"
+    },
+    "rights": {
+      "id": "903bb9e6-df80-4c88-ab92-4fe8516bc563",
+      "hash": "fbea29c050d917798157e81134bf0dd276d288d7a93a07ed7fedd92b960e1535",
+      "extension": "json"
+    },
+    "reviews": [
+      {
+        "id": "3461f1d7-b033-4cee-8263-d7d809be5a76",
+        "hash": "ff8a78dbc2a8d4c83ed6cd7c84422295b6eccb59ce57cdffb281328296a8f123",
+        "extension": "json"
+      },
+      {
+        "id": "3381855f-acbc-4155-b202-c4a5902268e9",
+        "hash": "8ef24d9aed292979a709f205a8b9c1ddfbd031ba62cc13fd71b39fc6946c6e96",
+        "extension": "json"
+      }
+    ],
+    "exports": {
+      "docx": {
+        "id": "57cfd98c-b97c-4c88-ad60-8439faa1d8f0",
+        "hash": "f23b182527f89fe2ab704328a371590a07c9c6c61882bcd990744c5905076746",
+        "extension": "docx"
+      },
+      "pdf": {
+        "id": "ba5a4c14-9cb4-4865-877a-ccadd94caf02",
+        "hash": "67975e7fdf0ffd331a04f3d5c7fafb7e06aea28e12780088093bb33a19b240e9",
+        "extension": "pdf"
+      }
+    },
+    "exportReport": {
+      "id": "713729c9-5f73-45d7-8a16-2302cce44829",
+      "hash": "144fa9d4d5ad26b1a8e62b7052c13822830c9aa2e6d83d39664c8fa2d19eb424",
+      "extension": "json"
+    }
+  },
+  "rightsScope": "Actual server AI authoring receipt and retrieved platform/provider terms retained for free development evaluation. No copyright, exclusivity, non-infringement, indemnity or sales-licence guarantee. Not for sale.",
+  "commercialLicenceAccepted": false,
+  "scope": "Development only; no public launch, sales, R1 acceptance or professional verification"
+}

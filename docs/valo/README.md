@@ -1,3 +1,9 @@
+# Current operational publication refinement
+
+See [the operational publication checkpoint](operational-publication-checkpoint.md).
+The conditional path and negative tests are implemented, but all three actual
+candidates remain held. There is no eligible release or real withdrawal proof.
+
 # Valo Compliance — implementation and evidence
 
 Visible brand: **Valo**. Homepage copy: **The documents you need. The business rules you should know.**

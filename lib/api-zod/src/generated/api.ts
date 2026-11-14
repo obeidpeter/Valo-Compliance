@@ -347,6 +347,145 @@ export const ListPublicCatalogueResponse = zod.object({
 })
 
 
+export const getReleasedTemplatePathSlugMax = 100;
+
+
+
+export const GetReleasedTemplateParams = zod.object({
+  "slug": zod.coerce.string().max(getReleasedTemplatePathSlugMax)
+})
+
+export const GetReleasedTemplateResponse = zod.object({
+  "id": zod.string().uuid(),
+  "templateId": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "version": zod.number().int(),
+  "reviewedAt": zod.coerce.date(),
+  "reviewBy": zod.coerce.date(),
+  "disclosure": zod.string(),
+  "scope": zod.string(),
+  "limitations": zod.string(),
+  "preview": zod.array(zod.string()),
+  "developmentOnly": zod.boolean(),
+  "commercialLicenceAccepted": zod.boolean(),
+  "formats": zod.array(zod.enum(['docx', 'pdf']))
+})
+
+
+export const ListOperationalRecommendationsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "type": zod.string(),
+  "summary": zod.string(),
+  "industry": zod.string()
+})),
+  "total": zod.number().int(),
+  "page": zod.number().int(),
+  "heldTemplates": zod.number().int()
+})
+
+
+export const CreateTemplateDraftParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const createTemplateDraftResponseContentFieldsIssuerNameMax = 160;
+
+export const createTemplateDraftResponseContentFieldsRecipientNameMax = 160;
+
+export const createTemplateDraftResponseContentFieldsDocumentNumberMax = 80;
+
+export const createTemplateDraftResponseContentFieldsIssueDateMax = 10;
+
+export const createTemplateDraftResponseContentFieldsDueDateMax = 10;
+
+export const createTemplateDraftResponseContentFieldsNotesMax = 5000;
+
+export const createTemplateDraftResponseContentBlocksItemIdMax = 80;
+
+export const createTemplateDraftResponseContentBlocksItemTextMax = 8000;
+
+export const createTemplateDraftResponseContentBlocksItemRowsItemItemMax = 1000;
+
+export const createTemplateDraftResponseContentBlocksItemRowsItemMax = 10;
+
+export const createTemplateDraftResponseContentBlocksItemRowsMax = 100;
+
+export const createTemplateDraftResponseContentBlocksMax = 100;
+
+export const createTemplateDraftResponseContentSelectedClausesMax = 0;
+
+export const createTemplateDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const createTemplateDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createTemplateDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createTemplateDraftResponseContentFinancialInputLinesMax = 40;
+
+export const createTemplateDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createTemplateDraftResponseContentFinancialInputTaxLabelMax = 80;
+
+export const createTemplateDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createTemplateDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+
+
+export const CreateTemplateDraftResponse = zod.object({
+  "revisionId": zod.string().uuid(),
+  "id": zod.string(),
+  "title": zod.string(),
+  "revision": zod.number().int(),
+  "content": zod.object({
+  "fields": zod.object({
+  "issuerName": zod.string().max(createTemplateDraftResponseContentFieldsIssuerNameMax),
+  "recipientName": zod.string().max(createTemplateDraftResponseContentFieldsRecipientNameMax),
+  "documentNumber": zod.string().max(createTemplateDraftResponseContentFieldsDocumentNumberMax),
+  "issueDate": zod.string().max(createTemplateDraftResponseContentFieldsIssueDateMax),
+  "dueDate": zod.string().max(createTemplateDraftResponseContentFieldsDueDateMax),
+  "notes": zod.string().max(createTemplateDraftResponseContentFieldsNotesMax)
+}),
+  "blocks": zod.array(zod.object({
+  "id": zod.string().min(1).max(createTemplateDraftResponseContentBlocksItemIdMax),
+  "type": zod.enum(['paragraph', 'list', 'table']),
+  "text": zod.string().max(createTemplateDraftResponseContentBlocksItemTextMax),
+  "rows": zod.array(zod.array(zod.string().max(createTemplateDraftResponseContentBlocksItemRowsItemItemMax)).max(createTemplateDraftResponseContentBlocksItemRowsItemMax)).max(createTemplateDraftResponseContentBlocksItemRowsMax)
+})).max(createTemplateDraftResponseContentBlocksMax),
+  "selectedClauses": zod.array(zod.string()).max(createTemplateDraftResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createTemplateDraftResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createTemplateDraftResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+})).max(createTemplateDraftResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(createTemplateDraftResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "amountDueKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable()
+}).optional(),
+  "formatting": zod.object({
+  "font": zod.enum(['sans', 'serif']),
+  "accent": zod.enum(['forest', 'charcoal'])
+})
+}),
+  "contentHash": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "status": zod.enum(['business_draft']),
+  "templateVersion": zod.string().nullable()
+})
+
+
+export const DownloadReleasedTemplateParams = zod.object({
+  "id": zod.coerce.string().uuid(),
+  "format": zod.enum(['docx', 'pdf'])
+})
+
+export const DownloadReleasedTemplateResponse = zod.unknown()
+
+
 export const GetBuildStatusResponse = zod.object({
   "receivedRequirements": zod.number().int(),
   "expectedRequirements": zod.number().int(),

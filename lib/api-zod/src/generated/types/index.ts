@@ -79,6 +79,8 @@ export * from './quotaErrorResponse';
 export * from './referenceEvidence';
 export * from './referenceEvidencePublication';
 export * from './releaseControl';
+export * from './releasedTemplate';
+export * from './releasedTemplateFormatsItem';
 export * from './releaseGate';
 export * from './reminderPreferences';
 export * from './reminderPreferencesInput';

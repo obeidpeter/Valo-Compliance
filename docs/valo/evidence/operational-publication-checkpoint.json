@@ -1,0 +1,204 @@
+{
+  "executedAt": "2026-11-14T00:11:08.347Z",
+  "tests": [
+    {
+      "name": "foundation",
+      "passed": 164,
+      "failed": 0,
+      "skipped": 0,
+      "outputHash": "29e3c9d0c61ee287b1fe396a99693b1f66c0d9593804ccd3baae5841710ee862"
+    },
+    {
+      "name": "api",
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0,
+      "outputHash": "a821ab4199835d372411f4b0e276e544d4514e1c8a983c2e9f8673a543db60e6"
+    },
+    {
+      "name": "database",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "outputHash": "fd257ab82dfbb621ac38a43237d9c7d7d55e54bab7fc305c4a8e8e4c39015f82"
+    },
+    {
+      "name": "customer-db",
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0,
+      "outputHash": "2314cedbe8b521b6407241ac56fcb889bc456ffa5eba6f3ae5d86942f417612f"
+    }
+  ],
+  "actualIndependentReviewCalls": 6,
+  "actualAuthoringCalls": 1,
+  "realPrivateExportChecks": 6,
+  "providers": [
+    {
+      "versionId": "258811a8-c35d-4702-b699-25562d75ec8f",
+      "version": 1,
+      "status": "held",
+      "candidateHash": "497398a77039fb005acb3e68702a07a6dd900ed0c5cdad466cc4ed47a5468290",
+      "recordedAuthoringReceipt": null,
+      "reviews": [
+        {
+          "role": "factual",
+          "providerResponseId": "chatcmpl-EjvM8tAmJmY1mo0fVF5tweyRH5ox4",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "verdict": "hold",
+          "findings": [
+            "The template includes a disclosure stating it was 'not reviewed by a Nigerian legal, tax or sector specialist'; that is acceptable as a limitation, but it does not support any substantive regulatory claim. The template still uses the phrase 'Scope: ... Optional operational practice; no legal applicability determination,' which is fine, but the same document also says 'A completed count does not confirm product quality or fitness for use.' This is a general operational statement and not a regulatory issue.",
+            "The rights/provenance section relies on provider-use permission excerpts from OpenAI terms/help text. Provider permission may support reuse, but it does not establish exclusivity, copyright clearance against third-party material, or accepted customer licence/sales terms. The candidate's own conclusion correctly notes this, so no correction is needed; however, the provenance claim 'Original ChatGPT prose supplied by coordinator' is unverified upstream and should not be treated as authoritative provenance.",
+            "The line 'Source/provenance checked: 2026-11-13T23:52:16.151Z' is a self-reported timestamp without external evidentiary support. It is not itself a material defect, but it should not be presented as independent verification.",
+            "No authoritative evidence was supplied for any material Nigerian regulatory claim. The document avoids making such claims, so there is no missing operative evidence for a legal assertion."
+          ],
+          "missingEvidence": [
+            "Independent evidence of upstream authorship/provenance beyond the coordinator-supplied statement.",
+            "Authoritative evidence only if any future version asserts Nigerian statutory or regulatory applicability."
+          ],
+          "inputTokens": 2081,
+          "outputTokens": 327,
+          "latencyMs": 2459,
+          "reviewAsOf": null
+        },
+        {
+          "role": "challenge",
+          "providerResponseId": "chatcmpl-EjvM8l8oRHwTLCedH6oAisKudlQVH",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "verdict": "hold",
+          "findings": [
+            "Rights/provenance overclaim: the submission says 'Original supplied ChatGPT prose' and relies on provider permissions, but this does not establish exclusivity, copyright clearance against third-party claims, or acceptance of any customer licence/sales terms. The conclusion is too strong for the evidence provided.",
+            "Scope-risk limitation: the template states 'no legal applicability determination' and 'optional operational practice,' which is fine, but it still includes legal/regulatory-sounding assurances about 'no statutory duty' and 'no legal-validity assurance' without authoritative operative evidence. Those should remain explicitly unverified, not implicitly settled.",
+            "Disclosure gap: the draft says it was not reviewed by a Nigerian legal, tax or sector specialist. That is good disclosure, but the document still uses firm operational guidance language ('Do not mix pieces, cartons, litres or kilograms', 'A negative balance is a discrepancy to investigate') that could be read as prescriptive procedure. This is acceptable only if clearly framed as internal best practice, not compliance advice. That framing is not consistently repeated.",
+            "Source/provenance date concern: 'Source/provenance checked: 2026-11-13T23:52:16.151Z' is in the future relative to the current review date and therefore undermines trust in the provenance statement. It should be corrected or explained."
+          ],
+          "missingEvidence": [
+            "Authoritative evidence that any legal or regulatory claim in the template is valid for the intended Nigerian use case, if such claims are to remain.",
+            "Evidence supporting the provenance timestamp and how it was generated, since it appears future-dated relative to review time.",
+            "Evidence that provider permissions are sufficient for the intended commercial/customer distribution posture, beyond the narrow platform reuse permission quoted."
+          ],
+          "inputTokens": 2088,
+          "outputTokens": 362,
+          "latencyMs": 2757,
+          "reviewAsOf": null
+        }
+      ]
+    },
+    {
+      "versionId": "abff59dd-6abf-4074-8a9f-b61ec59ffc74",
+      "version": 2,
+      "status": "held",
+      "candidateHash": "2a9dc86af15df1af30e22743a2d18491cf0636537169e3cfffad112094dffa20",
+      "recordedAuthoringReceipt": null,
+      "reviews": [
+        {
+          "role": "factual",
+          "providerResponseId": "chatcmpl-EjvNqyrwgd2M26Mq6gZZePYMYPGxg",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "verdict": "hold",
+          "findings": [
+            "The claim that the release is “AI drafted and reviewed; not reviewed by a Nigerian legal, tax or sector specialist” is a process disclosure, not a blocker by itself; however, the candidate also states “Original stock-movement and physical-count record for user-entered business information. Optional operational practice; no legal applicability determination.” and the review request is for factual accuracy/provenance. The supplied provenance says “Original ChatGPT prose supplied by coordinator; upstream model and execution ID not established,” which is not independently verified authorship. Because the note asserts checked provenance and authoring route without an established upstream execution record, the provenance claim remains unverified and cannot be treated as confirmed.",
+            "The release-source-date text says “Source/provenance checked: 2026-11-13T23:54:02.224Z. This checks authoring and provider permissions, not Nigerian regulatory requirements.” The timestamp is earlier than the trusted review clock and is supplied by the candidate/provenance package. The review cannot independently verify that this check occurred or that it was comprehensive. Treat the provenance/date assertion as unverified unless backed by authoritative source logs or execution receipts.",
+            "The rights section concludes “Provider permissions and coordinator-attributed original operational provenance checked for this free synthetic-development release only... No copyright, exclusivity or non-infringement guarantee. No sales or accepted Valo commercial licence.” This is acceptable as a limitation, but it is not evidence of actual provider-use permission beyond the quoted OpenAI terms, and it does not verify the coordinator-attributed authorship route. The package does not supply authoritative operative evidence for a broader originality or non-infringement conclusion beyond provider permissions."
+          ],
+          "missingEvidence": [
+            "Authoritative execution record or immutable log showing the exact upstream model/run that produced the candidate body, or equivalent provenance evidence tying the content to the stated authoring route.",
+            "Independent verification of the source/provenance check time and scope, including what was actually checked and by whom/system, rather than a self-asserted timestamp in the candidate text.",
+            "If the release is intended to rely on a broader originality or non-infringement conclusion, operative evidence beyond OpenAI provider-use permissions showing the exact third-party material screening performed on the final candidate/export."
+          ],
+          "inputTokens": 16419,
+          "outputTokens": 564,
+          "latencyMs": 4366,
+          "reviewAsOf": "2026-11-13T23:54:09.594Z"
+        },
+        {
+          "role": "challenge",
+          "providerResponseId": "chatcmpl-EjvNqtzL6LreS94MPmQ2YLYkP7Q6T",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "verdict": "hold",
+          "findings": [
+            "The provenance/rights narrative overstates verification: it says official OpenAI terms and the authoring route were 'retrieved' and 'checked' and that provider permissions and coordinator-attributed provenance were verified, but the supplied record does not include independently verifiable execution receipts, retrieval logs, or file-level lineage beyond the candidate bundle itself. This is material because the review standard requires narrow attribution against the supplied actual authoring note/item/file hashes and forbids presenting unrecorded upstream model/run details as independently verified.",
+            "The rights conclusion is too strong for the evidence supplied. It says 'provider permissions and coordinator-attributed original operational provenance checked' and that 'no third-party material was identified in the supplied form,' yet upstream model/run details are explicitly unrecorded and the review record does not establish non-infringement, exclusivity, or accepted commercial licence terms. The output must not imply a cleared rights position beyond the limited provider-permission evidence actually supplied.",
+            "The release-scope and limitations language risks implying a broader approval than justified. The template says 'sales are disabled' and 'commercial licence terms are not accepted,' but the review packet does not show the operational mechanism for disabling sales or the actual licence state; those are implementation claims that remain unverified.",
+            "The source/provenance date claims need tighter handling. The document states 'Source/provenance checked: 2026-11-13T23:54:02.224Z' while the trusted review clock is 2026-11-13T23:54:09.627Z. This is not necessarily fatal, but the time-stamped claim should not be presented as authoritative if it is only a supplied field and not independently verified against the trusted review clock."
+          ],
+          "missingEvidence": [
+            "Independent execution receipt or lineage record tying the candidate body to the exact claimed authoring route and version binding, including the specific item/file hashes that support the provenance statement.",
+            "Verifiable evidence that sales are actually disabled in the release environment, or a narrower statement that this is only a declared limitation rather than an operationally enforced state.",
+            "A precise rights basis showing what provider permissions were actually checked, and what was not checked, so the review does not imply non-infringement, exclusivity, or accepted commercial licence terms.",
+            "If the provenance timestamp is meant to be authoritative, a record explaining why the 2026-11-13T23:54:02.224Z source-check time should be accepted despite the later trusted review clock."
+          ],
+          "inputTokens": 16426,
+          "outputTokens": 617,
+          "latencyMs": 4581,
+          "reviewAsOf": "2026-11-13T23:54:09.627Z"
+        }
+      ]
+    },
+    {
+      "versionId": "9eec6628-28b3-468f-9d02-3f8bb3229d8d",
+      "version": 3,
+      "status": "held",
+      "candidateHash": "4492e9af3581d1b2afdcc2617b785844a1df8dfc30db8d89d9742590bcc4793c",
+      "recordedAuthoringReceipt": {
+        "id": "bad6b715-6e07-40e0-9f2c-0dc11e1ffbe0",
+        "hash": "3231c20e8d24ccbe2bdc1b52c318883160f14acc6ab05242a01f5a181beb9be3",
+        "extension": "json"
+      },
+      "reviews": [
+        {
+          "role": "factual",
+          "providerResponseId": "chatcmpl-EjvUCJsdBD8xLgevfca9g4gZygp6W",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "verdict": "hold",
+          "findings": [
+            "The disclosure states the source/provenance was checked at 2026-11-14T00:00:33.550Z and that the release is AI drafted/reviewed, but the candidate also presents exact provenance and authorship assertions as if independently verified. The record includes untrusted upstream metadata and an unrecorded upstream model/run must not be treated as independently verified; the disclosure needs to be narrowed to what was actually evidenced in the supplied authoring note and hashes.",
+            "The rights section quotes provider terms and concludes with broad statements about retained provider records and outputs, but no authoritative evidence is supplied that these specific terms or permissions establish any customer sales licence, exclusivity, or copyright/non-infringement guarantee. Those implications remain unsupported and should be explicitly limited.",
+            "The candidate includes a definitive provenance claim: 'Source/provenance checked' and 'Provider-source and authoring records are retained.' The supplied materials show internal records and hashes, but not independent verification of all upstream records beyond the provided authoring note/item/hash trail. That scope should be corrected to avoid overclaiming provenance verification."
+          ],
+          "missingEvidence": [
+            "Authoritative evidence that the exact upstream provider-source and authoring records were independently verified beyond the supplied authoring note, source hash, and execution receipt.",
+            "Evidence supporting any implication that provider terms confer exclusivity, copyright clearance, non-infringement assurance, or accepted Valo customer sales/licence terms for this output.",
+            "A narrower provenance statement that matches only the supplied hashes and recorded server AI authoring receipt, without asserting broader independent verification."
+          ],
+          "inputTokens": 24338,
+          "outputTokens": 370,
+          "latencyMs": 3774,
+          "reviewAsOf": "2026-11-14T00:00:44.538Z"
+        },
+        {
+          "role": "challenge",
+          "providerResponseId": "chatcmpl-EjvUDQXDRcK0ptoPVqg7LPeTSzbKN",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "verdict": "hold",
+          "findings": [
+            "The review relies on provenance and authoring claims that are not independently verifiable from the supplied actual authoring note/item/file hashes. In particular, the statement that the output is a recorded original server AI output and that the upstream model/run was not recorded should not be treated as independently verified without the underlying authoritative execution artifact. This is a material provenance blocker because the reviewer must verify narrow attribution against the supplied actual authoring note/item/file hashes only.",
+            "The template’s disclosure line says it was 'not reviewed by a Nigerian legal, tax or sector specialist,' but the surrounding metadata and rights text include multiple legal-adjacent assertions about scope, non-applicability, and licensing. The review cannot accept those as verified operative conclusions without authoritative evidence; the material uncertainty remains unresolved.",
+            "The candidate includes 'AI drafted and reviewed' and 'Source/provenance checked' language that could be read as a stronger assurance than the evidence supports. Since the supplied source/provenance is explicitly untrusted and no independent verification artifact is provided, this is overstated certainty and must be held."
+          ],
+          "missingEvidence": [
+            "Authoritative execution record or equivalent immutable artifact showing the original server run tied to the cited source hash and authoring note hash, sufficient to independently verify the claimed provenance and that no upstream model/run record is omitted.",
+            "Independent verification that the cited 'Source/provenance checked' timestamp and 'recorded original server AI output' claim correspond to the supplied actual authoring note/item/file hashes, not just metadata assertions embedded in the submission.",
+            "An operative, authoritative basis for treating the legal-adjacent scope/limitation statements as verified conclusions rather than unverified drafting language."
+          ],
+          "inputTokens": 24345,
+          "outputTokens": 434,
+          "latencyMs": 2977,
+          "reviewAsOf": "2026-11-14T00:00:44.476Z"
+        }
+      ]
+    }
+  ],
+  "actualPublishedVersions": 0,
+  "realEligibleDevelopmentReleaseProved": false,
+  "realWithdrawalDrillProved": false,
+  "historicalDraftWithdrawalPreservationProved": false,
+  "deterministicOperationalEligibilityFixture": "Passed, synthetic engineering fixture only; not publication evidence",
+  "policyAuthority": "Existing master and explicit operational refinement; no invented per-item approval",
+  "commercialLicenceAccepted": false,
+  "r1Accepted": false,
+  "r2Unlocked": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false,
+  "unresolved": "All three real candidates were held by actual independent AI checks, including the recorded-authoring candidate. No override or synthetic release substituted."
+}

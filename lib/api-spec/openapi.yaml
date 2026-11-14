@@ -144,6 +144,54 @@ paths:
               schema:
                 $ref: "#/components/schemas/CataloguePage"
         "429": { $ref: "#/components/responses/QuotaError" }
+  /public/templates/{slug}:
+    get:
+      operationId: getReleasedTemplate
+      parameters:
+        - { in: path, name: slug, required: true, schema: { type: string, maxLength: 100 } }
+      responses:
+        "200":
+          description: Live eligible development template, never an unpublished master
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleasedTemplate" }
+        "404": { $ref: "#/components/responses/AuthError" }
+  /public/recommendations:
+    get:
+      operationId: listOperationalRecommendations
+      responses:
+        "200":
+          description: Optional operational aids, not legal applicability recommendations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CataloguePage" }
+  /workspace/templates/{id}/draft:
+    post:
+      operationId: createTemplateDraft
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "201":
+          description: Tenant-owned immutable first revision linked to its released template version
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BusinessDocument" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+  /workspace/templates/{id}/files/{format}:
+    get:
+      operationId: downloadReleasedTemplate
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+        - { in: path, name: format, required: true, schema: { type: string, enum: [docx, pdf] } }
+      responses:
+        "200":
+          description: Private account-gated blank master; withdrawal prevents new downloads
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
   /public/status:
     get:
       operationId: getBuildStatus
@@ -1076,6 +1124,25 @@ components:
         type: { type: string }
         summary: { type: string }
         industry: { type: string }
+    ReleasedTemplate:
+      type: object
+      required: [id, templateId, slug, title, summary, version, reviewedAt, reviewBy, disclosure, scope, limitations, preview, developmentOnly, commercialLicenceAccepted, formats]
+      properties:
+        id: { type: string, format: uuid }
+        templateId: { type: string }
+        slug: { type: string }
+        title: { type: string }
+        summary: { type: string }
+        version: { type: integer }
+        reviewedAt: { type: string, format: date-time }
+        reviewBy: { type: string, format: date-time }
+        disclosure: { type: string }
+        scope: { type: string }
+        limitations: { type: string }
+        preview: { type: array, items: { type: string } }
+        developmentOnly: { type: boolean }
+        commercialLicenceAccepted: { type: boolean }
+        formats: { type: array, items: { type: string, enum: [docx, pdf] } }
     CataloguePage:
       type: object
       required: [items, total, page, heldTemplates]

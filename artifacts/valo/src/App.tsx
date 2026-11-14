@@ -14,6 +14,7 @@ import { basePath } from '@/lib/env';
 import NotFound from '@/screens/not-found';
 import Home from '@/screens/home';
 import Library from '@/screens/library';
+import TemplateDetail from '@/screens/template-detail';
 import Compliance from '@/screens/compliance';
 import Industries from '@/screens/industries';
 import Resources from '@/screens/resources';
@@ -193,6 +194,7 @@ function ShellRoutes() {
       <Switch>
         <Route path="/" component={HomeRedirect} />
         <Route path="/library" component={Library} />
+        <Route path="/library/:slug">{(p) => <TemplateDetail slug={p.slug} />}</Route>
         <Route path="/compliance" component={Compliance} />
         <Route path="/industries" component={Industries} />
         <Route path="/resources" component={Resources} />

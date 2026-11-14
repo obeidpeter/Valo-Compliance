@@ -48,6 +48,7 @@ import type {
   ProofRegister,
   PublicCoverage,
   QuotaErrorResponse,
+  ReleasedTemplate,
   ReminderPreferences,
   ReminderPreferencesInput,
   ReminderRecord,
@@ -1012,6 +1013,367 @@ export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPub
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListPublicCatalogueQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetReleasedTemplateUrl = (slug: string,) => {
+
+
+
+
+  return `/api/public/templates/${slug}`
+}
+
+export const getReleasedTemplate = async (slug: string, options?: Parameters<typeof customFetch>[1]): Promise<ReleasedTemplate> => {
+
+  return customFetch<ReleasedTemplate>(getGetReleasedTemplateUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetReleasedTemplateQueryKey = (slug: string,) => {
+    return [
+    `/api/public/templates/${slug}`
+    ] as const;
+    }
+
+
+export const getGetReleasedTemplateQueryOptions = <TData = Awaited<ReturnType<typeof getReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReleasedTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReleasedTemplateQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReleasedTemplate>>> = ({ signal }) => getReleasedTemplate(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: slug !== null && slug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReleasedTemplate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetReleasedTemplateQueryResult = NonNullable<Awaited<ReturnType<typeof getReleasedTemplate>>>
+export type GetReleasedTemplateQueryError = ErrorType<AuthErrorResponse>
+
+
+export function useGetReleasedTemplate<TData = Awaited<ReturnType<typeof getReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(
+ slug: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReleasedTemplate>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReleasedTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof getReleasedTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetReleasedTemplate<TData = Awaited<ReturnType<typeof getReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReleasedTemplate>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReleasedTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof getReleasedTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetReleasedTemplate<TData = Awaited<ReturnType<typeof getReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReleasedTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetReleasedTemplate<TData = Awaited<ReturnType<typeof getReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(
+ slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReleasedTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetReleasedTemplateQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListOperationalRecommendationsUrl = () => {
+
+
+
+
+  return `/api/public/recommendations`
+}
+
+export const listOperationalRecommendations = async ( options?: Parameters<typeof customFetch>[1]): Promise<CataloguePage> => {
+
+  return customFetch<CataloguePage>(getListOperationalRecommendationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOperationalRecommendationsQueryKey = () => {
+    return [
+    `/api/public/recommendations`
+    ] as const;
+    }
+
+
+export const getListOperationalRecommendationsQueryOptions = <TData = Awaited<ReturnType<typeof listOperationalRecommendations>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOperationalRecommendations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOperationalRecommendationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOperationalRecommendations>>> = ({ signal }) => listOperationalRecommendations({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOperationalRecommendations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOperationalRecommendationsQueryResult = NonNullable<Awaited<ReturnType<typeof listOperationalRecommendations>>>
+export type ListOperationalRecommendationsQueryError = ErrorType<unknown>
+
+
+export function useListOperationalRecommendations<TData = Awaited<ReturnType<typeof listOperationalRecommendations>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOperationalRecommendations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOperationalRecommendations>>,
+          TError,
+          Awaited<ReturnType<typeof listOperationalRecommendations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOperationalRecommendations<TData = Awaited<ReturnType<typeof listOperationalRecommendations>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOperationalRecommendations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOperationalRecommendations>>,
+          TError,
+          Awaited<ReturnType<typeof listOperationalRecommendations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOperationalRecommendations<TData = Awaited<ReturnType<typeof listOperationalRecommendations>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOperationalRecommendations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListOperationalRecommendations<TData = Awaited<ReturnType<typeof listOperationalRecommendations>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOperationalRecommendations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOperationalRecommendationsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateTemplateDraftUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/templates/${id}/draft`
+}
+
+export const createTemplateDraft = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<BusinessDocument> => {
+
+  return customFetch<BusinessDocument>(getCreateTemplateDraftUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateTemplateDraftMutationKey = () => ['createTemplateDraft'] as const;
+
+export const getCreateTemplateDraftMutationOptions = <TError = ErrorType<AuthErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTemplateDraft>>, TError,CreateTemplateDraftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTemplateDraft>>, TError,CreateTemplateDraftMutationVariables, TContext> => {
+
+const mutationKey = getCreateTemplateDraftMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTemplateDraft>>, CreateTemplateDraftMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  createTemplateDraft(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTemplateDraftMutationResult = NonNullable<Awaited<ReturnType<typeof createTemplateDraft>>>
+
+    export type CreateTemplateDraftMutationError = ErrorType<AuthErrorResponse>
+    export type CreateTemplateDraftMutationVariables = {id: string}
+
+    export const useCreateTemplateDraft = <TError = ErrorType<AuthErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTemplateDraft>>, TError,CreateTemplateDraftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createTemplateDraft>>,
+        TError,
+        CreateTemplateDraftMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateTemplateDraftMutationOptions(options), queryClient);
+    }
+
+export const getDownloadReleasedTemplateUrl = (id: string,
+    format: 'docx' | 'pdf',) => {
+
+
+
+
+  return `/api/workspace/templates/${id}/files/${format}`
+}
+
+export const downloadReleasedTemplate = async (id: string,
+    format: 'docx' | 'pdf', options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadReleasedTemplateUrl(id,format),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadReleasedTemplateQueryKey = (id: string,
+    format: 'docx' | 'pdf',) => {
+    return [
+    `/api/workspace/templates/${id}/files/${format}`
+    ] as const;
+    }
+
+
+export const getDownloadReleasedTemplateQueryOptions = <TData = Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(id: string,
+    format: 'docx' | 'pdf', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadReleasedTemplateQueryKey(id,format);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadReleasedTemplate>>> = ({ signal }) => downloadReleasedTemplate(id,format, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && format !== null && format !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadReleasedTemplateQueryResult = NonNullable<Awaited<ReturnType<typeof downloadReleasedTemplate>>>
+export type DownloadReleasedTemplateQueryError = ErrorType<AuthErrorResponse>
+
+
+export function useDownloadReleasedTemplate<TData = Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    format: 'docx' | 'pdf', options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadReleasedTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof downloadReleasedTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadReleasedTemplate<TData = Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    format: 'docx' | 'pdf', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadReleasedTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof downloadReleasedTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadReleasedTemplate<TData = Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    format: 'docx' | 'pdf', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useDownloadReleasedTemplate<TData = Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    format: 'docx' | 'pdf', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadReleasedTemplateQueryOptions(id,format,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

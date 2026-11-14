@@ -886,6 +886,32 @@ export interface PublicItem {
   industry: string;
 }
 
+export type ReleasedTemplateFormatsItem = typeof ReleasedTemplateFormatsItem[keyof typeof ReleasedTemplateFormatsItem];
+
+
+export const ReleasedTemplateFormatsItem = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export interface ReleasedTemplate {
+  id: string;
+  templateId: string;
+  slug: string;
+  title: string;
+  summary: string;
+  version: number;
+  reviewedAt: string;
+  reviewBy: string;
+  disclosure: string;
+  scope: string;
+  limitations: string;
+  preview: string[];
+  developmentOnly: boolean;
+  commercialLicenceAccepted: boolean;
+  formats: ReleasedTemplateFormatsItem[];
+}
+
 export interface CataloguePage {
   items: PublicItem[];
   total: number;

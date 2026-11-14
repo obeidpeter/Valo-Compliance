@@ -4,6 +4,7 @@ import { documentInput } from "./valo-validation";
 
 export const RENDER_VERSION = "manual-draft-1";
 export const DRAFT_NOTICE = "INCOMPLETE BUSINESS DRAFT — user-provided information. Not verified payment proof, official approval or legal advice.";
+export const TEMPLATE_NOTICE = "BLANK DEVELOPMENT TEMPLATE — complete with your own business information. Not regulatory guidance or verified business facts.";
 export const exportMime = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pdf: "application/pdf",
@@ -11,7 +12,8 @@ export const exportMime = {
 export function escapeHtml(text: string) {
   return text.replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[char]!);
 }
-export function controlledHtml(raw: unknown, revision: number) {
+export function controlledHtml(raw: unknown, revision: number,mode:"business_draft"|"template_sample"="business_draft") {
+  const notice=mode==="template_sample"?TEMPLATE_NOTICE:DRAFT_NOTICE;
   const { title, content } = documentInput.parse(raw);
   const e = escapeHtml;
   const font = content.formatting.font === "serif" ? "Georgia, serif" : "Arial, sans-serif";
@@ -22,15 +24,16 @@ export function controlledHtml(raw: unknown, revision: number) {
     : `<p>${e(block.text)}</p>`).join("");
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${e(title)}</title><style>
   @page{size:A4;margin:25mm 18mm}body{font:11pt ${font};color:#292724;overflow-wrap:anywhere}h1{color:${colour};font-size:23pt}p,li,td{white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin:14pt 0}td{border:1px solid #aaa;padding:7pt;vertical-align:top}tr{break-inside:avoid}.notice{border:1px solid #b6ac94;padding:10pt;color:#675c3b;font-size:9pt}.field{margin:5pt 0}thead{display:table-header-group}</style></head><body>
-  <div class="notice">${DRAFT_NOTICE}</div><h1>${e(title)}</h1><p>Valo · Saved revision ${revision}</p>
+  <div class="notice">${notice}</div><h1>${e(title)}</h1><p>Valo · Saved revision ${revision}</p>
   ${Object.entries(content.fields).map(([key,value])=>`<div class="field"><strong>${e(key)}:</strong> ${e(value || "[Not supplied]")}</div>`).join("")}
   ${blocks}</body></html>`;
 }
-export async function renderDocument(raw: unknown, format: "docx" | "pdf", revision: number): Promise<Buffer> {
+export async function renderDocument(raw: unknown, format: "docx" | "pdf", revision: number,mode:"business_draft"|"template_sample"="business_draft"): Promise<Buffer> {
+  const notice=mode==="template_sample"?TEMPLATE_NOTICE:DRAFT_NOTICE;
   const { title, content } = documentInput.parse(raw);
   if (format === "docx") {
     const children: (Paragraph | Table)[] = [
-      new Paragraph({ text: DRAFT_NOTICE }),
+      new Paragraph({ text: notice }),
       new Paragraph({ heading: "Title", children:[new TextRun({text:title,color:content.formatting.accent === "forest" ? "214d3b" : "292724"})] }),
       new Paragraph(`Valo · Saved revision ${revision}`),
       ...Object.entries(content.fields).map(([key,value]) => new Paragraph({ children: [
@@ -47,10 +50,10 @@ export async function renderDocument(raw: unknown, format: "docx" | "pdf", revis
         [new TextRun({ text, break: i ? 1 : 0 })]) }));
     }
     return Packer.toBuffer(new Document({
-      creator: "Valo", title, description: DRAFT_NOTICE,
+      creator: "Valo", title, description: notice,
       styles: { default: { document: { run: { font: content.formatting.font === "serif" ? "Times New Roman" : "Arial", size: 22 } } } },
       sections: [{ properties: { page: { size: { width:11906, height:16838 }, margin: { top:1200, bottom:1200, left:1020, right:1020 } } },
-        headers: { default: new Header({ children: [new Paragraph(DRAFT_NOTICE)] }) },
+        headers: { default: new Header({ children: [new Paragraph(notice)] }) },
         footers: { default: new Footer({ children: [new Paragraph({ children: [new TextRun("Valo · Page "), new TextRun({ children: [PageNumber.CURRENT] })] })] }) },
         children,
       }],
@@ -65,10 +68,10 @@ export async function renderDocument(raw: unknown, format: "docx" | "pdf", revis
     const context = await browser.newContext({ javaScriptEnabled:false, serviceWorkers:"block" });
     await context.route("**/*", route => route.abort("blockedbyclient"));
     const page = await context.newPage();
-    await page.setContent(controlledHtml(raw, revision), { waitUntil:"load", timeout:15000 });
+    await page.setContent(controlledHtml(raw, revision,mode), { waitUntil:"load", timeout:15000 });
     return await page.pdf({
       format:"A4", printBackground:true, displayHeaderFooter:true,
-      headerTemplate:`<div style="font-size:7px;width:100%;text-align:center">${DRAFT_NOTICE}</div>`,
+      headerTemplate:`<div style="font-size:7px;width:100%;text-align:center">${notice}</div>`,
       footerTemplate:'<div style="font-size:8px;width:100%;text-align:center">Valo · <span class="pageNumber"></span> / <span class="totalPages"></span></div>',
       margin:{top:"25mm",bottom:"20mm",left:"18mm",right:"18mm"},
     });
