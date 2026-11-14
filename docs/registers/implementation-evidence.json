@@ -49,7 +49,7 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -111,7 +111,7 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -154,7 +154,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -197,7 +197,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -271,7 +271,7 @@
         "artifacts/valo/src/screens/staff.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -330,7 +330,7 @@
       "implementation_paths": [
         "artifacts/api-server/src/middlewares/valo-identity.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -415,7 +415,7 @@
         "lib/valo-core/src/money.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -492,7 +492,7 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -566,7 +566,7 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -647,7 +647,7 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -730,7 +730,7 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -820,7 +820,7 @@
         "artifacts/api-server/src/editorial/rights-applicability.ts",
         "lib/valo-core/src/coverage.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -894,7 +894,7 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -968,7 +968,7 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1027,12 +1027,28 @@
       "evidence": [
         {
           "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/customer-experience-checkpoint.json",
           "hash": "e98ffe46ae88f05f6bb8aa3d253170e0f81e7e421a7591b7667d32d7f4ea81d7",
           "result": "pass"
         }
       ],
       "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql",
         "artifacts/api-server/src/lib/valo-customer-access.ts",
         "artifacts/api-server/src/routes/valo-customer-access.ts",
         "artifacts/api-server/src/lib/valo-customer-access.integration.test.ts",
@@ -1042,7 +1058,7 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1101,6 +1117,12 @@
       "evidence": [
         {
           "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/chatgpt-permission-publication-proof.json",
           "hash": "ab6339d2f6b0c4d84716ee526d739416401df50d845ffdb5ffbd2a93861e616c",
           "result": "pass"
@@ -1113,6 +1135,16 @@
         }
       ],
       "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql",
         "artifacts/api-server/src/editorial/rights-applicability.ts",
         "artifacts/api-server/src/editorial/operational-preparation.ts",
         "artifacts/api-server/src/editorial/operational-review.ts",
@@ -1123,7 +1155,7 @@
         "artifacts/api-server/src/lib/valo-released-content.ts",
         "lib/valo-core/src/coverage.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1170,11 +1202,29 @@
         ]
       },
       "risk": "Template count is not evidence of usable rights-cleared content; paid masters must not leak.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1225,7 +1275,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1276,7 +1326,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1328,7 +1378,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1422,7 +1472,7 @@
         "artifacts/api-server/src/lib/valo-customer-ai.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1521,7 +1571,7 @@
         "artifacts/valo/src/screens/profile.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1608,7 +1658,7 @@
         "lib/valo-core/src/money.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1663,7 +1713,7 @@
         "artifacts/api-server/src/lib/valo-validation.ts",
         "artifacts/valo/src/screens/document-editor.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1771,7 +1821,7 @@
         "artifacts/valo/src/screens/profile.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1869,7 +1919,7 @@
         "artifacts/valo/src/screens/profile.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -1976,7 +2026,7 @@
         "artifacts/valo/src/screens/profile.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2038,7 +2088,7 @@
         "artifacts/api-server/src/lib/valo-render.ts",
         "artifacts/api-server/src/lib/valo-render.test.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2090,7 +2140,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2170,7 +2220,7 @@
         "lib/valo-core/src/customer-document.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2240,7 +2290,7 @@
         "lib/valo-core/src/customer-document.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2327,7 +2377,7 @@
         "artifacts/api-server/src/lib/valo-customer-ai.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2390,7 +2440,7 @@
         "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
         "lib/valo-core/src/customer-document.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2470,7 +2520,7 @@
         "lib/valo-core/src/customer-document.ts",
         "artifacts/api-server/src/lib/valo-customer-ai.integration.test.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2533,7 +2583,7 @@
         "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
         "lib/valo-core/src/customer-document.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2604,7 +2654,7 @@
         "artifacts/api-server/src/lib/valo-customer-ai.integration.test.ts",
         "lib/valo-core/src/money.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2677,7 +2727,7 @@
         "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
         "lib/valo-core/src/customer-document.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2755,7 +2805,7 @@
         "lib/valo-core/src/customer-document.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2805,7 +2855,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2865,7 +2915,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2927,7 +2977,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -2999,7 +3049,7 @@
         "artifacts/api-server/src/editorial/rights-applicability.ts",
         "lib/valo-core/src/coverage.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3049,7 +3099,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3109,7 +3159,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3169,7 +3219,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3219,7 +3269,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3269,7 +3319,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3337,7 +3387,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3391,7 +3441,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3445,7 +3495,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3499,7 +3549,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3560,7 +3610,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3614,7 +3664,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3677,7 +3727,7 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3731,7 +3781,7 @@
         "lib/valo-core/src/checker.ts",
         "artifacts/valo/src/screens/checker.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3794,7 +3844,7 @@
         "artifacts/api-server/src/lib/valo-reminder-worker.ts",
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3864,7 +3914,7 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -3934,7 +3984,7 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4004,7 +4054,7 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4081,7 +4131,7 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4141,7 +4191,7 @@
       "implementation_paths": [
         "artifacts/valo/src/screens/workspace.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4220,7 +4270,7 @@
         "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
         "artifacts/api-server/src/lib/valo-proxy-security.test.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4286,7 +4336,7 @@
       "implementation_paths": [
         "artifacts/valo/src/screens/services.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4339,7 +4389,7 @@
         "artifacts/valo/src/components/ticket-form.tsx",
         "lib/db/src/schema/valo-support.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4389,7 +4439,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4439,7 +4489,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4479,11 +4529,29 @@
         ]
       },
       "risk": "Browser success alone cannot grant access; races, mismatch and refunds must preserve financial integrity.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4530,11 +4598,29 @@
         ]
       },
       "risk": "Browser success alone cannot grant access; races, mismatch and refunds must preserve financial integrity.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4581,11 +4667,29 @@
         ]
       },
       "risk": "Browser success alone cannot grant access; races, mismatch and refunds must preserve financial integrity.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4632,11 +4736,29 @@
         ]
       },
       "risk": "Browser success alone cannot grant access; races, mismatch and refunds must preserve financial integrity.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4683,11 +4805,29 @@
         ]
       },
       "risk": "Browser success alone cannot grant access; races, mismatch and refunds must preserve financial integrity.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4734,11 +4874,29 @@
         ]
       },
       "risk": "Browser success alone cannot grant access; races, mismatch and refunds must preserve financial integrity.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4785,11 +4943,29 @@
         ]
       },
       "risk": "Browser success alone cannot grant access; races, mismatch and refunds must preserve financial integrity.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4836,11 +5012,29 @@
         ]
       },
       "risk": "Browser success alone cannot grant access; races, mismatch and refunds must preserve financial integrity.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4887,11 +5081,29 @@
         ]
       },
       "risk": "Browser success alone cannot grant access; races, mismatch and refunds must preserve financial integrity.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4942,7 +5154,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -4994,12 +5206,28 @@
       "evidence": [
         {
           "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/customer-experience-checkpoint.json",
           "hash": "e98ffe46ae88f05f6bb8aa3d253170e0f81e7e421a7591b7667d32d7f4ea81d7",
           "result": "pass"
         }
       ],
       "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql",
         "artifacts/api-server/src/lib/valo-customer-access.ts",
         "artifacts/api-server/src/routes/valo-customer-access.ts",
         "artifacts/api-server/src/lib/valo-customer-access.integration.test.ts",
@@ -5009,7 +5237,7 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5077,7 +5305,7 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5136,7 +5364,7 @@
         "artifacts/api-server/src/editorial/business-name-evidence.test.ts",
         "lib/valo-core/src/research-source-leads.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5180,7 +5408,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5246,7 +5474,7 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5290,7 +5518,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5334,7 +5562,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5378,7 +5606,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5438,7 +5666,7 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5497,7 +5725,7 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5567,7 +5795,7 @@
         "artifacts/api-server/src/editorial/pipeline.ts",
         "artifacts/api-server/src/editorial/model-adapter.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5636,7 +5864,7 @@
         "artifacts/api-server/src/editorial/citation-selection.ts",
         "artifacts/api-server/src/editorial/model-adapter.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5716,7 +5944,7 @@
         "artifacts/api-server/src/editorial/citation-selection.ts",
         "artifacts/api-server/src/editorial/pipeline.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5775,7 +6003,7 @@
         "artifacts/api-server/src/editorial/business-name-evidence.test.ts",
         "lib/valo-core/src/research-source-leads.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5855,7 +6083,7 @@
         "artifacts/api-server/src/editorial/pipeline.ts",
         "artifacts/api-server/src/editorial/model-adapter.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5901,6 +6129,12 @@
       "evidence": [
         {
           "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/customer-security-checkpoint.json",
           "hash": "70f2ee336e7590fceba90ea4bfa6d54affb707fd4d33fb6e5bb8afaf47673711",
           "result": "pass"
@@ -5914,6 +6148,16 @@
       ],
       "implementation_paths": [
         "lib/valo-core/src/publication.ts",
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql",
         "artifacts/api-server/src/lib/valo-released-content.ts",
         "artifacts/api-server/src/editorial/rights-applicability.ts",
         "lib/valo-core/src/coverage.ts",
@@ -5923,7 +6167,7 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -5970,7 +6214,7 @@
       "implementation_paths": [
         "lib/valo-core/src/publication.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6031,7 +6275,7 @@
         "artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
         "lib/db/drizzle/0007_operational_publication.sql"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6078,7 +6322,7 @@
       "implementation_paths": [
         "lib/valo-core/src/publication.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6125,7 +6369,7 @@
       "implementation_paths": [
         "lib/valo-core/src/publication.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6204,7 +6448,7 @@
         "artifacts/api-server/src/editorial/citation-selection.ts",
         "artifacts/api-server/src/editorial/model-adapter.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6248,7 +6492,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6314,7 +6558,7 @@
         "artifacts/valo/src/screens/document-editor.tsx",
         "artifacts/valo/src/screens/profile.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6362,13 +6606,29 @@
           "path": "docs/valo/evidence/part5-export-checks.json",
           "hash": "40010e211e17348f36cf6ce72efccd705819be99f0056e2cfba31806357c3dfb",
           "result": "pass"
+        },
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
         }
       ],
       "implementation_paths": [
         "lib/db/drizzle/0002_fresh_alice.sql",
-        "lib/db/drizzle/pg-boss-development.sql"
+        "lib/db/drizzle/pg-boss-development.sql",
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6412,7 +6672,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6456,7 +6716,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6500,7 +6760,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6584,7 +6844,7 @@
         "artifacts/valo/src/screens/document-editor.tsx",
         "artifacts/valo/src/screens/profile.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6628,7 +6888,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6685,6 +6945,12 @@
         },
         {
           "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/export-recovery-checkpoint.json",
           "hash": "79d87f0bff23cea6800e48d1519b10747e7b8eb46ff4208c7cadc7b4b5ae0c47",
           "result": "pass"
@@ -6717,6 +6983,16 @@
       "implementation_paths": [
         "artifacts/api-server/src/lib/valo-exports.ts",
         "artifacts/api-server/src/lib/valo-exports.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql",
         "artifacts/api-server/src/lib/valo-export-recovery.ts",
         "artifacts/api-server/src/workers/export-worker.ts",
         "artifacts/api-server/src/lib/valo-export-recovery.integration.test.ts",
@@ -6745,7 +7021,7 @@
         "lib/valo-core/src/money.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6799,7 +7075,7 @@
         "artifacts/api-server/src/scripts/dependency-storage-proof.ts",
         "pnpm-workspace.yaml"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6867,7 +7143,7 @@
         "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
         "artifacts/api-server/src/lib/valo-proxy-security.test.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6921,7 +7197,7 @@
         "artifacts/api-server/src/lib/valo-render.ts",
         "artifacts/api-server/src/lib/valo-render.test.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -6995,7 +7271,7 @@
         "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
         "artifacts/api-server/src/lib/valo-proxy-security.test.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7035,11 +7311,29 @@
         ]
       },
       "risk": "Passing builds and generic scans are not independent security acceptance.",
-      "implementation_status": "unverified",
-      "test_status": "not_run_for_complete_acceptance",
-      "evidence": [],
-      "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "implementation_status": "partial_development_with_execution_evidence",
+      "test_status": "partial_development_evidence_not_full_acceptance",
+      "evidence": [
+        {
+          "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        }
+      ],
+      "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql"
+      ],
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7094,7 +7388,7 @@
         "artifacts/api-server/src/lib/request-complexity.test.ts",
         "artifacts/api-server/src/scripts/parser-regression-checkpoint.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7138,7 +7432,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7185,7 +7479,7 @@
         "docs/registers/final-source-context.json",
         "docs/valo/part6-sources-and-retention.md"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7221,7 +7515,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7258,12 +7552,28 @@
       "evidence": [
         {
           "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/customer-experience-checkpoint.json",
           "hash": "e98ffe46ae88f05f6bb8aa3d253170e0f81e7e421a7591b7667d32d7f4ea81d7",
           "result": "pass"
         }
       ],
       "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql",
         "artifacts/api-server/src/lib/valo-customer-access.ts",
         "artifacts/api-server/src/routes/valo-customer-access.ts",
         "artifacts/api-server/src/lib/valo-customer-access.integration.test.ts",
@@ -7273,7 +7583,7 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7324,7 +7634,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7368,7 +7678,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7412,7 +7722,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7456,7 +7766,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7500,7 +7810,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7545,6 +7855,12 @@
       "evidence": [
         {
           "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/reminder-browser-journey.json",
           "hash": "0bde05a74ecff15b3185a6ee6cf364a52bfdebee8d746c57801031fa77f05346",
           "result": "pass"
@@ -7563,6 +7879,16 @@
         }
       ],
       "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql",
         "artifacts/api-server/src/scripts/customer-experience-journey.ts",
         "artifacts/valo/src/index.css",
         "artifacts/api-server/src/lib/valo-export-recovery.ts",
@@ -7581,7 +7907,7 @@
         "artifacts/valo/src/screens/resources.tsx",
         "artifacts/valo/src/screens/staff.tsx"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7632,6 +7958,12 @@
         },
         {
           "kind": "test",
+          "path": "docs/valo/evidence/commerce-development-checkpoint.json",
+          "hash": "c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",
+          "result": "pass"
+        },
+        {
+          "kind": "test",
           "path": "docs/valo/evidence/reminder-browser-journey.json",
           "hash": "0bde05a74ecff15b3185a6ee6cf364a52bfdebee8d746c57801031fa77f05346",
           "result": "pass"
@@ -7656,6 +7988,16 @@
         }
       ],
       "implementation_paths": [
+        "artifacts/api-server/src/lib/valo-commerce.ts",
+        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+        "artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+        "artifacts/api-server/src/routes/valo-commerce.ts",
+        "artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+        "artifacts/api-server/src/editorial/operational-read-permission.ts",
+        "artifacts/valo/src/screens/purchase-history.tsx",
+        "artifacts/api-server/src/scripts/commerce-clean-migrations.ts",
+        "lib/db/drizzle/0011_commerce_ledger.sql",
         "artifacts/api-server/src/scripts/customer-experience-journey.ts",
         "artifacts/valo/src/index.css",
         "artifacts/api-server/src/lib/valo-export-recovery.ts",
@@ -7675,7 +8017,7 @@
         "artifacts/valo/src/screens/staff.tsx",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7754,7 +8096,7 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7857,7 +8199,7 @@
         "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
         "artifacts/api-server/src/scripts/checker-customer-journey.ts"
       ],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7901,7 +8243,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -7945,7 +8287,7 @@
       "test_status": "not_run_for_complete_acceptance",
       "evidence": [],
       "implementation_paths": [],
-      "evidence_code_revision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+      "evidence_code_revision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
       "acceptance_status": "blocked",
       "remaining_acceptance_blockers": [
         "Complete acceptance evidence and required operational approvals are not established"
@@ -8120,11 +8462,11 @@
   ],
   "specification_baseline_status": "implementation unverified",
   "execution_register": {
-    "generatedAt": "2026-11-14T04:49:38.179Z",
-    "codeRevision": "7aa686fffd1333f0d69b650c17aaba1d708abab6",
+    "generatedAt": "2026-11-14T09:02:08.424Z",
+    "codeRevision": "d488d4ea0f5e1b03da3e0cca844b5523673562fa",
     "formalRequirements": 127,
     "sourceRegister": "docs/registers/requirements.json",
-    "rowsWithPartialExecutionEvidence": 77,
+    "rowsWithPartialExecutionEvidence": 88,
     "r1Accepted": false,
     "r2Accepted": false,
     "publicLaunchEnabled": false,
