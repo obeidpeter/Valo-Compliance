@@ -1,0 +1,42 @@
+{
+  "status": "retrieved",
+  "sourceID": "NAFDAC-CAP-F33",
+  "url": "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Regulations/NAFDAC_Acts/FOOD-DRUGS-AND-RELATED-PRODUCTS-REGISTRATION-ACT-Cap.F.33.pdf",
+  "finalURL": "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Regulations/NAFDAC_Acts/FOOD-DRUGS-AND-RELATED-PRODUCTS-REGISTRATION-ACT-Cap.F.33.pdf",
+  "httpStatus": 200,
+  "contentType": "application/pdf",
+  "retrievedAt": "2026-11-14T12:13:56.236508+00:00",
+  "bytes": 31142,
+  "rawSHA256": "3099b153d913872ef0d839110a65c8451f758d145eeadd54ebc2f049ff663f07",
+  "rawPath": "analysis/governance_safety_sources/nafdac_cap_f33.pdf",
+  "textPath": "analysis/governance_safety_sources/nafdac_cap_f33.txt",
+  "textExtraction": "pdftotext -layout",
+  "textSHA256": "ba915ee0564f131c5d5db3eabe040c19060c9bd833d76dc59a3de2c28d432320",
+  "pdfPages": 8,
+  "pageTextFiles": [
+    {
+      "pdfPage": 2,
+      "path": "analysis/governance_safety_sources/nafdac_cap_f33_page_02.txt",
+      "textSHA256": "418d8d6a49165c30ea9a5480470be9c971aa7750c43b2b5be99fb4f81a6c1d0c"
+    },
+    {
+      "pdfPage": 6,
+      "path": "analysis/governance_safety_sources/nafdac_cap_f33_page_06.txt",
+      "textSHA256": "ed99971abfeb6f4e510f9f242d8bcd43e787883f83a9df44408b391553cf50af"
+    },
+    {
+      "pdfPage": 7,
+      "path": "analysis/governance_safety_sources/nafdac_cap_f33_page_07.txt",
+      "textSHA256": "e211ce7196ba5aa7bc55f3a4b4f2654145b219e0001ff5165455bafcfdf0a81d"
+    },
+    {
+      "pdfPage": 8,
+      "path": "analysis/governance_safety_sources/nafdac_cap_f33_page_08.txt",
+      "textSHA256": "b6542e3392d01ba6794099f8db528d081740791adbad279d59006d89a417c510"
+    }
+  ],
+  "repositoryDirectory": "docs/content-candidates/source-evidence",
+  "repositoryRawPath": "docs/content-candidates/source-evidence/nafdac_cap_f33.pdf",
+  "repositoryTextPath": "docs/content-candidates/source-evidence/nafdac_cap_f33.txt",
+  "repositoryPageBundlePath": "docs/content-candidates/source-evidence/nafdac_cap_f33_pages.json"
+}

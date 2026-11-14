@@ -82,3 +82,61 @@ These are distinct boundary candidates, not executed results and not replacement
 7. **Recheck after publication binding and preserve failures.** An offline pass supports the exact candidate; subsequent customer execution must resolve to the same released manifest. Hold unresolved interpretations and show the reason. A suite is accepted only after all critical results/exclusions pass and all requirement coverage is actually evidenced. Four narrow candidates and 80 authored rows do not by themselves prove that, but the TRD does not demand 80 distinct statutes either.
 
 Customer AI (60) and editorial publication (60) remain separate suites. Their counts and results must not be combined with the rule suite. The source/currentness work here is usable release input and removes avoidable uncertainty; it does not waive EDP-002–007, mark the source-backed suite executed or accept R1/R2.
+
+## 14 November 2026 addendum: independent preparatory source challenge
+
+**Review classification:** independent preparatory source review of the authored expectations, separate from implementation outcomes. The coordinating research agent checked CAMA/NAFDAC; separate research agents challenged NDPA and NTAA. This work had prior corpus context and is not claimed as a blind challenge, a pipeline/provider review receipt, executed rule tests, publication eligibility or RUL-008 acceptance. No case, fact, expected label or execution status was changed.
+
+**Version binding.** The historical review above was fetched from `docs/reviews/rule-evaluation-readiness-2026-11-14.md` at repository head `359665569659e637246cecdba67220ccef525c94` and preserved as an unchanged prefix. Its original UTF-8 SHA-256 is `3db6ffd07b45e13856bc86609974d48c6d89c3d81a99c22587a4a73844f29e28`. The reviewed corpus is `docs/evaluation-candidates/checker.json`, schema 1.1, corresponding to retained `analysis/checker-evaluation-candidates.json`: SHA-256 `5e333b3f472263e16f767b3165e29c1b1e210fdbac922873d1ffc086027ae1a0`. Its recorded earlier schema 1.0 ancestor hash is `6f2b8d46f6f30aaadd6377e73b8720115a88986c6f2990f43cff5c428bb900cf`; that older version is not the reviewed execution input.
+
+### Retained source bindings
+
+All page numbers below are one-based PDF pages. Raw hashes were recomputed from the listed local files during this addendum. Local research files are evidence locations, not a claim that the application has ingested or approved their bytes.
+
+| Source | Retained file and raw SHA-256 | Relevant locators |
+|---|---|---|
+| CAMA 2020, official CAC PDF | `analysis/business_name_sources/cama_2020.pdf`; `d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8` | §814 pp405–406/A405–406; §863 p432; §868 pp434–436. Exact §814 extracted passage hash: `4bc357be4f635d2980b67447f8bd5e6624ddbbcf4980348ac85f0bd2f998953d`. |
+| Business Facilitation Act, official NIPC PDF | `analysis/business_name_sources/bfa_2022.pdf`; `c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14` | Schedule Part I pp9–13/A103–107; inspected amendment context, not proof of exhaustive absence of later amendments. |
+| NDPA 2023, official NDPC PDF | `analysis/privacy_sources/ndpc_act_2023.pdf`; `5bfb22cf7b344e92ecca9b80decf73db694a0d1000c4f42188f46e047d8df075` | §§2–3 pp7–8/A723–724; §27 pp18–19/A734–735. Selected extracted-page hashes are retained in `analysis/privacy_sources/guidance-source-manifest.json`. |
+| NTAA 2025, National Assembly copy | `analysis/registration_tax_sources/ntaa_nass_2025.pdf`; `eb3ea717052f48492cc6441ad23f9e7ac2ad4782395db1c391580cc1adef20e2` | §11 pp13–14/A269–270; §147 pp73–75/A329–331; printed commencement p9/A265. |
+| NTAA 2025, NRS copy | `analysis/registration_tax_sources/ntaa_nrs_2025.pdf`; `956092e5ec5aad8e8b9cda47d6dbb6bde4dacf1000e59df6fe73a5fc12abc403` | §11 pp11–12/A269–270; §147 pp70–72/A328–330; printed commencement p7/A265 and §148 p74/A332. |
+| Cap F33, official NAFDAC PDF | `analysis/governance_safety_sources/nafdac_cap_f33.pdf`; `3099b153d913872ef0d839110a65c8451f758d145eeadd54ebc2f049ff663f07`; 31,142 bytes, 8 pages. Retrieved from the exact official URL with HTTP 200 on 14 November 2026 at 12:13:56 UTC. | §§1–2 p2; §13 pp6–8, with relevant definitions on p7. Exact extracted pages and their hashes are retained in `analysis/governance_safety_sources/nafdac_cap_f33_pages.json`; retrieval metadata is in `nafdac_cap_f33_retrieval.json` in the same folder. |
+
+Official source URLs:
+
+- CAMA: https://icrp.cac.gov.ng/assets/docs/CAMA-NOTE%20FINAL-FULL-VERSION.pdf
+- Business Facilitation Act: https://nipc.gov.ng/assets/resources/business-facilitation-miscellaneous-provisions-act-2022/business-facilitation-misc-provisions-act-2022.pdf
+- NDPA: https://ndpc.gov.ng/wp-content/uploads/2024/03/Nigeria_Data_Protection_Act_2023.pdf
+- NTAA, National Assembly: https://nass.gov.ng/documents/download/11250
+- NTAA, NRS: https://www.nrs.gov.ng/uploads/NIGERIA_TAX_ADMINISTRATION_ACT_2025_8c945071a7.pdf
+- Cap F33: https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Regulations/NAFDAC_Acts/FOOD-DRUGS-AND-RELATED-PRODUCTS-REGISTRATION-ACT-Cap.F.33.pdf
+
+### Challenge findings requiring explicit disposition
+
+These are objections to resolve before adopting an oracle, not automatic label replacements or permission to weaken a failed test.
+
+| Exact case IDs | Challenge outcome | Source-backed finding |
+|---|---|---|
+| **CHK-CAND-NDPA-018** | **Support gap in negative result** | §2(2)(a), p7/A723 separately includes Nigerian domicile, residence or operation. The case negates operation, processing location and data-subject location, but not domicile/residence. Being currently outside Nigeria does not settle them. `connectionResultForScenario` is a conclusion. Establish the missing territorial facts, including relevant processor connections if claiming every link is absent, or preserve uncertainty. |
+| **CHK-CAND-NTAA-009** | **Support gap in negative result** | §147 Company definition, NASS p73/A329 and NRS p70/A328, extends beyond CAMA incorporation and mentions associations. `ordinary_unincorporated_partnership` plus `incorporatedAsCompany:false` does not document the required exclusion interpretation. A precise scoped justification or classification follow-up is needed. This objection does not establish that the partnership owes a company return. |
+| **CHK-CAND-NAFDAC-009, CHK-CAND-NAFDAC-013, CHK-CAND-NAFDAC-016** | **Scope/label ambiguity** | §1(1), p2 covers regulated products and several activities; §13, p7 supplies relevant definitions. Uncertain procedural classification does not necessarily make national registration relevance uncertain. Decide whether the oracle concerns product-registration relevance or local-manufacturer application eligibility before adopting these `May apply` labels. |
+| **CHK-CAND-NAFDAC-017** | **Scope/uncertainty ambiguity** | §1(2), p2 provides the conditional sample-permit route. This case already confirms the matching permit and satisfied conditions. Its follow-up repeats established facts. Distinguish the confirmed sample exception from continuing permit conditions; an unexplained `May apply` label is insufficiently precise. |
+| **CHK-CAND-NDPA-009** | **Timing ambiguity; no automatic label reversal** | Rejecting solely-household treatment follows §3(1), p8. Reuse of an existing household list does not establish a new collection event for §27(1), p18. Retain relevance without inventing retrospective notice timing; separate the accessible-policy obligation under §27(3), p19, from any additional purpose-change claim needing its own support. |
+| **CHK-CAND-NTAA-012** | **Input terminology ambiguity** | §147, NASS pp74–75/A330–331 and NRS pp71–72/A329–330 distinguishes Foreign Company from Nigerian Company; the latter includes effective management/control. `foreign_company` should not predetermine tax classification while Nigerian management is unverified. The known fact is incorporation outside Nigeria. Existing `May apply` remains defensible. |
+| **CHK-CAND-NTAA-013** | **Stipulated classification limits coverage** | The domestic-candidate exclusion is defensible. However, `finalTaxTreatment:confirmed_for_scenario` does not independently prove the final-withholding classification underlying §11(3). That would need actual income facts and the applicable NTA provision. §11(2)–(3): NASS pp13–14/A269–270; NRS p11/A269. |
+| **CHK-CAND-NTAA-018** | **Qualify the uncertainty** | §11(1),(5), NASS pp13–14 supports separating broad annual-return relevance from period-specific treatment/timing. The retained transition announcement discusses accounting-period treatment. Keep `May apply` uncertainty attached to the unresolved period question, not to unrelated turnover or small-company thresholds. |
+
+### Outcomes retained, with limits
+
+- **CHK-CAND-CAMA-001 through CHK-CAND-CAMA-020:** no label reversal identified under the expressly narrow §814 naming-trigger scope. The earlier case table remains conditional. `section814Exception` and naming-assessment stipulations must be bound to underlying facts; omitted questionnaire answers cannot become an exception decision. §868 definitions and §863 context remain necessary to prevent name parsing errors or general-exemption claims.
+- **CHK-CAND-NDPA-008:** its negative depends on the supplied confirmed household/no-rights-violation facts, not mere absence of reported harm. **NDPA-013–016** reasonably preserve uncertainty about collection and exemptions. **NDPA-017** has an affirmative territorial connection. **NDPA-019–020** remain historical/source-policy holds, not declarations that legal duties disappeared. Relevant sources are §§2–3 and 27 at the pages above.
+- **CHK-CAND-NTAA-001–007, 014–015 and 019:** no contradiction identified in the narrow current filing-relevance results under §11(1)/(4). Zero tax/turnover, nonprofit purpose or cessation must not automatically become a filing exemption. **NTAA-008, 010–011 and 016** preserve their entity/scope distinctions. **NTAA-017 and 020** remain intentionally unsupported historical/future-context holds.
+- **CHK-CAND-NAFDAC-018:** further authority is needed for the claimed food-sample permit; §1(2) does not itself list processed food. Do not infer a food-sample exemption or use absence of commercial supply as a blanket registration exclusion.
+
+The two NTAA copies have different printed commencement dates: National Assembly p9 shows 26 June 2025; NRS p7 shows 1 January 2026 and §148/p74 shows 1 January 2025. These retained differences do not undermine the stable present-day §11 wording by themselves. Conversely, this review does not resolve all historical treatment, establish an official correction, or prove exhaustive currentness.
+
+**Disposition:** two negative-result support gaps remain open; the identified scope, terminology, timing and stipulated-classification limitations also need a recorded decision. The 80 authored cases remain unchanged and unexecuted by this review. No provider run ID, passing-result count, released manifest or acceptance status was created or inferred.
+
+**14 November 2026, 12:13 UTC source-binding update:** the previously missing Cap F33 raw source was successfully retrieved once through ordinary HTTPS without escalation. Its 8-page PDF identity and relevant pages were checked with `pdfinfo` and `pdftotext -layout`. Full extracted-text SHA-256 is `ba915ee0564f131c5d5db3eabe040c19060c9bd833d76dc59a3de2c28d432320`. The retained text confirms the sections used above; the substantive objections are unchanged. This removes the local raw-byte evidence gap only: it does not bind the application registry, resolve currentness/amendments, clear rights or editorial review, or alter the authored corpus.
+
+
