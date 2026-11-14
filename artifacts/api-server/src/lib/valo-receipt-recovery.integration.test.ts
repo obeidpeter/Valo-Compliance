@@ -5,7 +5,7 @@ import {and,eq} from "drizzle-orm";
 import {db,pool,valoPrices,valoOrders,valoEntitlements,valoPurchaseOutbox,valoEvents} from "@workspace/db";
 import {financeHeldFixture} from "./valo-finance-test-fixture";
 import {resolveWorkspace} from "./valo-store";
-import {recoverSyntheticPurchaseReceipt,purchaseReceipt} from "./valo-commerce";
+import {recoverSyntheticPurchaseReceipt,purchaseReceipt,purchases} from "./valo-commerce";
 
 test("recorded synthetic receipt recovery, no provider verification or messages",{
   skip:process.env.VALO_RUN_DB_TESTS!=="synthetic-development-only",
@@ -55,9 +55,15 @@ test("recorded synthetic receipt recovery, no provider verification or messages"
       const receipt=await purchaseReceipt(actor,orderId);
       assert.equal(receipt.amountKobo,10000);
       assert.equal(receipt.licenceVersion,"synthetic-only");
+      assert.equal(receipt.deliveryStatus,"held_synthetic_recovery");
       await db.update(valoOrders).set({status:"reversed"}).where(eq(valoOrders.id,orderId));
       const reversed=await purchaseReceipt(actor,orderId);
       assert.equal(reversed.amountKobo,10000);assert.equal(reversed.status,"reversed");
+      assert.equal(reversed.deliveryStatus,"held_synthetic_recovery");
+      const listed=(await purchases(actor)).orders.find(order=>order.id===orderId);
+      assert.equal(listed?.receiptReference,reversed.receiptReference);
+      assert.ok(listed?.receiptReference);assert.equal(listed.status,"reversed");
+      assert.equal((await purchases(foreign)).orders.some(order=>order.id===orderId),false);
       await assert.rejects(()=>recoverSyntheticPurchaseReceipt(orderId),{status:409});
     });
   }finally{
@@ -67,3 +73,4 @@ test("recorded synthetic receipt recovery, no provider verification or messages"
     await pool.end();
   }
 });
+
