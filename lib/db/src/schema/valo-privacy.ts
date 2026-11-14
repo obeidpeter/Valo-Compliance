@@ -1,4 +1,4 @@
-import {pgTable,uuid,text,integer,timestamp,jsonb,uniqueIndex,index,foreignKey} from "drizzle-orm/pg-core";
+import {pgTable,uuid,text,integer,timestamp,jsonb,uniqueIndex,index,foreignKey,primaryKey} from "drizzle-orm/pg-core";
 import {valoWorkspaces} from "./valo-workspaces";
 import {valoSupportTickets} from "./valo-support";
 export type PrivacyStep={system:string;status:"pending"|"running"|"confirmed"|"held"|"failed"|"not_applicable";detail:string;
@@ -38,3 +38,11 @@ export const valoPrivacyTombstones=pgTable("valo_privacy_tombstones",{
   createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
   updatedAt:timestamp("updated_at",{withTimezone:true}).notNull().defaultNow(),
 },t=>[index("valo_privacy_tombstone_workspace").on(t.workspaceId)]);
+// Intentionally independent of export-job/file FKs: deletion instructions must
+// outlive the private document records they remove.
+export const valoPrivacyErasureObjects=pgTable("valo_privacy_erasure_objects",{
+  workspaceId:uuid("workspace_id").notNull(),caseId:uuid("case_id").notNull(),objectKey:text("object_key").notNull(),
+  status:text("status",{enum:["pending","deleted","failed"]}).notNull().default("pending"),
+  attempts:integer("attempts").notNull().default(0),
+  updatedAt:timestamp("updated_at",{withTimezone:true}).notNull().defaultNow(),
+},t=>[primaryKey({columns:[t.caseId,t.objectKey]}),index("valo_privacy_erasure_workspace").on(t.workspaceId)]);

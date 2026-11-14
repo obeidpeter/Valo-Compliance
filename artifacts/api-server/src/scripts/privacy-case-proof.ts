@@ -113,10 +113,10 @@ try{
     await assert.rejects(()=>createPrivacyCase(actor,"synthetic@example.invalid",body("export")),{status:429});
     assert.equal((await pool.query("SELECT count(*)::int AS n FROM valo_privacy_cases WHERE workspace_id=$1",[actor.workspaceId])).rows[0].n,3);
   });
-  await check("erasure_is_honestly_disabled_not_fabricated_as_complete",async()=>{
+  await check("erasure_requires_explicit_irreversible_scope_acknowledgement",async()=>{
     const{actor,s,id,result}=await opened("deletion");
     await assert.rejects(()=>processPrivacyAction(s,id,{expectedVersion:result.request.version,action:"start_erasure",
-      reason:"Controlled unsupported-erasure path must fail closed.",acknowledgement:true}),{status:503});
+      reason:"Controlled unacknowledged erasure must fail closed.",acknowledgement:false}),{status:422});
     assert.equal((await customerPrivacyDetail(actor,id)).request.status,"assigned");
   });
 }finally{

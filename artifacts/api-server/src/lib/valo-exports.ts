@@ -4,7 +4,7 @@ import { and, eq, ne, desc } from "drizzle-orm";
 import { db, valoMemberships, valoDocuments, valoDocumentRevisions, valoExportJobs, valoExportRequests, valoFileAssets, valoExportObjects, valoEvents } from "@workspace/db";
 import { CreateDocumentExportBody, CreateDocumentExportResponse } from "@workspace/api-zod";
 import { sha256 } from "@workspace/valo-core";
-import { ValoProblem, type WorkspaceActor } from "./valo-store";
+import { ValoProblem,authorizeWorkspaceWrite, type WorkspaceActor } from "./valo-store";
 import { RENDER_VERSION, renderDocument, exportMime } from "./valo-render";
 import { readPrivateFile, writePrivateFile, deletePrivateFile } from "./valo-private-storage";
 import { documentInput } from "./valo-validation";
@@ -167,6 +167,7 @@ export async function executeExport(id: string, workspaceId: string, queueId: st
     await db.transaction(async tx=>{
       const [current]=await tx.select().from(valoExportJobs).where(eq(valoExportJobs.id,id)).for("update");
       if(!current||current.queueId!==queueId||current.status!=="running")throw new Error("EXPORT_SCOPE_MISMATCH");
+      await authorizeWorkspaceWrite(tx,actor);
       await tx.insert(valoExportObjects).values({objectKey,workspaceId,jobId:id,queueId,state:"pending"});
     });
     const stored = await writePrivateFile(objectKey,bytes,()=>onStage?.("uploading")??Promise.resolve());

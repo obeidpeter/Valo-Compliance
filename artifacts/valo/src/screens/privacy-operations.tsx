@@ -9,6 +9,8 @@ const actions:{value:PrivacyStaffAction["action"];label:string}[]=[
   {value:"hold",label:"Hold processing"},{value:"release_hold",label:"Release a resolved hold"},
   {value:"reject",label:"Reject with recorded reason"},{value:"prepare_export",label:"Prepare scoped application JSON"},
   {value:"record_correction",label:"Record an actual corrected profile revision"},
+  {value:"start_erasure",label:"Start synthetic development content erasure"},
+  {value:"resume_erasure",label:"Resume synthetic development content erasure"},
 ];
 export default function PrivacyOperations(){
   const[page,setPage]=useState(1),[selected,setSelected]=useState<PrivacyCase|null>(null),[detail,setDetail]=useState<PrivacyCaseDetail|null>(null);
@@ -63,6 +65,9 @@ export default function PrivacyOperations(){
       <label className="grid gap-2 text-sm">Reason, scope and observed evidence
         <textarea className="field min-h-28" value={reason} onChange={e=>setReason(e.target.value)} minLength={10} maxLength={1000} disabled={mutation.isPending}/>
       </label>
+      {(action==="start_erasure"||action==="resume_erasure")&&
+        <label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)} disabled={mutation.isPending}/>
+          <span>I acknowledge irreversible deletion of the named application content and private exports in this synthetic development workspace. Access will be revoked. Financial, support/privacy and audit records are retained pending policy review; managed identity, backups and external providers are not fulfilled.</span></label>}
       {action==="record_correction"&&<>
         <label className="grid gap-2 text-sm">Actual corrected profile version ID
           <input className="field" value={profileVersionId} onChange={e=>setProfile(e.target.value)} disabled={mutation.isPending} autoComplete="off"/>
@@ -70,11 +75,12 @@ export default function PrivacyOperations(){
         <label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)} disabled={mutation.isPending}/>
           <span>I checked the specified current profile revision and scope. This does not claim that sign-in-provider or other-system corrections are complete.</span></label>
       </>}
-      <p className="rounded-xl bg-secondary p-3 text-sm">Erasure is not enabled in this screen. The resumable erasure processor, retention/hold controls and recovery tombstones still need completion and verification. No deletion is claimed.</p>
+      <p className="rounded-xl bg-secondary p-3 text-sm">Content erasure is development-only and accepts explicitly synthetic workspaces. Resume advances a bounded batch and records actual system outcomes. A partial result is not complete account deletion. Production deletion and external-provider handling remain disabled.</p>
       {mutation.isError&&<ErrorState error={mutation.error}/>}
       <div className="flex flex-wrap gap-3">
         <button className="btn btn-primary btn-sm" onClick={submit} disabled={reason.trim().length<10||mutation.isPending||
-          (action==="record_correction"&&(!profileVersionId.trim()||!ack))}>{mutation.isPending?"Processing…":"Apply recorded operation"}</button>
+          (action==="record_correction"&&(!profileVersionId.trim()||!ack))||
+          ((action==="start_erasure"||action==="resume_erasure")&&!ack)}>{mutation.isPending?"Processing…":"Apply recorded operation"}</button>
         <button className="btn btn-ghost btn-sm" disabled={mutation.isPending} onClick={clear}>Discard unsent details</button>
       </div>
       {detail&&<div role="status" className="grid gap-3">

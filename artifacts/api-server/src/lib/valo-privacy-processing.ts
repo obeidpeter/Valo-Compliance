@@ -6,12 +6,13 @@ import {workspaceDataExport} from "./valo-customer-access";
 import {ValoProblem} from "./valo-problem";
 import {assertPrivacyVersion} from "./valo-privacy-state";
 import {requirePrivacyStaff,readPrivacyCase,privacyChange,privacyDetail,simpleStaffPrivacyAction,type PrivacyStaffActor} from "./valo-privacy";
+import {processPrivacyErasure} from "./valo-privacy-erasure";
 export async function processPrivacyAction(actor:PrivacyStaffActor,id:string,raw:unknown){
   const input=ActOnStaffPrivacyCaseBody.strict().parse(raw);
   if(input.action==="prepare_export")return preparePrivacyExport(actor,id,input);
   if(input.action==="record_correction")return recordPrivacyCorrection(actor,id,input);
   if(input.action==="start_erasure"||input.action==="resume_erasure")
-    throw new ValoProblem(503,"The erasure processor is not enabled. No deletion was performed; retention approval and the resumable processor must be ready first.");
+    return processPrivacyErasure(actor,id,input);
   return simpleStaffPrivacyAction(actor,id,input);
 }
 async function preparePrivacyExport(actor:PrivacyStaffActor,id:string,input:ReturnType<typeof ActOnStaffPrivacyCaseBody.parse>){
