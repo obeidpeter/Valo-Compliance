@@ -11,7 +11,9 @@ remain historical evidence and do not supersede these limits.
 
 **Latest privacy/security checkpoint:** [rotation, multi-object deletion and scoped
 support/privacy redaction](privacy-erasure-v2-checkpoint.md): 101/101 database
-checks, 2/2 operations checks and typecheck passed. This is partial development
+checks at that checkpoint. [Same-case information exchange and staff
+inspection](privacy-information-checkpoint.md) subsequently passed 103/103
+database checks, 174/174 engineering checks and typecheck. This is partial development
 evidence; independent deletion-journal recovery, full privacy fulfilment,
 unbounded resumable export, disputes, rich live checker and the finite inference
 manifest remain unfinished. No spending, messages or launch were enabled.

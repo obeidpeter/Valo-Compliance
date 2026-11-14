@@ -27,7 +27,7 @@ export async function authorizeWorkspaceWrite(tx:Tx,actor:WorkspaceActor){
     .where(eq(valoPrivacyTombstones.workspaceId,actor.workspaceId)).limit(1);
   if(deleted)throw new ValoProblem(403,"Workspace deletion is recorded. No changes were saved.");
 }
-async function limitWorkspaceWrite(tx:Tx,actor:WorkspaceActor,operation:"profile"|"document"|"support"){
+export async function limitWorkspaceWrite(tx:Tx,actor:WorkspaceActor,operation:"profile"|"document"|"support"){
   const key=quotaSubjectHash(process.env.SESSION_SECRET,"user",actor.identityId);
   for(const window of["minute","day"]as const){
     const bucket=`${operation}-write${window==="day"?"-day":""}` as keyof typeof quotaPolicy;

@@ -800,6 +800,24 @@ paths:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/PrivacyCase" } }
         "401": { $ref: "#/components/responses/AuthError" }
+  /workspace/privacy-cases/{id}/respond:
+    post:
+      operationId: respondPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrivacyInformation"
+      responses:
+        "200":
+          description: Information saved to this case, separately from identity verification
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "401": { $ref: "#/components/responses/AuthError" }
   /workspace/privacy-cases/{id}:
     get:
       operationId: getPrivacyCase
@@ -877,6 +895,18 @@ paths:
                   total: { type: integer }
                   pageSize: { type: integer }
         "403": { $ref: "#/components/responses/AuthError" }
+  /admin/privacy-cases/{id}:
+    get:
+      operationId: getStaffPrivacyCase
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Fresh-MFA privacy staff read-only case inspection and currently permitted operations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
+        "401": { $ref: "#/components/responses/AuthError" }
   /admin/privacy-cases/{id}/action:
     post:
       operationId: actOnStaffPrivacyCase
@@ -1008,11 +1038,29 @@ components:
         resultScope: { type: string }
         createdAt: { type: string }
         updatedAt: { type: string }
+    PrivacyInformation:
+      type: object
+      additionalProperties: false
+      required: [expectedVersion, message]
+      properties:
+        expectedVersion: { type: integer, minimum: 1 }
+        message: { type: string, minLength: 10, maxLength: 4000 }
     PrivacyCaseDetail:
       type: object
-      required: [request, events, steps]
+      required: [request, events, steps, messages, mayRespond]
       properties:
         request: { $ref: "#/components/schemas/PrivacyCase" }
+        mayRespond: { type: boolean }
+        availableActions: { type: array, items: { type: string } }
+        messages:
+          type: array
+          items:
+            type: object
+            required: [id, body, createdAt]
+            properties:
+              id: { type: string, format: uuid }
+              body: { type: string }
+              createdAt: { type: string }
         events:
           type: array
           items:

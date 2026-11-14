@@ -4,7 +4,7 @@ import {randomUUID} from "node:crypto";
 import {db,pool,valoPrivacyErasureObjects,valoPrivacyCases,valoPrivacyEvents,valoPrivacyTombstones,
   valoWorkspaces,valoMemberships,valoStaffAssignments,valoStaffAccessAudit,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoSupportTickets,valoEvents,valoAIDrafts,
-  valoExportJobs,valoFileAssets,valoExportObjects} from "@workspace/db";
+  valoExportJobs,valoFileAssets,valoExportObjects,valoPrivacyMessages} from "@workspace/db";
 import {eq,inArray,sql} from "drizzle-orm";
 import {resolveWorkspace,saveProfile,createDocument,authorizeWorkspaceWrite} from "./valo-store";
 import {syntheticProfile,syntheticDocument} from "./valo-test-fixtures";
@@ -52,6 +52,8 @@ test("resumable physical development erasure with retained exclusions and replay
     const prepared=await createPrivacyCase(a,"synthetic-private-contact@example.invalid",{kind:"export",
       idempotencyKey:randomUUID(),message:"SYNTHETIC-PRIVATE-REQUEST-TEXT",acknowledgement:true});
     preparedCaseId=prepared.reference.slice(5);
+    await db.insert(valoPrivacyMessages).values({id:randomUUID(),workspaceId:a.workspaceId,caseId:preparedCaseId,
+      replyToVersion:1,body:"SYNTHETIC-ERASE-PRIVATE-CASE-REPLY"});
     await db.transaction(async tx=>{
       const existing=await readPrivacyCase(tx,preparedCaseId);
       await privacyChange(tx,existing,{identityId:"synthetic-fixture-setup",type:"worker"},"synthetic_result_fixture",
@@ -132,6 +134,7 @@ test("resumable physical development erasure with retained exclusions and replay
           assert.equal(checked.resultJson,null);
         }
       });
+      assert.equal((await db.select().from(valoPrivacyMessages).where(eq(valoPrivacyMessages.workspaceId,a.workspaceId))).length,0);
       assert.equal(usage.providerRuns.length,1);
     });
     await t.test("restored membership and late-written objects are re-deleted from retained tombstones",async()=>{
@@ -199,7 +202,7 @@ test("resumable physical development erasure with retained exclusions and replay
       await db.delete(table).where(eq(table.workspaceId,a.workspaceId));
     if(storageKey)await deletePrivateFile(storageKey);
     const ids=[a.workspaceId,b.workspaceId];
-    for(const table of[valoPrivacyErasureObjects,valoPrivacyEvents,valoPrivacyTombstones,valoPrivacyCases,
+    for(const table of[valoPrivacyMessages,valoPrivacyErasureObjects,valoPrivacyEvents,valoPrivacyTombstones,valoPrivacyCases,
       valoSupportTickets,valoEvents,valoAIDrafts,valoDocumentRevisions,valoDocuments,valoProfileVersions,valoMemberships])
       await db.delete(table).where(inArray(table.workspaceId,ids));
     await db.delete(valoStaffAccessAudit).where(eq(valoStaffAccessAudit.actorId,staff.identityId));

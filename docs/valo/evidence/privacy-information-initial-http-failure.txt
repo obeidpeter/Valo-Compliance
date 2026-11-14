@@ -1,0 +1,62 @@
+TAP version 13
+# Subtest: actual HTTP privacy routes apply an independent privacy role and fresh MFA
+    # Subtest: privacy-only identity can read and claim; finance-only cannot
+    ok 1 - privacy-only identity can read and claim; finance-only cannot
+      ---
+      duration_ms: 94.99425
+      type: 'test'
+      ...
+    # Subtest: read-only inspection and customer replies preserve verification and deduplicate actual HTTP writes
+    not ok 2 - read-only inspection and customer replies preserve verification and deduplicate actual HTTP writes
+      ---
+      duration_ms: 193.035911
+      type: 'test'
+      location: '/home/runner/workspace/artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts:73:13'
+      failureType: 'testCodeFailure'
+      error: |-
+        Expected values to be strictly equal:
+        
+        429 !== 200
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 200
+      actual: 429
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts:104:55)
+        process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+        async Test.run (node:internal/test_runner/test:1409:7)
+        async TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts:73:5)
+        async Test.run (node:internal/test_runner/test:1409:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+      ...
+    # Subtest: revoked and stale-MFA privacy identities fail on the HTTP route
+    ok 3 - revoked and stale-MFA privacy identities fail on the HTTP route
+      ---
+      duration_ms: 18.251632
+      type: 'test'
+      ...
+    # Subtest: hostile origin never reaches the privacy mutation
+    ok 4 - hostile origin never reaches the privacy mutation
+      ---
+      duration_ms: 2.078638
+      type: 'test'
+      ...
+    1..4
+not ok 1 - actual HTTP privacy routes apply an independent privacy role and fresh MFA
+  ---
+  duration_ms: 489.609853
+  type: 'test'
+  location: '/home/runner/workspace/artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts:13:1'
+  failureType: 'testCodeFailure'
+  error: 'sql is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts:122:14)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Interrupted while running: src/routes/valo-privacy-http.integration.test.ts at /home/runner/workspace/artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts:1:1

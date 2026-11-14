@@ -1,11 +1,12 @@
 import {randomUUID,createHash} from "node:crypto";
 import {and,eq,desc,asc,sql} from "drizzle-orm";
-import {db,valoPrivacyCases,valoPrivacyEvents,valoStaffAssignments,valoStaffAccessAudit,valoWorkspaces,valoProfileVersions,type PrivacyStep} from "@workspace/db";
-import {RequestCustomerPrivacyBody,VerifyPrivacyCaseBody,ActOnStaffPrivacyCaseBody} from "@workspace/api-zod";
-import {authorizeWorkspaceWrite,createTicketInTransaction,type WorkspaceActor} from "./valo-store";
+import {db,valoPrivacyCases,valoPrivacyEvents,valoPrivacyMessages,valoStaffAssignments,valoStaffAccessAudit,valoWorkspaces,valoProfileVersions,type PrivacyStep} from "@workspace/db";
+import {RequestCustomerPrivacyBody,VerifyPrivacyCaseBody,ActOnStaffPrivacyCaseBody,RespondPrivacyCaseBody} from "@workspace/api-zod";
+import {authorizeWorkspaceWrite,createTicketInTransaction,limitWorkspaceWrite,type WorkspaceActor} from "./valo-store";
 import {quotaSubjectHash} from "./valo-quota";
 import {ValoProblem} from "./valo-problem";
 import {privacyKey,privacySigner} from "./valo-privacy-keys";
+import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import {assertPrivacyVersion,assertPrivacyTransition,assertPrivacyCompletion,privacyInitialSteps,privacyAuditHash,privacyAuditEqual,privacySnapshotHash,
   type PrivacyAuditInput,type PrivacyStatus} from "./valo-privacy-state";
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -57,8 +58,11 @@ export function privacyCaseRecord(row:PrivacyRow){
 }
 export async function privacyDetail(tx:Tx,row:PrivacyRow){
   const events=await checkPrivacyAudit(tx,row);
+  const messages=await tx.select().from(valoPrivacyMessages).where(and(eq(valoPrivacyMessages.caseId,row.id),
+    eq(valoPrivacyMessages.workspaceId,row.workspaceId))).orderBy(asc(valoPrivacyMessages.createdAt),asc(valoPrivacyMessages.id));
   return {request:privacyCaseRecord(row),events:events.map(e=>({sequence:e.sequence,action:e.action,actorType:e.actorType,
-    reason:e.reason,createdAt:e.createdAt.toISOString()})),steps:row.steps};
+    reason:e.reason,createdAt:e.createdAt.toISOString()})),steps:row.steps,
+    messages:messages.map(m=>({id:m.id,body:m.body,createdAt:m.createdAt.toISOString()})),mayRespond:row.status==="needs_information"&&row.erasurePhase==="not_started"};
 }
 export async function privacyChange(tx:Tx,row:PrivacyRow,actor:{identityId:string;type:PrivacyAuditInput["actorType"]},
   action:string,reason:string,patch:Partial<Pick<PrivacyRow,"message"|"status"|"assignedIdentityId"|"verifiedAt"|"resultJson"|"resultScope"|"steps"|"erasurePhase">>){
@@ -136,7 +140,7 @@ export async function confirmPrivacyCase(actor:WorkspaceActor,id:string,raw:unkn
     row=await privacyChange(tx,row,{identityId:actor.identityId,type:"customer"},cancel?"request_cancelled":"identity_verified",
       cancel?"The owner cancelled before destructive processing. Previously completed processing is not reversed.":
         "The active managed owner session and current workspace membership were checked. No provider fulfilment is implied.",
-      {status:cancel?"cancelled":"verified",...(!cancel?{verifiedAt:new Date(),steps}:{})});
+      {status:cancel?"cancelled":row.status==="needs_information"?"needs_information":"verified",...(!cancel?{verifiedAt:new Date(),steps}:{})});
     return privacyDetail(tx,row);
   });
 }
@@ -150,6 +154,56 @@ export async function listStaffPrivacyCases(actor:PrivacyStaffActor,page:number)
     await tx.insert(valoStaffAccessAudit).values({id:randomUUID(),assignmentId:role.id,actorId:actor.identityId,area:"privacy",
       reason:"Viewed the privacy request queue; no customer document body was returned."});
     return {items:rows.map(privacyCaseRecord),page,total:total?.count??0,pageSize};
+  });
+}
+export async function respondPrivacyCase(actor:WorkspaceActor,id:string,raw:unknown){
+  const input=RespondPrivacyCaseBody.strict().parse(raw);
+  if(input.message.trim().length<10)throw new ValoProblem(422,"Provide at least ten non-padding characters of additional information.");
+  return db.transaction(async tx=>{
+    await authorizeWorkspaceWrite(tx,actor);
+    let row=await readPrivacyCase(tx,id,actor);
+    const[existing]=await tx.select().from(valoPrivacyMessages).where(and(eq(valoPrivacyMessages.caseId,id),
+      eq(valoPrivacyMessages.replyToVersion,input.expectedVersion)));
+    if(existing&&existing.body===input.message.trim())return privacyDetail(tx,row);
+    assertPrivacyVersion(row.version,input.expectedVersion);
+    if(row.status!=="needs_information"||row.erasurePhase!=="not_started")
+      throw new ValoProblem(409,"This case is not waiting for additional information. No reply was saved.");
+    await limitWorkspaceWrite(tx,actor,"support");
+    await tx.insert(valoPrivacyMessages).values({id:randomUUID(),workspaceId:actor.workspaceId,caseId:id,
+      replyToVersion:input.expectedVersion,body:input.message.trim()});
+    row=await privacyChange(tx,row,{identityId:actor.identityId,type:"customer"},"information_received",
+      "The customer supplied additional information. This did not verify identity or fulfil the request.",{
+        status:row.verifiedAt?row.assignedIdentityId?"assigned":"verified":"awaiting_verification",
+      });
+    return privacyDetail(tx,row);
+  });
+}
+export function availablePrivacyActions(row:PrivacyRow,identityId:string){
+  const actions:("claim"|"request_information"|"hold"|"release_hold"|"reject"|"prepare_export"|"record_correction"|"start_erasure"|"resume_erasure")[]=[];
+  if(row.assignedIdentityId&&row.assignedIdentityId!==identityId)return actions;
+  const can=(next:PrivacyStatus)=>{try{assertPrivacyTransition(row.status,next);return true;}catch{return false;}};
+  if(can("held"))actions.push("hold");
+  if(row.erasurePhase!=="not_started"){
+    if(["assigned","in_progress","failed","partially_fulfilled"].includes(row.status))actions.push("resume_erasure");
+    return actions;
+  }
+  if(can("needs_information"))actions.push("request_information");
+  if(can("rejected"))actions.push("reject");
+  if(row.verifiedAt&&!row.assignedIdentityId&&can("assigned"))actions.push("claim");
+  if(row.status==="held")actions.push("release_hold");
+  if(row.status==="assigned"&&row.verifiedAt&&row.assignedIdentityId===identityId){
+    if(row.kind==="export")actions.push("prepare_export");
+    if(row.kind==="correction")actions.push("record_correction");
+    try{assertDevelopmentRuntime();if(row.kind==="deletion"&&/^(synthetic-|privacy-fixture-)/.test(row.requesterIdentityId))actions.push("start_erasure");}catch{/* Development erasure is not an available production operation. */}
+  }
+  return actions;
+}
+export async function staffPrivacyDetail(actor:PrivacyStaffActor,id:string){
+  return db.transaction(async tx=>{
+    const role=await requirePrivacyStaff(tx,actor),row=await readPrivacyCase(tx,id);
+    await tx.insert(valoStaffAccessAudit).values({id:randomUUID(),assignmentId:role.id,actorId:actor.identityId,area:"privacy",
+      reason:"Read privacy case history, processing scope and information messages without changing case state."});
+    return{...await privacyDetail(tx,row),availableActions:availablePrivacyActions(row,actor.identityId)};
   });
 }
 export async function simpleStaffPrivacyAction(actor:PrivacyStaffActor,id:string,raw:unknown){

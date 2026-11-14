@@ -7,8 +7,10 @@ missing historical material holds processing and identity matching. Scoped v2
 erasure removes support/contact and privacy prepared-result bodies, holds
 unsent notices and preserves recorded accepted outcomes. Ready, pending and
 cleanup objects are jointly tested with deduplication, retry and stale-worker
-fencing. **101/101 development database checks**, **2/2 operations checks** and
-typecheck passed. See [scope, evidence and remaining software gaps](docs/valo/privacy-erasure-v2-checkpoint.md).
+fencing. Same-case customer information replies and read-only staff inspection
+are now implemented with distinct verification, duplicate suppression and
+scoped actions. **103/103 development database checks**, **174/174 engineering
+checks** and typecheck passed. See [scope and remaining software gaps](docs/valo/privacy-information-checkpoint.md).
 No new inference spending, external messages or live actions were enabled.
 
 ## Earlier tested units — retained evidence, not completion

@@ -15,7 +15,7 @@ import {ValoProblem} from "../lib/valo-problem";
 import {GetFinanceRefundsResponse,DecideFinanceRefundResponse,ReconcileFinanceRefundResponse,ReconcileFinanceRefundBody} from "@workspace/api-zod";
 import {ListPrivacyCasesResponse,GetPrivacyCaseResponse,VerifyPrivacyCaseResponse,CancelPrivacyCaseResponse,
   ListStaffPrivacyCasesResponse,ActOnStaffPrivacyCaseResponse} from "@workspace/api-zod";
-import {listPrivacyCases,customerPrivacyDetail,confirmPrivacyCase,listStaffPrivacyCases} from "../lib/valo-privacy";
+import {listPrivacyCases,customerPrivacyDetail,confirmPrivacyCase,listStaffPrivacyCases,respondPrivacyCase,staffPrivacyDetail} from "../lib/valo-privacy";
 import {processPrivacyAction,privacyPreparedResult} from "../lib/valo-privacy-processing";
 import {db} from "@workspace/db";
 import {requirePrivacyStaff,type PrivacyStaffActor} from "../lib/valo-privacy";
@@ -48,6 +48,9 @@ customerAccessRouter.get("/workspace/privacy-cases/:id",async(req,res)=>{
 });
 customerAccessRouter.post("/workspace/privacy-cases/:id/verify",sameOriginMutation,async(req,res)=>{
   res.json(VerifyPrivacyCaseResponse.parse(await confirmPrivacyCase(res.locals.valoActor,z.string().uuid().parse(req.params.id),req.body)));
+});
+customerAccessRouter.post("/workspace/privacy-cases/:id/respond",sameOriginMutation,async(req,res)=>{
+  res.json(GetPrivacyCaseResponse.parse(await respondPrivacyCase(res.locals.valoActor,z.string().uuid().parse(req.params.id),req.body)));
 });
 customerAccessRouter.post("/workspace/privacy-cases/:id/cancel",sameOriginMutation,async(req,res)=>{
   res.json(CancelPrivacyCaseResponse.parse(await confirmPrivacyCase(res.locals.valoActor,z.string().uuid().parse(req.params.id),req.body,true)));
@@ -108,6 +111,9 @@ const privacyActor=async(req:Request)=>{
 router.get("/",async(req,res)=>{
   const page=z.coerce.number().int().min(1).max(100000).default(1).parse(req.query.page);
   res.json(ListStaffPrivacyCasesResponse.parse(await listStaffPrivacyCases(await privacyActor(req),page)));
+});
+router.get("/:id",async(req,res)=>{
+  res.json(GetPrivacyCaseResponse.parse(await staffPrivacyDetail(await privacyActor(req),z.string().uuid().parse(req.params.id))));
 });
 router.post("/:id/action",sameOriginMutation,async(req,res)=>{
   res.json(ActOnStaffPrivacyCaseResponse.parse(await processPrivacyAction(await privacyActor(req),z.string().uuid().parse(req.params.id),req.body)));

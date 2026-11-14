@@ -63,6 +63,7 @@ import type {
   PrivacyCase,
   PrivacyCaseConfirmation,
   PrivacyCaseDetail,
+  PrivacyInformation,
   PrivacyRequestInput,
   PrivacyStaffAction,
   ProfileInput,
@@ -5352,6 +5353,89 @@ export function useListPrivacyCases<TData = Awaited<ReturnType<typeof listPrivac
 
 
 
+export const getRespondPrivacyCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/privacy-cases/${id}/respond`
+}
+
+export const respondPrivacyCase = async (id: string,
+    privacyInformation: PrivacyInformation, options?: Parameters<typeof customFetch>[1]): Promise<PrivacyCaseDetail> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PrivacyCaseDetail>(getRespondPrivacyCaseUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(privacyInformation)
+  }
+);}
+
+
+
+
+
+export const getRespondPrivacyCaseMutationKey = () => ['respondPrivacyCase'] as const;
+
+export const getRespondPrivacyCaseMutationOptions = <TError = ErrorType<AuthErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof respondPrivacyCase>>, TError,RespondPrivacyCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof respondPrivacyCase>>, TError,RespondPrivacyCaseMutationVariables, TContext> => {
+
+const mutationKey = getRespondPrivacyCaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof respondPrivacyCase>>, RespondPrivacyCaseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  respondPrivacyCase(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RespondPrivacyCaseMutationResult = NonNullable<Awaited<ReturnType<typeof respondPrivacyCase>>>
+    export type RespondPrivacyCaseMutationBody = BodyType<PrivacyInformation>
+    export type RespondPrivacyCaseMutationError = ErrorType<AuthErrorResponse>
+    export type RespondPrivacyCaseMutationVariables = {id: string;data: BodyType<PrivacyInformation>}
+
+    export const useRespondPrivacyCase = <TError = ErrorType<AuthErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof respondPrivacyCase>>, TError,RespondPrivacyCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof respondPrivacyCase>>,
+        TError,
+        RespondPrivacyCaseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRespondPrivacyCaseMutationOptions(options), queryClient);
+    }
+
 export const getGetPrivacyCaseUrl = (id: string,) => {
 
 
@@ -5795,6 +5879,100 @@ export function useListStaffPrivacyCases<TData = Awaited<ReturnType<typeof listS
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListStaffPrivacyCasesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetStaffPrivacyCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/privacy-cases/${id}`
+}
+
+export const getStaffPrivacyCase = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<PrivacyCaseDetail> => {
+
+  return customFetch<PrivacyCaseDetail>(getGetStaffPrivacyCaseUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStaffPrivacyCaseQueryKey = (id: string,) => {
+    return [
+    `/api/admin/privacy-cases/${id}`
+    ] as const;
+    }
+
+
+export const getGetStaffPrivacyCaseQueryOptions = <TData = Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError = ErrorType<AuthErrorResponse>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStaffPrivacyCaseQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStaffPrivacyCase>>> = ({ signal }) => getStaffPrivacyCase(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetStaffPrivacyCaseQueryResult = NonNullable<Awaited<ReturnType<typeof getStaffPrivacyCase>>>
+export type GetStaffPrivacyCaseQueryError = ErrorType<AuthErrorResponse>
+
+
+export function useGetStaffPrivacyCase<TData = Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStaffPrivacyCase>>,
+          TError,
+          Awaited<ReturnType<typeof getStaffPrivacyCase>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStaffPrivacyCase<TData = Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStaffPrivacyCase>>,
+          TError,
+          Awaited<ReturnType<typeof getStaffPrivacyCase>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStaffPrivacyCase<TData = Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStaffPrivacyCase<TData = Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffPrivacyCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetStaffPrivacyCaseQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

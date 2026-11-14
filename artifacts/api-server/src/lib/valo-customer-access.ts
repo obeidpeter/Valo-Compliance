@@ -8,7 +8,7 @@ import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfil
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { authorizeWorkspaceWrite,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
-import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations } from "@workspace/db";
+import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations,valoPrivacyMessages } from "@workspace/db";
 export const accessMessage="Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack=(id:string)=>({reference:`VALO-ACCESS-${id}`,message:accessMessage,delivery:"not_dispatched" as const});
 export async function saveAccessSupport(raw:unknown,remoteAddress:string){
@@ -61,7 +61,7 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
       assessments:valoAssessments,tasks:valoTasks,reminderPreferences:valoReminderPreferences,
       reminderDeliveries:valoReminderOutbox,supportRequests:valoSupportTickets,aiDrafts:valoAIDrafts,
       orders:valoOrders,entitlements:valoEntitlements,purchaseMessages:valoPurchaseOutbox,
-      refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations};
+      refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations,privacyInformation:valoPrivacyMessages};
     const data:Record<string,unknown>={};
     let bytes=0;
     let sections=0;

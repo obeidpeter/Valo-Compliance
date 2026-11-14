@@ -7,10 +7,14 @@
  */
 import type { PrivacyCase } from './privacyCase';
 import type { PrivacyCaseDetailEventsItem } from './privacyCaseDetailEventsItem';
+import type { PrivacyCaseDetailMessagesItem } from './privacyCaseDetailMessagesItem';
 import type { PrivacyCaseDetailStepsItem } from './privacyCaseDetailStepsItem';
 
 export interface PrivacyCaseDetail {
   request: PrivacyCase;
+  mayRespond: boolean;
+  availableActions?: string[];
+  messages: PrivacyCaseDetailMessagesItem[];
   events: PrivacyCaseDetailEventsItem[];
   steps: PrivacyCaseDetailStepsItem[];
 }

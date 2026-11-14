@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from "react";
 import {Link} from "wouter";
-import {useListStaffPrivacyCases,useActOnStaffPrivacyCase,type PrivacyCase,type PrivacyCaseDetail,type PrivacyStaffAction} from "@workspace/api-client-react";
+import {useListStaffPrivacyCases,useGetStaffPrivacyCase,useActOnStaffPrivacyCase,type PrivacyCase,type PrivacyCaseDetail,type PrivacyStaffAction} from "@workspace/api-client-react";
 import {ErrorState} from "@/components/states";
 import {useUnsavedNavigation} from "@/lib/use-unsaved-navigation";
 import {formatDate} from "@/lib/api";
@@ -19,8 +19,12 @@ export default function PrivacyOperations(){
   const nav=useUnsavedNavigation(()=>dirty),dialog=useRef<HTMLDialogElement>(null);
   useEffect(()=>{if(nav.blocked)dialog.current?.showModal();else dialog.current?.close();},[nav.blocked]);
   const q=useListStaffPrivacyCases({page},{query:{retry:false,refetchOnWindowFocus:!dirty}});
+  const inspected=useGetStaffPrivacyCase(selected?.id??"",{query:{enabled:!!selected,retry:false,refetchOnWindowFocus:!dirty}});
+  const inspection=inspected.data?.request.id===selected?.id?inspected.data:detail?.request.id===selected?.id?detail:null;
+  const offered=actions.filter(a=>inspection?.availableActions?.includes(a.value));
+  const activeAction=offered.some(a=>a.value===action)?action:offered[0]?.value;
   const mutation=useActOnStaffPrivacyCase({mutation:{onSuccess:async result=>{
-    setSelected(result.request);setDetail(result);setReason("");setProfile("");setAck(false);await q.refetch();
+    setSelected(result.request);setDetail(result);setReason("");setProfile("");setAck(false);await Promise.all([q.refetch(),inspected.refetch()]);
   }}});
   const clear=()=>{setReason("");setProfile("");setAck(false);mutation.reset();};
   const choose=(row:PrivacyCase)=>{
@@ -28,8 +32,8 @@ export default function PrivacyOperations(){
     clear();setSelected(row);setDetail(null);setAction("claim");
   };
   const submit=()=>{
-    if(!selected||reason.trim().length<10||mutation.isPending)return;
-    mutation.mutate({id:selected.id,data:{expectedVersion:selected.version,action,reason:reason.trim(),
+    if(!selected||!inspection||!activeAction||inspected.isError||reason.trim().length<10||mutation.isPending)return;
+    mutation.mutate({id:selected.id,data:{expectedVersion:inspection.request.version,action:activeAction,reason:reason.trim(),
       ...(profileVersionId.trim()?{profileVersionId:profileVersionId.trim()}:{}),acknowledgement:ack}});
   };
   return <div className="mx-auto max-w-6xl px-5 py-10 lg:px-8">
@@ -56,19 +60,32 @@ export default function PrivacyOperations(){
     </>}
     {selected&&<section className="surface mt-8 grid gap-4 p-5 sm:p-7" aria-labelledby="privacy-operation-heading">
       <h2 id="privacy-operation-heading" className="font-display break-words text-2xl">{selected.reference}</h2>
-      <p className="text-sm">Expected version {selected.version} · {selected.verifiedAt?"Owner verified":"Owner not verified"} · {selected.assigned?"Assigned":"Unassigned"}</p>
+      {inspected.isLoading&&<p role="status">Loading case history before enabling operations…</p>}
+      {inspected.isError&&<ErrorState error={inspected.error} onRetry={()=>inspected.refetch()}/>}
+      {inspection&&<div className="grid gap-3 text-sm">
+        <p>Expected version {inspection.request.version} · {inspection.request.verifiedAt?"Owner verified":"Owner not verified"}</p>
+        <p className="whitespace-pre-wrap break-words">{inspection.request.message}</p>
+        <p>{inspection.request.resultScope}</p>
+        <ol className="grid gap-2" aria-label="Case history">{inspection.events.map(e=><li key={e.sequence}>
+          <strong>{e.action.replaceAll("_"," ")}</strong> · {formatDate(e.createdAt)}<p className="whitespace-pre-wrap break-words">{e.reason}</p>
+        </li>)}</ol>
+        <ul className="grid gap-2" aria-label="Customer information">{inspection.messages.map(m=><li key={m.id}>
+          <p className="text-xs">{formatDate(m.createdAt)}</p><p className="whitespace-pre-wrap break-words">{m.body}</p>
+        </li>)}</ul>
+      </div>}
       <label className="grid gap-2 text-sm">Operation
-        <select className="field" value={action} onChange={e=>setAction(e.target.value as PrivacyStaffAction["action"])} disabled={mutation.isPending}>
-          {actions.map(a=><option key={a.value} value={a.value}>{a.label}</option>)}
+        <select className="field" value={activeAction??""} onChange={e=>setAction(e.target.value as PrivacyStaffAction["action"])} disabled={mutation.isPending||!offered.length||inspected.isError}>
+          {!offered.length&&<option value="">No operation currently available</option>}
+          {offered.map(a=><option key={a.value} value={a.value}>{a.label}</option>)}
         </select>
       </label>
       <label className="grid gap-2 text-sm">Reason, scope and observed evidence
         <textarea className="field min-h-28" value={reason} onChange={e=>setReason(e.target.value)} minLength={10} maxLength={1000} disabled={mutation.isPending}/>
       </label>
-      {(action==="start_erasure"||action==="resume_erasure")&&
+      {(activeAction==="start_erasure"||activeAction==="resume_erasure")&&
         <label className="flex items-start gap-3 text-sm"><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)} disabled={mutation.isPending}/>
-          <span>I acknowledge irreversible deletion of the named application content and private exports in this synthetic development workspace. Access will be revoked. Financial, support/privacy and audit records are retained pending policy review; managed identity, backups and external providers are not fulfilled.</span></label>}
-      {action==="record_correction"&&<>
+          <span>I acknowledge irreversible scoped deletion of synthetic application content, private exports, support/contact copies and privacy message/result bodies. Financial history, minimal case references and signed audit text are retained; managed identity, backups and external providers are not fulfilled.</span></label>}
+      {activeAction==="record_correction"&&<>
         <label className="grid gap-2 text-sm">Actual corrected profile version ID
           <input className="field" value={profileVersionId} onChange={e=>setProfile(e.target.value)} disabled={mutation.isPending} autoComplete="off"/>
         </label>
@@ -78,9 +95,9 @@ export default function PrivacyOperations(){
       <p className="rounded-xl bg-secondary p-3 text-sm">Content erasure is development-only and accepts explicitly synthetic workspaces. Resume advances a bounded batch and records actual system outcomes. A partial result is not complete account deletion. Production deletion and external-provider handling remain disabled.</p>
       {mutation.isError&&<ErrorState error={mutation.error}/>}
       <div className="flex flex-wrap gap-3">
-        <button className="btn btn-primary btn-sm" onClick={submit} disabled={reason.trim().length<10||mutation.isPending||
-          (action==="record_correction"&&(!profileVersionId.trim()||!ack))||
-          ((action==="start_erasure"||action==="resume_erasure")&&!ack)}>{mutation.isPending?"Processing…":"Apply recorded operation"}</button>
+        <button className="btn btn-primary btn-sm" onClick={submit} disabled={!activeAction||!inspection||inspected.isError||reason.trim().length<10||mutation.isPending||
+          (activeAction==="record_correction"&&(!profileVersionId.trim()||!ack))||
+          ((activeAction==="start_erasure"||activeAction==="resume_erasure")&&!ack)}>{mutation.isPending?"Processing…":"Apply recorded operation"}</button>
         <button className="btn btn-ghost btn-sm" disabled={mutation.isPending} onClick={clear}>Discard unsent details</button>
       </div>
       {detail&&<div role="status" className="grid gap-3">

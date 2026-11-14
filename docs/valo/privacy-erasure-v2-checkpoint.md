@@ -41,7 +41,9 @@ must still be retained and authenticated independently of the restored
 database snapshot; replay tests using retained development rows do not prove
 that complete backup/import capability or production recovery.
 
-Large resumable customer exports, privacy-case customer replies, merchant
+Privacy-case customer replies and read-only staff inspection were subsequently
+implemented in [the information-exchange checkpoint](privacy-information-checkpoint.md).
+Large resumable customer exports, merchant
 dispute execution/decisions, rich released-rule customer integration and the
 actual finite inference manifest/liability reconciliation remain separate
 unfinished software/evidence work. No spending decision is requested here.

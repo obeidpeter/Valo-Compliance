@@ -31,6 +31,12 @@ export const valoPrivacyEvents=pgTable("valo_privacy_events",{
   keyVersion:text("key_version").notNull(),createdAt:timestamp("created_at",{withTimezone:true}).notNull(),
 },t=>[uniqueIndex("valo_privacy_event_sequence").on(t.caseId,t.sequence),
   foreignKey({columns:[t.caseId,t.workspaceId],foreignColumns:[valoPrivacyCases.id,valoPrivacyCases.workspaceId]})]);
+export const valoPrivacyMessages=pgTable("valo_privacy_messages",{
+  id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),caseId:uuid("case_id").notNull(),
+  replyToVersion:integer("reply_to_version").notNull(),body:text("body").notNull(),
+  createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
+},t=>[uniqueIndex("valo_privacy_message_reply").on(t.caseId,t.replyToVersion),
+  foreignKey({columns:[t.caseId,t.workspaceId],foreignColumns:[valoPrivacyCases.id,valoPrivacyCases.workspaceId]})]);
 export const valoPrivacyTombstones=pgTable("valo_privacy_tombstones",{
   id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),caseId:uuid("case_id").notNull().unique(),
   identityHash:text("identity_hash").notNull(),phase:text("phase").notNull(),

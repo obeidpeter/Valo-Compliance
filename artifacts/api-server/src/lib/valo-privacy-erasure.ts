@@ -19,7 +19,7 @@ const basePhases=[
   "valo_export_requests","valo_file_assets","valo_export_objects","valo_export_jobs",
   "valo_document_revisions","valo_documents","valo_profile_versions","valo_reminder_preferences",
 ] as const;
-const phases=[...basePhases,"purchase_notifications","support_content","privacy_content"] as const;
+const phases=[...basePhases,"purchase_notifications","support_content","privacy_messages","privacy_content"] as const;
 const scope="development-application-content-erasure-v2";
 const removedMessage="[Private content removed by verified workspace erasure]";
 type Input=ReturnType<typeof ActOnStaffPrivacyCaseBody.parse>;
@@ -36,6 +36,8 @@ export async function holdUnsentPrivacyNotifications(tx:Tx,workspaceId:string){
       AND status IN ('awaiting_email_configuration','pending','retry') LIMIT 100)`);
 }
 async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[number],currentCaseId:string){
+  if(section==="privacy_messages")return tx.execute(sql`DELETE FROM valo_privacy_messages WHERE ctid IN
+    (SELECT ctid FROM valo_privacy_messages WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
   if(section==="purchase_notifications"){
     // Accepted messages cannot be retracted. Keep provider/financial evidence.
     return holdUnsentPrivacyNotifications(tx,workspaceId);

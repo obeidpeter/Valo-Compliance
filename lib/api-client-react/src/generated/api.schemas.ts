@@ -141,6 +141,22 @@ export interface PrivacyCase {
   updatedAt: string;
 }
 
+export interface PrivacyInformation {
+  /** @minimum 1 */
+  expectedVersion: number;
+  /**
+     * @minLength 10
+     * @maxLength 4000
+     */
+  message: string;
+}
+
+export type PrivacyCaseDetailMessagesItem = {
+  id: string;
+  body: string;
+  createdAt: string;
+};
+
 export type PrivacyCaseDetailEventsItemActorType = typeof PrivacyCaseDetailEventsItemActorType[keyof typeof PrivacyCaseDetailEventsItemActorType];
 
 
@@ -178,6 +194,9 @@ export type PrivacyCaseDetailStepsItem = {
 
 export interface PrivacyCaseDetail {
   request: PrivacyCase;
+  mayRespond: boolean;
+  availableActions?: string[];
+  messages: PrivacyCaseDetailMessagesItem[];
   events: PrivacyCaseDetailEventsItem[];
   steps: PrivacyCaseDetailStepsItem[];
 }
