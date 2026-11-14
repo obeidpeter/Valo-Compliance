@@ -21,7 +21,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
       await assert.rejects(()=>managedCompletion('customer',{model:'gpt-5.4-mini',max_completion_tokens:8192,
         messages:[{role:'user',content:'synthetic'}]},{timeout:1000,maxRetries:0}),/INFERENCE_BUDGET_DISABLED/);
       console.log('DISABLED_WITHOUT_DATABASE_OR_SDK');`;
-    const result=spawnSync(process.execPath,["--import","tsx","--input-type=module","-e",code],{
+    const result=spawnSync(process.execPath,["--import",import.meta.resolve("tsx"),"--input-type=module","-e",code],{
       cwd:fileURLToPath(new URL("../../..",import.meta.url)),encoding:"utf8",
       env:{...process.env,NODE_ENV:"development",DATABASE_URL:"",AI_INTEGRATIONS_OPENAI_API_KEY:"",OPENAI_API_KEY:""},
       timeout:15000});
@@ -44,7 +44,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
         console.log('DEPLOYMENT_MARKER_ZERO_EFFECTS');`;
       const env={...process.env,NODE_ENV:"development",DATABASE_URL:""};
       for(const key of Object.keys(env))if(key==="REPLIT_DEPLOYMENT"||key.startsWith("REPLIT_DEPLOYMENT_"))delete (env as Record<string,string|undefined>)[key];
-      const result=spawnSync(process.execPath,["--import","tsx","--input-type=module","-e",code],{
+      const result=spawnSync(process.execPath,["--import",import.meta.resolve("tsx"),"--input-type=module","-e",code],{
         cwd:fileURLToPath(new URL("../../..",import.meta.url)),encoding:"utf8",env:{...env,[marker!]:value},timeout:15000});
       assert.equal(result.status,0,result.stderr);assert.match(result.stdout,/DEPLOYMENT_MARKER_ZERO_EFFECTS/);
     }
