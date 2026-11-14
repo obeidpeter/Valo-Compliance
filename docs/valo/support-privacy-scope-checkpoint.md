@@ -1,5 +1,7 @@
 # Support details and honest workspace export scope
 
+Saved implementation revision: `88b3b23f15053193313c31c8462b58ff8ee35027`.
+
 This is a partial development checkpoint, not privacy fulfilment, authorised
 staff/MFA acceptance or R1/R2 completion.
 
