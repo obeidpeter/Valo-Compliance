@@ -47,15 +47,54 @@ async function fixtureSeed(){
     process.stdout.write(JSON.stringify(fixtures));
   }finally{await pool.end();}
 }
+function assertFixtureTargetEnvironment(){
+  const target=new URL(process.env.DATABASE_URL??"");
+  assert.equal(target.protocol,"postgresql:");assert.equal(target.hostname,"localhost");
+  assert.equal(target.port,"58463");assert.equal(target.pathname,"/valo_restore_target");
+  assert.ok(process.env.PGHOST?.startsWith("/tmp/valo-recovery-"));
+  assert.equal(target.searchParams.get("host"),process.env.PGHOST);
+}
+async function fixtureReplay(){
+  assertFixtureTargetEnvironment();
+  const {pool}=await import("@workspace/db");
+  const path=process.argv[3];assert.ok(path.startsWith("/tmp/valo-recovery-"));
+  const saved=JSON.parse(await readFile(path,"utf8"))as{controls:RecoveryControls;signature:string;key:string;snapshotHash:string};
+  const client=await pool.connect();
+  try{
+    await assertIsolatedRecoveryTarget(client);
+    await replayRecoveryControls(client,saved.controls,saved.signature,Buffer.from(saved.key,"base64"),saved.snapshotHash);
+    await replayRecoveryControls(client,saved.controls,saved.signature,Buffer.from(saved.key,"base64"),saved.snapshotHash);
+    process.stdout.write(JSON.stringify({replayed:true}));
+  }finally{client.release();await pool.end();}
+}
 async function verifyAccess(){
-  const {pool}=await import("@workspace/db"),store=await import("../lib/valo-store");
+  assertFixtureTargetEnvironment();
+  const {db,pool}=await import("@workspace/db"),store=await import("../lib/valo-store");
+  const {privacyKeys,privacyKey}=await import("../lib/valo-privacy-keys");
+  const {quotaSubjectHash}=await import("../lib/valo-quota-policy");
   const fixtures=JSON.parse(await readFile(process.argv[3],"utf8"))as Fixture[];
   try{
-    for(const f of fixtures.slice(0,2))await assert.rejects(()=>store.resolveWorkspace(f.identityId),/suspended/);
+    const client=await pool.connect();
+    try{await assertIsolatedRecoveryTarget(client);}finally{client.release();}
+    const ring=privacyKeys(),key=await db.transaction(tx=>privacyKey(tx,ring.current,ring));
+    const tombstones=(await pool.query("SELECT identity_hash,key_version FROM valo_privacy_tombstones WHERE workspace_id=$1",[fixtures[0].workspaceId])).rows;
+    assert.equal(tombstones.length,1);
+    assert.equal(tombstones[0].key_version,ring.current);
+    assert.equal(tombstones[0].identity_hash,quotaSubjectHash(key,"user",fixtures[0].identityId));
+    const before=(await pool.query("SELECT (SELECT count(*) FROM valo_workspaces) AS workspaces,(SELECT count(*) FROM valo_memberships) AS memberships,(SELECT count(*) FROM valo_privacy_key_versions) AS key_versions")).rows;
+    // A missing historical key (503) is not a successful authorization denial.
+    await assert.rejects(()=>store.resolveWorkspace(fixtures[0].identityId),{
+      status:403,message:"Identity deletion is recorded. Access cannot be recreated.",
+    });
+    await assert.rejects(()=>store.resolveWorkspace(fixtures[1].identityId),{
+      status:403,message:"Workspace membership is suspended",
+    });
     const c=await store.resolveWorkspace(fixtures[2].identityId);
     assert.equal((await store.getDocument(c,fixtures[2].documentId)).id,fixtures[2].documentId);
-    await assert.rejects(()=>store.getDocument(c,fixtures[0].documentId),/not found/);
-    process.stdout.write(JSON.stringify({revokedIdentitiesDenied:2,activeDocumentRecovered:1,crossTenantDenied:1}));
+    await assert.rejects(()=>store.getDocument(c,fixtures[0].documentId),{status:404,message:"Document not found"});
+    const after=(await pool.query("SELECT (SELECT count(*) FROM valo_workspaces) AS workspaces,(SELECT count(*) FROM valo_memberships) AS memberships,(SELECT count(*) FROM valo_privacy_key_versions) AS key_versions")).rows;
+    assert.deepEqual(after,before);
+    process.stdout.write(JSON.stringify({authorisationChecksCreatedNoRows:true,versionedIdentityBinding:true,revokedIdentitiesDenied:2,activeDocumentRecovered:1,crossTenantDenied:1}));
   }finally{await pool.end();}
 }
 async function drill(){
@@ -123,9 +162,16 @@ async function drill(){
       finally{sourceClient.release();}
       check.sourceDatabaseRejectedAsReplayTarget=true;
       await assert.rejects(()=>replayRecoveryControls(client,{...controls,snapshotHash:"0".repeat(64)},signature,key,snapshotHash),/BINDING/);
-      check.alteredJournalRejected=true;
-      await replayRecoveryControls(client,controls,signature,key,snapshotHash);
-      await replayRecoveryControls(client,controls,signature,key,snapshotHash);
+      assert.equal(Number((await client.query("SELECT count(*) FROM valo_privacy_tombstones")).rows[0].count),0);
+      assert.equal(Number((await client.query("SELECT count(*) FROM valo_privacy_key_versions")).rows[0].count),0);
+      assert.equal(Number((await client.query("SELECT count(*) FROM valo_memberships WHERE active='yes'")).rows[0].count),3);
+      check.alteredJournalRejected=true;check.alteredJournalRejectedWithoutEffects=true;
+      // The parent never imports the DB-backed signer. Only this allowlisted
+      // child receives the explicit disposable target URL and same fresh key.
+      const controlsPath=join(directory,"controls.json");
+      await writeFile(controlsPath,JSON.stringify({controls,signature,key:key.toString("base64"),snapshotHash}),{mode:0o600});
+      await exec("pnpm",["--filter","@workspace/api-server","exec","tsx",script,"--replay-controls",controlsPath],
+        {...options,env:{...env,DATABASE_URL:url("valo_restore_target")}});
       assert.equal(Number((await client.query("SELECT count(*) FROM valo_privacy_tombstones")).rows[0].count),1);
       check.idempotentDeletionTombstoneAndRevocationReplay=true;
       assert.equal((await client.query("SELECT has_table_privilege('valo_content_publisher_dev','valo_document_revisions','SELECT') AS allowed")).rows[0].allowed,false);
@@ -167,4 +213,5 @@ async function drill(){
     logger.info({event:"recovery.isolated_drill",report});
   }
 }
-if(mode==="--fixture-seed")await fixtureSeed();else if(mode==="--verify-access")await verifyAccess();else await drill();
+if(mode==="--fixture-seed")await fixtureSeed();else if(mode==="--replay-controls")await fixtureReplay();else if(mode==="--verify-access")await verifyAccess();else await drill();
+

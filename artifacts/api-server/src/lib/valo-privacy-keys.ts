@@ -4,7 +4,7 @@ import {db,valoPrivacyEvents,valoPrivacyTombstones} from "@workspace/db";
 import {privacyAuditHash,privacyAuditEqual} from "./valo-privacy-state";
 import {quotaSubjectHash} from "./valo-quota";
 import {ValoProblem} from "./valo-problem";
-type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
+type Tx=Pick<Parameters<Parameters<typeof db.transaction>[0]>[0],"execute"|"select"|"selectDistinct">;
 export type PrivacyKeys={current:string;keys:Record<string,string>};
 const legacy="session-derived-v1";
 const fingerprint=(key:string)=>createHash("sha256").update(key).digest("hex");
@@ -54,3 +54,4 @@ export async function privacyIdentityHashes(tx:Tx,identityId:string,ring:Privacy
   for(const {version}of versions)hashes.push(quotaSubjectHash(await privacyKey(tx,version,ring),"user",identityId));
   return hashes;
 }
+

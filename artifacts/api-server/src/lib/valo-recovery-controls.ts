@@ -1,6 +1,7 @@
 import {createHmac,timingSafeEqual,randomUUID} from "node:crypto";
 import type {PoolClient} from "pg";
 import {z} from "zod";
+import {quotaSubjectHash} from "./valo-quota-policy";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 const controlsSchema=z.object({snapshotHash:z.string().regex(/^[a-f0-9]{64}$/),cutoff:z.string().datetime(),
   entries:z.array(z.object({id:z.string().uuid(),workspaceId:z.string().uuid(),identityId:z.string().startsWith("synthetic-recovery-"),
@@ -26,16 +27,24 @@ export async function replayRecoveryControls(client:PoolClient,raw:unknown,signa
   await assertIsolatedRecoveryTarget(client);
   await client.query("BEGIN");
   try{
+    // Only the guarded child has an explicit local DATABASE_URL. Bind the
+    // existing key service to this exact client/transaction, never its default
+    // database handle or the independent recovery-journal signing key.
+    const[{drizzle},{privacySigner}]=await Promise.all([
+      import("drizzle-orm/node-postgres"),import("./valo-privacy-keys"),
+    ]);
+    const signer=await privacySigner(drizzle(client));
     for(const e of controls.entries){
       const {rows}=await client.query("SELECT 1 FROM valo_workspaces WHERE id=$1 AND owner_identity_id LIKE 'synthetic-recovery-%'",[e.workspaceId]);
       if(rows.length!==1)throw Error("OWNED_SYNTHETIC_WORKSPACE_REQUIRED");
       await client.query("UPDATE valo_memberships SET active='no' WHERE workspace_id=$1 AND ($2='deletion' OR identity_id=$3)",[e.workspaceId,e.kind,e.identityId]);
       await client.query("UPDATE valo_export_jobs SET status='failed',error_code='RESTORE_ACCESS_QUARANTINED' WHERE workspace_id=$1",[e.workspaceId]);
       if(e.kind==="deletion")await client.query(`INSERT INTO valo_privacy_tombstones
-        (id,workspace_id,case_id,identity_hash,phase) VALUES($1,$2,$3,$4,'restore_access_quarantined_purge_pending')
-        ON CONFLICT(case_id) DO NOTHING`,[randomUUID(),e.workspaceId,e.id,createHmac("sha256",key).update(e.identityId).digest("hex")]);
+        (id,workspace_id,case_id,identity_hash,key_version,phase) VALUES($1,$2,$3,$4,$5,'restore_access_quarantined_purge_pending')
+        ON CONFLICT(case_id) DO NOTHING`,[randomUUID(),e.workspaceId,e.id,quotaSubjectHash(signer.key,"user",e.identityId),signer.version]);
     }
     await client.query("COMMIT");
   }catch(e){await client.query("ROLLBACK");throw e;}
   return{entries:controls.entries.length,accessQuarantined:true,physicalErasureComplete:false,externalEffectsEnabled:false};
 }
+
