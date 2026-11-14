@@ -22,7 +22,7 @@ export function ErrorState({ error, onRetry, title }: { error: unknown; onRetry?
             <button className="btn btn-ghost btn-sm" onClick={onRetry} data-testid="button-retry"><RefreshCw className="h-4 w-4" /> Try again</button>
           )}
           {d.kind === 'unauthenticated' && <Link href="/sign-in" className="btn btn-primary btn-sm" data-testid="link-signin-from-error">Sign in</Link>}
-          {d.kind === 'forbidden' && <Link href="/support" className="btn btn-ghost btn-sm">Contact support</Link>}
+          {(d.kind === 'forbidden' || d.kind === 'unauthenticated') && <Link href="/account-access" className="btn btn-ghost btn-sm" data-testid="link-access-help">Account access help</Link>}
         </div>
       </div>
     </div>

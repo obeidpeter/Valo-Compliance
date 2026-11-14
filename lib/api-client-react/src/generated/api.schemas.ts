@@ -5,6 +5,137 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type AccessSupportInputTopic = typeof AccessSupportInputTopic[keyof typeof AccessSupportInputTopic];
+
+
+export const AccessSupportInputTopic = {
+  account_access: 'account_access',
+  general: 'general',
+  content_issue: 'content_issue',
+} as const;
+
+export interface AccessSupportInput {
+  idempotencyKey: string;
+  /** @maxLength 254 */
+  email: string;
+  topic: AccessSupportInputTopic;
+  /**
+     * @minLength 20
+     * @maxLength 2000
+     */
+  message: string;
+  /** @maxLength 0 */
+  website?: string;
+}
+
+export type AccessSupportAckDelivery = typeof AccessSupportAckDelivery[keyof typeof AccessSupportAckDelivery];
+
+
+export const AccessSupportAckDelivery = {
+  not_dispatched: 'not_dispatched',
+} as const;
+
+export interface AccessSupportAck {
+  reference: string;
+  message: string;
+  delivery: AccessSupportAckDelivery;
+}
+
+export type ReleasedResourceKind = typeof ReleasedResourceKind[keyof typeof ReleasedResourceKind];
+
+
+export const ReleasedResourceKind = {
+  guidance: 'guidance',
+  guide: 'guide',
+  industry_pack: 'industry_pack',
+  location_pack: 'location_pack',
+} as const;
+
+export interface PublicSourceReference {
+  url: string;
+  title: string;
+  locator: string;
+}
+
+export interface ReleasedResource {
+  id: string;
+  slug: string;
+  title: string;
+  kind: ReleasedResourceKind;
+  industrySlugs: string[];
+  summary: string;
+  body: string;
+  reviewedAt: string;
+  disclosure: string;
+  scope: string;
+  limitations: string;
+  sources: PublicSourceReference[];
+}
+
+export type PrivacyRequestInputKind = typeof PrivacyRequestInputKind[keyof typeof PrivacyRequestInputKind];
+
+
+export const PrivacyRequestInputKind = {
+  correction: 'correction',
+  export: 'export',
+  deletion: 'deletion',
+} as const;
+
+export interface PrivacyRequestInput {
+  kind: PrivacyRequestInputKind;
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  message: string;
+  acknowledgement: true;
+}
+
+export interface PrivacyRequestRecord {
+  reference: string;
+  request: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface CustomerAccount {
+  workspaceId: string;
+  privacyRequests: PrivacyRequestRecord[];
+}
+
+export type WorkspaceDataExportData = { [key: string]: unknown };
+
+export interface WorkspaceDataExport {
+  schemaVersion: number;
+  exportedAt: string;
+  workspaceId: string;
+  scope: string;
+  data: WorkspaceDataExportData;
+}
+
+export interface CustomerPurchases {
+  available: boolean;
+  message: string;
+}
+
+export type StaffOperationsArea = typeof StaffOperationsArea[keyof typeof StaffOperationsArea];
+
+
+export const StaffOperationsArea = {
+  content: 'content',
+  support: 'support',
+  finance: 'finance',
+  system: 'system',
+} as const;
+
+export type StaffOperationsRecordsItem = { [key: string]: unknown };
+
+export interface StaffOperations {
+  area: StaffOperationsArea;
+  notice: string;
+  records: StaffOperationsRecordsItem[];
+}
+
 export type CustomerAITask = typeof CustomerAITask[keyof typeof CustomerAITask];
 
 
@@ -1234,6 +1365,20 @@ export type QuotaErrorResponse = ApiProblem;
  * Validation, access or concurrency error
  */
 export type AuthErrorResponse = ApiProblem;
+
+export type GetStaffOperationsParams = {
+area: GetStaffOperationsArea;
+};
+
+export type GetStaffOperationsArea = typeof GetStaffOperationsArea[keyof typeof GetStaffOperationsArea];
+
+
+export const GetStaffOperationsArea = {
+  content: 'content',
+  support: 'support',
+  finance: 'finance',
+  system: 'system',
+} as const;
 
 export type ListPublicCatalogueParams = {
 /**

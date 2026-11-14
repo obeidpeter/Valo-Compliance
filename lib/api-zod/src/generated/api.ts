@@ -8,6 +8,134 @@
 import * as zod from 'zod';
 
 
+export const requestAccessSupportBodyEmailMax = 254;
+
+export const requestAccessSupportBodyMessageMin = 20;
+export const requestAccessSupportBodyMessageMax = 2000;
+
+export const requestAccessSupportBodyWebsiteMax = 0;
+
+
+
+export const RequestAccessSupportBody = zod.object({
+  "idempotencyKey": zod.string().uuid(),
+  "email": zod.string().email().max(requestAccessSupportBodyEmailMax),
+  "topic": zod.enum(['account_access', 'general', 'content_issue']),
+  "message": zod.string().min(requestAccessSupportBodyMessageMin).max(requestAccessSupportBodyMessageMax),
+  "website": zod.string().max(requestAccessSupportBodyWebsiteMax).optional()
+})
+
+export const RequestAccessSupportResponse = zod.object({
+  "reference": zod.string(),
+  "message": zod.string(),
+  "delivery": zod.enum(['not_dispatched'])
+})
+
+
+export const ListReleasedResourcesResponseItem = zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "kind": zod.enum(['guidance', 'guide', 'industry_pack', 'location_pack']),
+  "industrySlugs": zod.array(zod.string()),
+  "summary": zod.string(),
+  "body": zod.string(),
+  "reviewedAt": zod.string(),
+  "disclosure": zod.string(),
+  "scope": zod.string(),
+  "limitations": zod.string(),
+  "sources": zod.array(zod.object({
+  "url": zod.string(),
+  "title": zod.string(),
+  "locator": zod.string()
+}))
+})
+export const ListReleasedResourcesResponse = zod.array(ListReleasedResourcesResponseItem)
+
+
+export const getReleasedResourcePathSlugMax = 100;
+
+
+
+export const GetReleasedResourceParams = zod.object({
+  "slug": zod.coerce.string().max(getReleasedResourcePathSlugMax)
+})
+
+export const GetReleasedResourceResponse = zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "kind": zod.enum(['guidance', 'guide', 'industry_pack', 'location_pack']),
+  "industrySlugs": zod.array(zod.string()),
+  "summary": zod.string(),
+  "body": zod.string(),
+  "reviewedAt": zod.string(),
+  "disclosure": zod.string(),
+  "scope": zod.string(),
+  "limitations": zod.string(),
+  "sources": zod.array(zod.object({
+  "url": zod.string(),
+  "title": zod.string(),
+  "locator": zod.string()
+}))
+})
+
+
+export const GetCustomerAccountResponse = zod.object({
+  "workspaceId": zod.string().uuid(),
+  "privacyRequests": zod.array(zod.object({
+  "reference": zod.string(),
+  "request": zod.string(),
+  "status": zod.string(),
+  "createdAt": zod.string()
+}))
+})
+
+
+export const requestCustomerPrivacyBodyMessageMin = 10;
+export const requestCustomerPrivacyBodyMessageMax = 1500;
+
+
+
+export const RequestCustomerPrivacyBody = zod.object({
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string().min(requestCustomerPrivacyBodyMessageMin).max(requestCustomerPrivacyBodyMessageMax),
+  "acknowledgement": zod.literal(true)
+})
+
+export const RequestCustomerPrivacyResponse = zod.object({
+  "reference": zod.string(),
+  "message": zod.string(),
+  "delivery": zod.enum(['not_dispatched'])
+})
+
+
+export const DownloadWorkspaceDataResponse = zod.object({
+  "schemaVersion": zod.number().int(),
+  "exportedAt": zod.string(),
+  "workspaceId": zod.string(),
+  "scope": zod.string(),
+  "data": zod.record(zod.string(), zod.unknown())
+})
+
+
+export const GetCustomerPurchasesResponse = zod.object({
+  "available": zod.boolean(),
+  "message": zod.string()
+})
+
+
+export const GetStaffOperationsQueryParams = zod.object({
+  "area": zod.enum(['content', 'support', 'finance', 'system'])
+})
+
+export const GetStaffOperationsResponse = zod.object({
+  "area": zod.enum(['content', 'support', 'finance', 'system']),
+  "notice": zod.string(),
+  "records": zod.array(zod.record(zod.string(), zod.unknown()))
+})
+
+
 export const ListDocumentExportsParams = zod.object({
   "id": zod.coerce.string().uuid()
 })

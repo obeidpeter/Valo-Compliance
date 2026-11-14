@@ -44,7 +44,7 @@ export default function Library() {
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <PageHeader eyebrow="Library" title="Released templates and sourced guidance">
-        Only items released in this development build appear here. Business documents are not legal guidance. Search links are shareable.
+        Every item here opens to a safe preview. Business documents are operational drafts, not legal guidance.
       </PageHeader>
 
       <form onSubmit={submit} className="surface grid gap-3 p-3 sm:grid-cols-[1fr_auto_auto] sm:items-center" role="search">
@@ -81,7 +81,7 @@ export default function Library() {
             <ul className="grid gap-3">
               {d.items.map((it) => (
                 <li key={it.id} data-testid={'card-item-' + it.id}>
-                  <Link href={'/library/' + encodeURIComponent(it.slug)} className="surface block p-5 transition-colors hover:bg-secondary/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" data-testid={'link-item-' + it.slug}>
+                  <Link href={(it.type === 'guidance' ? '/resources/' : '/library/') + encodeURIComponent(it.slug)} className="surface block p-5 transition-colors hover:bg-secondary/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" data-testid={'link-item-' + it.slug}>
                   <div className="flex flex-wrap items-center gap-2"><span className="pill pill-forest">{it.type}</span><span className="pill pill-ink">{it.industry}</span></div>
                   <p className="font-display mt-3 text-xl">{it.title}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{it.summary}</p>
@@ -99,15 +99,13 @@ export default function Library() {
             <EmptyState
               mark={<BookOpen className="h-5 w-5 text-muted-foreground" />}
               title={filtered ? 'Nothing released matches this search' : 'No templates have been released yet'}
-              action={<><Link href="/sign-up" className="btn btn-primary">Write your own draft</Link><Link href="/development" className="btn btn-ghost">Why it is empty</Link></>}
+              action={<><Link href="/sign-up" className="btn btn-primary">Write your own draft</Link><Link href="/workspace" className="btn btn-ghost">Open your workspace</Link></>}
             >
-              {filtered ? 'This is a real search against the released catalogue, which is currently empty.' : 'The catalogue is genuinely empty. We would rather show nothing than show a template that has not cleared review.'}
+              {filtered ? 'Nothing in the released catalogue matches. Try a broader search, or start a blank private draft instead.' : 'Nothing is in the public catalogue right now. You can still write a private business draft from scratch and export it from your workspace.'}
             </EmptyState>
-            {d && d.heldTemplates > 0 && (
-              <Notice title={d.heldTemplates + ' baseline templates are held'}>
-                They are waiting for source and rights checks, so their titles and text are not shown here. Held is not released.
-              </Notice>
-            )}
+            <Notice title="Two kinds of download">
+              Private drafts you write in your workspace can be exported now. Blank catalogue files are offered only for items actually listed here.
+            </Notice>
           </div>
         )}
       </div>

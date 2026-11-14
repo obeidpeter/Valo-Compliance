@@ -7,3 +7,4 @@
 - [AI evaluation cost evidence](ai-evaluation-cost-evidence.md) — synthetic inputs can incur real provider usage; cleanup must preserve usage history and quota accounting.
 - [Operational publication](operational-publication.md) — citations follow actual claims; owner authority is already given, sales approval is separate, and real review holds cannot be overridden.
 - [Customer trust boundaries](customer-trust-boundaries.md) — configured exact origin, durable write caps and commit-ordered membership revocation; findings are not exploit claims.
+- [Customer experience](customer-experience.md) — public access help must not depend on sign-in; product pages describe actual behavior, not proof milestones.

@@ -7,7 +7,12 @@ const TABS = [
   { href: '/workspace/assessments', label: 'Assessments' },
   { href: '/workspace/tasks', label: 'Tasks' },
   { href: '/workspace/reminders', label: 'Reminders' },
+  { href: '/workspace/checker', label: 'Checker' },
+  { href: '/workspace/notifications', label: 'Notifications' },
   { href: '/workspace/profile', label: 'Profile' },
+  { href: '/workspace/privacy', label: 'Privacy' },
+  { href: '/workspace/purchases', label: 'Purchases' },
+  { href: '/workspace/account', label: 'Account' },
 ];
 
 export function WorkspaceNav() {

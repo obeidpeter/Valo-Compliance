@@ -64,6 +64,13 @@
       "when": 1794615542748,
       "tag": "0008_operational_authoring_budget",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794615542749,
+      "tag": "0009_customer_access",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@ const replitHosts = [process.env.REPLIT_DEV_DOMAIN, process.env.REPLIT_DOMAINS]
 
 const nextConfig = {
   reactStrictMode: true,
+  devIndicators: false,
   allowedDevOrigins: [...replitHosts, '*.replit.dev', '*.repl.co', '*.replit.app'],
   // Only public values are mapped. The Clerk secret key is never referenced here.
   env: {

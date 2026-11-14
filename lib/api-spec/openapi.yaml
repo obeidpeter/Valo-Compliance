@@ -11,6 +11,104 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /public/access-support:
+    post:
+      operationId: requestAccessSupport
+      tags: [support]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccessSupportInput" }
+      responses:
+        "201":
+          description: Durably saved without looking up or disclosing an account; not an email-delivery confirmation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccessSupportAck" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
+  /public/resources:
+    get:
+      operationId: listReleasedResources
+      tags: [public]
+      responses:
+        "200":
+          description: Only currently eligible released non-template content.
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ReleasedResource" } }
+  /public/resources/{slug}:
+    get:
+      operationId: getReleasedResource
+      tags: [public]
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string, maxLength: 100 } }
+      responses:
+        "200":
+          description: Released guidance with its actual sources, scope and limitations.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleasedResource" }
+        "404": { description: "Unknown, held, expired or withdrawn." }
+  /workspace/account:
+    get:
+      operationId: getCustomerAccount
+      tags: [workspace]
+      responses:
+        "200":
+          description: Actual saved privacy requests for the authorised workspace.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerAccount" }
+  /workspace/privacy-requests:
+    post:
+      operationId: requestCustomerPrivacy
+      tags: [workspace]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PrivacyRequestInput" }
+      responses:
+        "201":
+          description: Saved request; no deletion or provider-wide fulfilment is claimed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccessSupportAck" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
+  /workspace/data-export:
+    get:
+      operationId: downloadWorkspaceData
+      tags: [workspace]
+      responses:
+        "200":
+          description: Private structured workspace data; identity/provider-wide export is separately requested.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkspaceDataExport" }
+  /workspace/purchases:
+    get:
+      operationId: getCustomerPurchases
+      tags: [workspace]
+      responses:
+        "200":
+          description: Honest unavailable state until server-verified commerce and purchase records exist.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerPurchases" }
+  /admin/operations:
+    get:
+      operationId: getStaffOperations
+      tags: [admin]
+      parameters:
+        - { name: area, in: query, required: true, schema: { type: string, enum: [content, support, finance, system] } }
+      responses:
+        "200":
+          description: Role-separated read-only operations, active managed session and recent MFA required.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StaffOperations" }
+        "403": { description: Missing staff permission or recent MFA; no self-enrolment route. }
   /v1/documents/{id}/exports:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
@@ -571,6 +669,92 @@ components:
           schema:
             $ref: "#/components/schemas/ApiProblem"
   schemas:
+    AccessSupportInput:
+      type: object
+      additionalProperties: false
+      required: [idempotencyKey, email, topic, message]
+      properties:
+        idempotencyKey: { type: string, format: uuid }
+        email: { type: string, format: email, maxLength: 254 }
+        topic: { type: string, enum: [account_access, general, content_issue] }
+        message: { type: string, minLength: 20, maxLength: 2000 }
+        website: { type: string, maxLength: 0 }
+    AccessSupportAck:
+      type: object
+      required: [reference, message, delivery]
+      properties:
+        reference: { type: string }
+        message: { type: string }
+        delivery: { type: string, enum: [not_dispatched] }
+    ReleasedResource:
+      type: object
+      required: [id, slug, title, kind, industrySlugs, summary, body, reviewedAt, disclosure, scope, limitations, sources]
+      properties:
+        id: { type: string }
+        slug: { type: string }
+        title: { type: string }
+        kind: { type: string, enum: [guidance, guide, industry_pack, location_pack] }
+        industrySlugs: { type: array, items: { type: string } }
+        summary: { type: string }
+        body: { type: string }
+        reviewedAt: { type: string }
+        disclosure: { type: string }
+        scope: { type: string }
+        limitations: { type: string }
+        sources: { type: array, items: { $ref: "#/components/schemas/PublicSourceReference" } }
+    PublicSourceReference:
+      type: object
+      required: [url, title, locator]
+      properties:
+        url: { type: string }
+        title: { type: string }
+        locator: { type: string }
+    PrivacyRequestInput:
+      type: object
+      additionalProperties: false
+      required: [kind, message, acknowledgement]
+      properties:
+        kind: { type: string, enum: [correction, export, deletion] }
+        message: { type: string, minLength: 10, maxLength: 1500 }
+        acknowledgement: { type: boolean, enum: [true] }
+    CustomerAccount:
+      type: object
+      required: [workspaceId, privacyRequests]
+      properties:
+        workspaceId: { type: string, format: uuid }
+        privacyRequests:
+          type: array
+          items: { $ref: "#/components/schemas/PrivacyRequestRecord" }
+    PrivacyRequestRecord:
+      type: object
+      required: [reference, request, status, createdAt]
+      properties:
+        reference: { type: string }
+        request: { type: string }
+        status: { type: string }
+        createdAt: { type: string }
+    WorkspaceDataExport:
+      type: object
+      required: [schemaVersion, exportedAt, workspaceId, scope, data]
+      properties:
+        schemaVersion: { type: integer }
+        exportedAt: { type: string }
+        workspaceId: { type: string }
+        scope: { type: string }
+        data: { type: object, additionalProperties: true }
+    CustomerPurchases:
+      type: object
+      required: [available, message]
+      properties:
+        available: { type: boolean }
+        message: { type: string }
+    StaffOperations:
+      type: object
+      required: [area, notice, records]
+      properties:
+        area: { type: string, enum: [content, support, finance, system] }
+        notice: { type: string }
+        records: { type: array, items: { type: object, additionalProperties: true } }
     CustomerAITask:
       type: string
       enum: [invoice, quotation, payment_reminder, business_proposal]

@@ -16,7 +16,7 @@ function Unavailable() {
   return (
     <EmptyState mark={<FileX className="h-5 w-5 text-muted-foreground" />} title="This template is not available"
       action={<Link href="/library" className="btn btn-primary" data-testid="link-back-library">Back to the library</Link>}>
-      It may have been withdrawn or revoked, or the link is wrong. Withdrawn templates are removed from public view straight away. Drafts you already created stay in your workspace.
+      It may have been withdrawn, its evidence may need updating, or the link may be wrong. Availability is checked again before a new draft or download. Drafts you already created stay in your workspace.
     </EmptyState>
   );
 }

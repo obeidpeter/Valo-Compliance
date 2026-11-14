@@ -1,6 +1,7 @@
 # Current operational publication refinement
 
-Current implementation status is in [the security checkpoint](security-checkpoint.md).
+Current customer-facing implementation status is in [the customer-experience checkpoint](customer-experience-checkpoint.md).
+The [preceding security checkpoint](security-checkpoint.md) remains retained evidence, not a claim that all release gates passed.
 Older dated sections and incident records below describe their original
 checkpoints; they are not assertions that AI/auth remain unconfigured or that
 the repository is currently public.

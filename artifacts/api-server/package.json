@@ -12,7 +12,7 @@
     "test:valo-security-http":"tsx --test src/lib/valo-proxy-security.test.ts",
     "test:valo-write-security":"NODE_ENV=development tsx --test src/lib/valo-write-security.integration.test.ts",
     "test:valo-exports": "tsx --test src/lib/valo-exports.integration.test.ts",
-    "test:valo-db": "NODE_ENV=development tsx --test src/lib/valo-store.integration.test.ts src/lib/valo-quota.integration.test.ts src/lib/valo-requirements.integration.test.ts src/lib/valo-customer-ai.integration.test.ts",
+    "test:valo-db": "NODE_ENV=development tsx --test src/lib/valo-store.integration.test.ts src/lib/valo-quota.integration.test.ts src/lib/valo-requirements.integration.test.ts src/lib/valo-customer-ai.integration.test.ts src/lib/valo-customer-access.integration.test.ts",
     "test:valo-http": "tsx --test src/lib/valo-http.test.ts",
     "worker:dev": "NODE_ENV=development tsx src/workers/export-worker.ts",
     "queue:generate": "tsx src/scripts/queue-migration.ts generate",

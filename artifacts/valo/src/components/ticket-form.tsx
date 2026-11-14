@@ -26,6 +26,7 @@ export function TicketForm({ defaultCategory = 'support', categories, intro }: {
           <div className="mt-5 flex flex-wrap gap-2">
             <Link href="/sign-in" className="btn btn-primary">Sign in</Link>
             <Link href="/sign-up" className="btn btn-ghost">Create an account</Link>
+            <Link href="/contact" className="btn btn-ghost">Write without an account</Link>
           </div>
         </div>
       </Show>
@@ -97,7 +98,7 @@ function TicketFormInner({ defaultCategory, categories, intro }: { defaultCatego
       </div>
       <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background p-4 text-sm">
         <input type="checkbox" className="mt-1 h-4 w-4 accent-[hsl(155_42%_21%)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="checkbox-consent" />
-        <span>I agree Valo staff may share this request with a suitable professional if one is later arranged. <span className="text-muted-foreground">Optional. Nothing is shared today; no providers are listed yet.</span></span>
+        <span>I agree Valo staff may share this request with an outside adviser if that ever becomes available. <span className="text-muted-foreground">Optional. Nothing is shared today, and no advisers are offered.</span></span>
       </label>
       {err && <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive" data-testid="text-ticket-error">{err.message}</p>}
       <div>

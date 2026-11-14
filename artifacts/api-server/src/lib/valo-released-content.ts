@@ -3,7 +3,7 @@ import { db,valoContentVersions,valoPublicationPolicies,valoDocuments } from "@w
 import { evaluatePublication,publicationSchema,coveragePlan } from "@workspace/valo-core";
 import { developmentPublicationOnly,operationalPolicy } from "../editorial/operational-policy";
 import { getPublicationArtifact,type ArtifactRef } from "../editorial/publication-artifacts";
-import { createDocumentInTransaction,getDocument,ValoProblem,type WorkspaceActor } from "./valo-store";
+import { createDocumentInTransaction,getDocument,ValoProblem,authorizeWorkspaceWrite,type WorkspaceActor } from "./valo-store";
 import { documentInput } from "./valo-validation";
 import { loadRightsApplicability } from "../editorial/rights-applicability";
 import { paginateReleasedItems } from "./valo-catalogue";
@@ -30,6 +30,36 @@ export async function liveReleasedVersions(){
 export async function liveOperationalVersions(){
   return(await liveReleasedVersions()).filter(r=>publicationSchema.parse(r.bundle).candidate.contentClass==="general_template");
 }
+export function projectReleasedResource(row:typeof valoContentVersions.$inferSelect){
+  const b=publicationSchema.parse(row.bundle),c=b.candidate;
+  if(c.contentClass!=="sourced_guidance")throw new Error("Not a released resource class");
+  const first=c.body.split("\n").find(l=>l.trim())?.replace(/^#{1,6}\s+/,"").trim();
+  const title=first&&first.length<=140?first:row.slug.replace(/-/g," ");
+  const kind=c.coverage?.kind??"guidance";
+  if(kind==="template")throw new Error("Resource classification mismatch");
+  return{id:row.id,slug:row.slug,title,kind,industrySlugs:c.coverage?.industrySlugs??[],
+    summary:c.body.replace(/\s+/g," ").slice(0,260),body:c.body,reviewedAt:c.sourceCheckDate,
+    disclosure:c.disclosure,scope:c.scope,limitations:c.limitations,
+    sources:c.claims.flatMap(claim=>{
+      const s=b.sources.find(s=>s.id===claim.sourceId);
+      if(!s||new URL(s.url).protocol!=="https:")return[];
+      return[{url:s.url,title:s.title,locator:claim.locator}];
+    }).filter((s,i,a)=>a.findIndex(x=>x.url===s.url&&x.locator===s.locator)===i)};
+}
+export async function releasedResources(){
+  return(await liveReleasedVersions()).filter(r=>publicationSchema.parse(r.bundle).candidate.contentClass==="sourced_guidance")
+    .map(projectReleasedResource);
+}
+export function operationalPresentation(templateId:string){
+  if(templateId==="TPL-07")return{summary:"Record stock movements and physical counts using your own information.",
+    preview:["SAMPLE FIELD: Business name [your information]","SAMPLE FIELDS: Item, unit and location [your information]",
+      "SAMPLE SECTIONS: Receipts, issues, adjustments and physical counts [your records]"]};
+  if(templateId==="TPL-06")return{summary:"Record a business expense and the details needed for your internal review.",
+    preview:["SAMPLE FIELD: Claimant [your information]","SAMPLE FIELDS: Expense date, description, amount and currency [your records]",
+      "SAMPLE FIELD: Internal review notes [your process]"]};
+  return{summary:"Prepare this business document using your own information. Check its scope and required inputs before use.",
+    preview:["SAMPLE FIELD: Business name [your information]","SAMPLE FIELD: Document details [your information]"]};
+}
 export async function liveCoverage(){
   return coveragePlan((await liveReleasedVersions()).map(row=>{
     const c=publicationSchema.parse(row.bundle).candidate;
@@ -41,21 +71,23 @@ export async function releasedCatalogue(query:{q?:string;type?:string;industry?:
   const all=await liveOperationalVersions();
   const items=all.map(r=>{
     const document=documentInput.parse(JSON.parse(publicationSchema.parse(r.bundle).candidate.body));
-    return{id:r.id,slug:r.slug,title:document.title,type:"template",industry:"All industries",
-      summary:"Optional stock-movement and physical-count record. AI reviewed operational development template; not regulatory guidance."};
+    const c=publicationSchema.parse(r.bundle).candidate;
+    return{id:r.id,slug:r.slug,title:document.title,type:"template",industry:c.coverage?.industrySlugs.join(",")||"All industries",
+      summary:operationalPresentation(r.templateId).summary};
   });
-  return {...paginateReleasedItems(items,query),heldTemplates:Math.max(0,40-all.filter(r=>/^TPL-(0[1-9]|[1-3][0-9]|40)$/.test(r.templateId)).length)};
+  const guidance=(await releasedResources()).map(r=>({id:r.id,slug:r.slug,title:r.title,type:"guidance",
+    industry:r.industrySlugs.join(",")||"All industries",summary:r.summary}));
+  return {...paginateReleasedItems([...items,...guidance],query),heldTemplates:Math.max(0,40-all.filter(r=>/^TPL-(0[1-9]|[1-3][0-9]|40)$/.test(r.templateId)).length)};
 }
 export async function releasedTemplate(slug:string){
   const row=(await liveOperationalVersions()).find(r=>r.slug===slug);
   if(!row)throw new ValoProblem(404,"This template is unavailable, withdrawn or awaiting valid evidence.");
   const bundle=publicationSchema.parse(row.bundle),document=documentInput.parse(JSON.parse(bundle.candidate.body));
   return{id:row.id,templateId:row.templateId,slug:row.slug,title:document.title,
-    summary:"Record stock movements and physical counts using your own information.",
+    summary:operationalPresentation(row.templateId).summary,
     version:row.version,reviewedAt:bundle.candidate.sourceCheckDate,reviewBy:row.reviewBy.toISOString(),
     disclosure:bundle.candidate.disclosure,scope:bundle.candidate.scope,limitations:bundle.candidate.limitations,
-    preview:["SAMPLE FIELD: Business name [your information]","SAMPLE FIELD: Item, unit and location [your information]",
-      "SAMPLE SECTION: Receipts, issues, adjustments and physical-count differences. Full blank files require a verified account."],
+    preview:operationalPresentation(row.templateId).preview,
     developmentOnly:true,commercialLicenceAccepted:false,formats:["docx","pdf"] as const};
 }
 async function lockedLiveVersion(tx:Parameters<Parameters<typeof db.transaction>[0]>[0],id:string){
@@ -63,6 +95,13 @@ async function lockedLiveVersion(tx:Parameters<Parameters<typeof db.transaction>
   if(!row)throw new ValoProblem(404,"Template unavailable");
   const[policy]=await tx.select().from(valoPublicationPolicies).where(eq(valoPublicationPolicies.id,row.policyId));
   if(!policy||!releaseVisible(row,policy.hash))throw new ValoProblem(404,"Template withdrawn, expired or unavailable");
+  const c=publicationSchema.parse(row.bundle).candidate;
+  if(c.evidenceMode==="original_operational"){
+    const rights=await loadRightsApplicability(),current=await operationalPolicy();
+    if(!rights.verified||policy.hash!==current.policy.hash||
+      (row.attestations as {rightsApplicabilityHash?:string}).rightsApplicabilityHash!==rights.hash)
+      throw new ValoProblem(404,"Template unavailable while applicable rights or policy evidence is unresolved.");
+  }
   return row;
 }
 export async function createReleasedTemplateDraft(actor:WorkspaceActor,id:string){
@@ -76,10 +115,12 @@ export async function createReleasedTemplateDraft(actor:WorkspaceActor,id:string
   });
   return getDocument(actor,documentId);
 }
-export async function readReleasedMaster(id:string,format:"docx"|"pdf"){
+export async function readReleasedMaster(id:string,format:"docx"|"pdf",actor?:WorkspaceActor){
   developmentPublicationOnly();
   return db.transaction(async tx=>{
     const row=await lockedLiveVersion(tx,id);
+    if(!actor)throw new ValoProblem(403,"Template unavailable without an authorised workspace.");
+    await authorizeWorkspaceWrite(tx,actor);
     const a=row.attestations as {exports:Record<"docx"|"pdf",ArtifactRef>};
     return{bytes:await getPublicationArtifact(a.exports[format]),templateId:row.templateId,version:row.version};
   });

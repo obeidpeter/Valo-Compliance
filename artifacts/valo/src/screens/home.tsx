@@ -15,7 +15,7 @@ export default function Home() {
           The documents you need. <span className="italic text-primary">The business rules you should know.</span>
         </h1>
         <p className="reveal reveal-3 mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-          Valo keeps two shelves apart: drafts you write for your business, and guidance that will only appear once it traces back to an official source. Neither pretends to be the other.
+          A private workspace for invoices, quotations and everyday business documents, alongside guidance that appears only when it traces back to an official source. Neither pretends to be the other.
         </p>
 
         <div className="reveal reveal-4 mt-12 grid gap-4 md:grid-cols-2">
@@ -24,7 +24,7 @@ export default function Home() {
             label="Shelf one"
             title="Business documents"
             body="Write and save your own drafts in a private workspace, with every save kept as a revision you can return to."
-            meta={status.isLoading ? null : <><span className="pill pill-forest"><span className="dot" /> Drafting open</span><span className="pill pill-ink">{s ? s.publishedTemplates : 0} released templates</span></>}
+            meta={status.isLoading ? null : <><span className="pill pill-forest"><span className="dot" /> Private drafting and export</span>{s && s.publishedTemplates > 0 && <span className="pill pill-ink">{s.publishedTemplates} catalogue templates</span>}</>}
             href="/sign-up"
             cta="Start a business draft"
             tone="forest"
@@ -34,10 +34,10 @@ export default function Home() {
             icon={<Scale className="h-5 w-5" />}
             label="Shelf two"
             title="Compliance guidance"
-            body="Rules will be published only after each is tied to its official source and reviewed. Until then, we show you exactly what is held."
-            meta={status.isLoading ? null : <><span className="pill pill-ochre"><span className="dot" /> Held for review</span><span className="pill pill-ink">0 rules published</span></>}
-            href="/compliance"
-            cta="See what is covered"
+            body="Answer a few questions about your business and see which official routes may apply. Published guidance always names its source."
+            meta={status.isLoading ? null : <><span className="pill pill-ink"><span className="dot" /> Requirements checker</span><span className="pill pill-ink">Sources shown</span></>}
+            href="/checker"
+            cta="Check what may apply"
             tone="ink"
             testid="compliance"
           />
@@ -54,7 +54,7 @@ export default function Home() {
             {[
               ['Your drafts are labelled as yours', 'Everything you write is marked "business draft". It is not a released template, and nobody at Valo or any AI has reviewed it.'],
               ['Guidance waits for its source', 'A rule appears only when it links to the official text it came from. Nothing unreviewed is published to fill space.'],
-              ['Gaps are stated, not hidden', 'Where coverage is held, the page says so. You will always know when you need to check with the authority directly.'],
+              ['Gaps are stated, not hidden', 'Where Valo has nothing checked to say, the page says so and points to the official authority instead.'],
             ].map(([t, b], i) => (
               <li key={t} className="flex gap-5 bg-card p-6">
                 <span className="font-mono text-sm text-muted-foreground">0{i + 1}</span>
@@ -75,7 +75,7 @@ export default function Home() {
                 ['Business profile', 'Legal form, registration, activities, state and LGA. Every answer allows "unknown" or "not yet answered".'],
                 ['Section editor', 'Paragraphs, lists and key fields with autosave. Missing details are flagged, not invented.'],
                 ['Revision history', 'Restoring an old version creates a new revision. History is never overwritten.'],
-                ['Exports', 'Not available yet. PDF and Word export wait on a private renderer and verified storage.'],
+                ['Exports', 'Export your own drafts to PDF or Word from the editor. Each file is marked as a business draft.'],
               ].map(([t, b]) => (
                 <li key={t} className="grid grid-cols-[9rem_1fr] gap-4 border-t border-border pt-5 max-sm:grid-cols-1 max-sm:gap-1">
                   <span className="font-medium">{t}</span><span className="text-muted-foreground leading-relaxed">{b}</span>
@@ -90,15 +90,14 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-5 pb-24 lg:px-8">
         <div className="surface grid gap-6 p-8 sm:p-10 md:grid-cols-[1.4fr_1fr] md:items-center">
           <div>
-            <p className="eyebrow">Honest build status</p>
-            {status.isLoading ? <Skel className="mt-3 h-8 w-2/3" /> : (
-              <p className="font-display mt-3 text-3xl leading-snug" data-testid="text-home-status">
-                {s ? <>{s.receivedRequirements} of {s.expectedRequirements} requirements received. Not launched.</> : 'Build status is unavailable right now.'}
-              </p>
-            )}
-            <p className="mt-3 text-sm text-muted-foreground">{s?.notice ?? 'Valo is in development. No live payments, no published guidance yet.'}</p>
+            <p className="eyebrow">Before you begin</p>
+            <p className="font-display mt-3 text-3xl leading-snug" data-testid="text-home-status">Valo is still being built. Use test details only.</p>
+            <p className="mt-3 text-sm text-muted-foreground">There are no payments, no professional services and no regulator endorsement. What works today: private drafts, exports of your own drafts, the requirements checker, tasks and reminders.</p>
           </div>
-          <div className="flex md:justify-end"><Link href="/development" className="btn btn-ghost">Read the build status <ArrowRight className="h-4 w-4" /></Link></div>
+          <div className="flex flex-wrap gap-2 md:justify-end">
+            <Link href="/about" className="btn btn-ghost">How Valo works <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/contact" className="btn btn-ghost">Contact us</Link>
+          </div>
         </div>
       </section>
     </div>
@@ -141,9 +140,9 @@ function DraftSpecimen() {
         <div className="mt-6 grid gap-2.5">
           {[100, 94, 97, 60].map((w, i) => <div key={i} className="h-2.5 rounded bg-muted" style={{ width: w + '%' }} />)}
         </div>
-        <div className="mt-6 flex gap-2"><span className="pill pill-forest">Undo</span><span className="pill pill-ink">Export unavailable</span></div>
+        <div className="mt-6 flex gap-2"><span className="pill pill-forest">Undo</span><span className="pill pill-ink">Export draft</span></div>
       </div>
-      <figcaption className="mt-6 text-center text-xs text-muted-foreground">Illustration. No sample legal or invoice text is supplied.</figcaption>
+      <figcaption className="mt-6 text-center text-xs text-muted-foreground">Illustration of the editor. Not a sample document.</figcaption>
     </figure>
   );
 }

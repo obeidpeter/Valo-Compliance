@@ -11,8 +11,21 @@ import customerAIRouter from "./valo-customer-ai";
 import { releasedCatalogue,releasedTemplate,createReleasedTemplateDraft,readReleasedMaster,liveCoverage } from "../lib/valo-released-content";
 import { exportMime } from "../lib/valo-render";
 import { GetReleasedTemplateResponse } from "@workspace/api-zod";
+import { GetReleasedResourceResponse as ReleasedResource } from "@workspace/api-zod";
+import { publicAccessRouter,customerAccessRouter,staffOperationsRouter } from "./valo-customer-access";
+import { releasedResources } from "../lib/valo-released-content";
 
 const router = Router();
+router.use(publicAccessRouter);
+router.use(staffOperationsRouter);
+router.get("/public/resources",async(_req,res)=>{
+  res.set("Cache-Control","no-store");res.json((await releasedResources()).map(r=>ReleasedResource.parse(r)));
+});
+router.get("/public/resources/:slug",async(req,res)=>{
+  const item=(await releasedResources()).find(r=>r.slug===z.string().max(100).parse(req.params.slug));
+  if(!item){res.status(404).json({error:"This resource is unavailable or no longer released."});return;}
+  res.set("Cache-Control","no-store");res.json(ReleasedResource.parse(item));
+});
 router.get("/development/source-evidence",async (_req,res):Promise<void>=>{
   if(process.env.NODE_ENV!=="development"){res.status(404).json({error:"Not found"});return;}
   res.set("Cache-Control","no-store");
@@ -38,7 +51,7 @@ router.get("/public/status", async (_req, res) => {
   const state = readiness();
   res.json({
     receivedRequirements: state.receivedFormalRequirements, expectedRequirements: state.expectedFormalRequirements,
-    publishedTemplates: (await releasedCatalogue()).total, p0Passed: false, r2Unlocked: false, livePaymentsEnabled: false,
+    publishedTemplates: (await releasedCatalogue({type:"template"})).total, p0Passed: false, r2Unlocked: false, livePaymentsEnabled: false,
     notice: "Development only. Synthetic data only. R1 gates have not passed; unreviewed content, live payments and public launch remain disabled.",
   });
 });
@@ -60,12 +73,13 @@ router.get("/development/content", async (_req, res) => {
     rows: contentTraceRows(),
     industries: c.industryTaxonomy, deeperPacks: c.deeperPacks,
     identifiedTemplates: c.summary.identifiedIncludingProposals,
-    regulatoryRows: c.summary.regulatoryRows, publishedTemplates: (await releasedCatalogue()).total,
+    regulatoryRows: c.summary.regulatoryRows, publishedTemplates: (await releasedCatalogue({type:"template"})).total,
     notice: `${c.summary.notice} 78 canonical research keys remain after the explicit SCUML alias only; other umbrella overlaps remain. Neither figure counts distinct published entries.`,
     overlaps:c.overlaps, ...expansionReadiness(),
   }));
 });
 router.use("/workspace", sameOriginMutation, verifiedWorkspace);
+router.use(customerAccessRouter);
 router.get("/workspace", async (_req, res) => { res.json(await store.getWorkspace(res.locals.valoActor)); });
 router.put("/workspace/profile", async (req, res) => { res.json(await store.saveProfile(res.locals.valoActor, req.body)); });
 router.get("/workspace/documents", async (_req, res) => { res.json(await store.listDocuments(res.locals.valoActor)); });
@@ -89,7 +103,7 @@ router.post("/workspace/templates/:id/draft",async(req,res)=>{
 });
 router.get("/workspace/templates/:id/files/:format",async(req,res)=>{
   const format=z.enum(["docx","pdf"]).parse(req.params.format);
-  const asset=await readReleasedMaster(z.string().uuid().parse(req.params.id),format);
+  const asset=await readReleasedMaster(z.string().uuid().parse(req.params.id),format,res.locals.valoActor);
   res.set({"Content-Type":exportMime[format],"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff",
     "Content-Disposition":`attachment; filename="${asset.templateId}-v${asset.version}.${format}"`});
   res.send(asset.bytes);

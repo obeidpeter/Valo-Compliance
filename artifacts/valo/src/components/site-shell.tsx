@@ -9,11 +9,10 @@ import { cn } from '@/lib/utils';
 const NAV = [
   { href: '/checker', label: 'Checker' },
   { href: '/library', label: 'Library' },
-  { href: '/compliance', label: 'Compliance' },
-  { href: '/industries', label: 'Industries' },
   { href: '/resources', label: 'Resources' },
-  { href: '/services', label: 'Services' },
-  { href: '/pricing', label: 'Pricing' },
+  { href: '/industries', label: 'Industries' },
+  { href: '/compliance', label: 'Compliance' },
+  { href: '/about', label: 'About' },
   { href: '/help', label: 'Help' },
 ];
 
@@ -43,9 +42,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <span className="font-mono uppercase tracking-wider text-background">Development build</span>
         <span className="mx-2 opacity-40">/</span>
         Not launched. Use synthetic test details only — no real customer or confidential data.
-        <Link href="/development" className="ml-2 underline underline-offset-2">Build status</Link>
       </div>
-      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md"
+        onKeyDown={e=>{if(e.key==="Escape"&&open){setOpen(false);e.currentTarget.querySelector<HTMLButtonElement>('[data-testid="button-menu"]')?.focus();}}}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 lg:px-8">
           <Wordmark />
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
@@ -90,9 +89,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <Wordmark />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">Your business drafts and source-governed guidance, kept on separate shelves. Built for owners of Nigerian small businesses.</p>
           </div>
-          <FooterCol title="Documents" links={[['/library', 'Template library'], ['/workspace', 'Your workspace'], ['/pricing', 'Pricing']]} />
-          <FooterCol title="Compliance" links={[['/checker', 'Requirements checker'], ['/compliance', 'Guidance status'], ['/industries', 'Industries'], ['/resources', 'Resources'], ['/services', 'Services']]} />
-          <FooterCol title="Valo" links={[['/help', 'Help'], ['/support', 'Support'], ['/development', 'Build status'], ['/privacy', 'Privacy'], ['/terms', 'Terms']]} />
+          <FooterCol title="Documents" links={[['/library', 'Library'], ['/workspace', 'Your workspace'], ['/workspace/privacy', 'Privacy and data'], ['/pricing', 'Pricing']]} />
+          <FooterCol title="Compliance" links={[['/checker', 'Requirements checker'], ['/resources', 'Resources'], ['/industries', 'Industries'], ['/compliance', 'Official sources'], ['/services', 'Services']]} />
+          <FooterCol title="Valo" links={[['/about', 'About'], ['/help', 'Help'], ['/contact', 'Contact'], ['/account-access', 'Account access'], ['/privacy', 'Privacy policy'], ['/terms', 'Terms'], ['/development', 'Developer notes']]} />
         </div>
         <div className="mx-auto max-w-7xl border-t border-border px-5 py-5 text-xs text-muted-foreground lg:px-8">
           Valo does not provide legal, tax or accounting advice, and no regulator endorses it.

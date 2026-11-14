@@ -1,6 +1,9 @@
 # Valo Compliance — Valo Platform
 
-Current security/correctness work:
+Current customer routes, signed-out access support, privacy requests and staff-read checkpoint:
+[working behavior, executed checks and remaining limitations](docs/valo/customer-experience-checkpoint.md).
+
+Prior security/correctness work:
 [trust boundaries, durable write caps, revocation races, live counts and rights](docs/valo/security-checkpoint.md).
 The GitHub repository is private and source is synchronized through draft PR2.
 Managed customer identity and server AI are configured and have retained actual

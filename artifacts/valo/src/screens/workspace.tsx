@@ -90,7 +90,7 @@ export default function WorkspaceHome() {
               </ul>
             ) : (
               <EmptyState mark={<FilePlus2 className="h-5 w-5 text-muted-foreground" />} title="No drafts yet" action={<button className="btn btn-primary" onClick={newDraft} disabled={create.isPending}>Start a blank draft</button>}>
-                A new draft starts empty. Valo does not insert sample legal or invoice wording, and released templates are not available yet.
+                A new draft starts empty. Choose a released template from the library when one fits, or write your own document.
               </EmptyState>
             )}
             <Notice className="mt-4" tone="ink" title="Development workspace">Use synthetic test details only. Open a saved draft to request private, visibly marked DOCX or PDF exports. Production recovery and release approval remain unproved.</Notice>

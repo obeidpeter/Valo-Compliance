@@ -3,7 +3,7 @@ import { ClerkProvider, SignIn, SignUp, Show, useClerk } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
-import { Redirect, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
+import { Link, Redirect, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -16,8 +16,12 @@ import Home from '@/screens/home';
 import Library from '@/screens/library';
 import TemplateDetail from '@/screens/template-detail';
 import Compliance from '@/screens/compliance';
-import Industries from '@/screens/industries';
-import Resources from '@/screens/resources';
+import Industries, { IndustryDetail } from '@/screens/industries';
+import Resources, { ResourceDetail } from '@/screens/resources';
+import About from '@/screens/about';
+import { Contact, AccountAccess } from '@/screens/contact';
+import { AccountPage, PrivacyPage, PurchasesPage } from '@/screens/account';
+import StaffPage from '@/screens/staff';
 import Services from '@/screens/services';
 import Pricing from '@/screens/pricing';
 import Help from '@/screens/help';
@@ -130,6 +134,9 @@ function AuthFrame({ children, side }: { children: ReactNode; side: 'in' | 'up' 
       <div className="flex flex-col items-center justify-center gap-6 px-4 py-12">
         <div className="lg:hidden"><Wordmark /></div>
         {children}
+        <p className="max-w-[440px] text-center text-sm text-muted-foreground">
+          Cannot sign in, unverified or suspended? <Link href="/account-access" className="font-medium text-primary underline underline-offset-4" data-testid="link-auth-access-help">Get account access help</Link>
+        </p>
       </div>
     </div>
   );
@@ -197,7 +204,12 @@ function ShellRoutes() {
         <Route path="/library/:slug">{(p) => <TemplateDetail slug={p.slug} />}</Route>
         <Route path="/compliance" component={Compliance} />
         <Route path="/industries" component={Industries} />
+        <Route path="/industries/:slug">{(p) => <IndustryDetail slug={p.slug} />}</Route>
         <Route path="/resources" component={Resources} />
+        <Route path="/resources/:slug">{(p) => <ResourceDetail slug={p.slug} />}</Route>
+        <Route path="/about" component={About} />
+        <Route path="/contact" component={Contact} />
+        <Route path="/account-access" component={AccountAccess} />
         <Route path="/services" component={Services} />
         <Route path="/pricing" component={Pricing} />
         <Route path="/help" component={Help} />
@@ -214,6 +226,12 @@ function ShellRoutes() {
         <Route path="/workspace/reminders">{() => <RequireAuth><RemindersPage /></RequireAuth>}</Route>
         <Route path="/workspace">{() => <RequireAuth><WorkspaceHome /></RequireAuth>}</Route>
         <Route path="/workspace/profile">{() => <RequireAuth><ProfilePage /></RequireAuth>}</Route>
+        <Route path="/workspace/checker">{() => <RequireAuth><Checker /></RequireAuth>}</Route>
+        <Route path="/workspace/notifications">{() => <RequireAuth><RemindersPage /></RequireAuth>}</Route>
+        <Route path="/workspace/purchases">{() => <RequireAuth><PurchasesPage /></RequireAuth>}</Route>
+        <Route path="/workspace/account">{() => <RequireAuth><AccountPage /></RequireAuth>}</Route>
+        <Route path="/workspace/privacy">{() => <RequireAuth><PrivacyPage /></RequireAuth>}</Route>
+        <Route path="/staff">{() => <RequireAuth><StaffPage /></RequireAuth>}</Route>
         <Route path="/workspace/documents/:id">{(p) => <RequireAuth><DocumentEditor id={p.id} /></RequireAuth>}</Route>
         <Route component={NotFound} />
       </Switch>

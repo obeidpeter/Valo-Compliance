@@ -2,19 +2,20 @@ import { Link } from 'wouter';
 import { PageHeader } from '@/components/states';
 
 const QA = [
-  ['Is a draft I write a legal template?', 'No. Drafts you write are labelled "business draft". They are not released templates and have not been reviewed by Valo, a professional or an AI.'],
-  ['Why is the library empty?', 'Templates appear only after source and rights review. Baseline templates are held until that is done.'],
-  ['Can I download my draft as PDF or Word?', 'Not yet. Export needs a private renderer and verified storage that are still being built. The button explains this rather than pretending.'],
+  ['Is a draft I write a legal template?', 'No. Drafts you write are labelled "business draft". Nobody at Valo reviews them, and they do not tell you what the law requires.'],
+  ['Why is the library or resources page empty?', 'Items appear only when they are actually released with their sources. Until then the page says so, and you can still write a blank private draft or use the requirements checker.'],
+  ['Can I download my draft as PDF or Word?', 'Yes. Open a draft in your workspace and use Export. Files are generated from your own text and marked as a business draft. Blank catalogue downloads exist only for items listed in the library.'],
+  ['How do I get a copy of my data or ask for deletion?', 'Signed in, go to Workspace, then Privacy. You can download a JSON copy of your workspace data and save a correction or deletion request for staff.'],
   ['What happens if I edit in two tabs?', 'Each save checks the revision you started from. If another tab saved first, Valo keeps your unsaved text and asks how to proceed.'],
   ['Does restoring an old revision delete newer ones?', 'No. Restoring saves the old content as a brand new revision. History is never overwritten.'],
-  ['I cannot sign in or my email is not verified.', 'Use "Forgot password" on the sign-in screen, or finish the email verification step. If your account is suspended, contact support.'],
+  ['I cannot sign in or my email is not verified.', 'Use "Forgot password" on the sign-in screen, or finish the email verification step. If your account is suspended or you are still stuck, use the account access page; it works without signing in.'],
   ['Should I enter real business information?', 'Not during development. Please use synthetic test details only.'],
 ];
 
 export default function Help() {
   return (
     <div className="mx-auto max-w-4xl px-5 py-14 lg:px-8">
-      <PageHeader eyebrow="Help" title="Straight answers">Still stuck? <Link href="/support" className="text-primary underline underline-offset-4">Save a support request</Link>.</PageHeader>
+      <PageHeader eyebrow="Help" title="Straight answers">Locked out? <Link href="/account-access" className="text-primary underline underline-offset-4">Account access help</Link>. Anything else? <Link href="/contact" className="text-primary underline underline-offset-4">Contact us</Link>.</PageHeader>
       <div className="divide-y divide-border border-y border-border">
         {QA.map(([q, a], i) => (
           <details key={q} className="group py-5" data-testid={'faq-' + i}>

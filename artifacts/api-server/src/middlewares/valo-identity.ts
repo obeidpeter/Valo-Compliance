@@ -5,7 +5,7 @@ import { trustedSiteOrigin,permittedMutationOrigin } from "../lib/valo-site-orig
 
 declare global {
   namespace Express {
-    interface Locals { valoActor: WorkspaceActor }
+    interface Locals { valoActor: WorkspaceActor; valoContactEmail:string }
   }
 }
 /** Recheck provider session and verified primary email on EVERY private request.
@@ -31,6 +31,7 @@ export const verifiedWorkspace: RequestHandler = async (req, res, next) => {
       res.status(403).json({ error: "Verify your primary email address before saving business data" }); return;
     }
     res.locals.valoActor = await resolveWorkspace(user.id);
+    res.locals.valoContactEmail=primary.emailAddress;
     next();
   } catch (error) { next(error); }
 };
