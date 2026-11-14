@@ -7,6 +7,34 @@ import type { ArtifactRef } from "./publication-artifacts";
 import {originalSections,operationalDocument} from "./original-content-adapter";
 export type OperationalProvenance={path:string;hash:string;sourceText:string;note:string;noteHash:string;
   authoringRoute:string;transformation:string;templateId:string;version:number;generation?:ArtifactRef};
+/** Canonical reconstruction for every exact R1 template ID. Risk/claims,
+ * enhanced checks and eligibility are separate; extraction is not release. */
+export async function templateCandidate(id:string,version:number,now=new Date(),
+  recorded?:{original:string;provenance:OperationalProvenance}){
+  if(id==="TPL-07")return inventoryCandidate(version,now,recorded);
+  const {readTemplateIntake,readGuidanceIntake}=await import("./operational-intake");
+  const guidance=id.startsWith("GUD-");
+  const intake=guidance?await readGuidanceIntake(id,version):await readTemplateIntake(id,version);
+  const provenance=recorded?.provenance??intake.provenance,original=recorded?.original??intake.section.body;
+  if(provenance.templateId!==id||sha256(provenance.sourceText)!==provenance.hash||
+    sha256(provenance.note)!==provenance.noteHash||original!==intake.section.body||
+    provenance.hash!==intake.sourceHash||provenance.noteHash!==intake.provenance.noteHash)
+    throw Error("TEMPLATE_PROVENANCE_OR_BODY_MISMATCH");
+  const scope=guidance?intake.catalogue.scope:
+    `Original ${intake.catalogue.title.toLowerCase()} starting form for user-entered facts, subject to its stated use assumptions and separate evidence gates.`;
+  const limitations=guidance?"Conditional general information, not a compliance determination, comprehensive local coverage or professional review. Use the stated facts, exceptions, source period and official next steps. Development evaluation only; unresolved evidence holds publication.":
+    "A starting document, not a guarantee of legal validity, regulatory approval or professional review. Unresolved parties, terms, amounts and material clauses must be resolved before use. Development evaluation only; commercial licence acceptance and sales remain separate.";
+  const reviewedAt=now.toISOString(),reviewBy=new Date(+now+90*86400000).toISOString();
+  const document=documentInput.parse({...intake.document,content:{...intake.document.content,blocks:[
+    ...intake.document.content.blocks,
+    {id:"release-scope",type:"paragraph",text:`Scope: ${scope}`,rows:[]},
+    {id:"release-limitations",type:"paragraph",text:`Limitations: ${limitations}`,rows:[]},
+    {id:"release-disclosure",type:"paragraph",text:disclosure,rows:[]},
+    {id:"review-meaning",type:"paragraph",text:"Release requires two separate automated AI checks and all applicable source, enhanced and export checks. This is not legal or regulatory verification or professional certification.",rows:[]},
+    {id:"release-source-date",type:"paragraph",text:`File-integrity and evidence check date: ${reviewedAt}.`,rows:[]},
+  ]}});
+  return{document,scope,limitations,reviewBy,reviewedAt,original,provenance,documentDigest:digest(document)};
+}
 export async function inventoryCandidate(version:number,now=new Date(),recorded?:{original:string;provenance:OperationalProvenance}){
   const path="docs/content-candidates/operational-template-candidates.md";
   const workspaceRoot=publicationWorkspaceRoot();

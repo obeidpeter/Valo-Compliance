@@ -16,4 +16,9 @@ export interface FinancialLine {
   quantity: string;
   /** @pattern ^[0-9]{1,24}$ */
   unitPriceKobo: string;
+  /**
+     * @minLength 3
+     * @maxLength 3
+     */
+  currency?: string;
 }

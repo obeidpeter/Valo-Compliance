@@ -50,7 +50,7 @@ export function industrySections(source:string):OriginalSection[]{
 }
 /** A4 portrait: wide source tables become editable field/value records, not tiny print. */
 export function operationalDocument(section:OriginalSection){
-  if(!/^TPL-\d{2}$/.test(section.id))throw Error("OPERATIONAL_TEMPLATE_ID_REQUIRED");
+  if(!/^(?:TPL-\d{2}|GUD-(?:0[1-9]|[12]\d|30))$/.test(section.id))throw Error("OPERATIONAL_TEMPLATE_ID_REQUIRED");
   const blocks:{id:string;type:"paragraph"|"table";text:string;rows:string[][]}[]=[];
   const add=(type:"paragraph"|"table",text:string,rows:string[][]=[])=>blocks.push({
     id:`${section.id.toLowerCase()}-${blocks.length+1}`,type,text,rows});

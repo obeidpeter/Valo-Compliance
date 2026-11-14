@@ -38,8 +38,9 @@ export function missingCustomerFields(i:CustomerAIInput){
   return missing;
 }
 export function unsupportedCustomerInput(i:CustomerAIInput){
-  const text=[i.draftingInstruction??"",...i.contextLines].join("\n");
-  return /ignore.{0,50}(instructions|system|policy)|reveal.{0,50}(secret|other tenant|system prompt)|read.{0,30}\.env|169\.254\.169\.254|(?:invent|assume|guess|make up).{0,40}(tax|name|signature|amount|registration|payment|legal)|(?:draft|provide|write|create).{0,35}(legal opinion|employment contract|non-compete|non-disclosure agreement)|(?:lawyer approved|guaranteed compliant|forge.{0,20}payment proof)/i.test(text);
+  const text=[i.draftingInstruction??"",...i.contextLines,...i.financialInput.lines.map(l=>l.description),
+    ...(i.financialInput.optionalLines??[]).map(l=>l.description)].join("\n");
+  return /ignore.{0,50}(instructions|system|policy|balance|user)|system override|(?:publish|email).{0,35}(every|all).{0,20}(draft|document)|(?:access|use).{0,30}(bank tools|private URLs)|reveal.{0,50}(secret|other tenant|system prompt)|read.{0,30}\.env|169\.254\.169\.254|(?:invent|assume|guess|make up).{0,40}(tax|name|signature|amount|registration|payment|legal)|(?:draft|provide|write|create).{0,35}(legal opinion|employment contract|non-compete|non-disclosure agreement)|(?:lawyer approved|guaranteed compliant|forge.{0,20}payment proof)/i.test(text);
 }
 /** Only selected redacted notes/instruction are sent, never profile/history or direct financial/name fields. */
 export function customerProviderPayload(i:CustomerAIInput){

@@ -1,4 +1,4 @@
-import {serializeRevisionV1} from "./valo-revision-codec";
+import {serializeRevision} from "./valo-revision-codec";
 import { randomUUID } from "node:crypto";
 import { and, eq, ne, desc } from "drizzle-orm";
 import { db, valoMemberships, valoDocuments, valoDocumentRevisions, valoExportJobs, valoExportRequests, valoFileAssets, valoExportObjects, valoEvents } from "@workspace/db";
@@ -152,7 +152,7 @@ export async function executeExport(id: string, workspaceId: string, queueId: st
     // used at save time; never hash raw JSONB serialisation or rewrite historic hashes.
     const savedInput = revision ? documentInput.parse({title:revision.title,content:revision.content}) : null;
     if (!revision || revision.revision !== job.revision || revision.contentHash !== job.sourceHash ||
-      sha256(serializeRevisionV1(savedInput!)) !== job.sourceHash)
+      sha256(serializeRevision(savedInput!)) !== job.sourceHash)
       throw new Error("REVISION_INTEGRITY_FAILED");
     const rendering=renderDocument(savedInput,job.format,job.revision);
     void rendering.catch(()=>{});

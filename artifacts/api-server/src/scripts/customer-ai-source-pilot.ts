@@ -39,7 +39,8 @@ async function main(){
   // Reuse an existing evaluation tenant. Never cycle accounts to evade a limit.
   const [existingActor]=await db.select({workspaceId:valoAIDrafts.workspaceId,identityId:valoAIDrafts.actorId})
     .from(valoAIDrafts).where(like(valoAIDrafts.actorId,"valo-ai-eval-invoice-%")).orderBy(asc(valoAIDrafts.createdAt)).limit(1);
-  const actor=existingActor??await resolveWorkspace("valo-source-customer-ai-evaluation-v1");
+  assert.ok(existingActor,"Existing evaluation identity required; do not create a replacement to bypass limits");
+  const actor=existingActor;
   const before=await customerAIUsage(actor),startDay=new Date();startDay.setUTCHours(0,0,0,0);
   const [globalBefore]=await db.select({used:count()}).from(valoAIDrafts)
     .where(and(eq(valoAIDrafts.budgetReserved,true),gte(valoAIDrafts.createdAt,startDay)));
@@ -119,7 +120,12 @@ async function main(){
         files.push({format,bytes:file.bytes.length,checksum:createHash("sha256").update(file.bytes).digest("hex"),
           authorisedDownloadPassed:true,readerContentPassed:true,readerWhitespaceNormalised:true});
       }
-      results.push({caseID:fixture.caseID,caseHash:hashAI(fixture),status:"pass",previewId,previewStatus:preview.status,
+      results.push({caseID:fixture.caseID,caseHash:hashAI(fixture),status:fixture.task==="invoice"?"pass":"partial",
+        evidenceClass:fixture.task==="invoice"?"provider_generation":"missing_date_safety_preflight",
+        authoredGenerationPassed:fixture.task==="invoice",originalCompleteScopeSatisfied:fixture.task==="invoice",
+        requiredFollowup:fixture.task==="quotation"?{question:"What issue date should appear on the quotation?",
+          nextStep:"Explicitly declare a synthetic follow-up fixture and execute the real provider generation; the original 27000.00 subtotal, unspecified tax and unconfirmed delivery rubric stays unchanged."}:null,
+        previewId,previewStatus:preview.status,
         missingFields:preview.missingFields,promptVersion:stored.promptVersion,reusedExactPreview:!!old,
         newProviderAttempts,retainedProviderRuns:runs,documentId:doc.id,savedRevision:doc.revision,
         originalHistoryPreserved:true,files});
@@ -128,11 +134,12 @@ async function main(){
   }
   const report={suite:"supplied-customer-AI-source-pilot",sourceCommit:sourceCommit.trim(),executedAt:new Date().toISOString(),
     sourceFile:"docs/evaluation-candidates/customer-ai.json",sourceSHA256:createHash("sha256").update(bytes).digest("hex"),
-    executed:results.length,passed:results.filter(r=>r.status==="pass").length,failed:results.filter(r=>r.status!=="pass").length,
+    executed:results.length,passed:results.filter(r=>r.status==="pass").length,partial:results.filter(r=>r.status==="partial").length,
+    failed:results.filter(r=>r.status==="fail").length,
     budgetBefore:{workspace:before.workspaceUsed,workspaceDailyLimit:before.workspaceDailyLimit,global:globalBefore!.used,
       globalDailyLimit:120},sameExistingEvaluationTenant:!!existingActor,actualBilling:null,
     identityAndHTTPMiddlewareTested:false,AI008Accepted:false,full60CaseSuiteExecuted:false,R1Accepted:false,R2Accepted:false,
-    limits:"Two exact supplied candidates through real server services. Invoice requires actual provider receipts; quotation must ask for its absent date without calling AI. Both save/edit/reload and deliberately watermarked private exports. Not browser identity, all four task quality, sixty-case acceptance, publication or legal accuracy.",results};
+    limits:"One authored invoice generation and a separate partial quotation missing-date safety preflight. QUO-01 complete_scope generation is NOT satisfied until an explicit synthetic follow-up receives actual provider output and the unchanged source rubric is evaluated. Saving/exporting the partial quotation does not complete that generation case. Not sixty-case acceptance, publication or legal accuracy.",results};
   await writeFile(resolve(root,"docs/valo/evidence/customer-ai-source-pilot.json"),JSON.stringify(report,null,2)+"\n");
   console.log(JSON.stringify({executed:report.executed,passed:report.passed,failed:report.failed,
     newProviderAttempts:results.map(r=>r.newProviderAttempts),full60CaseSuiteExecuted:false}));

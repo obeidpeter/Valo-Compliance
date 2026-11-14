@@ -23,3 +23,11 @@ new outbound attempts from retained attempts in the rerun evidence.
 
 **Why:** A real provider completion can be valid even when later file inspection
 fails; rerunning the entire pipeline otherwise adds cost and obscures provenance.
+
+An authored complete-generation case stopped by a missing-fact preflight remains
+partial. Keep the original oracle and record any synthetic follow-up separately.
+Fault/quota/kill-switch evidence must reach that specific boundary, not fail
+earlier on unrelated missing data. Use the existing evaluation identity and limits.
+
+**Why:** The user repeatedly required these distinctions; safe preflight behavior
+must not be miscounted as completed generation or the intended failure test.

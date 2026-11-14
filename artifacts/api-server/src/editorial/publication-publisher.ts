@@ -8,7 +8,7 @@ import { digest,evaluatePublication,publicationSchema,sha256 } from "@workspace/
 import { getPublicationArtifact,type ArtifactRef } from "./publication-artifacts";
 import { developmentPublicationOnly,operationalPolicy } from "./operational-policy";
 import { operationalReviewSchema } from "./operational-review-contract";
-import { inventoryCandidate } from "./operational-content";
+import { templateCandidate } from "./operational-content";
 import { originalFormSchema,formMarkdown } from "./operational-authoring-contract";
 import { operationalMechanicalChecks } from "./operational-mechanical";
 import {recheckOperationalExports} from "./operational-export-inspection";
@@ -30,7 +30,8 @@ export async function publishOperationalVersion(id:string){
     if(row.reviewBy.toISOString()!==bundle.candidate.reviewBy||+row.reviewBy<=Date.now())throw Error("STALE_RELEASE");
     const result=evaluatePublication(bundle);
     if(result.decision!=="eligible")throw Error(`PUBLICATION_HELD:${result.reasons.join(",")}`);
-    if(bundle.candidate.id!=="TPL-07")throw Error("OPERATIONAL_FORM_NOT_IMPLEMENTED");
+    if((bundle.candidate.contentClass==="general_template")!==bundle.candidate.id.startsWith("TPL-"))
+      throw Error("CONTENT_CLASS_ID_MISMATCH");
     const a=row.attestations as ReleaseAttestations;
     const provenance=JSON.parse((await getPublicationArtifact(a.provenance)).toString());
     if(sha256(provenance.sourceText)!==provenance.hash||sha256(provenance.note)!==provenance.noteHash||
@@ -44,12 +45,14 @@ export async function publishOperationalVersion(id:string){
         JSON.stringify(output)!==provenance.sourceText)throw Error("AUTHORING_RECEIPT_INVALID");
       recorded={original:formMarkdown(output),provenance};
     }else if(provenance.path!==chatGPTSourcePath){
-      const intake=await readOperationalIntake(bundle.candidate.id,row.version);
-      if(intake.sourceHash!==provenance.hash||intake.manifestHash!==provenance.noteHash)
+      const {readTemplateIntake,readGuidanceIntake}=await import("./operational-intake");
+      const intake=bundle.candidate.contentClass==="general_template"?await readTemplateIntake(bundle.candidate.id,row.version):
+        await readGuidanceIntake(bundle.candidate.id,row.version);
+      if(intake.sourceHash!==provenance.hash||sha256(intake.provenance.note)!==provenance.noteHash)
         throw Error("INTAKE_AUTHORING_LINEAGE_MISMATCH");
       recorded={original:intake.section.body,provenance};
     }
-    const original=await inventoryCandidate(row.version,new Date(bundle.candidate.sourceCheckDate),recorded);
+    const original=await templateCandidate(bundle.candidate.id,row.version,new Date(bundle.candidate.sourceCheckDate),recorded);
     if(row.version!==bundle.candidate.version||bundle.candidate.body!==JSON.stringify(original.document)||
       bundle.candidate.scope!==original.scope||bundle.candidate.limitations!==original.limitations)
       throw Error("OPERATIONAL_BODY_OUTSIDE_REVIEWED_ORIGINAL");
@@ -75,7 +78,7 @@ export async function publishOperationalVersion(id:string){
         throw Error("APPLICABLE_TERMS_SNAPSHOT_MISSING");
     }
     const measuredChecks=operationalMechanicalChecks({candidate:bundle.candidate,policy:bundle.policy,
-      provenance,provenanceArtifactHash:a.provenance.hash,rights,applicability,snapshot:provider});
+      provenance,provenanceArtifactHash:a.provenance.hash,rights,applicability,snapshot:provider,sources:bundle.sources});
     if(measuredChecks.some(check=>check.result!=="pass")||
       digest(measuredChecks)!==digest(bundle.mechanicalChecks))
       throw Error("MECHANICAL_EXECUTION_ATTESTATION_INVALID");

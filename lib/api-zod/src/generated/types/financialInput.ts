@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CustomerAITask } from './customerAITask';
+import type { FinancialInputOptionalLinesItem } from './financialInputOptionalLinesItem';
 import type { FinancialInputPaymentRecord } from './financialInputPaymentRecord';
 import type { FinancialLine } from './financialLine';
 
@@ -25,6 +26,25 @@ export interface FinancialInput {
      * @pattern ^[0-9]{1,24}$
      */
   discountKobo: string | null;
+  /** @pattern ^[0-9]{1,24}$ */
+  deliveryKobo?: string;
+  /** @pattern ^(0|[1-9][0-9]{0,2})(\.[0-9]{1,4})?$ */
+  discountPercent?: string;
+  /** @pattern ^(0|[1-9][0-9]{0,2})(\.[0-9]{1,4})?$ */
+  taxPercent?: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  taxBaseKobo?: string;
+  /**
+     * @minLength 3
+     * @maxLength 3
+     */
+  currency?: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  requestedTotalKobo?: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  disputedKobo?: string;
+  /** @maxItems 40 */
+  optionalLines?: FinancialInputOptionalLinesItem[];
   /**
      * @nullable
      * @pattern ^[0-9]{1,24}$

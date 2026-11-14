@@ -72,6 +72,7 @@ export * from './exportRetryInput';
 export * from './financeRefunds';
 export * from './financeRefundsDisputesItem';
 export * from './financialInput';
+export * from './financialInputOptionalLinesItem';
 export * from './financialInputPaymentRecord';
 export * from './financialInputPaymentRecordPaymentsItem';
 export * from './financialLine';

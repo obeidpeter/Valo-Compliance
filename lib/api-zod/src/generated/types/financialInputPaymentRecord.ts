@@ -10,6 +10,7 @@ import type { FinancialInputPaymentRecordPaymentsItem } from './financialInputPa
 export type FinancialInputPaymentRecord = {
   /** @pattern ^[0-9]{1,24}$ */
   invoiceAmountKobo: string;
+  duplicatesConfirmed?: boolean;
   /** @maxItems 40 */
   payments: FinancialInputPaymentRecordPaymentsItem[];
 };

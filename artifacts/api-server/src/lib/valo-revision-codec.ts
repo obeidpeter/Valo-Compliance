@@ -1,7 +1,22 @@
 import type {z} from "zod";
-import type {CreateDocumentBody} from "@workspace/api-zod";
+import {CreateDocumentBody} from "@workspace/api-zod";
 import {isDeepStrictEqual} from "node:util";
 type CanonicalDocument=z.infer<typeof CreateDocumentBody>;
+/** V2 is explicitly domain-separated; old documents still use frozen V1 bytes.
+ * The persisted extension fields identify V2 without changing historic rows. */
+export function serializeRevision(input:CanonicalDocument):string{
+  const m=input.content.financialInput;
+  const extended=!!m&&(
+    ["deliveryKobo","discountPercent","taxPercent","taxBaseKobo","currency","requestedTotalKobo","disputedKobo","optionalLines"]
+      .some(key=>(m as unknown as Record<string,unknown>)[key]!==undefined)||
+    m.lines.some(l=>l.currency!==undefined)||m.paymentRecord?.duplicatesConfirmed!==undefined);
+  if(!extended)return serializeRevisionV1(input);
+  const data=JSON.parse(JSON.stringify(input)),validated=JSON.parse(JSON.stringify(CreateDocumentBody.parse(input)));
+  if(!isDeepStrictEqual(data,validated))throw Error("UNSUPPORTED_REVISION_MODEL_VERSION");
+  const stable=(v:unknown):unknown=>Array.isArray(v)?v.map(stable):
+    v&&typeof v==="object"?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([k,x])=>[k,stable(x)])):v;
+  return"valo-document-revision-v2\n"+JSON.stringify(stable(validated));
+}
 /** Frozen write-time v1 ordering, independent of Zod's enumeration/default
  * implementation and JSONB key order. A future model extension needs an
  * explicit new codec/version, not a rewrite of historic hashes. */

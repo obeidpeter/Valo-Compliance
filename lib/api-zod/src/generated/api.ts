@@ -856,12 +856,31 @@ export const createTemplateDraftResponseContentFinancialInputLinesItemDescriptio
 
 export const createTemplateDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const createTemplateDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createTemplateDraftResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const createTemplateDraftResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const createTemplateDraftResponseContentFinancialInputLinesMax = 40;
 
 export const createTemplateDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createTemplateDraftResponseContentFinancialInputTaxLabelMax = 80;
 
 export const createTemplateDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createTemplateDraftResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createTemplateDraftResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createTemplateDraftResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createTemplateDraftResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createTemplateDraftResponseContentFinancialInputCurrencyMin = 3;
+export const createTemplateDraftResponseContentFinancialInputCurrencyMax = 3;
+
+export const createTemplateDraftResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createTemplateDraftResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createTemplateDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const createTemplateDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createTemplateDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createTemplateDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const createTemplateDraftResponseContentFinancialInputOptionalLinesMax = 40;
+
 export const createTemplateDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createTemplateDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createTemplateDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -897,14 +916,30 @@ export const CreateTemplateDraftResponse = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(createTemplateDraftResponseContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(createTemplateDraftResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(createTemplateDraftResponseContentFinancialInputLinesItemCurrencyMin).max(createTemplateDraftResponseContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(createTemplateDraftResponseContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(createTemplateDraftResponseContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(createTemplateDraftResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(createTemplateDraftResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(createTemplateDraftResponseContentFinancialInputCurrencyMin).max(createTemplateDraftResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createTemplateDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createTemplateDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(createTemplateDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(createTemplateDraftResponseContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(createTemplateDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(createTemplateDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -1083,12 +1118,31 @@ export const listDocumentsResponseContentFinancialInputLinesItemDescriptionMax =
 
 export const listDocumentsResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const listDocumentsResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentsResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const listDocumentsResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const listDocumentsResponseContentFinancialInputLinesMax = 40;
 
 export const listDocumentsResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const listDocumentsResponseContentFinancialInputTaxLabelMax = 80;
 
 export const listDocumentsResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentsResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentsResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const listDocumentsResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const listDocumentsResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentsResponseContentFinancialInputCurrencyMin = 3;
+export const listDocumentsResponseContentFinancialInputCurrencyMax = 3;
+
+export const listDocumentsResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentsResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentsResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const listDocumentsResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const listDocumentsResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentsResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const listDocumentsResponseContentFinancialInputOptionalLinesMax = 40;
+
 export const listDocumentsResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const listDocumentsResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const listDocumentsResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -1124,14 +1178,30 @@ export const ListDocumentsResponseItem = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(listDocumentsResponseContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(listDocumentsResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(listDocumentsResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(listDocumentsResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(listDocumentsResponseContentFinancialInputLinesItemCurrencyMin).max(listDocumentsResponseContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(listDocumentsResponseContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(listDocumentsResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(listDocumentsResponseContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(listDocumentsResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(listDocumentsResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(listDocumentsResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(listDocumentsResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(listDocumentsResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(listDocumentsResponseContentFinancialInputCurrencyMin).max(listDocumentsResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(listDocumentsResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(listDocumentsResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(listDocumentsResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(listDocumentsResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(listDocumentsResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(listDocumentsResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(listDocumentsResponseContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(listDocumentsResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(listDocumentsResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(listDocumentsResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(listDocumentsResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -1184,12 +1254,31 @@ export const createDocumentBodyContentFinancialInputLinesItemDescriptionMax = 20
 
 export const createDocumentBodyContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const createDocumentBodyContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentBodyContentFinancialInputLinesItemCurrencyMin = 3;
+export const createDocumentBodyContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const createDocumentBodyContentFinancialInputLinesMax = 40;
 
 export const createDocumentBodyContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createDocumentBodyContentFinancialInputTaxLabelMax = 80;
 
 export const createDocumentBodyContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentBodyContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentBodyContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createDocumentBodyContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createDocumentBodyContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentBodyContentFinancialInputCurrencyMin = 3;
+export const createDocumentBodyContentFinancialInputCurrencyMax = 3;
+
+export const createDocumentBodyContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentBodyContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentBodyContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const createDocumentBodyContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createDocumentBodyContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentBodyContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const createDocumentBodyContentFinancialInputOptionalLinesMax = 40;
+
 export const createDocumentBodyContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createDocumentBodyContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createDocumentBodyContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -1222,14 +1311,30 @@ export const CreateDocumentBody = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(createDocumentBodyContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(createDocumentBodyContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(createDocumentBodyContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(createDocumentBodyContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(createDocumentBodyContentFinancialInputLinesItemCurrencyMin).max(createDocumentBodyContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(createDocumentBodyContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(createDocumentBodyContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(createDocumentBodyContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(createDocumentBodyContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(createDocumentBodyContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(createDocumentBodyContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(createDocumentBodyContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(createDocumentBodyContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(createDocumentBodyContentFinancialInputCurrencyMin).max(createDocumentBodyContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(createDocumentBodyContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(createDocumentBodyContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createDocumentBodyContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createDocumentBodyContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createDocumentBodyContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(createDocumentBodyContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(createDocumentBodyContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(createDocumentBodyContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(createDocumentBodyContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(createDocumentBodyContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(createDocumentBodyContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -1273,12 +1378,31 @@ export const createDocumentResponseContentFinancialInputLinesItemDescriptionMax 
 
 export const createDocumentResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const createDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const createDocumentResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const createDocumentResponseContentFinancialInputLinesMax = 40;
 
 export const createDocumentResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createDocumentResponseContentFinancialInputTaxLabelMax = 80;
 
 export const createDocumentResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createDocumentResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createDocumentResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentResponseContentFinancialInputCurrencyMin = 3;
+export const createDocumentResponseContentFinancialInputCurrencyMax = 3;
+
+export const createDocumentResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const createDocumentResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createDocumentResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createDocumentResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const createDocumentResponseContentFinancialInputOptionalLinesMax = 40;
+
 export const createDocumentResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createDocumentResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createDocumentResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -1314,14 +1438,30 @@ export const CreateDocumentResponse = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(createDocumentResponseContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(createDocumentResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(createDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(createDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(createDocumentResponseContentFinancialInputLinesItemCurrencyMin).max(createDocumentResponseContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(createDocumentResponseContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(createDocumentResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(createDocumentResponseContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(createDocumentResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(createDocumentResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(createDocumentResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(createDocumentResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(createDocumentResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(createDocumentResponseContentFinancialInputCurrencyMin).max(createDocumentResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(createDocumentResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(createDocumentResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createDocumentResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createDocumentResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createDocumentResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(createDocumentResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(createDocumentResponseContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(createDocumentResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(createDocumentResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(createDocumentResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(createDocumentResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -1375,12 +1515,31 @@ export const getDocumentResponseContentFinancialInputLinesItemDescriptionMax = 2
 
 export const getDocumentResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const getDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getDocumentResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const getDocumentResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const getDocumentResponseContentFinancialInputLinesMax = 40;
 
 export const getDocumentResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const getDocumentResponseContentFinancialInputTaxLabelMax = 80;
 
 export const getDocumentResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getDocumentResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getDocumentResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const getDocumentResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const getDocumentResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getDocumentResponseContentFinancialInputCurrencyMin = 3;
+export const getDocumentResponseContentFinancialInputCurrencyMax = 3;
+
+export const getDocumentResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getDocumentResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getDocumentResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const getDocumentResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const getDocumentResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getDocumentResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const getDocumentResponseContentFinancialInputOptionalLinesMax = 40;
+
 export const getDocumentResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const getDocumentResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const getDocumentResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -1416,14 +1575,30 @@ export const GetDocumentResponse = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(getDocumentResponseContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(getDocumentResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(getDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(getDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(getDocumentResponseContentFinancialInputLinesItemCurrencyMin).max(getDocumentResponseContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(getDocumentResponseContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(getDocumentResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(getDocumentResponseContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(getDocumentResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(getDocumentResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(getDocumentResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(getDocumentResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(getDocumentResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(getDocumentResponseContentFinancialInputCurrencyMin).max(getDocumentResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(getDocumentResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(getDocumentResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(getDocumentResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(getDocumentResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(getDocumentResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(getDocumentResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(getDocumentResponseContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(getDocumentResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(getDocumentResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(getDocumentResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(getDocumentResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -1480,12 +1655,31 @@ export const saveDocumentBodyContentFinancialInputLinesItemDescriptionMax = 200;
 
 export const saveDocumentBodyContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const saveDocumentBodyContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentBodyContentFinancialInputLinesItemCurrencyMin = 3;
+export const saveDocumentBodyContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const saveDocumentBodyContentFinancialInputLinesMax = 40;
 
 export const saveDocumentBodyContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const saveDocumentBodyContentFinancialInputTaxLabelMax = 80;
 
 export const saveDocumentBodyContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentBodyContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentBodyContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const saveDocumentBodyContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const saveDocumentBodyContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentBodyContentFinancialInputCurrencyMin = 3;
+export const saveDocumentBodyContentFinancialInputCurrencyMax = 3;
+
+export const saveDocumentBodyContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentBodyContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentBodyContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const saveDocumentBodyContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const saveDocumentBodyContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentBodyContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const saveDocumentBodyContentFinancialInputOptionalLinesMax = 40;
+
 export const saveDocumentBodyContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const saveDocumentBodyContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const saveDocumentBodyContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -1519,14 +1713,30 @@ export const SaveDocumentBody = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(saveDocumentBodyContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(saveDocumentBodyContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(saveDocumentBodyContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(saveDocumentBodyContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(saveDocumentBodyContentFinancialInputLinesItemCurrencyMin).max(saveDocumentBodyContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(saveDocumentBodyContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(saveDocumentBodyContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(saveDocumentBodyContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(saveDocumentBodyContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(saveDocumentBodyContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(saveDocumentBodyContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(saveDocumentBodyContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(saveDocumentBodyContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(saveDocumentBodyContentFinancialInputCurrencyMin).max(saveDocumentBodyContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(saveDocumentBodyContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(saveDocumentBodyContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(saveDocumentBodyContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(saveDocumentBodyContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(saveDocumentBodyContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(saveDocumentBodyContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(saveDocumentBodyContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(saveDocumentBodyContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(saveDocumentBodyContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(saveDocumentBodyContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(saveDocumentBodyContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -1570,12 +1780,31 @@ export const saveDocumentResponseContentFinancialInputLinesItemDescriptionMax = 
 
 export const saveDocumentResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const saveDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const saveDocumentResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const saveDocumentResponseContentFinancialInputLinesMax = 40;
 
 export const saveDocumentResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const saveDocumentResponseContentFinancialInputTaxLabelMax = 80;
 
 export const saveDocumentResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const saveDocumentResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const saveDocumentResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentResponseContentFinancialInputCurrencyMin = 3;
+export const saveDocumentResponseContentFinancialInputCurrencyMax = 3;
+
+export const saveDocumentResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const saveDocumentResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const saveDocumentResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const saveDocumentResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const saveDocumentResponseContentFinancialInputOptionalLinesMax = 40;
+
 export const saveDocumentResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const saveDocumentResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const saveDocumentResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -1611,14 +1840,30 @@ export const SaveDocumentResponse = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(saveDocumentResponseContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(saveDocumentResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(saveDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(saveDocumentResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(saveDocumentResponseContentFinancialInputLinesItemCurrencyMin).max(saveDocumentResponseContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(saveDocumentResponseContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(saveDocumentResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(saveDocumentResponseContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(saveDocumentResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(saveDocumentResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(saveDocumentResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(saveDocumentResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(saveDocumentResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(saveDocumentResponseContentFinancialInputCurrencyMin).max(saveDocumentResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(saveDocumentResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(saveDocumentResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(saveDocumentResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(saveDocumentResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(saveDocumentResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(saveDocumentResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(saveDocumentResponseContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(saveDocumentResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(saveDocumentResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(saveDocumentResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(saveDocumentResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -1672,12 +1917,31 @@ export const listDocumentRevisionsResponseContentFinancialInputLinesItemDescript
 
 export const listDocumentRevisionsResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const listDocumentRevisionsResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentRevisionsResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const listDocumentRevisionsResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const listDocumentRevisionsResponseContentFinancialInputLinesMax = 40;
 
 export const listDocumentRevisionsResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const listDocumentRevisionsResponseContentFinancialInputTaxLabelMax = 80;
 
 export const listDocumentRevisionsResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentRevisionsResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentRevisionsResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const listDocumentRevisionsResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const listDocumentRevisionsResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentRevisionsResponseContentFinancialInputCurrencyMin = 3;
+export const listDocumentRevisionsResponseContentFinancialInputCurrencyMax = 3;
+
+export const listDocumentRevisionsResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentRevisionsResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentRevisionsResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const listDocumentRevisionsResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const listDocumentRevisionsResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const listDocumentRevisionsResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const listDocumentRevisionsResponseContentFinancialInputOptionalLinesMax = 40;
+
 export const listDocumentRevisionsResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const listDocumentRevisionsResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const listDocumentRevisionsResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -1713,14 +1977,30 @@ export const ListDocumentRevisionsResponseItem = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(listDocumentRevisionsResponseContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(listDocumentRevisionsResponseContentFinancialInputLinesItemCurrencyMin).max(listDocumentRevisionsResponseContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(listDocumentRevisionsResponseContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(listDocumentRevisionsResponseContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(listDocumentRevisionsResponseContentFinancialInputCurrencyMin).max(listDocumentRevisionsResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(listDocumentRevisionsResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(listDocumentRevisionsResponseContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(listDocumentRevisionsResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(listDocumentRevisionsResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -1789,12 +2069,31 @@ export const createCustomerAIDraftBodyFinancialInputLinesItemDescriptionMax = 20
 
 export const createCustomerAIDraftBodyFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const createCustomerAIDraftBodyFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMin = 3;
+export const createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMax = 3;
+
 export const createCustomerAIDraftBodyFinancialInputLinesMax = 40;
 
 export const createCustomerAIDraftBodyFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createCustomerAIDraftBodyFinancialInputTaxLabelMax = 80;
 
 export const createCustomerAIDraftBodyFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createCustomerAIDraftBodyFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createCustomerAIDraftBodyFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputCurrencyMin = 3;
+export const createCustomerAIDraftBodyFinancialInputCurrencyMax = 3;
+
+export const createCustomerAIDraftBodyFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const createCustomerAIDraftBodyFinancialInputOptionalLinesMax = 40;
+
 export const createCustomerAIDraftBodyFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createCustomerAIDraftBodyFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -1819,14 +2118,30 @@ export const CreateCustomerAIDraftBody = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(createCustomerAIDraftBodyFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(createCustomerAIDraftBodyFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMin).max(createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMax).optional()
 })).max(createCustomerAIDraftBodyFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(createCustomerAIDraftBodyFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(createCustomerAIDraftBodyFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(createCustomerAIDraftBodyFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(createCustomerAIDraftBodyFinancialInputCurrencyMin).max(createCustomerAIDraftBodyFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createCustomerAIDraftBodyFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createCustomerAIDraftBodyFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(createCustomerAIDraftBodyFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(createCustomerAIDraftBodyFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -1867,12 +2182,31 @@ export const createCustomerAIDraftResponseContentFinancialInputLinesItemDescript
 
 export const createCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const createCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const createCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
 
 export const createCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
 
 export const createCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputCurrencyMin = 3;
+export const createCustomerAIDraftResponseContentFinancialInputCurrencyMax = 3;
+
+export const createCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesMax = 40;
+
 export const createCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -1908,14 +2242,30 @@ export const CreateCustomerAIDraftResponse = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(createCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin).max(createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(createCustomerAIDraftResponseContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(createCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(createCustomerAIDraftResponseContentFinancialInputCurrencyMin).max(createCustomerAIDraftResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(createCustomerAIDraftResponseContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -1971,12 +2321,31 @@ export const getCustomerAIDraftResponseContentFinancialInputLinesItemDescription
 
 export const getCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const getCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const getCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
 
 export const getCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const getCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
 
 export const getCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const getCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const getCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputCurrencyMin = 3;
+export const getCustomerAIDraftResponseContentFinancialInputCurrencyMax = 3;
+
+export const getCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesMax = 40;
+
 export const getCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const getCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -2012,14 +2381,30 @@ export const GetCustomerAIDraftResponse = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(getCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin).max(getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(getCustomerAIDraftResponseContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(getCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(getCustomerAIDraftResponseContentFinancialInputCurrencyMin).max(getCustomerAIDraftResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(getCustomerAIDraftResponseContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -2077,12 +2462,31 @@ export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemDescriptionM
 
 export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMin = 3;
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const acceptCustomerAIDraftBodyContentFinancialInputLinesMax = 40;
 
 export const acceptCustomerAIDraftBodyContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const acceptCustomerAIDraftBodyContentFinancialInputTaxLabelMax = 80;
 
 export const acceptCustomerAIDraftBodyContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const acceptCustomerAIDraftBodyContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const acceptCustomerAIDraftBodyContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputCurrencyMin = 3;
+export const acceptCustomerAIDraftBodyContentFinancialInputCurrencyMax = 3;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesMax = 40;
+
 export const acceptCustomerAIDraftBodyContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -2115,14 +2519,30 @@ export const AcceptCustomerAIDraftBody = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(acceptCustomerAIDraftBodyContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMin).max(acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(acceptCustomerAIDraftBodyContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(acceptCustomerAIDraftBodyContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(acceptCustomerAIDraftBodyContentFinancialInputCurrencyMin).max(acceptCustomerAIDraftBodyContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
@@ -2167,12 +2587,31 @@ export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemDescript
 
 export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
 export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
 export const acceptCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
 
 export const acceptCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const acceptCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
 
 export const acceptCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const acceptCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const acceptCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputCurrencyMin = 3;
+export const acceptCustomerAIDraftResponseContentFinancialInputCurrencyMax = 3;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesMax = 40;
+
 export const acceptCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
 export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
@@ -2208,14 +2647,30 @@ export const AcceptCustomerAIDraftResponse = zod.object({
   "lines": zod.array(zod.object({
   "description": zod.string().min(1).max(acceptCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
   "quantity": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp)
+  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin).max(acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax).optional()
 })).max(acceptCustomerAIDraftResponseContentFinancialInputLinesMax),
   "taxAmountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
   "taxLabel": zod.string().max(acceptCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
   "discountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(acceptCustomerAIDraftResponseContentFinancialInputCurrencyMin).max(acceptCustomerAIDraftResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesMax).optional(),
   "amountDueKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
   "paymentRecord": zod.object({
   "invoiceAmountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
   "payments": zod.array(zod.object({
   "reference": zod.string().min(1).max(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
   "amountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)

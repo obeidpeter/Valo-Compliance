@@ -1,5 +1,19 @@
 # Customer-AI instructions, saved revisions and private exports
 
+## Acceptance correction
+
+The historical two-case pilot below is **not two completed authored-generation
+cases**. INV-01 generated an invoice. QUO-01 originally reached only its safe
+missing-date preflight and made no quotation-generation call. Its original
+`complete_scope` oracle was not changed.
+
+The subsequent source60 runner preserves that preflight and separately records
+an explicitly declared synthetic issue-date follow-up, a real provider-generated
+quotation, the **27000.00 NGN** subtotal, unconfirmed delivery and unspecified tax.
+See `source-acceptance-corrections.md` and its exact retained results. Neither the
+pilot nor that adapted quotation establishes AI-008's full sixty-case acceptance.
+The original pilot JSON is retained as historical evidence, not silently rewritten.
+
 This is further **partial implementation**, not acceptance of R1, R2, a publication manifest, or the required sixty-case customer-AI suite.
 
 ## Working changes
@@ -15,7 +29,7 @@ This is further **partial implementation**, not acceptance of R1, R2, a publicat
 | --- | --- |
 | API unit/contract/render tests | 115 total: 114 passed, zero failed, one skipped |
 | Database integration tests | 58 passed at the preceding service revision; subsequent changes are client note selection and reader checks, not persistence behavior |
-| Supplied source cases | Two executed, two passed; **not sixty** |
+| Historical supplied cases | INV-01 generation; QUO-01 missing-date safety step only. Not two completed authored-generation cases or sixty-case acceptance. |
 | Actual provider invocation | One retained invoice invocation; quotation preflight zero |
 | Successful rerun | Both exact previews reused; zero additional model calls |
 | Private downloaded artifacts | Two DOCX and two PDF; no repeated same-version exports |

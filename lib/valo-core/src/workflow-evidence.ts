@@ -189,6 +189,14 @@ const groups = [
       "artifacts/api-server/src/editorial/model-adapter.ts"],record:editorialHold},
 ];
 export function partialWorkflowEvidence(id:string){
+  // "fail" here means the complete formal corpus has not met acceptance.
+  // Case-bound controls and a declared follow-up are not sixty-case passes.
+  const customerSource60={kind:"test" as const,path:"docs/valo/evidence/customer-source60-bound-results.json",
+    hash:"e1149db481f2119ec6f3fc229e0f4968fe40be2ef24c276d64f5c0e3226d2130",result:"fail" as const};
+  const editorialSource60={kind:"test" as const,path:"docs/valo/evidence/editorial-source60-bound-results.json",
+    hash:"6b36ee25631fd49f47a6ab8f701503084b05fc765a7a18efbfab06c6a91b5439",result:"fail" as const};
+  const quotationFollowup={kind:"test" as const,path:"docs/valo/evidence/source-quotation-private-journey.json",
+    hash:"be3652bc6ea33a370d06f9ca7db8ba159a8f81a8e996377efd85ebded4e7b415",result:"pass" as const};
   const validationRuntime={kind:"test" as const,path:"docs/valo/evidence/zod-native-runtime-checkpoint.json",
     hash:"6a377c1fe063785eb560ddb71a22c218e559f4c4421b72cf51b0c55e075ab98d",result:"pass" as const};
   const exactSourcePublication={kind:"test" as const,path:"docs/valo/evidence/operational-publication-v8.json",
@@ -207,6 +215,16 @@ export function partialWorkflowEvidence(id:string){
   const privacyCaseProof={kind:"test" as const,path:"docs/valo/evidence/privacy-cases-checkpoint.json",
     hash:"352688315e3166dcbd4df5d15e26bec46de12be8b018fec3bdc22f5c85149f1e",result:"pass" as const};
   const currentValidation=[
+    {ids:["AI-001","AI-002","AI-003","AI-005","AI-006","AI-008","AI-009"],
+      paths:["artifacts/api-server/src/scripts/customer-source-suite.ts","artifacts/api-server/src/lib/valo-customer-case-binding.ts",
+        "artifacts/api-server/src/lib/valo-source-acceptance.test.ts"],record:customerSource60},
+    {ids:["EDP-004","EDP-006","EDP-009","EDP-010","EDP-012","ADM-005"],
+      paths:["artifacts/api-server/src/scripts/editorial-source-suite.ts","artifacts/api-server/src/editorial/candidate-arithmetic.ts",
+        "artifacts/api-server/src/editorial/claim-locator.ts","artifacts/api-server/src/editorial/operational-mechanical.ts"],record:editorialSource60},
+    {ids:["AI-001","AI-003","EDT-002","EDT-003","EDT-004","EDT-006","EDT-007","EDT-008","NFR-009"],
+      paths:["artifacts/api-server/src/scripts/source-quotation-journey.ts","artifacts/api-server/src/lib/valo-revision-codec.ts",
+        "artifacts/api-server/src/lib/valo-store.ts","artifacts/api-server/src/lib/valo-exports.ts",
+        "artifacts/valo/src/components/financial-fields.tsx"],record:quotationFollowup},
     {ids:["PRO-002","PRV-003","ADM-001","ADM-009","SEC-001","SEC-006","WRK-006","NFR-009"],
       paths:["artifacts/api-server/src/lib/valo-privacy.ts","artifacts/api-server/src/lib/valo-privacy-processing.ts",
         "artifacts/api-server/src/lib/valo-privacy-state.ts","artifacts/api-server/src/scripts/privacy-case-proof.ts",

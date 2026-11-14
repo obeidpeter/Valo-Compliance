@@ -410,7 +410,27 @@ export interface FinancialLine {
   quantity: string;
   /** @pattern ^[0-9]{1,24}$ */
   unitPriceKobo: string;
+  /**
+     * @minLength 3
+     * @maxLength 3
+     */
+  currency?: string;
 }
+
+export type FinancialInputOptionalLinesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 240
+     */
+  description: string;
+  /** @pattern ^(0|[1-9][0-9]{0,6})(\.[0-9]{1,3})?$ */
+  quantity: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  unitPriceKobo: string;
+  selected: boolean;
+  /** @pattern ^[A-Z]{3}$ */
+  currency?: string;
+};
 
 export type FinancialInputPaymentRecordPaymentsItem = {
   /**
@@ -425,6 +445,7 @@ export type FinancialInputPaymentRecordPaymentsItem = {
 export type FinancialInputPaymentRecord = {
   /** @pattern ^[0-9]{1,24}$ */
   invoiceAmountKobo: string;
+  duplicatesConfirmed?: boolean;
   /** @maxItems 40 */
   payments: FinancialInputPaymentRecordPaymentsItem[];
 };
@@ -445,6 +466,25 @@ export interface FinancialInput {
      * @pattern ^[0-9]{1,24}$
      */
   discountKobo: string | null;
+  /** @pattern ^[0-9]{1,24}$ */
+  deliveryKobo?: string;
+  /** @pattern ^(0|[1-9][0-9]{0,2})(\.[0-9]{1,4})?$ */
+  discountPercent?: string;
+  /** @pattern ^(0|[1-9][0-9]{0,2})(\.[0-9]{1,4})?$ */
+  taxPercent?: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  taxBaseKobo?: string;
+  /**
+     * @minLength 3
+     * @maxLength 3
+     */
+  currency?: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  requestedTotalKobo?: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  disputedKobo?: string;
+  /** @maxItems 40 */
+  optionalLines?: FinancialInputOptionalLinesItem[];
   /**
      * @nullable
      * @pattern ^[0-9]{1,24}$

@@ -7,22 +7,38 @@ import { cn } from '@/lib/utils';
 
 export const FINANCIAL_BLOCK_IDS = ['financial-items-v1', 'financial-summary-v1'];
 
-type LineText = { description: string; quantity: string; price: string };
+type LineText = { description: string; quantity: string; price: string;currency?:FinancialInput["lines"][number]["currency"] };
 type Text = { lines: LineText[]; tax: string; taxLabel: string; discount: string; due: string;
-  recorded:boolean; invoice:string; payments:{reference:string;amount:string}[] };
+  recorded:boolean; invoice:string; payments:{reference:string;amount:string}[];
+  delivery:string;discountPercent:string;taxPercent:string;taxBase:string;disputed:string;duplicatesConfirmed:boolean;
+  preserved:Partial<FinancialInput> };
 
 const QTY = /^(0|[1-9][0-9]{0,6})(\.[0-9]{1,3})?$/;
 
 function toText(v: FinancialInput): Text {
+  const{kind:_kind,lines:_lines,taxAmountKobo:_tax,taxLabel:_label,discountKobo:_discount,amountDueKobo:_due,
+    paymentRecord:_record,...preserved}=v;
   return {
-    lines: v.lines.map((l) => ({ description: l.description, quantity: l.quantity, price: koboToNaira(l.unitPriceKobo) })),
+    lines: v.lines.map((l) => ({ description: l.description, quantity: l.quantity, price: koboToNaira(l.unitPriceKobo),...(l.currency?{currency:l.currency}:{}) })),
     tax: koboToNaira(v.taxAmountKobo), taxLabel: v.taxLabel, discount: koboToNaira(v.discountKobo), due: koboToNaira(v.amountDueKobo),
     recorded:!!v.paymentRecord, invoice:koboToNaira(v.paymentRecord?.invoiceAmountKobo??null),
     payments:v.paymentRecord?.payments.map(p=>({reference:p.reference,amount:koboToNaira(p.amountKobo)}))??[],
+    delivery:koboToNaira(v.deliveryKobo??null),discountPercent:v.discountPercent??"",taxPercent:v.taxPercent??"",
+    taxBase:koboToNaira(v.taxBaseKobo??null),disputed:koboToNaira(v.disputedKobo??null),
+    duplicatesConfirmed:v.paymentRecord?.duplicatesConfirmed??false,preserved,
   };
 }
 
 const money = (s: string) => (s.trim() ? nairaToKobo(s) : null);
+const financialMessage=(code:string)=>(({
+  DISCOUNT_EXCEEDS_SUBTOTAL:"The discount is larger than the subtotal.",
+  CURRENCY_RECONCILIATION_REQUIRED:"Confirm one NGN currency for all items. Valo does not invent an exchange rate.",
+  UNEXPLAINED_TOTAL_MISMATCH:"The stated total differs from the items and adjustments. Reconcile them before continuing.",
+  CONFLICTING_DISCOUNT_INPUTS:"The fixed and percentage discounts disagree. Correct one or clear the unused field.",
+  CONFLICTING_TAX_INPUTS:"The fixed tax and percentage calculation disagree. Confirm the rate, base and amount.",
+  USER_TAX_BASE_REQUIRED:"Enter the explicitly agreed taxable base; Valo does not select a tax rate or base.",
+  DISPUTE_EXCEEDS_RECORDED_BALANCE:"The disputed portion is larger than the recorded outstanding balance.",
+} as Record<string,string>)[code]??"Review the amounts, percentages and payment references. Nothing has been applied or treated as verified payment.");
 
 /** Parse typed text into a FinancialInput. Integer kobo via string conversion only. */
 function parse(kind: FinancialInput['kind'], t: Text): { value: FinancialInput | null; errors: Record<string, string>; summary: string[][] | null } {
@@ -33,7 +49,7 @@ function parse(kind: FinancialInput['kind'], t: Text): { value: FinancialInput |
     if (!QTY.test(l.quantity.trim()) || Number(l.quantity) <= 0) errors['q' + i] = 'Positive number, up to 3 decimals.';
     const k = money(l.price);
     if (!k) errors['p' + i] = 'Naira, up to 2 decimals.';
-    return { description: l.description.trim().slice(0, 200), quantity: l.quantity.trim(), unitPriceKobo: k ?? '0' };
+    return { description: l.description.trim().slice(0, 200), quantity: l.quantity.trim(), unitPriceKobo: k ?? '0',...(l.currency?{currency:l.currency}:{}) };
   }) : [];
   const chk = (key: string, s: string) => { const k = money(s); if (s.trim() && !k) errors[key] = 'Naira, up to 2 decimals.'; return k; };
   const tax = usesLines ? chk('tax', t.tax) : null;
@@ -50,20 +66,29 @@ function parse(kind: FinancialInput['kind'], t: Text): { value: FinancialInput |
       return{reference:p.reference.trim(),amountKobo:amount??'0'};
     });
     if(!Object.keys(errors).length){
-      paymentRecord={invoiceAmountKobo:invoice!,payments};
+      paymentRecord={invoiceAmountKobo:invoice!,payments,...(t.duplicatesConfirmed?{duplicatesConfirmed:true}:{})};
       try{due=recordedBalance(paymentRecord).amountDueKobo;}
-      catch{errors.form='Payment references must be distinct. Check your records; nothing has been deducted twice.';}
+      catch(e){errors.form=financialMessage(e instanceof Error?e.message:"");}
     }
   }
   if (Object.keys(errors).length) return { value: null, errors, summary: null };
-  const value: FinancialInput = { kind, lines, taxAmountKobo: tax, taxLabel: usesLines ? t.taxLabel.trim().slice(0, 80) : '', discountKobo: discount, amountDueKobo: due,
+  const preserved={...t.preserved};
+  for(const key of["deliveryKobo","discountPercent","taxPercent","taxBaseKobo","disputedKobo"] as const)delete preserved[key];
+  const extras:Partial<FinancialInput>={};
+  for(const[key,value]of[["deliveryKobo",t.delivery],["taxBaseKobo",t.taxBase],["disputedKobo",t.disputed]] as const){
+    if(value.trim()){const v=chk(key,value);if(v!==null)extras[key]=v;}
+  }
+  if(t.discountPercent.trim())extras.discountPercent=t.discountPercent.trim();
+  if(t.taxPercent.trim())extras.taxPercent=t.taxPercent.trim();
+  if(Object.keys(errors).length)return{value:null,errors,summary:null};
+  const value: FinancialInput = {...preserved,...extras,kind, lines, taxAmountKobo: tax, taxLabel: usesLines ? t.taxLabel.trim().slice(0, 80) : '', discountKobo: discount, amountDueKobo: due,
     ...(paymentRecord?{paymentRecord}:{}) };
   try {
     const blocks = financialBlocks(value);
     return { value, errors, summary: blocks.find((b) => b.id === 'financial-summary-v1')?.rows.slice(1) ?? null };
   } catch (e) {
     const msg = String((e as Error).message);
-    errors.form = msg === 'DISCOUNT_EXCEEDS_SUBTOTAL' ? 'The discount is larger than the subtotal.' : 'These amounts cannot be calculated: ' + msg;
+    errors.form = financialMessage(msg);
     return { value: null, errors, summary: null };
   }
 }
@@ -100,6 +125,27 @@ export function FinancialFields({ value, idPrefix, onChange,onDirtyChange }: { v
 
   return (
     <div className="grid gap-5" data-testid={idPrefix + '-financial'}>
+      <details className="rounded-xl border border-border p-3">
+        <summary className="cursor-pointer font-medium focus-visible:outline focus-visible:outline-2">Agreed adjustments and reconciliation</summary>
+        <p className="mt-2 text-sm text-muted-foreground">Use only agreed figures. Percentages do not determine applicable tax. Optional items remain separate unless selected.</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {(usesLines?[["delivery","Agreed delivery (NGN)"],["discountPercent","Agreed discount (%)"],["taxPercent","User-specified tax (%)"],["taxBase","User-specified taxable base (NGN)"]]:
+            [["disputed","Disputed portion (NGN)"]]).map(([key,label])=>(
+            <Cell key={key} id={`${idPrefix}-${key}`} label={label!} err={e(key!)}>
+              <input id={`${idPrefix}-${key}`} className="field" inputMode="decimal" value={t[key as "delivery"|"discountPercent"|"taxPercent"|"taxBase"|"disputed"]}
+                onChange={ev=>up({[key!]:ev.target.value})}/>
+            </Cell>))}
+        </div>
+        {kind==="payment_reminder"&&<label className="mt-3 flex gap-2 text-sm">
+          <input type="checkbox" checked={t.duplicatesConfirmed} onChange={ev=>up({duplicatesConfirmed:ev.target.checked})}/>
+          I confirmed identical repeated references and amounts are copies of the same payment, not separate payments.
+        </label>}
+        {t.preserved.optionalLines?.map((line,i)=><label key={i} className="mt-3 flex gap-2 text-sm">
+          <input type="checkbox" checked={line.selected} onChange={ev=>up({preserved:{...t.preserved,
+            optionalLines:t.preserved.optionalLines!.map((x,n)=>n===i?{...x,selected:ev.target.checked}:x)}})}/>
+          Include optional item: {line.description}
+        </label>)}
+      </details>
       {usesLines && (
         <div>
           <p className="label">Line items {kind === 'business_proposal' && <span className="font-normal text-muted-foreground">(optional)</span>}</p>

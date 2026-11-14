@@ -1,0 +1,59 @@
+{
+  "executedAt": "2026-11-14T17:09:00.891Z",
+  "caseID": "CAI-CAND-QUO-01",
+  "caseHash": "27aeace4842577bf5639e8e23bda8432715cdc6af6dd7af81496e81e36e86c5a",
+  "followup": {
+    "version": "synthetic-customer-followup-v1",
+    "synthetic": true,
+    "values": {
+      "issueDate": "2026-11-13"
+    },
+    "hash": "c2fa7fccdd017a69542e9cef3f4a463d18d4ecb3fb855d47a5c20ae58e5f2a2a"
+  },
+  "providerPreviewId": "3ca80fad-f42d-4684-b79b-504595551bca",
+  "providerRuns": [
+    {
+      "cost": null,
+      "model": "gpt-5.4-mini-2026-03-17",
+      "usage": {
+        "inputTokens": 284,
+        "totalTokens": 310,
+        "outputTokens": 26
+      },
+      "attempt": 1,
+      "outcome": "validated",
+      "latencyMs": 1439,
+      "responseId": "chatcmpl-EkB0gcPBVG6akEfVC4BhdXnY392Zz",
+      "outboundAttempted": true
+    }
+  ],
+  "newProviderCalls": 0,
+  "originalUnadaptedGenerationPassed": false,
+  "syntheticFollowupGenerationPassed": true,
+  "documentId": "e77b4662-c553-4bd8-a070-b0930ad127ac",
+  "revisionId": "d8f0f666-2e29-4110-8b99-a9fab4dcffda",
+  "savedRevision": 2,
+  "canonicalHash": "5e06d3643971e5b8b45de8e47c3f0da81448425c9e100f5b073f819b55b1e5c7",
+  "earlierHistoryPreserved": true,
+  "files": [
+    {
+      "format": "docx",
+      "jobId": "21d540c8-ab4b-45f7-8b31-bd32cd11dd8d",
+      "revisionId": "d8f0f666-2e29-4110-8b99-a9fab4dcffda",
+      "size": 12082,
+      "hash": "36555475c0128baee6d0b1734a10666dfcb9095bb0ed11777000279310fed9c7",
+      "authorisedDownload": true,
+      "actualReaderPassed": true
+    },
+    {
+      "format": "pdf",
+      "jobId": "a9ffdccd-dfbc-43ff-aaab-784a445693ad",
+      "revisionId": "d8f0f666-2e29-4110-8b99-a9fab4dcffda",
+      "size": 47500,
+      "hash": "34613bbf9eddeec966c127548b9b9139d9ad31df2fad43b7f95ce17ee933a4ee",
+      "authorisedDownload": true,
+      "actualReaderPassed": true
+    }
+  ],
+  "scope": "Actual existing synthetic evaluation identity, provider result, authorised persistence and private worker exports. Not a managed sign-in/browser proof, formal customer60 acceptance, publication, commercial licence acceptance or R1/R2 approval."
+}

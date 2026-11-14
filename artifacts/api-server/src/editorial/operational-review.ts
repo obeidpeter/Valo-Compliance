@@ -6,7 +6,7 @@ import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { digest,sha256,type PublicationBundle } from "@workspace/valo-core";
 import { putPublicationArtifact,getPublicationArtifact } from "./publication-artifacts";
-import { operationalReviewSchema } from "./operational-review-contract";
+import { operationalReviewSchema,assertBlindReviewInputs } from "./operational-review-contract";
 import {meterReviewRequest,providerUsage} from "./review-meter";
 export type OperationalServerEvidence={
   candidateHash:string;policyHash:string;sourceCheckedAt:string;sourceHash:string;provenanceArtifactHash:string;
@@ -15,6 +15,7 @@ export type OperationalServerEvidence={
 };
 export function operationalReviewRequests(candidate:PublicationBundle["candidate"],rights:unknown,provenance:unknown,exports:unknown,
   serverEvidence:OperationalServerEvidence,reviewAsOf=new Date().toISOString()){
+  assertBlindReviewInputs(rights,provenance,exports);
   if(serverEvidence.candidateHash!==candidate.hash||serverEvidence.sourceCheckedAt!==candidate.sourceCheckDate||
     ![serverEvidence.policyHash,serverEvidence.sourceHash,serverEvidence.provenanceArtifactHash,serverEvidence.rightsArtifactHash,
       serverEvidence.exportReportArtifactHash,serverEvidence.providerSnapshotHash].every(h=>/^[a-f0-9]{64}$/.test(h)))

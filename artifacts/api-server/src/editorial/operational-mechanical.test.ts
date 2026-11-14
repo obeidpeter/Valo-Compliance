@@ -4,9 +4,11 @@ import {candidateDigest,disclosure,sha256,type PublicationBundle} from "@workspa
 import {inventoryCandidate} from "./operational-content";
 import {operationalPolicy} from "./operational-policy";
 import {operationalMechanicalChecks} from "./operational-mechanical";
+import {readTemplateIntake} from "./operational-intake";
 
 async function fixture(){
-  const now=new Date("2026-11-14T12:00:00Z"),content=await inventoryCandidate(42,now);
+  const now=new Date("2026-11-14T12:00:00Z"),intake=await readTemplateIntake("TPL-07",42),
+    content=await inventoryCandidate(42,now,{original:intake.section.body,provenance:intake.provenance});
   const raw:Omit<PublicationBundle["candidate"],"hash">={id:"TPL-07",version:42,
     body:JSON.stringify(content.document),contentClass:"general_template",jurisdiction:"NG",risk:"general",
     scope:content.scope,limitations:content.limitations,assumptions:["Blank optional internal form"],

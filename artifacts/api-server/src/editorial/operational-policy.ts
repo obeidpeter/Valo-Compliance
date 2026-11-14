@@ -22,13 +22,19 @@ export async function operationalPolicy(){
     if(!text.includes(ref.quote))throw Error("OWNER_AUTHORITY_EXCERPT_MISSING");
     authority.push({...ref,hash:sha256(text),text});
   }
+  const scopeQuote=authority[0]!.text.split(/\r?\n/).find(line=>
+    line.includes("The independently permissioned publisher may publish eligible content automatically when all mandatory gates pass."));
+  if(!scopeQuote)throw Error("ORIGINAL_MASTER_PUBLICATION_SCOPE_NOT_FOUND");
   const body={
-    version:"operational-development-1",ownerApproved:true,
-    allowedClasses:["general_template"],jurisdictions:["NG"],risks:["general"],
-    officialHosts:["openai.com","help.openai.com"],
-    blockedActivities:["regulatory_claims","legal_opinions","tax_rates","legal_validity","sales","public_launch","confidential_customer_data"],
-    originalOperationalIds:["TPL-06","TPL-07"],
-    authorityRefs:authority.map(({text:_text,...ref})=>ref),developmentOnly:true,
+    version:"r1-evidence-gated-development-2",ownerApproved:true,
+    allowedClasses:["general_template","sourced_guidance"],jurisdictions:["NG","NG-LA","NG-FC","NG-BY"],
+    risks:["general","tax","employment","privacy","governance","contracts","regulated_sector"],
+    officialHosts:["openai.com","help.openai.com","icrp.cac.gov.ng","cac.gov.ng","ndpc.gov.ng","www.ncc.gov.ng",
+      "www.nrs.gov.ng","nrs.gov.ng","nafdac.gov.ng","son.gov.ng","www.pencom.gov.ng","nipc.gov.ng","www.nipc.gov.ng"],
+    blockedActivities:["bespoke_legal_opinions","invented_tax_rates","guaranteed_legal_validity","sales","public_launch","confidential_customer_data","government_filings","payment_movement"],
+    originalOperationalIds:Array.from({length:40},(_,i)=>`TPL-${String(i+1).padStart(2,"0")}`),
+    authorityRefs:[...authority.map(({text:_text,...ref})=>ref),
+      {path:refs[0]!.path,hash:authority[0]!.hash,quote:scopeQuote.trim()}],developmentOnly:true,
   };
   return{policy:{...body,hash:digest(body)} as PublicationBundle["policy"],authority};
 }

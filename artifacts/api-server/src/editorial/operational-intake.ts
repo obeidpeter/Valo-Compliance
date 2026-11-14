@@ -54,3 +54,24 @@ export async function readTemplateIntake(id:string,version=1){
       templateId:id,version},
     rightsState:"not_evaluated_for_new_bytes",reviewState:"not_run",publicationStatus:"unpublished_candidate"};
 }
+export async function readGuidanceIntake(id:string,version=1){
+  if(!/^GUD-(0[1-9]|[12]\d|30)$/.test(id)||!Number.isSafeInteger(version)||version<1)throw Error("R1_GUIDANCE_ID_NOT_SUPPORTED");
+  const root=publicationWorkspaceRoot(),path="docs/content-candidates/r1-content-intake-manifest.json";
+  const note=await readFile(resolve(root,path),"utf8"),manifest=JSON.parse(note);
+  const row=manifest.guidance.find((r:{id:string})=>r.id===id);
+  if(!row||!/^docs\/content-candidates\/[a-z0-9-]+\.md$/.test(row.sourcePath))throw Error("GUIDANCE_SOURCE_NOT_ALLOWLISTED");
+  const source=await readFile(resolve(root,row.sourcePath),"utf8");
+  if(sha256(source)!==row.sourceSHA256)throw Error("GUIDANCE_SOURCE_HASH_MISMATCH");
+  const marker=`## ${id} — ${row.title}`;
+  if(source.split(marker).length!==2)throw Error("GUIDANCE_HEADING_NOT_UNIQUE");
+  const section=source.split(marker)[1]!.split(/^## GUD-\d{2} — /m)[0]!;
+  const pieces=section.split(/^### (?:Customer body(?: starts?)?|Customer article)\s*$/im);
+  if(pieces.length!==2)throw Error("GUIDANCE_CUSTOMER_BOUNDARY_MISSING");
+  const body=pieces[1]!.split(/^### (?:Customer body ends?|Editorial metadata|Internal|Claim map|Source metadata)/im)[0]!.trim();
+  if(body.length<100||/EDP-\d|publicationStatus|aiReviewedAt|sourceSHA256/.test(body))throw Error("GUIDANCE_INTERNAL_METADATA_IN_BODY");
+  const original:OriginalSection={id,title:row.title,body,sourceHash:row.sourceSHA256,relatedTemplateIds:[]};
+  return{section:original,document:operationalDocument(original),catalogue:row,sourceHash:row.sourceSHA256,
+    provenance:{path:row.sourcePath,hash:sha256(source),sourceText:source,note,noteHash:sha256(note),templateId:id,version,
+      authoringRoute:"Original supplied ChatGPT guidance; source and independent review still required",
+      transformation:"Exact customer-body boundary extraction; editorial claim maps and internal status excluded"}};
+}
