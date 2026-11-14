@@ -1,4 +1,5 @@
 import type { CheckerFacts, Profile, Answer } from '@workspace/api-client-react';
+import { ANSWER_STATE_LABELS, isRichMarker, normaliseRichAnswers, richFactLabel, richReviewEntries, richStringLabel, type RichCheckerFacts } from './rich-checker';
 
 export const MARKERS = ['unknown', 'unanswered', 'not_applicable'] as const;
 export type Marker = (typeof MARKERS)[number];
@@ -63,8 +64,9 @@ export function factsFromProfile(p: Profile): CheckerFacts {
 export const needsProducts = (f: CheckerFacts) => f.manufacturing === 'yes' || f.importing === 'yes';
 
 /** Normalise before sending: dependent questions become not_applicable / omitted. */
-export function finaliseFacts(f: CheckerFacts): CheckerFacts {
-  const out: CheckerFacts = { ...f };
+export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
+  const out: RichCheckerFacts = { ...f };
+  if (f.rich) out.rich = normaliseRichAnswers(f.rich) as RichCheckerFacts['rich'];
   if (Array.isArray(out.activities)) {
     const a = out.activities.map((x) => x.trim()).filter(Boolean);
     out.activities = a.length ? a : 'unanswered';
@@ -132,7 +134,7 @@ export const FACT_LABELS: Record<string, string> = {
   personalData: 'Holds personal data',
 };
 
-export const factLabel = (k: string) => FACT_LABELS[k] ?? k;
+export const factLabel = (k: string) => FACT_LABELS[k] ?? richFactLabel(k);
 
 const VALUE_LABELS: Record<string, string> = {
   unknown: 'Unknown',
@@ -153,8 +155,13 @@ export function valueLabel(v: string): string {
 }
 
 export function displayFact(k: string, v: unknown): string {
-  if (v === null || v === undefined) return 'Not answered';
-  if (Array.isArray(v)) return v.length ? v.join(', ') : 'None listed';
+  if (v === undefined) return 'Not supplied';
+  if (v === null) return 'Not answered';
+  if (isRichMarker(v)) return ANSWER_STATE_LABELS[v.status];
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (Array.isArray(v)) return v.length ? v.map(item => displayFact(k, item)).join('; ') : 'None listed';
+  if (typeof v === 'object') return Object.entries(v).map(([field, value]) => `${factLabel(field)}: ${displayFact(k === 'rich' || k.startsWith('rich.') ? `${k}.${field}` : field, value)}`).join('; ') || 'No details supplied';
+  if ((k === 'rich' || k.startsWith('rich.')) && typeof v === 'string') return richStringLabel(k, v);
   if (k === 'turnoverAmountKobo' && typeof v === 'string' && !isMarker(v)) return formatKobo(v);
   return valueLabel(String(v));
 }
@@ -165,3 +172,9 @@ export const LEGAL_FORMS = ['sole_proprietor', 'partnership', 'limited_company',
 export const REG_STATUSES = ['registered', 'unregistered', 'pending'];
 
 export const FACT_ORDER = Object.keys(FACT_LABELS);
+
+export function reviewFacts(facts: object): [string, unknown][] {
+  const record = facts as Record<string, unknown>;
+  return [...FACT_ORDER.filter(key => key in record).map(key => [key, record[key]] as [string, unknown]), ...richReviewEntries(facts)];
+}
+

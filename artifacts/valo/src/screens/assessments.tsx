@@ -12,13 +12,12 @@ import { AssessmentResultView } from '@/components/assessment-result';
 import { TaskForm, emptyDraft, type TaskDraft } from '@/components/task-form';
 import { EmptyState, ErrorState, Notice, Skel } from '@/components/states';
 import { describeError, formatDate } from '@/lib/api';
-import { FACT_ORDER, displayFact, factLabel, live } from '@/lib/checker';
+import { reviewFacts, displayFact, factLabel, live } from '@/lib/checker';
+import { RESULT_LABELS, RESULT_TONES, factAtPath, canCreateSourceTask } from '@/lib/rich-checker';
 import { useToast } from '@/hooks/use-toast';
 
 function counts(a: SavedAssessment) {
-  const c = { likely: 0, more: 0 };
-  a.result.items.forEach((i) => { if (i.label === 'Likely relevant') c.likely++; else if (i.label === 'More information needed') c.more++; });
-  return c;
+  return RESULT_LABELS.map(label => ({ label, count: a.result.items.filter(item => item.label === label).length })).filter(item => item.count > 0);
 }
 
 export function AssessmentsList() {
@@ -55,7 +54,7 @@ export function AssessmentsList() {
                         </span>
                       </span>
                       {a.result.items.length === 0 ? <span className="pill pill-ink">Coverage unavailable</span> : (
-                        <span className="flex gap-1.5"><span className="pill pill-forest">{c.likely} likely</span>{c.more > 0 && <span className="pill pill-ochre">{c.more} need info</span>}</span>
+                        <span className="flex flex-wrap gap-1.5">{c.map(({ label, count }) => <span key={label} className={'pill ' + RESULT_TONES[label]}>{count} {label.toLowerCase()}</span>)}</span>
                       )}
                       <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                     </Link>
@@ -90,17 +89,17 @@ export function AssessmentDetail({ id }: { id: string }) {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_18rem]">
         <div className="min-w-0">
-          <AssessmentResultView result={s.result} itemAction={(it) => it.label === 'Likely relevant' ? (
+          <AssessmentResultView result={s.result} itemAction={(it) => canCreateSourceTask(it) ? (
             <button type="button" className="btn btn-ghost btn-sm" aria-expanded={taskFor === it.ruleId} onClick={() => setTaskFor(taskFor === it.ruleId ? null : it.ruleId)} data-testid={'button-task-' + it.ruleId}><ListPlus className="h-4 w-4" />Add task</button>
           ) : null} />
-          {taskFor && (() => { const it = s.result.items.find((i) => i.ruleId === taskFor); return it ? <TaskFromItem key={it.ruleId} assessmentId={s.id} item={it} onDone={() => setTaskFor(null)} /> : null; })()}
+          {taskFor && (() => { const it = s.result.items.find((i) => i.ruleId === taskFor); return it && canCreateSourceTask(it) ? <TaskFromItem key={it.ruleId} assessmentId={s.id} item={it} onDone={() => setTaskFor(null)} /> : null; })()}
         </div>
         <aside className="grid h-fit gap-4">
           <details className="surface p-5" open>
             <summary className="eyebrow cursor-pointer">Answers used</summary>
             <dl className="mt-3 grid gap-2 text-sm">
-              {FACT_ORDER.filter((k) => k in facts).map((k) => (
-                <div key={k} className="border-t border-border pt-2"><dt className="text-xs text-muted-foreground">{factLabel(k)}</dt><dd className="break-words">{displayFact(k, facts[k])}</dd></div>
+              {reviewFacts(facts).map(([k, value]) => (
+                <div key={k} className="border-t border-border pt-2"><dt className="text-xs text-muted-foreground">{factLabel(k)}</dt><dd className="break-words">{displayFact(k, value)}</dd></div>
               ))}
             </dl>
           </details>
@@ -142,7 +141,7 @@ function Comparison({ id, prevId, current, previous }: { id: string; prevId: str
         <ul className="mt-2 grid gap-2 text-sm">
           {d.changedFacts.length === 0 ? <li className="text-muted-foreground">None</li> : d.changedFacts.map((k) => (
             <li key={k} className="rounded-xl border border-border p-3"><span className="block text-xs text-muted-foreground">{factLabel(k)}</span>
-              {pf ? <><span className="text-muted-foreground line-through">{displayFact(k, pf[k])}</span> <ArrowRight className="mx-1 inline h-3 w-3" /> {displayFact(k, cf[k])}</> : displayFact(k, cf[k])}
+              {pf ? <><span className="text-muted-foreground line-through">{displayFact(k, factAtPath(pf, k))}</span> <ArrowRight className="mx-1 inline h-3 w-3" /> {displayFact(k, factAtPath(cf, k))}</> : displayFact(k, factAtPath(cf, k))}
             </li>
           ))}
         </ul>
@@ -188,3 +187,4 @@ function TaskFromItem({ assessmentId, item, onDone }: { assessmentId: string; it
     </div>
   );
 }
+

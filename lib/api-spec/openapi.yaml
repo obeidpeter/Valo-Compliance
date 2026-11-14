@@ -653,6 +653,20 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/AssessmentResult" }
+  /workspace/checker/preview:
+    post:
+      operationId: previewWorkspaceAssessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssessmentInput" }
+      responses:
+        "200":
+          description: Ephemeral assessment; inputs are not saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssessmentResult" }
   /workspace/assessments:
     get:
       operationId: listAssessments
@@ -1284,11 +1298,1394 @@ components:
         globalAvailable: { type: boolean }
         manualFallbackAvailable: { type: boolean }
         policyNotice: { type: string }
+    RichCheckerFacts:
+      type: object
+      properties:
+        businessName:
+          type: object
+          properties:
+            legalForm:
+              anyOf:
+              - type: string
+                enum:
+                - individual
+                - firm
+                - company
+                - other
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            hasPlaceOfBusinessInNigeria:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            carryingOnBusiness:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            trueSurname:
+              anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 300
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            trueForenames:
+              anyOf:
+              - maxItems: 20
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+                  maxLength: 150
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            recognizedAbbreviations:
+              anyOf:
+              - maxItems: 20
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+                  maxLength: 150
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            businessName:
+              anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 300
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            corporateName:
+              anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 300
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            partners:
+              anyOf:
+              - maxItems: 30
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      anyOf:
+                      - type: string
+                        enum:
+                        - individual
+                        - corporation
+                      - type: object
+                        properties:
+                          status:
+                            type: string
+                            enum:
+                            - unknown
+                            - unanswered
+                            - not_applicable
+                          value:
+                            type: 'null'
+                        required:
+                        - status
+                        - value
+                        additionalProperties: false
+                    surname:
+                      anyOf:
+                      - type: string
+                        minLength: 1
+                        maxLength: 300
+                      - type: object
+                        properties:
+                          status:
+                            type: string
+                            enum:
+                            - unknown
+                            - unanswered
+                            - not_applicable
+                          value:
+                            type: 'null'
+                        required:
+                        - status
+                        - value
+                        additionalProperties: false
+                    forenames:
+                      anyOf:
+                      - maxItems: 20
+                        type: array
+                        items:
+                          type: string
+                          minLength: 1
+                          maxLength: 150
+                      - type: object
+                        properties:
+                          status:
+                            type: string
+                            enum:
+                            - unknown
+                            - unanswered
+                            - not_applicable
+                          value:
+                            type: 'null'
+                        required:
+                        - status
+                        - value
+                        additionalProperties: false
+                    recognizedAbbreviations:
+                      anyOf:
+                      - maxItems: 20
+                        type: array
+                        items:
+                          type: string
+                          minLength: 1
+                          maxLength: 150
+                      - type: object
+                        properties:
+                          status:
+                            type: string
+                            enum:
+                            - unknown
+                            - unanswered
+                            - not_applicable
+                          value:
+                            type: 'null'
+                        required:
+                        - status
+                        - value
+                        additionalProperties: false
+                    corporateName:
+                      anyOf:
+                      - type: string
+                        minLength: 1
+                        maxLength: 300
+                      - type: object
+                        properties:
+                          status:
+                            type: string
+                            enum:
+                            - unknown
+                            - unanswered
+                            - not_applicable
+                          value:
+                            type: 'null'
+                        required:
+                        - status
+                        - value
+                        additionalProperties: false
+                  additionalProperties: false
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            operatorRole:
+              anyOf:
+              - type: string
+                enum:
+                - proprietor
+                - manager
+                - receiver
+                - other
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            appointmentAuthority:
+              anyOf:
+              - type: string
+                enum:
+                - court
+                - private_contract
+                - other
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            appointmentConfirmed:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            namingAssessment:
+              anyOf:
+              - type: object
+                properties:
+                  onlyAddedWordsIndicateSuccession:
+                    anyOf:
+                    - type: boolean
+                    - type: object
+                      properties:
+                        status:
+                          type: string
+                          enum:
+                          - unknown
+                          - unanswered
+                          - not_applicable
+                        value:
+                          type: 'null'
+                      required:
+                      - status
+                      - value
+                      additionalProperties: false
+                  otherBrandAddition:
+                    anyOf:
+                    - type: boolean
+                    - type: object
+                      properties:
+                        status:
+                          type: string
+                          enum:
+                          - unknown
+                          - unanswered
+                          - not_applicable
+                        value:
+                          type: 'null'
+                      required:
+                      - status
+                      - value
+                      additionalProperties: false
+                  sameSurnameAllPartners:
+                    anyOf:
+                    - type: boolean
+                    - type: object
+                      properties:
+                        status:
+                          type: string
+                          enum:
+                          - unknown
+                          - unanswered
+                          - not_applicable
+                        value:
+                          type: 'null'
+                      required:
+                      - status
+                      - value
+                      additionalProperties: false
+                  onlyAdditionIsPluralS:
+                    anyOf:
+                    - type: boolean
+                    - type: object
+                      properties:
+                        status:
+                          type: string
+                          enum:
+                          - unknown
+                          - unanswered
+                          - not_applicable
+                        value:
+                          type: 'null'
+                      required:
+                      - status
+                      - value
+                      additionalProperties: false
+                additionalProperties: false
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            businessNameRegistered:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+          additionalProperties: false
+        privacy:
+          type: object
+          properties:
+            processesPersonalData:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            controllerRole:
+              anyOf:
+              - type: string
+                enum:
+                - controller
+                - processor_only
+                - mixed
+                - other
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            collectionMethod:
+              anyOf:
+              - type: string
+                enum:
+                - direct
+                - indirect
+                - mixed
+                - other
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            newCollectionEvent:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            operatesInNigeria:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            processingOccursInNigeria:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            dataSubjectsInNigeria:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            controllerDomiciledInNigeria:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            controllerResidentInNigeria:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            processorConnectionInNigeria:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            processingPurpose:
+              anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 300
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            commercialUse:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            privacyRightsViolationIndicated:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            section3Exception:
+              anyOf:
+              - type: string
+                enum:
+                - none
+                - personal_household
+                - legal_claim
+                - other
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            determinesPurposesAndMeans:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            ownPurposeReuse:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            dataSubjectAlreadyInformed:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+              - type: string
+                const: claimed_not_verified
+            indirectNoticeException:
+              anyOf:
+              - type: string
+                enum:
+                - none
+                - disproportionate_effort_claim
+                - other
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            exceptionScopeConfirmed:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            exceptionSupportingFacts:
+              anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 300
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            dataCategories:
+              anyOf:
+              - maxItems: 20
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+                  maxLength: 150
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            automatedDecisionMaking:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            profiling:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+          additionalProperties: false
+        tax:
+          type: object
+          properties:
+            legalForm:
+              anyOf:
+              - type: string
+                enum:
+                - company
+                - company_limited_by_guarantee
+                - foreign_company
+                - individual_business_name
+                - ordinary_unincorporated_partnership
+                - incorporated_trustees
+                - other
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            incorporatedInNigeria:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            incorporatedAsCompany:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            effectiveManagementCountry:
+              anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 300
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            managementStatusVerification:
+              anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 300
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            nonresident:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            onlyNigeriaIncome:
+              anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 300
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            finalTaxTreatment:
+              anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 300
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            companyStatus:
+              anyOf:
+              - type: string
+                minLength: 1
+                maxLength: 300
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            accountingPeriodStart:
+              anyOf:
+              - type: string
+                pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            accountingPeriodEnd:
+              anyOf:
+              - type: string
+                pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))$
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+          additionalProperties: false
+        product:
+          type: object
+          properties:
+            productCategory:
+              anyOf:
+              - type: string
+                enum:
+                - processed_food
+                - cosmetic
+                - claimed_cosmetic
+                - water
+                - drug
+                - drug_product
+                - medical_device
+                - live_fish
+                - other
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            manufacturesInNigeria:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            commercialSupplyInNigeria:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            commercialSupplyOfRegulatedProducts:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            activity:
+              anyOf:
+              - type: string
+                enum:
+                - manufacture
+                - resale_only
+                - own_brand_repackaging
+                - import_and_distribute
+                - service_use_only
+                - sample_for_registration
+                - sample_for_registration_only
+                - other
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            productRegistration:
+              anyOf:
+              - type: string
+                enum:
+                - current_for_product_and_manufacturer
+                - supplier_registration_claimed
+                - none
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            ownBrandOrRepackaging:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            processingOrPackaging:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            drugOrMedicalUse:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            therapeuticClaims:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            specialSamplePermit:
+              anyOf:
+              - type: string
+                enum:
+                - permit_held
+                - none
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            permitScopeMatchesActivity:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            permitConditionsSatisfied:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            registrationCoversExactProductAndManufacturer:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+            registrationConditionsChanged:
+              anyOf:
+              - type: boolean
+              - type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - unknown
+                    - unanswered
+                    - not_applicable
+                  value:
+                    type: 'null'
+                required:
+                - status
+                - value
+                additionalProperties: false
+          additionalProperties: false
+      additionalProperties: false
+    MissingAnswerState:
+      type: object
+      additionalProperties: false
+      required: [field, state]
+      properties:
+        field: { type: string }
+        state: { type: string, enum: [unknown, unanswered, not_applicable, review] }
     CheckerFacts:
       type: object
       additionalProperties: false
       required: [legalForm, registrationStatus, activities, state, lga, employees, turnoverBand, turnoverYear, turnoverMetric, turnoverCurrency, premises, manufacturing, importing, personalData]
       properties:
+        factsVersion: { type: string, enum: [checker-facts-v2] }
+        rich: { $ref: "#/components/schemas/RichCheckerFacts" }
         legalForm: { type: string, maxLength: 80 }
         registrationStatus: { type: string, maxLength: 80 }
         activities:
@@ -1360,8 +2757,13 @@ components:
         ruleVersion: { type: integer }
         requirementVersionId: { type: string }
         title: { type: string }
-        label: { type: string, enum: ["Likely relevant", "More information needed", "Not indicated by these answers"] }
+        label: { type: string, enum: ["Likely relevant", "May apply", "More information needed", "Not indicated by these answers"] }
         reason: { type: string }
+        assessedProposition: { type: string }
+        factsNotice: { type: string }
+        sourceReviewHold: { type: string }
+        sourceLinkedTaskEligible: { type: boolean }
+        missingAnswerStates: { type: array, items: { $ref: "#/components/schemas/MissingAnswerState" } }
         missingFacts: { type: array, items: { type: string } }
         matchedFacts: { type: array, items: { type: string } }
         nextStep: { type: string }

@@ -89,6 +89,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
+      - name: Prove rich checker contracts, factual states and UI helper targets
+        run: pnpm --filter @workspace/api-server test:valo-rich-checker
       - name: Run foundation unit tests
         run: pnpm --filter @workspace/scripts test:valo
       - name: Install standard PDF readers
@@ -166,6 +168,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Apply tracked migrations to empty synthetic database
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
+      - name: Prove current-rule task guards against synthetic PostgreSQL
+        run: pnpm --filter @workspace/api-server test:valo-task-source-guard
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db
       - name: Prove durable write limits and membership revocation races

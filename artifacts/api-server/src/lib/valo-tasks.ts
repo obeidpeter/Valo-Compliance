@@ -5,7 +5,8 @@ import { CreateTaskBody,UpdateTaskBody,DeleteTaskBody,SaveReminderPreferencesBod
   GetReminderPreferencesResponse,CreateTaskResponse,ListRemindersResponse } from "@workspace/api-zod";
 import { z } from "zod";
 import { ValoProblem,type WorkspaceActor } from "./valo-store";
-import { assessmentRow,serializeAssessment,workspaceTransaction,workspaceEvent,releasedRegistry,type WorkspaceTx } from "./valo-assessments";
+import { assessmentRow,serializeAssessment,workspaceTransaction,workspaceEvent,releasedRegistry,
+  currentSourceTaskRecommendation,type WorkspaceTx } from "./valo-assessments";
 import {reminderEmailConfiguration,automaticReminderDeliveryReady} from "./valo-reminder-resend";
 
 const emailBlocker="Development email needs an approved sender and an owner-controlled test recipient. Preferences are saved; inbox delivery has not been verified.";
@@ -69,10 +70,10 @@ export async function createTask(actor:WorkspaceActor,raw:unknown){
     if(input.assessmentId){
       const saved=serializeAssessment(await assessmentRow(tx,actor,input.assessmentId));
       if(input.ruleId){
-        const item=saved.result.items.find(i=>i.ruleId===input.ruleId&&i.label==="Likely relevant");
+        const item=saved.result.items.find(i=>i.ruleId===input.ruleId&&i.label==="Likely relevant"&&i.sourceLinkedTaskEligible!==false);
         if(!item)throw new ValoProblem(422,"Only an eligible recommendation in this saved assessment can create a source-linked task");
-        const current=await releasedRegistry(tx,new Date());
-        if(!current.rules.some(r=>r.id===item.ruleId&&r.version===item.ruleVersion))
+        const now=new Date(),current=await releasedRegistry(tx,now);
+        if(!currentSourceTaskRecommendation(saved.facts,current,item.ruleId,item.ruleVersion,now))
           throw new ValoProblem(409,"This recommendation is no longer current. Reassess before creating its task.");
         ruleVersion=item.ruleVersion;
       }
