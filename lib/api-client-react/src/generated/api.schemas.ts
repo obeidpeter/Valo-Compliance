@@ -671,6 +671,535 @@ export interface CustomerAIUsage {
   policyNotice: string;
 }
 
+export type RichCheckerFactsBusinessNameLegalForm = 'individual' | 'firm' | 'company' | 'other' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameHasPlaceOfBusinessInNigeria = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameCarryingOnBusiness = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameTrueSurname = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameTrueForenames = string[] | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameRecognizedAbbreviations = string[] | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameBusinessName = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameCorporateName = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNamePartners = ({
+  type?: 'individual' | 'corporation' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+  surname?: string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+  forenames?: string[] | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+  recognizedAbbreviations?: string[] | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+  corporateName?: string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+})[] | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameOperatorRole = 'proprietor' | 'manager' | 'receiver' | 'other' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameAppointmentAuthority = 'court' | 'private_contract' | 'other' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameAppointmentConfirmed = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameNamingAssessment = {
+  onlyAddedWordsIndicateSuccession?: boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+  otherBrandAddition?: boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+  sameSurnameAllPartners?: boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+  onlyAdditionIsPluralS?: boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+} | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessNameBusinessNameRegistered = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsBusinessName = {
+  legalForm?: RichCheckerFactsBusinessNameLegalForm;
+  hasPlaceOfBusinessInNigeria?: RichCheckerFactsBusinessNameHasPlaceOfBusinessInNigeria;
+  carryingOnBusiness?: RichCheckerFactsBusinessNameCarryingOnBusiness;
+  trueSurname?: RichCheckerFactsBusinessNameTrueSurname;
+  trueForenames?: RichCheckerFactsBusinessNameTrueForenames;
+  recognizedAbbreviations?: RichCheckerFactsBusinessNameRecognizedAbbreviations;
+  businessName?: RichCheckerFactsBusinessNameBusinessName;
+  corporateName?: RichCheckerFactsBusinessNameCorporateName;
+  partners?: RichCheckerFactsBusinessNamePartners;
+  operatorRole?: RichCheckerFactsBusinessNameOperatorRole;
+  appointmentAuthority?: RichCheckerFactsBusinessNameAppointmentAuthority;
+  appointmentConfirmed?: RichCheckerFactsBusinessNameAppointmentConfirmed;
+  namingAssessment?: RichCheckerFactsBusinessNameNamingAssessment;
+  businessNameRegistered?: RichCheckerFactsBusinessNameBusinessNameRegistered;
+};
+
+export type RichCheckerFactsPrivacyProcessesPersonalData = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyControllerRole = 'controller' | 'processor_only' | 'mixed' | 'other' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyCollectionMethod = 'direct' | 'indirect' | 'mixed' | 'other' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyNewCollectionEvent = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyOperatesInNigeria = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyProcessingOccursInNigeria = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyDataSubjectsInNigeria = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyControllerDomiciledInNigeria = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyControllerResidentInNigeria = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyProcessorConnectionInNigeria = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyProcessingPurpose = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyCommercialUse = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyPrivacyRightsViolationIndicated = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacySection3Exception = 'none' | 'personal_household' | 'legal_claim' | 'other' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyDeterminesPurposesAndMeans = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyOwnPurposeReuse = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyDataSubjectAlreadyInformed = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+} | 'claimed_not_verified';
+
+export type RichCheckerFactsPrivacyIndirectNoticeException = 'none' | 'disproportionate_effort_claim' | 'other' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyExceptionScopeConfirmed = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyExceptionSupportingFacts = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyDataCategories = string[] | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyAutomatedDecisionMaking = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacyProfiling = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsPrivacy = {
+  processesPersonalData?: RichCheckerFactsPrivacyProcessesPersonalData;
+  controllerRole?: RichCheckerFactsPrivacyControllerRole;
+  collectionMethod?: RichCheckerFactsPrivacyCollectionMethod;
+  newCollectionEvent?: RichCheckerFactsPrivacyNewCollectionEvent;
+  operatesInNigeria?: RichCheckerFactsPrivacyOperatesInNigeria;
+  processingOccursInNigeria?: RichCheckerFactsPrivacyProcessingOccursInNigeria;
+  dataSubjectsInNigeria?: RichCheckerFactsPrivacyDataSubjectsInNigeria;
+  controllerDomiciledInNigeria?: RichCheckerFactsPrivacyControllerDomiciledInNigeria;
+  controllerResidentInNigeria?: RichCheckerFactsPrivacyControllerResidentInNigeria;
+  processorConnectionInNigeria?: RichCheckerFactsPrivacyProcessorConnectionInNigeria;
+  processingPurpose?: RichCheckerFactsPrivacyProcessingPurpose;
+  commercialUse?: RichCheckerFactsPrivacyCommercialUse;
+  privacyRightsViolationIndicated?: RichCheckerFactsPrivacyPrivacyRightsViolationIndicated;
+  section3Exception?: RichCheckerFactsPrivacySection3Exception;
+  determinesPurposesAndMeans?: RichCheckerFactsPrivacyDeterminesPurposesAndMeans;
+  ownPurposeReuse?: RichCheckerFactsPrivacyOwnPurposeReuse;
+  dataSubjectAlreadyInformed?: RichCheckerFactsPrivacyDataSubjectAlreadyInformed;
+  indirectNoticeException?: RichCheckerFactsPrivacyIndirectNoticeException;
+  exceptionScopeConfirmed?: RichCheckerFactsPrivacyExceptionScopeConfirmed;
+  exceptionSupportingFacts?: RichCheckerFactsPrivacyExceptionSupportingFacts;
+  dataCategories?: RichCheckerFactsPrivacyDataCategories;
+  automatedDecisionMaking?: RichCheckerFactsPrivacyAutomatedDecisionMaking;
+  profiling?: RichCheckerFactsPrivacyProfiling;
+};
+
+export type RichCheckerFactsTaxLegalForm = 'company' | 'company_limited_by_guarantee' | 'foreign_company' | 'individual_business_name' | 'ordinary_unincorporated_partnership' | 'incorporated_trustees' | 'other' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTaxIncorporatedInNigeria = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTaxIncorporatedAsCompany = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTaxEffectiveManagementCountry = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTaxManagementStatusVerification = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTaxNonresident = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTaxOnlyNigeriaIncome = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTaxFinalTaxTreatment = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTaxCompanyStatus = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTaxAccountingPeriodStart = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTaxAccountingPeriodEnd = string | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsTax = {
+  legalForm?: RichCheckerFactsTaxLegalForm;
+  incorporatedInNigeria?: RichCheckerFactsTaxIncorporatedInNigeria;
+  incorporatedAsCompany?: RichCheckerFactsTaxIncorporatedAsCompany;
+  effectiveManagementCountry?: RichCheckerFactsTaxEffectiveManagementCountry;
+  managementStatusVerification?: RichCheckerFactsTaxManagementStatusVerification;
+  nonresident?: RichCheckerFactsTaxNonresident;
+  onlyNigeriaIncome?: RichCheckerFactsTaxOnlyNigeriaIncome;
+  finalTaxTreatment?: RichCheckerFactsTaxFinalTaxTreatment;
+  companyStatus?: RichCheckerFactsTaxCompanyStatus;
+  accountingPeriodStart?: RichCheckerFactsTaxAccountingPeriodStart;
+  accountingPeriodEnd?: RichCheckerFactsTaxAccountingPeriodEnd;
+};
+
+export type RichCheckerFactsProductProductCategory = 'processed_food' | 'cosmetic' | 'claimed_cosmetic' | 'water' | 'drug' | 'drug_product' | 'medical_device' | 'live_fish' | 'other' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductManufacturesInNigeria = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductCommercialSupplyInNigeria = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductCommercialSupplyOfRegulatedProducts = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductActivity = 'manufacture' | 'resale_only' | 'own_brand_repackaging' | 'import_and_distribute' | 'service_use_only' | 'sample_for_registration' | 'sample_for_registration_only' | 'other' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductProductRegistration = 'current_for_product_and_manufacturer' | 'supplier_registration_claimed' | 'none' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductOwnBrandOrRepackaging = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductProcessingOrPackaging = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductDrugOrMedicalUse = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductTherapeuticClaims = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductSpecialSamplePermit = 'permit_held' | 'none' | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductPermitScopeMatchesActivity = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductPermitConditionsSatisfied = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductRegistrationCoversExactProductAndManufacturer = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProductRegistrationConditionsChanged = boolean | {
+  status: 'unknown' | 'unanswered' | 'not_applicable';
+  /** @nullable */
+  value: null;
+};
+
+export type RichCheckerFactsProduct = {
+  productCategory?: RichCheckerFactsProductProductCategory;
+  manufacturesInNigeria?: RichCheckerFactsProductManufacturesInNigeria;
+  commercialSupplyInNigeria?: RichCheckerFactsProductCommercialSupplyInNigeria;
+  commercialSupplyOfRegulatedProducts?: RichCheckerFactsProductCommercialSupplyOfRegulatedProducts;
+  activity?: RichCheckerFactsProductActivity;
+  productRegistration?: RichCheckerFactsProductProductRegistration;
+  ownBrandOrRepackaging?: RichCheckerFactsProductOwnBrandOrRepackaging;
+  processingOrPackaging?: RichCheckerFactsProductProcessingOrPackaging;
+  drugOrMedicalUse?: RichCheckerFactsProductDrugOrMedicalUse;
+  therapeuticClaims?: RichCheckerFactsProductTherapeuticClaims;
+  specialSamplePermit?: RichCheckerFactsProductSpecialSamplePermit;
+  permitScopeMatchesActivity?: RichCheckerFactsProductPermitScopeMatchesActivity;
+  permitConditionsSatisfied?: RichCheckerFactsProductPermitConditionsSatisfied;
+  registrationCoversExactProductAndManufacturer?: RichCheckerFactsProductRegistrationCoversExactProductAndManufacturer;
+  registrationConditionsChanged?: RichCheckerFactsProductRegistrationConditionsChanged;
+};
+
+export interface RichCheckerFacts {
+  businessName?: RichCheckerFactsBusinessName;
+  privacy?: RichCheckerFactsPrivacy;
+  tax?: RichCheckerFactsTax;
+  product?: RichCheckerFactsProduct;
+}
+
+export type MissingAnswerStateState = typeof MissingAnswerStateState[keyof typeof MissingAnswerStateState];
+
+
+export const MissingAnswerStateState = {
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  not_applicable: 'not_applicable',
+  review: 'review',
+} as const;
+
+export interface MissingAnswerState {
+  field: string;
+  state: MissingAnswerStateState;
+}
+
+export type CheckerFactsFactsVersion = typeof CheckerFactsFactsVersion[keyof typeof CheckerFactsFactsVersion];
+
+
+export const CheckerFactsFactsVersion = {
+  'checker-facts-v2': 'checker-facts-v2',
+} as const;
+
 export type CheckerFactsState = typeof CheckerFactsState[keyof typeof CheckerFactsState];
 
 
@@ -782,6 +1311,8 @@ export const Answer = {
 } as const;
 
 export interface CheckerFacts {
+  factsVersion?: CheckerFactsFactsVersion;
+  rich?: RichCheckerFacts;
   /** @maxLength 80 */
   legalForm: string;
   /** @maxLength 80 */
@@ -858,6 +1389,7 @@ export type AssessmentItemLabel = typeof AssessmentItemLabel[keyof typeof Assess
 
 export const AssessmentItemLabel = {
   Likely_relevant: 'Likely relevant',
+  May_apply: 'May apply',
   More_information_needed: 'More information needed',
   Not_indicated_by_these_answers: 'Not indicated by these answers',
 } as const;
@@ -869,6 +1401,11 @@ export interface AssessmentItem {
   title: string;
   label: AssessmentItemLabel;
   reason: string;
+  assessedProposition?: string;
+  factsNotice?: string;
+  sourceReviewHold?: string;
+  sourceLinkedTaskEligible?: boolean;
+  missingAnswerStates?: MissingAnswerState[];
   missingFacts: string[];
   matchedFacts: string[];
   nextStep: string;

@@ -1,5 +1,10 @@
 # Privacy information exchange and inspection
 
+Subsequently reconciled with concurrent checker/erasure implementation; see
+[combined checks and migration renumbering](privacy-checker-reconciliation.md).
+The original information SQL became canonical migration 0023 without changing
+its bytes; the 0022 receipt below records its earlier development execution.
+
 Partial evidence for PRV-003, IAM-003, ADM-001/009 and WRK-006. Not full privacy
 fulfilment, formal R1/R2 acceptance or a real managed-MFA browser result.
 

@@ -184,6 +184,7 @@ export function availablePrivacyActions(row:PrivacyRow,identityId:string){
   const can=(next:PrivacyStatus)=>{try{assertPrivacyTransition(row.status,next);return true;}catch{return false;}};
   if(can("held"))actions.push("hold");
   if(row.erasurePhase!=="not_started"){
+    if(row.status==="held")actions.push("release_hold");
     if(["assigned","in_progress","failed","partially_fulfilled"].includes(row.status))actions.push("resume_erasure");
     return actions;
   }
@@ -212,12 +213,16 @@ export async function simpleStaffPrivacyAction(actor:PrivacyStaffActor,id:string
     await requirePrivacyStaff(tx,actor);let row=await readPrivacyCase(tx,id);
     assertPrivacyVersion(row.version,input.expectedVersion);
     const status={claim:"assigned",request_information:"needs_information",hold:"held",
-      release_hold:!row.verifiedAt?"awaiting_verification":row.assignedIdentityId?"assigned":"verified",
+      release_hold:row.erasurePhase!=="not_started"?(row.erasurePhase==="application_erased"?"partially_fulfilled":"in_progress"):
+        !row.verifiedAt?"awaiting_verification":row.assignedIdentityId?"assigned":"verified",
       reject:"rejected"}[input.action as "claim"];
     if(!status)throw new ValoProblem(422,"This operation must use its dedicated processing service.");
     if(input.action==="claim"&&!row.verifiedAt)throw new ValoProblem(409,"The owner must verify the request before it can be assigned.");
+    if(row.status==="held"&&input.action!=="release_hold")
+      throw new ValoProblem(409,"Release the recorded hold explicitly before another case action. Claim cannot bypass a hold.");
+    if(input.action==="release_hold"&&row.status!=="held")throw new ValoProblem(409,"Only a held request can release its hold.");
     if(row.assignedIdentityId&&row.assignedIdentityId!==actor.identityId)throw new ValoProblem(403,"This case is assigned to another privacy operator.");
-    if(row.erasurePhase!=="not_started"&&["reject","release_hold"].includes(input.action))
+    if(row.erasurePhase!=="not_started"&&input.action==="reject")
       throw new ValoProblem(409,"Started erasure cannot be rejected or reset as if nothing happened. Resume its recorded steps.");
     row=await privacyChange(tx,row,{identityId:actor.identityId,type:"staff"},input.action,input.reason,
       {status:status as PrivacyStatus,...(input.action==="claim"?{assignedIdentityId:actor.identityId}:{})});

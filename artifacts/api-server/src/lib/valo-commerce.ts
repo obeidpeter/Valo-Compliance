@@ -13,6 +13,7 @@ import {requestOrderRefund,refundView,handleRefundEvent} from "./valo-refunds";
 import {syncDispute} from "./valo-payment-disputes";
 import {refundBalance,TEST_REFUND_POLICY} from "./valo-refund-provider";
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
+const originalReceiptActions=["payment.verified_success","payment.synthetic_receipt_recovered"];
 function audit(tx:Tx,workspaceId:string,actorId:string,action:string,id:string){
   return tx.insert(valoEvents).values({id:randomUUID(),workspaceId,actorId,action,entityId:id});
 }
@@ -34,7 +35,7 @@ function display(order:typeof valoOrders.$inferSelect,refunds:(typeof valoRefund
 async function originalReceiptExists(tx:Tx,orderId:string,workspaceId:string){
   const[row]=await tx.select({id:valoEvents.id}).from(valoEvents).where(and(
     eq(valoEvents.workspaceId,workspaceId),eq(valoEvents.entityId,orderId),
-    inArray(valoEvents.action,["payment.verified_success","payment.synthetic_receipt_recovered"]))).limit(1);
+    inArray(valoEvents.action,originalReceiptActions))).limit(1);
   return!!row;
 }
 async function presentOrder(tx:Tx,order:typeof valoOrders.$inferSelect){
@@ -55,7 +56,7 @@ export async function purchases(actor:WorkspaceActor){
     const refunds=await tx.select().from(valoRefundRequests).where(eq(valoRefundRequests.workspaceId,actor.workspaceId)).orderBy(desc(valoRefundRequests.createdAt));
     const disputes=await tx.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.workspaceId,actor.workspaceId)).orderBy(desc(valoPaymentDisputes.checkedAt));
     const originalReceipts=new Set((await tx.select({id:valoEvents.entityId}).from(valoEvents).where(and(
-      eq(valoEvents.workspaceId,actor.workspaceId),eq(valoEvents.action,"payment.verified_success")))).map(e=>e.id));
+      eq(valoEvents.workspaceId,actor.workspaceId),inArray(valoEvents.action,originalReceiptActions)))).map(e=>e.id));
     return{available:true,livePaymentsEnabled:false,message:"No live payments. Only server-verified Paystack test transactions can grant test purchases. Saved orders do not prove payment.",
        orders:orders.map(o=>display(o,refunds.filter(r=>r.orderId===o.id),disputes.find(d=>d.orderId===o.id)?.status??null,originalReceipts.has(o.id))),products:await commerceProducts()};
   });
@@ -296,3 +297,4 @@ export async function reconcilePayments(){
     }
   }
 }
+

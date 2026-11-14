@@ -1,0 +1,23 @@
+
+> @workspace/api-server@0.0.0 test:valo-erasure-controls /home/runner/workspace/artifacts/api-server
+> node --import tsx --test src/lib/valo-erasure-seal.test.ts src/lib/valo-erasure-lock.test.ts
+
+✔ dedicated lock capacity two and shared data capacity one drain distinct-case work (45.971807ms)
+✔ same-case conflict releases its slot without unlocking the active owner (2.720927ms)
+✔ callback rejection still unlocks and preserves the original error (0.748523ms)
+✔ uncertain acquisition destroys the session without dispatching work (3.313475ms)
+✔ failed or unconfirmed unlock destroys the session and retains callback outcome (1.77092ms)
+▶ exact erasure inventory and recovery signing
+  ✔ ordered inventory rejects same-workspace replacement, omission, addition and duplicates (3.434001ms)
+  ✔ scope, identity and completion binding changes and unsigned legacy records hold closed (1.280075ms)
+  ✔ old proofs verify with retained material while new progress uses the new pinned signer (1.4256ms)
+  ✔ persisted progress cannot skip a phase, change cursor or cross an inventory version (4.928113ms)
+✔ exact erasure inventory and recovery signing (13.803352ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 703.59788

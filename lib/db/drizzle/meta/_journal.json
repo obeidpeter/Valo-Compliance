@@ -159,8 +159,15 @@
     {
       "idx": 22,
       "version": "7",
+      "when": 1794700000001,
+      "tag": "0022_privacy_erasure_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
       "when": 1794701000000,
-      "tag": "0022_privacy_information",
+      "tag": "0023_privacy_information",
       "breakpoints": true
     }
   ]

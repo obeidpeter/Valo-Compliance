@@ -1,0 +1,24 @@
+{
+  "scope": "Combined development implementation and controlled evidence, not formal acceptance",
+  "parents": ["198e91003ed17d2ff872fb3938aedb4ff3dd25c6", "a274cb02cbb71c10bcefc84d3d2db773608784de"],
+  "tests": {
+    "developmentDatabase": {"passed": 103, "failed": 0, "skipped": 0},
+    "engineeringTraceability": {"passed": 174, "failed": 0, "skipped": 0},
+    "richChecker": {"passed": 26, "failed": 0, "skipped": 0},
+    "runtimeAccountBoundaries": {"passed": 45, "failed": 0, "skipped": 0},
+    "erasureControls": {"passed": 10, "failed": 0, "skipped": 0},
+    "erasureDatabaseAndKill": {"passed": 16, "failed": 0, "skipped": 0},
+    "typecheck": "passed",
+    "overlap": true
+  },
+  "migrationCollision": {"hardening": "0022_privacy_erasure_hardening", "information": "0023_privacy_information", "informationBytesUnchanged": true},
+  "newPaidInferenceCalls": 0,
+  "externalMessages": 0,
+  "merchantCalls": 0,
+  "contentReleases": 0,
+  "formalSource80Accepted": false,
+  "customerAi60Accepted": false,
+  "editorial60Accepted": false,
+  "r1Accepted": false,
+  "r2Accepted": false
+}

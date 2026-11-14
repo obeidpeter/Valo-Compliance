@@ -13,6 +13,11 @@ scoped actions. **103/103 development database checks**, **174/174 engineering
 checks** and typecheck passed. See [scope and remaining software gaps](docs/valo/privacy-information-checkpoint.md).
 No new inference spending, external messages or live actions were enabled.
 
+Concurrent rich-checker and authenticated erasure work was normally reconciled;
+[combined verification](docs/valo/privacy-checker-reconciliation.md) also passed
+26 rich-checker, 45 runtime/account-boundary, 10 erasure-control and 16 erasure
+database checks. These overlap and are not formal source/AI acceptance.
+
 ## Earlier tested units — retained evidence, not completion
 
 The private development branch now includes independent privacy-role HTTP

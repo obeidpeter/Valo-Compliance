@@ -1,0 +1,38 @@
+
+> @workspace/api-server@0.0.0 test:valo-rich-checker /home/runner/workspace/artifacts/api-server
+> node --import tsx --test src/lib/valo-checker-rich.test.ts ../valo/src/lib/rich-checker.test.ts
+
+✔ rich review preserves known false, omitted answers and all three explicit states (3.506607ms)
+✔ changing the operator preserves partner and name answers, and editing a field preserves other groups (0.498753ms)
+✔ review and comparisons address nested partners and removed rich facts without object text (1.005034ms)
+✔ submission removes unfinished blank name rows without inventing answers or clearing conditional details (1.135177ms)
+✔ all four result labels are represented and server task restrictions override likely relevance (0.203285ms)
+✔ exact names stay literal across review and grouped comparison (0.230034ms)
+✔ rich question targets cover every declared customer control, including support facts (2.112584ms)
+✔ group and indexed question targets have real fallbacks while review aliases have no target (0.577045ms)
+✔ old v1 result/hash and generated saved response remain unchanged (9.514987ms)
+✔ v2 preserves known false, absence and all three marker states through request/save schemas (15.198873ms)
+✔ version and client evidence injection are rejected without source policy coercion (12.247146ms)
+✔ four outcomes traverse the real engine and generated response contract in private fixture mode (52.359086ms)
+✔ all partners matter; unknown appointment and unknown exception facts do not become a negative (9.86835ms)
+✔ household context never fills an omitted purpose or upgrades uncertainty into exemption (6.649818ms)
+✔ unknown operator and derived exception questions map back to actual supplied answers (4.324115ms)
+✔ period and product questions retain their narrow scope without an automatic date or duplicate application (4.251489ms)
+✔ source-family implementation, publication, period and freshness gates fail closed (7.256879ms)
+✔ comparison identifies removed and changed nested answers without flattening marker states (1.120517ms)
+✔ original source candidate bytes remain bound and unchanged (2.33184ms)
+✔ composite privacy questions preserve each original marker and target actual facts (4.780262ms)
+✔ contradictory formation and personal-data facts ask for review without changing known answers (3.874242ms)
+✔ authority-only classifications are explicit source holds without invented customer questions (2.077073ms)
+✔ indirect supporting circumstances remain answerable but cannot certify an exception (1.499114ms)
+✔ product composite questions retain markers and separate permit authority review (2.819205ms)
+✔ unsupported succession composition points to real name facts and a source-review hold (1.16781ms)
+✔ known unsupported classifications cannot be fixed by asserting a legal conclusion (1.778842ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1594.388253
