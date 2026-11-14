@@ -1,0 +1,103 @@
+{
+  "sourceRevision": "582ff8718d7dc939ce195255094c65e2206efe46",
+  "checkedAt": "2026-11-14T01:41:35.138Z",
+  "result": "targeted_development_checks_passed_not_release_acceptance",
+  "formalRequirements": 127,
+  "checks": {
+    "typecheck": "pass",
+    "foundation": {
+      "runnerTests": 166,
+      "pass": 166,
+      "syntheticEngineFixtures": 80,
+      "sourceBackedNigerianRuleAcceptance": false
+    },
+    "apiUnits": {
+      "runnerTests": 38,
+      "pass": 38
+    },
+    "database": {
+      "runnerTests": 49,
+      "pass": 49,
+      "newAccessSuiteRunnerTests": 10,
+      "newAccessSuiteLeafCases": 9
+    },
+    "publicationBoundaries": {
+      "runnerTests": 12,
+      "pass": 12,
+      "formalEditorial60": false
+    },
+    "browser": {
+      "groups": 9,
+      "pass": 9,
+      "actualJourneyGroups": 7,
+      "browserOnlyFixtureGroups": 2,
+      "managedTestIdentity": true,
+      "suspendedAccountHelp": true,
+      "physicalDevice": false,
+      "manualScreenReader": false
+    },
+    "publicProxyOrigins": {
+      "cases": 3,
+      "rejected403": 3
+    },
+    "migration": {
+      "developmentApplied": true,
+      "productionApplied": false,
+      "freshCi": "awaiting_new_head_run"
+    }
+  },
+  "artifacts": [
+    {
+      "path": "docs/valo/evidence/customer-experience/browser.json",
+      "sha256": "5f648e82a7bf3df6d265ba04f729b40b45dc9ece957f9595dc3453b5db9fc3be"
+    },
+    {
+      "path": "docs/valo/evidence/customer-experience/browser-initial.json",
+      "sha256": "695f7d1292b6a3cc8b2388cb524789649c79d1ea9ee77207e81367b8609bf4e8"
+    },
+    {
+      "path": "docs/valo/evidence/customer-experience/browser-diagnostic.json",
+      "sha256": "1b26c3b5a7493d489c3ea7a9280ca055a6854f3d9e0cd0305997be4bfdcf888b"
+    },
+    {
+      "path": "docs/valo/evidence/customer-experience/public-origin.json",
+      "sha256": "663c1941e66762b3cceec53111b9ce4a307a9d7c5be404544b285b6c1181fc2f"
+    },
+    {
+      "path": "docs/valo/evidence/customer-experience/types-final.log",
+      "sha256": "ba0130e4c1ce10c9b900b86bd79da6c401689a632c20277ec7a959204618f331"
+    },
+    {
+      "path": "docs/valo/evidence/customer-experience/foundation.log",
+      "sha256": "8166f868a625dc9f34a82d4c8db03d693730fedbf5d4fe5fc7c0bd2fd774730b"
+    },
+    {
+      "path": "docs/valo/evidence/customer-experience/units.log",
+      "sha256": "90c5c1ed5369368e8539360351e746f2ef114aaed172779a34cbbcf4d7cab41d"
+    },
+    {
+      "path": "docs/valo/evidence/customer-experience/database-final.log",
+      "sha256": "da05c7c44994aa8b4a67e34ebaf6244cd02839ac11efffa583ace8dbcb04d2f2"
+    },
+    {
+      "path": "docs/valo/evidence/customer-experience/publication-regression.log",
+      "sha256": "358ae326fff486eb577704f87f8c5ffa944273979ada465ea362d172222c4c0b"
+    },
+    {
+      "path": "docs/valo/evidence/customer-experience/migration.log",
+      "sha256": "bfc76117151965e727a761a4ed37873bda1a3d7584cf658531d9f069091667ef"
+    }
+  ],
+  "limitations": [
+    "Zero actual eligible publications; no positive real published-master roundtrip or actual withdrawal/history proof",
+    "Privacy request is not deletion; JSON excludes files and external identity/provider-wide data",
+    "Actual staff identity MFA browser proof and assignments not provisioned; service tests use fixtures",
+    "Email not configured or dispatched; commerce history and settlement not implemented",
+    "80 source-backed rules,60 customer AI and60 editorial acceptance not completed by these checks",
+    "R1/R2 not accepted; launch/live payments/confidential data disabled"
+  ],
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "publicLaunch": false,
+  "livePayments": false
+}

@@ -33,7 +33,17 @@ const customerSecurity={
   kind:"test" as const,path:"docs/valo/evidence/customer-security-checkpoint.json",
   hash:"70f2ee336e7590fceba90ea4bfa6d54affb707fd4d33fb6e5bb8afaf47673711",result:"pass" as const,
 };
+const customerExperience={
+  kind:"test" as const,path:"docs/valo/evidence/customer-experience-checkpoint.json",
+  hash:"0f5faf6a00a2412ea753753b11492865aceb17d42837fb60651efbf45fbc4999",result:"pass" as const,
+};
 const groups = [
+  {ids:["WEB-001","WEB-002","IAM-001","PRO-002","DOC-002","DOC-003","DOC-004","DOC-005",
+    "WRK-006","ADM-001","ADM-009","SEC-001","SEC-005","PRV-003","NFR-006","NFR-007"],
+    paths:["artifacts/api-server/src/lib/valo-customer-access.ts","artifacts/api-server/src/routes/valo-customer-access.ts",
+      "artifacts/api-server/src/lib/valo-customer-access.integration.test.ts","artifacts/api-server/src/scripts/customer-experience-journey.ts",
+      "artifacts/valo/src/screens/contact.tsx","artifacts/valo/src/screens/account.tsx",
+      "artifacts/valo/src/screens/resources.tsx","artifacts/valo/src/screens/staff.tsx"],record:customerExperience},
   {ids:["IAM-003","SEC-001","SEC-003","SEC-005","EDT-004","PRO-003","WRK-006","NFR-009"],
     paths:["artifacts/api-server/src/lib/valo-site-origin.ts","artifacts/api-server/src/lib/valo-store.ts",
       "artifacts/api-server/src/lib/valo-quota.ts","artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
