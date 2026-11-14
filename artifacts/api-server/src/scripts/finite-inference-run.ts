@@ -2,26 +2,25 @@ import {mkdir,writeFile} from "node:fs/promises";
 import {randomUUID} from "node:crypto";
 import {resolve} from "node:path";
 import {desc} from "drizzle-orm";
-import {db,pool,valoContentVersions} from "@workspace/db";
 import {publicationSchema} from "@workspace/valo-core";
 import {assertDevelopmentRuntime} from "../lib/valo-development-runtime";
 import {requestDigest} from "../lib/inference-budget";
 import {prepareOperationalFiniteManifest,finiteManifestProposal} from "../lib/inference-manifest";
-import {readOperationalInferenceReadiness} from "../lib/inference-operational-ready";
-import {assertFiniteWorkBindings} from "../lib/inference-work-bindings";
-import {withApprovedInferencePair} from "../lib/managed-inference";
 import type {FiniteManifest} from "../lib/inference-batch-dispatch";
-import {saveOperationalReviewPlan,executeOperationalReviewPlan} from "../editorial/operational-review";
-import {getPublicationArtifact,putPublicationArtifact} from "../editorial/publication-artifacts";
-import {publicationWorkspaceRoot} from "../editorial/operational-policy";
 import {prepareFiniteAllocationPackage,allocationPackageId,registerPreparedInferenceSubmanifest,readApprovedFiniteAllocationPackage} from "../lib/inference-allocation-package";
-import {InferenceBudgetStore} from "../lib/inference-budget-store";
 
 /** No approval/enable operation exists in this command. Preparation creates
  * exact, disabled private artifacts; execution can only use an existing owner
  * approval independently verified by the production dispatcher. */
 async function main(){
   assertDevelopmentRuntime();
+  const [{db,pool,valoContentVersions},{readOperationalInferenceReadiness},{assertFiniteWorkBindings},
+    {withApprovedInferencePair},{saveOperationalReviewPlan,executeOperationalReviewPlan},
+    {getPublicationArtifact,putPublicationArtifact},{publicationWorkspaceRoot},{InferenceBudgetStore}]=await Promise.all([
+    import("@workspace/db"),import("../lib/inference-operational-ready"),import("../lib/inference-work-bindings"),
+    import("../lib/managed-inference"),import("../editorial/operational-review"),import("../editorial/publication-artifacts"),
+    import("../editorial/operational-policy"),import("../lib/inference-budget-store")]);
+  try{
   const[mode,batchId,...extra]=process.argv.slice(2);
   if(mode==="--admit"){
     const[artifactHash]=extra;
@@ -106,6 +105,7 @@ async function main(){
     expectedIndependentReviews:2,complete:reviews.length===2,publicationAccepted:false};
   const resultArtifact=await putPublicationArtifact(Buffer.from(JSON.stringify(report)),"json");
   console.log(JSON.stringify({...report,resultArtifact}));
+  }finally{await pool.end();}
 }
 main().catch(error=>{console.error(error instanceof Error&&/^[A-Z_]{3,100}$/.test(error.message)?error.message:
-  "FINITE_INFERENCE_RUN_FAILED");process.exitCode=1;}).finally(()=>pool.end());
+  "FINITE_INFERENCE_RUN_FAILED");process.exitCode=1;});

@@ -1,6 +1,7 @@
 import {AsyncLocalStorage} from "node:async_hooks";
 import {inferenceProposal,type BudgetLane} from "./inference-budget";
 import type {FiniteInferenceDispatcher} from "./inference-batch-dispatch";
+import {assertDevelopmentRuntime} from "./valo-development-runtime";
 export type ManagedRequest={model:string;max_completion_tokens?:number;messages:readonly unknown[];
   response_format?:unknown;stream?:boolean;tools?:unknown[];n?:number;tool_choice?:unknown};
 export class InferenceHeld extends Error{
@@ -10,9 +11,9 @@ export class InferenceHeld extends Error{
 // configuration. Only server-owned finite-work entry points can create context.
 const active=new AsyncLocalStorage<FiniteInferenceDispatcher>();
 let runtime:Promise<FiniteInferenceDispatcher>|undefined;
+function requireDevelopment(){try{assertDevelopmentRuntime();}catch{throw new InferenceHeld("INFERENCE_DEVELOPMENT_ONLY");}}
 async function dispatcher(){
-  if(process.env.NODE_ENV!=="development"||process.env.REPLIT_DEPLOYMENT)
-    throw new InferenceHeld("INFERENCE_DEVELOPMENT_ONLY");
+  requireDevelopment();
   runtime??=(async()=>{
     const[{pool},{InferenceBudgetStore},{FiniteInferenceDispatcher},{assertFiniteWorkBindings}]=await Promise.all([
       import("@workspace/db"),import("./inference-budget-store"),import("./inference-batch-dispatch"),import("./inference-work-bindings")]);
@@ -58,6 +59,7 @@ export async function managedCompletion(lane:BudgetLane,request:ManagedRequest,
     request.stream||request.tools?.length||request.tool_choice!==undefined||
     (request.n!==undefined&&request.n!==1)||options.maxRetries!==0)throw new InferenceHeld("UNAPPROVED_INFERENCE_REQUEST");
   const d=active.getStore();if(!d?.current())throw new InferenceHeld();
+  requireDevelopment();
   return d.complete(lane,request,options);
 }
 export type ManagedCompletionResult={id:string;model:string;created:number;_request_id?:string|null;

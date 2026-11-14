@@ -4,6 +4,7 @@ import {createHash} from "node:crypto";
 import {additionalInferenceAllocation,inferenceProposal,inferenceTimestamp,requestDigest} from "./inference-budget";
 import type {FiniteManifest,FiniteWork} from "./inference-batch-dispatch";
 import type {InferenceBudgetStore} from "./inference-budget-store";
+import {assertDevelopmentRuntime} from "./valo-development-runtime";
 const root=resolve(import.meta.dirname,"../../../..");
 const sha=(bytes:Buffer)=>createHash("sha256").update(bytes).digest("hex");
 type SourceRef={path:string;sha256:string};
@@ -120,6 +121,7 @@ async function packageRow(c:import("pg").PoolClient,schema:string,id:string,admi
 /** Reuse the existing immutable package for fresh exact submanifests. A new
  * child timestamp never creates a new owner-approval requirement. */
 export async function readApprovedFiniteAllocationPackage(pool:Pick<import("pg").Pool,"connect">,id:string,schema="public"){
+  assertDevelopmentRuntime();
   if(!/^[a-z_][a-z0-9_]*$/.test(schema))throw Error("INVALID_LEDGER_SCHEMA");
   const c=await pool.connect();
   // PostgreSQL row locks require an ordinary transaction. This path performs
@@ -150,7 +152,8 @@ export async function assertDelegatedBatchAuthority(c:import("pg").PoolClient,sc
  * package. It cannot create/enable the parent approval or reset its ledger. */
 export async function registerPreparedInferenceSubmanifest(store:InferenceBudgetStore,manifest:FiniteManifest,
   expiresAt:string,recheck:(work:FiniteWork)=>Promise<void>){
-  if(process.env.NODE_ENV!=="development"||process.env.REPLIT_DEPLOYMENT||!manifest.packageId||
+  assertDevelopmentRuntime();
+  if(!manifest.packageId||
     store.allocationId()!==additionalInferenceAllocation.id)throw Error("DELEGATED_REGISTRATION_HELD");
   const manifestHash=requestDigest(manifest),batchId=`finite-submanifest:${manifestHash}`;
   return store.mutate("finite-submanifest-admitted",async(s,c)=>{

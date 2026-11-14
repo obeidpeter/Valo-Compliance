@@ -29,6 +29,27 @@ test("default managed entry and customer organizer use actual finite dispatch an
     assert.match(result.stdout,/DISABLED_WITHOUT_DATABASE_OR_SDK/);
   });
 
+  await t.test("all nonempty deployment markers block before database or SDK initialization",()=>{
+    for(const [marker,value] of [["REPLIT_DEPLOYMENT_ID","0"],["REPLIT_DEPLOYMENT_REGION","false"],
+      ["REPLIT_DEPLOYMENT_FUTURE_MARKER"," "]]){
+      const managed=new URL("./managed-inference.ts",import.meta.url).href;
+      const allocation=new URL("./inference-allocation-package.ts",import.meta.url).href;
+      const code=`import assert from 'node:assert/strict';
+        const {withApprovedInferenceWork}=await import(${JSON.stringify(managed)});
+        await assert.rejects(()=>withApprovedInferenceWork('unused','unused',async()=>null),/INFERENCE_DEVELOPMENT_ONLY/);
+        const {registerPreparedInferenceSubmanifest,readApprovedFiniteAllocationPackage}=await import(${JSON.stringify(allocation)});
+        const blocked=new Proxy({}, {get(){throw Error('UNEXPECTED_DATABASE_OR_LEDGER_EFFECT')}});
+        await assert.rejects(()=>registerPreparedInferenceSubmanifest(blocked,{},'unused',async()=>{}),{code:'DEVELOPMENT_RUNTIME_REQUIRED'});
+        await assert.rejects(()=>readApprovedFiniteAllocationPackage(blocked,'unused'),{code:'DEVELOPMENT_RUNTIME_REQUIRED'});
+        console.log('DEPLOYMENT_MARKER_ZERO_EFFECTS');`;
+      const env={...process.env,NODE_ENV:"development",DATABASE_URL:""};
+      for(const key of Object.keys(env))if(key==="REPLIT_DEPLOYMENT"||key.startsWith("REPLIT_DEPLOYMENT_"))delete (env as Record<string,string|undefined>)[key];
+      const result=spawnSync(process.execPath,["--import","tsx","--input-type=module","-e",code],{
+        cwd:fileURLToPath(new URL("../../..",import.meta.url)),encoding:"utf8",env:{...env,[marker!]:value},timeout:15000});
+      assert.equal(result.status,0,result.stderr);assert.match(result.stdout,/DEPLOYMENT_MARKER_ZERO_EFFECTS/);
+    }
+  });
+
   // Only the database ledger adapter and SDK transport are controlled. The
   // real managed entry point, dispatcher, binding verifier, corpus file,
   // request constructor, schema validation and draft builder execute below.

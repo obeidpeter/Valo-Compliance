@@ -9,11 +9,12 @@ import { workspaceTransaction,workspaceEvent,type WorkspaceTx } from "./valo-ass
 import { createDocumentInTransaction,getDocument,ValoProblem,type WorkspaceActor } from "./valo-store";
 import { documentInput } from "./valo-validation";
 import {hasApprovedInferenceContext} from "./managed-inference";
+import {assertDevelopmentRuntime} from "./valo-development-runtime";
 const workspaceDailyLimit=30,globalDailyLimit=120;
 async function enabled(tx:WorkspaceTx,workspaceId:string){
   if(!hasApprovedInferenceContext("customer"))return false;
   // No customer or model input can enable this; production remains off even if a development switch is copied.
-  if(process.env.NODE_ENV!=="development"||process.env.REPLIT_DEPLOYMENT)return false;
+  try{assertDevelopmentRuntime();}catch{return false;}
   // A workspace may be additionally paused; it can never override a global or
   // production pause. Resolving this key uses the authorised server workspace.
   const flags=await tx.select().from(valoSafetySwitches).where(inArray(valoSafetySwitches.key,
