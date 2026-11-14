@@ -51,9 +51,12 @@ export async function customerAccount(actor:WorkspaceActor){
 export async function requestPrivacy(actor:WorkspaceActor,email:string,raw:unknown){
   return createPrivacyCase(actor,email,raw);
 }
-export async function workspaceDataExport(actor:WorkspaceActor){
+export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:string)=>Promise<void>){
   return db.transaction(async tx=>{
     await authorizeWorkspaceWrite(tx,actor);
+    const header={schemaVersion:2,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,
+      scope:"Only the named application sections under data are included; this is not complete privacy fulfilment. Includes export/file metadata and your own workspace activity, but not private file bytes or storage links. Does not include membership records, other people's activity, full system/staff audits, managed identity records, external provider data or unlinked public contact requests. Request coordinated access for those systems."};
+    if(sink)await sink(JSON.stringify(header).slice(0,-1)+',"data":{');
     const tables={profileVersions:valoProfileVersions,documents:valoDocuments,documentRevisions:valoDocumentRevisions,
       assessments:valoAssessments,tasks:valoTasks,reminderPreferences:valoReminderPreferences,
       reminderDeliveries:valoReminderOutbox,supportRequests:valoSupportTickets,aiDrafts:valoAIDrafts,
@@ -61,6 +64,21 @@ export async function workspaceDataExport(actor:WorkspaceActor){
       refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations};
     const data:Record<string,unknown>={};
     let bytes=0;
+    let sections=0;
+    const collect=async<T>(name:string,query:(offset:number)=>PromiseLike<T[]>)=>{
+      if(!sink){append(name,await query(0));return;}
+      await sink((sections++?",":"")+JSON.stringify(name)+":[");
+      let offset=0,first=true;
+      for(;;){
+        const rows=await query(offset);
+        for(const row of rows){
+          await sink((first?"":",")+JSON.stringify(row));first=false;
+        }
+        if(rows.length<500)break;
+        offset+=rows.length;
+      }
+      await sink("]");
+    };
     const append=(name:string,rows:unknown[])=>{
       if(rows.length>5000)throw new ValoProblem(409,"This workspace needs an assisted full export. Submit a privacy export request; no partial file was returned.");
       bytes+=Buffer.byteLength(JSON.stringify(rows));
@@ -68,25 +86,26 @@ export async function workspaceDataExport(actor:WorkspaceActor){
       data[name]=rows;
     };
     for(const [name,table] of Object.entries(tables)){
-      const rows=await tx.select().from(table).where(eq(table.workspaceId,actor.workspaceId)).limit(5001);
-      append(name,rows);
+      await collect(name,offset=>tx.select().from(table).where(eq(table.workspaceId,actor.workspaceId))
+        .orderBy("id" in table?table.id:table.workspaceId).limit(sink?500:5001).offset(offset));
     }
     // Explicit projections: never include storage locators, queue identifiers or leases.
-    append("exportJobs",await tx.select({id:valoExportJobs.id,workspaceId:valoExportJobs.workspaceId,
+    await collect("exportJobs",offset=>tx.select({id:valoExportJobs.id,workspaceId:valoExportJobs.workspaceId,
       documentId:valoExportJobs.documentId,revisionId:valoExportJobs.revisionId,revision:valoExportJobs.revision,
       format:valoExportJobs.format,renderVersion:valoExportJobs.renderVersion,sourceHash:valoExportJobs.sourceHash,
       status:valoExportJobs.status,attempts:valoExportJobs.attempts,errorCode:valoExportJobs.errorCode,
       createdAt:valoExportJobs.createdAt,updatedAt:valoExportJobs.updatedAt})
-      .from(valoExportJobs).where(eq(valoExportJobs.workspaceId,actor.workspaceId)).limit(5001));
-    append("fileMetadata",await tx.select({id:valoFileAssets.id,workspaceId:valoFileAssets.workspaceId,
+      .from(valoExportJobs).where(eq(valoExportJobs.workspaceId,actor.workspaceId))
+      .orderBy(valoExportJobs.id).limit(sink?500:5001).offset(offset));
+    await collect("fileMetadata",offset=>tx.select({id:valoFileAssets.id,workspaceId:valoFileAssets.workspaceId,
       jobId:valoFileAssets.jobId,checksum:valoFileAssets.checksum,mime:valoFileAssets.mime,
       size:valoFileAssets.size,retentionAt:valoFileAssets.retentionAt,createdAt:valoFileAssets.createdAt})
-      .from(valoFileAssets).where(eq(valoFileAssets.workspaceId,actor.workspaceId)).limit(5001));
-    append("yourActivity",await tx.select().from(valoEvents).where(and(eq(valoEvents.workspaceId,actor.workspaceId),
-      eq(valoEvents.actorId,actor.identityId))).limit(5001));
-    return{schemaVersion:2,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,
-      scope:"Only the named application sections under data are included; this is not complete privacy fulfilment. Includes export/file metadata and your own workspace activity, but not private file bytes or storage links. Does not include membership records, other people's activity, full system/staff audits, managed identity records, external provider data or unlinked public contact requests. Request coordinated access for those systems.",
-      data};
+      .from(valoFileAssets).where(eq(valoFileAssets.workspaceId,actor.workspaceId))
+      .orderBy(valoFileAssets.id).limit(sink?500:5001).offset(offset));
+    await collect("yourActivity",offset=>tx.select().from(valoEvents).where(and(eq(valoEvents.workspaceId,actor.workspaceId),
+      eq(valoEvents.actorId,actor.identityId))).orderBy(valoEvents.id).limit(sink?500:5001).offset(offset));
+    if(sink)await sink("}}");
+    return{...header,data};
   },{isolationLevel:"repeatable read"});
 }
 export type StaffArea="content"|"support"|"finance"|"system";

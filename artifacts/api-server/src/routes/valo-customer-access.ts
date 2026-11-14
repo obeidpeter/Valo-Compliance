@@ -1,12 +1,15 @@
 import { Router,type Request } from "express";
+import {createReadStream} from "node:fs";
+import {pipeline} from "node:stream/promises";
 import { getAuth,clerkClient } from "@clerk/express";
 import { z } from "zod";
 import { RequestAccessSupportResponse as AccessSupportAck,GetCustomerAccountResponse as CustomerAccount,
-  DownloadWorkspaceDataResponse as WorkspaceDataExport,GetCustomerPurchasesResponse as CustomerPurchases,
+  GetCustomerPurchasesResponse as CustomerPurchases,
   GetStaffOperationsResponse as StaffOperations,
   GetStaffOperationsQueryParams } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
-import { saveAccessSupport,customerAccount,requestPrivacy,workspaceDataExport,staffOperations } from "../lib/valo-customer-access";
+import { saveAccessSupport,customerAccount,requestPrivacy,staffOperations } from "../lib/valo-customer-access";
+import {withWorkspaceDataFile} from "../lib/valo-data-download";
 import {financeRefunds,decideRefund,reconcileFinanceRefund,assertFinanceActor} from "../lib/valo-refunds";
 import {ValoProblem} from "../lib/valo-problem";
 import {GetFinanceRefundsResponse,DecideFinanceRefundResponse,ReconcileFinanceRefundResponse,ReconcileFinanceRefundBody} from "@workspace/api-zod";
@@ -27,9 +30,12 @@ customerAccessRouter.post("/workspace/privacy-requests",async(req,res)=>{
   res.status(201).json(AccessSupportAck.parse(await requestPrivacy(res.locals.valoActor,res.locals.valoContactEmail,req.body)));
 });
 customerAccessRouter.get("/workspace/data-export",async(_req,res)=>{
-  res.set({"Cache-Control":"private, no-store","Content-Disposition":'attachment; filename="valo-workspace-data.json"',
-    "X-Content-Type-Options":"nosniff"});
-  res.json(WorkspaceDataExport.parse(await workspaceDataExport(res.locals.valoActor)));
+  await withWorkspaceDataFile(res.locals.valoActor,async path=>{
+    if(res.destroyed)return;
+    res.set({"Cache-Control":"private, no-store","Content-Disposition":'attachment; filename="valo-workspace-data.json"',
+      "Content-Type":"application/json; charset=utf-8","X-Content-Type-Options":"nosniff"});
+    await pipeline(createReadStream(path),res);
+  });
 });
 customerAccessRouter.use("/workspace/privacy-cases",(_req,res,next)=>{res.set("Cache-Control","private, no-store");next();});
 customerAccessRouter.get("/workspace/privacy-cases",async(_req,res)=>{

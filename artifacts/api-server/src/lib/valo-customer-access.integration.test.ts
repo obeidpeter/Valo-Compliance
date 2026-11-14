@@ -9,6 +9,8 @@ import {customerPrivacyDetail} from "./valo-privacy";
 import { saveAccessSupport,customerAccount,requestPrivacy,workspaceDataExport,staffOperations } from "./valo-customer-access";
 import { resolveWorkspace,createDocument,ValoProblem } from "./valo-store";
 import { syntheticDocument } from "./valo-test-fixtures";
+import {withWorkspaceDataFile} from "./valo-data-download";
+import {readFile,stat} from "node:fs/promises";
 test("real development access intake, privacy isolation and staff boundaries",{
   skip:process.env.VALO_RUN_DB_TESTS!=="synthetic-development-only",
 },async t=>{
@@ -103,6 +105,30 @@ test("real development access intake, privacy isolation and staff boundaries",{
         actorId:a.identityId,action:"synthetic.export_limit_case",entityId:a.workspaceId})));
       await assert.rejects(()=>workspaceDataExport(a),(error:unknown)=>
         error instanceof ValoProblem&&error.status===409&&/no partial file was returned/.test(error.message));
+    });
+    await t.test("large scoped download spans pages without truncation, private fields or another tenant; scratch is removed",async()=>{
+      let scratch="";
+      const count=await withWorkspaceDataFile(a,async path=>{
+        scratch=path;
+        assert.equal((await stat(path)).mode&0o777,0o600);
+        const body=JSON.parse(await readFile(path,"utf8"));
+        assert.equal(body.schemaVersion,2);
+        assert.ok(body.data.yourActivity.length>=5001);
+        for(const rows of Object.values(body.data) as Record<string,unknown>[][])
+          for(const row of rows)assert.equal(row.workspaceId,a.workspaceId);
+        assert.ok(body.data.yourActivity.every((row:{actorId:string})=>row.actorId===a.identityId));
+        assert.ok(body.data.fileMetadata.every((row:Record<string,unknown>)=>!("storageLocator" in row)));
+        return body.data.yourActivity.length;
+      });
+      assert.ok(count>=5001);
+      await assert.rejects(stat(scratch),{code:"ENOENT"});
+    });
+    await t.test("download consumer failure removes private scratch instead of leaving a prepared result",async()=>{
+      let scratch="";
+      await assert.rejects(()=>withWorkspaceDataFile(b,async path=>{
+        scratch=path;throw new Error("synthetic disconnected reader");
+      }),/synthetic disconnected/);
+      await assert.rejects(stat(scratch),{code:"ENOENT"});
     });
     await t.test("revoked membership cannot retrieve exports or saved privacy requests",async()=>{
       await db.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,b.workspaceId));
