@@ -3,7 +3,9 @@ import { test } from "node:test";
 import { randomUUID } from "node:crypto";
 import { eq,inArray,and } from "drizzle-orm";
 import { db,pool,valoAccessSupport,valoStaffAssignments,valoStaffAccessAudit,valoMemberships,
-  valoDocuments,valoDocumentRevisions,valoSupportTickets,valoEvents,valoWorkspaces } from "@workspace/db";
+  valoDocuments,valoDocumentRevisions,valoSupportTickets,valoEvents,valoWorkspaces,
+  valoPrivacyCases,valoPrivacyEvents,valoPrivacyTombstones } from "@workspace/db";
+import {customerPrivacyDetail} from "./valo-privacy";
 import { saveAccessSupport,customerAccount,requestPrivacy,workspaceDataExport,staffOperations } from "./valo-customer-access";
 import { resolveWorkspace,createDocument,ValoProblem } from "./valo-store";
 import { syntheticDocument } from "./valo-test-fixtures";
@@ -49,8 +51,13 @@ test("real development access intake, privacy isolation and staff boundaries",{
     });
     await t.test("privacy requests really persist and do not claim deletion",async()=>{
       const r=await requestPrivacy(a,email,{kind:"deletion",message:"Synthetic request to remove this test workspace later.",acknowledgement:true});
-      assert.match(r.message,/No data has been deleted/);assert.equal((await customerAccount(a)).privacyRequests.length,1);
+      assert.match(r.message,/no export, correction, deletion or provider action has been completed/i);
+      assert.equal((await customerAccount(a)).privacyRequests.length,1);
       assert.equal((await customerAccount(b)).privacyRequests.length,0);
+      const request=await customerPrivacyDetail(a,r.reference.slice(5));
+      assert.equal(request.request.status,"awaiting_verification");
+      assert.equal(request.request.resultAvailable,false);assert.equal(request.events.length,1);
+      await assert.rejects(()=>customerPrivacyDetail(b,r.reference.slice(5)),{status:404});
     });
     await t.test("workspace JSON export includes saved revisions but excludes another business",async()=>{
       const doc=await createDocument(a,syntheticDocument);
@@ -85,6 +92,9 @@ test("real development access intake, privacy isolation and staff boundaries",{
       await db.delete(valoAccessSupport).where(eq(valoAccessSupport.contactEmail,contact));
     await db.delete(valoDocumentRevisions).where(inArray(valoDocumentRevisions.workspaceId,ids));
     await db.delete(valoDocuments).where(inArray(valoDocuments.workspaceId,ids));
+    await db.delete(valoPrivacyEvents).where(inArray(valoPrivacyEvents.workspaceId,ids));
+    await db.delete(valoPrivacyTombstones).where(inArray(valoPrivacyTombstones.workspaceId,ids));
+    await db.delete(valoPrivacyCases).where(inArray(valoPrivacyCases.workspaceId,ids));
     await db.delete(valoSupportTickets).where(inArray(valoSupportTickets.workspaceId,ids));
     await db.delete(valoEvents).where(inArray(valoEvents.workspaceId,ids));
     await db.delete(valoMemberships).where(inArray(valoMemberships.workspaceId,ids));

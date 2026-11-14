@@ -26,6 +26,20 @@ Exact file hashes and retained results: [execution evidence](evidence/privacy-ca
 
 Mobile checks used a 360px viewport, keyboard focus and page reflow. They are not manual WCAG AA, screen-reader or real-device acceptance.
 
+### Additional database regression and retained CI failure
+
+The initial [CI database job failed](https://github.com/obeidpeter/Valo-Compliance/actions/runs/43614314728): its older privacy test expected ticket-only wording and its fixture teardown omitted the new foreign-key children. This was not a passing CI run.
+
+The test now checks the explicit non-fulfilment message, actual `awaiting_verification` state, absent result, persisted event and cross-tenant denial. Cleanup removes only its owned privacy children before their ticket/workspace parents.
+
+The complete seven-file database regression then ran serially against development PostgreSQL: **61 records, 61 passed, 0 failed, 0 skipped**. The focused ten-record access test is included, not additive.
+
+- [Actual database regression output](evidence/privacy-full-db-regression.raw.txt)
+- Tested access-integration source SHA-256: `c1d2110031ec12091bd3141cbda2e5f06d09b67aa2ae953bbdb239d7ac7aafff`
+- Regression-output SHA-256: `5e0b1563f05c5ba3d5b212d3f7619cadce611412224ec7820795d10e9029f37d`
+
+These are controlled engineering checks, not the required source80/customerAI60/editorial60 acceptance. The application implementation above is unchanged.
+
 ## Still unfinished
 
 **Resumable erasure is not implemented or enabled.** The tombstone table is only schema, not an operational deletion/restore process. Coordinated identity/provider access, correction/deletion, retention/hold fulfilment and deletion reapplication after recovery remain unfinished.
