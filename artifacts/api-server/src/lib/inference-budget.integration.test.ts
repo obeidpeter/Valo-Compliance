@@ -4,7 +4,7 @@ import {randomUUID} from "node:crypto";
 import {readFile} from "node:fs/promises";
 import {pool} from "@workspace/db";
 import {InferenceBudgetStore} from "./inference-budget-store";
-import {emptyBudget,reserveBudget,requestDigest,budgetUsed,transitionBudget,settleBudget} from "./inference-budget";
+import {emptyBudget,reserveBudget,reserveReviewPair,requestDigest,budgetUsed,transitionBudget,settleBudget} from "./inference-budget";
 test("isolated PostgreSQL global ledger serializes races and preserves unknown/retry liability",{
   skip:process.env.VALO_RUN_DB_TESTS!=="synthetic-development-only",
 },async()=>{
@@ -45,5 +45,24 @@ test("isolated PostgreSQL global ledger serializes races and preserves unknown/r
     const events=await pool.query(`SELECT count(*)::int AS n,count(DISTINCT version)::int AS versions
       FROM "${schema}".valo_inference_budget_events`);
     assert.equal(events.rows[0].n,events.rows[0].versions);
+    // Reset ONLY this disposable test schema, never the real pilot ledger.
+    await store.mutate("context_capacity_fixture",()=>({state:{...emptyBudget(),priorUseReconciled:true},value:null}));
+    const capacityAuthority={...authority,tokenizationVerified:false,contextCapacityVerified:true};
+    const paired=await Promise.all(Array.from({length:60},(_,n)=>store.mutate("whole_context_pair",s=>{
+      const base={...admission(`f-${n}`),lane:"publication" as const,proof:null,
+        reservationMode:"whole-context" as const};
+      try{const r=reserveReviewPair(s,capacityAuthority,base,{...base,runKey:`c-${n}`,
+        request:{...request,messages:[{role:"system",content:"separate challenge"}]}});
+        return{state:r.state,value:true};}catch(e){
+        assert.match(String(e),/ALLOCATION_EXHAUSTED/);return{state:s,value:false};
+      }
+    })));
+    assert.equal(paired.filter(Boolean).length,40);
+    const capped=await store.mutate("inspect_context_cap",s=>({state:s,value:s}));
+    assert.equal(capped.entries.length,80);assert.equal(budgetUsed(capped),29644032000n);
+    const dispatches=await Promise.allSettled(capped.entries.slice(0,3).map(e=>
+      store.mutate("concurrent_dispatch",s=>({state:transitionBudget(s,e.runKey,"dispatch"),value:true}))));
+    assert.equal(dispatches.filter(x=>x.status==="fulfilled").length,2);
+    assert.equal(dispatches.filter(x=>x.status==="rejected").length,1);
   }finally{await pool.query(`DROP SCHEMA "${schema}" CASCADE`);await pool.end();}
 });

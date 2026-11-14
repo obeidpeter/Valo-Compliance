@@ -2,7 +2,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {emptyBudget,inferenceProposal,proposalTotals,tokenCost,budgetUsed,reserveBudget,requestDigest,
-  transitionBudget,settleBudget,importPilotUsage,type BudgetState,type BudgetAuthority} from "./inference-budget";
+  transitionBudget,settleBudget,importPilotUsage,reserveReviewPair,type BudgetState,type BudgetAuthority} from "./inference-budget";
 import {managedCompletion} from "./managed-inference";
 const fixtureAuthority:BudgetAuthority={enabled:true,ownerApproved:true,tokenizationVerified:true,managedPriceUpperBoundVerified:true};
 const baseline=():BudgetState=>({...emptyBudget(),priorUseReconciled:true});
@@ -98,4 +98,58 @@ test("reported bound breaches suspend admission; malformed/negative balances fai
   const breached=settleBudget(s,"one",{input:4097,output:20,responseId:"breach",resultRef:"held",freshUntil:200});
   assert.equal(breached.suspended,true);assert.throws(()=>reserveBudget(breached,fixtureAuthority,input("retry")),/UNRECONCILED/);
   assert.throws(()=>budgetUsed({...s,entries:s.entries.map(e=>({...e,reserved:"-1"}))}),/INVALID/);
+});
+const contextAuthority={...fixtureAuthority,tokenizationVerified:false,contextCapacityVerified:true};
+const contextInput=(key:string,lane:"customer"|"publication"="customer")=>({
+  ...input(key,lane),proof:null,reservationMode:"whole-context" as const});
+test("whole-context fallback rounds upward and needs no exact tokenization",()=>{
+  assert.equal(tokenCost(400000,8192),370550400n);
+  assert.equal(tokenCost(1,0),825n);
+  assert.equal(tokenCost(1,0,1),751n);
+  const r=reserveBudget(baseline(),contextAuthority,contextInput("context"));
+  assert.equal(r.state.entries[0]!.inputBound,400000);
+  assert.equal(budgetUsed(r.state),370550400n);
+  assert.throws(()=>reserveBudget(baseline(),contextAuthority,{...contextInput("fake"),proof:input().proof}),/ATTESTATION/);
+  assert.throws(()=>reserveBudget(baseline(),{...contextAuthority,contextCapacityVerified:false},contextInput("no-proof")),/UNPROVEN/);
+  assert.throws(()=>reserveBudget(baseline(),inferenceProposal,contextInput("disabled")),/DISABLED/);
+});
+test("finite context batch stops safely without requiring all 458 attempts or a daily delay",()=>{
+  let s=baseline(),count=0;
+  while(true){try{s=reserveBudget(s,contextAuthority,contextInput(`attempt-${count}`,"publication")).state;count++;}
+    catch(e){assert.match(String(e),/ALLOCATION_EXHAUSTED/);break;}}
+  assert.equal(count,80);assert.equal(budgetUsed(s),29644032000n);
+  assert.equal(inferenceProposal.batch.dailySchedule,null);
+  assert.deepEqual(Object.values(inferenceProposal.lanes).map(l=>l.slots),[216,68,80,94]);
+});
+test("independent pair reservation is all-or-nothing and binds exact distinct requests",()=>{
+  const f=contextInput("f","publication"),c={...contextInput("c","publication"),
+    request:{...input().request,messages:[{role:"system",content:"independent challenge"}]}};
+  const pair=reserveReviewPair(baseline(),contextAuthority,f,c);
+  assert.equal(budgetUsed(pair.state),741100800n);
+  const s=structuredClone(pair.state);s.entries[0]!.status="settled";s.entries[0]!.charged="29400000000";
+  s.entries=s.entries.slice(0,1);s.entries[0]!.runKey="prior";s.entries[0]!.legacy=true;
+  assert.throws(()=>reserveReviewPair(s,contextAuthority,f,c),/ALLOCATION_EXHAUSTED/);
+  assert.equal(s.entries.length,1); // failed second reservation cannot mutate caller state
+  assert.throws(()=>reserveReviewPair(baseline(),contextAuthority,f,{...f,runKey:"same-prompt"}),/INVALID_INDEPENDENT/);
+});
+test("concurrency two includes unknown outcomes, with no timeout release or automatic retry",()=>{
+  let s=baseline();for(const k of["a","b","c"])s=reserveBudget(s,contextAuthority,contextInput(k)).state;
+  s=transitionBudget(transitionBudget(s,"a","dispatch"),"b","dispatch");
+  s=transitionBudget(s,"a","unknown");
+  assert.throws(()=>transitionBudget(s,"c","dispatch"),/CONCURRENCY_EXHAUSTED/);
+  const before=budgetUsed(s);assert.throws(()=>transitionBudget(s,"a","cancel"),/UNSAFE/);
+  s=settleBudget(s,"a",{input:100,output:10,responseId:"trusted-controlled-receipt",resultRef:"fresh",freshUntil:200});
+  const reused=reserveBudget(s,inferenceProposal,contextInput("unchanged-reuse"));
+  assert.equal(reused.dispatch,false);assert.equal(reused.reuse,"fresh");
+  assert.equal(budgetUsed(reused.state),budgetUsed(s));
+  assert.ok(budgetUsed(s)<before);s=transitionBudget(s,"c","dispatch");
+  assert.throws(()=>settleBudget(s,"b",{input:1,output:1,responseId:"trusted-controlled-receipt",resultRef:"another",freshUntil:200}),/ALREADY_USED/);
+});
+test("fallback does not admit tools, multiple completions or streaming",()=>{
+  for(const extra of[{n:2},{tools:[{type:"function"}]},{tool_choice:"auto"},{stream:true}]){
+    const i=contextInput("bad");assert.throws(()=>reserveBudget(baseline(),contextAuthority,{...i,request:{...i.request,...extra}}),/REQUEST_LIMIT/);
+  }
+  for(const extra of[{modalities:["audio"]},{messages:[{role:"user",content:[{type:"image_url",image_url:"synthetic"}]}]}]){
+    const i=contextInput("nontext");assert.throws(()=>reserveBudget(baseline(),contextAuthority,{...i,request:{...i.request,...extra}}),/TEXT_ONLY/);
+  }
 });

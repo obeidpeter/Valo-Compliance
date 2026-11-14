@@ -1,5 +1,37 @@
 # Valo — setup checklist and disabled inference proposal
 
+## Current refinement: whole-context fallback, still disabled
+
+The finite batch can reserve the verified named model's entire 400,000-token
+context as input plus 8,192 completion tokens when exact full-request tokenization
+is unproved. At the supplied prices and a 10% uplift this is **$0.370550400 per
+attempt**, rounded upward in integer nano-USD. Reserving input plus output this
+way deliberately overestimates the shared context capacity. It covers only this
+named pre-tax text-inference batch, not taxes, other account charges or development.
+
+Settled charges plus all outstanding reservations must remain at or below $30.
+Independent factual/challenge reviews reserve together atomically. With no
+prior charges and maximum unknown usage, at most 80 attempts (40 full pairs)
+fit; this is not a promised completion count or available balance. Existing
+pilot charges and unresolved liabilities still count and must be reconciled.
+Unknown outcomes retain their full reservations and occupy concurrency until
+trustworthy usage is reconciled. No elapsed-time release, tools, multiple
+completions or automatic retries are allowed. Every additional attempt reserves
+again. Concurrency is two; original lane ceilings remain 216/68/80/94. Exact,
+unchanged and fresh evidence can be reused without a new call.
+
+There is **no imposed 60/day or four-day minimum schedule**. Existing application
+daily/identity quotas remain unchanged and independently enforced; genuine
+provider rate limits still apply. Existing input-size guards remain necessary.
+The smaller lane-specific estimates below apply only with trustworthy exact
+full-request bounds, not byte estimates. Otherwise the whole-context reservation
+is required; a partial batch may stop safely before all slots are used.
+
+The batch and managed transport remain disabled and unapproved. The changed
+policy hash intentionally holds any existing ledger pending reviewed adoption;
+this change does not overwrite the old policy, discard pilot use or reconcile
+unknown charges. No SDK call or new spend is enabled by this refinement.
+
 **Preparation only. No spending approval, activation, quota increase, new
 evaluation identity, live commerce or production launch.** New managed inference
 is held; existing private drafts/previews/downloads and manual editing remain
@@ -39,13 +71,10 @@ withdrawal, deletion and result validation still apply.
 
 1. Owner spend approval is absent and the proposal is disabled in code. There
    is no environment switch or activation endpoint.
-2. **Code/verification gap:** no verified full-request token-count adapter for
-   the current managed **chat-completions** request, including system/user
-   messages, instructions and JSON schemas. Bytes plus a protocol allowance
-   are not provider tokenization. The documented Responses input-token endpoint
-   is a different request shape; its managed support, charging and complete
-   schema/instruction equivalence have not been established. No count/generation
-   request was made to test this without authorisation.
+2. The smaller lane-specific estimates still lack a verified full-request
+   token-count adapter, including instructions and schemas. This **does not
+   block the whole-context fallback** above. Bytes plus protocol allowances
+   are not token proof; no count/generation request was made without authority.
 3. **Provider/owner-controlled evidence:** actual managed routing, processing
    region, service tier and applicable price upper bound require confirmation.
    The public price/uplift calculation is not a billing guarantee.

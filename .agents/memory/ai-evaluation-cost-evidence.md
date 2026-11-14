@@ -34,10 +34,12 @@ must not be miscounted as completed generation or the intended failure test.
 
 The $30 all-lane managed-inference ceiling is a **disabled proposal**, not
 permission to spend or increase daily/identity limits. Reconcile prior pilot
-usage and unknown charges; prove full-request input tokenization (instructions
-and schemas included) and actual price/region bounds before activation. A byte
-estimate plus protocol allowance is not tokenization proof. Synthetic enabled
-budget fixtures are not approval.
+usage and unknown charges and actual price/region bounds before activation.
+Exact full-request tokenization is required only for the smaller reservation:
+the user supplied the verified 400,000-token model context as a conservative
+fallback input reservation, plus 8,192 output tokens, at $0.3705504 including
+10% uplift. This fallback is not authorization. A byte estimate plus protocol
+allowance is not tokenization proof. Synthetic enabled fixtures are not approval.
 
 If necessary full-request context exceeds its proposed bound, hold the case and
 revise the estimate before authorisation; never truncate needed evidence,
@@ -45,3 +47,15 @@ instructions or schema to manufacture a passing bound.
 
 **Why:** The user explicitly authorised budget preparation only, while retaining
 the existing limits and prohibiting new identities or alternate-lane evasion.
+
+Do not impose a 60/day or four-day minimum schedule on the proposed finite
+batch. Those were coordinating-team proposals, not user/provider requirements.
+Use the manifest, monetary ceiling, concurrency two and actual provider limits;
+leave existing daily/identity caps unchanged until separately authorized.
+
+**Why:** The user explicitly corrected the proposed schedule and authorized
+preparation, not spending or quota increases.
+
+**How to apply:** Reserve independent-review pairs atomically, retain unknown
+charges, and require a fresh reservation for every additional attempt. An
+incomplete batch may stop safely without spending beyond its allocation.
