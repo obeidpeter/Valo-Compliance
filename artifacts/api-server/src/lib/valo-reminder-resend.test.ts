@@ -66,4 +66,7 @@ test("every nonempty deployment marker and production reject before transport, i
   delete runtime.REPLIT_DEPLOYMENT;runtime.NODE_ENV="production";
   await assert.rejects(()=>sender.send(input),/EMAIL_DEVELOPMENT_ONLY/);
   assert.equal(calls,0);
+  runtime.NODE_ENV="development";runtime.VALO_ISOLATED_RECOVERY="synthetic-local-only";
+  await assert.rejects(()=>sender.send(input),/RECOVERY_EXTERNAL_EFFECTS_DISABLED/);
+  assert.equal(calls,0);
 });

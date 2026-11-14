@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pool } from "@workspace/db";
+import {versionedEvidencePath} from "../lib/versioned-evidence-path";
 import { prepareInventoryRelease } from "../editorial/operational-preparation";
 import { withdrawOperationalVersion } from "../editorial/publication-publisher";
 import { publicationWorkspaceRoot } from "../editorial/operational-policy";
@@ -10,7 +11,7 @@ async function main(){
   if(action==="prepare"){
     const report=await prepareInventoryRelease(resolve(publicationWorkspaceRoot(),process.env.VALO_OPERATIONAL_AUTHORING==="recorded"?
       "generated-artifacts/valo-publication/provider-rights-snapshot.json":"generated-artifacts/valo-publication/chatgpt-provider-rights-snapshot.json"));
-    const out=resolve(publicationWorkspaceRoot(),`docs/valo/evidence/operational-publication-v${report.version}.json`);
+    const out=versionedEvidencePath(publicationWorkspaceRoot(),report.version);
     await writeFile(out,JSON.stringify({executedAt:new Date().toISOString(),...report,
       scope:"Development only; no public launch, sales, R1 acceptance or professional verification"},null,2)+"\n");
     process.stdout.write(JSON.stringify({report:out,id:report.id,version:report.version,decision:report.release.decision,

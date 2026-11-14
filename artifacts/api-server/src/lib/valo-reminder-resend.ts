@@ -1,3 +1,5 @@
+import {assertRecoveryEffectsAllowed} from "./valo-recovery-effects";
+import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import {ReplitConnectors} from "@replit/connectors-sdk";
 import {clerkClient} from "@clerk/express";
 import {z} from "zod";
@@ -23,7 +25,8 @@ export function createResendReminderSender(config:Config,proxy:Proxy,
     // expiry: an unknown old outcome must never become a fresh send.
     replayWindowMs:23*60*60*1000,
     async send(input){
-      if(env.NODE_ENV!=="development"||!!env.REPLIT_DEPLOYMENT)throw Error("EMAIL_DEVELOPMENT_ONLY");
+      assertRecoveryEffectsAllowed(env);
+      try{assertDevelopmentRuntime(env);}catch{throw Error("EMAIL_DEVELOPMENT_ONLY");}
       const recipient=await verifiedRecipient(input.ownerIdentityId);
       if(!recipient||recipient.toLowerCase()!==config.recipient)throw Error("EMAIL_TEST_RECIPIENT_NOT_AUTHORIZED");
       const key=`valo-reminder-v1-${sha256(input.idempotencyKey)}`;

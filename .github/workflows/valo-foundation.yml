@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: ["feature/valo-*"]
+    branches: [main, "feature/valo-*"]
 
 permissions:
   contents: read
@@ -14,6 +14,58 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  merge-security:
+    name: Dependency and redacted secret checks on actual merges
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: Install pinned open-source secret scanner
+        run: |
+          go install github.com/zricethezav/gitleaks/v8@v8.26.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Install frozen dependencies and run detector canaries and scans
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.1 --activate
+          pnpm install --frozen-lockfile
+          pnpm --filter @workspace/scripts exec tsx src/valo/merge-security.ts
+      - name: Retain sanitized reports even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: redacted-merge-security
+          path: generated-artifacts/valo-security/merge-security.json
+  merge-static:
+    name: Static security checks with detector canary
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned open-source local scanner
+        run: python -m pip install semgrep==1.134.0
+      - name: Run canary and static security rules without cloud upload
+        run: bash scripts/src/valo/merge-static.sh
+      - name: Retain sanitized static scan report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: redacted-merge-static-security
+          path: generated-artifacts/valo-security/merge-static.json
   foundation:
     name: Foundation typecheck and unit tests
     runs-on: ubuntu-latest
@@ -51,6 +103,21 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo
       - name: Reject unsafe export modes and stale account requests
         run: pnpm --filter @workspace/api-server test:valo-runtime-boundaries
+      - name: Check HTTP log privacy, internal alerts and recovery effects
+        run: pnpm --filter @workspace/api-server test:valo-operations
+      - name: Install local-only recovery tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-16
+          echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
+      - name: Restore disposable synthetic database and fixture objects
+        run: pnpm --filter @workspace/api-server test:valo-isolated-recovery
+      - name: Retain isolated recovery report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-development-recovery
+          path: artifacts/api-server/generated-artifacts/valo-recovery/isolated-recovery.json
       - name: Prove isolated source-candidate controls, not legal acceptance
         run: pnpm --filter @workspace/api-server test:valo-source-candidates
       - name: Prove refund reference and timeout contract without a merchant

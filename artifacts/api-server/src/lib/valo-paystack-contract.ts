@@ -1,3 +1,4 @@
+import {assertRecoveryEffectsAllowed} from "./valo-recovery-effects";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { ValoProblem } from "./valo-problem";
@@ -54,6 +55,7 @@ function testSecret(){
 }
 /** Only the fixed provider host is reachable; discard all instrument/customer data. */
 export async function paystackRequest(path:string,body?:unknown):Promise<unknown>{
+  assertRecoveryEffectsAllowed();
   const key=testSecret();
   let response:Response;
   try{

@@ -1,6 +1,18 @@
 # Valo Compliance — Valo Platform
 
-## Latest development checkpoint — export and account boundaries
+## Latest development checkpoint — merge security and isolated recovery
+
+Added merge-time dependency/secret/static checks, actual HTTP/error-log privacy
+capture, internal development worker/database/backlog/cleanup/payment probes and
+a disposable synthetic database/object restore drill. The drill replays access
+tombstones/revocations; it does **not** complete physical privacy erasure or prove
+production/App Storage recovery. The 35-day retention proposal remains unresolved.
+The live development probe found 94 retained synthetic settled orders missing
+receipt-outbox rows and kept an internal alert; no messages or money operations
+were triggered. See [the exact scope and commands](docs/valo/merge-security-and-recovery.md).
+Formal acceptance, R1/R2 and production approval remain incomplete.
+
+## Previous checkpoint — export and account boundaries
 
 Development exports, recovery, queue construction and worker dispatch now require
 explicit development and no nonempty deployment marker. Account/session changes

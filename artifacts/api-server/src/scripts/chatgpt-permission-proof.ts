@@ -1,3 +1,4 @@
+import {versionedEvidencePath} from "../lib/versioned-evidence-path";
 import assert from "node:assert/strict";
 import { readFile,writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -41,10 +42,10 @@ async function main(){
     prepared.attestations.exports.docx,prepared.attestations.exports.pdf])await getPublicationArtifact(asset);
   const prior=[];
   for(const version of [4,5]){
-    const report=JSON.parse(await readFile(resolve(root,`docs/valo/evidence/operational-publication-v${version}.json`),"utf8"));
+    const report=JSON.parse(await readFile(versionedEvidencePath(root,version),"utf8"));
     prior.push({version,decision:report.release.decision,candidateHash:report.candidateHash,reviews:report.reviews});
   }
-  await writeFile(resolve(root,`docs/valo/evidence/operational-publication-v${prepared.version}.json`),
+  await writeFile(versionedEvidencePath(root,prepared.version),
     JSON.stringify({executedAt:new Date().toISOString(),...prepared,scope:"Actual budget hold; zero new provider requests; not publication acceptance"},null,2)+"\n");
   const report={executedAt:new Date().toISOString(),sourceNoteCommit:"551e5580662cc305c05f3fd2c705a74b035c2c82",
     providerPermission:{verified:true,scope:permission.record.commercialUseScope,hash:permission.hash,

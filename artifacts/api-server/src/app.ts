@@ -1,5 +1,5 @@
 import express, { type Express, type ErrorRequestHandler } from "express";
-import pinoHttp from "pino-http";
+import {requestLogging} from "./lib/http-logging";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import { ZodError } from "zod";
@@ -15,25 +15,7 @@ import { paystackWebhookRouter } from "./routes/valo-paystack-webhook";
 
 const app: Express = express();
 
-app.use(
-  pinoHttp({
-    logger,
-    serializers: {
-      req(req) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url?.split("?")[0],
-        };
-      },
-      res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
-      },
-    },
-  }),
-);
+app.use(requestLogging(logger));
 app.disable("x-powered-by");
 app.use((req,res,next) => {
   const sendJson = res.json.bind(res);
@@ -70,7 +52,7 @@ app.use(requestReadQuota);
 app.use("/api", router);
 app.use("/api", valoRouter);
 app.use("/api", valoExportsRouter);
-const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
+export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
   res.setHeader("Cache-Control", "private, no-store");
   if (typeof error === "object" && error !== null && "type" in error) {
     if (error.type === "entity.parse.failed") {
@@ -95,7 +77,7 @@ const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
       code:error.status===429?"WRITE_LIMIT_REACHED":undefined});return;
   }
   // Never log request bodies, provider payloads, user text or raw prompts.
-  req.log.error({ event: "request.failed", errorType: error instanceof Error ? error.name : "unknown" });
+  req.log.error({ event: "request.failed", errorType: error instanceof TypeError ? "TypeError" : error instanceof RangeError ? "RangeError" : "Error" });
   res.status(503).json({ error: "A required service is unavailable. Check the saved status before retrying; your request may need recovery." });
 };
 app.use(onError);

@@ -10,8 +10,11 @@ import { processPaymentEvents,reconcilePayments } from "../lib/valo-commerce";
 import {processRefundQueue} from "../lib/valo-refunds";
 import {reconcileKnownDisputes} from "../lib/valo-payment-disputes";
 import {dispatchOperationalJobs} from "../lib/valo-operational-dispatch";
+import {assertRecoveryEffectsAllowed} from "../lib/valo-recovery-effects";
+import {recordWorkerHeartbeat,collectOperationalSample,recordOperationalAlerts} from "../lib/valo-operations";
 
 developmentExportsOnly();
+assertRecoveryEffectsAllowed();
 const payload = z.object({ jobId:z.string().uuid(),workspaceId:z.string().uuid() }).strict();
 const boss = exportQueue();
 boss.on("error", () => logger.error({event:"queue.database_error"}));
@@ -32,6 +35,7 @@ await boss.work(EXPORT_QUEUE, {batchSize:1,pollingIntervalSeconds:1}, async jobs
 });
 let dispatching = false;
 let reminderCheckedAt=0;
+let operationalCheckedAt=0;
 async function dispatch() {
   developmentExportsOnly();
   if (dispatching) return;
@@ -54,7 +58,16 @@ async function dispatch() {
       for(const domain of failures)logger.error({event:"operational.dispatch_failed",domain});
     }
   } catch { logger.error({event:"export.dispatch_failed"}); }
-  finally { dispatching = false; }
+  finally {
+    dispatching = false;
+    try{
+      await recordWorkerHeartbeat();
+      if(Date.now()-operationalCheckedAt>=60000){
+        operationalCheckedAt=Date.now();
+        await recordOperationalAlerts(await collectOperationalSample(text=>{const config={text,query_timeout:1500};return pool.query(config);}));
+      }
+    }catch{logger.error({event:"operations.internal_probe_failed"});}
+  }
 }
 await dispatch();
 const timer = setInterval(dispatch,3000);

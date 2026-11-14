@@ -1,0 +1,6 @@
+# Exact immutable historical SHA-256 evidence fields, not credentials.
+# See docs/valo/merge-security-and-recovery.md. No future commit is exempted.
+786d9a1055b98502bbfe53a7757f988bb58bbfbb:docs/valo/evidence/source-acceptance-checkpoint.json:generic-api-key:29
+786d9a1055b98502bbfe53a7757f988bb58bbfbb:docs/valo/evidence/source-acceptance-checkpoint.json:generic-api-key:30
+786d9a1055b98502bbfe53a7757f988bb58bbfbb:docs/valo/evidence/source-acceptance-checkpoint.json:generic-api-key:31
+c649daea538e67b9f816c0af21c0c0a14d629888:docs/valo/evidence/p0-customer-execution-checks.json:generic-api-key:14
