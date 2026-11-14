@@ -11,3 +11,4 @@
 - [Export interruption](export-interruption.md) — transport retries do not repair application state; fenced leases and pre-upload reservations preserve recovery.
 - [PDF reader validation](pdf-geometry.md) — allow small A4 rounding; running headers/footers can interrupt extracted paragraphs.
 - [Browser evaluation boundaries](browser-evaluation-boundaries.md) — an arrow-function string is not equivalent to a Playwright locator callback; separate harness failures from product failures.
+- [Supply-chain controls](supply-chain-controls.md) — npm cooldown uses days, pnpm minutes; a frozen install is not proof of every negative policy boundary.

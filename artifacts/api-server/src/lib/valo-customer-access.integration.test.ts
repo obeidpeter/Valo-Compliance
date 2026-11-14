@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { eq,inArray,and } from "drizzle-orm";
 import { db,pool,valoAccessSupport,valoStaffAssignments,valoStaffAccessAudit,valoMemberships,
   valoDocuments,valoDocumentRevisions,valoSupportTickets,valoEvents,valoWorkspaces,
-  valoPrivacyCases,valoPrivacyEvents,valoPrivacyTombstones } from "@workspace/db";
+  valoPrivacyCases,valoPrivacyEvents,valoPrivacyTombstones,valoExportJobs,valoFileAssets } from "@workspace/db";
 import {customerPrivacyDetail} from "./valo-privacy";
 import { saveAccessSupport,customerAccount,requestPrivacy,workspaceDataExport,staffOperations } from "./valo-customer-access";
 import { resolveWorkspace,createDocument,ValoProblem } from "./valo-store";
@@ -67,6 +67,43 @@ test("real development access intake, privacy isolation and staff boundaries",{
       assert.equal((other.data.documents as unknown[]).length,0);
       assert.ok(!JSON.stringify(other).includes(doc.id));
     });
+    await t.test("JSON v2 includes owned file/job metadata, never private locators or queue identifiers",async()=>{
+      const[doc]=await db.select().from(valoDocuments).where(eq(valoDocuments.workspaceId,a.workspaceId));
+      const[revision]=await db.select().from(valoDocumentRevisions).where(eq(valoDocumentRevisions.documentId,doc.id));
+      const jobId=randomUUID(),assetId=randomUUID(),queueId=randomUUID();
+      const locator=`synthetic-private-locator-${run}`;
+      // Metadata-only failed fixture: no object, render, queue delivery or provider call.
+      await db.insert(valoExportJobs).values({id:jobId,workspaceId:a.workspaceId,documentId:doc.id,
+        revisionId:revision.id,revision:revision.revision,format:"docx",renderVersion:"synthetic-metadata-only",
+        sourceHash:revision.contentHash,requestedBy:a.identityId,queueId,status:"failed",errorCode:"SYNTHETIC_METADATA_ONLY"});
+      await db.insert(valoFileAssets).values({id:assetId,workspaceId:a.workspaceId,jobId,objectKey:locator,
+        checksum:"c".repeat(64),mime:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",size:17});
+      const own=await workspaceDataExport(a),other=await workspaceDataExport(b);
+      assert.equal(own.schemaVersion,2);
+      assert.ok((own.data.exportJobs as {id:string}[]).some(r=>r.id===jobId));
+      assert.ok((own.data.fileMetadata as {id:string;size:number}[]).some(r=>r.id===assetId&&r.size===17));
+      for(const forbidden of[locator,queueId])assert.equal(JSON.stringify(own).includes(forbidden),false);
+      for(const forbidden of[jobId,assetId,locator])assert.equal(JSON.stringify(other).includes(forbidden),false);
+      assert.match(own.scope,/not complete privacy fulfilment/);
+      assert.match(own.scope,/not private file bytes or storage links/);
+    });
+    await t.test("activity export is restricted to this requester and workspace",async()=>{
+      const otherActor=`synthetic-other-actor-${run}`,eventId=randomUUID();
+      await db.insert(valoEvents).values({id:eventId,workspaceId:a.workspaceId,actorId:otherActor,
+        action:"synthetic.other_actor_event",entityId:a.workspaceId});
+      const own=await workspaceDataExport(a);
+      const activity=own.data.yourActivity as {actorId:string;workspaceId:string}[];
+      assert.ok(activity.length>0);
+      assert.ok(activity.every(r=>r.actorId===a.identityId&&r.workspaceId===a.workspaceId));
+      assert.equal(JSON.stringify(own).includes(otherActor),false);
+      assert.equal(JSON.stringify(own).includes(eventId),false);
+    });
+    await t.test("an over-limit metadata section fails explicitly rather than returning a truncated download",async()=>{
+      await db.insert(valoEvents).values(Array.from({length:5001},()=>({id:randomUUID(),workspaceId:a.workspaceId,
+        actorId:a.identityId,action:"synthetic.export_limit_case",entityId:a.workspaceId})));
+      await assert.rejects(()=>workspaceDataExport(a),(error:unknown)=>
+        error instanceof ValoProblem&&error.status===409&&/no partial file was returned/.test(error.message));
+    });
     await t.test("revoked membership cannot retrieve exports or saved privacy requests",async()=>{
       await db.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,b.workspaceId));
       for(const action of[()=>workspaceDataExport(b),()=>customerAccount(b)])
@@ -90,6 +127,8 @@ test("real development access intake, privacy isolation and staff boundaries",{
     await db.delete(valoStaffAssignments).where(eq(valoStaffAssignments.id,role));
     for(const contact of[email,`burst-${run}@example.invalid`,`other-${run}@example.invalid`])
       await db.delete(valoAccessSupport).where(eq(valoAccessSupport.contactEmail,contact));
+    await db.delete(valoFileAssets).where(inArray(valoFileAssets.workspaceId,ids));
+    await db.delete(valoExportJobs).where(inArray(valoExportJobs.workspaceId,ids));
     await db.delete(valoDocumentRevisions).where(inArray(valoDocumentRevisions.workspaceId,ids));
     await db.delete(valoDocuments).where(inArray(valoDocuments.workspaceId,ids));
     await db.delete(valoPrivacyEvents).where(inArray(valoPrivacyEvents.workspaceId,ids));

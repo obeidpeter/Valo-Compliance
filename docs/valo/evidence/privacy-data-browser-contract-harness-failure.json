@@ -1,0 +1,21 @@
+{
+  "executedAt": "2026-11-14T20:08:04.854Z",
+  "passed": false,
+  "scope": "Controlled API and account identities; actual React/browser/download behavior",
+  "managedIdentityAcceptance": false,
+  "completePrivacyFulfilment": false,
+  "checks": [],
+  "runtimeErrors": [
+    "cases.data?.map is not a function"
+  ],
+  "sourceHashes": [
+    {
+      "path": "artifacts/valo/src/screens/account.tsx",
+      "sha256": "5e7109dc5b31e603869c12a44ab67bd97110118441f77d68a67349a428165cb6"
+    },
+    {
+      "path": "artifacts/valo/src/components/account-state-boundary.tsx",
+      "sha256": "223ef52ed00158b9fcedf22f40d194b558b6c7dd745beb5ec317d6a774e74879"
+    }
+  ]
+}

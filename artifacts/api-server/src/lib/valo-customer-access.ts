@@ -3,7 +3,8 @@ import {createPrivacyCase} from "./valo-privacy";
 import { and,eq,desc,like } from "drizzle-orm";
 import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoAssessments,valoTasks,valoReminderPreferences,
-  valoReminderOutbox,valoAIDrafts,valoContentVersions,valoSafetySwitches,valoStaffAccessAudit } from "@workspace/db";
+  valoReminderOutbox,valoAIDrafts,valoContentVersions,valoSafetySwitches,valoStaffAccessAudit,
+  valoExportJobs,valoFileAssets,valoEvents } from "@workspace/db";
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { authorizeWorkspaceWrite,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
@@ -60,17 +61,33 @@ export async function workspaceDataExport(actor:WorkspaceActor){
       refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations};
     const data:Record<string,unknown>={};
     let bytes=0;
-    for(const [name,table] of Object.entries(tables)){
-      const rows=await tx.select().from(table).where(eq(table.workspaceId,actor.workspaceId)).limit(5001);
+    const append=(name:string,rows:unknown[])=>{
       if(rows.length>5000)throw new ValoProblem(409,"This workspace needs an assisted full export. Submit a privacy export request; no partial file was returned.");
       bytes+=Buffer.byteLength(JSON.stringify(rows));
       if(bytes>8_000_000)throw new ValoProblem(409,"This workspace needs an assisted full export. Submit a privacy export request; no partial file was returned.");
       data[name]=rows;
+    };
+    for(const [name,table] of Object.entries(tables)){
+      const rows=await tx.select().from(table).where(eq(table.workspaceId,actor.workspaceId)).limit(5001);
+      append(name,rows);
     }
-    return{schemaVersion:1,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,
-      scope:"Only the named sections under data are included; this is not complete privacy fulfilment. Does not include private file bytes, file/job metadata, membership/audit records, managed identity records, external provider data or unlinked public contact requests. Request coordinated access for those systems.",
+    // Explicit projections: never include storage locators, queue identifiers or leases.
+    append("exportJobs",await tx.select({id:valoExportJobs.id,workspaceId:valoExportJobs.workspaceId,
+      documentId:valoExportJobs.documentId,revisionId:valoExportJobs.revisionId,revision:valoExportJobs.revision,
+      format:valoExportJobs.format,renderVersion:valoExportJobs.renderVersion,sourceHash:valoExportJobs.sourceHash,
+      status:valoExportJobs.status,attempts:valoExportJobs.attempts,errorCode:valoExportJobs.errorCode,
+      createdAt:valoExportJobs.createdAt,updatedAt:valoExportJobs.updatedAt})
+      .from(valoExportJobs).where(eq(valoExportJobs.workspaceId,actor.workspaceId)).limit(5001));
+    append("fileMetadata",await tx.select({id:valoFileAssets.id,workspaceId:valoFileAssets.workspaceId,
+      jobId:valoFileAssets.jobId,checksum:valoFileAssets.checksum,mime:valoFileAssets.mime,
+      size:valoFileAssets.size,retentionAt:valoFileAssets.retentionAt,createdAt:valoFileAssets.createdAt})
+      .from(valoFileAssets).where(eq(valoFileAssets.workspaceId,actor.workspaceId)).limit(5001));
+    append("yourActivity",await tx.select().from(valoEvents).where(and(eq(valoEvents.workspaceId,actor.workspaceId),
+      eq(valoEvents.actorId,actor.identityId))).limit(5001));
+    return{schemaVersion:2,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,
+      scope:"Only the named application sections under data are included; this is not complete privacy fulfilment. Includes export/file metadata and your own workspace activity, but not private file bytes or storage links. Does not include membership records, other people's activity, full system/staff audits, managed identity records, external provider data or unlinked public contact requests. Request coordinated access for those systems.",
       data};
-  });
+  },{isolationLevel:"repeatable read"});
 }
 export type StaffArea="content"|"support"|"finance"|"system";
 export async function staffOperations(identityId:string,recentMfa:boolean,area:StaffArea){

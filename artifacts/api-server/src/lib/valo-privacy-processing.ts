@@ -39,7 +39,7 @@ async function preparePrivacyExport(actor:PrivacyStaffActor,id:string,input:Retu
         status:"partially_fulfilled",resultJson:result,resultScope:result.scope,
         steps:row.steps.map(s=>s.system==="application"?{...s,status:"confirmed",detail:"The named application JSON sections were read under current workspace authorization and saved as this immutable prepared result."}:
           s.system==="identity_verification"?s:{...s,status:"held",detail:s.system==="private_files"?
-            "Rendered private file bytes and file/job metadata are not included in this result.":s.system==="managed_identity"?
+            "Export/file metadata is included; rendered private file bytes are not included in this result.":s.system==="managed_identity"?
               "Managed sign-in-provider data has not been prepared in this result.":s.system==="external_processors"?
                 "External processor access has not been fulfilled or represented as complete.":
                 "Retention exceptions and recovery handling have not been confirmed. No complete privacy-fulfilment claim is made."})});

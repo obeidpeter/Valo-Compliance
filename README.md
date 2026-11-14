@@ -1,6 +1,22 @@
 # Valo Compliance — Valo Platform
 
-## Latest development checkpoint — merge security and isolated recovery
+## Latest development checkpoint — scoped customer data and working CI
+
+The customer JSON download now includes workspace-scoped export/file metadata
+and requester-only activity in a consistent database snapshot. Storage locators,
+queue identifiers and file bytes are not included; this is still partial privacy
+access, not completed deletion or full provider fulfilment. Prepared historic
+results are not silently rewritten.
+
+Application/CI checkpoint `1e99c4a` passed all four jobs in both GitHub runs,
+after fixing the database-dependent HTTP test and scanner startup/report handling.
+The later data-access evidence distinguishes actual PostgreSQL checks from
+controlled browser/API identities. See
+[the data-access scope](docs/valo/customer-data-access.md) and
+[the retained CI evidence](docs/valo/evidence/ci-runtime-checkpoint.json).
+No R1/R2, formal evaluation or production acceptance is implied.
+
+## Previous checkpoint — merge security and isolated recovery
 
 Added merge-time dependency/secret/static checks, actual HTTP/error-log privacy
 capture, internal development worker/database/backlog/cleanup/payment probes and
