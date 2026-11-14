@@ -1,0 +1,21 @@
+▶ dispute transport: official operations with controlled HTTP, not merchant execution
+  ✔ disabled and recovery paths have zero outbound effects (1.591394ms)
+  ✔ scope checks cover dispute, environment, reference, transaction, currency and amount (7.750661ms)
+  ✔ full and partial accept are exact integer-subunit requests, not outcome assertions (9.571354ms)
+  ✔ declines require provider filename; no guessed evidence IDs or delivery dates (4.650096ms)
+  ✔ upload acknowledges empty 204 using a separate no-Authorization client (22.513511ms)
+  ✔ destination expiry, host, credentials, traversal and overlong validity are rejected (1.591418ms)
+  ✔ bad/expired destination and arbitrary bytes never reach object upload (0.910257ms)
+  ✔ structured evidence uses exact fields and matches the returned dispute (2.523877ms)
+  ✔ fraud cannot omit structured evidence; API success never implies bank victory (1.424135ms)
+  ✔ timeout after acceptance makes only one mutation attempt (1.065117ms)
+  ✔ terminal, pending and bank-feedback states prevent a new mutation (3.082285ms)
+✔ dispute transport: official operations with controlled HTTP, not merchant execution (62.199096ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3748.230928

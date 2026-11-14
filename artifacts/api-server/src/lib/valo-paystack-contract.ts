@@ -54,12 +54,12 @@ function testSecret(){
   return process.env.PAYSTACK_SECRET_KEY;
 }
 /** Only the fixed provider host is reachable; discard all instrument/customer data. */
-export async function paystackRequest(path:string,body?:unknown):Promise<unknown>{
+export async function paystackRequest(path:string,body?:unknown,method:"GET"|"POST"|"PUT"=body?"POST":"GET"):Promise<unknown>{
   assertRecoveryEffectsAllowed();
   const key=testSecret();
   let response:Response;
   try{
-    response=await fetch("https://api.paystack.co"+path,{method:body?"POST":"GET",
+    response=await fetch("https://api.paystack.co"+path,{method,
       headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},
       ...(body?{body:JSON.stringify(body)}:{}),redirect:"error",signal:AbortSignal.timeout(12000)});
   }catch{throw new ValoProblem(503,"Paystack did not respond. Keep this order and refresh its status before starting another payment.");}

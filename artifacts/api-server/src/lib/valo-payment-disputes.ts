@@ -5,14 +5,16 @@ import {db,valoOrders,valoEntitlements,valoPaymentDisputes,valoEvents} from "@wo
 import {paystackRequest,sandboxPaymentsConfigured} from "./valo-paystack-contract";
 import {ValoProblem} from "./valo-problem";
 const id=z.union([z.string().regex(/^\d{1,40}$/),z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)]).transform(String);
-const dispute=z.object({id,domain:z.literal("test"),status:z.enum(["awaiting-merchant-feedback","awaiting-bank-feedback","pending","resolved","archived"]),
+export const verifiedDispute=z.object({id,domain:z.literal("test"),status:z.enum(["awaiting-merchant-feedback","awaiting-bank-feedback","pending","resolved","archived"]),
   resolution:z.string().max(100).nullable(),refund_amount:z.number().int().nonnegative().max(2147483647).nullable(),
+  category:z.string().max(100).nullable().optional(),updatedAt:z.string().datetime().optional(),
+  evidence:z.unknown().optional(),
   currency:z.literal("NGN").nullable(),transaction:z.object({id,domain:z.literal("test"),reference:z.string().max(150),
     amount:z.number().int().positive().max(2147483647),currency:z.literal("NGN")})});
 /** Only call with a server-fetched canonical dispute, never with webhook data.
  * No bank evidence, card data, customer payload or attachment is retained. */
 export async function storeVerifiedDispute(providerId:string,raw:unknown){
-  const data=dispute.parse(raw);
+  const data=verifiedDispute.parse(raw);
   if(data.id!==providerId)throw new ValoProblem(409,"Dispute identity mismatch.");
   return db.transaction(async tx=>{
     const[order]=await tx.select().from(valoOrders).where(and(eq(valoOrders.providerTransactionId,data.transaction.id),
@@ -26,7 +28,11 @@ export async function storeVerifiedDispute(providerId:string,raw:unknown){
     const values={status:data.status,resolution:data.resolution,amountKobo:data.refund_amount,checkedAt:new Date()};
     const[row]=await tx.insert(valoPaymentDisputes).values({id:randomUUID(),workspaceId:order.workspaceId,
       orderId:order.id,providerId,...values}).onConflictDoUpdate({target:valoPaymentDisputes.providerId,set:values}).returning();
-    await tx.update(valoEntitlements).set({status:"suspended"}).where(eq(valoEntitlements.orderId,order.id));
+    // Terminal/archived is not a documented final bank outcome. Do not newly
+    // suspend from that status alone, or restore access held for another reason.
+    if(!["resolved","archived"].includes(data.status))
+      await tx.update(valoEntitlements).set({status:"suspended"}).where(and(eq(valoEntitlements.orderId,order.id),
+        eq(valoEntitlements.status,"active")));
     await tx.insert(valoEvents).values({id:randomUUID(),workspaceId:order.workspaceId,actorId:"service:dispute-verifier",
       action:"payment.dispute_observed",entityId:row.id});
     return row;

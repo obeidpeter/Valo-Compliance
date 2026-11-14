@@ -1,0 +1,27 @@
+▶ refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund
+  ✔ strict amounts, tenant isolation, idempotent retries and changed-key conflicts (513.68285ms)
+  ✔ no role, wrong role, missing/stale/future MFA and stale revision cannot approve (85.03886ms)
+  ✔ concurrent partial requests cannot reserve more than the paid amount (44.840744ms)
+  ✔ racing approve/reject decisions record one revision and one decision reason (53.004518ms)
+  ✔ provider pending is not complete; partial then full processing preserves private drafts (323.03219ms)
+  ✔ timeout after provider acceptance reuses one reference and creates no second refund (82.535624ms)
+  ✔ parallel workers and changed provider facts never duplicate or falsely complete (122.845902ms)
+  ✔ SIGKILL after committed claim recovers with the same reference and bounded attempts (2292.667432ms)
+  ✔ committed membership and finance revocations defeat writes waiting on an order (66.773625ms)
+  ✔ canonical disputes suspend reuse, cannot be forged across transactions, and block double compensation (108.443539ms)
+  ✔ an explicitly exhausted refund counter blocks writes without losing saved history (194.301435ms)
+  ✔ legacy unknown amounts cannot be authorized; rejection is explicit and auditable (30.024059ms)
+  ✔ a verified failed provider refund releases funds; needs-attention does not invent completion (81.498522ms)
+  ✔ a late worker response cannot replace a newer completed observation (60.832257ms)
+  ✔ reversed payment or a late processed refund blocks a newly unsafe dispatch (238.155327ms)
+{"realPaystackCalls":0,"controlledProviderOnly":true,"realKernelSigkill":true,"leaseClockAdvance":"owned synthetic row","livePayments":false,"publicationsCreated":0,"privateDraftPreserved":true,"syntheticFinancialParentsRetainedForAudit":true}
+  ✔ the database rejects changes to financial transition history (16.060688ms)
+✔ refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund (9222.349752ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13648.190256
