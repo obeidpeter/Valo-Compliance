@@ -2,9 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'wouter';
 import { UserProfile } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, Download, Loader2, ShoppingBag } from 'lucide-react';
+import { CheckCircle2, Loader2, ShoppingBag } from 'lucide-react';
 import {
-  useGetCustomerAccount, useRequestCustomerPrivacy, useGetCustomerPurchases, downloadWorkspaceData,
+  useGetCustomerAccount, useRequestCustomerPrivacy, useGetCustomerPurchases,
   getGetCustomerAccountQueryKey, getGetCustomerPurchasesQueryKey,
   type AccessSupportAck, type PrivacyRequestInputKind,
 } from '@workspace/api-client-react';
@@ -14,6 +14,7 @@ import { describeError, formatDate } from '@/lib/api';
 import { PurchaseHistoryPage } from './purchase-history';
 import {PrivacyCases} from "@/components/privacy-cases";
 import {getListPrivacyCasesQueryKey} from "@workspace/api-client-react";
+import { WorkspaceDataDownload } from '@/components/workspace-data-download';
 
 export function AccountPage() {
   return (
@@ -53,7 +54,6 @@ export function PrivacyPage() {
   const [ack, setAckChecked] = useState(false);
   const [touched, setTouched] = useState(false);
   const [saved, setSaved] = useState<AccessSupportAck | null>(null);
-  const [dl, setDl] = useState<{ busy: boolean; err: string | null; done: boolean }>({ busy: false, err: null, done: false });
 
   const msgErr = message.trim().length < 10 ? 'At least 10 characters.' : message.length > 1500 ? 'Keep it under 1,500 characters.' : '';
 
@@ -63,22 +63,6 @@ export function PrivacyPage() {
     req.mutate({ data: { kind, message: message.trim(), acknowledgement: true,idempotencyKey } }, {
       onSuccess: (r) => { setSaved(r); setMessage(''); setAckChecked(false); setTouched(false);setIdempotencyKey(crypto.randomUUID()); },
     });
-  }
-
-  async function download() {
-    setDl({ busy: true, err: null, done: false });
-    try {
-      const data = await downloadWorkspaceData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `valo-workspace-${data.exportedAt.slice(0, 10)}.json`;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setDl({ busy: false, err: null, done: true });
-    } catch (e) {
-      setDl({ busy: false, err: describeError(e).message, done: false });
-    }
   }
 
   const err = req.error ? describeError(req.error) : null;
@@ -93,11 +77,7 @@ export function PrivacyPage() {
         <section className="surface p-6 sm:p-8">
           <h2 className="font-display text-2xl">Download workspace data</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground" data-testid="workspace-export-scope">A JSON copy of the sections listed in the file: profile versions, drafts and revisions, assessments, tasks, reminder records, support requests, AI drafts, purchases, export/file metadata and your own workspace activity. This is not complete privacy fulfilment. It does not include Word/PDF file bytes, storage links, membership records, other people's activity, full system/staff audits, sign-in-provider data, external-provider data or unlinked public contact requests. Use the privacy request form for coordinated access to those systems.</p>
-          <button className="btn btn-primary mt-5" onClick={download} disabled={dl.busy} data-testid="button-download-workspace">
-            {dl.busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Download className="h-4 w-4" aria-hidden />} Download JSON
-          </button>
-          {dl.done && <p role="status" className="mt-3 text-sm text-primary">Downloaded. Store it somewhere private.</p>}
-          {dl.err && <p role="alert" className="mt-3 text-sm text-destructive" data-testid="text-download-error">{dl.err}</p>}
+          <WorkspaceDataDownload />
         </section>
 
         <section>

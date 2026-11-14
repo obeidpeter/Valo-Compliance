@@ -89,6 +89,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
+      - name: Prove workspace download release requires the current session
+        run: pnpm --filter @workspace/api-server test:valo-workspace-download
       - name: Prove finite inference scope, actual callers and disabled entry without network
         run: pnpm --filter @workspace/api-server test:valo-finite-entry
       - name: Prove rich checker contracts, factual states and UI helper targets
@@ -107,6 +109,14 @@ jobs:
           echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Run API input-safety tests
         run: pnpm --filter @workspace/api-server test:valo
+      - name: Prove native workspace download, cancellation and account boundaries
+        run: pnpm --filter @workspace/api-server test:valo-workspace-download-browser
+      - name: Retain controlled workspace download browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: controlled-workspace-download-browser
+          path: generated-artifacts/valo-completion/workspace-data-download-browser.*
       - name: Reject unsafe export modes and stale account requests
         run: pnpm --filter @workspace/api-server test:valo-runtime-boundaries
       - name: Check HTTP log privacy, internal alerts and recovery effects
@@ -172,6 +182,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Apply tracked migrations to empty synthetic database
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
+      - name: Prove paged workspace attachment, final authorization and disconnect cleanup
+        run: pnpm --filter @workspace/api-server test:valo-workspace-download-db
       - name: Prove current-rule task guards against synthetic PostgreSQL
         run: pnpm --filter @workspace/api-server test:valo-task-source-guard
       - name: Prove synthetic erasure holds, late-upload races and bounded recovery

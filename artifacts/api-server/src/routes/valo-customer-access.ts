@@ -1,6 +1,4 @@
 import { Router,type Request } from "express";
-import {createReadStream} from "node:fs";
-import {pipeline} from "node:stream/promises";
 import { getAuth,clerkClient } from "@clerk/express";
 import { z } from "zod";
 import { RequestAccessSupportResponse as AccessSupportAck,GetCustomerAccountResponse as CustomerAccount,
@@ -9,7 +7,7 @@ import { RequestAccessSupportResponse as AccessSupportAck,GetCustomerAccountResp
   GetStaffOperationsQueryParams } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
 import { saveAccessSupport,customerAccount,requestPrivacy,staffOperations } from "../lib/valo-customer-access";
-import {withWorkspaceDataFile} from "../lib/valo-data-download";
+import {makeWorkspaceDataDownloadHandler} from "../lib/valo-data-download-http";
 import {financeRefunds,decideRefund,reconcileFinanceRefund,assertFinanceActor} from "../lib/valo-refunds";
 import {ValoProblem} from "../lib/valo-problem";
 import {GetFinanceRefundsResponse,DecideFinanceRefundResponse,ReconcileFinanceRefundResponse,ReconcileFinanceRefundBody} from "@workspace/api-zod";
@@ -31,14 +29,7 @@ customerAccessRouter.get("/workspace/account",async(_req,res)=>{
 customerAccessRouter.post("/workspace/privacy-requests",async(req,res)=>{
   res.status(201).json(AccessSupportAck.parse(await requestPrivacy(res.locals.valoActor,res.locals.valoContactEmail,req.body)));
 });
-customerAccessRouter.get("/workspace/data-export",async(_req,res)=>{
-  await withWorkspaceDataFile(res.locals.valoActor,async path=>{
-    if(res.destroyed)return;
-    res.set({"Cache-Control":"private, no-store","Content-Disposition":'attachment; filename="valo-workspace-data.json"',
-      "Content-Type":"application/json; charset=utf-8","X-Content-Type-Options":"nosniff"});
-    await pipeline(createReadStream(path),res);
-  });
-});
+customerAccessRouter.get("/workspace/data-export",makeWorkspaceDataDownloadHandler());
 customerAccessRouter.use("/workspace/privacy-cases",(_req,res,next)=>{res.set("Cache-Control","private, no-store");next();});
 customerAccessRouter.get("/workspace/privacy-cases",async(_req,res)=>{
   res.json(ListPrivacyCasesResponse.parse(await listPrivacyCases(res.locals.valoActor)));
