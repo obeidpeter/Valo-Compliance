@@ -45,8 +45,9 @@ async function main(){
     const report=JSON.parse(await readFile(versionedEvidencePath(root,version),"utf8"));
     prior.push({version,decision:report.release.decision,candidateHash:report.candidateHash,reviews:report.reviews});
   }
-  await writeFile(versionedEvidencePath(root,prepared.version),
-    JSON.stringify({executedAt:new Date().toISOString(),...prepared,scope:"Actual budget hold; zero new provider requests; not publication acceptance"},null,2)+"\n");
+  // An earlier revision wrote a dynamically versioned output here. This script
+  // only reads fixed historical evidence versions and records its new proof in
+  // the fixed operator report below; the held candidate stays in the database.
   const report={executedAt:new Date().toISOString(),sourceNoteCommit:"551e5580662cc305c05f3fd2c705a74b035c2c82",
     providerPermission:{verified:true,scope:permission.record.commercialUseScope,hash:permission.hash,
       sourceBinding:permission.record.sourceBinding,accountContractClassified:false,paidPlanRequired:false,
