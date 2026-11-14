@@ -77,7 +77,8 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       const locks=new Pool({connectionString:process.env.DATABASE_URL,max:2,connectionTimeoutMillis:1000,allowExitOnIdle:true});
       try{
         const results=await Promise.all(Array.from({length:6},()=>withPrivacyCaseLock(locks,randomUUID(),async()=>{
-          const r=await data.query({text:"SELECT 1 AS value",query_timeout:1000});return r.rows[0].value;
+          const config={text:"SELECT 1 AS value",query_timeout:1000};
+          const r=await data.query(config);return r.rows[0].value;
         })));
         assert.deepEqual(results,[1,1,1,1,1,1]);
       }finally{await locks.end();await data.end();}
