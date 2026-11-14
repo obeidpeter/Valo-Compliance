@@ -88,7 +88,7 @@ The validator's synthetic attestations exercise logic. Production must derive at
 
 A GitHub connection was attached. An initial metadata request returned HTTP 404. After secure sign-in and repository creation, a second request confirmed `obeidpeter/Valo-Compliance` is private, main points to the user-supplied initial commit, and the connected GitHub App has push access.
 
-**Latest observation supersedes the historical private state:** GitHub metadata returned `private=false`. New application source has not been uploaded. Private visibility must be restored before synchronization resumes. No repository visibility, branch protection, main branch or plan was changed by this development batch. The coordinating team's complete specification baseline was imported read-only; its files were not overwritten.
+**Historical observation, superseded by later private-status checks:** GitHub metadata returned `private=false`. New application source had not been uploaded at that checkpoint, and private visibility had to be restored before synchronization could resume. No repository visibility, branch protection, main branch or plan was changed by that development batch. The coordinating team's complete specification baseline was imported read-only; its files were not overwritten.
 
 Do not create a competing repository. Synchronization must preserve the initial main commit, add actual source on a feature branch and open a draft pull request without force pushes or direct main writes. Remote synchronization is not successful until the branch commit/tree and PR response are verified.
 

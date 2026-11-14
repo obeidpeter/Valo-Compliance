@@ -46,7 +46,7 @@ and disclosures remain required.
 **v8 passed the actual DOCX/PDF inspection, including its three-page PDF.**
 Publication remains **held**: the existing daily review limit is **6**, and the
 database records **6** attempts today. The independent pair could not reserve
-two slots. **Zero new factual/challenge reviews and zero new provider calls**
+two slots. **Zero new factual/challenge reviews and zero new AI-provider calls**
 occurred. The cap was not raised or bypassed. This is not a new factual
 rejection. Commercial licence acceptance and sales remain false.
 
