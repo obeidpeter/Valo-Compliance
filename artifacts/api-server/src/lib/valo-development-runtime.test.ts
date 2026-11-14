@@ -20,18 +20,19 @@ test("explicit development only; empty markers are absent, every nonempty marker
 
 test("actual export entries and worker startup reject before database, queue or storage effects",async t=>{
   const dir=await mkdtemp(join(tmpdir(),"valo-export-guard-"));
-  const zero={database:0,queue:0,storage:0,render:0,services:0};
+  const zero={database:0,authorization:0,queue:0,storage:0,render:0,services:0};
   const files=new Map<string,string>([
     ["@workspace/db",`const hit=()=>{globalThis.guardEffects.database++;throw Error("DATABASE_EFFECT")};
       export const db=new Proxy({},{get:()=>hit});export const pool={end:hit};
       export const valoMemberships={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
-      valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={};`],
+      valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={};`],
     ["drizzle-orm","export const and=()=>{},eq=()=>{},ne=()=>{},desc=()=>{},inArray=()=>{},lte=()=>{},sql=()=>{};"],
     ["pg-boss",`export class PgBoss{constructor(){globalThis.guardEffects.queue++;}
       on(){} async start(){globalThis.guardEffects.queue++;}async work(){globalThis.guardEffects.queue++;}}`],
     ["@workspace/api-zod","export const CreateDocumentExportBody={strict(){return this},parse(x){return x}},CreateDocumentExportResponse={parse:x=>x};"],
     ["@workspace/valo-core","export const sha256=x=>x;"],
-    ["valo-store","export class ValoProblem extends Error{constructor(status,message){super(message);this.status=status;}}"],
+    ["valo-store",`export class ValoProblem extends Error{constructor(status,message){super(message);this.status=status;}}
+      export const authorizeWorkspaceWrite=()=>{globalThis.guardEffects.authorization++;throw Error("AUTHORIZATION_EFFECT")};`],
     ["valo-private-storage",`const hit=()=>{globalThis.guardEffects.storage++;throw Error("STORAGE_EFFECT")};
       export const readPrivateFile=hit,writePrivateFile=hit,deletePrivateFile=hit;`],
     ["valo-render","export const RENDER_VERSION='controlled';export const exportMime=()=>'';export const renderDocument=()=>{globalThis.guardEffects.render++};"],
@@ -43,6 +44,8 @@ test("actual export entries and worker startup reject before database, queue or 
     ["valo-refunds","export const processRefundQueue=async()=>{globalThis.guardEffects.services++};"],
     ["valo-payment-disputes","export const reconcileKnownDisputes=async()=>{globalThis.guardEffects.services++};"],
     ["valo-operational-dispatch","export const dispatchOperationalJobs=async()=>{globalThis.guardEffects.services++};"],
+    ["valo-privacy-erasure",`const hit=async()=>{globalThis.guardEffects.services++;throw Error("PRIVACY_SERVICE_EFFECT")};
+      export const reconcileErasedObjects=hit,closePrivacyErasureLocks=hit;`],
   ]);
   const plugin:Plugin={name:"count-effects-only-in-isolated-proof",setup(b){
     b.onResolve({filter:/.*/},args=>{
