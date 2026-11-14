@@ -71,8 +71,10 @@ async function main(){
       mutatedCandidateHash:candidateDigest(b.candidate),bundleHash:digest(b),originalBaselineEligible:original?evaluatePublication(original).decision==="eligible":false};
   };
   for(const c of corpus.cases){
+    const selectsReviewedBaseline=["EVAL-EDP-C038","EVAL-EDP-C039"].includes(c.id);
     const record:Record<string,unknown>={caseID:c.id,caseHash:digest(c),scenario:c.scenario,requiresProviderRun:c.requiresProviderRun,
-      status:"blocked",actualProviderCalls:0,baselineId:row?.id??null,baselineBundleHash:original?digest(original):null,
+      status:"blocked",actualProviderCalls:0,baselineId:selectsReviewedBaseline?null:row?.id??null,
+      baselineBundleHash:selectsReviewedBaseline?null:original?digest(original):null,
       originalCaseMutation:c.inputMutation,formalCaseAccepted:false};
     results.push(record);
     if(c.requiresProviderRun){record.reason="genuine_case_bound_provider_roles_sources_rights_and_exports_required";continue;}
