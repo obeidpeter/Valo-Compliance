@@ -1,3 +1,8 @@
+> Subsequent rights correction: generic terms quoted in these retained attempts
+> did not establish the applicable workspace account/integration contract.
+> See [the current security checkpoint](security-checkpoint.md). Their historical
+> clearance assertions are not usable current publication evidence.
+
 # Operational publication checkpoint
 
 This is development implementation evidence, **not a successful release**.

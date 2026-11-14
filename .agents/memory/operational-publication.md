@@ -15,6 +15,16 @@ development holds, fixed guidance classification and invented extra approval.
 reviews and exact export evidence. Do not add per-item owner/specialist approval.
 Keep commercial licence acceptance before sales separate from content eligibility.
 
+Applicable account, managed-integration and provider terms must be evidenced;
+generic Replit Commercial Agreement or personal ChatGPT clauses cannot be assumed.
+
+**Why:** The user specifically corrected cross-plan rights assumptions.
+
+**How to apply:** Record the actual contractual scope before rights clearance.
+Configured integration, model receipts or dashboard access are not evidence of
+the governing account agreement. Keep historical overstatements, but do not use
+them as current clearance. This is not a new per-item owner approval.
+
 Actual independent AI checks may still hold material for unsupported assumptions
 about provenance or negated licence disclosures. Retain their exact evidence;
 neither override a hold nor present model agreement as truth. Bound retries.

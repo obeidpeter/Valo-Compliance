@@ -1,5 +1,6 @@
 /** Bounded publisher: no customer/draft tables, model calls, prices, money or policy writes. */
 import { randomUUID } from "node:crypto";
+import { loadRightsApplicability } from "./rights-applicability";
 import { and,eq,sql } from "drizzle-orm";
 import { db,valoPublicationPolicies,valoContentVersions,valoPublicationAudit } from "@workspace/db";
 import { digest,evaluatePublication,publicationSchema,sha256 } from "@workspace/valo-core";
@@ -9,7 +10,7 @@ import { operationalReviewSchema } from "./operational-review-contract";
 import { inventoryCandidate } from "./operational-content";
 import { originalFormSchema,formMarkdown } from "./operational-authoring-contract";
 export type ReleaseAttestations={
-  provenance:ArtifactRef;rights:ArtifactRef;reviews:ArtifactRef[];
+  provenance:ArtifactRef;rights:ArtifactRef;reviews:ArtifactRef[];rightsApplicabilityHash?:string;
   exports:{docx:ArtifactRef;pdf:ArtifactRef};exportReport:ArtifactRef;
 };
 export async function publishOperationalVersion(id:string){
@@ -45,22 +46,22 @@ export async function publishOperationalVersion(id:string){
       bundle.candidate.scope!==original.scope||bundle.candidate.limitations!==original.limitations)
       throw Error("OPERATIONAL_BODY_OUTSIDE_REVIEWED_ORIGINAL");
     const rights=JSON.parse((await getPublicationArtifact(a.rights)).toString());
+    const applicability=await loadRightsApplicability();
+    if(!applicability.verified||rights.authoringRoute!=="recorded_server_ai"||
+      rights.applicabilityHash!==applicability.hash||a.rightsApplicabilityHash!==applicability.hash)
+      throw Error("PROVIDER_RIGHTS_APPLICABILITY_UNVERIFIED");
     if(digest(rights)!==bundle.rights.evidenceHash||bundle.rights.evidence!==JSON.stringify(rights)||
       !rights.originalOperationalOnly||rights.customerLicenceAccepted!==false||
       rights.provenanceHash!==a.provenance.hash||Date.parse(rights.validUntil)<=Date.now())
       throw Error("RIGHTS_EVIDENCE_INVALID");
     const provider=JSON.parse((await getPublicationArtifact(rights.snapshot as ArtifactRef)).toString());
-    const faq=provider.pages.find((p:{url:string})=>p.url==="https://help.openai.com/en/articles/6783457-what-is-chatgpt");
-    const terms=provider.pages.filter((p:{url:string})=>p.url==="https://openai.com/policies/terms-of-use/"||p.url==="https://openai.com/policies/eu-terms-of-use/");
-    if(rights.authoringRoute==="recorded_server_ai"){
-      const platform=provider.pages.find((p:{url:string})=>p.url==="https://replit.com/commercial-agreement");
-      const api=provider.pages.find((p:{url:string})=>p.url==="https://openai.com/policies/business-terms/");
-      if(!provenance.generation||platform?.truncated||api?.truncated||
-        !platform?.text.includes("own the Output Content")||!api?.text.includes("owns all Output"))
-        throw Error("RECORDED_PROVIDER_PERMISSION_TEXT_MISSING");
-    }else if(!faq?.text.includes("regardless of whether output was generated through a free or paid plan")||
-      terms.length!==2||terms.some((p:{text:string;truncated:boolean})=>p.truncated||!p.text.includes("own the Output")))
-        throw Error("PROVIDER_PERMISSION_TEXT_MISSING");
+    if(!provenance.generation||JSON.stringify(rights.permissions)!==JSON.stringify(applicability.record.evidence))
+      throw Error("RECORDED_PROVIDER_PERMISSION_TEXT_MISSING");
+    for(const evidence of applicability.record.evidence){
+      const page=provider.pages.find((p:{url:string})=>p.url===evidence.url);
+      if(!page||page.truncated||sha256(page.text)!==evidence.hash||!page.text.includes(evidence.quote))
+        throw Error("APPLICABLE_TERMS_SNAPSHOT_MISSING");
+    }
     if(a.reviews.length!==2)throw Error("INDEPENDENT_REVIEWS_MISSING");
     const providerIds=new Set<string>();
     for(const ref of a.reviews){

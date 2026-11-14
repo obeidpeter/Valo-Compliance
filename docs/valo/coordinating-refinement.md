@@ -62,7 +62,13 @@ access and isolated restore still require actual proof.
 
 ## Repository and release boundaries
 
-The current authorised exact-name check returned an existing public repository,
+**Historical visibility incident, not current repository status.** The repository
+was subsequently made private and application source was synchronized through
+the existing feature branch and draft PR2. See
+[current security checkpoint](security-checkpoint.md). This historical finding
+and the original restraint on writes are retained:
+
+The then-current authorised exact-name check returned an existing public repository,
 despite the coordinating report that none was created. The owner subsequently
 confirmed it is the intended repository. This resolves product identity only;
 creation history, private visibility, uploads, CI and protection are separate

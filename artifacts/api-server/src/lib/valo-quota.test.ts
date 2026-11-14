@@ -5,6 +5,8 @@ import { quotaPolicy, quotaSubjectHash } from "./valo-quota-policy";
 test("quota defaults preserve the requested initial ceilings", () => {
   assert.deepEqual(quotaPolicy, {
     "anonymous-read":60, "authenticated-read":120, "customer-ai":5, "checkout-create":10, "export-create":10,
+    "profile-write":20,"profile-write-day":200,"document-write":30,"document-write-day":600,
+    "support-write":3,"support-write-day":20,
   });
 });
 test("quota subjects are pseudonymised, domain-separated and keyed", () => {

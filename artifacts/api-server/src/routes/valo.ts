@@ -8,7 +8,7 @@ import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-ident
 import * as store from "../lib/valo-store";
 import requirementsRouter from "./valo-requirements";
 import customerAIRouter from "./valo-customer-ai";
-import { releasedCatalogue,releasedTemplate,createReleasedTemplateDraft,readReleasedMaster } from "../lib/valo-released-content";
+import { releasedCatalogue,releasedTemplate,createReleasedTemplateDraft,readReleasedMaster,liveCoverage } from "../lib/valo-released-content";
 import { exportMime } from "../lib/valo-render";
 import { GetReleasedTemplateResponse } from "@workspace/api-zod";
 
@@ -18,8 +18,9 @@ router.get("/development/source-evidence",async (_req,res):Promise<void>=>{
   res.set("Cache-Control","no-store");
   res.json(GetSourceEvidenceResponse.parse(await sourceEvidenceRegister()));
 });
-router.get("/public/coverage", (_req, res) => {
-  res.json(GetPublicCoverageResponse.parse(coveragePlan()));
+router.get("/public/coverage", async (_req, res) => {
+  res.set("Cache-Control","no-store");
+  res.json(GetPublicCoverageResponse.parse(await liveCoverage()));
 });
 router.get("/public/catalogue", async (req, res) => {
   const query = ListPublicCatalogueQueryParams.parse(req.query);

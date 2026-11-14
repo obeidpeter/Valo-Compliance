@@ -38,7 +38,9 @@ app.use((req,res,next) => {
   res.json = ((body: unknown) => {
     if (res.statusCode >= 400 && typeof body === "object" && body !== null && "error" in body) {
       res.setHeader("Cache-Control","private, no-store");
-      body = { ...body, code:"HTTP_"+res.statusCode, requestId:String(req.id), message:body.error };
+      const code="code" in body&&typeof body.code==="string"&&/^[A-Z][A-Z0-9_]{1,79}$/.test(body.code)?
+        body.code:"HTTP_"+res.statusCode;
+      body = { ...body, code, requestId:String(req.id), message:body.error };
     }
     return sendJson(body);
   }) as typeof res.json;
@@ -79,7 +81,10 @@ const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
     return;
   }
   if (error instanceof ValoProblem) {
-    res.status(error.status).json({ error: error.message, currentRevision: error.currentRevision }); return;
+    if(error.retryAfter)res.setHeader("Retry-After",String(error.retryAfter));
+    res.setHeader("Cache-Control","private, no-store");
+    res.status(error.status).json({error:error.message,currentRevision:error.currentRevision,retryAfter:error.retryAfter,
+      code:error.status===429?"WRITE_LIMIT_REACHED":undefined});return;
   }
   // Never log request bodies, provider payloads, user text or raw prompts.
   req.log.error({ event: "request.failed", errorType: error instanceof Error ? error.name : "unknown" });

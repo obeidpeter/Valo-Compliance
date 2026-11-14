@@ -7,12 +7,29 @@ import {
 import { sha256 } from "@workspace/valo-core";
 import { documentInput, documentUpdate, profileInput, ticketInput } from "./valo-validation";
 import { z } from "zod";
+import { consumeQuota,quotaPolicy,quotaSubjectHash } from "./valo-quota";
 
 export class ValoProblem extends Error {
-  constructor(public status: number, message: string, public currentRevision?: number) { super(message); }
+  constructor(public status: number, message: string, public currentRevision?: number,public retryAfter?:number) { super(message); }
 }
 export type WorkspaceActor = { workspaceId: string; identityId: string };
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+/** Acquire after potentially blocking resource locks, immediately before writing.
+ * Revocation committed while a request waited must win. Holding this row lock
+ * makes the eventual write/revocation order linearizable until commit. */
+export async function authorizeWorkspaceWrite(tx:Tx,actor:WorkspaceActor){
+  const[member]=await tx.select().from(valoMemberships).where(and(
+    eq(valoMemberships.workspaceId,actor.workspaceId),eq(valoMemberships.identityId,actor.identityId))).for("share");
+  if(!member||member.active!=="yes")throw new ValoProblem(403,"Active workspace membership is required. No changes were saved.");
+}
+async function limitWorkspaceWrite(tx:Tx,actor:WorkspaceActor,operation:"profile"|"document"|"support"){
+  const key=quotaSubjectHash(process.env.SESSION_SECRET,"user",actor.identityId);
+  for(const window of["minute","day"]as const){
+    const bucket=`${operation}-write${window==="day"?"-day":""}` as keyof typeof quotaPolicy;
+    const q=await consumeQuota(bucket,key,quotaPolicy[bucket],window,tx);
+    if(!q.allowed)throw new ValoProblem(429,`Write limit reached. Retry in ${q.retryAfter} seconds. Previously saved work is unchanged; keep your unsaved input.`,undefined,q.retryAfter);
+  }
+}
 function event(tx: Tx, actor: WorkspaceActor, action: string, entityId: string, revision?: number) {
   return tx.insert(valoEvents).values({ id: randomUUID(), workspaceId: actor.workspaceId, actorId: actor.identityId, action, entityId, revision });
 }
@@ -49,8 +66,10 @@ export async function saveProfile(actor: WorkspaceActor, raw: unknown) {
   return db.transaction(async tx => {
     const [workspace] = await tx.select().from(valoWorkspaces).where(eq(valoWorkspaces.id, actor.workspaceId)).for("update");
     if (!workspace) throw new ValoProblem(404, "Workspace not found");
+    await authorizeWorkspaceWrite(tx,actor);
     if (workspace.profileRevision !== input.expectedRevision)
       throw new ValoProblem(409, "Profile changed elsewhere. Reload before saving; your unsaved input has not been applied.", workspace.profileRevision);
+    await limitWorkspaceWrite(tx,actor,"profile");
     const revision = workspace.profileRevision + 1;
     await tx.insert(valoProfileVersions).values({
       id: randomUUID(), workspaceId: actor.workspaceId, revision, profile: input.profile,
@@ -122,9 +141,8 @@ export async function createDocument(actor: WorkspaceActor, raw: unknown) {
 export async function createDocumentInTransaction(tx:Tx,actor:WorkspaceActor,raw:unknown,origin:"manual"|"customer_ai"="manual"){
   const input = documentInput.parse(raw);
   const id = randomUUID();
-  const[member]=await tx.select().from(valoMemberships).where(and(eq(valoMemberships.workspaceId,actor.workspaceId),
-    eq(valoMemberships.identityId,actor.identityId),eq(valoMemberships.active,"yes"))).for("share");
-  if(!member)throw new ValoProblem(403,"Active workspace membership is required");
+  await authorizeWorkspaceWrite(tx,actor);
+  await limitWorkspaceWrite(tx,actor,"document");
   await tx.insert(valoDocuments).values({ id, workspaceId: actor.workspaceId, currentRevision: 1 });
   await appendRevision(tx, actor, id, 1, input,origin);
   return id;
@@ -135,6 +153,7 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
     const [document] = await tx.select().from(valoDocuments).where(and(
       eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId))).for("update");
     if (!document) throw new ValoProblem(404, "Document not found");
+    await authorizeWorkspaceWrite(tx,actor);
     if (document.currentRevision !== expectedRevision)
       throw new ValoProblem(409, "Document changed in another tab. Your text was not overwritten; compare with the latest revision.", document.currentRevision);
     const[current]=await tx.select({content:valoDocumentRevisions.content}).from(valoDocumentRevisions)
@@ -142,6 +161,7 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
         eq(valoDocumentRevisions.revision,expectedRevision)));
     if(current?.content.financialInput&&!input.content.financialInput)
       throw new ValoProblem(422,"Keep the guided financial model. Create a separate blank draft for unrestricted free-form content.");
+    await limitWorkspaceWrite(tx,actor,"document");
     await appendRevision(tx, actor, id, expectedRevision + 1, input);
     await tx.update(valoDocuments).set({ currentRevision: expectedRevision + 1, updatedAt: new Date() })
       .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)));
@@ -152,6 +172,8 @@ export async function createTicket(actor: WorkspaceActor, raw: unknown) {
   const input = ticketInput.parse(raw);
   const id = randomUUID();
   await db.transaction(async tx => {
+    await authorizeWorkspaceWrite(tx,actor);
+    await limitWorkspaceWrite(tx,actor,"support");
     await tx.insert(valoSupportTickets).values({
       id, workspaceId: actor.workspaceId, ...input, consentVersion: "service-sharing-v1", dispatchStatus: "awaiting_staff",
     });

@@ -6,3 +6,4 @@
 - [Managed identity browser tests](clerk-browser-testing.md) — match test tooling to the actual FAPI; a bot challenge is not automatically missing identity setup.
 - [AI evaluation cost evidence](ai-evaluation-cost-evidence.md) — synthetic inputs can incur real provider usage; cleanup must preserve usage history and quota accounting.
 - [Operational publication](operational-publication.md) — citations follow actual claims; owner authority is already given, sales approval is separate, and real review holds cannot be overridden.
+- [Customer trust boundaries](customer-trust-boundaries.md) — configured exact origin, durable write caps and commit-ordered membership revocation; findings are not exploit claims.

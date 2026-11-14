@@ -236,6 +236,7 @@ paths:
         "401": { $ref: "#/components/responses/AuthError" }
         "403": { $ref: "#/components/responses/AuthError" }
         "409": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
   /workspace/documents:
     get:
       operationId: listDocuments
@@ -268,6 +269,7 @@ paths:
         "400": { $ref: "#/components/responses/AuthError" }
         "401": { $ref: "#/components/responses/AuthError" }
         "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
   /workspace/documents/{id}:
     parameters:
       - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
@@ -302,6 +304,7 @@ paths:
         "403": { $ref: "#/components/responses/AuthError" }
         "404": { $ref: "#/components/responses/AuthError" }
         "409": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
   /workspace/documents/{id}/revisions:
     get:
       operationId: listDocumentRevisions
@@ -336,6 +339,7 @@ paths:
         "400": { $ref: "#/components/responses/AuthError" }
         "401": { $ref: "#/components/responses/AuthError" }
         "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
   /healthz:
     get:
       operationId: healthCheck
@@ -540,6 +544,19 @@ paths:
               schema: { type: array, items: { $ref: "#/components/schemas/ReminderRecord" } }
 components:
   responses:
+    WriteLimit:
+      description: Durable write ceiling reached; saved data is unchanged and unsaved input must be retained
+      headers:
+        Retry-After: { schema: { type: integer, minimum: 1 }, description: Seconds until the limiting database window resets }
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, error, retryAfter]
+            properties:
+              code: { type: string, enum: [WRITE_LIMIT_REACHED] }
+              error: { type: string }
+              retryAfter: { type: integer, minimum: 1 }
     QuotaError:
       description: Read ceiling reached; retry after the indicated seconds without changing saved work
       headers:

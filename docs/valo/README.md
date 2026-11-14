@@ -1,5 +1,10 @@
 # Current operational publication refinement
 
+Current implementation status is in [the security checkpoint](security-checkpoint.md).
+Older dated sections and incident records below describe their original
+checkpoints; they are not assertions that AI/auth remain unconfigured or that
+the repository is currently public.
+
 See [the operational publication checkpoint](operational-publication-checkpoint.md).
 The conditional path and negative tests are implemented, but all three actual
 candidates remain held. There is no eligible release or real withdrawal proof.

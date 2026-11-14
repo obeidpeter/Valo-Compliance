@@ -1,5 +1,11 @@
 # Valo Compliance — Valo Platform
 
+Current security/correctness work:
+[trust boundaries, durable write caps, revocation races, live counts and rights](docs/valo/security-checkpoint.md).
+The GitHub repository is private and source is synchronized through draft PR2.
+Managed customer identity and server AI are configured and have retained actual
+execution evidence; this is not production or full R1/R2 acceptance.
+
 Latest implemented increment: saved profile-driven checker assessments,
 comparisons, private tasks and opted-in held reminders; four real-provider AI
 document flows with editable private revisions and DOCX/PDF exports. The

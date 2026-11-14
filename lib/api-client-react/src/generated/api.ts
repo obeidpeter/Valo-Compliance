@@ -62,7 +62,8 @@ import type {
   TicketInput,
   TicketReceipt,
   Workspace,
-  WorkspaceTask
+  WorkspaceTask,
+  WriteLimitResponse
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1615,7 +1616,7 @@ return customFetch<Workspace>(getSaveBusinessProfileUrl(),
 
 export const getSaveBusinessProfileMutationKey = () => ['saveBusinessProfile'] as const;
 
-export const getSaveBusinessProfileMutationOptions = <TError = ErrorType<AuthErrorResponse>,
+export const getSaveBusinessProfileMutationOptions = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveBusinessProfile>>, TError,SaveBusinessProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveBusinessProfile>>, TError,SaveBusinessProfileMutationVariables, TContext> => {
 
@@ -1644,10 +1645,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SaveBusinessProfileMutationResult = NonNullable<Awaited<ReturnType<typeof saveBusinessProfile>>>
     export type SaveBusinessProfileMutationBody = BodyType<ProfileInput>
-    export type SaveBusinessProfileMutationError = ErrorType<AuthErrorResponse>
+    export type SaveBusinessProfileMutationError = ErrorType<AuthErrorResponse | WriteLimitResponse>
     export type SaveBusinessProfileMutationVariables = {data: BodyType<ProfileInput>}
 
-    export const useSaveBusinessProfile = <TError = ErrorType<AuthErrorResponse>,
+    export const useSaveBusinessProfile = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveBusinessProfile>>, TError,SaveBusinessProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof saveBusinessProfile>>,
@@ -1792,7 +1793,7 @@ return customFetch<BusinessDocument>(getCreateDocumentUrl(),
 
 export const getCreateDocumentMutationKey = () => ['createDocument'] as const;
 
-export const getCreateDocumentMutationOptions = <TError = ErrorType<AuthErrorResponse>,
+export const getCreateDocumentMutationOptions = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDocument>>, TError,CreateDocumentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createDocument>>, TError,CreateDocumentMutationVariables, TContext> => {
 
@@ -1821,10 +1822,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof createDocument>>>
     export type CreateDocumentMutationBody = BodyType<DocumentInput>
-    export type CreateDocumentMutationError = ErrorType<AuthErrorResponse>
+    export type CreateDocumentMutationError = ErrorType<AuthErrorResponse | WriteLimitResponse>
     export type CreateDocumentMutationVariables = {data: BodyType<DocumentInput>}
 
-    export const useCreateDocument = <TError = ErrorType<AuthErrorResponse>,
+    export const useCreateDocument = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDocument>>, TError,CreateDocumentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createDocument>>,
@@ -1970,7 +1971,7 @@ return customFetch<BusinessDocument>(getSaveDocumentUrl(id),
 
 export const getSaveDocumentMutationKey = () => ['saveDocument'] as const;
 
-export const getSaveDocumentMutationOptions = <TError = ErrorType<AuthErrorResponse>,
+export const getSaveDocumentMutationOptions = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveDocument>>, TError,SaveDocumentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveDocument>>, TError,SaveDocumentMutationVariables, TContext> => {
 
@@ -1999,10 +2000,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SaveDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof saveDocument>>>
     export type SaveDocumentMutationBody = BodyType<DocumentUpdate>
-    export type SaveDocumentMutationError = ErrorType<AuthErrorResponse>
+    export type SaveDocumentMutationError = ErrorType<AuthErrorResponse | WriteLimitResponse>
     export type SaveDocumentMutationVariables = {id: string;data: BodyType<DocumentUpdate>}
 
-    export const useSaveDocument = <TError = ErrorType<AuthErrorResponse>,
+    export const useSaveDocument = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveDocument>>, TError,SaveDocumentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof saveDocument>>,
@@ -2147,7 +2148,7 @@ return customFetch<TicketReceipt>(getCreateSupportTicketUrl(),
 
 export const getCreateSupportTicketMutationKey = () => ['createSupportTicket'] as const;
 
-export const getCreateSupportTicketMutationOptions = <TError = ErrorType<AuthErrorResponse>,
+export const getCreateSupportTicketMutationOptions = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportTicket>>, TError,CreateSupportTicketMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createSupportTicket>>, TError,CreateSupportTicketMutationVariables, TContext> => {
 
@@ -2176,10 +2177,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateSupportTicketMutationResult = NonNullable<Awaited<ReturnType<typeof createSupportTicket>>>
     export type CreateSupportTicketMutationBody = BodyType<TicketInput>
-    export type CreateSupportTicketMutationError = ErrorType<AuthErrorResponse>
+    export type CreateSupportTicketMutationError = ErrorType<AuthErrorResponse | WriteLimitResponse>
     export type CreateSupportTicketMutationVariables = {data: BodyType<TicketInput>}
 
-    export const useCreateSupportTicket = <TError = ErrorType<AuthErrorResponse>,
+    export const useCreateSupportTicket = <TError = ErrorType<AuthErrorResponse | WriteLimitResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportTicket>>, TError,CreateSupportTicketMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createSupportTicket>>,

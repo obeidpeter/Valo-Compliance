@@ -1,23 +1,33 @@
 import { sourceCoverageExpansion } from "./coverage-expansion.generated";
 import { baselineTemplates, additionalCandidates, contentReadiness } from "./catalogue";
 
-export function coveragePlan() {
+/** Facts are supplied only after live publication eligibility checks, never from inventory rows. */
+export type ReleasedCoverageFact={id:string;kind:"template"|"guidance"|"guide"|"industry_pack"|"location_pack";
+  industrySlugs:string[];locationIds:string[];sourceCheckedAt:string};
+export function coveragePlan(released:ReleasedCoverageFact[]=[]) {
   const c = contentReadiness();
+  const distinct=[...new Map(released.map(r=>[r.id,r])).values()];
+  const regulatory=distinct.filter(r=>r.kind!=="template");
   return {
-    industries: c.industryTaxonomy.map((title, index) => ({
+    industries: c.industryTaxonomy.map((title, index) => {
+      const slug=title.replaceAll("/", "-").replaceAll(" ", "-");
+      const matches=regulatory.filter(r=>r.industrySlugs.includes(slug));
+      return({
       id: `IND-${String(index + 1).padStart(2, "0")}`,
       slug: title.replaceAll("/", "-").replaceAll(" ", "-"), title,
       deeperPackTarget: (c.deeperPacks as readonly string[]).includes(title),
       enhancedEvidenceRequired: ["healthcare", "financial services", "energy"].includes(title),
-      coverageState: "held", evidenceState: "no_released_evidence", sourceCheckedAt: null,
-      publishedItems: 0,
-    })),
-    guidanceTarget: c.releaseTargets.R1.compliance_entries, publishedGuidance: 0,
-    guidesTarget: c.releaseTargets.R1.guides, publishedGuides: 0,
-    deeperPackTarget: c.releaseTargets.R1.deeper_industry_packs, publishedDeeperPacks: 0,
+      coverageState: matches.length?"partial":"held", evidenceState: matches.length?"released_evidence":"no_released_evidence",
+      sourceCheckedAt:matches.map(r=>r.sourceCheckedAt).sort().at(-1)??null,
+      publishedItems:matches.length,
+    });}),
+    guidanceTarget: c.releaseTargets.R1.compliance_entries, publishedGuidance: distinct.filter(r=>r.kind==="guidance").length,
+    guidesTarget: c.releaseTargets.R1.guides, publishedGuides: distinct.filter(r=>r.kind==="guide").length,
+    deeperPackTarget: c.releaseTargets.R1.deeper_industry_packs, publishedDeeperPacks: distinct.filter(r=>r.kind==="industry_pack").length,
     selectableLocations: 37, priorityLocations: c.statePriorities,
-    checkedLocationPacks: 0,
-    notice: "Coverage targets, not completed coverage. No federal, state/FCT or LGA guidance is currently released. Priority is not evidence of a source check.",
+    checkedLocationPacks: distinct.filter(r=>r.kind==="location_pack").length,
+    notice: regulatory.length?"Counts include only currently eligible released content. Coverage remains partial; absent state/LGA/activity evidence is a gap, not an exemption.":
+      "Coverage targets, not completed coverage. No federal, state/FCT or LGA guidance is currently released. Priority is not evidence of a source check.",
     ngoNotice: "NGO applicability depends on actual legal form, activities and geography. No tax or licensing exemption is inferred. NGO onboarding expansion remains locked until R1 acceptance.",
   };
 }

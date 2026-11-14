@@ -15,8 +15,14 @@ import { developmentPublicationOnly,operationalPolicy } from "./operational-poli
 import { putPublicationArtifact } from "./publication-artifacts";
 import { reviewOperationalCandidate } from "./operational-review";
 import { publishOperationalVersion,recordActualPublicationHold,type ReleaseAttestations } from "./publication-publisher";
+import { loadRightsApplicability } from "./rights-applicability";
 const execFile=promisify(execCallback);
 export async function prepareInventoryRelease(snapshotPath:string){
+  const applicability=await loadRightsApplicability();
+  // Fail before metered authoring/review calls. Terms existing on the web do
+  // not establish their applicability to this account and integration.
+  if(!applicability.verified||process.env.VALO_OPERATIONAL_AUTHORING!=="recorded")
+    throw Error("PROVIDER_RIGHTS_APPLICABILITY_UNVERIFIED");
   developmentPublicationOnly();
   const now=new Date(),{policy,authority}=await operationalPolicy();
   await db.insert(valoPublicationPolicies).values({id:policy.version,hash:policy.hash,policy,authority}).onConflictDoNothing();
@@ -40,27 +46,18 @@ export async function prepareInventoryRelease(snapshotPath:string){
   if(snapshot.kind!=="official_provider_terms_snapshot"||snapshot.pages.some((p:{truncated:boolean})=>p.truncated)||
     !Number.isFinite(Date.parse(snapshot.retrievedAt))||Date.parse(snapshot.retrievedAt)>+now||
     +now-Date.parse(snapshot.retrievedAt)>86400000)throw Error("FRESH_ACTUAL_PROVIDER_TERMS_REQUIRED");
-  const terms=snapshot.pages.filter((p:{url:string})=>["https://openai.com/policies/terms-of-use/","https://openai.com/policies/eu-terms-of-use/"].includes(p.url));
-  const faq=snapshot.pages.find((p:{url:string})=>p.url==="https://help.openai.com/en/articles/6783457-what-is-chatgpt");
-  if(terms.length!==2||!terms.every((p:{text:string})=>p.text.includes("own the Output"))||
-    !faq?.text.includes("regardless of whether output was generated through a free or paid plan"))throw Error("PROVIDER_RIGHTS_TEXT_NOT_CONFIRMED");
+  for(const evidence of applicability.record.evidence){
+    const page=snapshot.pages.find((p:{url:string})=>p.url===evidence.url);
+    if(!page||sha256(page.text)!==evidence.hash||!page.text.includes(evidence.quote))
+      throw Error("APPLICABLE_TERMS_SNAPSHOT_MISSING");
+  }
   const snapshotRef=await putPublicationArtifact(Buffer.from(JSON.stringify(snapshot)),"json");
   const rights={snapshot:snapshotRef,provenanceHash:provenance.hash,originalOperationalOnly:true,
+    applicabilityHash:applicability.hash,applicability:applicability.record,
     customerLicenceAccepted:false,checkedAt:now.toISOString(),validUntil:content.reviewBy,
     authoringRoute:authored?"recorded_server_ai":"coordinator_chatgpt",
     conclusion:authored?"Actual server AI authoring receipt and retrieved platform/provider terms retained for free development evaluation. No copyright, exclusivity, non-infringement, indemnity or sales-licence guarantee. Not for sale.":"Provider permissions and coordinator-attributed original operational provenance checked for this free synthetic-development release only. Upstream execution IDs are unrecorded; no copyright, exclusivity or non-infringement guarantee. No sales or accepted Valo commercial licence.",
-    permissions:terms.map((p:{url:string;text:string})=>({url:p.url,locator:"Content / Ownership of content",
-      quote:p.text.match(/.{0,40}own the Output.{0,140}/)?.[0]})).concat([{url:faq.url,locator:"Can I use output from ChatGPT for commercial uses?",
-      quote:faq.text.match(/.{0,80}regardless of whether output was generated through a free or paid plan.{0,20}/)?.[0]}])};
-  if(authored){
-    const platform=snapshot.pages.find((p:{url:string})=>p.url==="https://replit.com/commercial-agreement");
-    const api=snapshot.pages.find((p:{url:string})=>p.url==="https://openai.com/policies/business-terms/");
-    const platformQuote=platform?.text.match(/.{0,160}own the Output Content.{0,260}/)?.[0];
-    const apiQuote=api?.text.match(/.{0,120}owns all Output.{0,220}/)?.[0];
-    if(!platformQuote||!apiQuote)throw Error("RECORDED_AUTHORING_PROVIDER_TERMS_MISSING");
-    rights.permissions=[{url:platform.url,locator:"B.2 Customer Content Ownership",quote:platformQuote},
-      {url:api.url,locator:"4.1 Customer Content Ownership",quote:apiQuote}];
-  }
+    permissions:applicability.record.evidence};
   const rightsRef=await putPublicationArtifact(Buffer.from(JSON.stringify(rights)),"json");
   const rawCandidate:Omit<PublicationBundle["candidate"],"hash">={
     id:"TPL-07",version,body:JSON.stringify(content.document),contentClass:"general_template" as const,
@@ -89,7 +86,7 @@ export async function prepareInventoryRelease(snapshotPath:string){
   const reportRef=await putPublicationArtifact(Buffer.from(JSON.stringify(exportReport)),"json");
   const reviewed=await reviewOperationalCandidate(candidate,
     {permissions:rights.permissions,conclusion:rights.conclusion,customerLicenceAccepted:false,
-      actualProviderTerms:snapshot.pages.filter((p:{url:string})=>authored?/replit.com|business-terms/.test(p.url):terms.some((t:{url:string})=>t.url===p.url)||p.url===faq.url),
+      actualProviderTerms:snapshot.pages.filter((p:{url:string})=>applicability.record.evidence.some(e=>e.url===p.url)),
       actualExecutionReceipt:authored?.receipt,environmentEvidence:{developmentOnly:true,
         runtimeGuard:"NODE_ENV=development and no REPLIT_DEPLOYMENT; publication endpoints are not exposed to customers",
         policy:policy,scope:"Free synthetic evaluation; no sales or commercial licence granted"}},
@@ -121,7 +118,7 @@ export async function prepareInventoryRelease(snapshotPath:string){
   Object.assign(bundle.manifest,{rightsHash:digest(bundle.rights),
     reviewHash:digest({draft:bundle.draftRun,reviews:bundle.reviews}),checksHash:digest({mechanical:bundle.mechanicalChecks,enhanced:[]}),
     exportsHash:digest(bundle.exports)});
-  const id=randomUUID(),attestations:ReleaseAttestations={provenance,rights:rightsRef,
+  const id=randomUUID(),attestations:ReleaseAttestations={provenance,rights:rightsRef,rightsApplicabilityHash:applicability.hash,
     reviews:reviewed.map(r=>r.artifact),exports,exportReport:reportRef};
   await db.transaction(async tx=>{
     await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);

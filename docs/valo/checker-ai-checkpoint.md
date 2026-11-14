@@ -1,3 +1,8 @@
+> Retained execution checkpoint. The runs/counts below describe that source
+> revision, not a new execution of every suite. See
+> [current security and rights status](security-checkpoint.md) for subsequent
+> changes; publication, commercial and production gates remain unaccepted.
+
 # Checker and customer AI: development execution checkpoint
 
 This is partial R1 development, not R1/R2 acceptance or production readiness.

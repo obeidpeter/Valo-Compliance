@@ -66,6 +66,7 @@ jobs:
       # Ephemeral synthetic CI service only; no workspace/provider/production secret.
       DATABASE_URL: postgresql://valo_ci:synthetic_ci_only@localhost:5432/valo_ci
       VALO_RUN_DB_TESTS: synthetic-development-only
+      SESSION_SECRET: synthetic-ci-only-write-quota-key-not-a-production-secret
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
@@ -84,3 +85,5 @@ jobs:
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db
+      - name: Prove durable write limits and membership revocation races
+        run: pnpm --filter @workspace/api-server test:valo-write-security

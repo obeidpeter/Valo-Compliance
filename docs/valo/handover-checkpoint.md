@@ -1,3 +1,7 @@
+> Retained historical checkpoint. For current private-repository, configured
+> identity/AI and security status, see [the current checkpoint](security-checkpoint.md).
+> Original failed/blocked observations below are preserved, not current setup claims.
+
 # Handover checkpoint and development schema-safety increment
 
 ## Actual changes

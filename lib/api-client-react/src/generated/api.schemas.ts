@@ -1211,6 +1211,20 @@ export interface HealthStatus {
   status: string;
 }
 
+export type WriteLimitResponseCode = typeof WriteLimitResponseCode[keyof typeof WriteLimitResponseCode];
+
+
+export const WriteLimitResponseCode = {
+  WRITE_LIMIT_REACHED: 'WRITE_LIMIT_REACHED',
+} as const;
+
+export type WriteLimitResponse = {
+  code: WriteLimitResponseCode;
+  error: string;
+  /** @minimum 1 */
+  retryAfter: number;
+};
+
 /**
  * Read ceiling reached; retry after the indicated seconds without changing saved work
  */

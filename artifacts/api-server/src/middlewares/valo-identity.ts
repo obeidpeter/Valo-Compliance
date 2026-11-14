@@ -1,7 +1,7 @@
 import { clerkClient, getAuth } from "@clerk/express";
 import type { RequestHandler } from "express";
 import { resolveWorkspace, type WorkspaceActor } from "../lib/valo-store";
-import { getClerkProxyHost } from "./clerkProxyMiddleware";
+import { trustedSiteOrigin,permittedMutationOrigin } from "../lib/valo-site-origin";
 
 declare global {
   namespace Express {
@@ -38,12 +38,15 @@ export const verifiedWorkspace: RequestHandler = async (req, res, next) => {
 export const sameOriginMutation: RequestHandler = (req, res, next) => {
   if (["GET", "HEAD", "OPTIONS"].includes(req.method)) { next(); return; }
   const origin = req.get("origin");
-  const host = getClerkProxyHost(req);
-  let sameOrigin = false;
-  try { sameOrigin = Boolean(origin && host && new URL(origin).host === host); } catch { /* reject */ }
+  const trusted=trustedSiteOrigin();
+  if(!trusted){res.status(503).json({code:"ORIGIN_CONFIGURATION_UNAVAILABLE",error:"Trusted site configuration is unavailable. No changes were saved."});return;}
+  const sameOrigin=permittedMutationOrigin(origin,trusted);
   const site = req.get("sec-fetch-site");
   if (!sameOrigin || (site && !["same-origin", "none"].includes(site)) || !req.is("application/json")) {
-    res.status(403).json({ error: "A same-origin JSON request is required" }); return;
+    req.log?.warn({event:"origin.rejected",forwardedHostPresent:Boolean(req.get("x-forwarded-host")),
+      forwardedProtocolPresent:Boolean(req.get("x-forwarded-proto")),
+      multiHopForwardedHost:Boolean(req.get("x-forwarded-host")?.includes(","))});
+    res.status(403).json({code:"UNTRUSTED_ORIGIN",error:"A same-origin JSON request is required"}); return;
   }
   next();
 };

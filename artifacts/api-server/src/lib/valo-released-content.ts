@@ -1,35 +1,50 @@
 import { and,eq } from "drizzle-orm";
 import { db,valoContentVersions,valoPublicationPolicies,valoDocuments } from "@workspace/db";
-import { evaluatePublication,publicationSchema } from "@workspace/valo-core";
-import { developmentPublicationOnly } from "../editorial/operational-policy";
+import { evaluatePublication,publicationSchema,coveragePlan } from "@workspace/valo-core";
+import { developmentPublicationOnly,operationalPolicy } from "../editorial/operational-policy";
 import { getPublicationArtifact,type ArtifactRef } from "../editorial/publication-artifacts";
 import { createDocumentInTransaction,getDocument,ValoProblem,type WorkspaceActor } from "./valo-store";
 import { documentInput } from "./valo-validation";
+import { loadRightsApplicability } from "../editorial/rights-applicability";
+import { paginateReleasedItems } from "./valo-catalogue";
 export function releaseVisible(row:typeof valoContentVersions.$inferSelect,policyHash:string,now=new Date()){
   const parsed=publicationSchema.safeParse(row.bundle);
   return row.status==="published"&&+row.reviewBy>+now&&parsed.success&&
     parsed.data.candidate.hash===row.candidateHash&&parsed.data.policy.hash===policyHash&&
     evaluatePublication(parsed.data,now).decision==="eligible";
 }
-export async function liveOperationalVersions(){
+export async function liveReleasedVersions(){
   if(process.env.NODE_ENV!=="development"||process.env.REPLIT_DEPLOYMENT)return[];
+  const rights=await loadRightsApplicability();
+  const currentPolicy=await operationalPolicy();
   const rows=await db.select({content:valoContentVersions,policy:valoPublicationPolicies}).from(valoContentVersions)
     .innerJoin(valoPublicationPolicies,eq(valoContentVersions.policyId,valoPublicationPolicies.id))
     .where(eq(valoContentVersions.status,"published"));
-  return rows.filter(r=>releaseVisible(r.content,r.policy.hash)).map(r=>r.content)
+  return rows.filter(r=>releaseVisible(r.content,r.policy.hash)&&(
+    publicationSchema.parse(r.content.bundle).candidate.evidenceMode!=="original_operational"||
+    (rights.verified&&r.policy.hash===currentPolicy.policy.hash&&
+      (r.content.attestations as {rightsApplicabilityHash?:string}).rightsApplicabilityHash===rights.hash)
+  )).map(r=>r.content)
     .sort((a,b)=>b.version-a.version).filter((r,i,all)=>all.findIndex(v=>v.templateId===r.templateId)===i);
+}
+export async function liveOperationalVersions(){
+  return(await liveReleasedVersions()).filter(r=>publicationSchema.parse(r.bundle).candidate.contentClass==="general_template");
+}
+export async function liveCoverage(){
+  return coveragePlan((await liveReleasedVersions()).map(row=>{
+    const c=publicationSchema.parse(row.bundle).candidate;
+    return{id:row.templateId,kind:c.contentClass==="general_template"?"template":c.coverage?.kind??"guidance",
+      industrySlugs:c.coverage?.industrySlugs??[],locationIds:c.coverage?.locationIds??[],sourceCheckedAt:c.sourceCheckDate};
+  }));
 }
 export async function releasedCatalogue(query:{q?:string;type?:string;industry?:string;page?:number}={}){
   const all=await liveOperationalVersions();
-  const q=query.q?.trim().toLowerCase()??"";
   const items=all.map(r=>{
     const document=documentInput.parse(JSON.parse(publicationSchema.parse(r.bundle).candidate.body));
     return{id:r.id,slug:r.slug,title:document.title,type:"template",industry:"All industries",
       summary:"Optional stock-movement and physical-count record. AI reviewed operational development template; not regulatory guidance."};
-  }).filter(i=>(!q||`${i.title} ${i.summary}`.toLowerCase().includes(q))&&
-    (!query.type||query.type==="all"||query.type==="template"));
-  const page=query.page??1;
-  return{items:items.slice((page-1)*20,page*20),total:items.length,page,heldTemplates:Math.max(0,40-all.length)};
+  });
+  return {...paginateReleasedItems(items,query),heldTemplates:Math.max(0,40-all.filter(r=>/^TPL-(0[1-9]|[1-3][0-9]|40)$/.test(r.templateId)).length)};
 }
 export async function releasedTemplate(slug:string){
   const row=(await liveOperationalVersions()).find(r=>r.slug===slug);

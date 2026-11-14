@@ -28,6 +28,10 @@ export const publicationSchema = z.object({
     evidenceMode: z.enum(["regulatory", "original_operational"]).optional(),
     legalScopeStatus: z.enum(["verified", "unverified", "not_applicable"]).optional(),
     reviewBy: date.optional(),
+    coverage:z.object({
+      kind:z.enum(["template","guidance","guide","industry_pack","location_pack"]),
+      industrySlugs:z.array(nonempty).max(20),locationIds:z.array(nonempty).max(37),
+    }).strict().optional(),
     claims: z.array(z.object({
       text: nonempty, kind: z.enum(["source_statement", "interpretation", "optional_practice"]),
       sourceId: nonempty, quote: nonempty, locator: nonempty,
@@ -115,6 +119,12 @@ export function evaluatePublication(input: unknown, now = new Date()) {
   const c = b.candidate;
   const reasons: string[] = [];
   const fail = (condition: boolean, reason: string) => { if (condition) reasons.push(reason); };
+  if(c.coverage){
+    fail((c.contentClass==="general_template")!==(c.coverage.kind==="template"),"coverage_class_mismatch");
+    fail(c.coverage.kind==="industry_pack"&&c.coverage.industrySlugs.length!==1,"industry_pack_scope_missing");
+    fail(c.coverage.kind==="location_pack"&&(c.jurisdiction==="NG"||c.coverage.locationIds.length!==1||
+      c.coverage.locationIds[0]!==c.jurisdiction),"location_pack_scope_mismatch");
+  }
   const evidenceHash = digest(b.sources);
   const timestamp = now.getTime();
   fail(!Number.isFinite(timestamp), "invalid_clock");
