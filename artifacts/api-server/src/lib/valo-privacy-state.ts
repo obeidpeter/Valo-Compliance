@@ -13,7 +13,7 @@ export function assertPrivacyTransition(from:PrivacyStatus,to:PrivacyStatus){
     assigned:["assigned","in_progress","cancelled","needs_information","held","rejected"],
     in_progress:["in_progress","partially_fulfilled","fulfilled","held","failed","needs_information"],
     needs_information:["verified","cancelled","held","rejected"],
-    held:["awaiting_verification","verified","assigned","cancelled","rejected"],
+    held:["awaiting_verification","verified","assigned","in_progress","partially_fulfilled","cancelled","rejected"],
     partially_fulfilled:["in_progress","partially_fulfilled","fulfilled","held","failed"],
     failed:["in_progress","held","cancelled"],fulfilled:[],rejected:[],cancelled:[],
   };
