@@ -37,7 +37,16 @@ const customerExperience={
   kind:"test" as const,path:"docs/valo/evidence/customer-experience-checkpoint.json",
   hash:"e98ffe46ae88f05f6bb8aa3d253170e0f81e7e421a7591b7667d32d7f4ea81d7",result:"pass" as const,
 };
+const exportRecovery={
+  kind:"test" as const,path:"docs/valo/evidence/export-recovery-checkpoint.json",
+  hash:"79d87f0bff23cea6800e48d1519b10747e7b8eb46ff4208c7cadc7b4b5ae0c47",result:"pass" as const,
+};
 const groups = [
+  {ids:["EDT-003","EDT-006","EDT-007","EDT-008","DOC-002","SEC-001","OPS-002","OPS-007","NFR-006","NFR-007","NFR-009"],
+    paths:["artifacts/api-server/src/lib/valo-export-recovery.ts","artifacts/api-server/src/lib/valo-exports.ts",
+      "artifacts/api-server/src/workers/export-worker.ts","artifacts/api-server/src/lib/valo-export-recovery.integration.test.ts",
+      "artifacts/api-server/src/lib/valo-catalogue-pages.test.ts","artifacts/valo/src/screens/library.tsx",
+      "artifacts/valo/src/screens/document-editor.tsx","artifacts/valo/src/screens/profile.tsx"],record:exportRecovery},
   {ids:["WEB-001","WEB-002","IAM-001","PRO-002","DOC-002","DOC-003","DOC-004","DOC-005",
     "WRK-006","ADM-001","ADM-009","SEC-001","SEC-005","PRV-003","NFR-006","NFR-007"],
     paths:["artifacts/api-server/src/lib/valo-customer-access.ts","artifacts/api-server/src/routes/valo-customer-access.ts",

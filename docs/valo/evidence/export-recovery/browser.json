@@ -1,0 +1,58 @@
+{
+  "checkedAt": "2026-11-14T02:21:15.193Z",
+  "syntheticDevelopmentOnly": true,
+  "checks": [
+    {
+      "name": "desktop_exact_hero_and_public_about_contact_routes",
+      "status": "pass"
+    },
+    {
+      "name": "catalogue_pagination_first_full_final_empty_and_keyboard_filter_fixtures",
+      "status": "pass"
+    },
+    {
+      "name": "real_mobile_menu_keyboard_focus_and360px_public_routes",
+      "status": "pass"
+    },
+    {
+      "name": "real_anonymous_account_access_form_keyboard_submit_and_durable_ack",
+      "status": "pass"
+    },
+    {
+      "name": "released_resource_UI_fixture_links_plain_text_and_withdrawal_are_not_publication",
+      "status": "pass"
+    },
+    {
+      "name": "template_library_detail_preview_UI_fixture_keeps_real_account_and_release_gates",
+      "status": "pass"
+    },
+    {
+      "name": "managed_verified_customer_can_open_private_routes",
+      "status": "pass"
+    },
+    {
+      "name": "real_private_privacy_request_reload_and_JSON_download",
+      "status": "pass"
+    },
+    {
+      "name": "multiple_activity_labels_and_editor_keyboard_relationships_across_mobile_sizes",
+      "status": "pass"
+    },
+    {
+      "name": "private_account_and_notification_mobile_reflow",
+      "status": "pass"
+    },
+    {
+      "name": "actual_suspended_account_still_has_public_non_enumerating_support",
+      "status": "pass"
+    }
+  ],
+  "actualManagedIdentityUsed": true,
+  "realEmailDeliveryClaimed": false,
+  "actualNewPublications": 0,
+  "fixtureDisclosure": "Resource and template fixtures were intercepted only in this browser, never inserted/published; no content eligibility or real published-master download proven.",
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "cleanupErrors": 0,
+  "cleanup": "Owned synthetic identity and application rows removed; provider usage history untouched."
+}
