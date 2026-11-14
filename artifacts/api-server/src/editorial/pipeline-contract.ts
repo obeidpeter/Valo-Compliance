@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 export const editorialModel="gpt-5.4-mini";
 export const editorialPromptVersion="valo-editorial-development-2";
 export const candidateSchema=z.strictObject({

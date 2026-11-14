@@ -1,3 +1,4 @@
+import {serializeRevisionV1} from "./valo-revision-codec";
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, sql } from "drizzle-orm";
 import {
@@ -120,7 +121,7 @@ async function appendRevision(tx: Tx, actor: WorkspaceActor, id: string, revisio
   // The hash binds the title and entire canonical document, not only its visible text.
   await tx.insert(valoDocumentRevisions).values({
     id: randomUUID(), workspaceId: actor.workspaceId, documentId: id, revision,
-    title: input.title, content: input.content, contentHash: sha256(JSON.stringify(input)), actorId: actor.identityId,origin,
+    title: input.title, content: input.content, contentHash: sha256(serializeRevisionV1(input)), actorId: actor.identityId,origin,
   });
   await event(tx, actor, "document.revision_saved", id, revision);
 }

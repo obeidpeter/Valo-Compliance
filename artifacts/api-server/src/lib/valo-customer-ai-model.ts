@@ -1,5 +1,6 @@
 import { customerPlanSchema,customerPromptVersion,hashAI,type CustomerAIInput,customerProviderPayload } from "./valo-customer-ai-domain";
 import { buildBusinessDraft } from "@workspace/valo-core/customer-document";
+import {parseBoundedProviderJSON} from "./provider-output-budget";
 export type CustomerProviderRun={attempt:number;outboundAttempted:boolean;outcome:string;model:string|null;responseId:string|null;
   latencyMs:number;usage:{inputTokens:number;outputTokens:number;totalTokens:number}|null;cost:null};
 const outputSchema={type:"object",additionalProperties:false,required:["opening","sections"],properties:{
@@ -34,7 +35,7 @@ export async function organizeCustomerDraft(input:CustomerAIInput,invoke:Custome
           outputTokens:response.usage.completion_tokens,totalTokens:response.usage.total_tokens}:null,cost:null};
       runs.push(run);
       try{
-        const plan=customerPlanSchema.parse(JSON.parse(response.choices[0]?.message.content??""));
+        const plan=customerPlanSchema.parse(parseBoundedProviderJSON(response.choices[0]?.message.content??""));
         buildBusinessDraft(input,plan);run.outcome="validated";
         return{plan,runs,providerInputHash,failureCode:null};
       }catch{run.outcome="invalid_structured_plan";if(attempt===2)return{plan:null,runs,providerInputHash,failureCode:"AI_SCHEMA_INVALID"};}

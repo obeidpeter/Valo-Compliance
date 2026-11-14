@@ -1,6 +1,7 @@
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
-import { z } from "zod/v4";
+import { z } from "zod";
+import {parseBoundedProviderJSON} from "../lib/provider-output-budget";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { digest,type PublicationBundle } from "@workspace/valo-core";
@@ -41,7 +42,7 @@ export async function reviewOperationalCandidate(candidate:PublicationBundle["ca
     };
     const response=await openai.chat.completions.create(request,{timeout:45000,maxRetries:0});
     if(response.choices[0]?.finish_reason!=="stop")throw Error("OPERATIONAL_REVIEW_INCOMPLETE");
-    const output=operationalReviewSchema.parse(JSON.parse(response.choices[0].message.content??""));
+    const output=operationalReviewSchema.parse(parseBoundedProviderJSON(response.choices[0].message.content??""));
     const record={role,candidateHash:candidate.hash,evidenceHash:digest([]),providerResponseId:response.id,
       model:response.model,promptVersion:`operational-${role}-3`,promptHash:digest(request.messages[0].content),receivedOtherVerdict:false,serverEvidence,
       reviewAsOf,providerCreatedAt:new Date(response.created*1000).toISOString(),

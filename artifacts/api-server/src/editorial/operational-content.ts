@@ -10,11 +10,12 @@ export type OperationalProvenance={path:string;hash:string;sourceText:string;not
 export async function inventoryCandidate(version:number,now=new Date(),recorded?:{original:string;provenance:OperationalProvenance}){
   const path="docs/content-candidates/operational-template-candidates.md";
   const workspaceRoot=publicationWorkspaceRoot();
-  const full=await readFile(resolve(workspaceRoot,path),"utf8");
-  const provenance=await readFile(resolve(workspaceRoot,"docs/content-candidates/chatgpt-content-provenance-rights.md"),"utf8");
-  if(!provenance.includes(sha256(full)))throw Error("AUTHORING_PROVENANCE_HASH_MISMATCH");
+  const full=recorded?.provenance.sourceText??await readFile(resolve(workspaceRoot,path),"utf8");
+  const provenance=recorded?.provenance.note??await readFile(resolve(workspaceRoot,"docs/content-candidates/chatgpt-content-provenance-rights.md"),"utf8");
+  if(recorded?(sha256(full)!==recorded.provenance.hash||sha256(provenance)!==recorded.provenance.noteHash):
+    !provenance.includes(sha256(full)))throw Error("AUTHORING_PROVENANCE_HASH_MISMATCH");
   const original=recorded?.original??full.split("## TPL-07 — Inventory register\n")[1]?.split("\n## TPL-09")[0]?.replace(/\n---\s*$/,"").trim();
-  if(!original||!provenance.includes("authored in this ChatGPT conversation"))throw Error("AUTHORING_PROVENANCE_MISSING");
+  if(!original||(!recorded&&!provenance.includes("authored in this ChatGPT conversation")))throw Error("AUTHORING_PROVENANCE_MISSING");
   const scope="Original stock-movement and physical-count record for user-entered business information. Optional operational practice; no legal applicability determination.";
   const limitations="Blank Word/PDF operational aid, not a spreadsheet or accounting system. No ownership, product approval, valuation, statutory duty, tax-rate or legal-validity assurance. Release uses two separate automated AI checks, not human or professional review. Synthetic development evaluation only; commercial licence terms are not accepted and sales are disabled.";
   const reviewedAt=now.toISOString(),reviewBy=new Date(+now+90*86400000).toISOString();
@@ -25,10 +26,10 @@ export async function inventoryCandidate(version:number,now=new Date(),recorded?
     fields:{issuerName:"",recipientName:"",documentNumber:"",issueDate:"",dueDate:"",notes:""},
     blocks:[{id:"optional-instructions",type:"paragraph",text:"Optional internal working instructions: all suggestions below are stock-recording practices to adapt to your actual workflow, not legal duties or regulatory advice. Enter your own business facts and quantities; blank fields are not verified information.",rows:[]},...blocks,
       {id:"release-scope",type:"paragraph",text:`Scope: ${scope}`,rows:[]},
-       {id:"release-limitations",type:"paragraph",text:"Limitations: an internal stock-recording aid, not a spreadsheet, accounting system, product approval, valuation or legal-validity assurance.",rows:[]},
+       {id:"release-limitations",type:"paragraph",text:`Limitations: ${limitations}`,rows:[]},
       {id:"release-disclosure",type:"paragraph",text:disclosure,rows:[]},
       {id:"review-meaning",type:"paragraph",text:"Here, reviewed means two separate automated AI checks: one factual/source check and one challenge. It does not mean review by a human, lawyer, tax adviser or sector specialist. Release requires both checks to pass on this exact version; their results are not professional certification.",rows:[]},
-      {id:"release-source-date",type:"paragraph",text:`File-integrity and provider-permission check date: ${reviewedAt}. ${recorded?"The recorded server-authoring receipt is retained.":"The supplied authoring note describes the prose as ChatGPT-assisted. Valo has not independently verified that upstream drafting event or model; this attribution is not authorship certification."} This software check covers the retained file checksum and provider-permission passages, not legal or regulatory verification.`,rows:[]},
+      {id:"release-source-date",type:"paragraph",text:`File-integrity and provider-permission check date: ${reviewedAt}. ${recorded?.provenance.generation?"The recorded server-authoring receipt is retained.":"The supplied authoring note describes the prose as ChatGPT-assisted. Valo has not independently verified that upstream drafting event or model; this attribution is not authorship certification."} This software check covers the retained file checksum and provider-permission passages, not legal or regulatory verification.`,rows:[]},
     ],selectedClauses:[],formatting:{font:"sans",accent:"forest"},
   }});
   return{document,scope,limitations,reviewBy,reviewedAt,original,

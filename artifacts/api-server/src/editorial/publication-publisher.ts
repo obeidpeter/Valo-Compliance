@@ -1,6 +1,7 @@
 /** Bounded publisher: no customer/draft tables, model calls, prices, money or policy writes. */
 import { randomUUID } from "node:crypto";
-import { loadRightsApplicability,loadChatGPTPermission,assertPermissionRoute } from "./rights-applicability";
+import { loadRightsApplicability,loadChatGPTPermission,assertPermissionRoute,chatGPTSourcePath } from "./rights-applicability";
+import {readOperationalIntake} from "./operational-intake";
 import { and,eq,sql } from "drizzle-orm";
 import { db,valoPublicationPolicies,valoContentVersions,valoPublicationAudit } from "@workspace/db";
 import { digest,evaluatePublication,publicationSchema,sha256 } from "@workspace/valo-core";
@@ -10,6 +11,7 @@ import { operationalReviewSchema } from "./operational-review-contract";
 import { inventoryCandidate } from "./operational-content";
 import { originalFormSchema,formMarkdown } from "./operational-authoring-contract";
 import { operationalMechanicalChecks } from "./operational-mechanical";
+import {recheckOperationalExports} from "./operational-export-inspection";
 export type ReleaseAttestations={
   provenance:ArtifactRef;rights:ArtifactRef;reviews:ArtifactRef[];rightsApplicabilityHash?:string;
   exports:{docx:ArtifactRef;pdf:ArtifactRef};exportReport:ArtifactRef;
@@ -41,6 +43,11 @@ export async function publishOperationalVersion(id:string){
       if(generation.providerResponseId!==bundle.draftRun.runId||generation.model!==bundle.draftRun.model||
         JSON.stringify(output)!==provenance.sourceText)throw Error("AUTHORING_RECEIPT_INVALID");
       recorded={original:formMarkdown(output),provenance};
+    }else if(provenance.path!==chatGPTSourcePath){
+      const intake=await readOperationalIntake(bundle.candidate.id,row.version);
+      if(intake.sourceHash!==provenance.hash||intake.manifestHash!==provenance.noteHash)
+        throw Error("INTAKE_AUTHORING_LINEAGE_MISMATCH");
+      recorded={original:intake.section.body,provenance};
     }
     const original=await inventoryCandidate(row.version,new Date(bundle.candidate.sourceCheckDate),recorded);
     if(row.version!==bundle.candidate.version||bundle.candidate.body!==JSON.stringify(original.document)||
@@ -48,7 +55,7 @@ export async function publishOperationalVersion(id:string){
       throw Error("OPERATIONAL_BODY_OUTSIDE_REVIEWED_ORIGINAL");
     const rights=JSON.parse((await getPublicationArtifact(a.rights)).toString());
     const provider=JSON.parse((await getPublicationArtifact(rights.snapshot as ArtifactRef)).toString());
-    const applicability=provenance.generation?await loadRightsApplicability():await loadChatGPTPermission(provider);
+    const applicability=provenance.generation?await loadRightsApplicability():await loadChatGPTPermission(provider,provenance);
     assertPermissionRoute(applicability.record,Boolean(provenance.generation));
     if(!provenance.generation&&(applicability.record.sourceBinding?.hash!==provenance.hash||
       applicability.record.sourceBinding?.noteHash!==provenance.noteHash))
@@ -93,8 +100,9 @@ export async function publishOperationalVersion(id:string){
     if(providerIds.size!==2)throw Error("REVIEWS_NOT_INDEPENDENT");
     const exportReport=JSON.parse((await getPublicationArtifact(a.exportReport)).toString());
     if(exportReport.candidateHash!==row.candidateHash||exportReport.passed!==true)throw Error("EXPORT_REPORT_INVALID");
+    const bytes={docx:await getPublicationArtifact(a.exports.docx),pdf:await getPublicationArtifact(a.exports.pdf)};
+    await recheckOperationalExports(bundle.candidate,bytes,exportReport);
     for(const format of ["docx","pdf"] as const){
-      await getPublicationArtifact(a.exports[format]);
       const attested=bundle.exports.find(e=>e.format===format);
       if(attested?.fileHash!==a.exports[format].hash||exportReport.hashes[format]!==attested.fileHash)
         throw Error("EXPORT_ATTESTATION_INVALID");

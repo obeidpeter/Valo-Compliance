@@ -1,10 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { readFile,writeFile,mkdtemp,rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { resolve } from "node:path";
-import { execFile as execCallback } from "node:child_process";
-import { promisify } from "node:util";
-import { unzipSync,strFromU8 } from "fflate";
+import { readFile } from "node:fs/promises";
 import { and,eq,sql } from "drizzle-orm";
 import { db,valoPublicationPolicies,valoContentVersions } from "@workspace/db";
 import { candidateDigest,digest,evaluatePublication,disclosure,sha256,type PublicationBundle } from "@workspace/valo-core";
@@ -17,12 +12,16 @@ import { reviewOperationalCandidate } from "./operational-review";
 import { publishOperationalVersion,recordActualPublicationHold,type ReleaseAttestations } from "./publication-publisher";
 import { loadRightsApplicability,loadChatGPTPermission,assertPermissionRoute } from "./rights-applicability";
 import { operationalMechanicalChecks } from "./operational-mechanical";
-const execFile=promisify(execCallback);
+import {inspectOperationalExports} from "./operational-export-inspection";
+import {readOperationalIntake} from "./operational-intake";
 export async function prepareInventoryRelease(snapshotPath:string){
   developmentPublicationOnly();
   const snapshot=JSON.parse(await readFile(snapshotPath,"utf8"));
   const useRecordedAuthoring=process.env.VALO_OPERATIONAL_AUTHORING==="recorded";
-  const applicability=useRecordedAuthoring?await loadRightsApplicability():await loadChatGPTPermission(snapshot);
+  const versions=await db.select().from(valoContentVersions).where(eq(valoContentVersions.templateId,"TPL-07"));
+  const version=Math.max(0,...versions.map(r=>r.version))+1;
+  const intake=useRecordedAuthoring?null:await readOperationalIntake("TPL-07",version);
+  const applicability=useRecordedAuthoring?await loadRightsApplicability():await loadChatGPTPermission(snapshot,intake!.provenance);
   // Verify the actual authoring route before any metered calls. ChatGPT's
   // documented free/paid permission is not a Replit account-plan assertion.
   if(!applicability.verified)
@@ -32,10 +31,9 @@ export async function prepareInventoryRelease(snapshotPath:string){
   await db.insert(valoPublicationPolicies).values({id:policy.version,hash:policy.hash,policy,authority}).onConflictDoNothing();
   const [storedPolicy]=await db.select().from(valoPublicationPolicies).where(eq(valoPublicationPolicies.id,policy.version));
   if(storedPolicy.hash!==policy.hash)throw Error("POLICY_VERSION_CHANGED_CREATE_NEW_VERSION");
-  const versions=await db.select().from(valoContentVersions).where(eq(valoContentVersions.templateId,"TPL-07"));
-  const version=Math.max(0,...versions.map(r=>r.version))+1;
   const authored=process.env.VALO_OPERATIONAL_AUTHORING==="recorded"?await recordOriginalAuthoring():undefined;
-  let recorded: {original:string;provenance:OperationalProvenance}|undefined;
+  let recorded: {original:string;provenance:OperationalProvenance}|undefined=intake?
+    {original:intake.section.body,provenance:intake.provenance}:undefined;
   if(authored){
     const sourceText=JSON.stringify(authored.receipt.output),hash=sha256(sourceText);
     const note=`Recorded original server AI output ${hash}; provider response ${authored.receipt.providerResponseId}, model ${authored.receipt.model}, prompt ${authored.receipt.promptVersion}. No external form or customer content was supplied to the author. Output may be nonunique; no copyright or non-infringement guarantee.`;
@@ -73,24 +71,14 @@ export async function prepareInventoryRelease(snapshotPath:string){
   // Render the exact canonical body being reviewed; not independently regenerated prose.
   const files={docx:await renderDocument(content.document,"docx",version,"template_sample"),
     pdf:await renderDocument(content.document,"pdf",version,"template_sample")};
-  const xml=strFromU8(unzipSync(files.docx)["word/document.xml"]);
-  const temporary=await mkdtemp(resolve(tmpdir(),"valo-publication-"));
-  let pdfText="";
-  try{await writeFile(resolve(temporary,"sample.pdf"),files.pdf);
-    pdfText=(await execFile("pdftotext",["-layout",resolve(temporary,"sample.pdf"),"-"],{maxBuffer:1024*1024})).stdout;
-  }finally{await rm(temporary,{recursive:true,force:true});}
-  const required=["Inventory register","Scope:","Limitations:","AI drafted and reviewed","File-integrity and provider-permission check date",authored?"Stock movement":"Running quantity"];
-  const exportPassed=files.pdf.subarray(0,5).toString()==="%PDF-"&&required.every(s=>xml.includes(s)&&pdfText.replace(/\s+/g," ").includes(s));
-  if(!exportPassed)throw Error("REAL_EXPORT_INSPECTION_FAILED");
+  const exportReport=await inspectOperationalExports(candidate,files);
   const exports={docx:await putPublicationArtifact(files.docx,"docx"),pdf:await putPublicationArtifact(files.pdf,"pdf")};
-  const exportReport={candidateHash:candidate.hash,passed:exportPassed,hashes:{docx:sha256(files.docx),pdf:sha256(files.pdf)},
-    checks:["Actual DOCX ZIP/XML parsed; required text present","Actual Chromium A4 PDF parsed with pdftotext; required text present","Renderer network disabled"],
-    manualWordApplicationReview:false,manualAccessibilityReview:false};
   const reportRef=await putPublicationArtifact(Buffer.from(JSON.stringify(exportReport)),"json");
   const checks=operationalMechanicalChecks({candidate,policy,provenance:content.provenance,
     provenanceArtifactHash:provenance.hash,rights,applicability,snapshot,now});
   let reviewed:Awaited<ReturnType<typeof reviewOperationalCandidate>>=[];
-  let providerFailure:string|null=checks.some(check=>check.result!=="pass")?"OPERATIONAL_MECHANICAL_VALIDATION_FAILED":null;
+  let providerFailure:string|null=!exportReport.passed?"OPERATIONAL_EXPORT_VALIDATION_FAILED":
+    checks.some(check=>check.result!=="pass")?"OPERATIONAL_MECHANICAL_VALIDATION_FAILED":null;
   try{if(!providerFailure)reviewed=await reviewOperationalCandidate(candidate,
     {permissions:rights.permissions,conclusion:rights.conclusion,customerLicenceAccepted:false,
       actualProviderTerms:snapshot.pages.filter((p:{url:string})=>applicability.record.evidence.some(e=>e.url===p.url)),
@@ -122,7 +110,9 @@ export async function prepareInventoryRelease(snapshotPath:string){
       evidenceHash:r.evidenceHash,role:r.role,verdict:r.verdict,findings:r.findings,receivedOtherVerdict:false})),
     mechanicalChecks:checks,enhancedChecks:[],
     exports:(["docx","pdf"] as const).map(format=>({format,candidateHash:candidate.hash,fileHash:exports[format].hash,
-      rendered:true,disclosureIncluded:true,scopeIncluded:true,limitationsIncluded:true,sourceDateIncluded:true})),
+      rendered:exportReport.formats[format].parsed,disclosureIncluded:exportReport.formats[format].disclosureIncluded,
+      scopeIncluded:exportReport.formats[format].scopeIncluded,limitationsIncluded:exportReport.formats[format].limitationsIncluded,
+      sourceDateIncluded:exportReport.formats[format].sourceDateIncluded})),
     manifest:{candidateHash:candidate.hash,evidenceHash:digest([]),rightsHash:"",policyHash:policy.hash,
       reviewHash:"",checksHash:"",exportsHash:"",status:!providerFailure&&reviews.length===2&&reviews.every(r=>r.verdict==="pass"&&!r.findings.length)?"eligible":"review"},
   };

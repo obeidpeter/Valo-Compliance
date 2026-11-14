@@ -142,7 +142,22 @@ const groups = [
       "artifacts/api-server/src/editorial/model-adapter.ts"],record:editorialHold},
 ];
 export function partialWorkflowEvidence(id:string){
-  const matching=groups.filter(g=>g.ids.includes(id));
+  const validationRuntime={kind:"test" as const,path:"docs/valo/evidence/zod-native-runtime-checkpoint.json",
+    hash:"6a377c1fe063785eb560ddb71a22c218e559f4c4421b72cf51b0c55e075ab98d",result:"pass" as const};
+  const exactSourcePublication={kind:"test" as const,path:"docs/valo/evidence/operational-publication-v8.json",
+    hash:"3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521",result:"fail" as const};
+  const currentValidation=[
+    {ids:["SEC-003","SEC-007","AI-002","AI-009","EDT-002","EDT-006","NFR-009","NFR-011"],
+      paths:["artifacts/api-server/src/lib/provider-output-budget.ts","artifacts/api-server/src/lib/valo-revision-codec.ts",
+        "artifacts/api-server/src/lib/valo-revision-codec.test.ts","artifacts/api-server/src/scripts/zod-upgrade-proof.ts",
+        "lib/api-spec/orval.config.ts"],record:validationRuntime},
+    {ids:["DOC-001","DOC-006","ADM-005","EDP-003","EDP-004","EDP-006","EDP-007","EDP-012"],
+      paths:["artifacts/api-server/src/editorial/operational-intake.ts","artifacts/api-server/src/editorial/rights-applicability.ts",
+        "artifacts/api-server/src/editorial/operational-export-inspection.ts",
+        "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
+        "artifacts/api-server/src/editorial/publication-publisher.ts"],record:exactSourcePublication},
+  ];
+  const matching=[...groups,...currentValidation].filter(g=>g.ids.includes(id));
   return{paths:[...new Set(matching.flatMap(g=>g.paths))],
     records:[...new Map(matching.map(g=>[g.record.path,g.record])).values()]};
 }

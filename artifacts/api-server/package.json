@@ -8,7 +8,7 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:valo": "tsx --test src/lib/valo-validation.test.ts src/lib/valo-quota.test.ts src/lib/valo-render.test.ts src/lib/valo-customer-ai.test.ts src/lib/valo-reminder.test.ts src/lib/valo-chatgpt-rights.test.ts src/lib/valo-paystack-contract.test.ts src/lib/valo-site-origin.test.ts src/lib/valo-catalogue.test.ts src/lib/valo-catalogue-pages.test.ts src/lib/request-complexity.test.ts src/editorial/original-content-adapter.test.ts src/editorial/operational-mechanical.test.ts",
+    "test:valo": "tsx --test src/lib/valo-validation.test.ts src/lib/valo-quota.test.ts src/lib/valo-render.test.ts src/lib/valo-customer-ai.test.ts src/lib/valo-reminder.test.ts src/lib/valo-chatgpt-rights.test.ts src/lib/valo-paystack-contract.test.ts src/lib/valo-site-origin.test.ts src/lib/valo-catalogue.test.ts src/lib/valo-catalogue-pages.test.ts src/lib/request-complexity.test.ts src/lib/valo-revision-codec.test.ts src/editorial/original-content-adapter.test.ts src/editorial/operational-mechanical.test.ts src/editorial/operational-intake.test.ts src/editorial/operational-export-inspection.test.ts",
     "test:valo-commerce": "NODE_ENV=development tsx --test src/lib/valo-commerce.integration.test.ts",
     "test:valo-paystack-http": "NODE_ENV=development tsx --test src/lib/valo-paystack-http.integration.test.ts",
     "test:valo-export-recovery": "tsx --test src/lib/valo-export-recovery.integration.test.ts",

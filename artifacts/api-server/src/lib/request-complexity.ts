@@ -1,7 +1,8 @@
 import type {RequestHandler} from "express";
 
 export class InputComplexityError extends Error {}
-/** Before schema validation: legacy schema .max() checks may inspect every element first. */
+/** Before all schema validation, including unconstrained objects/collections.
+ * Patched collection validators do not replace an overall structural budget. */
 export function assertInputBudget(input:unknown){
   const stack=[{value:input,depth:0}];let nodes=0;
   while(stack.length){

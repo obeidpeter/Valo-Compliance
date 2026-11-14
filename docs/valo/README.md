@@ -1,8 +1,11 @@
 # Current operational publication refinement
 
-**Current implementation evidence:** [purchase/history mechanics and responsive
-identity](commerce-development-checkpoint.md). Private order/receipt/refund-request
-mechanics and authoring-aware content reads are implemented and development-tested.
+**Current implementation evidence:** [patched validation, exact source intake
+and re-executed export checks](validator-publication-checkpoint.md). Saved hashes
+and real private exports survived the native validator upgrade. Corrected TPL-07
+passed both export inspections but received no new reviews because the existing
+six-attempt daily cap is exhausted. Prior private purchase/refund-request mechanics
+are recorded in [the commerce checkpoint](commerce-development-checkpoint.md).
 Published content is still zero; merchant execution, complete acceptance and R2
 remain unaccepted. Older entries below are retained historical checkpoints.
 

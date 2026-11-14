@@ -1,7 +1,8 @@
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
-import { z } from "zod/v4";
+import { z } from "zod";
+import {parseBoundedProviderJSON} from "../lib/provider-output-budget";
 import { sha256,digest } from "@workspace/valo-core";
 import { putPublicationArtifact } from "./publication-artifacts";
 import { originalFormSchema,formMarkdown } from "./operational-authoring-contract";
@@ -20,7 +21,7 @@ export async function recordOriginalAuthoring(){
     response_format:{type:"json_schema",json_schema:{name:"original_inventory_prose",strict:true,schema}},
   },{timeout:45000,maxRetries:0});
   if(response.choices[0]?.finish_reason!=="stop")throw Error("AUTHORING_INCOMPLETE");
-  const output=originalFormSchema.parse(JSON.parse(response.choices[0].message.content??""));
+  const output=originalFormSchema.parse(parseBoundedProviderJSON(response.choices[0].message.content??""));
   if(Object.values(output).some(t=>t.length>1500||/\b(?:must|shall|statutory|tax|legally|copyright|licensed|certified|guaranteed)\b/i.test(t)))
     throw Error("AUTHORING_OUTSIDE_OPERATIONAL_SCHEMA");
   const receipt={role:"draft",model:response.model,providerResponseId:response.id,promptVersion:"original-inventory-authoring-1",

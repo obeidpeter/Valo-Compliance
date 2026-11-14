@@ -1,0 +1,12 @@
+✔ native patched schemas and frozen codec preserve all ten actual v3 document hashes (17.220315ms)
+✔ unknown profile facts and optional marketing retain their original v3 hashes (3.142929ms)
+✔ native patched constrained arrays reject before invoking any item validator (1.867819ms)
+✔ provider outputs are byte/structure bounded BEFORE schema validation (2.403108ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1063.882021

@@ -1,7 +1,7 @@
 # Valo Compliance — Valo Platform
 
 Latest implementation checkpoint:
-[purchase/history mechanics, content-read correction and responsive identity](docs/valo/commerce-development-checkpoint.md).
+[patched validation, exact-ID source intake and measured private exports](docs/valo/validator-publication-checkpoint.md).
 
 This is partial development, not complete R1/R2 acceptance. No eligible content,
 real merchant settlement, public launch or live payments are claimed.

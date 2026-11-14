@@ -1,5 +1,6 @@
 import { openai } from "@workspace/integrations-openai-ai-server";
-import { z } from "zod/v4";
+import { z } from "zod";
+import { parseBoundedProviderJSON } from "../lib/provider-output-budget";
 import { candidateSchema,reviewSchema,editorialModel,systemPrompt,type EditorialRole } from "./pipeline-contract";
 import { draftSelectionSchema,resolveDraftSelection } from "./citation-selection";
 export async function callEditorialModel(role:EditorialRole,input:unknown){
@@ -16,7 +17,7 @@ export async function callEditorialModel(role:EditorialRole,input:unknown){
     throw Error("AI_OUTPUT_INCOMPLETE");
   let output:unknown,providerOutput:unknown;
   try{
-    providerOutput=schema.parse(JSON.parse(response.choices[0].message.content));
+    providerOutput=schema.parse(parseBoundedProviderJSON(response.choices[0].message.content));
     output=role==="draft"?resolveDraftSelection(providerOutput,input):providerOutput;
     if(role==="draft")candidateSchema.parse(output);
   }

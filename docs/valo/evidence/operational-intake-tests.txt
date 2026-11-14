@@ -1,0 +1,11 @@
+✔ all twelve exact operational IDs compile without examples, metadata or neighbouring forms (151.190303ms)
+✔ corrected inventory/expense bodies and complete customer subsections are selected (15.807ms)
+✔ changed bytes, duplicate IDs and unsupported IDs cannot be silently imported (0.912102ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 992.231533

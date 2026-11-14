@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { z } from "zod";
 import { sha256 } from "@workspace/valo-core";
 import { publicationWorkspaceRoot } from "./operational-policy";
+import {readOperationalIntake} from "./operational-intake";
 const schema=z.object({
   version:z.string().min(1),status:z.enum(["verified","unverified"]),accountPlan:z.string().min(1),
   accountTerms:z.string().min(1).nullable(),integration:z.enum(["replit_managed_openai","chatgpt"]),provider:z.literal("openai"),
@@ -43,10 +44,20 @@ export const chatGPTSourcePath="docs/content-candidates/operational-template-can
 const notePath="docs/content-candidates/chatgpt-content-provenance-rights.md";
 const termsSnapshotSchema=z.object({kind:z.literal("official_provider_terms_snapshot"),retrievedAt:z.string().datetime(),
   pages:z.array(z.object({url:z.string().url(),text:z.string().min(1),truncated:z.literal(false)}).strict()).min(3)}).strict();
-export function chatGPTPermissionRecord(raw:unknown,source:string,note:string,now=new Date()){
+export function chatGPTPermissionRecord(raw:unknown,source:string,note:string,now=new Date(),
+  binding={path:chatGPTSourcePath,notePath,templateId:""}){
   const snapshot=termsSnapshotSchema.parse(raw),sourceHash=sha256(source);
-  const boundLine=note.split("\n").find(line=>line.includes(`\`${chatGPTSourcePath}\``));
-  if(!boundLine?.includes(`\`${sourceHash}\``))throw Error("CHATGPT_SOURCE_HASH_NOT_BOUND");
+  if(binding.templateId){
+    const manifest=JSON.parse(note);
+    if(!/^TPL-(0[1-9]|1[0-2])$/.test(binding.templateId)||!manifest.authoring?.context?.includes("ChatGPT")||
+      manifest.authoring.upstreamProviderExecutionReceiptsRecorded!==false||
+      !manifest.templates.some((r:{id:string;sourcePath:string;sourceSHA256:string})=>
+        r.id===binding.templateId&&r.sourcePath===binding.path&&r.sourceSHA256===sourceHash))
+      throw Error("CHATGPT_SOURCE_HASH_NOT_BOUND");
+  }else{
+    const boundLine=note.split("\n").find(line=>line.includes(`\`${chatGPTSourcePath}\``));
+    if(!boundLine?.includes(`\`${sourceHash}\``))throw Error("CHATGPT_SOURCE_HASH_NOT_BOUND");
+  }
   const evidence=[{url:rowTerms,quote:ownershipQuote,locator:"Content → Ownership of content"},
     {url:euTerms,quote:ownershipQuote,locator:"Content → Ownership of content"},
     {url:chatGPTFAQ,quote:commercialQuote,locator:"Can I use output from ChatGPT for commercial uses?"},
@@ -66,15 +77,24 @@ export function chatGPTPermissionRecord(raw:unknown,source:string,note:string,no
     accountPlan:"not_classified_or_required_for_documented_free_paid_output_permission",accountTerms:null,
     integration:"chatgpt",provider:"openai",authoringRoute:"coordinator_chatgpt",
     commercialUseScope:"chatgpt_original_operational_provider_permission_only",checkedAt:snapshot.retrievedAt,
-    sourceBinding:{path:chatGPTSourcePath,hash:sourceHash,notePath,noteHash:sha256(note)},evidence,
+    sourceBinding:{path:binding.path,hash:sourceHash,notePath:binding.notePath,noteHash:sha256(note)},evidence,
     limitations:["Provider permission is not copyright eligibility, uniqueness, exclusivity, non-infringement or third-party clearance.",
       "Regional variants are retained without claiming residence or account-contract classification.",
       "Original ChatGPT prose only; no Replit/API authoring receipt or application-code rights are inferred.",
       "Independent final-candidate checks remain mandatory. Customer licence acceptance and sales approval remain false."]});
   return{record,hash:sha256(JSON.stringify(record)),verified:verifiedRightsApplicability(record,now)};
 }
-export async function loadChatGPTPermission(snapshot:unknown){
+export async function loadChatGPTPermission(snapshot:unknown,provenance?:{
+  path:string;templateId:string;version:number;hash:string;sourceText:string;note:string;noteHash:string}){
   const root=publicationWorkspaceRoot();
+  if(provenance&&provenance.path!==chatGPTSourcePath){
+    const intake=await readOperationalIntake(provenance.templateId,provenance.version);
+    if(provenance.path!==intake.sourcePath||provenance.hash!==intake.sourceHash||
+      provenance.sourceText!==intake.provenance.sourceText||provenance.note!==intake.provenance.note||
+      provenance.noteHash!==intake.manifestHash)throw Error("INTAKE_AUTHORING_LINEAGE_MISMATCH");
+    return chatGPTPermissionRecord(snapshot,provenance.sourceText,provenance.note,new Date(),
+      {path:provenance.path,notePath:"docs/content-candidates/r1-content-intake-manifest.json",templateId:provenance.templateId});
+  }
   return chatGPTPermissionRecord(snapshot,await readFile(resolve(root,chatGPTSourcePath),"utf8"),
     await readFile(resolve(root,notePath),"utf8"));
 }

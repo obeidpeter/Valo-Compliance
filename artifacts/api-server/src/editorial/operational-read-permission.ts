@@ -14,7 +14,7 @@ export async function currentOperationalPermission(row:typeof valoContentVersion
     return false;
   const recorded=Boolean(provenance.generation);
   const snapshot=JSON.parse((await getPublicationArtifact(rights.snapshot as ArtifactRef)).toString());
-  const applicable=recorded?await loadRightsApplicability():await loadChatGPTPermission(snapshot);
+  const applicable=recorded?await loadRightsApplicability():await loadChatGPTPermission(snapshot,provenance);
   assertPermissionRoute(applicable.record,recorded);
   return applicable.verified&&a.rightsApplicabilityHash===applicable.hash&&
     rights.authoringRoute===(recorded?"recorded_server_ai":"coordinator_chatgpt")&&

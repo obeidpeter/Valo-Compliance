@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { candidateSchema,type EvidenceBundle } from "./pipeline-contract";
 
 const paragraph=candidateSchema.shape.paragraphs.element;
