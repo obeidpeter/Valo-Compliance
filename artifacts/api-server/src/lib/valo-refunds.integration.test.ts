@@ -173,6 +173,38 @@ test("refund lifecycle: actual development PostgreSQL and controlled provider, n
       assert.equal((await purchases(a)).orders.find(o=>o.id===order),undefined);
       assert.equal((await purchases(b)).orders.find(o=>o.id===order)?.disputeStatus,"resolved");
     });
+    await t.test("first-observed terminal disputes preserve active grants without inventing financial outcomes",async()=>{
+      for(const status of["resolved","archived"]){
+        const order=await fixture(b),[before]=await db.select().from(valoOrders).where(eq(valoOrders.id,order));
+        const[grant]=await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order));
+        const providerId=String(++idCounter),raw={id:providerId,domain:"test",status,resolution:null,refund_amount:null,currency:"NGN",
+          transaction:{id:before.providerTransactionId,domain:"test",reference:before.reference,amount:10000,currency:"NGN"}};
+        const observed=await storeVerifiedDispute(providerId,raw);
+        assert.equal(observed.status,status);assert.equal(observed.orderId,order);
+        assert.deepEqual((await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order)))[0],grant);
+        assert.equal(grant.status,"active");
+        assert.deepEqual((await db.select().from(valoOrders).where(eq(valoOrders.id,order)))[0],before);
+        assert.equal((await db.select().from(valoRefundRequests).where(eq(valoRefundRequests.orderId,order))).length,0);
+        assert.equal((await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,order))).length,0);
+      }
+    });
+    await t.test("dispute observations cannot replace a separately revoked or suspended grant",async()=>{
+      for(const status of["revoked","suspended"]){
+        const order=await fixture(b),[before]=await db.select().from(valoOrders).where(eq(valoOrders.id,order));
+        await db.update(valoEntitlements).set({status}).where(eq(valoEntitlements.orderId,order));
+        const[grant]=await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order));
+        const providerId=String(++idCounter),raw={id:providerId,domain:"test",status:"pending",resolution:null,refund_amount:null,currency:"NGN",
+          transaction:{id:before.providerTransactionId,domain:"test",reference:before.reference,amount:10000,currency:"NGN"}};
+        for(const observation of[raw,{...raw,status:"resolved",resolution:"declined",refund_amount:0},raw]){
+          await storeVerifiedDispute(providerId,observation);
+          assert.deepEqual((await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order)))[0],grant);
+          assert.deepEqual((await db.select().from(valoOrders).where(eq(valoOrders.id,order)))[0],before);
+        }
+        assert.equal((await db.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.providerId,providerId)))[0].status,"resolved");
+        assert.equal((await db.select().from(valoRefundRequests).where(eq(valoRefundRequests.orderId,order))).length,0);
+        assert.equal((await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,order))).length,0);
+      }
+    });
     await t.test("an explicitly exhausted refund counter blocks writes without losing saved history",async()=>{
       const order=await fixture(),before=(await purchases(a)).orders.reduce((n,o)=>n+o.refunds.length,0);
       // Do not infer the current window's usage from unrelated earlier cases.
