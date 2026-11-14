@@ -1,0 +1,55 @@
+{
+  "sourceFile": "analysis/regulatory-guidance-privacy-consumer.md",
+  "sourceFileSha256": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+  "status": "draft-not-publication",
+  "bodies": [
+    {
+      "id": "GUD-11",
+      "title": "What should I explain before collecting customer information?",
+      "words": 282,
+      "bodySha256": "dcf678052750324a1d545fc8dc4016a9702582f8a75bb6f92e2f04e9c8307fd3"
+    },
+    {
+      "id": "GUD-12",
+      "title": "Do I need consent for every use of personal information?",
+      "words": 298,
+      "bodySha256": "f1de181c95c17311a3c14e46316905852460dda8587058e02fcbbbd28d831440"
+    },
+    {
+      "id": "GUD-13",
+      "title": "How should my business handle a request about someone's data?",
+      "words": 306,
+      "bodySha256": "63a498141873b55006ce7d6765069486a423e3ada6c9d227fd22d4a42ae4476a"
+    },
+    {
+      "id": "GUD-14",
+      "title": "What should I agree with a supplier handling customer data?",
+      "words": 302,
+      "bodySha256": "8b0bd0db30325b06cbe75ed9dc76d3df3ff4724ef04f6f2c9e5963877a763c1b"
+    },
+    {
+      "id": "GUD-15",
+      "title": "What should I check before customer data goes outside Nigeria?",
+      "words": 294,
+      "bodySha256": "361a7624b1761aea1dd4c7ad35dd86cd86eeb456cfb87d86905a85681a5e4942"
+    },
+    {
+      "id": "GUD-16",
+      "title": "What price and transaction details should customers receive?",
+      "words": 281,
+      "bodySha256": "7e5e115295330f87df70cbc263e8187f35f16adf39a71b83cf9f9ccd47c859af"
+    },
+    {
+      "id": "GUD-17",
+      "title": "Does \u201cno refunds\u201d settle a complaint about goods?",
+      "words": 305,
+      "bodySha256": "928bff50a48c8289adadf30280135c9d1b98622a7a1afa60dcd6aeb47540b773"
+    },
+    {
+      "id": "GUD-18",
+      "title": "How should I handle unfair terms, cancellations and poor service?",
+      "words": 301,
+      "bodySha256": "6a66088dbc05c27ce366082267ce0ec5d7bb4ee3b0352786fa48d8f8dafcdb6f"
+    }
+  ]
+}

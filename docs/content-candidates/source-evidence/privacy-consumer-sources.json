@@ -1,0 +1,206 @@
+{
+  "checkedAt": "2026-11-14",
+  "scope": "Official-source bytes and selected-page text hashes; no exhaustive amendment or publication clearance",
+  "sources": [
+    {
+      "sourceId": "NDPA",
+      "url": "https://ndpc.gov.ng/wp-content/uploads/2024/03/Nigeria_Data_Protection_Act_2023.pdf",
+      "retrievedAtDate": "2026-11-14",
+      "httpStatus": 200,
+      "pdfBytes": 658393,
+      "pdfSha256": "5bfb22cf7b344e92ecca9b80decf73db694a0d1000c4f42188f46e047d8df075",
+      "textSha256": "61090b5e57a360914d3ccdfb703b952e8636f4994179514a74aca1c006015d17",
+      "textRepresentation": "pdftotext -layout; PDF visual text is authoritative where OCR differs",
+      "pages": [
+        {
+          "pdfPage": 7,
+          "extractedPageSha256": "68ef17766f111f028d1ea8e4b894fe4e86bc71c1281bb54bc81071247058d586"
+        },
+        {
+          "pdfPage": 8,
+          "extractedPageSha256": "3af95275cd96cec41ba225719534c7613e84ddce2f1c4d97d31b363695c0ce97"
+        },
+        {
+          "pdfPage": 16,
+          "extractedPageSha256": "f29fff81e1c482c899f6d68183e6142c751d20290848afe744caeb594598b7fd"
+        },
+        {
+          "pdfPage": 17,
+          "extractedPageSha256": "b95ca5317f59b5ec55cac14ca1f572d045b87c7b27d694e22c1b18c350c42d8a"
+        },
+        {
+          "pdfPage": 18,
+          "extractedPageSha256": "9acd20d5717a63ac3a0003fafe2286f423b30765d31f56e009bffa8544d681bf"
+        },
+        {
+          "pdfPage": 19,
+          "extractedPageSha256": "b94a759c193ce766e614a5d6c319360b92c4c8ca02c4522a7b0747f8e9546000"
+        },
+        {
+          "pdfPage": 20,
+          "extractedPageSha256": "ed395d00e38c6768e6b1882910c1a06cc89b5ff1ffea1df1921ccfa069556bef"
+        },
+        {
+          "pdfPage": 22,
+          "extractedPageSha256": "20dcdf3f1224478259e20ffae877560a49cd6cf04bd39647ea1d02aaa035005f"
+        },
+        {
+          "pdfPage": 23,
+          "extractedPageSha256": "4612067739ca1c6f37b73ec908e6fc82785c5f16fb3344a09e2c77695ce15eb1"
+        },
+        {
+          "pdfPage": 24,
+          "extractedPageSha256": "d1049b995f31e5c492db6a7a815854d407533c1d6577bbc675509111c6bf3f64"
+        },
+        {
+          "pdfPage": 25,
+          "extractedPageSha256": "7e734f2a83f65d56a674682a5127af82fe79480691a6841968752b04aa82185f"
+        },
+        {
+          "pdfPage": 26,
+          "extractedPageSha256": "4f4e0bebd745fb0a9a9c0b12b95d96a18fca584c07bd72cea871426fd18c9667"
+        },
+        {
+          "pdfPage": 27,
+          "extractedPageSha256": "76f5d28ecef076bfa14440084a50587c8e391023312ea1e0266f026f21cf5e78"
+        },
+        {
+          "pdfPage": 28,
+          "extractedPageSha256": "f178e73912439a0cbedbe6224a46c545b4d329d25183c74a6959d37225d99e3d"
+        },
+        {
+          "pdfPage": 29,
+          "extractedPageSha256": "615914139be3f97572364ef6e5fa58d6bc686c61308e4feee3dbcd7306f51616"
+        },
+        {
+          "pdfPage": 38,
+          "extractedPageSha256": "9692d6c466b18fe6da0fc2121b5d9931c3e347f63c230b2dc27d975e19a6e8dd"
+        },
+        {
+          "pdfPage": 39,
+          "extractedPageSha256": "8b6d5c5a9f582751d5e50c4ab6c0ff7b1ad2194b6f7ba68ee1a4b105eff04051"
+        }
+      ]
+    },
+    {
+      "sourceId": "GAID",
+      "url": "https://ndpc.gov.ng/wp-content/uploads/2025/07/NDP-ACT-GAID-2025-MARCH-20TH.pdf",
+      "retrievedAtDate": "2026-11-14",
+      "httpStatus": 200,
+      "pdfBytes": 1830615,
+      "pdfSha256": "e4359e90c9a11cd772f9605c797d6f36af000c58a27bfba251fa37a89824cc5a",
+      "textSha256": "2cdb70cf225ac75389d424229544b38dafdc13e8e88e7a22d7395a6f1bef505b",
+      "textRepresentation": "pdftotext -layout; PDF visual text is authoritative where OCR differs",
+      "pages": [
+        {
+          "pdfPage": 24,
+          "extractedPageSha256": "9a32bb638c897ec8643095cc548a42f7923c05a102fd23a3f5932c16a0c4bf08"
+        },
+        {
+          "pdfPage": 25,
+          "extractedPageSha256": "0ae019c22f2beb41f1629af7d318507ae7995143487f55cca4445515e136532f"
+        },
+        {
+          "pdfPage": 30,
+          "extractedPageSha256": "b92b7c2e0ec9775e11692a696a6ca675d4d623afd5c68ed1225c52aa0a404dc5"
+        },
+        {
+          "pdfPage": 31,
+          "extractedPageSha256": "776d7ca3ad11d3d29f7a19d38169a9eb4edcb1dc71b94daac2d46ad586405294"
+        },
+        {
+          "pdfPage": 39,
+          "extractedPageSha256": "de7dc2a1f13370eca30ec534bd63e29dd86e5a91adbaa7d072a6d09687171bbd"
+        },
+        {
+          "pdfPage": 40,
+          "extractedPageSha256": "27be69a82c8186c136619a750349627b9aef9eda51d5124263367d72b94caa38"
+        },
+        {
+          "pdfPage": 42,
+          "extractedPageSha256": "7ee264f384cd4ff11b0b8fa7010f0e854aa498503b6bbb301ef75b4d64d4dbad"
+        },
+        {
+          "pdfPage": 43,
+          "extractedPageSha256": "a0ecc25579cbad2ecf466d42365a4f391a846ce9164cfaf444cf4d6aa2c3cd4b"
+        },
+        {
+          "pdfPage": 52,
+          "extractedPageSha256": "d9631f162912d9e62311f67fc61dc467bb4f3a0f0cd097c1062127ce13580fce"
+        },
+        {
+          "pdfPage": 53,
+          "extractedPageSha256": "eedd5ffda888fba9744240e27136606c44ae01cd3948138959ef871d580a0472"
+        },
+        {
+          "pdfPage": 101,
+          "extractedPageSha256": "b87f43051993a0124ad55d039be6479f7b28d3ad5d20343c97792140a36e9b94"
+        },
+        {
+          "pdfPage": 102,
+          "extractedPageSha256": "5d77351146ffad734c633d67158169016ec171233d9007615d0fdb41c8b98db0"
+        },
+        {
+          "pdfPage": 103,
+          "extractedPageSha256": "f184dc1487e59e2e8800def39dde3ecfbd13f96dfac3077f9a339542eef31ae7"
+        }
+      ]
+    },
+    {
+      "sourceId": "FCCPA",
+      "url": "https://fccpc.gov.ng/wp-content/uploads/2022/07/FCCPA-2018.pdf",
+      "retrievedAtDate": "2026-11-14",
+      "httpStatus": 200,
+      "pdfBytes": 7842477,
+      "pdfSha256": "aa942cdef860387e8f984de52666e5683d12d6e2813cb47b10335e0bf82a07f5",
+      "textSha256": "bee4af0bf767a28a4a26c6bf8034ed8d7469ba8983e3d4b351e0428edef473b3",
+      "textRepresentation": "pdftotext -layout; PDF visual text is authoritative where OCR differs",
+      "pages": [
+        {
+          "pdfPage": 62,
+          "extractedPageSha256": "85e4b3d8de533266d06f3b7fc87d9a30182d6ea8bd26c643c7a31f8ebcb2d704"
+        },
+        {
+          "pdfPage": 63,
+          "extractedPageSha256": "b08dff828fc7455f9a47b47f365ebb522d36b0fe86b55982b2d8d466250d63ae"
+        },
+        {
+          "pdfPage": 64,
+          "extractedPageSha256": "3bdc82f45709a8bccb493f4f7cfc7ab07bec7f98c06a9586e78ed0b8c1c3ae99"
+        },
+        {
+          "pdfPage": 65,
+          "extractedPageSha256": "408da07c686f383a9645f49627f25a291915bc3d35cfac23e14124847b996791"
+        },
+        {
+          "pdfPage": 66,
+          "extractedPageSha256": "fc9c83d032b20aa2e05702715a46f5f362fc36a42084b547a7ca5e9c7300baab"
+        },
+        {
+          "pdfPage": 69,
+          "extractedPageSha256": "607ab1659e53a383bf9dd65a052668abe41c61401e6913cb38566bcc19cbd495"
+        },
+        {
+          "pdfPage": 70,
+          "extractedPageSha256": "5aebd4dfe98dcffe27d0f0b1af7c352bafd5e23932e87ca757d8f81506b5bd5d"
+        },
+        {
+          "pdfPage": 71,
+          "extractedPageSha256": "da000f479f00ab20dc4029ad13d833e44028fa3d1d3d62932389f919e09bc586"
+        },
+        {
+          "pdfPage": 72,
+          "extractedPageSha256": "04e4c42da9de89df3f9e1e48fa3cec840e83b1ae23bcf80bc05a710f2caaf37d"
+        },
+        {
+          "pdfPage": 87,
+          "extractedPageSha256": "78eba32e6f6e8fd09f53245e5e8aa2791461b0ec256c60904bcbcff282b793dc"
+        },
+        {
+          "pdfPage": 88,
+          "extractedPageSha256": "dc0f09d57a5bbdb7f430d9d4125f685284e7fddda0f2e8f8bd99b28250972c36"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "taxid_how",
+    "url": "https://taxid.nrs.gov.ng/how-it-works",
+    "finalURL": "https://taxid.nrs.gov.ng/how-it-works",
+    "fetchedAt": "2026-11-14T08:42:43.029317+00:00",
+    "rawSHA256": "7812b8f287be384299bfd6757e914c94ebb69864bd5b930fea0ce892e00734ba",
+    "textSHA256": "ace248fe65d4e547fec9db978fed6651187dde991d2e8ac08de25ed04eeef211",
+    "textPath": "analysis/registration_tax_sources/taxid_how.txt",
+    "rawPath": "analysis/registration_tax_sources/taxid_how.html",
+    "status": "retrieved_unreviewed"
+  },
+  {
+    "id": "taxid_home",
+    "url": "https://taxid.nrs.gov.ng/",
+    "finalURL": "https://taxid.nrs.gov.ng/",
+    "fetchedAt": "2026-11-14T08:42:43.346344+00:00",
+    "rawSHA256": "fba26c0fa61ccd7d23ed3e4ed235b84bdc2cdf729cca1b1b9669314435e36b9f",
+    "textSHA256": "f47b1907fa459e4bcb8195d7b1fdbc8217f8acffaaa8838f57fdc3bb8e438d73",
+    "textPath": "analysis/registration_tax_sources/taxid_home.txt",
+    "rawPath": "analysis/registration_tax_sources/taxid_home.html",
+    "status": "retrieved_unreviewed"
+  },
+  {
+    "id": "tax_transition",
+    "url": "https://fmino.gov.ng/federal-government-issues-transition-guidelines-for-tax-acts-2025/",
+    "finalURL": "https://fmino.gov.ng/federal-government-issues-transition-guidelines-for-tax-acts-2025/",
+    "fetchedAt": "2026-11-14T08:42:43.438554+00:00",
+    "rawSHA256": "d10dd629d5a4f7ba3ea4abe9fe2afd29d892757850238ac521593b5351cb5df2",
+    "textSHA256": "917dd6fe7ad58d53f35847032bdba945e36fcf7f77bedf54eb40e88e42074ca5",
+    "textPath": "analysis/registration_tax_sources/tax_transition.txt",
+    "rawPath": "analysis/registration_tax_sources/tax_transition.html",
+    "status": "retrieved_unreviewed"
+  }
+]

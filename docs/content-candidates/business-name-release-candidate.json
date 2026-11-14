@@ -1,0 +1,156 @@
+{
+  "artifactType": "source_backed_release_candidate_input_not_executable_rule",
+  "candidateID": "CAC-BUSINESS-NAME-814",
+  "researchRevision": 2,
+  "preparedDate": "2026-11-14",
+  "referenceRepositoryHead": "3409a4f0e7e38b864b6b3f3240608761569ac462",
+  "status": {
+    "sourceResearch": "prepared_for_independent_checks",
+    "independentFactualReview": "not_run_by_this_handoff",
+    "independentChallenge": "not_run_by_this_handoff",
+    "ruleFixtures": "not_executed_by_this_handoff",
+    "publication": "unreleased",
+    "acceptance": "not_claimed"
+  },
+  "customerTitle": "Check whether your trading name triggers business-name registration",
+  "claimScope": "Section814 naming-trigger relevance only; not general registration exemption, breach or name approval",
+  "jurisdiction": {
+    "country": "Nigeria",
+    "level": "national",
+    "stateAndLocalCoverage": "not_evaluated"
+  },
+  "effectiveContext": {
+    "instrumentCommencement": "2020-08-07",
+    "supportedResearchAssessmentDate": "2026-11-14",
+    "historicalVersionSupport": "requires_separately_bound_period_evidence",
+    "futureCurrentness": "not_claimed"
+  },
+  "sourceManifestPath": "analysis/business_name_sources/retrieval_manifest.json",
+  "sourcePassagesPath": "analysis/business_name_sources/bounded_passages.json",
+  "sourcePassagesSHA256": "18410ef30dabbdf615a551b6202decbe82f9abef3d5de2b3ee617f97e98b558e",
+  "requiredPassageIDs": [
+    "CAMA-814",
+    "CAMA-868-business",
+    "CAMA-868-business-name",
+    "CAMA-868-firm",
+    "CAMA-868-forename",
+    "CAMA-868-initials",
+    "CAMA-863",
+    "CAMA-COMMENCEMENT",
+    "BFA-PART-I",
+    "BFA-COMMENCEMENT",
+    "COPYRIGHT-3B",
+    "COPYRIGHT-2-5"
+  ],
+  "currentness": {
+    "reviewDate": "2026-11-14",
+    "scope": "814 and relevant 868 naming definitions; BFA SchedulePartI inspected in full; current CAC routes checked; official amendment/bill discovery reviewed",
+    "bfaChanges814": false,
+    "bfaRelevantDefinitionChange": "868 deletion of insolvency practitioner does not alter retained naming definitions",
+    "laterEnactedChangeToThisClaimFoundInScopedPrimarySearch": false,
+    "exhaustiveAbsenceOfAllLaterLawClaimed": false,
+    "finalEditorialCurrentnessDecision": "pending_exact_candidate_reviews",
+    "searchDomains": [
+      "cac.gov.ng",
+      "nass.gov.ng",
+      "ir.nilds.gov.ng",
+      "statehouse.gov.ng"
+    ],
+    "billRecordURL": "https://ir.nilds.gov.ng/handle/123456789/1868?show=full",
+    "billRecordEvidence": "Official record identifies a bill/working paper, not enacted amendment; web retrieval succeeded, separate raw HTTP attempt timed out."
+  },
+  "rightsBasis": {
+    "instrumentTitle": "Copyright Act 2022",
+    "section": "3(b), with2(5) compilation context",
+    "scope": "bounded official statutory passages and original explanatory paraphrase",
+    "compilationsExcludedFromThisPermission": true,
+    "wholeDesignedPDFPublicRedistributionClaimed": false,
+    "websiteOrLogoRightsClaimed": false,
+    "thirdPartyCommentaryRightsClaimed": false,
+    "AIProviderRightsClaimed": false,
+    "finalExactArtifactRightsManifest": "required_not_claimed"
+  },
+  "factsContract": {
+    "states": [
+      "known",
+      "unknown",
+      "unanswered",
+      "not_applicable"
+    ],
+    "requiredBaseFacts": [
+      "operatorForm",
+      "hasPlaceOfBusinessInNigeria",
+      "carryingOnBusinessUnderName"
+    ],
+    "branchFacts": [
+      "confirmedNameComposition",
+      "trueNamesOrCorporateName",
+      "partnerTypesAndAllRelevantNames",
+      "successionOnlyAddition",
+      "sharedSurnamePluralOnlyAddition",
+      "businessCarriedOnByCourtAppointedReceiverOrManager"
+    ],
+    "actionOnlyFacts": [
+      "registrationStatusForExactNameAndOperator"
+    ],
+    "noInferenceFrom": [
+      "sector",
+      "stateDropdown",
+      "nationality",
+      "nameSpelling",
+      "omittedAnswers"
+    ],
+    "unsupportedInitialForms": [
+      "mixed_corporate_partner_firm",
+      "limited_liability_partnership",
+      "limited_partnership",
+      "trust",
+      "unclassified_other"
+    ]
+  },
+  "decisionTableReference": "analysis/business-name-release-candidate.md#deterministic-semantics-to-implement-and-review",
+  "customerLabels": [
+    "Likely relevant",
+    "May apply",
+    "More information needed",
+    "Not indicated by these answers"
+  ],
+  "heldDisplay": {
+    "customerLabel": "More information needed",
+    "availability": "held",
+    "mustExplainEligibilityOrScopeGap": true
+  },
+  "exclusions": [
+    "CAMA815 deadline calculation",
+    "Company formation capacity",
+    "Unreviewed registration fines or penalties",
+    "Fee amounts",
+    "Processing-time promises",
+    "General exemption from CAMA863",
+    "Name approval",
+    "Tax duties",
+    "State/FCT/LGA obligations",
+    "Automatic statutory reminder dates"
+  ],
+  "fixtureContract": {
+    "authoredCorpus": "analysis/checker-evaluation-candidates.json",
+    "existingCAMAIDs": "CHK-CAND-CAMA-001 through CHK-CAND-CAMA-020",
+    "existingLabelsChanged": false,
+    "offlineCandidateValidation": "bind immutable candidate version/hash and exact source hashes; isolated execution does not publish",
+    "customerExecution": "requires actual eligible released manifest matching validated bytes",
+    "independentExpectedOutcomeChallenge": "required_not_claimed",
+    "supplementalBoundaries": "BN-BOUND-01 through BN-BOUND-12 in analysis/rule-evaluation-readiness.md"
+  },
+  "requiredReleaseEvidence": [
+    "independent_factual_run_on_exact_candidate",
+    "blind_challenge_run_on_exact_candidate",
+    "source_currentness_and_scope_record",
+    "exact_artifact_rights_and_provenance_record",
+    "passing_actual_deterministic_fixtures",
+    "mechanical_validation",
+    "immutable_manifest",
+    "atomic_publisher_recheck",
+    "actual_customer_visibility_and_withdrawal_check"
+  ],
+  "perItemHumanApprovalRequiredByThisHandoff": false
+}
