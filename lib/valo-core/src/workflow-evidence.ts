@@ -275,6 +275,11 @@ export function partialWorkflowEvidence(id:string){
         "artifacts/api-server/src/editorial/publication-publisher.ts"],record:exactSourcePublication},
   ];
   const operationalEvidence=[
+    {ids:["AI-007","SEC-005"],
+      paths:["artifacts/api-server/src/lib/inference-budget.ts","artifacts/api-server/src/lib/inference-budget-store.ts",
+        "artifacts/api-server/src/lib/managed-inference.ts"],
+      record:{kind:"test" as const,path:"docs/valo/evidence/context-budget-refinement.json",
+        hash:"75201e59b36fde9dd741b0f4b1e6c80772db4c77e6d66a8b761ab858cec5fcf0",result:"pass" as const}},
     {ids:["PRV-003","PRO-002","SEC-001","WRK-001"],
       paths:["artifacts/api-server/src/lib/valo-customer-access.ts","artifacts/api-server/src/lib/valo-privacy-processing.ts",
         "artifacts/api-server/src/scripts/privacy-data-browser.ts","artifacts/valo/src/screens/account.tsx"],
