@@ -74,6 +74,23 @@ and failed publication evidence are retained, not rewritten.
 
 ## Execution evidence
 
+Application code checkpoint:`8591d6c1555895d65dc58eb0fb67c2181bac73f8`.
+Executed runner totals:166 foundation,38 API units,39 customer DB regressions,
+12 write-security,17 proxy/direct-backend and12 publication-boundary checks;
+all passed with zero skipped tests. Counts include parent groups: the write
+suite has10 leaf scenarios and the transport suite16.
+
+The initial proxy checks correctly received403 but exposed an error-envelope
+formatter overwriting specific response codes. That formatter was fixed;
+the failed output and successful rerun are both retained. The proxy stripped
+injected forwarded-host headers, so direct running-backend requests additionally
+proved hostile/multi-hop headers are rejected when actually received.
+
+Whole-workspace typechecking passed. Code generation ran successfully. The
+signed-in browser suite was **not** rerun; current quota-denial UI recovery was
+checked in code, not exercised through a signed-in browser. No new provider
+calls were made.
+
 `evidence/customer-security-checkpoint.json` records executed test counts, output
 hashes and real development-proxy outcomes. Synthetic nonzero catalogue/coverage
 adapter fixtures prove data-dependent behavior only; they are not Nigerian

@@ -27,7 +27,20 @@ const operationalPublication = {
   kind:"test" as const,path:"docs/valo/evidence/operational-publication-checkpoint.json",
   hash:"01219ace3b66985d259fb2bba2f53b97c5029406d1bafa826de1c49ed9d74c7e",result:"fail" as const,
 };
+// Targeted controls passed; unknown rights and untested whole-requirement
+// acceptance stay explicitly unaccepted in the report.
+const customerSecurity={
+  kind:"test" as const,path:"docs/valo/evidence/customer-security-checkpoint.json",
+  hash:"70f2ee336e7590fceba90ea4bfa6d54affb707fd4d33fb6e5bb8afaf47673711",result:"pass" as const,
+};
 const groups = [
+  {ids:["IAM-003","SEC-001","SEC-003","SEC-005","EDT-004","PRO-003","WRK-006","NFR-009"],
+    paths:["artifacts/api-server/src/lib/valo-site-origin.ts","artifacts/api-server/src/lib/valo-store.ts",
+      "artifacts/api-server/src/lib/valo-quota.ts","artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
+      "artifacts/api-server/src/lib/valo-proxy-security.test.ts"],record:customerSecurity},
+  {ids:["DOC-001","DOC-002","DOC-006","CMP-004","EDP-007"],
+    paths:["artifacts/api-server/src/lib/valo-released-content.ts","artifacts/api-server/src/editorial/rights-applicability.ts",
+      "lib/valo-core/src/coverage.ts"],record:customerSecurity},
   {ids:["EDP-001","EDP-003","EDP-004","EDP-006","EDP-007","EDP-009","EDP-012","ADM-002","ADM-005","DOC-001"],
     paths:["artifacts/api-server/src/editorial/operational-policy.ts","artifacts/api-server/src/editorial/operational-preparation.ts",
       "artifacts/api-server/src/editorial/publication-publisher.ts","artifacts/api-server/src/editorial/operational-publication.integration.test.ts",
