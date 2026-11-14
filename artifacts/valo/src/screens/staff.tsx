@@ -5,6 +5,7 @@ import { useGetStaffOperations, getGetStaffOperationsQueryKey, GetStaffOperation
 import { EmptyState, ErrorState, Skel } from '@/components/states';
 import { cn } from '@/lib/utils';
 import {FinanceRefunds} from './finance-refunds';
+import {SupportRecords} from '@/components/support-records';
 
 const AREAS: { v: Area; l: string }[] = [
   { v: GetStaffOperationsArea.content, l: 'Content' },
@@ -28,13 +29,13 @@ export default function StaffPage() {
   const errText = (q.error as { data?: { error?: string; code?: string } } | null)?.data;
   const mfa = status === 403 && /mfa|factor|reverif/i.test(`${errText?.code ?? ''} ${errText?.error ?? ''}`);
   const records = q.data?.records ?? [];
-  const cols = Array.from(new Set(records.flatMap((r) => Object.keys(r)))).filter((k) => area === 'support' || !HIDDEN.test(k)).slice(0, 8);
+  const cols = Array.from(new Set(records.flatMap((r) => Object.keys(r)))).filter((k) => !HIDDEN.test(k)).slice(0, 8);
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
       <p className="eyebrow">Staff</p>
       <h1 className="font-display mt-2 text-4xl">Operations</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Read-only view of what the server returns for your role. In Support, the customer's message is shown so you can help. Other areas never show customer text.</p>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Support shows the full saved request. Finance actions are available only to authorised finance staff. Customer document bodies are not shown here.</p>
       <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Staff area filters">
         {AREAS.map((a) => (
           <button key={a.v} type="button" aria-pressed={area === a.v} onClick={() => setArea(a.v)} className={cn('rounded-full border px-4 py-1.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2', area === a.v ? 'border-foreground bg-foreground text-background' : 'border-border hover:bg-secondary')} data-testid={'tab-staff-' + a.v}>{a.l}</button>
@@ -51,12 +52,12 @@ export default function StaffPage() {
           <>
             <p className="rounded-2xl border border-border bg-sidebar p-4 text-sm" data-testid="text-staff-notice">{q.data.notice}</p>
             {area==='finance'&&<FinanceRefunds/>}
-            {records.length === 0 ? <p className="mt-6 text-sm text-muted-foreground">No records in this area.</p> : (
+            {records.length === 0 ? <p className="mt-6 text-sm text-muted-foreground">No records in this area.</p> : area==='support' ? <SupportRecords records={records}/> : (
               <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-secondary"><tr>{cols.map((c) => <th key={c} scope="col" className="px-4 py-2.5 font-mono text-xs font-medium">{c}</th>)}</tr></thead>
                   <tbody className="divide-y divide-border bg-card">
-                    {records.map((r, i) => <tr key={i}>{cols.map((c) => <td key={c} className={cn('px-4 py-2.5 align-top', area === 'support' && HIDDEN.test(c) ? 'min-w-[16rem] max-w-md whitespace-pre-line break-words' : 'max-w-xs truncate')}>{cell(r[c])}</td>)}</tr>)}
+                    {records.map((r, i) => <tr key={i}>{cols.map((c) => <td key={c} className="max-w-xs truncate px-4 py-2.5 align-top">{cell(r[c])}</td>)}</tr>)}
                   </tbody>
                 </table>
               </div>

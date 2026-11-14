@@ -17,6 +17,10 @@ let unknownAck:string|undefined,phase="guard";
 const ownIntakeIds:string[]=[];
 const ownCommercePriceIds:string[]=[];
 async function check(name:string,fn:()=>Promise<void>){
+  if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"&&
+    !["managed_verified_customer_can_open_private_routes",
+      "controlled_support_display_preserves_mixed_full_messages_and_keyboard_mobile",
+      "real_private_privacy_request_reload_and_JSON_download"].includes(name))return;
   if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"&&
     !["managed_verified_customer_can_open_private_routes","real_editor_navigation_financial_restore_undo_and_concurrent_session",
       "real_task_notes_survive_filters_background_refresh_and_revision_conflict",
@@ -258,6 +262,57 @@ try{
       await expect(page!.locator("main")).not.toContainText("Something went wrong");
     }
   });
+  await check("controlled_support_display_preserves_mixed_full_messages_and_keyboard_mobile",async()=>{
+    // The customer really signs in, and really lacks staff permission. Only the
+    // display payload below is intercepted; this is NOT a staff/MFA proof.
+    expect((await api("/api/admin/operations?area=support")).status).toBe(403);
+    const message="Synthetic account-access context. ".repeat(22)+
+      "<script>window.__valoSupportXss=1</script> PUBLIC-MESSAGE-END";
+    const scope="Privacy request (correction): synthetic workspace details. ".repeat(18)+" PRIVATE-SCOPE-END";
+    const publicId="00000000-0000-4000-8000-000000000001",privateId="00000000-0000-4000-8000-000000000002";
+    const records=[
+      {id:publicId,contactEmail:"synthetic-access@example.invalid",topic:"sign_in_trouble",message,
+        status:"awaiting_staff",noticeVersion:"synthetic-notice",createdAt:"2026-11-14T12:00:00Z",kind:"public_access_request"},
+      {id:privateId,workspaceId,category:"support",scope,contactEmail:"synthetic-privacy@example.invalid",
+        sharingConsent:false,consentVersion:"synthetic-consent",dispatchStatus:"awaiting_staff",
+        createdAt:"2026-11-14T12:01:00Z",kind:"workspace_request"},
+    ];
+    await page!.route("**/api/admin/operations*",route=>{
+      const area=new URL(route.request().url()).searchParams.get("area")??"content";
+      return route.fulfill({json:{area,notice:"Controlled display fixture; not actual authorised staff access.",
+        records:area==="support"?records:[]}});
+    });
+    try{
+      await page!.goto("/staff");await page!.getByTestId("tab-staff-support").click();
+      await expect(page!.getByTestId("support-records")).toBeVisible();
+      const publicSummary=page!.getByTestId(`support-details-public_access_request-${publicId}`);
+      const privateSummary=page!.getByTestId(`support-details-workspace_request-${privateId}`);
+      const publicMessage=page!.getByTestId(`support-message-public_access_request-${publicId}`);
+      const privateScope=page!.getByTestId(`support-scope-workspace_request-${privateId}`);
+      await expect(publicMessage).not.toBeVisible();await expect(privateScope).not.toBeVisible();
+      await publicSummary.focus();await page!.keyboard.press("Enter");
+      await expect(publicMessage).toBeVisible();expect(await publicMessage.textContent()).toBe(message);
+      const outline=z.object({width:z.number(),style:z.string()}).parse(await publicSummary.evaluate(el=>{
+        const style=el.ownerDocument.defaultView!.getComputedStyle(el);
+        return{width:parseFloat(style.outlineWidth),style:style.outlineStyle};
+      }));
+      expect(outline.width).toBeGreaterThanOrEqual(2);expect(outline.style).not.toBe("none");
+      await privateSummary.focus();await page!.keyboard.press("Enter");
+      await expect(privateScope).toBeVisible();expect(await privateScope.textContent()).toBe(scope);
+      const privateCard=page!.getByTestId(`support-record-workspace_request-${privateId}`);
+      await expect(privateCard.getByText("Category",{exact:true})).toBeVisible();
+      await expect(privateCard.getByText("Not given",{exact:true})).toBeVisible();
+      await expect(privateCard.getByText("synthetic-privacy@example.invalid",{exact:true})).toBeVisible();
+      expect(await page!.evaluate("window.__valoSupportXss===undefined")).toBe(true);
+      for(const width of[1280,360]){
+        await page!.setViewportSize({width,height:900});await reflow();
+        expect(await publicMessage.textContent()).toBe(message);
+        expect(await privateScope.textContent()).toBe(scope);
+      }
+      await privateSummary.focus();await page!.keyboard.press("Space");await expect(privateScope).not.toBeVisible();
+      await page!.keyboard.press("Space");await expect(privateScope).toBeVisible();
+    }finally{await page!.unroute("**/api/admin/operations*");}
+  });
   await check("real_editor_navigation_financial_restore_undo_and_concurrent_session",editorSafetyJourney);
   await check("real_task_notes_survive_filters_background_refresh_and_revision_conflict",async()=>{
     const body={title:"Synthetic notes safety",notes:"Original synthetic notes",dueDate:null,dateConfirmed:false,assessmentId:null,ruleId:null};
@@ -365,6 +420,8 @@ try{
   });
   await check("real_private_privacy_request_reload_and_JSON_download",async()=>{
     expect(userId).toBeTruthy();await page!.goto("/workspace/privacy");
+    await expect(page!.getByTestId("workspace-export-scope")).toContainText("not complete privacy fulfilment");
+    await expect(page!.getByTestId("workspace-export-scope")).toContainText("file/job metadata");
     const created=await api("/api/workspace/documents","POST",syntheticDocument);expect(created.status).toBe(201);
     const createdDocument=GetDocumentResponse.parse(created.body);
     await page!.getByTestId("radio-privacy-deletion").check();
@@ -372,12 +429,15 @@ try{
     await page!.getByTestId("checkbox-privacy-ack").check();
     await page!.getByTestId("button-privacy-submit").click();
     await expect(page!.getByTestId("privacy-ack")).toBeVisible();await page!.reload();
-    expect(GetCustomerAccountResponse.parse((await api("/api/workspace/account")).body).privacyRequests.length).toBe(1);
+    const privacyRequests=GetCustomerAccountResponse.parse((await api("/api/workspace/account")).body).privacyRequests;
+    expect(privacyRequests.length).toBe(1);expect(privacyRequests[0].status).toBe("awaiting_staff");
     const download=page!.waitForEvent("download");await page!.getByTestId("button-download-workspace").click();
     const file=await download;expect(file.suggestedFilename()).toMatch(/valo-workspace.*json/);
     const raw=await api("/api/workspace/data-export");expect(raw.status).toBe(200);expect(raw.cache).toContain("no-store");
     const exported=DownloadWorkspaceDataResponse.parse(raw.body);
     expect(exported.workspaceId).toBe(workspaceId);
+    expect(exported.scope).toContain("not complete privacy fulfilment");
+    expect(exported.scope).toContain("membership/audit records");
     expect((exported.data.documentRevisions as {documentId:string}[]).some(r=>r.documentId===createdDocument.id)).toBe(true);
     await page!.goto("/workspace/purchases");await expect(page!.getByTestId("text-purchases-message")).toContainText(/not proof of payment/);
     await page!.goto("/staff");expect((await api("/api/admin/operations?area=support")).status).toBe(403);
@@ -501,19 +561,24 @@ finally{
   for(const id of ownCommercePriceIds)
     await pool.query("DELETE FROM valo_prices WHERE id=$1",[id]).catch(()=>{cleanupErrors++;process.exitCode=1;});
   await pool.end();
-  await writeFile(fileURLToPath(new URL("../../../../generated-artifacts/valo-customer-ux/browser.json",import.meta.url)),JSON.stringify({
+  await writeFile(fileURLToPath(new URL(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"?
+    "../../../../generated-artifacts/valo-customer-ux/browser-support-details.json":
+    "../../../../generated-artifacts/valo-customer-ux/browser.json",import.meta.url)),JSON.stringify({
     checkedAt:new Date().toISOString(),syntheticDevelopmentOnly:true,checks,
-    selection:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"?"managed-identity-editor-safety":
+    selection:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"?"managed-identity-support-details-and-privacy-scope":
+      process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"?"managed-identity-editor-safety":
       process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"?"managed-identity-commerce-only":
       process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?"managed-identity-reminder-only":"full-existing-journey",
     actualManagedIdentityUsed:Boolean(userId),realEmailDeliveryClaimed:false,actualNewPublications:0,
-    fixtureDisclosure:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"?
+    fixtureDisclosure:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="support-details"?
+      "Actual managed synthetic customer verification, private routes, saved privacy ticket and workspace JSON download. The real staff API denied this customer. ONLY the staff display payload was intercepted with synthetic mixed request records for full-message, XSS, keyboard and mobile checks. No actual authorised staff/MFA session, privacy fulfilment, provider-wide export or erasure was proven. No messages sent.":
+      process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="editor-safety"?
       "Actual managed synthetic verified identity, application API and PostgreSQL. Two real browser tabs; one PATCH delayed then released unchanged to order a revision conflict. No forged API responses, provider sends, AI calls or payment calls.":
       process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"?
       "An unpaid controlled order/licence fixture was saved in the actual database and displayed through authenticated APIs; it was not a released product, price approval or real payment. All owned fixture records were removed.":
       process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?
       "No intercepted content fixture groups were executed in this managed-identity/reminder subset.":
-      "Resource and template fixtures were intercepted only in this browser, never inserted/published; no content eligibility or real published-master download proven.",
+      "Resource, template and staff-display fixtures were intercepted only in this browser, never inserted/published. No content eligibility, real published-master download or authorised staff/MFA session was proven by those fixture groups.",
     r1Accepted:false,r2Accepted:false,cleanupErrors,
     cleanup:cleanupErrors?"Synthetic cleanup needs attention":"Owned synthetic identity and application rows removed; provider usage history untouched.",
   },null,2)+"\n");

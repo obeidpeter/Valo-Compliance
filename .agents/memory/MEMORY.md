@@ -10,3 +10,4 @@
 - [Customer experience](customer-experience.md) — public access help must not depend on sign-in; product pages describe actual behavior, not proof milestones.
 - [Export interruption](export-interruption.md) — transport retries do not repair application state; fenced leases and pre-upload reservations preserve recovery.
 - [PDF reader validation](pdf-geometry.md) — allow small A4 rounding; running headers/footers can interrupt extracted paragraphs.
+- [Browser evaluation boundaries](browser-evaluation-boundaries.md) — an arrow-function string is not equivalent to a Playwright locator callback; separate harness failures from product failures.

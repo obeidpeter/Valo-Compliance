@@ -87,7 +87,7 @@ export function PrivacyPage() {
       <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
         <section className="surface p-6 sm:p-8">
           <h2 className="font-display text-2xl">Download workspace data</h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">A JSON file of what Valo stores for your workspace: profile, drafts, assessments, tasks and requests. It does not include data held by our authentication provider (such as sign-in history) or other providers.</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground" data-testid="workspace-export-scope">A JSON copy of the sections listed in the file: profile versions, drafts and revisions, assessments, tasks, reminder records, support requests, AI drafts and purchase records. This is not complete privacy fulfilment. Private file bytes and file/job metadata, membership/audit records, sign-in-provider data, external-provider data and unlinked public contact requests are not included. Use the privacy request form for coordinated access to those systems.</p>
           <button className="btn btn-primary mt-5" onClick={download} disabled={dl.busy} data-testid="button-download-workspace">
             {dl.busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Download className="h-4 w-4" aria-hidden />} Download JSON
           </button>

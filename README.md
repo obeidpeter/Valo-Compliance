@@ -1,5 +1,9 @@
 # Valo Compliance — Valo Platform
 
+Latest customer-support checkpoint: [complete message details and honest JSON export scope](docs/valo/support-privacy-scope-checkpoint.md).
+This proves the narrowly described browser behaviour, not privacy fulfilment,
+privileged staff/MFA acceptance or whole R1/R2 completion.
+
 Latest checker checkpoint:
 [all 80 supplied source cases executed, with 72 matches and eight retained oracle disagreements](docs/valo/source-checker-candidate-checkpoint.md).
 The 102 passing candidate-control TAP records are not formal legal/rule acceptance.

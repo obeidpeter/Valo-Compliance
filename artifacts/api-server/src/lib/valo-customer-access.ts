@@ -71,7 +71,7 @@ export async function workspaceDataExport(actor:WorkspaceActor){
       data[name]=rows;
     }
     return{schemaVersion:1,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,
-      scope:"Structured data held in this workspace. Does not include private file bytes, managed identity records, external provider data or unlinked public contact requests. Request a full privacy export for those systems.",
+      scope:"Only the named sections under data are included; this is not complete privacy fulfilment. Does not include private file bytes, file/job metadata, membership/audit records, managed identity records, external provider data or unlinked public contact requests. Request coordinated access for those systems.",
       data};
   });
 }

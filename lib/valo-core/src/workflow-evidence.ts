@@ -197,7 +197,13 @@ export function partialWorkflowEvidence(id:string){
   // Passing isolation controls do not convert them into RUL-008 acceptance.
   const sourceCandidateOracle={kind:"test" as const,path:"docs/valo/evidence/source-checker-80-candidate-evaluation.json",
     hash:"9f65bdfa78d6b5a1a1b8d39b402a91e7175aabd068fffd428c6c33698718468f",result:"fail" as const};
+  const supportScopeProof={kind:"test" as const,path:"docs/valo/evidence/support-privacy-scope.json",
+    hash:"e4f24a99bec91a603344c76963ee9ccab83aae4c447b33130ae12f9014fe53e4",result:"pass" as const};
   const currentValidation=[
+    {ids:["WEB-002","ADM-001","PRV-003","NFR-006","NFR-007"],
+      paths:["artifacts/valo/src/components/support-records.tsx","artifacts/valo/src/screens/staff.tsx",
+        "artifacts/valo/src/screens/account.tsx","artifacts/api-server/src/lib/valo-customer-access.ts",
+        "artifacts/api-server/src/scripts/customer-experience-journey.ts"],record:supportScopeProof},
     {ids:["CMP-002","CMP-003","CMP-004","RUL-002","RUL-003","RUL-004","RUL-006","RUL-008"],
       paths:["lib/valo-core/src/checker-business-name.ts","lib/valo-core/src/checker-source-candidates.ts",
         "artifacts/api-server/src/editorial/business-name-candidate-binding.ts",
