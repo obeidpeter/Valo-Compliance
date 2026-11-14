@@ -1,6 +1,9 @@
 # Valo Compliance — Valo Platform
 
-Latest customer-support checkpoint: [complete message details and honest JSON export scope](docs/valo/support-privacy-scope-checkpoint.md).
+Latest private-editor checkpoint: [twelve question-led drafts and verified private exports](docs/valo/guided-private-layouts-checkpoint.md).
+These are personal draft forms, not released catalogue masters or accepted R1/R2.
+
+Customer-support checkpoint: [complete message details and honest JSON export scope](docs/valo/support-privacy-scope-checkpoint.md).
 This proves the narrowly described browser behaviour, not privacy fulfilment,
 privileged staff/MFA acceptance or whole R1/R2 completion.
 

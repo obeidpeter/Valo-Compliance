@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-11-14T15:25:46.625Z",
-  "sourceRevision": "uncommitted-worktree",
+  "checkedAt": "2026-11-14T15:26:31.581Z",
+  "sourceRevision": "fcd167bac3174a54b8c35eb97d1bfbdddc444286",
   "sourceFiles": [
     {
       "path": "lib/valo-core/src/guided.ts",

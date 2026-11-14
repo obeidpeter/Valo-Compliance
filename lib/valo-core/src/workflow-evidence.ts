@@ -199,7 +199,16 @@ export function partialWorkflowEvidence(id:string){
     hash:"9f65bdfa78d6b5a1a1b8d39b402a91e7175aabd068fffd428c6c33698718468f",result:"fail" as const};
   const supportScopeProof={kind:"test" as const,path:"docs/valo/evidence/support-privacy-scope.json",
     hash:"e4f24a99bec91a603344c76963ee9ccab83aae4c447b33130ae12f9014fe53e4",result:"pass" as const};
+  // Private question-led drafts do not make catalogue masters eligible.
+  // This is engineering evidence, not complete EDT or 80/60/60 acceptance.
+  const guidedPrivateProof={kind:"test" as const,path:"docs/valo/evidence/guided-private-layouts.json",
+    hash:"0c70e6363821b87a1712b60cd939a162dd189aa6107a7a9c7b4d84c256c5eb5e",result:"pass" as const};
   const currentValidation=[
+    {ids:["EDT-001","EDT-002","EDT-003","EDT-005","EDT-006","EDT-009","NFR-006","NFR-007","NFR-008"],
+      paths:["lib/valo-core/src/guided-specs-v1.ts","lib/valo-core/src/guided-runtime-v1.ts",
+        "artifacts/valo/src/components/guided-fields.tsx","artifacts/valo/src/components/guided-draft-starter.tsx",
+        "artifacts/valo/src/screens/document-editor.tsx","artifacts/api-server/src/lib/valo-guided.test.ts",
+        "artifacts/api-server/src/scripts/customer-guided-journeys.ts"],record:guidedPrivateProof},
     {ids:["WEB-002","ADM-001","PRV-003","NFR-006","NFR-007"],
       paths:["artifacts/valo/src/components/support-records.tsx","artifacts/valo/src/screens/staff.tsx",
         "artifacts/valo/src/screens/account.tsx","artifacts/api-server/src/lib/valo-customer-access.ts",
