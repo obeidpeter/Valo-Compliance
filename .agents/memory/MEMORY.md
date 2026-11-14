@@ -1,6 +1,7 @@
 - [Valo acceptance constraints](valo-acceptance.md) — R1 gates precede R2; evidence, not inventory titles or model verdicts, determines acceptance.
 - [GitHub write permissions](github-write-permissions.md) — metadata push rights do not prove connector permission to activate workflow files.
 - [Infrastructure proof pitfalls](infrastructure-proof.md) — native storage SDK, consistent ORM peers and actual constraints must be proved, not inferred from setup/exit codes.
+- [Migration proof](migration-proof.md) — clean CI must execute journalled SQL; existing-database adoption needs measured schema evidence, not fabricated history.
 - [Saved document hashes](document-hash-compatibility.md) — JSONB key order differs; preserve historic digests with version-aware reconstruction.
 - [Managed identity browser tests](clerk-browser-testing.md) — match test tooling to the actual FAPI; a bot challenge is not automatically missing identity setup.
 - [AI evaluation cost evidence](ai-evaluation-cost-evidence.md) — synthetic inputs can incur real provider usage; cleanup must preserve usage history and quota accounting.
