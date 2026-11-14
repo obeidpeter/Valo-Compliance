@@ -8,7 +8,7 @@ The adapter uses GET canonical dispute, GET upload URL, separate object PUT,
 POST structured evidence and PUT resolution. Merchant resolutions are
 `merchant-accepted` and `declined`, never a made-up bank-win state. Amounts
 are integer subunits; declines require an acknowledged provider filename and
-fraud claims require structured evidence. Unsupported/terminal current states
+declining fraud claims requires structured evidence. Accepting a fraud claim does not require fabricated evidence or delivery details. Unsupported/terminal current states
 hold a new mutation. Evidence receipts must identify the selected dispute.
 
 Object PUT is restricted to the official documented destination, expires no
