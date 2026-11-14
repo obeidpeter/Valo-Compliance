@@ -61,6 +61,8 @@ export * from './exportJobFormat';
 export * from './exportJobStatus';
 export * from './exportRetryInput';
 export * from './financialInput';
+export * from './financialInputPaymentRecord';
+export * from './financialInputPaymentRecordPaymentsItem';
 export * from './financialLine';
 export * from './getStaffOperationsArea';
 export * from './getStaffOperationsParams';

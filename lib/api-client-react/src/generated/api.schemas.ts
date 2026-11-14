@@ -158,6 +158,23 @@ export interface FinancialLine {
   unitPriceKobo: string;
 }
 
+export type FinancialInputPaymentRecordPaymentsItem = {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  reference: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  amountKobo: string;
+};
+
+export type FinancialInputPaymentRecord = {
+  /** @pattern ^[0-9]{1,24}$ */
+  invoiceAmountKobo: string;
+  /** @maxItems 40 */
+  payments: FinancialInputPaymentRecordPaymentsItem[];
+};
+
 export interface FinancialInput {
   kind: CustomerAITask;
   /** @maxItems 40 */
@@ -179,6 +196,7 @@ export interface FinancialInput {
      * @pattern ^[0-9]{1,24}$
      */
   amountDueKobo: string | null;
+  paymentRecord?: FinancialInputPaymentRecord;
 }
 
 export type CustomerAIInputTone = typeof CustomerAIInputTone[keyof typeof CustomerAIInputTone];

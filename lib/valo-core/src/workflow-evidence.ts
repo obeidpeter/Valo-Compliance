@@ -46,6 +46,15 @@ const businessNameEvidence={
   hash:"8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",result:"pass" as const,
 };
 const groups = [
+  {ids:["AI-001","AI-003","AI-005","AI-008","EDT-002","EDT-003","EDT-006","EDT-007","EDT-008","NFR-008"],
+    paths:["lib/valo-core/src/money.ts","artifacts/api-server/src/lib/valo-reminder.test.ts",
+      "artifacts/api-server/src/scripts/reminder-evaluation.ts","artifacts/valo/src/components/financial-fields.tsx"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/reminder-candidate-evaluation.json",
+      hash:"3c82cb0560b0c131a836bf562ac6bb56b755bae5d241ee183712457052c169f2",result:"pass" as const}},
+  {ids:["AI-009","EDT-003","NFR-006","NFR-007"],
+    paths:["artifacts/api-server/src/scripts/customer-experience-journey.ts","artifacts/valo/src/index.css"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/reminder-browser-journey.json",
+      hash:"0bde05a74ecff15b3185a6ee6cf364a52bfdebee8d746c57801031fa77f05346",result:"pass" as const}},
   {ids:["SEC-003","SEC-007","NFR-009","OPS-007"],
     paths:["artifacts/api-server/src/app.ts","artifacts/api-server/src/lib/request-complexity.test.ts",
       "artifacts/api-server/src/scripts/parser-regression-checkpoint.ts"],

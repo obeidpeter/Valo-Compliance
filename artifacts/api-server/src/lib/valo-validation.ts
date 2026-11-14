@@ -22,10 +22,11 @@ export function calendarDate(value: string) {
   const date = new Date(`${value}T00:00:00Z`);
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
-function contentValid(input: { content: { fields: { issueDate: string; dueDate: string }; blocks: {id: string}[] } }) {
+function contentValid(input: { content: { fields: { issueDate: string; dueDate: string }; blocks: {id: string}[];
+  financialInput?:{kind:string} } }) {
   const { issueDate, dueDate } = input.content.fields;
   return (!issueDate || calendarDate(issueDate)) && (!dueDate || calendarDate(dueDate)) &&
-    (!issueDate || !dueDate || dueDate >= issueDate) &&
+    (!issueDate || !dueDate || input.content.financialInput?.kind==="payment_reminder" || dueDate >= issueDate) &&
     new Set(input.content.blocks.map(b => b.id)).size === input.content.blocks.length;
 }
 function financialsValid(input:{content:Parameters<typeof synchronizeFinancialBlocks>[0]}){

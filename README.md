@@ -7,6 +7,8 @@ Previous implementation checkpoint:
 [export crash recovery, correct pagination and accessible/mobile editing](docs/valo/export-recovery-accessibility-checkpoint.md).
 
 Latest original-content adaptation and dependency repair checkpoint:
+The [recorded-payment reminder customer slice](docs/valo/reminder-customer-checkpoint.md) now includes saved payment breakdowns, past original deadlines, genuine AI evidence, private exports and a managed-identity mobile/keyboard journey. It is a partial R1 implementation checkpoint, not full 80/60/60 acceptance.
+
 The [compressed-request advisory regression](docs/valo/parser-regression-checkpoint.md) now retains named hostile-payload/liveness checks, exact installed versions and separate generator/runtime Undici inventory. This targeted result is not full security or release acceptance.
 
 [working changes, actual export/storage proof and remaining implementation gaps](docs/valo/content-dependency-checkpoint.md).

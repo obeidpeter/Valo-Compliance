@@ -3,9 +3,25 @@ export type FinancialInput={
   kind:"invoice"|"quotation"|"payment_reminder"|"business_proposal";
   lines:{description:string;quantity:string;unitPriceKobo:string}[];
   taxAmountKobo:string|null;taxLabel:string;discountKobo:string|null;amountDueKobo:string|null;
+  paymentRecord?:{invoiceAmountKobo:string;payments:{reference:string;amountKobo:string}[]};
 };
 export type FinancialBlock={id:string;type:"table";text:string;rows:string[][]};
 function amount(s:string){if(!/^[0-9]{1,24}$/.test(s))throw Error("INVALID_INTEGER_KOBO");return BigInt(s);}
+/** User-entered records only; this neither verifies payments nor authorises refunds. */
+export function recordedBalance(record:NonNullable<FinancialInput["paymentRecord"]>){
+  if(record.payments.length>40)throw Error("TOO_MANY_PAYMENT_RECORDS");
+  const invoice=amount(record.invoiceAmountKobo),references=new Set<string>();
+  let paid=0n;
+  for(const payment of record.payments){
+    const reference=payment.reference.trim().toLowerCase();
+    if(!reference||reference.length>80)throw Error("PAYMENT_REFERENCE_REQUIRED");
+    if(references.has(reference))throw Error("DUPLICATE_PAYMENT_REFERENCE");
+    references.add(reference);paid+=amount(payment.amountKobo);
+  }
+  const net=invoice-paid;
+  return{invoiceKobo:invoice.toString(),recordedPaymentsKobo:paid.toString(),netRecordedBalanceKobo:net.toString(),
+    amountDueKobo:(net>0n?net:0n).toString(),excessToReconcileKobo:(net<0n?-net:0n).toString()};
+}
 export function formatKobo(kobo:string|bigint){
   const n=typeof kobo==="bigint"?kobo:amount(kobo);
   if(n<0n)throw Error("NEGATIVE_MONEY");
@@ -19,7 +35,20 @@ export function lineTotal(quantity:string,unitPriceKobo:string){
   return(amount(unitPriceKobo)*numerator+denominator/2n)/denominator;
 }
 export function financialBlocks(input:FinancialInput):FinancialBlock[]{
+  if(input.paymentRecord&&input.kind!=="payment_reminder")throw Error("PAYMENT_RECORD_REQUIRES_REMINDER");
   if(input.kind==="payment_reminder"){
+    if(input.paymentRecord){
+      const balance=recordedBalance(input.paymentRecord);
+      if(input.amountDueKobo===null||amount(input.amountDueKobo)!==BigInt(balance.amountDueKobo))
+        throw Error("OUTSTANDING_BALANCE_MISMATCH");
+      const rows=[["Description","Amount"],["Original invoice amount recorded",formatKobo(balance.invoiceKobo)],
+        ...input.paymentRecord.payments.map(p=>[`Payment recorded: ${p.reference} (not verified)`,formatKobo(p.amountKobo)]),
+        ["Total payments recorded (not verified)",formatKobo(BigInt(balance.recordedPaymentsKobo))]];
+      if(balance.excessToReconcileKobo!=="0")rows.push(["Excess recorded — reconcile; no refund authorised",formatKobo(BigInt(balance.excessToReconcileKobo))]);
+      rows.push(["Amount recorded due",formatKobo(balance.amountDueKobo)]);
+      return[{id:"financial-summary-v1",type:"table",
+        text:"Calculated solely from your records. Confirm discrepancies with the customer; this is not verified payment evidence.",rows}];
+    }
     if(input.amountDueKobo===null)return[];
     return[{id:"financial-summary-v1",type:"table",text:"User-recorded outstanding amount, not verified payment evidence",
       rows:[["Description","Amount"],["Amount recorded due",formatKobo(input.amountDueKobo)]]}];

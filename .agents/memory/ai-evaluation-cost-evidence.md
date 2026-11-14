@@ -15,3 +15,11 @@ evidence distinguishing actual calls from transport simulations.
 or preserve the necessary aggregate usage/audit evidence first. Check the
 current quota implementation before cleanup. Do not use this rule to retain
 private prompt bodies beyond an approved privacy/retention policy.
+
+When only a downstream renderer or evaluation harness fails, reuse the exact
+hash-bound provider result where safe instead of paying to regenerate unchanged
+inputs. Reject changed corpus, prompt/notice or provider payloads and distinguish
+new outbound attempts from retained attempts in the rerun evidence.
+
+**Why:** A real provider completion can be valid even when later file inspection
+fails; rerunning the entire pipeline otherwise adds cost and obscures provenance.

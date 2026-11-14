@@ -2,6 +2,8 @@
 
 Prepared 13 November 2026. These are authored scenario data and rubrics, not application code, an executable harness or test results. **Executed cases: zero. Accepted cases: zero.**
 
+The counts above describe the original preparation. Subsequent partial execution of REM-01–04 is retained separately in `../valo/evidence/reminder-candidate-evaluation.json` and explained in `../valo/reminder-customer-checkpoint.md`. The original candidate JSON remains unchanged; no full-suite acceptance is implied.
+
 | Dataset | Candidates | Purpose |
 | --- | ---: | --- |
 | Checker | 80 | Four narrow national source candidates, twenty cases each, across the six priority sectors and explicit location/unknown/history boundaries. |

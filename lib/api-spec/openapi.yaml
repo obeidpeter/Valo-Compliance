@@ -777,6 +777,22 @@ components:
         taxLabel: { type: string, maxLength: 80 }
         discountKobo: { type: [string, "null"], pattern: "^[0-9]{1,24}$" }
         amountDueKobo: { type: [string, "null"], pattern: "^[0-9]{1,24}$" }
+        paymentRecord:
+          type: object
+          additionalProperties: false
+          required: [invoiceAmountKobo, payments]
+          properties:
+            invoiceAmountKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+            payments:
+              type: array
+              maxItems: 40
+              items:
+                type: object
+                additionalProperties: false
+                required: [reference, amountKobo]
+                properties:
+                  reference: { type: string, minLength: 1, maxLength: 80 }
+                  amountKobo: { type: string, pattern: "^[0-9]{1,24}$" }
     CustomerAIInput:
       type: object
       additionalProperties: false

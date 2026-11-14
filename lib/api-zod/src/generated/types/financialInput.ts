@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CustomerAITask } from './customerAITask';
+import type { FinancialInputPaymentRecord } from './financialInputPaymentRecord';
 import type { FinancialLine } from './financialLine';
 
 export interface FinancialInput {
@@ -29,4 +30,5 @@ export interface FinancialInput {
      * @pattern ^[0-9]{1,24}$
      */
   amountDueKobo: string | null;
+  paymentRecord?: FinancialInputPaymentRecord;
 }

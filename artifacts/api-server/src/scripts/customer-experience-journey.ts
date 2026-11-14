@@ -3,6 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { chromium,expect,type Page,type Browser } from "@playwright/test";
 import { clerkSetup,setupClerkTestingToken } from "@clerk/testing/playwright";
+import {mkdir as ensureReminderDirectory} from "node:fs/promises";
 import { clerkClient } from "@clerk/express";
 import { pool } from "@workspace/db";
 import { GetCustomerAccountResponse,GetDocumentResponse,DownloadWorkspaceDataResponse } from "@workspace/api-zod";
@@ -13,11 +14,14 @@ let browser:Browser|undefined,page:Page|undefined,userId:string|undefined,worksp
 let unknownAck:string|undefined,phase="guard";
 const ownIntakeIds:string[]=[];
 async function check(name:string,fn:()=>Promise<void>){
+  if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"&&
+    !["managed_verified_customer_can_open_private_routes","real_manual_reminder_records_past_due_dates_and_mobile_keyboard_flow"].includes(name))return;
   phase=name;try{await fn();checks.push({name,status:"pass"});}
   catch{
     const safe=await page?.evaluate(`({path:location.pathname,headings:document.querySelectorAll("main h1").length,
       width:innerWidth,scroll:document.documentElement.scrollWidth,focus:document.activeElement?.tagName,
       focusOutline:document.activeElement?getComputedStyle(document.activeElement).outline:null,
+      focusId:document.activeElement?.id,focusVisible:document.activeElement?.matches(":focus-visible"),
       overflow:Array.from(document.querySelectorAll("main *")).filter(e=>e.getBoundingClientRect().right>innerWidth+1)
         .slice(0,5).map(e=>({tag:e.tagName,class:String(e.className)}))})`).catch(()=>null);
     checks.push({name,status:"fail",diagnostic:JSON.stringify(safe??"Unavailable; raw form details suppressed")});process.exitCode=1;
@@ -183,6 +187,49 @@ try{
     await page!.goto("/workspace/purchases");await expect(page!.getByTestId("text-purchases-message")).toContainText(/not enabled/);
     await page!.goto("/staff");expect((await api("/api/admin/operations?area=support")).status).toBe(403);
   });
+  await check("real_manual_reminder_records_past_due_dates_and_mobile_keyboard_flow",async()=>{
+    await page!.goto("/workspace/ai");
+    const reminderRadio=page!.getByTestId("radio-task-payment_reminder");
+    await reminderRadio.focus();await reminderRadio.press("Space");await expect(reminderRadio).toBeChecked();
+    for(const[key,value]of Object.entries({issuerName:"Fictional Business A",recipientName:"Fictional Customer B",
+      documentNumber:"DEMO-REM-003",issueDate:"2026-11-13",dueDate:"2026-11-05"}))
+      await page!.locator(`input[id$="${key}"]`).fill(value);
+    await page!.getByTestId("input-ai-recorded-balance").check();
+    await page!.getByTestId("input-ai-invoice-amount").fill("20000.00");
+    for(const[i,reference,amount]of [[0,"DEMO-P3A","5000.00"],[1,"DEMO-P3B","2500.00"]]as const){
+      await page!.getByTestId("button-ai-add-payment").click();
+      await page!.getByTestId(`input-ai-payment-reference-${i}`).fill(reference);
+      await page!.getByTestId(`input-ai-payment-amount-${i}`).fill(amount);
+      await expect(page!.getByTestId(`input-ai-payment-reference-${i}`)).toHaveAccessibleName(`Payment reference ${i+1}`);
+    }
+    await expect(page!.getByTestId("text-ai-summary")).toContainText("₦12,500.00");
+    await page!.getByTestId("input-ai-payment-reference-1").fill(" demo-p3a ");
+    await expect(page!.getByRole("alert").filter({hasText:"references must be distinct"})).toBeVisible();
+    await page!.getByTestId("input-ai-payment-reference-1").fill("DEMO-P3B");
+    await page!.getByTestId("input-ai-payment-amount-1").fill("20000.00");
+    await expect(page!.getByRole("status").filter({hasText:"no positive amount due"})).toBeVisible();
+    await page!.getByTestId("input-ai-payment-amount-1").fill("2500.00");
+    for(const width of [360,390,768,1280]){
+      await page!.setViewportSize({width,height:874});await reflow();
+      await page!.getByTestId("input-ai-payment-reference-0").focus();await page!.keyboard.press("Tab");
+      await expect(page!.getByTestId("input-ai-payment-amount-0")).toBeFocused();
+      await expect(page!.getByTestId("input-ai-payment-amount-0")).toHaveCSS("outline-style","solid");
+      await expect(page!.getByTestId("input-ai-payment-amount-0")).toHaveCSS("outline-width","2px");
+    }
+    await page!.setViewportSize({width:390,height:874});await reflow();
+    await ensureReminderDirectory(fileURLToPath(new URL("../../../../generated-artifacts/valo-customer-ux/",import.meta.url)),{recursive:true});
+    await page!.getByTestId("input-ai-invoice-amount").scrollIntoViewIfNeeded();
+    await page!.screenshot({path:fileURLToPath(new URL("../../../../generated-artifacts/valo-customer-ux/reminder-mobile.jpg",import.meta.url))});
+    // No AI consent or provider call: the independent manual editor must remain useful.
+    const request=page!.waitForResponse(r=>r.url().endsWith("/api/workspace/documents")&&r.request().method()==="POST");
+    await page!.getByTestId("button-manual-draft").click();const response=await request;
+    expect(response.status()).toBe(201);const document=GetDocumentResponse.parse(await response.json());
+    expect(document.content.financialInput?.amountDueKobo).toBe("1250000");
+    expect(document.content.financialInput?.paymentRecord?.payments.map(p=>p.reference)).toEqual(["DEMO-P3A","DEMO-P3B"]);
+    await page!.waitForURL(`**/workspace/documents/${document.id}`);await page!.reload();
+    const reopened=GetDocumentResponse.parse((await api(`/api/workspace/documents/${document.id}`)).body);
+    expect(reopened.content.fields.dueDate).toBe("2026-11-05");expect(reopened.content.financialInput).toEqual(document.content.financialInput);
+  });
   await check("multiple_activity_labels_and_editor_keyboard_relationships_across_mobile_sizes",async()=>{
     await page!.goto("/workspace/profile");
     await expect(page!.getByTestId("button-add-activity")).toBeVisible();
@@ -258,8 +305,11 @@ finally{
   await pool.end();
   await writeFile(fileURLToPath(new URL("../../../../generated-artifacts/valo-customer-ux/browser.json",import.meta.url)),JSON.stringify({
     checkedAt:new Date().toISOString(),syntheticDevelopmentOnly:true,checks,
+    selection:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?"managed-identity-reminder-only":"full-existing-journey",
     actualManagedIdentityUsed:Boolean(userId),realEmailDeliveryClaimed:false,actualNewPublications:0,
-    fixtureDisclosure:"Resource and template fixtures were intercepted only in this browser, never inserted/published; no content eligibility or real published-master download proven.",
+    fixtureDisclosure:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?
+      "No intercepted content fixture groups were executed in this managed-identity/reminder subset.":
+      "Resource and template fixtures were intercepted only in this browser, never inserted/published; no content eligibility or real published-master download proven.",
     r1Accepted:false,r2Accepted:false,cleanupErrors,
     cleanup:cleanupErrors?"Synthetic cleanup needs attention":"Owned synthetic identity and application rows removed; provider usage history untouched.",
   },null,2)+"\n");

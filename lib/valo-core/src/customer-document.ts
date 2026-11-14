@@ -1,4 +1,4 @@
-import { financialBlocks,type FinancialInput } from "./money";
+import { financialBlocks,recordedBalance,type FinancialInput } from "./money";
 export type CustomerTask=FinancialInput["kind"];
 export type CustomerDraftInput={
   task:CustomerTask;tone:"neutral"|"polite"|"firm";issuerName:string;recipientName:string;documentNumber:string;
@@ -37,5 +37,7 @@ export function buildBusinessDraft(input:CustomerDraftInput,plan:CustomerPlan|nu
       "Business draft prepared from supplied fields; no AI completion or professional review is claimed."},
     blocks:[...narrative,...financialBlocks(input.financialInput)],selectedClauses:[] as string[],
     formatting:{font:"serif" as const,accent:"forest" as const},financialInput:input.financialInput};
-  return{title:`${titles[input.task]}${input.documentNumber?` — ${input.documentNumber}`:""}`.slice(0,160),content};
+  const title=input.task==="payment_reminder"&&input.financialInput.paymentRecord&&
+    recordedBalance(input.financialInput.paymentRecord).amountDueKobo==="0"?"Payment record enquiry":titles[input.task];
+  return{title:`${title}${input.documentNumber?` — ${input.documentNumber}`:""}`.slice(0,160),content};
 }

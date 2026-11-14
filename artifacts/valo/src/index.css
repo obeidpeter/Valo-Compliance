@@ -326,6 +326,7 @@ body::before {
 .surface { background: hsl(var(--card)); border: 1px solid hsl(var(--card-border)); border-radius: 1.25rem; box-shadow: var(--shadow-sm); }
 .field { width: 100%; min-height: 2.75rem; border-radius: .75rem; border: 1px solid hsl(var(--input)); background: hsl(var(--card)); padding: .55rem .85rem; font-size: .95rem; transition: border-color .15s, box-shadow .15s; }
 .field:focus { outline: none; border-color: hsl(var(--ring)); box-shadow: 0 0 0 3px hsl(var(--ring) / .15); }
+.field:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 .field[aria-invalid='true'] { border-color: hsl(var(--destructive)); }
 textarea.field { line-height: 1.6; resize: vertical; }
 .label { display: block; font-size: .85rem; font-weight: 500; margin-bottom: .4rem; }

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { CreateCustomerAIDraftBody,CreateCustomerAIDraftResponse } from "@workspace/api-zod";
 import { canonical } from "@workspace/valo-core";
 import { buildBusinessDraft,type CustomerPlan } from "@workspace/valo-core/customer-document";
-import { financialBlocks } from "@workspace/valo-core/money";
+import { financialBlocks,recordedBalance } from "@workspace/valo-core/money";
 import { calendarDate } from "./valo-validation";
 import { z } from "zod";
 export const customerPromptVersion="customer-extractive-v1";
@@ -13,7 +13,7 @@ export const customerAIInput=CreateCustomerAIDraftBody.strict().superRefine((i,c
   if(i.task!==i.financialInput.kind)ctx.addIssue({code:"custom",path:["financialInput","kind"],message:"The financial model must match the selected task."});
   for(const field of ["issueDate","dueDate"] as const)if(i[field]&&!calendarDate(i[field]))
     ctx.addIssue({code:"custom",path:[field],message:"Enter a real YYYY-MM-DD calendar date."});
-  if(i.issueDate&&i.dueDate&&i.dueDate<i.issueDate)ctx.addIssue({code:"custom",path:["dueDate"],message:"The due date cannot precede the issue date."});
+  if(i.task!=="payment_reminder"&&i.issueDate&&i.dueDate&&i.dueDate<i.issueDate)ctx.addIssue({code:"custom",path:["dueDate"],message:"The due date cannot precede the issue date."});
   try{financialBlocks(i.financialInput);}catch{ctx.addIssue({code:"custom",path:["financialInput"],message:"Check positive quantities, integer kobo and discount not exceeding subtotal."});}
 });
 export type CustomerAIInput=z.infer<typeof customerAIInput>;
@@ -29,6 +29,8 @@ export function missingCustomerFields(i:CustomerAIInput){
   if(i.task==="payment_reminder"){
     if(i.financialInput.amountDueKobo===null)missing.push("amountDue");
     if(!i.dueDate)missing.push("dueDate");
+    if(i.financialInput.paymentRecord&&recordedBalance(i.financialInput.paymentRecord).amountDueKobo==="0")
+      missing.push("balanceReconciliation");
   }
   if(i.task==="business_proposal"&&!i.contextLines.length)missing.push("proposalPurposeAndScope");
   return missing;
@@ -39,7 +41,8 @@ export function unsupportedCustomerInput(i:CustomerAIInput){
 }
 /** Only selected notes are sent, never a profile, another document or direct financial/name fields. */
 export function customerProviderPayload(i:CustomerAIInput){
-  const identifiers=[i.issuerName,i.recipientName,i.documentNumber].map(v=>v.trim()).filter(Boolean).sort((a,b)=>b.length-a.length);
+  const identifiers=[i.issuerName,i.recipientName,i.documentNumber,...(i.financialInput.paymentRecord?.payments.map(p=>p.reference)??[])]
+    .map(v=>v.trim()).filter(Boolean).sort((a,b)=>b.length-a.length);
   const identifierPattern=identifiers.length?new RegExp(identifiers.map(v=>v.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|"),"gi"):null;
   return{task:i.task,tone:i.tone,notes:i.contextLines.map((line,index)=>{
     let text=line;
