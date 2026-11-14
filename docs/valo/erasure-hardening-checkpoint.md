@@ -1,7 +1,7 @@
 # Signed erasure inventory and late-upload recovery
 
 This private development change builds on the existing versioned privacy-key
-registry at `388b4d42`. It does not rotate real secrets, enable production
+registry and scoped-copy redaction at `e542ff15` / `1b44e7c2`. It does not rotate real secrets, enable production
 erasure, contact external processors or claim complete account deletion.
 
 ## Behavior
@@ -14,6 +14,15 @@ erasure, contact external processors or claim complete account deletion.
   exact inventory, key versions and signed recovery cursor before object I/O.
   It checks current case hold state before every object call. Initial staff
   erasure additionally rechecks the current privacy role/session on every call.
+- Current signing material is pinned and checked before destructive work, even
+  when all historical proofs verify. Dispatch keys are captured inside the same
+  locked transaction that authenticates the exact inventory; the sealed inventory
+  binding cannot be cleared to admit a new key.
+- Advisory locks use a separate two-connection pool with finite acquisition/query
+  timeouts, idle-exit safety and explicit worker/test shutdown. They cannot consume
+  all shared data connections and prevent hold/revoke transactions from running.
+- The latest development support/contact and prepared-result redaction is retained,
+  including signed case updates, unsent-notice holds and accepted-outcome retention.
 - An explicit hold release resumes the recorded erasure phase. Claiming cannot
   bypass a hold, and begun erasure cannot be rejected as though nothing happened.
   Results of already-dispatched deletions are retained even if a later hold or
@@ -25,8 +34,10 @@ erasure, contact external processors or claim complete account deletion.
   each object batch; total validation latency has not been load-tested.
 - Export cleanup checks whether its object became a retained asset after any
   ambiguous database commit. For an unretained temporary key, cleanup no longer
-  depends on a tracking row still existing. The independent erasure inventory
-  survives deleted export/job rows and is revisited by the existing worker.
+  depends on a tracking row still existing. Once a privacy tombstone exists,
+  both temporary-file and ordinary orphan cleanup defer to the signed case
+  gate, so they cannot bypass a hold. The independent erasure inventory survives
+  deleted export/job rows and is revisited by the existing worker.
 - Repeated cleanup remains scheduled after successful deletes, so a storage
   request accepted before process death can be removed if it completes later.
   This is an ongoing cleanup obligation, not proof that such a request cannot
@@ -38,18 +49,22 @@ erasure, contact external processors or claim complete account deletion.
   plus their parent). They exercise same-workspace substitution, omissions,
   additions, malformed scope, altered completion/identity, wrong historical
   material and forged/cross-inventory progress.
-- Strict TypeScript checking passed for the standalone signing implementation
-  and its tests. Syntax transpilation passed for the locally materialized files.
+- Five standalone lock tests also passed: six distinct cases with separate
+  two-slot lock/one-slot data pools, same-case contention, callback rejection,
+  ambiguous acquisition and failed unlock. Failed/uncertain ownership destroys
+  the connection instead of returning a possibly locked session to the pool.
+- Strict TypeScript checking passed for both standalone helpers and their tests.
+  Syntax transpilation passed for all 18 locally materialized TypeScript files.
 - No PostgreSQL, native object-storage, app build or browser integration run was
   possible in this scratch environment. Those are **unrun**, not passing.
 
 The new PostgreSQL integration suite is prepared to exercise 23 objects,
 235 restored application rows, holds and role revocation during object I/O,
-the actual export worker's late-upload completion after its tracking rows are
+the actual `executeExport` function's late-upload completion after its tracking rows are
 removed, and a separate export process killed with SIGKILL before upload
 acknowledgement. Its object service is explicitly controlled through an internal
 test transport; it is not a native-storage or production recovery proof.
-The existing native-storage regression stays explicitly separate.
+The full pg-boss worker and native-storage regressions remain separate. Current-key mismatch, missing historical keys, corrupted audit/completion proof, incomplete/corrupt/held ordinary cleanup, and concurrent distinct cases with a one-connection data pool are also prepared as database regressions.
 
 ## Required integration before merge
 

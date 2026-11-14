@@ -6,6 +6,7 @@ import {db,pool,valoPrivacyEvents} from "@workspace/db";
 import {privacySigner,privacyKey,privacyIdentityHashes,type PrivacyKeys} from "./valo-privacy-keys";
 import {privacyAuditHash,privacyAuditEqual,type PrivacyAuditInput} from "./valo-privacy-state";
 import {quotaSubjectHash} from "./valo-quota";
+import {holdUnsentPrivacyNotifications} from "./valo-privacy-erasure";
 test("isolated privacy signing-key rotation — no real secret rotation",{
   skip:process.env.VALO_RUN_DB_TESTS!=="synthetic-development-only",timeout:30000,
 },async t=>{
@@ -26,6 +27,7 @@ test("isolated privacy signing-key rotation — no real secret rotation",{
       await tx.execute(sql`CREATE TABLE valo_privacy_events(id uuid PRIMARY KEY,workspace_id uuid,case_id uuid,sequence integer,
         actor_type text,actor_hash text,action text,reason text,previous_hash text,state_hash text,event_hash text,key_version text,created_at timestamptz)`);
       await tx.execute(sql`CREATE TABLE valo_privacy_tombstones(id uuid,key_version text)`);
+      await tx.execute(sql`CREATE TABLE valo_purchase_outbox(id uuid,workspace_id uuid,status text,order_id uuid)`);
       await tx.insert(valoPrivacyEvents).values({id:randomUUID(),...event,eventHash:privacyAuditHash(event,old)});
       await tx.execute(sql`INSERT INTO valo_privacy_tombstones VALUES(${randomUUID()}::uuid,'session-derived-v1')`);
     });
@@ -57,6 +59,23 @@ test("isolated privacy signing-key rotation — no real secret rotation",{
       const wrong:PrivacyKeys={current:"v1",keys:{v1:next,"session-derived-v1":next}};
       await assert.rejects(()=>run(tx=>privacySigner(tx,wrong)),{status:503});
       await assert.rejects(()=>run(tx=>privacyKey(tx,event.keyVersion,wrong)),{status:503});
+    });
+    await t.test("unsent notices are held idempotently without rewriting accepted outcomes or another tenant",async()=>{
+      await run(async tx=>{
+        const a=randomUUID(),b=randomUUID();
+        for(const status of["awaiting_email_configuration","pending","retry","accepted","delivered","unknown_outcome","failed"])
+          await tx.execute(sql`INSERT INTO valo_purchase_outbox VALUES(${randomUUID()}::uuid,${a}::uuid,${status},${randomUUID()}::uuid)`);
+        await tx.execute(sql`INSERT INTO valo_purchase_outbox VALUES(${randomUUID()}::uuid,${b}::uuid,'pending',${randomUUID()}::uuid)`);
+        const before=await tx.execute<{id:string;status:string;workspace_id:string;order_id:string}>(sql`SELECT * FROM valo_purchase_outbox ORDER BY id`);
+        assert.equal((await holdUnsentPrivacyNotifications(tx,a)).rowCount,3);
+        assert.equal((await holdUnsentPrivacyNotifications(tx,a)).rowCount,0);
+        const afterRows=await tx.execute<{id:string;status:string;workspace_id:string;order_id:string}>(sql`SELECT * FROM valo_purchase_outbox ORDER BY id`);
+        for(let n=0;n<before.rows.length;n++){
+          const old=before.rows[n],now=afterRows.rows[n];
+          assert.equal(now.order_id,old.order_id);assert.equal(now.id,old.id);
+          assert.equal(now.status,old.workspace_id===a&&["awaiting_email_configuration","pending","retry"].includes(old.status)?"held_privacy_erasure":old.status);
+        }
+      });
     });
   }finally{await pool.query(`DROP SCHEMA "${schema}" CASCADE`);await pool.end();}
 });

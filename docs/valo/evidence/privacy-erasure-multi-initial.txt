@@ -1,0 +1,65 @@
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (22.114234ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (62.708815ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (562.1229ms)
+  ✔ ready, pending and cleanup objects are inventoried once before rows disappear and stale workers stay fenced (361.626289ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (707.340421ms)
+  ✖ restored membership and late-written objects are re-deleted from retained tombstones (35.403224ms)
+  ✖ native private storage deletion and repeated late-write replay remove actual synthetic bytes (828.620076ms)
+  ✔ a cross-workspace key in a corrupted object journal is never deleted (33.108458ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (1.826109ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (11.672379ms)
+✖ resumable physical development erasure with retained exclusions and replay (4209.214711ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 8
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11864.347809
+
+✖ failing tests:
+
+test at src/lib/valo-privacy-erasure.integration.test.ts:119:13
+✖ restored membership and late-written objects are re-deleted from retained tombstones (35.403224ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  4 !== 1
+  
+      at TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-privacy-erasure.integration.test.ts:125:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-privacy-erasure.integration.test.ts:119:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src/lib/valo-privacy-erasure.integration.test.ts:132:13
+✖ native private storage deletion and repeated late-write replay remove actual synthetic bytes (828.620076ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  4 !== 1
+  
+      at TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-privacy-erasure.integration.test.ts:137:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-privacy-erasure.integration.test.ts:132:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+undefined
+/home/runner/workspace/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx --test src/lib/valo-privacy-erasure.integration.test.ts

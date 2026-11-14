@@ -61,7 +61,7 @@ export async function privacyDetail(tx:Tx,row:PrivacyRow){
     reason:e.reason,createdAt:e.createdAt.toISOString()})),steps:row.steps};
 }
 export async function privacyChange(tx:Tx,row:PrivacyRow,actor:{identityId:string;type:PrivacyAuditInput["actorType"]},
-  action:string,reason:string,patch:Partial<Pick<PrivacyRow,"status"|"assignedIdentityId"|"verifiedAt"|"resultJson"|"resultScope"|"steps"|"erasurePhase">>){
+  action:string,reason:string,patch:Partial<Pick<PrivacyRow,"message"|"status"|"assignedIdentityId"|"verifiedAt"|"resultJson"|"resultScope"|"steps"|"erasurePhase">>){
   if(patch.status&&patch.status!==row.status)assertPrivacyTransition(row.status,patch.status);
   if(patch.status==="fulfilled")assertPrivacyCompletion(patch.steps??row.steps);
   const at=new Date(),version=row.version+1;

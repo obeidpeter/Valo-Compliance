@@ -1,0 +1,10 @@
+✔ operator report names reject traversal and non-integer versions (1.515248ms)
+✔ internal probes measure failures independently and persist/deduplicate/recover alerts without transports (186.150353ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 520.093192

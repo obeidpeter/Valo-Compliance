@@ -1,9 +1,11 @@
 import {test} from "node:test";
+import {Pool} from "pg";
+import {withPrivacyCaseLock} from "./valo-erasure-lock";
 import assert from "node:assert/strict";
 import {randomUUID,createHash} from "node:crypto";
 import {fork,type ChildProcess} from "node:child_process";
 import {fileURLToPath} from "node:url";
-import {eq,inArray} from "drizzle-orm";
+import {eq,inArray,sql} from "drizzle-orm";
 import {db,pool,valoPrivacyErasureObjects,valoPrivacyCases,valoPrivacyEvents,valoPrivacyTombstones,
   valoWorkspaces,valoMemberships,valoStaffAssignments,valoStaffAccessAudit,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoSupportTickets,valoEvents,valoExportRequests,valoFileAssets,
@@ -11,8 +13,10 @@ import {db,pool,valoPrivacyErasureObjects,valoPrivacyCases,valoPrivacyEvents,val
 import {resolveWorkspace,createDocument} from "./valo-store";
 import {syntheticDocument} from "./valo-test-fixtures";
 import {createPrivacyCase,confirmPrivacyCase,simpleStaffPrivacyAction} from "./valo-privacy";
-import {processPrivacyErasure,replayErasedApplication,reconcileErasedObjects} from "./valo-privacy-erasure";
+import {processPrivacyErasure,replayErasureObjects,replayErasedApplication,reconcileErasedObjects,closePrivacyErasureLocks} from "./valo-privacy-erasure";
 import {requestExport,executeExport} from "./valo-exports";
+import {reconcileExportOrphans} from "./valo-export-recovery";
+import {privacyKeys,privacySigner} from "./valo-privacy-keys";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 
 const reason="Controlled synthetic erasure race and recovery proof; no production or provider deletion.";
@@ -49,12 +53,41 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       revisionId:f.document.revisionId,format:"pdf",acknowledgeDraft:true});
     const[job]=await db.select().from(valoExportJobs).where(eq(valoExportJobs.id,created.id));return job;
   };
+  const assertWrongCurrentKey=async(run:(remove:(key:string)=>Promise<void>)=>Promise<unknown>,caseId:string)=>{
+    const original=process.env.VALO_PRIVACY_KEYRING,ring=privacyKeys(),current=`synthetic-erasure-key-${randomUUID()}`;
+    const pinned={current,keys:{...ring.keys,[current]:"controlled-pinned-test-key-".repeat(3)}};
+    await db.transaction(tx=>privacySigner(tx,pinned));
+    const[before]=await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,caseId));
+    let calls=0;
+    try{
+      process.env.VALO_PRIVACY_KEYRING=JSON.stringify({...pinned,keys:{...pinned.keys,[current]:"controlled-wrong-test-key-".repeat(3)}});
+      await assert.rejects(()=>run(async()=>{calls++;}),{status:503});assert.equal(calls,0);
+      process.env.VALO_PRIVACY_KEYRING=JSON.stringify({current,keys:{[current]:pinned.keys[current]}});
+      await assert.rejects(()=>run(async()=>{calls++;}),{status:503});assert.equal(calls,0);
+      const[after]=await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,caseId));
+      assert.deepEqual(after.replayState,before.replayState);
+    }finally{
+      if(original===undefined)delete process.env.VALO_PRIVACY_KEYRING;else process.env.VALO_PRIVACY_KEYRING=original;
+      await db.execute(sql`DELETE FROM valo_privacy_key_versions WHERE id=${current}`);
+    }
+  };
   try{
+    await t.test("distinct advisory locks cannot exhaust a one-connection shared data pool",async()=>{
+      const data=new Pool({connectionString:process.env.DATABASE_URL,max:1,connectionTimeoutMillis:1000,allowExitOnIdle:true});
+      const locks=new Pool({connectionString:process.env.DATABASE_URL,max:2,connectionTimeoutMillis:1000,allowExitOnIdle:true});
+      try{
+        const results=await Promise.all(Array.from({length:6},()=>withPrivacyCaseLock(locks,randomUUID(),async()=>{
+          const r=await data.query({text:"SELECT 1 AS value",query_timeout:1000});return r.rows[0].value;
+        })));
+        assert.deepEqual(results,[1,1,1,1,1,1]);
+      }finally{await locks.end();await data.end();}
+    });
     await t.test("holds and revoked roles stop the next object, while an in-flight result remains recorded",async()=>{
       const f=await setup(),keys=Array.from({length:23},()=>`valo/development/${f.owner.workspaceId}/${randomUUID()}.pdf`).sort();
       await db.insert(valoPrivacyErasureObjects).values(keys.map(objectKey=>({caseId:f.id,workspaceId:f.owner.workspaceId,objectKey})));
       await db.insert(valoDocuments).values(Array.from({length:205},()=>({id:randomUUID(),workspaceId:f.owner.workspaceId})));
       await step(f,async()=>{});
+      await assertWrongCurrentKey(remove=>step(f,remove),f.id);
       let dispatched=0,heldVersion=0;
       await assert.rejects(()=>step(f,async()=>{
         dispatched++;
@@ -75,6 +108,10 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       assert.equal((await db.select().from(valoPrivacyErasureObjects).where(eq(valoPrivacyErasureObjects.caseId,f.id))).filter(x=>x.status==="deleted").length,2);
       await db.update(valoStaffAssignments).set({active:true}).where(eq(valoStaffAssignments.identityId,f.actor.identityId));
       await finish(f,async()=>{});
+      // Create persisted object progress before replacing only the current signer.
+      const initial=await replayErasureObjects(f.id,async()=>{});assert.equal(initial.deleted,10);
+      await assertWrongCurrentKey(remove=>replayErasureObjects(f.id,remove),f.id);
+      for(let n=0;n<4;n++){const r=await replayErasureObjects(f.id,async()=>{});if(!r.remaining)break;}
       // Simulate restored application rows after importing the retained journal.
       await db.insert(valoDocuments).values(Array.from({length:235},()=>({id:randomUUID(),workspaceId:f.owner.workspaceId})));
       const replayed:string[]=[];let complete=false,totalRows=0;
@@ -99,11 +136,33 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       }).then(()=>({ok:true,error:null}),error=>({ok:false,error}));
       const key=await Promise.race([ready,running.then(()=>{throw Error("Export failed before reaching the controlled upload barrier.");})]);
       try{
+        await step(f,async object=>{objects.delete(object);});
+        let orphanCalls=0;
+        const incomplete=await reconcileExportOrphans(job.id,async()=>{orphanCalls++;});
+        assert.equal(orphanCalls,0);assert.equal(incomplete.privacyHeld,1);
+        await db.update(valoExportObjects).set({nextCleanupAt:new Date(0)}).where(eq(valoExportObjects.jobId,job.id));
+        const[before]=await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,f.id));
+        try{
+          await db.update(valoPrivacyTombstones).set({erasureSeal:{...before.erasureSeal,mac:"0".repeat(64)}})
+            .where(eq(valoPrivacyTombstones.caseId,f.id));
+          const corrupt=await reconcileExportOrphans(job.id,async()=>{orphanCalls++;});
+          assert.equal(orphanCalls,0);assert.equal(corrupt.privacyHeld,1);
+        }finally{await db.update(valoPrivacyTombstones).set({erasureSeal:before.erasureSeal}).where(eq(valoPrivacyTombstones.caseId,f.id));}
+        await db.update(valoExportObjects).set({nextCleanupAt:new Date(0)}).where(eq(valoExportObjects.jobId,job.id));
+        const held=await simpleStaffPrivacyAction(fresh(f),f.id,{action:"hold",expectedVersion:f.version,reason});
+        f.version=held.request.version;
+        const heldCleanup=await reconcileExportOrphans(job.id,async()=>{orphanCalls++;});
+        assert.equal(orphanCalls,0);assert.equal(heldCleanup.privacyHeld,1);
+        const released=await simpleStaffPrivacyAction(fresh(f),f.id,{action:"release_hold",expectedVersion:f.version,reason});
+        f.version=released.request.version;
         await finish(f,async object=>{objects.delete(object);});
         assert.equal((await db.select().from(valoExportJobs).where(eq(valoExportJobs.id,job.id))).length,0);
         assert.equal((await db.select().from(valoExportObjects).where(eq(valoExportObjects.objectKey,key))).length,0);
       }finally{release();}
-      const result=await running;assert.equal(result.ok,false);assert.equal(lateCleanup,true);assert.equal(objects.size,0);
+      const result=await running;assert.equal(result.ok,false);assert.equal(lateCleanup,false);
+      assert.equal(objects.size,1,"privacy-owned cleanup must pass the signed-case gate");
+      const cleanup=await reconcileErasedObjects(async key=>{lateCleanup=true;objects.delete(key);},f.id);
+      assert.equal(cleanup.cleaned,1);assert.equal(cleanup.held,0);assert.equal(lateCleanup,true);assert.equal(objects.size,0);
       assert.equal((await db.select().from(valoPrivacyErasureObjects).where(eq(valoPrivacyErasureObjects.caseId,f.id))).length,1);
     });
     await t.test("SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path",async()=>{
@@ -144,6 +203,7 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       await db.delete(valoStaffAccessAudit).where(inArray(valoStaffAccessAudit.actorId,operators));
       await db.delete(valoStaffAssignments).where(inArray(valoStaffAssignments.identityId,operators));
     }
+    await closePrivacyErasureLocks();
     await pool.end();
   }
 });

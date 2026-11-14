@@ -27,3 +27,21 @@ $$;
 CREATE TRIGGER valo_erasure_inventory_immutable
   BEFORE INSERT OR DELETE OR UPDATE OF case_id,workspace_id,object_key ON valo_privacy_erasure_objects
   FOR EACH ROW EXECUTE FUNCTION valo_guard_erasure_inventory();
+
+--> statement-breakpoint
+-- A concurrent writer cannot temporarily unseal a captured inventory and add
+-- candidates between validation and dispatch. Completion/signing may advance.
+CREATE FUNCTION valo_guard_erasure_binding() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF OLD.erasure_seal->>'inventoryHash' IS NOT NULL AND (
+    NEW.erasure_seal->>'inventoryHash' IS DISTINCT FROM OLD.erasure_seal->>'inventoryHash' OR
+    NEW.erasure_seal->>'inventoryCount' IS DISTINCT FROM OLD.erasure_seal->>'inventoryCount' OR
+    NEW.case_id IS DISTINCT FROM OLD.case_id OR NEW.workspace_id IS DISTINCT FROM OLD.workspace_id OR
+    NEW.identity_hash IS DISTINCT FROM OLD.identity_hash OR NEW.key_version IS DISTINCT FROM OLD.key_version) THEN
+    RAISE EXCEPTION 'Sealed erasure binding cannot be reset' USING ERRCODE='23514';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE TRIGGER valo_erasure_binding_immutable BEFORE UPDATE ON valo_privacy_tombstones
+  FOR EACH ROW EXECUTE FUNCTION valo_guard_erasure_binding();

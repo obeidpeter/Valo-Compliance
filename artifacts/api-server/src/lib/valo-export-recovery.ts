@@ -1,6 +1,7 @@
 import {randomUUID} from "node:crypto";
 import {and,eq,inArray,lte,sql} from "drizzle-orm";
-import {db,valoExportJobs,valoExportObjects,valoFileAssets,valoEvents} from "@workspace/db";
+import {db,valoExportJobs,valoExportObjects,valoFileAssets,valoEvents,valoPrivacyTombstones} from "@workspace/db";
+import {assertErasureObjectScope} from "./valo-erasure-seal";
 import {deletePrivateFile} from "./valo-private-storage";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 
@@ -35,20 +36,34 @@ export async function recoverAbandonedExports(jobId?:string){
  * after success so an upload accepted before process death cannot resurrect an
  * untracked object after an earlier ignore-not-found deletion.
  */
-export async function reconcileExportOrphans(jobId?:string){
+export async function reconcileExportOrphans(jobId?:string,remove:(key:string)=>Promise<void>=deletePrivateFile){
   assertDevelopmentRuntime();
   const due=await db.select().from(valoExportObjects).where(and(eq(valoExportObjects.state,"cleanup"),
     lte(valoExportObjects.nextCleanupAt,new Date()),jobId?eq(valoExportObjects.jobId,jobId):undefined)).limit(25);
-  let cleaned=0,failed=0;
+  let cleaned=0,failed=0,privacyHeld=0;
   for(const object of due){
     await db.transaction(async tx=>{
       const [locked]=await tx.select().from(valoExportObjects).where(and(eq(valoExportObjects.objectKey,object.objectKey),
         eq(valoExportObjects.state,"cleanup"),lte(valoExportObjects.nextCleanupAt,new Date()))).for("update",{skipLocked:true});
       if(!locked)return;
+      try{assertErasureObjectScope(locked.workspaceId,locked.objectKey);}catch{
+        failed++;await tx.update(valoExportObjects).set({nextCleanupAt:new Date(Date.now()+60_000)})
+          .where(eq(valoExportObjects.objectKey,locked.objectKey));return;
+      }
+      const[erasure]=await tx.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
+        .where(eq(valoPrivacyTombstones.workspaceId,locked.workspaceId)).limit(1);
+      if(erasure){
+        // Once privacy owns this scope, ordinary orphan cleanup must not
+        // bypass a hold, incomplete case or signed-inventory validation.
+        privacyHeld++;
+        await tx.update(valoExportObjects).set({nextCleanupAt:new Date(Date.now()+60_000)})
+          .where(eq(valoExportObjects.objectKey,object.objectKey));
+        return;
+      }
       const [asset]=await tx.select().from(valoFileAssets).where(eq(valoFileAssets.objectKey,object.objectKey)).limit(1);
       if(asset){await tx.update(valoExportObjects).set({state:"retained"}).where(eq(valoExportObjects.objectKey,object.objectKey));return;}
       let delay=3_600_000;
-      try{await deletePrivateFile(object.objectKey);cleaned++;}
+      try{await remove(object.objectKey);cleaned++;}
       catch{failed++;delay=Math.min(3_600_000,30_000*2**Math.min(7,object.cleanupAttempts));}
       await tx.update(valoExportObjects).set({cleanupAttempts:sql`${valoExportObjects.cleanupAttempts}+1`,
         nextCleanupAt:new Date(Date.now()+delay)}).where(eq(valoExportObjects.objectKey,object.objectKey));
@@ -58,8 +73,8 @@ export async function reconcileExportOrphans(jobId?:string){
   // revisited by the same running worker, including after a killed uploader.
   if(!jobId){
     const {reconcileErasedObjects}=await import("./valo-privacy-erasure");
-    const erased=await reconcileErasedObjects();
-    return{cleaned:cleaned+erased.cleaned,failed:failed+erased.failed,privacyHeld:erased.held};
+    const erased=await reconcileErasedObjects(remove);
+    return{cleaned:cleaned+erased.cleaned,failed:failed+erased.failed,privacyHeld:privacyHeld+erased.held};
   }
-  return{cleaned,failed,privacyHeld:0};
+  return{cleaned,failed,privacyHeld};
 }
