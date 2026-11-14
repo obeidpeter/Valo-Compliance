@@ -66,17 +66,17 @@ async function main(){
   if(process.env.VALO_PROVE_REVIEW_PLAN_GUARDS==="synthetic-development-only"){
     // Hard-disable this CLI process's SDK transport. Never inject a success,
     // fabricate provider findings, or risk a charge while testing a guard.
-    if(Number(live.rows[0].reviews_today)<6||new Date().getUTCHours()===23)
-      throw Error("ACTUAL_CAP_NOT_SAFELY_EXHAUSTED_FOR_ZERO_CALL_PROOF");
     const originalCreate=openai.chat.completions.create;
     Object.defineProperty(openai.chat.completions,"create",{configurable:true,value:()=>{
       outboundAttempts++;throw Error("NETWORK_DISABLED_DURING_GUARD_PROOF");}});
     try{
-      await assert.rejects(()=>executeOperationalReviewPlan(plan,candidate,serverEvidence),/OPERATIONAL_REVIEW_DAILY_CAP_REACHED/);
-      guards.push({case:"actual six-reservation limit",result:"rejected before transport"});
+      await assert.rejects(()=>executeOperationalReviewPlan(plan,candidate,serverEvidence),/INFERENCE_BUDGET_DISABLED/);
+      guards.push({case:"no approved finite-work context",result:"rejected before transport"});
       const badPlan=async(mutator:(p:typeof plan)=>void)=>{
         const copy=structuredClone(plan);mutator(copy);
-        copy.artifact=await putPublicationArtifact(Buffer.from(JSON.stringify({manifest:copy.manifest,entries:copy.entries})),"json");
+        const artifact=await putPublicationArtifact(Buffer.from(JSON.stringify({manifest:copy.manifest,entries:copy.entries})),"json");
+        if(artifact.extension!=="json")throw Error("REVIEW_PLAN_ARTIFACT_TYPE_INVALID");
+        copy.artifact={...artifact,extension:"json"};
         return copy;
       };
       const stale=await badPlan(p=>{p.manifest.expiresAt=new Date(Date.now()-1).toISOString();});
@@ -117,3 +117,4 @@ async function main(){
 }
 main().catch(error=>{console.error(error instanceof Error&&/^[A-Z_]+$/.test(error.message)?error.message:
   "OPERATIONAL_REVIEW_PLAN_FAILED");process.exitCode=1}).finally(()=>pool.end());
+
