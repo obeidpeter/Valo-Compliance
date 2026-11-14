@@ -35,6 +35,11 @@ try{
         AND table_name='valo_reminder_outbox' AND column_name='lease_token'),
       'firstReminderAttempt',EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
         AND table_name='valo_reminder_outbox' AND column_name='first_attempt_at'),
+      'refundAmount',EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+        AND table_name='valo_refund_requests' AND column_name='amount_kobo'),
+      'refundRequestUniqueness',to_regclass('public.valo_refund_request_key_unique') IS NOT NULL,
+      'financialHistoryImmutable',EXISTS(SELECT 1 FROM pg_trigger WHERE tgname='valo_refund_transition_immutable' AND NOT tgisinternal),
+      'publisherCannotRefund',NOT has_table_privilege('valo_content_publisher_dev','valo_refund_requests','INSERT'),
       'journalledMigrations',(SELECT count(*) FROM drizzle.__drizzle_migrations),
       'noSeedOrders',(SELECT count(*)=0 FROM valo_orders),
       'noSeedPrices',(SELECT count(*)=0 FROM valo_prices),
@@ -48,7 +53,8 @@ try{
   if(!checked.orderTable||!checked.receiptOutbox||!checked.dailyReconciliation||!checked.noSeedOrders||
     !checked.noSeedPrices||checked.tenantForeignKeys!==4||!checked.publisherCannotReadOrders||
     !checked.publisherCannotWriteOrders||!checked.publisherCannotWritePrices||!checked.editorialRequestMeter||
-    !checked.durableReminderLease||!checked.firstReminderAttempt||checked.journalledMigrations<15)
+    !checked.durableReminderLease||!checked.firstReminderAttempt||!checked.refundAmount||!checked.refundRequestUniqueness||
+    !checked.financialHistoryImmutable||!checked.publisherCannotRefund||checked.journalledMigrations<17)
     throw Error("CLEAN_MIGRATION_INVARIANT_FAILED");
   report.invariants=checked;report.disasterRecoveryProved=false;report.productionCompatibilityProved=false;
 }catch(error){

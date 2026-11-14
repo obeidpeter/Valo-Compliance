@@ -49,6 +49,8 @@ jobs:
           echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Run API input-safety tests
         run: pnpm --filter @workspace/api-server test:valo
+      - name: Prove refund reference and timeout contract without a merchant
+        run: pnpm --filter @workspace/api-server test:valo-refund-provider
       - name: Build the Next.js application
         run: pnpm --filter @workspace/valo run build
       - name: Print factual readiness
@@ -95,3 +97,7 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-db
       - name: Prove durable write limits and membership revocation races
         run: pnpm --filter @workspace/api-server test:valo-write-security
+      - name: Prove controlled payment settlement and refund lifecycle
+        run: |
+          pnpm --filter @workspace/api-server test:valo-commerce
+          pnpm --filter @workspace/api-server test:valo-refunds

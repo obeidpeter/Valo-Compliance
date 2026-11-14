@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { CommerceRefundInputAcceptedPolicyVersion } from './commerceRefundInputAcceptedPolicyVersion';
 
 export interface CommerceRefundInput {
   /**
@@ -12,4 +13,11 @@ export interface CommerceRefundInput {
      * @maxLength 1500
      */
   reason: string;
+  /**
+     * @minimum 1
+     * @maximum 2147483647
+     */
+  amountKobo: number;
+  requestKey: string;
+  acceptedPolicyVersion: CommerceRefundInputAcceptedPolicyVersion;
 }

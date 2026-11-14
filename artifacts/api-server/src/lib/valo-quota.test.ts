@@ -8,6 +8,7 @@ test("quota defaults preserve the requested initial ceilings", () => {
     "anonymous-read":60, "authenticated-read":120, "customer-ai":5, "checkout-create":10, "export-create":10,
     "profile-write":20,"profile-write-day":200,"document-write":30,"document-write-day":600,
     "support-write":3,"support-write-day":20,
+    "refund-create":10,"refund-create-day":50,
   });
 });
 test("quota subjects are pseudonymised, domain-separated and keyed", () => {

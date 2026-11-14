@@ -1,6 +1,6 @@
 import { randomUUID,createHash } from "node:crypto";
 import { and,desc,eq,sql } from "drizzle-orm";
-import { db,valoPrices,valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentEvents,valoEvents,valoPaymentReconciliations } from "@workspace/db";
+import { db,valoPrices,valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentEvents,valoEvents,valoPaymentReconciliations,valoPaymentDisputes } from "@workspace/db";
 import { z } from "zod";
 import { liveOperationalVersions } from "./valo-released-content";
 import { authorizeWorkspaceWrite,ValoProblem,type WorkspaceActor } from "./valo-store";
@@ -8,6 +8,9 @@ import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { assertOrderMatch,paystack,verifiedTransaction,sandboxPaymentsConfigured,type VerifiedTransaction } from "./valo-paystack-contract";
 import { trustedSiteOrigin } from "./valo-site-origin";
 import { CreateCommerceOrderBody,RequestCommerceRefundBody } from "@workspace/api-zod";
+import {requestOrderRefund,refundView,handleRefundEvent} from "./valo-refunds";
+import {syncDispute} from "./valo-payment-disputes";
+import {refundBalance,TEST_REFUND_POLICY} from "./valo-refund-provider";
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
 function audit(tx:Tx,workspaceId:string,actorId:string,action:string,id:string){
   return tx.insert(valoEvents).values({id:randomUUID(),workspaceId,actorId,action,entityId:id});
@@ -19,12 +22,17 @@ async function limit(tx:Tx,actor:WorkspaceActor){
     if(!q.allowed)throw new ValoProblem(429,`Purchase request limit reached. Retry in ${q.retryAfter} seconds; saved orders are unchanged.`,undefined,q.retryAfter);
   }
 }
-function display(order:typeof valoOrders.$inferSelect,refund?:typeof valoRefundRequests.$inferSelect){
+function display(order:typeof valoOrders.$inferSelect,refunds:(typeof valoRefundRequests.$inferSelect)[]=[],disputeStatus:string|null=null){
   return{id:order.id,reference:order.reference,title:order.line.title,amountKobo:order.amountKobo,currency:order.currency,
     status:order.status,createdAt:order.createdAt.toISOString(),lastCheckedAt:order.lastCheckedAt?.toISOString()??null,
     licenceVersion:order.line.licenceVersion,licenceText:order.line.licenceText,taxTreatment:order.line.taxTreatment,
-    contentVersionId:order.line.contentVersionId,refundStatus:refund?.status??null,
+    contentVersionId:order.line.contentVersionId,refundStatus:refunds[0]?.status??null,
+    refunds:refunds.map(refundView),...refundBalance(order.amountKobo,refunds),refundPolicy:TEST_REFUND_POLICY,disputeStatus,
     receiptReference:order.providerTransactionId&&order.status==="verified_success"?`VALO-TEST-${order.reference}`:null};
+}
+async function presentOrder(tx:Tx,order:typeof valoOrders.$inferSelect){
+  const[dispute]=await tx.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.orderId,order.id)).orderBy(desc(valoPaymentDisputes.checkedAt));
+  return display(order,await tx.select().from(valoRefundRequests).where(eq(valoRefundRequests.orderId,order.id)).orderBy(desc(valoRefundRequests.createdAt)),dispute?.status??null);
 }
 export async function commerceProducts(){
   const released=await liveOperationalVersions(),ids=new Set(released
@@ -37,9 +45,10 @@ export async function purchases(actor:WorkspaceActor){
   return db.transaction(async tx=>{
     await authorizeWorkspaceWrite(tx,actor);
     const orders=await tx.select().from(valoOrders).where(eq(valoOrders.workspaceId,actor.workspaceId)).orderBy(desc(valoOrders.createdAt)).limit(100);
-    const refunds=await tx.select().from(valoRefundRequests).where(eq(valoRefundRequests.workspaceId,actor.workspaceId)).limit(100);
+    const refunds=await tx.select().from(valoRefundRequests).where(eq(valoRefundRequests.workspaceId,actor.workspaceId)).orderBy(desc(valoRefundRequests.createdAt));
+    const disputes=await tx.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.workspaceId,actor.workspaceId)).orderBy(desc(valoPaymentDisputes.checkedAt));
     return{available:true,livePaymentsEnabled:false,message:"No live payments. Only server-verified Paystack test transactions can grant test purchases. Saved orders do not prove payment.",
-      orders:orders.map(o=>display(o,refunds.find(r=>r.orderId===o.id))),products:await commerceProducts()};
+      orders:orders.map(o=>display(o,refunds.filter(r=>r.orderId===o.id),disputes.find(d=>d.orderId===o.id)?.status??null)),products:await commerceProducts()};
   });
 }
 export async function createOrder(actor:WorkspaceActor,raw:unknown){
@@ -52,7 +61,7 @@ export async function createOrder(actor:WorkspaceActor,raw:unknown){
       await authorizeWorkspaceWrite(tx,actor);
       if(old.priceId!==input.priceId||old.line.licenceVersion!==input.acceptedLicenceVersion)
         throw new ValoProblem(409,"This request key belongs to another choice. Your original order is unchanged.");
-      return display(old);
+      return presentOrder(tx,old);
     }
     await limit(tx,actor);
     const[price]=await tx.select().from(valoPrices).where(eq(valoPrices.id,input.priceId)).for("share");
@@ -67,7 +76,7 @@ export async function createOrder(actor:WorkspaceActor,raw:unknown){
       line:{title:price.title,contentVersionId:price.contentVersionId,licenceVersion:price.licenceVersion,
         licenceText:price.licenceText,taxTreatment:price.taxTreatment}}).returning();
     await audit(tx,actor.workspaceId,actor.identityId,"order.created",id);
-    return display(order);
+    return presentOrder(tx,order);
   });
 }
 async function ownedOrder(tx:Tx,actor:WorkspaceActor,id:string){
@@ -115,11 +124,11 @@ export async function settleVerifiedOrder(id:string,data:VerifiedTransaction,act
     if(order.status==="reversed"&&data.status!=="reversed")
       throw new ValoProblem(409,"A reversed payment requires audited staff reconciliation; it cannot be reactivated by a replay.");
     if(order.providerTransactionId&&order.providerTransactionId!==data.id)throw new ValoProblem(409,"A different provider transaction is already attached. Staff reconciliation is required.");
-    if(order.status==="verified_success"&&data.status==="success")return display(order);
+    if(order.status==="verified_success"&&data.status==="success")return presentOrder(tx,order);
     const status=data.status==="success"?"verified_success":data.status==="reversed"?"reversed":
       ["failed","abandoned"].includes(data.status)?data.status:"pending";
     // Never silently downgrade a completed purchase on a transient/pending response.
-    if(order.status==="verified_success"&&status!=="reversed")return display(order);
+    if(order.status==="verified_success"&&status!=="reversed")return presentOrder(tx,order);
     const[updated]=await tx.update(valoOrders).set({status,lastCheckedAt:new Date(),providerTransactionId:data.id}).where(eq(valoOrders.id,id)).returning();
     if(status==="verified_success"){
       await tx.insert(valoEntitlements).values({id:randomUUID(),workspaceId:order.workspaceId,orderId:id,contentVersionId:order.line.contentVersionId}).onConflictDoNothing();
@@ -127,7 +136,7 @@ export async function settleVerifiedOrder(id:string,data:VerifiedTransaction,act
     }
     if(status==="reversed")await tx.update(valoEntitlements).set({status:"suspended"}).where(eq(valoEntitlements.orderId,id));
     await audit(tx,order.workspaceId,actor?.identityId??"service:paystack-verifier",`payment.${status}`,id);
-    return display(updated);
+    return presentOrder(tx,updated);
   });
 }
 export async function refreshOrder(actor:WorkspaceActor,id:string){
@@ -143,34 +152,28 @@ export async function purchaseReceipt(actor:WorkspaceActor,id:string){
     const order=await ownedOrder(tx,actor,id);
     if(order.status!=="verified_success"||!order.providerTransactionId)throw new ValoProblem(409,"There is no verified successful purchase receipt for this order.");
     const[delivery]=await tx.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,id));
-    return{...display(order),notice:"Paystack test-mode Valo purchase receipt. Not a live payment, customer-generated business invoice, government receipt or official tax invoice.",
+    return{...await presentOrder(tx,order),notice:"Paystack test-mode Valo purchase receipt. Not a live payment, customer-generated business invoice, government receipt or official tax invoice.",
       deliveryStatus:delivery?.status??"not_queued"};
   });
 }
 export async function requestRefund(actor:WorkspaceActor,id:string,raw:unknown){
-  const input=RequestCommerceRefundBody.strict().parse(raw);
-  return db.transaction(async tx=>{
-    const order=await ownedOrder(tx,actor,id);
-    if(order.status!=="verified_success")throw new ValoProblem(409,"Only a verified successful purchase can have a refund request.");
-    const[old]=await tx.select().from(valoRefundRequests).where(eq(valoRefundRequests.orderId,id));
-    if(old)return{reference:old.id,status:old.status};
-    await limit(tx,actor);
-    const[r]=await tx.insert(valoRefundRequests).values({id:randomUUID(),workspaceId:actor.workspaceId,orderId:id,reason:input.reason}).returning();
-    await audit(tx,actor.workspaceId,actor.identityId,"refund.requested",id);
-    return{reference:r.id,status:r.status};
-  });
+  return requestOrderRefund(actor,id,raw);
 }
 /** Persist only the minimum authenticated event facts, never card/customer payloads. */
 export async function recordPaymentEvent(raw:Buffer){
   const event=z.object({event:z.string().min(1).max(80),data:z.object({
     id:z.union([z.string().max(150),z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)]).optional(),
-    reference:z.string().max(150).optional()}).optional()}).parse(JSON.parse(raw.toString("utf8")));
-  const supported=event.event==="charge.success";
-  if(supported&&(!event.data?.id||!event.data.reference))throw new ValoProblem(422,"A charge event requires its transaction ID and reference.");
+    reference:z.string().max(150).optional(),refund_reference:z.string().max(150).nullable().optional(),
+    transaction_reference:z.string().max(150).optional()}).optional()}).parse(JSON.parse(raw.toString("utf8")));
+  const charge=event.event==="charge.success",refund=/^refund\.(pending|processing|needs-attention|failed|processed)$/.test(event.event),
+    dispute=/^charge\.dispute\.(create|remind|resolve)$/.test(event.event);
+  const supported=charge||refund||dispute;
+  if(charge&&(!event.data?.id||!event.data.reference))throw new ValoProblem(422,"A charge event requires its transaction ID and reference.");
+  const reference=refund?event.data?.refund_reference??undefined:dispute?String(event.data?.id??""):event.data?.reference;
   const bodyHash=createHash("sha256").update(raw).digest("hex");
-  const id=randomUUID(),eventKey=`test:${event.event}:${event.data?.id??bodyHash}`;
+  const id=randomUUID(),eventKey=`test:${event.event}:${event.data?.id??(refund?reference:undefined)??bodyHash}`;
   const[inserted]=await db.insert(valoPaymentEvents).values({id,eventKey,bodyHash,eventType:event.event,
-    reference:event.data?.reference,status:supported?"pending":"ignored"}).onConflictDoNothing().returning();
+    reference,status:supported?"pending":"ignored"}).onConflictDoNothing().returning();
   return{received:true,duplicate:!inserted};
 }
 export async function processPaymentEvents(){
@@ -179,6 +182,14 @@ export async function processPaymentEvents(){
   for(const event of events){
     try{
       if(!event.reference)throw new ValoProblem(409,"Missing reference");
+      if(event.eventType.startsWith("refund.")){
+        if(!await handleRefundEvent(event.reference))continue;
+        await db.update(valoPaymentEvents).set({status:"processed",failure:null}).where(eq(valoPaymentEvents.id,event.id));continue;
+      }
+      if(event.eventType.startsWith("charge.dispute.")){
+        if(!await syncDispute(event.reference))continue;
+        await db.update(valoPaymentEvents).set({status:"processed",failure:null}).where(eq(valoPaymentEvents.id,event.id));continue;
+      }
       const[order]=await db.select().from(valoOrders).where(eq(valoOrders.reference,event.reference));
       if(!order)throw new ValoProblem(409,"Unmatched reference");
       await settleVerifiedOrder(order.id,await paystack.verify(order.reference));

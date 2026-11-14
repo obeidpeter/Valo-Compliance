@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CommerceOrderStatus } from './commerceOrderStatus';
+import type { RefundRecord } from './refundRecord';
 
 export interface CommerceOrder {
   id: string;
@@ -25,4 +26,10 @@ export interface CommerceOrder {
   refundStatus: string | null;
   /** @nullable */
   receiptReference: string | null;
+  refunds: RefundRecord[];
+  refundableKobo: number;
+  refundedKobo: number;
+  refundPolicy: string;
+  /** @nullable */
+  disputeStatus: string | null;
 }

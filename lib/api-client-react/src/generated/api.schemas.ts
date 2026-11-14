@@ -136,6 +136,28 @@ export const CommerceOrderStatus = {
   reversed: 'reversed',
 } as const;
 
+export interface RefundRecord {
+  id: string;
+  orderId: string;
+  /** @nullable */
+  amountKobo: number | null;
+  status: string;
+  reference: string;
+  reason: string;
+  /** @nullable */
+  decisionReason: string | null;
+  policyVersion: string;
+  version: number;
+  attempts: number;
+  createdAt: string;
+  /** @nullable */
+  checkedAt: string | null;
+  /** @nullable */
+  completedAt: string | null;
+  /** @nullable */
+  failure: string | null;
+}
+
 export interface CommerceOrder {
   id: string;
   reference: string;
@@ -154,6 +176,12 @@ export interface CommerceOrder {
   refundStatus: string | null;
   /** @nullable */
   receiptReference: string | null;
+  refunds: RefundRecord[];
+  refundableKobo: number;
+  refundedKobo: number;
+  refundPolicy: string;
+  /** @nullable */
+  disputeStatus: string | null;
 }
 
 export interface CustomerPurchases {
@@ -174,12 +202,53 @@ export interface CommerceOrderInput {
   requestKey: string;
 }
 
+export type CommerceRefundInputAcceptedPolicyVersion = typeof CommerceRefundInputAcceptedPolicyVersion[keyof typeof CommerceRefundInputAcceptedPolicyVersion];
+
+
+export const CommerceRefundInputAcceptedPolicyVersion = {
+  'test-refund-v1': 'test-refund-v1',
+} as const;
+
 export interface CommerceRefundInput {
   /**
      * @minLength 10
      * @maxLength 1500
      */
   reason: string;
+  /**
+     * @minimum 1
+     * @maximum 2147483647
+     */
+  amountKobo: number;
+  requestKey: string;
+  acceptedPolicyVersion: CommerceRefundInputAcceptedPolicyVersion;
+}
+
+export type RefundDecisionInputDecision = typeof RefundDecisionInputDecision[keyof typeof RefundDecisionInputDecision];
+
+
+export const RefundDecisionInputDecision = {
+  approve: 'approve',
+  reject: 'reject',
+} as const;
+
+export interface RefundDecisionInput {
+  decision: RefundDecisionInputDecision;
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  reason: string;
+  /** @minimum 1 */
+  expectedVersion: number;
+}
+
+export type FinanceRefundsDisputesItem = { [key: string]: unknown };
+
+export interface FinanceRefunds {
+  refunds: RefundRecord[];
+  disputes: FinanceRefundsDisputesItem[];
+  policy: string;
 }
 
 export interface CommerceActionInput { [key: string]: never }

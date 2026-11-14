@@ -50,6 +50,7 @@ import type {
   ExportInput,
   ExportJob,
   ExportRetryInput,
+  FinanceRefunds,
   GetCommerceReceipt200,
   GetStaffOperationsParams,
   HealthStatus,
@@ -59,6 +60,8 @@ import type {
   ProofRegister,
   PublicCoverage,
   QuotaErrorResponse,
+  RefundDecisionInput,
+  RefundRecord,
   ReleasedResource,
   ReleasedTemplate,
   ReminderPreferences,
@@ -1268,6 +1271,266 @@ export function useGetStaffOperations<TData = Awaited<ReturnType<typeof getStaff
 
 
 
+
+export const getGetFinanceRefundsUrl = () => {
+
+
+
+
+  return `/api/admin/refunds`
+}
+
+export const getFinanceRefunds = async ( options?: Parameters<typeof customFetch>[1]): Promise<FinanceRefunds> => {
+
+  return customFetch<FinanceRefunds>(getGetFinanceRefundsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFinanceRefundsQueryKey = () => {
+    return [
+    `/api/admin/refunds`
+    ] as const;
+    }
+
+
+export const getGetFinanceRefundsQueryOptions = <TData = Awaited<ReturnType<typeof getFinanceRefunds>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinanceRefunds>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFinanceRefundsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFinanceRefunds>>> = ({ signal }) => getFinanceRefunds({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFinanceRefunds>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFinanceRefundsQueryResult = NonNullable<Awaited<ReturnType<typeof getFinanceRefunds>>>
+export type GetFinanceRefundsQueryError = ErrorType<unknown>
+
+
+export function useGetFinanceRefunds<TData = Awaited<ReturnType<typeof getFinanceRefunds>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinanceRefunds>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFinanceRefunds>>,
+          TError,
+          Awaited<ReturnType<typeof getFinanceRefunds>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFinanceRefunds<TData = Awaited<ReturnType<typeof getFinanceRefunds>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinanceRefunds>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFinanceRefunds>>,
+          TError,
+          Awaited<ReturnType<typeof getFinanceRefunds>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFinanceRefunds<TData = Awaited<ReturnType<typeof getFinanceRefunds>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinanceRefunds>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFinanceRefunds<TData = Awaited<ReturnType<typeof getFinanceRefunds>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFinanceRefunds>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFinanceRefundsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDecideFinanceRefundUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/refunds/${id}/decision`
+}
+
+export const decideFinanceRefund = async (id: string,
+    refundDecisionInput: RefundDecisionInput, options?: Parameters<typeof customFetch>[1]): Promise<RefundRecord> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RefundRecord>(getDecideFinanceRefundUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(refundDecisionInput)
+  }
+);}
+
+
+
+
+
+export const getDecideFinanceRefundMutationKey = () => ['decideFinanceRefund'] as const;
+
+export const getDecideFinanceRefundMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideFinanceRefund>>, TError,DecideFinanceRefundMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof decideFinanceRefund>>, TError,DecideFinanceRefundMutationVariables, TContext> => {
+
+const mutationKey = getDecideFinanceRefundMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof decideFinanceRefund>>, DecideFinanceRefundMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  decideFinanceRefund(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DecideFinanceRefundMutationResult = NonNullable<Awaited<ReturnType<typeof decideFinanceRefund>>>
+    export type DecideFinanceRefundMutationBody = BodyType<RefundDecisionInput>
+    export type DecideFinanceRefundMutationError = ErrorType<unknown>
+    export type DecideFinanceRefundMutationVariables = {id: string;data: BodyType<RefundDecisionInput>}
+
+    export const useDecideFinanceRefund = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof decideFinanceRefund>>, TError,DecideFinanceRefundMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof decideFinanceRefund>>,
+        TError,
+        DecideFinanceRefundMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDecideFinanceRefundMutationOptions(options), queryClient);
+    }
+
+export const getReconcileFinanceRefundUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/refunds/${id}/reconcile`
+}
+
+export const reconcileFinanceRefund = async (id: string,
+    commerceActionInput: CommerceActionInput, options?: Parameters<typeof customFetch>[1]): Promise<RefundRecord> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RefundRecord>(getReconcileFinanceRefundUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(commerceActionInput)
+  }
+);}
+
+
+
+
+
+export const getReconcileFinanceRefundMutationKey = () => ['reconcileFinanceRefund'] as const;
+
+export const getReconcileFinanceRefundMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reconcileFinanceRefund>>, TError,ReconcileFinanceRefundMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reconcileFinanceRefund>>, TError,ReconcileFinanceRefundMutationVariables, TContext> => {
+
+const mutationKey = getReconcileFinanceRefundMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reconcileFinanceRefund>>, ReconcileFinanceRefundMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reconcileFinanceRefund(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReconcileFinanceRefundMutationResult = NonNullable<Awaited<ReturnType<typeof reconcileFinanceRefund>>>
+    export type ReconcileFinanceRefundMutationBody = BodyType<CommerceActionInput>
+    export type ReconcileFinanceRefundMutationError = ErrorType<unknown>
+    export type ReconcileFinanceRefundMutationVariables = {id: string;data: BodyType<CommerceActionInput>}
+
+    export const useReconcileFinanceRefund = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reconcileFinanceRefund>>, TError,ReconcileFinanceRefundMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reconcileFinanceRefund>>,
+        TError,
+        ReconcileFinanceRefundMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReconcileFinanceRefundMutationOptions(options), queryClient);
+    }
 
 export const getListDocumentExportsUrl = (id: string,) => {
 

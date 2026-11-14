@@ -49,9 +49,30 @@ export const valoPurchaseOutbox=pgTable("valo_purchase_outbox",{
 export const valoRefundRequests=pgTable("valo_refund_requests",{
   id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull().references(()=>valoWorkspaces.id),
   orderId:uuid("order_id").notNull(),reason:text("reason").notNull(),status:text("status").notNull().default("requested"),
+  amountKobo:integer("amount_kobo"),requestKey:uuid("request_key").notNull().defaultRandom(),
+  reference:text("reference").notNull(),policyVersion:text("policy_version").notNull().default("legacy-unconfirmed"),
+  version:integer("version").notNull().default(1),decisionReason:text("decision_reason"),
+  authorisedBy:text("authorised_by"),authorisedAt:timestamp("authorised_at",{withTimezone:true}),
+  providerId:text("provider_id"),attempts:integer("attempts").notNull().default(0),
+  leaseToken:uuid("lease_token"),leaseUntil:timestamp("lease_until",{withTimezone:true}),
+  nextAttemptAt:timestamp("next_attempt_at",{withTimezone:true}),checkedAt:timestamp("checked_at",{withTimezone:true}),
+  completedAt:timestamp("completed_at",{withTimezone:true}),failure:text("failure"),
   createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
-},t=>[uniqueIndex("valo_refund_request_order_unique").on(t.orderId),
+},t=>[uniqueIndex("valo_refund_request_key_unique").on(t.workspaceId,t.requestKey),
+  uniqueIndex("valo_refund_reference_unique").on(t.reference),uniqueIndex("valo_refund_provider_unique").on(t.providerId),
+  index("valo_refund_queue_idx").on(t.status,t.nextAttemptAt),
   foreignKey({name:"valo_refund_order_tenant_fk",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
+export const valoRefundTransitions=pgTable("valo_refund_transitions",{
+  id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),orderId:uuid("order_id").notNull(),
+  refundId:uuid("refund_id").notNull().references(()=>valoRefundRequests.id),actorId:text("actor_id").notNull(),
+  action:text("action").notNull(),reason:text("reason").notNull(),
+  createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
+},t=>[foreignKey({name:"valo_refund_audit_order_tenant_fk",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
+export const valoPaymentDisputes=pgTable("valo_payment_disputes",{
+  id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),orderId:uuid("order_id").notNull(),
+  providerId:text("provider_id").notNull().unique(),status:text("status").notNull(),resolution:text("resolution"),
+  amountKobo:integer("amount_kobo"),checkedAt:timestamp("checked_at",{withTimezone:true}).notNull().defaultNow(),
+},t=>[foreignKey({name:"valo_dispute_order_tenant_fk",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
 export const insertValoOrderSchema=createInsertSchema(valoOrders);
 export const valoPaymentReconciliations=pgTable("valo_payment_reconciliations",{
   id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull().references(()=>valoWorkspaces.id),

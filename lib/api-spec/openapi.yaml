@@ -203,6 +203,50 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/StaffOperations" }
         "403": { description: Missing staff permission or recent MFA; no self-enrolment route. }
+  /admin/refunds:
+    get:
+      operationId: getFinanceRefunds
+      tags: [admin]
+      responses:
+        "200":
+          description: Finance-only test refunds; active managed identity and fresh MFA required.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinanceRefunds" }
+  /admin/refunds/{id}/decision:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: decideFinanceRefund
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RefundDecisionInput" }
+      responses:
+        "200":
+          description: Recorded decision, not provider completion.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundRecord" }
+  /admin/refunds/{id}/reconcile:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: reconcileFinanceRefund
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommerceActionInput" }
+      responses:
+        "200":
+          description: Verified provider observation or explicit unmet configuration; never assumed success.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundRecord" }
   /v1/documents/{id}/exports:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
@@ -866,16 +910,53 @@ components:
         requestKey: { type: string, format: uuid }
     CommerceRefundInput:
       type: object
-      required: [reason]
+      additionalProperties: false
+      required: [reason, amountKobo, requestKey, acceptedPolicyVersion]
       properties:
         reason: { type: string, minLength: 10, maxLength: 1500 }
+        amountKobo: { type: integer, minimum: 1, maximum: 2147483647 }
+        requestKey: { type: string, format: uuid }
+        acceptedPolicyVersion: { type: string, enum: [test-refund-v1] }
+    RefundDecisionInput:
+      type: object
+      additionalProperties: false
+      required: [decision, reason, expectedVersion]
+      properties:
+        decision: { type: string, enum: [approve, reject] }
+        reason: { type: string, minLength: 10, maxLength: 1500 }
+        expectedVersion: { type: integer, minimum: 1 }
+    RefundRecord:
+      type: object
+      required: [id, orderId, amountKobo, status, reference, reason, decisionReason, policyVersion, version, attempts, createdAt, checkedAt, completedAt, failure]
+      properties:
+        id: { type: string }
+        orderId: { type: string }
+        amountKobo: { type: [integer, "null"] }
+        status: { type: string }
+        reference: { type: string }
+        reason: { type: string }
+        decisionReason: { type: [string, "null"] }
+        policyVersion: { type: string }
+        version: { type: integer }
+        attempts: { type: integer }
+        createdAt: { type: string }
+        checkedAt: { type: [string, "null"] }
+        completedAt: { type: [string, "null"] }
+        failure: { type: [string, "null"] }
+    FinanceRefunds:
+      type: object
+      required: [refunds, disputes, policy]
+      properties:
+        refunds: { type: array, items: { $ref: "#/components/schemas/RefundRecord" } }
+        disputes: { type: array, items: { type: object, additionalProperties: true } }
+        policy: { type: string }
     CommerceActionInput:
       type: object
       additionalProperties: false
       properties: {}
     CommerceOrder:
       type: object
-      required: [id, reference, title, amountKobo, currency, status, createdAt, lastCheckedAt, licenceVersion, licenceText, taxTreatment, contentVersionId, refundStatus, receiptReference]
+      required: [id, reference, title, amountKobo, currency, status, createdAt, lastCheckedAt, licenceVersion, licenceText, taxTreatment, contentVersionId, refundStatus, receiptReference, refunds, refundableKobo, refundedKobo, refundPolicy, disputeStatus]
       properties:
         id: { type: string }
         reference: { type: string }
@@ -891,6 +972,11 @@ components:
         contentVersionId: { type: string }
         refundStatus: { type: string, nullable: true }
         receiptReference: { type: string, nullable: true }
+        refunds: { type: array, items: { $ref: "#/components/schemas/RefundRecord" } }
+        refundableKobo: { type: integer }
+        refundedKobo: { type: integer }
+        refundPolicy: { type: string }
+        disputeStatus: { type: [string, "null"] }
     StaffOperations:
       type: object
       required: [area, notice, records]

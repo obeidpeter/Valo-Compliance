@@ -3,16 +3,17 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { and,eq,inArray,sql } from "drizzle-orm";
 import { db,pool,valoContentVersions,valoPublicationPolicies,valoPrices,valoOrders,valoEntitlements,
-  valoPurchaseOutbox,valoRefundRequests,valoPaymentEvents,valoEvents,valoMemberships,valoWorkspaces,valoPaymentReconciliations } from "@workspace/db";
+  valoPurchaseOutbox,valoRefundRequests,valoRefundTransitions,valoPaymentEvents,valoEvents,valoMemberships,valoWorkspaces,valoPaymentReconciliations } from "@workspace/db";
 import * as store from "./valo-store";
 import * as commerce from "./valo-commerce";
 import { verifiedTransaction } from "./valo-paystack-contract";
+import {financeHeldFixture} from "./valo-finance-test-fixture";
 
 test("controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",{timeout:40000},async t=>{
   assert.equal(process.env.NODE_ENV,"development");
   const a=await store.resolveWorkspace(`synthetic-commerce-${randomUUID()}`),b=await store.resolveWorkspace(`synthetic-commerce-${randomUUID()}`);
   // Reuse an actual held development version; never insert or forge a release.
-  const[held]=await db.select().from(valoContentVersions).where(eq(valoContentVersions.status,"held")).limit(1);
+  const held=await financeHeldFixture();
   assert.ok(held,"An actual held development candidate is required for this non-publication mechanics proof.");
   const version=held.id,priceId=randomUUID(),workspaces=[a.workspaceId,b.workspaceId];
   const fixtureLine={title:"CONTROLLED TEST ONLY — not a released product",contentVersionId:version,
@@ -47,7 +48,8 @@ test("controlled PostgreSQL commerce mechanics — NOT real Paystack execution o
     });
     await t.test("other tenants cannot read a receipt, refresh, checkout, settle or request a refund",async()=>{
       for(const call of[()=>commerce.purchaseReceipt(b,order.id),()=>commerce.refreshOrder(b,order.id),
-        ()=>commerce.startCheckout(b,order.id,"synthetic@example.test"),()=>commerce.requestRefund(b,order.id,{reason:"Controlled test request"}),
+        ()=>commerce.startCheckout(b,order.id,"synthetic@example.test"),()=>commerce.requestRefund(b,order.id,{reason:"Controlled test request",
+          amountKobo:1000,requestKey:randomUUID(),acceptedPolicyVersion:"test-refund-v1"}),
         ()=>commerce.settleVerifiedOrder(order.id,verified,b)])await assert.rejects(call(),{status:404});
       assert.equal((await commerce.purchases(b)).orders.length,0);
     });
@@ -73,8 +75,9 @@ test("controlled PostgreSQL commerce mechanics — NOT real Paystack execution o
       assert.equal(receipt.receiptReference,`VALO-TEST-${order.reference}`);
     });
     await t.test("duplicate refund requests persist once without completing a refund or deleting owned work",async()=>{
-      const r=await commerce.requestRefund(a,order.id,{reason:"Controlled test of refund request persistence"});
-      const again=await commerce.requestRefund(a,order.id,{reason:"Controlled retry request"});
+      const payload={reason:"Controlled test of refund request persistence",amountKobo:12345,requestKey:randomUUID(),acceptedPolicyVersion:"test-refund-v1"};
+      const r=await commerce.requestRefund(a,order.id,payload);
+      const again=await commerce.requestRefund(a,order.id,payload);
       assert.deepEqual(r,again);assert.equal(r.status,"requested");
       const[grant]=await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order.id));
       assert.equal(grant.status,"active");
@@ -141,10 +144,9 @@ test("controlled PostgreSQL commerce mechanics — NOT real Paystack execution o
       publishedFixtures:0,priceApproval:false,livePayments:false}));
   }finally{
     await db.delete(valoPaymentEvents).where(inArray(valoPaymentEvents.eventKey,eventKeys.length?eventKeys:["none"]));
-    for(const table of[valoPaymentReconciliations,valoRefundRequests,valoPurchaseOutbox,valoEntitlements,valoOrders,valoEvents])
-      await db.delete(table).where(inArray(table.workspaceId,workspaces));
-    await db.delete(valoPrices).where(eq(valoPrices.id,priceId));
+    // Retain immutable synthetic financial history and FK parents. No trigger
+    // is disabled to make cleanup or a test pass.
     await db.delete(valoMemberships).where(inArray(valoMemberships.workspaceId,workspaces));
-    await db.delete(valoWorkspaces).where(inArray(valoWorkspaces.id,workspaces));await pool.end();
+    await pool.end();
   }
 });

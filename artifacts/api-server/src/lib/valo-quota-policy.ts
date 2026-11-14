@@ -8,6 +8,7 @@ export const quotaPolicy = {
   "profile-write":20,"profile-write-day":200,
   "document-write":30,"document-write-day":600,
   "support-write":3,"support-write-day":20,
+  "refund-create":10,"refund-create-day":50,
 } as const;
 export type QuotaBucket = keyof typeof quotaPolicy;
 export type QuotaDecision = {

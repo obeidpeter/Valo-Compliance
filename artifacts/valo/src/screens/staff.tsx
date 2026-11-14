@@ -4,6 +4,7 @@ import { KeyRound, Lock, ShieldAlert } from 'lucide-react';
 import { useGetStaffOperations, getGetStaffOperationsQueryKey, GetStaffOperationsArea, type GetStaffOperationsArea as Area } from '@workspace/api-client-react';
 import { EmptyState, ErrorState, Skel } from '@/components/states';
 import { cn } from '@/lib/utils';
+import {FinanceRefunds} from './finance-refunds';
 
 const AREAS: { v: Area; l: string }[] = [
   { v: GetStaffOperationsArea.content, l: 'Content' },
@@ -34,9 +35,9 @@ export default function StaffPage() {
       <p className="eyebrow">Staff</p>
       <h1 className="font-display mt-2 text-4xl">Operations</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Read-only view of what the server returns for your role. In Support, the customer's message is shown so you can help. Other areas never show customer text.</p>
-      <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Area">
+      <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Staff area filters">
         {AREAS.map((a) => (
-          <button key={a.v} role="tab" aria-selected={area === a.v} onClick={() => setArea(a.v)} className={cn('rounded-full border px-4 py-1.5 text-sm transition-colors', area === a.v ? 'border-foreground bg-foreground text-background' : 'border-border hover:bg-secondary')} data-testid={'tab-staff-' + a.v}>{a.l}</button>
+          <button key={a.v} type="button" aria-pressed={area === a.v} onClick={() => setArea(a.v)} className={cn('rounded-full border px-4 py-1.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2', area === a.v ? 'border-foreground bg-foreground text-background' : 'border-border hover:bg-secondary')} data-testid={'tab-staff-' + a.v}>{a.l}</button>
         ))}
       </div>
       <div className="mt-8">
@@ -49,6 +50,7 @@ export default function StaffPage() {
         ) : q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : q.data ? (
           <>
             <p className="rounded-2xl border border-border bg-sidebar p-4 text-sm" data-testid="text-staff-notice">{q.data.notice}</p>
+            {area==='finance'&&<FinanceRefunds/>}
             {records.length === 0 ? <p className="mt-6 text-sm text-muted-foreground">No records in this area.</p> : (
               <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
                 <table className="w-full text-left text-sm">

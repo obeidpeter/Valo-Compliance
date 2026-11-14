@@ -53,7 +53,7 @@ function testSecret(){
   return process.env.PAYSTACK_SECRET_KEY;
 }
 /** Only the fixed provider host is reachable; discard all instrument/customer data. */
-async function request(path:string,body?:unknown):Promise<unknown>{
+export async function paystackRequest(path:string,body?:unknown):Promise<unknown>{
   const key=testSecret();
   let response:Response;
   try{
@@ -67,9 +67,9 @@ async function request(path:string,body?:unknown):Promise<unknown>{
   return result.data;
 }
 export const paystack={
-  async verify(reference:string){return verifiedTransaction.parse(await request("/transaction/verify/"+encodeURIComponent(reference)));},
+  async verify(reference:string){return verifiedTransaction.parse(await paystackRequest("/transaction/verify/"+encodeURIComponent(reference)));},
   async initialise(order:{reference:string;amountKobo:number;id:string;workspaceId:string},email:string,callbackUrl:string){
-    const data=await request("/transaction/initialize",{reference:order.reference,amount:order.amountKobo,
+    const data=await paystackRequest("/transaction/initialize",{reference:order.reference,amount:order.amountKobo,
       currency:"NGN",email,callback_url:callbackUrl,metadata:{valoOrderId:order.id,workspaceId:order.workspaceId}});
     const parsed=z.object({authorization_url:z.string().url(),reference:z.string()}).parse(data);
     const url=new URL(parsed.authorization_url);

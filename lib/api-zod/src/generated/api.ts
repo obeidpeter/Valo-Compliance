@@ -137,7 +137,27 @@ export const GetCustomerPurchasesResponse = zod.object({
   "taxTreatment": zod.string(),
   "contentVersionId": zod.string(),
   "refundStatus": zod.string().nullable(),
-  "receiptReference": zod.string().nullable()
+  "receiptReference": zod.string().nullable(),
+  "refunds": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})),
+  "refundableKobo": zod.int(),
+  "refundedKobo": zod.int(),
+  "refundPolicy": zod.string(),
+  "disputeStatus": zod.string().nullable()
 })),
   "products": zod.array(zod.object({
   "id": zod.string(),
@@ -175,7 +195,27 @@ export const CreateCommerceOrderResponse = zod.object({
   "taxTreatment": zod.string(),
   "contentVersionId": zod.string(),
   "refundStatus": zod.string().nullable(),
-  "receiptReference": zod.string().nullable()
+  "receiptReference": zod.string().nullable(),
+  "refunds": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})),
+  "refundableKobo": zod.int(),
+  "refundedKobo": zod.int(),
+  "refundPolicy": zod.string(),
+  "disputeStatus": zod.string().nullable()
 })
 
 
@@ -214,7 +254,27 @@ export const RefreshCommerceOrderResponse = zod.object({
   "taxTreatment": zod.string(),
   "contentVersionId": zod.string(),
   "refundStatus": zod.string().nullable(),
-  "receiptReference": zod.string().nullable()
+  "receiptReference": zod.string().nullable(),
+  "refunds": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})),
+  "refundableKobo": zod.int(),
+  "refundedKobo": zod.int(),
+  "refundPolicy": zod.string(),
+  "disputeStatus": zod.string().nullable()
 })
 
 
@@ -236,7 +296,27 @@ export const GetCommerceReceiptResponse = zod.object({
   "taxTreatment": zod.string(),
   "contentVersionId": zod.string(),
   "refundStatus": zod.string().nullable(),
-  "receiptReference": zod.string().nullable()
+  "receiptReference": zod.string().nullable(),
+  "refunds": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})),
+  "refundableKobo": zod.int(),
+  "refundedKobo": zod.int(),
+  "refundPolicy": zod.string(),
+  "disputeStatus": zod.string().nullable()
 }).and(zod.object({
   "notice": zod.string(),
   "deliveryStatus": zod.string()
@@ -250,10 +330,15 @@ export const RequestCommerceRefundParams = zod.object({
 export const requestCommerceRefundBodyReasonMin = 10;
 export const requestCommerceRefundBodyReasonMax = 1500;
 
+export const requestCommerceRefundBodyAmountKoboMax = 2147483647;
+
 
 
 export const RequestCommerceRefundBody = zod.object({
-  "reason": zod.string().min(requestCommerceRefundBodyReasonMin).max(requestCommerceRefundBodyReasonMax)
+  "reason": zod.string().min(requestCommerceRefundBodyReasonMin).max(requestCommerceRefundBodyReasonMax),
+  "amountKobo": zod.int().min(1).max(requestCommerceRefundBodyAmountKoboMax),
+  "requestKey": zod.uuid(),
+  "acceptedPolicyVersion": zod.enum(['test-refund-v1'])
 })
 
 export const RequestCommerceRefundResponse = zod.object({
@@ -270,6 +355,88 @@ export const GetStaffOperationsResponse = zod.object({
   "area": zod.enum(['content', 'support', 'finance', 'system']),
   "notice": zod.string(),
   "records": zod.array(zod.record(zod.string(), zod.unknown()))
+})
+
+
+export const GetFinanceRefundsResponse = zod.object({
+  "refunds": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})),
+  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "policy": zod.string()
+})
+
+
+export const DecideFinanceRefundParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const decideFinanceRefundBodyReasonMin = 10;
+export const decideFinanceRefundBodyReasonMax = 1500;
+
+
+
+
+export const DecideFinanceRefundBody = zod.object({
+  "decision": zod.enum(['approve', 'reject']),
+  "reason": zod.string().min(decideFinanceRefundBodyReasonMin).max(decideFinanceRefundBodyReasonMax),
+  "expectedVersion": zod.int().min(1)
+})
+
+export const DecideFinanceRefundResponse = zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})
+
+
+export const ReconcileFinanceRefundParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const ReconcileFinanceRefundBody = zod.object({
+
+})
+
+export const ReconcileFinanceRefundResponse = zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
 })
 
 

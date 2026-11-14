@@ -7,6 +7,8 @@ import { logger } from "../lib/logger";
 import { reconcileDueReminders } from "../lib/valo-reminder-worker";
 import { recoverAbandonedExports,reconcileExportOrphans } from "../lib/valo-export-recovery";
 import { processPaymentEvents,reconcilePayments } from "../lib/valo-commerce";
+import {processRefundQueue} from "../lib/valo-refunds";
+import {reconcileKnownDisputes} from "../lib/valo-payment-disputes";
 
 developmentExportsOnly();
 const payload = z.object({ jobId:z.string().uuid(),workspaceId:z.string().uuid() }).strict();
@@ -43,6 +45,8 @@ async function dispatch() {
     if(Date.now()-reminderCheckedAt>=60000){
       await reconcileDueReminders();
       await processPaymentEvents();
+      await processRefundQueue();
+      await reconcileKnownDisputes();
       await reconcilePayments();
       reminderCheckedAt=Date.now();
     }
