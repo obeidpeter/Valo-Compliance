@@ -1,6 +1,6 @@
 /** Bounded publisher: no customer/draft tables, model calls, prices, money or policy writes. */
 import { randomUUID } from "node:crypto";
-import { loadRightsApplicability } from "./rights-applicability";
+import { loadRightsApplicability,loadChatGPTPermission,assertPermissionRoute } from "./rights-applicability";
 import { and,eq,sql } from "drizzle-orm";
 import { db,valoPublicationPolicies,valoContentVersions,valoPublicationAudit } from "@workspace/db";
 import { digest,evaluatePublication,publicationSchema,sha256 } from "@workspace/valo-core";
@@ -46,16 +46,20 @@ export async function publishOperationalVersion(id:string){
       bundle.candidate.scope!==original.scope||bundle.candidate.limitations!==original.limitations)
       throw Error("OPERATIONAL_BODY_OUTSIDE_REVIEWED_ORIGINAL");
     const rights=JSON.parse((await getPublicationArtifact(a.rights)).toString());
-    const applicability=await loadRightsApplicability();
-    if(!applicability.verified||rights.authoringRoute!=="recorded_server_ai"||
+    const provider=JSON.parse((await getPublicationArtifact(rights.snapshot as ArtifactRef)).toString());
+    const applicability=provenance.generation?await loadRightsApplicability():await loadChatGPTPermission(provider);
+    assertPermissionRoute(applicability.record,Boolean(provenance.generation));
+    if(!provenance.generation&&(applicability.record.sourceBinding?.hash!==provenance.hash||
+      applicability.record.sourceBinding?.noteHash!==provenance.noteHash))
+      throw Error("ORIGINAL_SOURCE_BINDING_INVALID");
+    if(!applicability.verified||rights.authoringRoute!==(provenance.generation?"recorded_server_ai":"coordinator_chatgpt")||
       rights.applicabilityHash!==applicability.hash||a.rightsApplicabilityHash!==applicability.hash)
       throw Error("PROVIDER_RIGHTS_APPLICABILITY_UNVERIFIED");
     if(digest(rights)!==bundle.rights.evidenceHash||bundle.rights.evidence!==JSON.stringify(rights)||
       !rights.originalOperationalOnly||rights.customerLicenceAccepted!==false||
       rights.provenanceHash!==a.provenance.hash||Date.parse(rights.validUntil)<=Date.now())
       throw Error("RIGHTS_EVIDENCE_INVALID");
-    const provider=JSON.parse((await getPublicationArtifact(rights.snapshot as ArtifactRef)).toString());
-    if(!provenance.generation||JSON.stringify(rights.permissions)!==JSON.stringify(applicability.record.evidence))
+    if(JSON.stringify(rights.permissions)!==JSON.stringify(applicability.record.evidence))
       throw Error("RECORDED_PROVIDER_PERMISSION_TEXT_MISSING");
     for(const evidence of applicability.record.evidence){
       const page=provider.pages.find((p:{url:string})=>p.url===evidence.url);
@@ -68,6 +72,12 @@ export async function publishOperationalVersion(id:string){
       const record=JSON.parse((await getPublicationArtifact(ref)).toString());
       const output=operationalReviewSchema.parse(record.output);
       const bound=bundle.reviews.find(r=>r.role===record.role);
+      const checked=record.serverEvidence;
+      if(!checked||checked.candidateHash!==row.candidateHash||checked.sourceCheckedAt!==bundle.candidate.sourceCheckDate||
+        checked.sourceHash!==provenance.hash||checked.provenanceArtifactHash!==a.provenance.hash||
+        checked.rightsArtifactHash!==a.rights.hash||checked.exportReportArtifactHash!==a.exportReport.hash||
+        checked.providerSnapshotHash!==rights.snapshot.hash||checked.authoringRoute!==rights.authoringRoute)
+        throw Error("REVIEW_SERVER_BINDING_INVALID");
       if(!bound||record.providerResponseId!==bound.runId||!record.model||record.receivedOtherVerdict||
         output.verdict!=="pass"||output.findings.length||output.missingEvidence.length||
         record.candidateHash!==bundle.candidate.hash||record.evidenceHash!==digest(bundle.sources))
@@ -102,8 +112,9 @@ export async function withdrawOperationalVersion(id:string,reason:string){
     return{id,status:"withdrawn" as const};
   });
 }
-export async function recordActualPublicationHold(id:string){
+export async function recordActualPublicationHold(id:string,failureCode?:string){
   developmentPublicationOnly();
+  if(failureCode&&!/^[A-Z_]{3,80}$/.test(failureCode))throw Error("INVALID_HOLD_REASON_CODE");
   return db.transaction(async tx=>{
     await tx.execute(sql`SET LOCAL ROLE valo_content_publisher_dev`);
     const[row]=await tx.select().from(valoContentVersions).where(eq(valoContentVersions.id,id)).for("update");
@@ -111,8 +122,9 @@ export async function recordActualPublicationHold(id:string){
     const decision=evaluatePublication(row.bundle);
     if(decision.decision!=="hold")throw Error("NO_FAILED_GATE_TO_RECORD");
     await tx.update(valoContentVersions).set({status:"held"}).where(eq(valoContentVersions.id,id));
+    const reasons=[...decision.reasons,...(failureCode?[failureCode]:[])];
     await tx.insert(valoPublicationAudit).values({id:randomUUID(),versionId:id,actor:"bounded_development_publisher",
-      action:"held",reason:decision.reasons.join(",")});
-    return{id,status:"held",reasons:decision.reasons};
+      action:"held",reason:reasons.join(",")});
+    return{id,status:"held",reasons};
   });
 }

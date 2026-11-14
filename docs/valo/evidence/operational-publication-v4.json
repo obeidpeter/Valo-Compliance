@@ -1,0 +1,122 @@
+{
+  "executedAt": "2026-11-14T04:35:22.094Z",
+  "id": "3c165276-5423-4b67-bd2a-ec4151c14783",
+  "version": 4,
+  "candidateHash": "e1d2cf271d675b6d82b92dfc966437273c25238cf83fc73d9f63248b254b2848",
+  "policyHash": "dfa73f081effb374f07b64595e44f8557fd9c4c0ee1e173ae4b1f117f3d1fd82",
+  "eligibility": {
+    "decision": "hold",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_not_clear:factual",
+      "review_not_clear:challenge"
+    ]
+  },
+  "release": {
+    "id": "3c165276-5423-4b67-bd2a-ec4151c14783",
+    "status": "held",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_not_clear:factual",
+      "review_not_clear:challenge"
+    ],
+    "decision": "held"
+  },
+  "reviews": [
+    {
+      "role": "factual",
+      "providerResponseId": "chatcmpl-EjzluqixbNpDtYJZHjI23ja5MICcX",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "verdict": "hold",
+      "findings": [
+        "The release disclosure says the template was 'not reviewed by a Nigerian legal, tax or sector specialist.' That is a limitation/disclaimer, not a blocker by itself, but the document also uses a jurisdiction-specific disclosure phrase ('AI drafted and reviewed') without evidence of an actual review by the named reviewer role. The review record must not imply a specialist or human review that was not established by evidence.",
+        "The source/provenance statement claims 'Source/provenance checked: 2026-11-14T04:35:09.655Z' and that 'Provider-source and authoring records are retained.' While the supplied evidence includes provider terms and an authoring note hash, the candidate still states 'original ChatGPT-authored prose supplied by coordinator; upstream model and execution ID not established.' That means narrow attribution is not independently verified from an upstream run record; the provenance is still partially unresolved for material attribution.",
+        "The rights section includes a commercial-use assertion for ChatGPT output, but the supplied evidence contains mixed provider-term surfaces (ROW/EU terms, help article, service terms) and the candidate simultaneously notes that customer licence acceptance is false and sales are disabled. The template's own rights/disclosure text should not overstate commercial-licence status beyond the verified provider permission scope.",
+        "The template uses a release/source-date assertion and 'Provider-source and authoring records are retained' language in a way that may read as an independently verified chain of custody. The supplied evidence does not establish a fully verified upstream execution record, only a coordinator-attributed route and retained hashes. That is a material provenance gap for any statement implying independent verification."
+      ],
+      "missingEvidence": [
+        "An authoritative upstream execution record or equivalent immutable provenance artifact linking the exact candidate text to the claimed ChatGPT drafting run, beyond the coordinator note and file hashes.",
+        "Evidence that the phrase 'AI drafted and reviewed' corresponds to an actual human review role and not only an automated/template-generated disclosure.",
+        "A clarified rights/provenance statement that distinguishes provider output-use permission from customer commercial licence acceptance and from independent verification of the specific drafting run.",
+        "If the release intends to rely on the supplied provider terms for commercial-use permission, a clean reconciliation of the ROW/EU terms and the help article so the template does not imply broader or exclusive rights than those sources establish."
+      ]
+    },
+    {
+      "role": "challenge",
+      "providerResponseId": "chatcmpl-EjzlufmaqdBEHAI7nPUGHrb9AOS2t",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "verdict": "hold",
+      "findings": [
+        "The template includes a source/provenance statement: “Source/provenance checked: 2026-11-14T04:35:09.655Z.” but the review package does not provide independent operative evidence that this exact source check time is authoritative for the final candidate; the timestamp is only coordinator-provided data, so the provenance claim should not be treated as independently verified.",
+        "The body says “AI drafted and reviewed; not reviewed by a Nigerian legal, tax or sector specialist.” This is acceptable as a limitation, but the package also contains broader rights and approval language that could be read as stronger verification than actually shown. The review record must avoid implying any specialist, legal, tax, or sectoral clearance for this release.",
+        "The rights section relies on provider permissions and includes a commercial-use quote from OpenAI help content. That does not establish Valo customer licence acceptance, exclusivity, non-infringement, or third-party clearance for this template, yet the surrounding package text risks overreading it as a fuller rights approval than is supported.",
+        "The candidate is presented as an “Inventory register” for NG with operational guidance, but no authoritative evidence is supplied for any material regulatory claim because the content is framed as non-regulatory. The review should keep that boundary explicit and not infer compliance, accounting, or legal adequacy from the template wording alone."
+      ],
+      "missingEvidence": [
+        "Independent operative evidence for the claimed source/provenance check time tied to the exact final candidate hash, rather than coordinator-supplied metadata alone.",
+        "Authoritative evidence showing a final rights/legal review decision by Valo for customer licence acceptance, exclusivity, or non-infringement, if any such approval is intended to be implied.",
+        "Any authoritative evidence that the template’s operational guidance has been reviewed for NG-specific legal, tax, or sector compliance, if the release package intends to suggest such clearance."
+      ]
+    }
+  ],
+  "exportReport": {
+    "candidateHash": "e1d2cf271d675b6d82b92dfc966437273c25238cf83fc73d9f63248b254b2848",
+    "passed": true,
+    "hashes": {
+      "docx": "971b7a6af4c024797777b71a27fd231ed5d48279aeb3bd612744dd9fdb3d9eac",
+      "pdf": "33ea46f2dba48bb29a2dff8f59ca8f774dd2d093a1d4fcbf755dea5c76c84c52"
+    },
+    "checks": [
+      "Actual DOCX ZIP/XML parsed; required text present",
+      "Actual Chromium A4 PDF parsed with pdftotext; required text present",
+      "Renderer network disabled"
+    ],
+    "manualWordApplicationReview": false,
+    "manualAccessibilityReview": false
+  },
+  "attestations": {
+    "provenance": {
+      "id": "cb309b97-4ab8-4929-be81-74018f88eb19",
+      "hash": "b54523d7bca257328f64da937eb4e621504dd5ec2a265d165a8bd7500786c3d8",
+      "extension": "json"
+    },
+    "rights": {
+      "id": "ede7410b-df53-4b04-a1c1-7a481afbb3ca",
+      "hash": "c28a1bece01442a31bb04d262b32dc24314ae23e76ae82962e51646bf73212e5",
+      "extension": "json"
+    },
+    "rightsApplicabilityHash": "fe90dbe1997d870dcd63a31b664991c76e2eefd2d1af05d231d926a1f8d69981",
+    "reviews": [
+      {
+        "id": "c39c2644-f858-44c9-9b11-c3248ba390b0",
+        "hash": "f6517be1912b92e46533eb22db606cdb676fa7d4058de97ffc30e58b606f4cff",
+        "extension": "json"
+      },
+      {
+        "id": "227d4bd2-4ab3-4551-bae9-0f59c0be8587",
+        "hash": "4dde69e003726dcab349d5b41cd1d15236f93fdcdeaf937a71714378f47cb6b5",
+        "extension": "json"
+      }
+    ],
+    "exports": {
+      "docx": {
+        "id": "153ce366-4b1b-4371-b36e-ad699106340d",
+        "hash": "971b7a6af4c024797777b71a27fd231ed5d48279aeb3bd612744dd9fdb3d9eac",
+        "extension": "docx"
+      },
+      "pdf": {
+        "id": "d79376ea-dc4a-4371-80ad-4d8536331085",
+        "hash": "33ea46f2dba48bb29a2dff8f59ca8f774dd2d093a1d4fcbf755dea5c76c84c52",
+        "extension": "pdf"
+      }
+    },
+    "exportReport": {
+      "id": "35dc14f2-fb3d-4336-a606-c338e86a958a",
+      "hash": "bd95d0e700ed782339aff90d6ba5a71055dd6e143ccf62ecb892549b4256fb2f",
+      "extension": "json"
+    }
+  },
+  "rightsScope": "Provider permissions and coordinator-attributed original operational provenance checked for this free synthetic-development release only. Upstream execution IDs are unrecorded; no copyright, exclusivity or non-infringement guarantee. No sales or accepted Valo commercial licence.",
+  "commercialLicenceAccepted": false,
+  "scope": "Development only; no public launch, sales, R1 acceptance or professional verification"
+}

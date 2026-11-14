@@ -15,15 +15,18 @@ import { developmentPublicationOnly,operationalPolicy } from "./operational-poli
 import { putPublicationArtifact } from "./publication-artifacts";
 import { reviewOperationalCandidate } from "./operational-review";
 import { publishOperationalVersion,recordActualPublicationHold,type ReleaseAttestations } from "./publication-publisher";
-import { loadRightsApplicability } from "./rights-applicability";
+import { loadRightsApplicability,loadChatGPTPermission,assertPermissionRoute } from "./rights-applicability";
 const execFile=promisify(execCallback);
 export async function prepareInventoryRelease(snapshotPath:string){
-  const applicability=await loadRightsApplicability();
-  // Fail before metered authoring/review calls. Terms existing on the web do
-  // not establish their applicability to this account and integration.
-  if(!applicability.verified||process.env.VALO_OPERATIONAL_AUTHORING!=="recorded")
-    throw Error("PROVIDER_RIGHTS_APPLICABILITY_UNVERIFIED");
   developmentPublicationOnly();
+  const snapshot=JSON.parse(await readFile(snapshotPath,"utf8"));
+  const useRecordedAuthoring=process.env.VALO_OPERATIONAL_AUTHORING==="recorded";
+  const applicability=useRecordedAuthoring?await loadRightsApplicability():await loadChatGPTPermission(snapshot);
+  // Verify the actual authoring route before any metered calls. ChatGPT's
+  // documented free/paid permission is not a Replit account-plan assertion.
+  if(!applicability.verified)
+    throw Error("PROVIDER_RIGHTS_APPLICABILITY_UNVERIFIED");
+  assertPermissionRoute(applicability.record,useRecordedAuthoring);
   const now=new Date(),{policy,authority}=await operationalPolicy();
   await db.insert(valoPublicationPolicies).values({id:policy.version,hash:policy.hash,policy,authority}).onConflictDoNothing();
   const [storedPolicy]=await db.select().from(valoPublicationPolicies).where(eq(valoPublicationPolicies.id,policy.version));
@@ -42,7 +45,6 @@ export async function prepareInventoryRelease(snapshotPath:string){
   }
   const content=await inventoryCandidate(version,now,recorded);
   const provenance=await putPublicationArtifact(Buffer.from(JSON.stringify(content.provenance)),"json");
-  const snapshot=JSON.parse(await readFile(snapshotPath,"utf8"));
   if(snapshot.kind!=="official_provider_terms_snapshot"||snapshot.pages.some((p:{truncated:boolean})=>p.truncated)||
     !Number.isFinite(Date.parse(snapshot.retrievedAt))||Date.parse(snapshot.retrievedAt)>+now||
     +now-Date.parse(snapshot.retrievedAt)>86400000)throw Error("FRESH_ACTUAL_PROVIDER_TERMS_REQUIRED");
@@ -76,7 +78,7 @@ export async function prepareInventoryRelease(snapshotPath:string){
   try{await writeFile(resolve(temporary,"sample.pdf"),files.pdf);
     pdfText=(await execFile("pdftotext",["-layout",resolve(temporary,"sample.pdf"),"-"],{maxBuffer:1024*1024})).stdout;
   }finally{await rm(temporary,{recursive:true,force:true});}
-  const required=["Inventory register","Scope:","Limitations:","AI drafted and reviewed","Source/provenance checked",authored?"Stock movement":"Running quantity"];
+  const required=["Inventory register","Scope:","Limitations:","AI drafted and reviewed","File-integrity and provider-permission check date",authored?"Stock movement":"Running quantity"];
   const exportPassed=files.pdf.subarray(0,5).toString()==="%PDF-"&&required.every(s=>xml.includes(s)&&pdfText.replace(/\s+/g," ").includes(s));
   if(!exportPassed)throw Error("REAL_EXPORT_INSPECTION_FAILED");
   const exports={docx:await putPublicationArtifact(files.docx,"docx"),pdf:await putPublicationArtifact(files.pdf,"pdf")};
@@ -84,15 +86,28 @@ export async function prepareInventoryRelease(snapshotPath:string){
     checks:["Actual DOCX ZIP/XML parsed; required text present","Actual Chromium A4 PDF parsed with pdftotext; required text present","Renderer network disabled"],
     manualWordApplicationReview:false,manualAccessibilityReview:false};
   const reportRef=await putPublicationArtifact(Buffer.from(JSON.stringify(exportReport)),"json");
-  const reviewed=await reviewOperationalCandidate(candidate,
+  let reviewed:Awaited<ReturnType<typeof reviewOperationalCandidate>>=[];
+  let providerFailure:string|null=null;
+  try{reviewed=await reviewOperationalCandidate(candidate,
     {permissions:rights.permissions,conclusion:rights.conclusion,customerLicenceAccepted:false,
       actualProviderTerms:snapshot.pages.filter((p:{url:string})=>applicability.record.evidence.some(e=>e.url===p.url)),
       actualExecutionReceipt:authored?.receipt,environmentEvidence:{developmentOnly:true,
+        providerPermissionScope:applicability.record,sourceFileHashVerified:true,
         runtimeGuard:"NODE_ENV=development and no REPLIT_DEPLOYMENT; publication endpoints are not exposed to customers",
         policy:policy,scope:"Free synthetic evaluation; no sales or commercial licence granted"}},
     {authoringRoute:content.provenance.authoringRoute,sourceHash:content.provenance.hash,
       originalItem:content.original,actualAuthoringNote:content.provenance.note,authoringNoteHash:content.provenance.noteHash,
-      adaptation:content.provenance.transformation,upstreamModelAndRunNotRecorded:!authored},exportReport);
+      adaptation:content.provenance.transformation,upstreamModelAndRunNotRecorded:!authored},exportReport,
+    {candidateHash:candidate.hash,sourceCheckedAt:candidate.sourceCheckDate,sourceHash:content.provenance.hash,
+      provenanceArtifactHash:provenance.hash,rightsArtifactHash:rightsRef.hash,exportReportArtifactHash:reportRef.hash,
+      providerSnapshotHash:snapshotRef.hash,authoringRoute:rights.authoringRoute,
+      sourceAttribution:"Provided authoring note; not independent certification of upstream authorship",
+      performedChecks:["Original source file SHA-256 matches the retained note","Provider passages occur in the exact retrieved full-page hashes",
+        "DOCX/PDF generated from the exact canonical candidate and inspected before review"]});
+  }catch(error){
+    providerFailure=error instanceof Error&&/^[A-Z_]{3,80}$/.test(error.message)?
+      error.message:"OPERATIONAL_REVIEW_PROVIDER_FAILURE";
+  }
   const reviews=reviewed.map(r=>({...r.record,runId:r.record.providerResponseId,
     verdict:r.record.output.verdict,findings:[...r.record.output.findings,...r.record.output.missingEvidence]}));
   const arithmeticFixtures=[{before:1000n,received:250n,issued:500n,adjustment:-100n,expected:650n},
@@ -113,7 +128,7 @@ export async function prepareInventoryRelease(snapshotPath:string){
     exports:(["docx","pdf"] as const).map(format=>({format,candidateHash:candidate.hash,fileHash:exports[format].hash,
       rendered:true,disclosureIncluded:true,scopeIncluded:true,limitationsIncluded:true,sourceDateIncluded:true})),
     manifest:{candidateHash:candidate.hash,evidenceHash:digest([]),rightsHash:"",policyHash:policy.hash,
-      reviewHash:"",checksHash:"",exportsHash:"",status:reviews.every(r=>r.verdict==="pass"&&!r.findings.length)?"eligible":"review"},
+      reviewHash:"",checksHash:"",exportsHash:"",status:!providerFailure&&reviews.length===2&&reviews.every(r=>r.verdict==="pass"&&!r.findings.length)?"eligible":"review"},
   };
   Object.assign(bundle.manifest,{rightsHash:digest(bundle.rights),
     reviewHash:digest({draft:bundle.draftRun,reviews:bundle.reviews}),checksHash:digest({mechanical:bundle.mechanicalChecks,enhanced:[]}),
@@ -127,9 +142,9 @@ export async function prepareInventoryRelease(snapshotPath:string){
   });
   const eligibility=evaluatePublication(bundle);
   const release=eligibility.decision==="eligible"?await publishOperationalVersion(id):
-    {...await recordActualPublicationHold(id),decision:"held"};
+    {...await recordActualPublicationHold(id,providerFailure??undefined),decision:"held"};
   return{id,version,candidateHash:candidate.hash,policyHash:policy.hash,eligibility,release,
     reviews:reviewed.map(r=>({role:r.record.role,providerResponseId:r.record.providerResponseId,model:r.record.model,
       verdict:r.record.output.verdict,findings:r.record.output.findings,missingEvidence:r.record.output.missingEvidence})),
-    exportReport,attestations,rightsScope: rights.conclusion,commercialLicenceAccepted:false};
+    exportReport,attestations,rightsScope: rights.conclusion,commercialLicenceAccepted:false,providerFailure};
 }

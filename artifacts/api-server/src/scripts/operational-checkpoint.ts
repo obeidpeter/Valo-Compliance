@@ -38,7 +38,7 @@ async function main(){
     deterministicOperationalEligibilityFixture:"Passed, synthetic engineering fixture only; not publication evidence",
     policyAuthority:"Existing master and explicit operational refinement; no invented per-item approval",
     commercialLicenceAccepted:false,r1Accepted:false,r2Unlocked:false,publicLaunchEnabled:false,livePaymentsEnabled:false,
-    unresolved:"All three real candidates were held by actual independent AI checks, including the recorded-authoring candidate. No override or synthetic release substituted."};
+    unresolved:"Inspect each retained version's actual verdicts and the current rights/hold evidence. Counts alone do not prove eligibility, provider permission, withdrawal, sales approval or R1 acceptance; no override or synthetic release may substitute."};
   await writeFile(resolve(root,"docs/valo/evidence/operational-publication-checkpoint.json"),JSON.stringify(report,null,2)+"\n");
   process.stdout.write(JSON.stringify({tests,actualReviewCalls:report.actualIndependentReviewCalls,
     actualAuthoringCalls:report.actualAuthoringCalls,realPrivateExportChecks:exportChecks,actualPublishedVersions:report.actualPublishedVersions})+"\n");

@@ -8,7 +8,8 @@ async function main(){
   if(process.env.VALO_OPERATIONAL_PUBLICATION!=="synthetic-development-only")throw Error("EXPLICIT_DEVELOPMENT_PUBLICATION_FLAG_REQUIRED");
   const action=process.argv[2];
   if(action==="prepare"){
-    const report=await prepareInventoryRelease(resolve(publicationWorkspaceRoot(),"generated-artifacts/valo-publication/provider-rights-snapshot.json"));
+    const report=await prepareInventoryRelease(resolve(publicationWorkspaceRoot(),process.env.VALO_OPERATIONAL_AUTHORING==="recorded"?
+      "generated-artifacts/valo-publication/provider-rights-snapshot.json":"generated-artifacts/valo-publication/chatgpt-provider-rights-snapshot.json"));
     const out=resolve(publicationWorkspaceRoot(),`docs/valo/evidence/operational-publication-v${report.version}.json`);
     await writeFile(out,JSON.stringify({executedAt:new Date().toISOString(),...report,
       scope:"Development only; no public launch, sales, R1 acceptance or professional verification"},null,2)+"\n");

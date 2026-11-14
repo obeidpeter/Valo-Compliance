@@ -16,7 +16,7 @@ export async function inventoryCandidate(version:number,now=new Date(),recorded?
   const original=recorded?.original??full.split("## TPL-07 — Inventory register\n")[1]?.split("\n## TPL-09")[0]?.replace(/\n---\s*$/,"").trim();
   if(!original||!provenance.includes("authored in this ChatGPT conversation"))throw Error("AUTHORING_PROVENANCE_MISSING");
   const scope="Original stock-movement and physical-count record for user-entered business information. Optional operational practice; no legal applicability determination.";
-  const limitations="Blank Word/PDF operational aid, not a spreadsheet or accounting system. No ownership, product approval, valuation, statutory duty, tax-rate or legal-validity assurance. No professional review. Synthetic development evaluation only; commercial licence terms are not accepted and sales are disabled.";
+  const limitations="Blank Word/PDF operational aid, not a spreadsheet or accounting system. No ownership, product approval, valuation, statutory duty, tax-rate or legal-validity assurance. Release uses two separate automated AI checks, not human or professional review. Synthetic development evaluation only; commercial licence terms are not accepted and sales are disabled.";
   const reviewedAt=now.toISOString(),reviewBy=new Date(+now+90*86400000).toISOString();
    const section=originalSections(`## TPL-07 — Inventory register\n${original}`)[0];
    if(!section)throw Error("OPERATIONAL_CONTENT_SECTION_MISSING");
@@ -27,7 +27,8 @@ export async function inventoryCandidate(version:number,now=new Date(),recorded?
       {id:"release-scope",type:"paragraph",text:`Scope: ${scope}`,rows:[]},
        {id:"release-limitations",type:"paragraph",text:"Limitations: an internal stock-recording aid, not a spreadsheet, accounting system, product approval, valuation or legal-validity assurance.",rows:[]},
       {id:"release-disclosure",type:"paragraph",text:disclosure,rows:[]},
-      {id:"release-source-date",type:"paragraph",text:`Source/provenance checked: ${reviewedAt}. Provider-source and authoring records are retained; this is not an independent legal or regulatory verification.`,rows:[]},
+      {id:"review-meaning",type:"paragraph",text:"Here, reviewed means two separate automated AI checks: one factual/source check and one challenge. It does not mean review by a human, lawyer, tax adviser or sector specialist. Release requires both checks to pass on this exact version; their results are not professional certification.",rows:[]},
+      {id:"release-source-date",type:"paragraph",text:`File-integrity and provider-permission check date: ${reviewedAt}. ${recorded?"The recorded server-authoring receipt is retained.":"The supplied authoring note describes the prose as ChatGPT-assisted. Valo has not independently verified that upstream drafting event or model; this attribution is not authorship certification."} This software check covers the retained file checksum and provider-permission passages, not legal or regulatory verification.`,rows:[]},
     ],selectedClauses:[],formatting:{font:"sans",accent:"forest"},
   }});
   return{document,scope,limitations,reviewBy,reviewedAt,original,

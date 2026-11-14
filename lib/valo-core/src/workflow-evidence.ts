@@ -46,6 +46,16 @@ const businessNameEvidence={
   hash:"8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",result:"pass" as const,
 };
 const groups = [
+  {ids:["DOC-006","EDP-004","EDP-012","ADM-002"],
+    paths:["artifacts/api-server/src/editorial/rights-applicability.ts",
+      "artifacts/api-server/src/editorial/operational-preparation.ts",
+      "artifacts/api-server/src/editorial/operational-review.ts",
+      "artifacts/api-server/src/editorial/publication-publisher.ts",
+      "artifacts/api-server/src/scripts/chatgpt-permission-proof.ts",
+      "docs/valo/policies/chatgpt-provider-permission.json",
+      "docs/content-candidates/chatgpt-content-provenance-rights.md"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/chatgpt-permission-publication-proof.json",
+      hash:"ab6339d2f6b0c4d84716ee526d739416401df50d845ffdb5ffbd2a93861e616c",result:"pass" as const}},
   {ids:["AI-001","AI-003","AI-005","AI-008","EDT-002","EDT-003","EDT-006","EDT-007","EDT-008","NFR-008"],
     paths:["lib/valo-core/src/money.ts","artifacts/api-server/src/lib/valo-reminder.test.ts",
       "artifacts/api-server/src/scripts/reminder-evaluation.ts","artifacts/valo/src/components/financial-fields.tsx"],
