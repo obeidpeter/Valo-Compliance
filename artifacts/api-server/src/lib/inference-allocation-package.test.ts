@@ -21,7 +21,8 @@ test("delegated membership cannot broaden the content inventory or enable unsupp
   const pkg=await prepareFiniteAllocationPackage(),w=work();
   assert.doesNotThrow(()=>assertWorkPackageMembership(w,pkg,"TPL-07"));
   assert.throws(()=>assertWorkPackageMembership(w,pkg,"unapproved-content"),/OUTSIDE_PACKAGE/);
-  assert.throws(()=>assertWorkPackageMembership(w,pkg,"TPL-01"),/PREPARER_UNAVAILABLE/);
+  for(const id of ["TPL-01","TPL-06","TPL-09","TPL-11"])assert.doesNotThrow(()=>assertWorkPackageMembership(w,pkg,id));
+  for(const id of ["TPL-12","TPL-13","TPL-40","GUD-01"])assert.throws(()=>assertWorkPackageMembership(w,pkg,id),/PREPARER_UNAVAILABLE/);
   const customer={...w,lane:"customer" as const,role:"customer" as const,pair:null,
     caseHash:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.hash,
     bindings:{...w.bindings,corpus:"customer-ai" as const,caseId:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.id}};
