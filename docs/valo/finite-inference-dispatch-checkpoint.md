@@ -6,7 +6,7 @@ The current implementation is described in the [finite completion checkpoint](fi
 
 ## Integrated behavior
 
-The real managed caller performs preflight before atomic independent-pair reservation, then checks durable authority again at dispatch. Every child uses the same fixed additional-allocation row. Parent expiry/revocation, changed source/request/case bindings, depleted funds, unknown liabilities within the allocation and unexpected returned models prevent further admission.
+The real managed caller performs preflight before atomic independent-pair reservation, then checks durable authority again at dispatch. Every child uses the same fixed additional-allocation row. Parent expiry/revocation, changed source/request/case bindings, depleted funds, unbounded liabilities, explicit suspension and unexpected returned models prevent further admission. A bounded unknown outcome retains its full reservation and concurrency slot; unrelated work may proceed only if the remaining budget, concurrency and authority permit it.
 
 The SDK is initialized lazily. Nonempty deployment markers deny entry before database or network effects. Customer retry requires its own listed attempt and cannot be entered as a direct replacement for the initial attempt. Valid admitted usage remains accounted after approval expiry. Interrupted operational artifact writes can reuse exact settled receipts and attempt IDs without another charged call.
 
