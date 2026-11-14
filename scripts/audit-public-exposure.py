@@ -71,8 +71,8 @@ def main():
     }
     output = pathlib.Path("docs/valo/evidence/public-exposure-history.json")
     output.write_text(json.dumps(result, indent=2) + "\n")
-    print(json.dumps({k: result[k] for k in ("head", "blobCount", "blobBytes", "trackedCurrentFiles", "binaryBlobs")}))
-    print(json.dumps({"historicalHits": len(findings), "metadataHits": len(messages), "currentHits": len(current)}))
+    # Keep the full inventory in its restricted evidence file, not routine stdout.
+    print('{"status":"evidence_written"}')
 
 
 if __name__ == "__main__":

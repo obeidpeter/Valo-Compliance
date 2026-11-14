@@ -3,6 +3,7 @@ import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import { ZodError } from "zod";
+import {requestComplexityLimit,safeValidationFields} from "./lib/request-complexity";
 import { CLERK_PROXY_PATH, clerkProxyMiddleware, getClerkProxyHost } from "./middlewares/clerkProxyMiddleware";
 import valoRouter from "./routes/valo";
 import valoExportsRouter from "./routes/valo-exports";
@@ -47,7 +48,8 @@ app.use((req,res,next) => {
   next();
 });
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
-app.use(express.json({ limit: "128kb" }));
+app.use(express.json({ limit: "128kb",inflate:false }));
+app.use(requestComplexityLimit);
 app.use(
   clerkMiddleware((req) => ({
     publishableKey: publishableKeyFromHost(
@@ -75,9 +77,13 @@ const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
     if (error.type === "entity.too.large") {
       res.status(413).json({ error: "Request body exceeds the 128 KiB limit." }); return;
     }
+    if(error.type==="encoding.unsupported"){
+      res.status(415).json({code:"UNSUPPORTED_CONTENT_ENCODING",error:"Send uncompressed JSON. Compressed request bodies are not supported."});return;
+    }
   }
   if (error instanceof ZodError) {
-    res.status(422).json({ code:"VALIDATION_FAILED", requestId:String(req.id), error: "Invalid request", fields: error.issues.map(i => ({ path: i.path.join("."), message: i.message })) });
+    res.status(422).json({ code:"VALIDATION_FAILED", requestId:String(req.id), error: "Invalid request",
+      fields:safeValidationFields(error.issues),truncated:error.issues.length>32 });
     return;
   }
   if (error instanceof ValoProblem) {

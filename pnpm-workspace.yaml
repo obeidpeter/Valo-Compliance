@@ -43,6 +43,11 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 overrides:
+  next>postcss: 8.5.32
+  '@tailwindcss/typography>postcss-selector-parser': 6.1.5
+  openai>zod: 4.6.7
+  gaxios@6.7.1>uuid: 11.1.1
+  teeny-request@9.0.0>uuid: 11.1.1
   '@esbuild-kit/esm-loader': npm:tsx@^4.21.0
   '@expo/ngrok-bin>@expo/ngrok-bin-darwin-arm64': '-'
   '@expo/ngrok-bin>@expo/ngrok-bin-darwin-x64': '-'

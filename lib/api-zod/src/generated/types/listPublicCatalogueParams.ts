@@ -8,17 +8,11 @@
 import type { ListPublicCatalogueType } from './listPublicCatalogueType';
 
 export type ListPublicCatalogueParams = {
-/**
- * @maxLength 120
- */
-q?: string;
-type?: ListPublicCatalogueType;
-/**
- * @maxLength 80
- */
-industry?: string;
-/**
- * @minimum 1
- */
-page?: number;
+  /** @maxLength 120 */
+  q?: string;
+  type?: ListPublicCatalogueType;
+  /** @maxLength 80 */
+  industry?: string;
+  /** @minimum 1 */
+  page?: number;
 };

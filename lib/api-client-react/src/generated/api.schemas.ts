@@ -1215,7 +1215,7 @@ export interface ExportInput {
   acknowledgeDraft: boolean;
 }
 
-export interface ExportRetryInput { [key: string]: unknown }
+export interface ExportRetryInput { [key: string]: never }
 
 export type ExportJobFormat = typeof ExportJobFormat[keyof typeof ExportJobFormat];
 
@@ -1367,7 +1367,7 @@ export type QuotaErrorResponse = ApiProblem;
 export type AuthErrorResponse = ApiProblem;
 
 export type GetStaffOperationsParams = {
-area: GetStaffOperationsArea;
+  area: GetStaffOperationsArea;
 };
 
 export type GetStaffOperationsArea = typeof GetStaffOperationsArea[keyof typeof GetStaffOperationsArea];
@@ -1381,19 +1381,13 @@ export const GetStaffOperationsArea = {
 } as const;
 
 export type ListPublicCatalogueParams = {
-/**
- * @maxLength 120
- */
-q?: string;
-type?: ListPublicCatalogueType;
-/**
- * @maxLength 80
- */
-industry?: string;
-/**
- * @minimum 1
- */
-page?: number;
+  /** @maxLength 120 */
+  q?: string;
+  type?: ListPublicCatalogueType;
+  /** @maxLength 80 */
+  industry?: string;
+  /** @minimum 1 */
+  page?: number;
 };
 
 export type ListPublicCatalogueType = typeof ListPublicCatalogueType[keyof typeof ListPublicCatalogueType];

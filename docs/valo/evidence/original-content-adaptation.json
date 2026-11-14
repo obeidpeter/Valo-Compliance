@@ -1,0 +1,936 @@
+{
+  "executedAt": "2026-11-14T03:26:44.378Z",
+  "sourceCommit": null,
+  "scope": "Original content adaptation and automated format checks only; not publication, Word UI inspection or R1 acceptance",
+  "counts": {
+    "forms": 7,
+    "guides": 12,
+    "industries": 20,
+    "packs": 6,
+    "industryTemplateMappings": 139,
+    "packTemplateMappings": 57
+  },
+  "candidates": [
+    {
+      "id": "TPL-06",
+      "title": "Expense claim form",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "relatedTemplateIds": [],
+      "bodyHash": "33a8d7b5c6eec48e44d4f9fab3483ba4fdc4760087a3c76f8fa2fb67554c3d1f",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "TPL-07",
+      "title": "Inventory register",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "relatedTemplateIds": [],
+      "bodyHash": "72e42fce3a155d9fb19a9335f0e886dbfe47b23fdd7f6cd687cfd4145675c208",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "TPL-09",
+      "title": "Customer complaint form",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "relatedTemplateIds": [],
+      "bodyHash": "27c608313cf47c7283de346efa9ea0e24be0f3cfae9049714958117c4284b018",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "TPL-24",
+      "title": "Procurement evaluation form",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "relatedTemplateIds": [],
+      "bodyHash": "1383efc68864bafe1acf31a1f8a2fb40f561811039a551b1ad3f0d9f9a7292a9",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "TPL-34",
+      "title": "Incident report",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "relatedTemplateIds": [],
+      "bodyHash": "5af18000f5bab2ed102a304294dde6cc6f230a3477408430e38afcd577ec3072",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "TPL-35",
+      "title": "Standard operating procedure",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "relatedTemplateIds": [],
+      "bodyHash": "a0005aaa18cdec6368e363d64885bc2958a04acd47b1112d40e5a787561c361a",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "TPL-38",
+      "title": "Equipment maintenance log",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "relatedTemplateIds": [],
+      "bodyHash": "1d1df8f774688d0d94b8bd5a46b2f78f60043bd14325bc8ef34f0d39e90141a6",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C01",
+      "title": "Prepare an invoice from facts you can check",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "5cf67f0a83ce4299861750c4b4d3abf7af46ea1c5f2794b12248be413efa098f",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C02",
+      "title": "Write a quotation that makes the offer clear",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "de55a960cb91e9f633669b764425e98329f6ca97a23f3e467f97bf4ef583def4",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C03",
+      "title": "Follow up an unpaid invoice with a useful reminder",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "7ce7968004d4128227c465e97d19f4d4e16431c3388c67e40eabad7956ed60f9",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C04",
+      "title": "Keep an inventory register people can maintain",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "2c1fc3dcde6aeead59b124d499fec75e14eb1d92ffaaf602aba9b586d15b31f6",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C05",
+      "title": "Prepare an expense claim with a clear record",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "4cf3714bcc99119931ee81b44a67abb5e4b0e7c81524cca84aa4721923aa97db",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C06",
+      "title": "Connect purchase orders, deliveries and invoices",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "a628ed9d2049b47764645a39377b7001d8965afc6bce399ecba0f17ab0d09572",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C07",
+      "title": "Turn meeting notes into clear actions",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "33959b4ab9083840b9e30ad5e89c4058140f9b7f7b1bbf36f0f38076ee3ec9ae",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C08",
+      "title": "Record a customer complaint and its resolution",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "5fdf0cdf065151e97b7821035888828b22c2a058149860336998805dd687f1dc",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C09",
+      "title": "Write a simple operating procedure people can follow",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "617af42d16d1948dbd1a30dd1d0b510c3ca3702342d1b2c896476f80242b190d",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C10",
+      "title": "Manage document versions without losing the history",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "cdb400b121cadfcaa249d70a1a33c4663828cb5de97bcdbeb63f69564b04f3eb",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C11",
+      "title": "Hand over work without sharing passwords or losing context",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "47e25492c6acf97ca6846d799945eae7c68f6c0f41ffeccd691bc103b716f945",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "GUIDE-C12",
+      "title": "Organise business records so you can find the answer",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "relatedTemplateIds": [],
+      "bodyHash": "81091900f0ef060fe319380fd3c16dee3fb43c479c1c35aba7a11d105e4bbd25",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C01",
+      "title": "retail/wholesale",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-04",
+        "TPL-07",
+        "TPL-05",
+        "TPL-01",
+        "TPL-03",
+        "TPL-12",
+        "TPL-09"
+      ],
+      "bodyHash": "44826e14d03afba3d51ba049e01d277ccc4b571f3f27fac4a34858bf25759cf0",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C02",
+      "title": "packaged-food manufacturing",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-35",
+        "TPL-07",
+        "TPL-37",
+        "TPL-36",
+        "TPL-38",
+        "TPL-09",
+        "TPL-40"
+      ],
+      "bodyHash": "0fdb326d9d2989a108d278e0151a994cbf6ebf7d4facb26236e3ff0f6d77c87c",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C03",
+      "title": "restaurants/hospitality",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-04",
+        "TPL-07",
+        "TPL-35",
+        "TPL-37",
+        "TPL-38",
+        "TPL-09",
+        "TPL-34"
+      ],
+      "bodyHash": "08132ceae05c89863f1511f67db1c7a1539eac44cf59b2573fa73aebe044b752",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C04",
+      "title": "agriculture",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-04",
+        "TPL-07",
+        "TPL-05",
+        "TPL-38",
+        "TPL-06",
+        "TPL-01",
+        "TPL-34"
+      ],
+      "bodyHash": "fe40afb21ec1428e92557ca1d0322b1d8cbf7bc8f944bcddbae5d165f1a14738",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C05",
+      "title": "general manufacturing",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-04",
+        "TPL-24",
+        "TPL-35",
+        "TPL-07",
+        "TPL-38",
+        "TPL-05",
+        "TPL-34"
+      ],
+      "bodyHash": "04397fe0bf8ffe05063e4f8a21b1dfa63df1733a5ccc93de236f1564bb438fe9",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C06",
+      "title": "logistics/transport",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-13",
+        "TPL-23",
+        "TPL-05",
+        "TPL-35",
+        "TPL-34",
+        "TPL-38",
+        "TPL-01"
+      ],
+      "bodyHash": "744c0bdb57a2bb327156279598f9b9fc9e74ae8c917b4147d9b12427ad5df393",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C07",
+      "title": "construction",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-22",
+        "TPL-23",
+        "TPL-02",
+        "TPL-04",
+        "TPL-21",
+        "TPL-34",
+        "TPL-33"
+      ],
+      "bodyHash": "09654e4e66d7df75c1c95e4885100921938114f8ac4cc3ec6b2fcf81912ff94d",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C08",
+      "title": "real estate",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-13",
+        "TPL-23",
+        "TPL-39",
+        "TPL-09",
+        "TPL-01",
+        "TPL-03",
+        "TPL-40"
+      ],
+      "bodyHash": "3100f2a6da7a6b0e08ad261f453df6ddcbd873ef248ae143bff993b1e248da48",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C09",
+      "title": "technology/software",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-23",
+        "TPL-13",
+        "TPL-15",
+        "TPL-29",
+        "TPL-31",
+        "TPL-32",
+        "TPL-35"
+      ],
+      "bodyHash": "5e6b069ca3a1fe2798b8fc5d8aca4a666c406b3cabc7ddffd0e50588f3523700",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C10",
+      "title": "e-commerce",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-01",
+        "TPL-03",
+        "TPL-05",
+        "TPL-09",
+        "TPL-30",
+        "TPL-29",
+        "TPL-07"
+      ],
+      "bodyHash": "34a433334ba75fafcca27ee4ec7b4a24d9d3b052145c8eefebd9e21f5715942c",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C11",
+      "title": "beauty/personal care",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-07",
+        "TPL-09",
+        "TPL-35",
+        "TPL-38",
+        "TPL-34",
+        "TPL-04",
+        "TPL-40"
+      ],
+      "bodyHash": "e78111b46548511ec3b5c3f095b5c5435ece5c72f8945c32d5566dee04878c33",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C12",
+      "title": "fashion/textiles",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-02",
+        "TPL-04",
+        "TPL-07",
+        "TPL-23",
+        "TPL-19",
+        "TPL-05",
+        "TPL-09"
+      ],
+      "bodyHash": "e50c0ccce4abd69299f16f03ec23b654b3aa6c233201c1afa280889165b2926d",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C13",
+      "title": "healthcare",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-04",
+        "TPL-38",
+        "TPL-11",
+        "TPL-34",
+        "TPL-35",
+        "TPL-40"
+      ],
+      "bodyHash": "c72c0ccfc1f8cd5bfcc0a09e436c82b7b198f1773314751c487ad72462aa5e2e",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C14",
+      "title": "education",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-22",
+        "TPL-23",
+        "TPL-13",
+        "TPL-11",
+        "TPL-08",
+        "TPL-09",
+        "TPL-29"
+      ],
+      "bodyHash": "79f4615779fe32f4b1e95aa8c2dd87b70f3344f76ac17328370c1ee87bdf7292",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C15",
+      "title": "professional services",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-22",
+        "TPL-14",
+        "TPL-23",
+        "TPL-15",
+        "TPL-01",
+        "TPL-12",
+        "TPL-08"
+      ],
+      "bodyHash": "d99b9703372f6e802d784aa586fb4f56cc109863307d3844c46dec0360cb1c43",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C16",
+      "title": "media/creative",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-22",
+        "TPL-23",
+        "TPL-21",
+        "TPL-15",
+        "TPL-24",
+        "TPL-01",
+        "TPL-06"
+      ],
+      "bodyHash": "0244bc6d601148c5f5aab81085e61510f132954cca1143e793bda15321e032f5",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C17",
+      "title": "import/export",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-04",
+        "TPL-18",
+        "TPL-19",
+        "TPL-07",
+        "TPL-05",
+        "TPL-01",
+        "TPL-40"
+      ],
+      "bodyHash": "34b0a05f2fa55249011e8b27b7b43d3ee53d3d51927e20254459ba24ad97dc66",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C18",
+      "title": "energy",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-22",
+        "TPL-23",
+        "TPL-13",
+        "TPL-38",
+        "TPL-34",
+        "TPL-09",
+        "TPL-01"
+      ],
+      "bodyHash": "2a878dda49dc0d9cfaa8da310e04efa8468a350790b0572b21020eb43b27dbd6",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C19",
+      "title": "financial services",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-13",
+        "TPL-23",
+        "TPL-35",
+        "TPL-09",
+        "TPL-34",
+        "TPL-29",
+        "TPL-40"
+      ],
+      "bodyHash": "24a2b3626c2f1019f29c22a7dc1858e21676f5b913ccc0d061d2642faa1eb2ee",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "IND-C20",
+      "title": "other",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-22",
+        "TPL-02",
+        "TPL-01",
+        "TPL-04",
+        "TPL-09",
+        "TPL-08",
+        "TPL-40"
+      ],
+      "bodyHash": "a5e468ca8db5b07318a9bf07db3254e9daee3d55a17fd47c8d6bdfdd12264d18",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "PACK-C01",
+      "title": "retail/wholesale — deeper pack",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-04",
+        "TPL-07",
+        "TPL-02",
+        "TPL-01",
+        "TPL-05",
+        "TPL-03",
+        "TPL-09",
+        "TPL-12"
+      ],
+      "bodyHash": "736b3906b140e1502fc1ae7eae1cf85d6852965cce93fe47e1aff8c9385c2ff4",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "PACK-C02",
+      "title": "packaged-food manufacturing — deeper pack",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-35",
+        "TPL-37",
+        "TPL-04",
+        "TPL-07",
+        "TPL-38",
+        "TPL-05",
+        "TPL-09",
+        "TPL-34",
+        "TPL-36"
+      ],
+      "bodyHash": "ecdeb59553e9438d41b1ab67a4de1375a314d64ef2a22bcaf59afdfc48fde1ac",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "PACK-C03",
+      "title": "restaurants/hospitality — deeper pack",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-04",
+        "TPL-07",
+        "TPL-35",
+        "TPL-37",
+        "TPL-38",
+        "TPL-34",
+        "TPL-09",
+        "TPL-02",
+        "TPL-01",
+        "TPL-03"
+      ],
+      "bodyHash": "6fee7451bfade5c74b93ce0557725656901c1bb3f4b86ef19ef37476880db03c",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "PACK-C04",
+      "title": "technology/software — deeper pack",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-22",
+        "TPL-23",
+        "TPL-13",
+        "TPL-14",
+        "TPL-15",
+        "TPL-29",
+        "TPL-31",
+        "TPL-32",
+        "TPL-08",
+        "TPL-35",
+        "TPL-01",
+        "TPL-09",
+        "TPL-34"
+      ],
+      "bodyHash": "11e9699ebd7c659c2be94164fb691ffaeecb1ce83daadfea3e0c9cfb19d8ebf3",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "PACK-C05",
+      "title": "professional services — deeper pack",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-22",
+        "TPL-23",
+        "TPL-14",
+        "TPL-15",
+        "TPL-08",
+        "TPL-06",
+        "TPL-01",
+        "TPL-12",
+        "TPL-09"
+      ],
+      "bodyHash": "b9cb752a1f6a25e3a4bb0a9367c8f9bf1468d647b83f33805518208be7b5e193",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    },
+    {
+      "id": "PACK-C06",
+      "title": "beauty/personal care — deeper pack",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "relatedTemplateIds": [
+        "TPL-04",
+        "TPL-07",
+        "TPL-35",
+        "TPL-38",
+        "TPL-09",
+        "TPL-34",
+        "TPL-40",
+        "TPL-36"
+      ],
+      "bodyHash": "aba5d2350176aa1926760f5cc0b69226e4ca32aa8394e57d2884d52ec5af44dc",
+      "state": "held",
+      "missing": [
+        "final-version independent factual and challenge checks",
+        "applicable rights evidence and release manifest"
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "templateId": "TPL-06",
+      "format": "docx",
+      "bytes": 12956,
+      "checksum": "3972c9b45cea4c5c8c99831b502ae8e576703820d6c05430e9bde0bf8fdddbce",
+      "revision": 1,
+      "revisionHash": "aff34e23aa2815a8607a93c53c6d4e4878674ba340aee9484f021211ca9df860",
+      "pages": null,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-06",
+      "format": "pdf",
+      "bytes": 50451,
+      "checksum": "59e766604d37369b653b51216c7723b255ed300bb59f591cf15c31a6f829c18d",
+      "revision": 1,
+      "revisionHash": "aff34e23aa2815a8607a93c53c6d4e4878674ba340aee9484f021211ca9df860",
+      "pages": 3,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-07",
+      "format": "docx",
+      "bytes": 13016,
+      "checksum": "4202675364be60af3babb1fe8dc3bebfcf77a223f763e0e8a5fad84dfb24bc0a",
+      "revision": 1,
+      "revisionHash": "b67863e668e2ca921e23c81cf9a7c18f19300d95826037352206dcb75ef23ec4",
+      "pages": null,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-07",
+      "format": "pdf",
+      "bytes": 51452,
+      "checksum": "1e5fb9cc8e741d34d63c95ace1fd15009f6f2a0bc6f3b5a27eb44b13b23096e2",
+      "revision": 1,
+      "revisionHash": "b67863e668e2ca921e23c81cf9a7c18f19300d95826037352206dcb75ef23ec4",
+      "pages": 3,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-09",
+      "format": "docx",
+      "bytes": 12930,
+      "checksum": "e2636ad97d4352c80992ad20807e22d51abd13c8142261d1fd0e53ee2b34719c",
+      "revision": 1,
+      "revisionHash": "7ca365ab63d94c5cffb7cb3f7af5939ec8cf6f3647ec08d3b8a06697b0e72713",
+      "pages": null,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-09",
+      "format": "pdf",
+      "bytes": 48354,
+      "checksum": "152fc7b604d8ec7f03865be2e187126d8cc7819518d6a5249b32e9e875a1a031",
+      "revision": 1,
+      "revisionHash": "7ca365ab63d94c5cffb7cb3f7af5939ec8cf6f3647ec08d3b8a06697b0e72713",
+      "pages": 2,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-24",
+      "format": "docx",
+      "bytes": 13127,
+      "checksum": "3f3412f6d44535f837cf8fb1c9a2b8921105697a6e69c0fe4f2172a6389201f9",
+      "revision": 1,
+      "revisionHash": "ec9d870fb947ca479de0b928926de293eb7d346fea8f06a204cc07e3c88e505e",
+      "pages": null,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-24",
+      "format": "pdf",
+      "bytes": 54875,
+      "checksum": "f5330a9ec5f4bc2412b046d30a58eea601f0c1b71259d5362616725dc05c99ca",
+      "revision": 1,
+      "revisionHash": "ec9d870fb947ca479de0b928926de293eb7d346fea8f06a204cc07e3c88e505e",
+      "pages": 4,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-34",
+      "format": "docx",
+      "bytes": 12951,
+      "checksum": "bf16f9f77a6c2e11784bb610a71c73c482ab010e243274fa54608c8887f59443",
+      "revision": 1,
+      "revisionHash": "326fcbe9a3c8891656df0bec5e4ca4e183c7dfe5d8f70adb59d52c2bfcc13c24",
+      "pages": null,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-34",
+      "format": "pdf",
+      "bytes": 50002,
+      "checksum": "5e48c9c5cc4a77acb2f0a44e29edeffa58b7b098bb43723bb93ae8a0ed9e7c39",
+      "revision": 1,
+      "revisionHash": "326fcbe9a3c8891656df0bec5e4ca4e183c7dfe5d8f70adb59d52c2bfcc13c24",
+      "pages": 3,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-35",
+      "format": "docx",
+      "bytes": 13030,
+      "checksum": "6570fbe17f6d3214bd3db6d9220c1a42884ea2738319efc0f5215b0ab9a81b83",
+      "revision": 1,
+      "revisionHash": "4da66346d79d7d7dd516e6e72170f9513f2815491af7fe3d10c6ec332dc5da95",
+      "pages": null,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-35",
+      "format": "pdf",
+      "bytes": 50727,
+      "checksum": "a55a707901008de16bb7bb627a7415c027b5b36c018f46050abfebe2075da6ab",
+      "revision": 1,
+      "revisionHash": "4da66346d79d7d7dd516e6e72170f9513f2815491af7fe3d10c6ec332dc5da95",
+      "pages": 3,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-38",
+      "format": "docx",
+      "bytes": 12983,
+      "checksum": "811c839558db8723a3a78b0bcc2d7e4bd85ac006911fa6c017a376faf178f621",
+      "revision": 1,
+      "revisionHash": "22ec88519bd613660ac4c6e91ad500974d6769059b3b2b9eaeb00c30db0794ef",
+      "pages": null,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    },
+    {
+      "templateId": "TPL-38",
+      "format": "pdf",
+      "bytes": 50630,
+      "checksum": "68a2147c2e84d540db5ec09bb45a57bfedc5526c2dde09c26770f3d37a7924f3",
+      "revision": 1,
+      "revisionHash": "22ec88519bd613660ac4c6e91ad500974d6769059b3b2b9eaeb00c30db0794ef",
+      "pages": 3,
+      "status": "rendered-and-parsed",
+      "publiclyAvailable": false
+    }
+  ],
+  "commercialLicenceAccepted": false,
+  "productionLaunchEnabled": false,
+  "livePaymentsEnabled": false
+}

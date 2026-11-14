@@ -4,6 +4,7 @@ import { digest,sha256,disclosure } from "@workspace/valo-core";
 import { documentInput } from "../lib/valo-validation";
 import { publicationWorkspaceRoot } from "./operational-policy";
 import type { ArtifactRef } from "./publication-artifacts";
+import {originalSections,operationalDocument} from "./original-content-adapter";
 export type OperationalProvenance={path:string;hash:string;sourceText:string;note:string;noteHash:string;
   authoringRoute:string;transformation:string;templateId:string;version:number;generation?:ArtifactRef};
 export async function inventoryCandidate(version:number,now=new Date(),recorded?:{original:string;provenance:OperationalProvenance}){
@@ -17,20 +18,14 @@ export async function inventoryCandidate(version:number,now=new Date(),recorded?
   const scope="Original stock-movement and physical-count record for user-entered business information. Optional operational practice; no legal applicability determination.";
   const limitations="Blank Word/PDF operational aid, not a spreadsheet or accounting system. No ownership, product approval, valuation, statutory duty, tax-rate or legal-validity assurance. No professional review. Synthetic development evaluation only; commercial licence terms are not accepted and sales are disabled.";
   const reviewedAt=now.toISOString(),reviewBy=new Date(+now+90*86400000).toISOString();
-  const paragraphs=original.replace(/^R1 .*?\n/m,"").split(/\n\s*\n/);
-  const blocks=paragraphs.map((paragraph,i)=>{
-    if(paragraph.startsWith("|")){
-      const rows=paragraph.split("\n").filter(line=>line.startsWith("|")&&!/^\|[\s:|-]+\|$/.test(line))
-        .map(line=>line.split("|").slice(1,-1).map(v=>v.trim()));
-      return{id:`inventory-${i}`,type:"table" as const,text:"",rows};
-    }
-    return{id:`inventory-${i}`,type:"paragraph" as const,text:paragraph.replace(/^#{1,6}\s*/gm,"").replace(/\*\*/g,""),rows:[]};
-  });
+   const section=originalSections(`## TPL-07 — Inventory register\n${original}`)[0];
+   if(!section)throw Error("OPERATIONAL_CONTENT_SECTION_MISSING");
+   const blocks=operationalDocument(section).content.blocks;
   const document=documentInput.parse({title:"Inventory register",content:{
     fields:{issuerName:"",recipientName:"",documentNumber:"",issueDate:"",dueDate:"",notes:""},
     blocks:[{id:"optional-instructions",type:"paragraph",text:"Optional internal working instructions: all suggestions below are stock-recording practices to adapt to your actual workflow, not legal duties or regulatory advice. Enter your own business facts and quantities; blank fields are not verified information.",rows:[]},...blocks,
       {id:"release-scope",type:"paragraph",text:`Scope: ${scope}`,rows:[]},
-      {id:"release-limitations",type:"paragraph",text:`Limitations: ${limitations}`,rows:[]},
+       {id:"release-limitations",type:"paragraph",text:"Limitations: an internal stock-recording aid, not a spreadsheet, accounting system, product approval, valuation or legal-validity assurance.",rows:[]},
       {id:"release-disclosure",type:"paragraph",text:disclosure,rows:[]},
       {id:"release-source-date",type:"paragraph",text:`Source/provenance checked: ${reviewedAt}. Provider-source and authoring records are retained; this is not an independent legal or regulatory verification.`,rows:[]},
     ],selectedClauses:[],formatting:{font:"sans",accent:"forest"},

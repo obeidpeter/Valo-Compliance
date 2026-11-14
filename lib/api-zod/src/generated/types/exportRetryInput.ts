@@ -6,4 +6,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface ExportRetryInput { [key: string]: unknown }
+export interface ExportRetryInput { [key: string]: never }

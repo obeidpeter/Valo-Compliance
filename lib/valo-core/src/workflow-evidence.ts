@@ -46,6 +46,16 @@ const businessNameEvidence={
   hash:"8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",result:"pass" as const,
 };
 const groups = [
+  {ids:["DOC-001","EDT-002","EDT-006","ADM-005"],
+    paths:["artifacts/api-server/src/editorial/original-content-adapter.ts",
+      "artifacts/api-server/src/editorial/original-content-adapter.test.ts",
+      "artifacts/api-server/src/scripts/original-content-checkpoint.ts"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/original-content-adaptation.json",
+      hash:"e9bf78e7caa05a5ed4a327527d280180bfbce8cd03509614eb029f4390328384",result:"pass" as const}},
+  {ids:["SEC-002","OPS-007","EDT-008"],
+    paths:["artifacts/api-server/src/scripts/dependency-storage-proof.ts","pnpm-workspace.yaml"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/dependency-storage-compatibility.json",
+      hash:"81c9a6a86eabd1ad95a0d6a8f521a4d82ed85a1823ef82a8264e94ecce534819",result:"pass" as const}},
   {ids:["EDP-002","EDP-005","EDP-006","CMP-004","ADM-003"],
     paths:["artifacts/api-server/src/editorial/business-name-evidence.ts",
       "artifacts/api-server/src/scripts/ingest-business-name.ts","artifacts/api-server/src/scripts/prepare-business-name.ts",

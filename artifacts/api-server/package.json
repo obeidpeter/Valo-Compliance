@@ -8,7 +8,7 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:valo": "tsx --test src/lib/valo-validation.test.ts src/lib/valo-quota.test.ts src/lib/valo-render.test.ts src/lib/valo-customer-ai.test.ts src/lib/valo-site-origin.test.ts src/lib/valo-catalogue.test.ts src/lib/valo-catalogue-pages.test.ts",
+    "test:valo": "tsx --test src/lib/valo-validation.test.ts src/lib/valo-quota.test.ts src/lib/valo-render.test.ts src/lib/valo-customer-ai.test.ts src/lib/valo-site-origin.test.ts src/lib/valo-catalogue.test.ts src/lib/valo-catalogue-pages.test.ts src/lib/request-complexity.test.ts src/editorial/original-content-adapter.test.ts",
     "test:valo-export-recovery": "tsx --test src/lib/valo-export-recovery.integration.test.ts",
     "test:valo-security-http":"tsx --test src/lib/valo-proxy-security.test.ts",
     "test:valo-write-security":"NODE_ENV=development tsx --test src/lib/valo-write-security.integration.test.ts",

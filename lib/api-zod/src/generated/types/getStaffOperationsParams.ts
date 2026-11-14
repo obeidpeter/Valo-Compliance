@@ -8,5 +8,5 @@
 import type { GetStaffOperationsArea } from './getStaffOperationsArea';
 
 export type GetStaffOperationsParams = {
-area: GetStaffOperationsArea;
+  area: GetStaffOperationsArea;
 };

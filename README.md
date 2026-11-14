@@ -6,6 +6,10 @@ Latest implementation checkpoint:
 Previous implementation checkpoint:
 [export crash recovery, correct pagination and accessible/mobile editing](docs/valo/export-recovery-accessibility-checkpoint.md).
 
+Latest original-content adaptation and dependency repair checkpoint:
+[working changes, actual export/storage proof and remaining implementation gaps](docs/valo/content-dependency-checkpoint.md).
+The seven forms and other supplied content remain held; neither export checks nor dependency repairs constitute R1/R2 acceptance.
+
 Previous customer routes, signed-out access support, privacy requests and staff-read checkpoint:
 [working behavior, executed checks and remaining limitations](docs/valo/customer-experience-checkpoint.md).
 The repository remains private. Older checkpoint and incident sections are historical; the linked current checkpoint is not a production-readiness declaration.

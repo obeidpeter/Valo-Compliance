@@ -260,7 +260,6 @@ export function useListReleasedResources<TData = Awaited<ReturnType<typeof listR
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReleasedResources>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useListReleasedResources<TData = Awaited<ReturnType<typeof listReleasedResources>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReleasedResources>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -355,7 +354,6 @@ export function useGetReleasedResource<TData = Awaited<ReturnType<typeof getRele
  slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReleasedResource>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetReleasedResource<TData = Awaited<ReturnType<typeof getReleasedResource>>, TError = ErrorType<void>>(
  slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReleasedResource>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -450,7 +448,6 @@ export function useGetCustomerAccount<TData = Awaited<ReturnType<typeof getCusto
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerAccount>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetCustomerAccount<TData = Awaited<ReturnType<typeof getCustomerAccount>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerAccount>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -627,7 +624,6 @@ export function useDownloadWorkspaceData<TData = Awaited<ReturnType<typeof downl
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadWorkspaceData>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useDownloadWorkspaceData<TData = Awaited<ReturnType<typeof downloadWorkspaceData>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadWorkspaceData>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -722,7 +718,6 @@ export function useGetCustomerPurchases<TData = Awaited<ReturnType<typeof getCus
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerPurchases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetCustomerPurchases<TData = Awaited<ReturnType<typeof getCustomerPurchases>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerPurchases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -824,7 +819,6 @@ export function useGetStaffOperations<TData = Awaited<ReturnType<typeof getStaff
  params: GetStaffOperationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffOperations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetStaffOperations<TData = Awaited<ReturnType<typeof getStaffOperations>>, TError = ErrorType<void>>(
  params: GetStaffOperationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffOperations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -919,7 +913,6 @@ export function useListDocumentExports<TData = Awaited<ReturnType<typeof listDoc
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useListDocumentExports<TData = Awaited<ReturnType<typeof listDocumentExports>>, TError = ErrorType<unknown>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -1180,7 +1173,6 @@ export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof down
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -1275,7 +1267,6 @@ export function useGetPublicCoverage<TData = Awaited<ReturnType<typeof getPublic
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicCoverage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetPublicCoverage<TData = Awaited<ReturnType<typeof getPublicCoverage>>, TError = ErrorType<QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicCoverage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -1370,7 +1361,6 @@ export function useGetSourceEvidence<TData = Awaited<ReturnType<typeof getSource
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceEvidence>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetSourceEvidence<TData = Awaited<ReturnType<typeof getSourceEvidence>>, TError = ErrorType<void>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceEvidence>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -1465,7 +1455,6 @@ export function useGetProofRegister<TData = Awaited<ReturnType<typeof getProofRe
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProofRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetProofRegister<TData = Awaited<ReturnType<typeof getProofRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProofRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -1560,7 +1549,6 @@ export function useGetContentRegister<TData = Awaited<ReturnType<typeof getConte
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getContentRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetContentRegister<TData = Awaited<ReturnType<typeof getContentRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getContentRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -1655,7 +1643,6 @@ export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof get
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequirementsRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetRequirementsRegister<TData = Awaited<ReturnType<typeof getRequirementsRegister>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRequirementsRegister>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -1757,7 +1744,6 @@ export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPub
  params?: ListPublicCatalogueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCatalogue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useListPublicCatalogue<TData = Awaited<ReturnType<typeof listPublicCatalogue>>, TError = ErrorType<QuotaErrorResponse>>(
  params?: ListPublicCatalogueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicCatalogue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -1852,7 +1838,6 @@ export function useGetReleasedTemplate<TData = Awaited<ReturnType<typeof getRele
  slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReleasedTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetReleasedTemplate<TData = Awaited<ReturnType<typeof getReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(
  slug: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReleasedTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -1947,7 +1932,6 @@ export function useListOperationalRecommendations<TData = Awaited<ReturnType<typ
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOperationalRecommendations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useListOperationalRecommendations<TData = Awaited<ReturnType<typeof listOperationalRecommendations>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOperationalRecommendations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -2117,7 +2101,6 @@ export function useDownloadReleasedTemplate<TData = Awaited<ReturnType<typeof do
     format: 'docx' | 'pdf', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useDownloadReleasedTemplate<TData = Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError = ErrorType<AuthErrorResponse>>(
  id: string,
     format: 'docx' | 'pdf', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadReleasedTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
@@ -2213,7 +2196,6 @@ export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStat
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBuildStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetBuildStatus<TData = Awaited<ReturnType<typeof getBuildStatus>>, TError = ErrorType<QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBuildStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -2308,7 +2290,6 @@ export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -2485,7 +2466,6 @@ export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useListDocuments<TData = Awaited<ReturnType<typeof listDocuments>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocuments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -2662,7 +2642,6 @@ export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, 
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocument>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetDocument<TData = Awaited<ReturnType<typeof getDocument>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDocument>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -2840,7 +2819,6 @@ export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listD
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentRevisions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useListDocumentRevisions<TData = Awaited<ReturnType<typeof listDocumentRevisions>>, TError = ErrorType<AuthErrorResponse | QuotaErrorResponse>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listDocumentRevisions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -2997,6 +2975,10 @@ export type HealthCheckQueryResult = NonNullable<Awaited<ReturnType<typeof healt
 export type HealthCheckQueryError = ErrorType<unknown>
 
 
+/**
+ * Returns server health status
+ * @summary Health check
+ */
 export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -3007,6 +2989,10 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Returns server health status
+ * @summary Health check
+ */
 export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -3017,14 +3003,18 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Returns server health status
+ * @summary Health check
+ */
 export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
+ * Returns server health status
  * @summary Health check
  */
-
 export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -3201,7 +3191,6 @@ export function useGetCustomerAIDraft<TData = Awaited<ReturnType<typeof getCusto
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerAIDraft>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetCustomerAIDraft<TData = Awaited<ReturnType<typeof getCustomerAIDraft>>, TError = ErrorType<unknown>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerAIDraft>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -3379,7 +3368,6 @@ export function useGetCustomerAIUsage<TData = Awaited<ReturnType<typeof getCusto
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerAIUsage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetCustomerAIUsage<TData = Awaited<ReturnType<typeof getCustomerAIUsage>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerAIUsage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -3556,7 +3544,6 @@ export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessm
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessments>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -3733,7 +3720,6 @@ export function useGetAssessment<TData = Awaited<ReturnType<typeof getAssessment
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessment>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetAssessment<TData = Awaited<ReturnType<typeof getAssessment>>, TError = ErrorType<unknown>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessment>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -3835,7 +3821,6 @@ export function useCompareAssessments<TData = Awaited<ReturnType<typeof compareA
     previousId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof compareAssessments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useCompareAssessments<TData = Awaited<ReturnType<typeof compareAssessments>>, TError = ErrorType<unknown>>(
  id: string,
     previousId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof compareAssessments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
@@ -3931,7 +3916,6 @@ export function useListTasks<TData = Awaited<ReturnType<typeof listTasks>>, TErr
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useListTasks<TData = Awaited<ReturnType<typeof listTasks>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -4274,7 +4258,6 @@ export function useGetReminderPreferences<TData = Awaited<ReturnType<typeof getR
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReminderPreferences>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useGetReminderPreferences<TData = Awaited<ReturnType<typeof getReminderPreferences>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getReminderPreferences>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -4451,7 +4434,6 @@ export function useListReminders<TData = Awaited<ReturnType<typeof listReminders
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReminders>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
 export function useListReminders<TData = Awaited<ReturnType<typeof listReminders>>, TError = ErrorType<unknown>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listReminders>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient

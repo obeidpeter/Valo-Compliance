@@ -1,0 +1,13 @@
+✔ seven exact baseline forms have editable bounded canonical layouts, not authoring metadata (35.678071ms)
+✔ twelve guides retain original prose and remove draft status lines (10.58921ms)
+✔ twenty exact industry pages and six packs retain the independently supplied mappings (7.319429ms)
+✔ handoff sections and embedded engineering metadata cannot enter a document (0.699327ms)
+✔ wide tables preserve each original field and blank without inventing records (0.67424ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 792.560883
