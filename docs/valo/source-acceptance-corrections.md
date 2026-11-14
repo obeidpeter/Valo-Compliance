@@ -4,6 +4,29 @@ This checkpoint is **partial implementation, not R1/R2 acceptance**. The origina
 source corpora and expected outcomes have not been overwritten. Issues 3–7 and
 the existing 127-row requirement register remain the work/acceptance references.
 
+### Subsequent runtime-boundary and provider evidence
+
+The latest retained customer result is `evidence/customer-source60-runtime-results.json`.
+It supersedes the earlier counts below, without rewriting those historical reports:
+7 controlled passes, 1 provider-generated quotation with a declared synthetic
+follow-up, 3 partial provider results, 49 blocked, 0 observed case failures.
+**Zero generation cases have passed as originally written.** The invoice,
+reminder and proposal now have genuine provider responses but their complete
+rubrics and log/payload privacy review remain incomplete; these are not three
+additional acceptance passes. The original quota/kill cases now reach real
+database boundaries after explicitly declared missing-date/reference follow-ups.
+
+`evidence/customer-native-boundaries.json` records the exact source/code bindings,
+configured 30-reservation workspace boundary, isolated workspace pause, zero
+outbound calls, successful manual revision saves and unchanged private historical
+DOCX/PDF downloads. The global switch and numerical limits were not changed.
+Only known no-outbound fixture reservations/results were removed; existing
+usage/attempt history was checked for preservation. The pause is deny-only:
+a workspace flag cannot override a global or production disable.
+
+These are development domain/database/export-service checks, not authenticated
+browser, production, billing, privacy certification or R1/R2 release acceptance.
+
 ## Working behavior
 
 - The actual QUO-01 original preflight asks for its missing issue date. It does

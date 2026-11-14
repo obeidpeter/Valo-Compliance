@@ -191,8 +191,8 @@ const groups = [
 export function partialWorkflowEvidence(id:string){
   // "fail" here means the complete formal corpus has not met acceptance.
   // Case-bound controls and a declared follow-up are not sixty-case passes.
-  const customerSource60={kind:"test" as const,path:"docs/valo/evidence/customer-source60-bound-results.json",
-    hash:"e1149db481f2119ec6f3fc229e0f4968fe40be2ef24c276d64f5c0e3226d2130",result:"fail" as const};
+  const customerSource60={kind:"test" as const,path:"docs/valo/evidence/customer-source60-runtime-results.json",
+    hash:"34946734be711f18d73da46325a8e1726c21a3f4ac58eab39c3cfd0f2b7ff517",result:"fail" as const};
   const editorialSource60={kind:"test" as const,path:"docs/valo/evidence/editorial-source60-bound-results.json",
     hash:"6b36ee25631fd49f47a6ab8f701503084b05fc765a7a18efbfab06c6a91b5439",result:"fail" as const};
   const quotationFollowup={kind:"test" as const,path:"docs/valo/evidence/source-quotation-private-journey.json",

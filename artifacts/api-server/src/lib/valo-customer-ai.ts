@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and,count,eq,gte,sql } from "drizzle-orm";
+import { and,count,eq,gte,inArray,sql } from "drizzle-orm";
 import { valoAIDrafts,valoSafetySwitches } from "@workspace/db";
 import { AcceptCustomerAIDraftBody,CreateCustomerAIDraftResponse,GetCustomerAIUsageResponse } from "@workspace/api-zod";
 import { customerAIInput,customerNoticeVersion,customerPromptVersion,customerPreview,hashAI,
@@ -9,11 +9,14 @@ import { workspaceTransaction,workspaceEvent,type WorkspaceTx } from "./valo-ass
 import { createDocumentInTransaction,getDocument,ValoProblem,type WorkspaceActor } from "./valo-store";
 import { documentInput } from "./valo-validation";
 const workspaceDailyLimit=30,globalDailyLimit=120;
-async function enabled(tx:WorkspaceTx){
+async function enabled(tx:WorkspaceTx,workspaceId:string){
   // No customer or model input can enable this; production remains off even if a development switch is copied.
   if(process.env.NODE_ENV!=="development"||process.env.REPLIT_DEPLOYMENT)return false;
-  const[flag]=await tx.select().from(valoSafetySwitches).where(eq(valoSafetySwitches.key,"customer_ai"));
-  return flag?.enabled??true;
+  // A workspace may be additionally paused; it can never override a global or
+  // production pause. Resolving this key uses the authorised server workspace.
+  const flags=await tx.select().from(valoSafetySwitches).where(inArray(valoSafetySwitches.key,
+    ["customer_ai",`customer_ai_workspace:${workspaceId}`]));
+  return flags.every(flag=>flag.enabled);
 }
 async function budget(tx:WorkspaceTx,workspaceId:string,now=new Date()){
   const start=new Date(now);start.setUTCHours(0,0,0,0);
@@ -31,7 +34,7 @@ export function serializeAIPreview(row:typeof valoAIDrafts.$inferSelect){
 export async function customerAIUsage(actor:WorkspaceActor){
   return workspaceTransaction(actor,async tx=>{
     const b=await budget(tx,actor.workspaceId);
-    return GetCustomerAIUsageResponse.parse({enabled:await enabled(tx),workspaceUsed:b.workspaceUsed,
+    return GetCustomerAIUsageResponse.parse({enabled:await enabled(tx,actor.workspaceId),workspaceUsed:b.workspaceUsed,
       workspaceDailyLimit,minuteLimit:5,globalAvailable:b.globalUsed<globalDailyLimit,manualFallbackAvailable:true,
       policyNotice:"Synthetic development only. These technical daily ceilings reset at 00:00 UTC; they are not a price plan. The independent manual editor does not require AI consent or AI quota. Provider retention and production use are not approved."});
   });
@@ -48,7 +51,7 @@ export async function createCustomerAIDraft(actor:WorkspaceActor,raw:unknown,ada
     }
     // A single cross-workspace budget lock prevents concurrent reservations exceeding the global cost ceiling.
     await tx.execute(sql`select pg_advisory_xact_lock(760214032)`);
-    const b=await budget(tx,actor.workspaceId),isEnabled=await enabled(tx);
+    const b=await budget(tx,actor.workspaceId),isEnabled=await enabled(tx,actor.workspaceId);
     const unsupported=unsupportedCustomerInput(input),missing=missingCustomerFields(input);
     const canCall=isEnabled&&!unsupported&&!missing.length&&b.workspaceUsed<workspaceDailyLimit&&b.globalUsed<globalDailyLimit;
     const status:CustomerPreview["status"]=unsupported?"unsupported":missing.length?"needs_information":canCall?"running":"manual_fallback";
