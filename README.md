@@ -1,6 +1,12 @@
 # Valo Compliance — Valo Platform
 
 Latest implementation checkpoint:
+[account-scoped component state and seven controlled browser regressions](docs/valo/account-state-checkpoint.md).
+
+Earlier implementation checkpoint:
+[amount-safe partial/full refund requests, fresh-MFA finance decisions and crash recovery](docs/valo/refund-lifecycle-checkpoint.md).
+
+Earlier implementation checkpoint:
 [separate AI instructions, preserved manual notes and two supplied cases through private exports](docs/valo/customer-ai-source-checkpoint.md).
 
 Earlier implementation checkpoint:

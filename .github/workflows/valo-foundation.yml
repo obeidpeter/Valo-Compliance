@@ -53,6 +53,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-refund-provider
       - name: Build the Next.js application
         run: pnpm --filter @workspace/valo run build
+      - name: Prove controlled profile and checker state does not cross accounts
+        run: NODE_ENV=development VALO_RUN_ACCOUNT_SCOPE_BROWSER=synthetic-development-only pnpm --filter @workspace/api-server exec tsx src/scripts/account-switch-browser.ts
       - name: Print factual readiness
         run: pnpm --filter @workspace/scripts valo:readiness
   postgres:

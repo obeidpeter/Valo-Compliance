@@ -2,7 +2,7 @@
  * Not a real Clerk account-switch, session-revocation or BFCache certification. */
 import {createServer} from "node:http";
 import {once} from "node:events";
-import {mkdir,writeFile,readFile} from "node:fs/promises";
+import {mkdir,writeFile,readFile,readdir} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {resolve} from "node:path";
 import {build} from "esbuild";
@@ -51,13 +51,20 @@ const result=await build({stdin:{contents:code,loader:"tsx",resolveDir:front},ab
 const js=result.outputFiles.find(f=>f.path.endsWith(".js"))!.contents;
 // Use the real Next/PostCSS output, not unprocessed Tailwind directives which
 // would make a reflow result meaningless.
-const origin=`https://${process.env.REPLIT_DEV_DOMAIN}`,html=await(await fetch(origin,{redirect:"error"})).text();
-const stylePaths=[...html.matchAll(/href="([^"]+\.css(?:\?[^"]*)?)"/g)].map(m=>m[1]).filter(p=>p?.startsWith("/_next/"));
-if(!stylePaths.length)throw Error("COMPILED_PRODUCT_CSS_REQUIRED");
-const css=(await Promise.all(stylePaths.map(async path=>{
-  const response=await fetch(origin+path,{redirect:"error"});
-  if(!response.ok)throw Error("COMPILED_PRODUCT_CSS_FETCH_FAILED");return response.text();
-}))).join("\n");
+let css:string;
+if(process.env.CI==="true"){
+  const directory=resolve(front,".next/static/css"),files=(await readdir(directory,{recursive:true})).filter(p=>p.endsWith(".css"));
+  if(!files.length)throw Error("BUILT_PRODUCT_CSS_REQUIRED");
+  css=(await Promise.all(files.map(p=>readFile(resolve(directory,p),"utf8")))).join("\n");
+}else{
+  const origin=`https://${process.env.REPLIT_DEV_DOMAIN}`,html=await(await fetch(origin,{redirect:"error"})).text();
+  const stylePaths=[...html.matchAll(/href="([^"]+\.css(?:\?[^"]*)?)"/g)].map(m=>m[1]).filter(p=>p?.startsWith("/_next/"));
+  if(!stylePaths.length)throw Error("COMPILED_PRODUCT_CSS_REQUIRED");
+  css=(await Promise.all(stylePaths.map(async path=>{
+    const response=await fetch(origin+path,{redirect:"error"});
+    if(!response.ok)throw Error("COMPILED_PRODUCT_CSS_FETCH_FAILED");return response.text();
+  }))).join("\n");
+}
 const server=createServer((req,res)=>{
   res.setHeader("Cache-Control","no-store");
   if(req.url==="/fixture.js"){res.setHeader("Content-Type","text/javascript");res.end(js);}

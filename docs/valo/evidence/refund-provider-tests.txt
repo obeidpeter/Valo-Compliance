@@ -1,0 +1,18 @@
+
+> @workspace/api-server@0.0.0 test:valo-refund-provider /home/runner/workspace/artifacts/api-server
+> tsx --test src/lib/valo-refund-provider.test.ts
+
+▶ native Paystack refund adapter: controlled transport only, no payment credentials
+  ✔ reference conflict looks up existing refund instead of generating another reference (24.802399ms)
+  ✔ timeout after acceptance recovers by the same reference and is not labelled failed (1.310554ms)
+  ✔ missing or ambiguous lookup never manufactures an observation (2.200335ms)
+  ✔ test-only configuration, independent limits and unknown amounts fail closed (0.276482ms)
+✔ native Paystack refund adapter: controlled transport only, no payment credentials (31.009345ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1282.727719

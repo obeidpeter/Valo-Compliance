@@ -1,5 +1,10 @@
 # Partial implementation-to-test links
 
+**Historical initial P0 summary below.** Its remainder column is not the current
+completion inventory. Use the live 127-row `implementation-evidence.json`
+register and the latest README checkpoint links, including the refund lifecycle
+and account-state regressions. Old evidence is retained rather than rewritten.
+
 The complete 127-row contract is executable in `lib/valo-core` and visible at
 `/development`. Original quotations and source locators are retained. Every full
 requirement remains blocked/unaccepted. This table records what the current tests
