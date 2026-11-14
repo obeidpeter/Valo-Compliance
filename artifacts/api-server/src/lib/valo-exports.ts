@@ -158,18 +158,22 @@ export async function executeExport(id: string, workspaceId: string, queueId: st
           .where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,workspaceId))).for("update");
         const[asset]=await tx.select({id:valoFileAssets.id}).from(valoFileAssets)
           .where(and(eq(valoFileAssets.workspaceId,workspaceId),eq(valoFileAssets.objectKey,key))).limit(1);
-        if(asset)return false;
+        if(asset)return{cleanup:false,privacy:false};
         await tx.update(valoExportObjects).set({state:"cleanup",nextCleanupAt:new Date()})
           .where(and(eq(valoExportObjects.objectKey,key),ne(valoExportObjects.state,"retained")));
         // Erasure may already have removed the job and reservation. Its sealed
         // independent journal captured this key before those rows were purged.
-        const erasure=await tx.update(valoPrivacyTombstones).set({nextReplayAt:new Date()})
-          .where(eq(valoPrivacyTombstones.workspaceId,workspaceId)).returning({id:valoPrivacyTombstones.id});
+        const[erasure]=await tx.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
+          .where(eq(valoPrivacyTombstones.workspaceId,workspaceId)).limit(1);
         // A privacy hold and inventory validation also govern late writes.
         // Its durable worker owns cleanup after quarantine, even with no job.
-        return erasure.length===0;
+        return{cleanup:!erasure,privacy:!!erasure};
       });
-      if(cleanup)try{await storage.remove(key);}catch{/* Both orphan/recovery journals survive for retry. */}
+      // Quarantine locks the tombstone before fencing jobs. Schedule only after
+      // releasing job/object locks so cleanup cannot introduce the reverse order.
+      if(cleanup.privacy)await db.update(valoPrivacyTombstones).set({nextReplayAt:new Date()})
+        .where(eq(valoPrivacyTombstones.workspaceId,workspaceId));
+      if(cleanup.cleanup)try{await storage.remove(key);}catch{/* Both orphan/recovery journals survive for retry. */}
   };
   try {
     await onStage?.("claimed");
