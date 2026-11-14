@@ -148,6 +148,13 @@
       "when": 1794699000000,
       "tag": "0020_inference_batch_authorization",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794700000000,
+      "tag": "0021_privacy_key_versions",
+      "breakpoints": true
     }
   ]
 }

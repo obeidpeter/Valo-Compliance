@@ -6,6 +6,7 @@ import {ActOnStaffPrivacyCaseBody} from "@workspace/api-zod";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import {deletePrivateFile} from "./valo-private-storage";
 import {quotaSubjectHash} from "./valo-quota";
+import {privacyKey,privacySigner} from "./valo-privacy-keys";
 import {ValoProblem} from "./valo-problem";
 import {assertPrivacyVersion} from "./valo-privacy-state";
 import {readPrivacyCase,requirePrivacyStaff,privacyChange,privacyDetail,type PrivacyStaffActor} from "./valo-privacy";
@@ -61,8 +62,9 @@ export async function processPrivacyErasure(actor:PrivacyStaffActor,id:string,in
       throw new ValoProblem(409,"This development erasure capability accepts explicitly synthetic workspaces only. Production policy and provider deletion are not enabled.");
     if(row.erasurePhase==="not_started"){
       if(input.action!=="start_erasure")throw new ValoProblem(409,"Begin the explicitly acknowledged erasure first.");
+      const signer=await privacySigner(tx);
       await tx.insert(valoPrivacyTombstones).values({id:randomUUID(),workspaceId:row.workspaceId,caseId:row.id,
-        identityHash:quotaSubjectHash(process.env.SESSION_SECRET,"user",w.ownerIdentityId),phase:scope});
+        identityHash:quotaSubjectHash(signer.key,"user",w.ownerIdentityId),keyVersion:signer.version,phase:scope});
       // Revocations serialize against every membership-authorized commit.
       await tx.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,row.workspaceId));
       row=await privacyChange(tx,row,{identityId:actor.identityId,type:"staff"},"erasure_quarantined",input.reason,{
@@ -136,8 +138,9 @@ export async function replayErasureObjects(caseId:string,remove:DeleteObject=del
   const[tombstone]=await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,caseId));
   if(!tombstone)throw new ValoProblem(404,"A retained deletion tombstone is required.");
   const[workspace]=await db.select().from(valoWorkspaces).where(eq(valoWorkspaces.id,tombstone.workspaceId));
+  const historicalKey=await db.transaction(tx=>privacyKey(tx,tombstone.keyVersion));
   if(!workspace||!/^(synthetic-|privacy-fixture-)/.test(workspace.ownerIdentityId)||
-    quotaSubjectHash(process.env.SESSION_SECRET,"user",workspace.ownerIdentityId)!==tombstone.identityHash)
+    quotaSubjectHash(historicalKey,"user",workspace.ownerIdentityId)!==tombstone.identityHash)
     throw new ValoProblem(409,"Recovery workspace does not match the retained synthetic deletion journal.");
   await db.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,tombstone.workspaceId));
   const rows=await db.execute<{workspace_id:string;object_key:string}>(sql`SELECT workspace_id,object_key

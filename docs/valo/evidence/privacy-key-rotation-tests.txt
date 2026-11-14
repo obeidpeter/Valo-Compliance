@@ -1,0 +1,30 @@
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (32.677722ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (87.452153ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (102.114236ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (683.519344ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (86.722601ms)
+  ✔ native private storage deletion and repeated late-write replay remove actual synthetic bytes (985.563055ms)
+  ✔ a cross-workspace key in a corrupted object journal is never deleted (26.06684ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (1.951645ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (14.073912ms)
+✔ resumable physical development erasure with retained exclusions and replay (2596.085718ms)
+▶ isolated privacy signing-key rotation — no real secret rotation
+  ✔ legacy version is pinned only after its retained signature verifies (27.307639ms)
+  ✔ new version signs while old and legacy signatures still verify (17.939587ms)
+  ✔ missing historical material holds both history verification and identity matching (13.319227ms)
+  ✔ reusing a pinned version name with another key cannot silently re-sign history (12.187588ms)
+✔ isolated privacy signing-key rotation — no real secret rotation (230.385646ms)
+▶ actual HTTP privacy routes apply an independent privacy role and fresh MFA
+  ✔ privacy-only identity can read and claim; finance-only cannot (227.277261ms)
+  ✔ revoked and stale-MFA privacy identities fail on the HTTP route (36.259652ms)
+  ✔ hostile origin never reaches the privacy mutation (7.463591ms)
+✔ actual HTTP privacy routes apply an independent privacy role and fresh MFA (679.837457ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7983.720366

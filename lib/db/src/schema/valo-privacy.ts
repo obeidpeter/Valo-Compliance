@@ -34,6 +34,7 @@ export const valoPrivacyEvents=pgTable("valo_privacy_events",{
 export const valoPrivacyTombstones=pgTable("valo_privacy_tombstones",{
   id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),caseId:uuid("case_id").notNull().unique(),
   identityHash:text("identity_hash").notNull(),phase:text("phase").notNull(),
+  keyVersion:text("key_version").notNull().default("session-derived-v1"),
   privateObjectKey:text("private_object_key"),checksum:text("checksum"),
   createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
   updatedAt:timestamp("updated_at",{withTimezone:true}).notNull().defaultNow(),

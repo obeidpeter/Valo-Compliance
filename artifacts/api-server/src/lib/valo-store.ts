@@ -1,6 +1,6 @@
 import {serializeRevision} from "./valo-revision-codec";
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql, inArray } from "drizzle-orm";
 import {
   db, valoWorkspaces, valoMemberships, valoProfileVersions, valoDocuments,
   valoDocumentRevisions, valoSupportTickets, valoEvents, valoPrivacyTombstones,
@@ -12,6 +12,7 @@ import {guidedDataFromBlocks} from "@workspace/valo-core/guided-runtime";
 import { consumeQuota,quotaPolicy,quotaSubjectHash } from "./valo-quota";
 
 import {ValoProblem} from "./valo-problem";
+import {privacyIdentityHashes} from "./valo-privacy-keys";
 export {ValoProblem} from "./valo-problem";
 export type WorkspaceActor = { workspaceId: string; identityId: string };
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -40,9 +41,9 @@ function event(tx: Tx, actor: WorkspaceActor, action: string, entityId: string, 
 /** Called only after identity verification; callers cannot choose a workspace. */
 export async function resolveWorkspace(identityId: string): Promise<WorkspaceActor> {
   return db.transaction(async tx => {
-    const identityHash=quotaSubjectHash(process.env.SESSION_SECRET,"user",identityId);
-    const[erasedIdentity]=await tx.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
-      .where(eq(valoPrivacyTombstones.identityHash,identityHash)).limit(1);
+    const hashes=await privacyIdentityHashes(tx,identityId);
+    const[erasedIdentity]=hashes.length?await tx.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
+      .where(inArray(valoPrivacyTombstones.identityHash,hashes)).limit(1):[];
     if(erasedIdentity)throw new ValoProblem(403,"Identity deletion is recorded. Access cannot be recreated.");
     const [existing] = await tx.select().from(valoMemberships).where(eq(valoMemberships.identityId, identityId));
     if (existing) {

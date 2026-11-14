@@ -5,19 +5,13 @@ import {RequestCustomerPrivacyBody,VerifyPrivacyCaseBody,ActOnStaffPrivacyCaseBo
 import {authorizeWorkspaceWrite,createTicketInTransaction,type WorkspaceActor} from "./valo-store";
 import {quotaSubjectHash} from "./valo-quota";
 import {ValoProblem} from "./valo-problem";
+import {privacyKey,privacySigner} from "./valo-privacy-keys";
 import {assertPrivacyVersion,assertPrivacyTransition,assertPrivacyCompletion,privacyInitialSteps,privacyAuditHash,privacyAuditEqual,privacySnapshotHash,
   type PrivacyAuditInput,type PrivacyStatus} from "./valo-privacy-state";
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type PrivacyRow=typeof valoPrivacyCases.$inferSelect;
 export type PrivacyStaffActor={identityId:string;recentMfa:boolean;verifiedAt:number};
 const GENESIS="0".repeat(64);
-const keyVersion="session-derived-v1";
-function auditKey(){
-  const key=process.env.SESSION_SECRET;
-  if(!key||key.length<32)throw new ValoProblem(503,"Privacy audit protection is unavailable. No request transition was completed.");
-  return key;
-}
-function actorHash(identityId:string){return quotaSubjectHash(process.env.SESSION_SECRET,"user",identityId);}
 function stateHash(row:Partial<PrivacyRow>){
   return privacySnapshotHash([row.id,row.workspaceId,row.requesterIdentityId,row.kind,row.idempotencyKey,row.payloadHash,row.message,
     row.status??"awaiting_verification",row.version??1,row.assignedIdentityId??null,row.verifiedAt??null,row.resultJson??null,
@@ -46,8 +40,8 @@ export async function checkPrivacyAudit(tx:Tx,row:PrivacyRow){
   let previous=GENESIS;
   for(let n=0;n<events.length;n++){
     const e=events[n]!;
-    if(e.sequence!==n+1||e.previousHash!==previous||e.keyVersion!==keyVersion||
-      !privacyAuditEqual(e.eventHash,privacyAuditHash(e,auditKey())))
+    if(e.sequence!==n+1||e.previousHash!==previous||
+      !privacyAuditEqual(e.eventHash,privacyAuditHash(e,await privacyKey(tx,e.keyVersion))))
       throw new ValoProblem(409,"Privacy audit integrity could not be verified. Processing is held for investigation.");
     previous=e.eventHash;
   }
@@ -71,10 +65,11 @@ export async function privacyChange(tx:Tx,row:PrivacyRow,actor:{identityId:strin
   if(patch.status&&patch.status!==row.status)assertPrivacyTransition(row.status,patch.status);
   if(patch.status==="fulfilled")assertPrivacyCompletion(patch.steps??row.steps);
   const at=new Date(),version=row.version+1;
+  const signer=await privacySigner(tx);
   const event:PrivacyAuditInput={workspaceId:row.workspaceId,caseId:row.id,sequence:version,actorType:actor.type,
-    actorHash:actorHash(actor.identityId),action,reason,createdAt:at,previousHash:row.lastEventHash,
-    stateHash:stateHash({...row,...patch,version,updatedAt:at}),keyVersion};
-  const eventHash=privacyAuditHash(event,auditKey());
+    actorHash:quotaSubjectHash(signer.key,"user",actor.identityId),action,reason,createdAt:at,previousHash:row.lastEventHash,
+    stateHash:stateHash({...row,...patch,version,updatedAt:at}),keyVersion:signer.version};
+  const eventHash=privacyAuditHash(event,signer.key);
   await tx.insert(valoPrivacyEvents).values({id:randomUUID(),...event,eventHash});
   const[next]=await tx.update(valoPrivacyCases).set({...patch,version,lastEventHash:eventHash,updatedAt:at})
     .where(and(eq(valoPrivacyCases.id,row.id),eq(valoPrivacyCases.workspaceId,row.workspaceId),eq(valoPrivacyCases.version,row.version))).returning();
@@ -107,10 +102,11 @@ export async function createPrivacyCase(actor:WorkspaceActor,email:string,raw:un
     const initial={id,workspaceId:actor.workspaceId,requesterIdentityId:actor.identityId,kind:input.kind,idempotencyKey,
       payloadHash,message,steps:privacyInitialSteps(input.kind).map(s=>s.system==="application"?
         {...s,profileRevisionAtRequest:workspace.revision,...(baseline?{profileHashAtRequest:baseline.hash}:{})}:s),createdAt:at,updatedAt:at};
+    const signer=await privacySigner(tx);
     const event:PrivacyAuditInput={workspaceId:actor.workspaceId,caseId:id,sequence:1,actorType:"customer",
-      actorHash:actorHash(actor.identityId),action:"request_received",reason:"The owner submitted a request; verification and processing are not yet complete.",
-      createdAt:at,previousHash:GENESIS,stateHash:stateHash(initial),keyVersion};
-    const eventHash=privacyAuditHash(event,auditKey());
+      actorHash:quotaSubjectHash(signer.key,"user",actor.identityId),action:"request_received",reason:"The owner submitted a request; verification and processing are not yet complete.",
+      createdAt:at,previousHash:GENESIS,stateHash:stateHash(initial),keyVersion:signer.version};
+    const eventHash=privacyAuditHash(event,signer.key);
     await tx.insert(valoPrivacyCases).values({...initial,lastEventHash:eventHash});
     await tx.insert(valoPrivacyEvents).values({id:randomUUID(),...event,eventHash});
     return {reference:ticket.reference,message:"Privacy request saved. Verify it in request processing; no export, correction, deletion or provider action has been completed.",
