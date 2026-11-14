@@ -1,0 +1,256 @@
+{
+  "executedAt": "2026-11-14T11:14:35.836Z",
+  "sourceCommit": "26bbe4427d1be15d82f2d17c2db499b40430858f",
+  "source": "Actual retained execution outputs; no model-generated pass verdicts",
+  "api": {
+    "total": 110,
+    "passed": 109,
+    "failed": 0,
+    "skipped": 1,
+    "sha256": "efb6d2cc9d05fc64b20004d7f0070298e018181cc06aa08de52156108ccf3638"
+  },
+  "database": {
+    "total": 58,
+    "passed": 58,
+    "failed": 0,
+    "skipped": 0,
+    "sha256": "be3d3b8212a9024cfb14d9f7f2e2dfa4efa0e98a46bc3d5e939a5c2708c42268"
+  },
+  "templateSamples": {
+    "passed": 40,
+    "total": 40,
+    "formats": [
+      "docx",
+      "pdf"
+    ],
+    "providerCalls": 0,
+    "canonicalBodiesComplete": true,
+    "published": false,
+    "limitation": "Draft reader extraction and page bounds only; not customer publication or Microsoft Word UI verification"
+  },
+  "reviewPlan": {
+    "executedAt": "2026-11-14T10:44:30.119Z",
+    "candidateId": "fbc4ef74-33db-4a6c-9387-f23ba0e65190",
+    "version": 8,
+    "status": "held",
+    "manifest": {
+      "schemaVersion": 1,
+      "lane": "operational_publication_review",
+      "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+      "serverEvidence": {
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "policyHash": "dfa73f081effb374f07b64595e44f8557fd9c4c0ee1e173ae4b1f117f3d1fd82",
+        "sourceCheckedAt": "2026-11-14T09:36:33.883Z",
+        "sourceHash": "f0a427d404b8fc4d2c09b6444ca01760ac221836f52d8781dadc4248237ec664",
+        "provenanceArtifactHash": "1d354d26f009831ec19c42e0284d20a94fb6a4b63f803b78c3fb8cd9dee6f796",
+        "rightsArtifactHash": "33bbf6569a9bc78ccb6c8c19ed39d0b45268c166eda242ba11aacafc15f0cf18",
+        "exportReportArtifactHash": "8792fa9f3459ddb09f198b3149e9ec50c82cc738e19ed8b4fe0810f455de2d15",
+        "providerSnapshotHash": "4910b260f792aa489791235935c652244171adab6598af093206be6c06d0a7c2",
+        "authoringRoute": "coordinator_chatgpt",
+        "sourceAttribution": "Retained authoring attribution; no independently certified upstream model/run",
+        "performedChecks": [
+          "schema",
+          "source_locators",
+          "dates",
+          "scope",
+          "numeric_extraction",
+          "rights",
+          "required_fields",
+          "disclosures",
+          "arithmetic",
+          "rule_fixtures"
+        ]
+      },
+      "preparedAt": "2026-11-14T10:44:27.965Z",
+      "expiresAt": "2026-11-14T11:44:27.965Z",
+      "attemptsRequired": 2,
+      "dailyLimit": 6,
+      "concurrency": 2,
+      "automaticRetries": 0,
+      "status": "mechanically_planned_not_reserved",
+      "entries": [
+        {
+          "role": "factual",
+          "reviewAsOf": "2026-11-14T10:44:27.965Z",
+          "promptVersion": "operational-factual-4",
+          "promptHash": "3673ecc941870c167c8e12a345e2a04412bfa3456939fc5b01e05dcfd57fc78a",
+          "meter": {
+            "requestHash": "adb99e1f9a50a0286e0bc68d65e0912de660ed837e96aa0a2ea6df84c7c3a07f",
+            "wireBytes": 28593,
+            "protocolAllowance": 1024,
+            "conservativeInputTokenBound": 29617,
+            "inputCeiling": 32000,
+            "maximumCompletionTokens": 8192,
+            "withinInputCeiling": true,
+            "method": "UTF8_bytes_plus_protocol_allowance_not_actual_provider_usage",
+            "actualInputTokens": null,
+            "actualOutputTokens": null,
+            "actualBilling": null
+          }
+        },
+        {
+          "role": "challenge",
+          "reviewAsOf": "2026-11-14T10:44:27.965Z",
+          "promptVersion": "operational-challenge-4",
+          "promptHash": "9f60c4d0ea1d4a2e3694a5ec99b02e47cab643f7f2dbab191a333bcaa1041e1d",
+          "meter": {
+            "requestHash": "4ecfe5983957b5b2692018e0f40e5ca98c4bc132949a71e84daf961180fb8354",
+            "wireBytes": 28653,
+            "protocolAllowance": 1024,
+            "conservativeInputTokenBound": 29677,
+            "inputCeiling": 32000,
+            "maximumCompletionTokens": 8192,
+            "withinInputCeiling": true,
+            "method": "UTF8_bytes_plus_protocol_allowance_not_actual_provider_usage",
+            "actualInputTokens": null,
+            "actualOutputTokens": null,
+            "actualBilling": null
+          }
+        }
+      ],
+      "actualBilling": null,
+      "caution": "This is not a global provider cap, legal review, publication, spending increase or billing estimate."
+    },
+    "privatePlan": {
+      "id": "c697f769-0a58-4dc2-81d6-7c351dd99f35",
+      "hash": "30a6acc697521349b87118c05c3999ca7c8a0d210863b2d4981a3db16812da24",
+      "extension": "json"
+    },
+    "mechanicalChecks": [
+      {
+        "name": "schema",
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "result": "pass",
+        "evidenceHash": "f0d558c44bea6a040dd0e884e0fc7bbe81492d4ffc1afe897ecd63e4366b9fa0"
+      },
+      {
+        "name": "source_locators",
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "result": "pass",
+        "evidenceHash": "a04f721e2409bfd6a41f5f1aa26c53f30106197ee6174d63808de4ebd97f55e5"
+      },
+      {
+        "name": "dates",
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "result": "pass",
+        "evidenceHash": "d82b860163b9edc44ea181ff53496f68b12d5b2f918221127c6c31d2def0edf6"
+      },
+      {
+        "name": "scope",
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "result": "pass",
+        "evidenceHash": "4b939efadb024b5605bb62cb38a0b4df925abf680a25b8856f6ca3eac04becc1"
+      },
+      {
+        "name": "numeric_extraction",
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "result": "pass",
+        "evidenceHash": "046d575b0734d97743250d2497083ef189d68da3b54937e8a239d91909b2d511"
+      },
+      {
+        "name": "rights",
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "result": "pass",
+        "evidenceHash": "511e496d865458d14ab15d24bc0579980c243321b7ae07cccb27dd61a2354f0f"
+      },
+      {
+        "name": "required_fields",
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "result": "pass",
+        "evidenceHash": "6c68db36ec902d201970ae537f89f5d3ff387baefaeb641d0edbc143eeefee7b"
+      },
+      {
+        "name": "disclosures",
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "result": "pass",
+        "evidenceHash": "efb2c944f7358f0fa28a7e667984ca778ab12fa342a13078b905c1a800ae2388"
+      },
+      {
+        "name": "arithmetic",
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "result": "pass",
+        "evidenceHash": "4b9121f9eb7a14417c018154078308aea9c7af88226a5a3c3bebf08634da254c"
+      },
+      {
+        "name": "rule_fixtures",
+        "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+        "result": "pass",
+        "evidenceHash": "c3740e35aded2d4b4ce3c450ae868a5a976cbf15c9549564b8fce456fcaeb5d2"
+      }
+    ],
+    "exportCheckPassed": true,
+    "liveReservations": {
+      "checked_at": "2026-11-14 10:44:28.352285+00",
+      "database_timezone": "GMT",
+      "reviews_today": 6,
+      "authoring_today": 1,
+      "known_input_tokens_today": null,
+      "known_output_tokens_today": null,
+      "reviews_with_unknown_usage_today": 6
+    },
+    "providerCalls": 0,
+    "reservationsCreated": 0,
+    "eligiblePublished": false,
+    "guards": [
+      {
+        "case": "actual six-reservation limit",
+        "result": "rejected before transport"
+      },
+      {
+        "case": "expired plan with actual hash-matching private artifact",
+        "result": "rejected"
+      },
+      {
+        "case": "changed request with old input meter",
+        "result": "rejected"
+      },
+      {
+        "case": "increased output budget with recomputed request hash",
+        "result": "rejected"
+      },
+      {
+        "case": "mismatched rights evidence binding",
+        "result": "rejected"
+      }
+    ],
+    "sdkTransportInvocationsDuringGuardProof": 0,
+    "dispatchBlocked": "operational_daily_limit",
+    "r1Accepted": false,
+    "r2Unlocked": false,
+    "livePaymentsEnabled": false,
+    "publicLaunchEnabled": false
+  },
+  "publication": {
+    "templates": 0,
+    "guidance": 0,
+    "rules": 0,
+    "newProviderCalls": 0
+  },
+  "requiredAcceptanceSuites": {
+    "rules80": "not accepted",
+    "customerAI60": "not accepted",
+    "editorial60": "not accepted"
+  },
+  "email": {
+    "authorizedConnectionAttached": true,
+    "providerDeliveryProved": false,
+    "controlledTransportOnly": true,
+    "nativeConnectionReadiness": {
+      "scope": "read-only native SDK, development workspace",
+      "httpStatus": 401,
+      "errorType": "restricted_api_key",
+      "credentialRecognizedButRestricted": true,
+      "developmentEmailEnabled": false,
+      "sendingAttempted": false
+    },
+    "developmentSenderConfigured": false,
+    "automaticOutboxEnabled": false
+  },
+  "existingDevelopmentBaselineAdopted": false,
+  "productionMigrationApplied": false,
+  "productionRecoveryProved": false,
+  "r1Accepted": false,
+  "r2Unlocked": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false
+}

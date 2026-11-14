@@ -46,6 +46,18 @@ const businessNameEvidence={
   hash:"8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",result:"pass" as const,
 };
 const groups = [
+  {ids:["DOC-001","EDT-006","EDP-004","EDP-006","EDP-007","AI-007","WRK-003","WRK-004","NFR-009","OPS-003"],
+    paths:["artifacts/api-server/src/editorial/operational-intake.ts",
+      "artifacts/api-server/src/editorial/operational-review.ts",
+      "artifacts/api-server/src/editorial/review-meter.ts",
+      "artifacts/api-server/src/lib/valo-reminder-worker.ts",
+      "artifacts/api-server/src/lib/valo-reminder-resend.ts",
+      "artifacts/api-server/src/lib/valo-reminder-delivery.integration.test.ts",
+      "artifacts/api-server/src/scripts/r1-template-render-proof.ts",
+      "lib/db/drizzle/0012_editorial_usage_meter.sql","lib/db/drizzle/0013_reminder_delivery_retry.sql",
+      "lib/db/drizzle/0014_reminder_replay_window.sql"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/content-intake-reminder-checkpoint.json",
+      hash:"e4e4e5ccccbf8e0bcfdcac63ac6b771096713a5ec2d0b9871d9fd8d4c538260f",result:"pass" as const}},
   {ids:["EDP-006","EDP-007","EDP-012","ADM-005"],
     paths:["artifacts/api-server/src/editorial/operational-mechanical.ts",
       "artifacts/api-server/src/editorial/operational-mechanical.test.ts",

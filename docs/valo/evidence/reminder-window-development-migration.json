@@ -1,0 +1,16 @@
+{
+  "observedAt": "2026-11-14T10:55:06.511Z",
+  "sqlHash": "c23302abed3200dc237157cb4f10c074d8f9275eb5256768c432b6613c9f58e1",
+  "applied": true,
+  "before": {
+    "rows": 1,
+    "attempts": 0
+  },
+  "after": {
+    "rows": 1,
+    "attempts": 0
+  },
+  "historicalFirstAttemptsBackfilled": false,
+  "baselineAdopted": false,
+  "productionApplied": false
+}
