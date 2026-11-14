@@ -106,7 +106,8 @@ async function main(){
     providerCalls:0,reservationsCreated:0,eligiblePublished:false,
     guards,sdkTransportInvocationsDuringGuardProof:outboundAttempts,
     dispatchBlocked:plan.manifest.status!=="mechanically_planned_not_reserved"?"input_size":
-      Number(live.rows[0].reviews_today)+2>6?"operational_daily_limit":null,
+      "finite_work_not_authorized",
+    legacyDailyCountsAreObservationOnly:true,
     r1Accepted:false,r2Unlocked:false,livePaymentsEnabled:false,publicLaunchEnabled:false};
   const directory=resolve(publicationWorkspaceRoot(),"generated-artifacts/valo-completion");
   await mkdir(directory,{recursive:true});
