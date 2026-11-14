@@ -71,6 +71,13 @@
       "when": 1794615542749,
       "tag": "0009_customer_access",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794615542750,
+      "tag": "0010_export_recovery",
+      "breakpoints": true
     }
   ]
 }

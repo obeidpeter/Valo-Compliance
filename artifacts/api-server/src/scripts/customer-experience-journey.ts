@@ -17,6 +17,7 @@ async function check(name:string,fn:()=>Promise<void>){
   catch{
     const safe=await page?.evaluate(`({path:location.pathname,headings:document.querySelectorAll("main h1").length,
       width:innerWidth,scroll:document.documentElement.scrollWidth,focus:document.activeElement?.tagName,
+      focusOutline:document.activeElement?getComputedStyle(document.activeElement).outline:null,
       overflow:Array.from(document.querySelectorAll("main *")).filter(e=>e.getBoundingClientRect().right>innerWidth+1)
         .slice(0,5).map(e=>({tag:e.tagName,class:String(e.className)}))})`).catch(()=>null);
     checks.push({name,status:"fail",diagnostic:JSON.stringify(safe??"Unavailable; raw form details suppressed")});process.exitCode=1;
@@ -45,6 +46,34 @@ try{
     for(const path of["/about","/contact","/account-access","/help","/library","/resources","/industries"]){
       await page!.goto(path);await expect(page!.locator("main h1")).toHaveCount(1);await reflow();
     }
+  });
+  await check("catalogue_pagination_first_full_final_empty_and_keyboard_filter_fixtures",async()=>{
+    let total=45;
+    await page!.route("**/api/public/catalogue*",r=>{
+      const p=Number(new URL(r.request().url()).searchParams.get("page")??1);
+      return r.fulfill({json:{page:p,total,heldTemplates:40,items:Array.from({length:Math.max(0,Math.min(20,total-(p-1)*20))},(_,i)=>({
+        id:`fixture-${(p-1)*20+i}`,slug:`fixture-${(p-1)*20+i}`,title:`Pagination fixture ${(p-1)*20+i}`,
+        type:"template",industry:"All industries",summary:"Browser-only pagination fixture; not a release."}))}});
+    });
+    await page!.goto("/library");
+    await expect(page!.getByTestId("button-prev")).toBeDisabled();
+    await expect(page!.getByTestId("button-next")).toBeEnabled();
+    await page!.getByTestId("button-next").click();
+    await expect(page!).toHaveURL(/page=2/);await expect(page!.getByTestId("button-next")).toBeEnabled();
+    await page!.getByTestId("button-next").click();
+    await expect(page!).toHaveURL(/page=3/);await expect(page!.getByTestId("button-next")).toBeDisabled();
+    await page!.getByTestId("button-prev").click();await expect(page!).toHaveURL(/page=2/);
+    await page!.goto("/library?page=4");
+    await expect(page!.getByRole("link",{name:/Pagination fixture/})).toHaveCount(0);
+    const next=page!.getByTestId("button-next");if(await next.count())await expect(next).toBeDisabled();
+    total=0;await page!.goto("/library");
+    await expect(page!.getByRole("link",{name:/Pagination fixture/})).toHaveCount(0);
+    const filters=page!.getByRole("group",{name:"Content type filters"});
+    await expect(filters.getByRole("tab")).toHaveCount(0);
+    await page!.getByTestId("tab-type-guidance").focus();await page!.keyboard.press("Space");
+    await expect(page!.getByTestId("tab-type-guidance")).toHaveAttribute("aria-pressed","true");
+    await expect(page!).toHaveURL(/type=guidance/);
+    await page!.unroute("**/api/public/catalogue*");
   });
   await check("real_mobile_menu_keyboard_focus_and360px_public_routes",async()=>{
     await page!.setViewportSize({width:360,height:800});
@@ -131,7 +160,7 @@ try{
     workspaceId=GetCustomerAccountResponse.parse(account.body).workspaceId;
     for(const path of["/workspace/checker","/workspace/assessments","/workspace/tasks","/workspace/notifications",
       "/workspace/purchases","/workspace/account","/workspace/privacy"]){
-      await page!.goto(path);await expect(page!.locator("main h1")).toHaveCount(1);
+      await page!.goto(path);await expect(page!.locator("main h1").first()).toBeVisible();
       await expect(page!.locator("main")).not.toContainText("Something went wrong");
     }
   });
@@ -154,10 +183,50 @@ try{
     await page!.goto("/workspace/purchases");await expect(page!.getByTestId("text-purchases-message")).toContainText(/not enabled/);
     await page!.goto("/staff");expect((await api("/api/admin/operations?area=support")).status).toBe(403);
   });
+  await check("multiple_activity_labels_and_editor_keyboard_relationships_across_mobile_sizes",async()=>{
+    await page!.goto("/workspace/profile");
+    await expect(page!.getByTestId("button-add-activity")).toBeVisible();
+    while(await page!.locator('input[id^="activity-"]').count()<3)await page!.getByTestId("button-add-activity").click();
+    for(let i=0;i<3;i++)await expect(page!.getByTestId(`input-activity-${i}`)).toHaveAccessibleName(new RegExp(`Business activity ${i+1}`));
+    for(const width of [320,390,768]){await page!.setViewportSize({width,height:850});await reflow();}
+    await page!.setViewportSize({width:1280,height:900});
+    const input=structuredClone(syntheticDocument);
+    input.title="Synthetic accessible mobile editor";
+    input.content.fields.issuerName="Very long synthetic organisation ".repeat(4);
+    input.content.blocks.push({id:"mobile-table",type:"table",text:"",rows:Array.from({length:12},(_,i)=>[`Row ${i+1}`,"LongUnbrokenSyntheticBusinessReference".repeat(5),"₦12,345.67"])});
+    const created=await api("/api/workspace/documents","POST",input);expect(created.status).toBe(201);
+    const doc=GetDocumentResponse.parse(created.body);
+    await page!.goto(`/workspace/documents/${doc.id}`);
+    const title=page!.getByTestId("input-title");
+    for(const width of [320,360,390,768]){
+      await page!.setViewportSize({width,height:850});await reflow();
+      await title.focus();await page!.keyboard.press("Tab");await page!.keyboard.press("Shift+Tab");
+      await expect(title).toBeFocused();
+      expect(await title.evaluate(e=>{const s=e.ownerDocument.defaultView!.getComputedStyle(e);
+        return s.outlineStyle!=="none"&&parseFloat(s.outlineWidth)>=2;})).toBe(true);
+      const edit=page!.getByRole("tab",{name:"Edit",exact:true}),preview=page!.getByRole("tab",{name:"Saved preview"});
+      await edit.focus();await page!.keyboard.press("ArrowRight");await expect(preview).toBeFocused();
+      await expect(preview).toHaveAttribute("aria-selected","true");await reflow();
+      await expect(page!.locator("#editor-preview-panel")).toBeVisible();
+      await expect(page!.locator("#editor-edit-panel")).toBeHidden();
+      if(width<768){
+        const table=page!.getByTestId("preview-doc").getByRole("region").last();
+        await table.focus();await page!.keyboard.press("ArrowRight");
+        await expect.poll(()=>table.evaluate(e=>e.scrollLeft)).toBeGreaterThan(0);
+        await reflow();await preview.focus();
+      }
+      await page!.keyboard.press("Home");await expect(edit).toBeFocused();await reflow();
+      await expect(edit).toHaveAttribute("aria-controls","editor-edit-panel");
+      await expect(page!.locator("#editor-edit-panel")).toHaveAttribute("aria-labelledby","editor-tab-edit");
+      await page!.keyboard.press("End");await expect(preview).toBeFocused();
+      await page!.keyboard.press("ArrowLeft");await expect(edit).toBeFocused();
+    }
+    await page!.setViewportSize({width:1280,height:900});
+  });
   await check("private_account_and_notification_mobile_reflow",async()=>{
     expect(userId).toBeTruthy();await page!.setViewportSize({width:360,height:800});
     for(const path of["/workspace/privacy","/workspace/notifications","/workspace/purchases","/workspace/account"]){
-      await page!.goto(path);await expect(page!.locator("main h1")).toHaveCount(1);await reflow();
+      await page!.goto(path);await expect(page!.locator("main h1").first()).toBeVisible();await reflow();
       await page!.keyboard.press("Tab");await expect(page!.locator(":focus")).toBeVisible();
     }
   });

@@ -38,7 +38,8 @@ export default function Library() {
   function submit(e: FormEvent) { e.preventDefault(); go({ q: draft.trim().slice(0, 120) }); }
   const filtered = !!(q || industry || type !== 'all');
   const d = cat.data;
-  const pageSize = d && d.items.length ? d.items.length : 20;
+  // Catalogue API has a fixed 20-row page, including a short final page.
+  const pageSize = 20;
   const hasMore = d ? d.page * pageSize < d.total : false;
 
   return (
@@ -63,9 +64,9 @@ export default function Library() {
       {coverage.isError && <div className="mt-3"><ErrorState error={coverage.error} title="Industry filters unavailable" onRetry={() => coverage.refetch()} /></div>}
       {unknownIndustry && coverage.data && <p className="mt-3 text-sm text-muted-foreground">This saved industry filter is not in the current taxonomy. It is preserved in the URL; choose a listed category or clear filters. No different activity is inferred.</p>}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2" role="tablist" aria-label="Type">
+      <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Content type filters">
         {TYPES.map((t) => (
-          <button key={t.v} role="tab" aria-selected={type === t.v} onClick={() => go({ type: t.v })} className={'rounded-full border px-4 py-1.5 text-sm transition-colors ' + (type === t.v ? 'border-foreground bg-foreground text-background' : 'border-border hover:bg-secondary')} data-testid={'tab-type-' + t.v}>{t.l}</button>
+          <button key={t.v} type="button" aria-pressed={type === t.v} onClick={() => go({ type: t.v })} className={'rounded-full border px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ' + (type === t.v ? 'border-foreground bg-foreground text-background' : 'border-border hover:bg-secondary')} data-testid={'tab-type-' + t.v}>{t.l}</button>
         ))}
         {filtered && <button className="ml-1 inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-2 hover:underline" onClick={() => setLocation('/library')} data-testid="button-clear-filters"><X className="h-3.5 w-3.5" /> Clear</button>}
       </div>

@@ -5,6 +5,7 @@ import { exportQueue, EXPORT_QUEUE } from "../lib/valo-export-queue";
 import { executeExport, developmentExportsOnly } from "../lib/valo-exports";
 import { logger } from "../lib/logger";
 import { reconcileDueReminders } from "../lib/valo-reminder-worker";
+import { recoverAbandonedExports,reconcileExportOrphans } from "../lib/valo-export-recovery";
 
 developmentExportsOnly();
 const payload = z.object({ jobId:z.string().uuid(),workspaceId:z.string().uuid() }).strict();
@@ -14,7 +15,15 @@ await boss.start();
 await boss.work(EXPORT_QUEUE, {batchSize:1,pollingIntervalSeconds:1}, async jobs => {
   for (const entry of jobs) {
     const input = payload.parse(entry.data);
-    await executeExport(input.jobId,input.workspaceId,entry.id);
+    const faultHarness=process.env.NODE_ENV==="development"&&!process.env.REPLIT_DEPLOYMENT&&
+      process.env.VALO_RUN_EXPORT_CRASH_TESTS==="synthetic-development-only"&&process.send&&
+      process.env.VALO_EXPORT_CRASH_JOB===input.jobId;
+    await executeExport(input.jobId,input.workspaceId,entry.id,faultHarness?async stage=>{
+      if(stage!==process.env.VALO_EXPORT_CRASH_STAGE)return;
+      const [owned]=await db.select().from(valoExportJobs).where(eq(valoExportJobs.id,input.jobId));
+      if(!owned?.requestedBy.startsWith("synthetic-export-crash-"))throw Error("OWNED_SYNTHETIC_JOB_REQUIRED");
+      process.send!({stage});await new Promise<void>(resolve=>process.once("message",()=>resolve()));
+    }:undefined);
   }
 });
 let dispatching = false;
@@ -23,6 +32,9 @@ async function dispatch() {
   if (dispatching) return;
   dispatching = true;
   try {
+    await recoverAbandonedExports();
+    const cleanup=await reconcileExportOrphans();
+    if(cleanup.failed)logger.error({event:"export.orphan_cleanup_failed",count:cleanup.failed});
     // This durable table is the transactional outbox. Stable queue IDs make retries harmless.
     const pending = await db.select().from(valoExportJobs).where(eq(valoExportJobs.status,"queued")).limit(25);
     for (const job of pending)

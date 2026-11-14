@@ -10,7 +10,7 @@ import { unzipSync, strFromU8 } from "fflate";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import {
   db,pool,valoExportJobs,valoExportRequests,valoFileAssets,valoDocumentRevisions,valoDocuments,
-  valoEvents,valoMemberships,valoProfileVersions,valoWorkspaces,
+  valoEvents,valoMemberships,valoProfileVersions,valoWorkspaces,valoExportObjects,
 } from "@workspace/db";
 import { resolveWorkspace, createDocument, saveDocument, getDocument } from "./valo-store";
 import { requestExport,getExport,listExports,executeExport,downloadExport,retryExport } from "./valo-exports";
@@ -159,6 +159,9 @@ test("real development PostgreSQL, private App Storage and renderer integration"
     await stopWorker();
     const files = await db.select().from(valoFileAssets).where(inArray(valoFileAssets.workspaceId,workspaces));
     for(const file of files) await deletePrivateFile(file.objectKey);
+    const objects=await db.select().from(valoExportObjects).where(inArray(valoExportObjects.workspaceId,workspaces));
+    for(const object of objects)await deletePrivateFile(object.objectKey);
+    await db.delete(valoExportObjects).where(inArray(valoExportObjects.workspaceId,workspaces));
     await db.delete(valoFileAssets).where(inArray(valoFileAssets.workspaceId,workspaces));
     await db.delete(valoExportRequests).where(inArray(valoExportRequests.workspaceId,workspaces));
     await db.delete(valoExportJobs).where(inArray(valoExportJobs.workspaceId,workspaces));

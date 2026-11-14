@@ -15,6 +15,7 @@ export const valoExportJobs = pgTable("valo_export_jobs", {
   status: text("status").notNull().default("queued").$type<"queued" | "running" | "retrying" | "ready" | "failed">(),
   attempts: integer("attempts").notNull().default(0),
   retryCycles: integer("retry_cycles").notNull().default(0),
+  leaseRecoveries: integer("lease_recoveries").notNull().default(0),
   errorCode: text("error_code"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

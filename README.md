@@ -1,6 +1,9 @@
 # Valo Compliance — Valo Platform
 
-Current customer routes, signed-out access support, privacy requests and staff-read checkpoint:
+Latest implementation checkpoint:
+[export crash recovery, correct pagination and accessible/mobile editing](docs/valo/export-recovery-accessibility-checkpoint.md).
+
+Previous customer routes, signed-out access support, privacy requests and staff-read checkpoint:
 [working behavior, executed checks and remaining limitations](docs/valo/customer-experience-checkpoint.md).
 The repository remains private. Older checkpoint and incident sections are historical; the linked current checkpoint is not a production-readiness declaration.
 

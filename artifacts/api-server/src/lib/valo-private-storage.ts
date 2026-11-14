@@ -14,12 +14,14 @@ function object(key: string) {
  * The native SDK has no conditional-create primitive. Never reuse or overwrite a key.
  * Source/render hashes live in the immutable-revision/job/file relational chain.
  */
-export async function writePrivateFile(key: string,bytes: Buffer) {
+export async function writePrivateFile(key: string,bytes: Buffer,onUploading?:()=>Promise<void>) {
   const {client,name} = object(key);
   const exists = await client.exists(name);
   if (!exists.ok) throw new Error("PRIVATE_STORAGE_CHECK_FAILED");
   if (exists.value) throw new Error("PRIVATE_FILE_KEY_ALREADY_WRITTEN");
-  const uploaded = await client.uploadFromBytes(name,bytes,{compress:false});
+  const uploading = client.uploadFromBytes(name,bytes,{compress:false});
+  if(onUploading)await onUploading();
+  const uploaded = await uploading;
   if (!uploaded.ok) throw new Error("PRIVATE_STORAGE_WRITE_FAILED");
   const read = await client.downloadAsBytes(name);
   if (!read.ok) throw new Error("PRIVATE_STORAGE_READ_FAILED");

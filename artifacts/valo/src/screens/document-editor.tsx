@@ -225,7 +225,8 @@ export default function DocumentEditor({ id }: { id: string }) {
         <span className="pill pill-ink">Not reviewed</span>
       </div>
       <label className="sr-only" htmlFor="doc-title">Title</label>
-      <input id="doc-title" value={title} maxLength={160} onChange={(e) => update({ title: e.target.value, content })} placeholder="Name this draft" aria-invalid={!title.trim()} className="font-display mt-3 w-full bg-transparent text-4xl leading-tight outline-none placeholder:text-muted-foreground/60 sm:text-5xl" data-testid="input-title" />
+      <h1 className="sr-only">Document editor</h1>
+      <input id="doc-title" value={title} maxLength={160} onChange={(e) => update({ title: e.target.value, content })} placeholder="Name this draft" aria-invalid={!title.trim()} className="document-title font-display mt-3 w-full rounded-md bg-transparent text-4xl leading-tight placeholder:text-muted-foreground/60 sm:text-5xl" data-testid="input-title" />
       {!title.trim() && <p className="hint !text-destructive">A title is needed before this draft can be saved.</p>}
 
       {state === 'conflict' && (
@@ -242,9 +243,13 @@ export default function DocumentEditor({ id }: { id: string }) {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex rounded-full border border-border p-1" role="tablist">
+            <div className="inline-flex rounded-full border border-border p-1" role="tablist" aria-label="Document view">
               {(['edit', 'preview'] as const).map((t) => (
-                <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={cn('rounded-full px-4 py-1.5 text-sm capitalize transition-colors', tab === t ? 'bg-foreground text-background' : 'hover:bg-secondary')} data-testid={'tab-' + t}>{t === 'preview' ? 'Saved preview' : 'Edit'}</button>
+                <button key={t} type="button" role="tab" id={'editor-tab-'+t} aria-controls={'editor-'+t+'-panel'} aria-selected={tab === t} tabIndex={tab===t?0:-1}
+                  onKeyDown={e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();
+                    const next=e.key==='Home'?'edit':e.key==='End'?'preview':t==='edit'?'preview':'edit';setTab(next);
+                    e.currentTarget.parentElement?.querySelector<HTMLButtonElement>('#editor-tab-'+next)?.focus();}}
+                  onClick={() => setTab(t)} className={cn('rounded-full px-4 py-1.5 text-sm capitalize transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring', tab === t ? 'bg-foreground text-background' : 'hover:bg-secondary')} data-testid={'tab-' + t}>{t === 'preview' ? 'Saved preview' : 'Edit'}</button>
               ))}
             </div>
             <div className="flex gap-2">
@@ -253,13 +258,15 @@ export default function DocumentEditor({ id }: { id: string }) {
             </div>
           </div>
 
+          <div hidden role="tabpanel" id={tab==='edit'?'editor-preview-panel':'editor-edit-panel'}
+            aria-labelledby={tab==='edit'?'editor-tab-preview':'editor-tab-edit'} />
           {tab === 'preview' ? (
-            <div>
+            <div role="tabpanel" id="editor-preview-panel" aria-labelledby="editor-tab-preview" tabIndex={0}>
               {state !== 'saved' && <p className="mb-3 text-sm text-muted-foreground">Showing the last saved revision. Unsaved edits are not included.</p>}
               {saved && <DocPreview title={saved.title} content={saved.content} revision={saved.revision} />}
             </div>
           ) : (
-            <div className="surface p-5 sm:p-8">
+            <div className="surface p-5 sm:p-8" role="tabpanel" id="editor-edit-panel" aria-labelledby="editor-tab-edit" tabIndex={0}>
               <p className="eyebrow mb-4">Key details</p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {(['issuerName', 'recipientName', 'documentNumber'] as const).map((k) => (
@@ -422,19 +429,21 @@ function DocPreview({ title, content, revision }: { title: string; content: Cano
   const accent = content.formatting.accent === 'forest' ? 'hsl(155 42% 21%)' : 'hsl(30 8% 14%)';
   const f = content.fields;
   return (
-    <article className={cn('surface mx-auto max-w-[46rem] px-7 py-10 shadow-[var(--shadow-lg)] sm:px-14 sm:py-14', content.formatting.font === 'serif' ? 'font-display' : 'font-sans')} data-testid="preview-doc">
+    <article className={cn('surface mx-auto min-w-0 w-full max-w-[46rem] px-7 py-10 shadow-[var(--shadow-lg)] sm:px-14 sm:py-14', content.formatting.font === 'serif' ? 'font-display' : 'font-sans')} style={{overflowWrap:'anywhere'}} data-testid="preview-doc">
       <div className="h-1 w-16 rounded-full" style={{ background: accent }} />
       <h2 className="mt-6 text-3xl leading-tight" style={{ color: accent }}>{title}</h2>
       <dl className="mt-6 grid gap-x-8 gap-y-2 font-sans text-sm sm:grid-cols-2">
         {(['issuerName', 'recipientName', 'documentNumber', 'issueDate', 'dueDate'] as const).map((k) => (
-          <div key={k} className="flex justify-between gap-3 border-b border-border py-1.5"><dt className="text-muted-foreground">{FIELD_LABELS[k]}</dt><dd className={f[k] ? '' : 'italic text-[hsl(38_60%_35%)]'}>{f[k] || 'Missing'}</dd></div>
+          <div key={k} className="flex min-w-0 flex-wrap justify-between gap-3 border-b border-border py-1.5"><dt className="text-muted-foreground">{FIELD_LABELS[k]}</dt><dd className={cn('min-w-0',f[k] ? '' : 'italic text-[hsl(38_60%_35%)]')}>{f[k] || 'Missing'}</dd></div>
         ))}
       </dl>
       <div className="mt-8 grid gap-4 text-[1.05rem] leading-relaxed">
-        {content.blocks.map((b) => b.type === 'list' ? (
+        {content.blocks.map((b,index) => b.type === 'list' ? (
           <ul key={b.id} className="list-disc pl-6">{b.text.split('\n').filter((l) => l.trim()).map((l, i) => <li key={i}>{l}</li>)}</ul>
         ) : b.type === 'table' ? (
-          <table key={b.id} className="w-full border-collapse font-sans text-sm"><tbody>{b.rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} className="border border-border px-2.5 py-1.5">{c}</td>)}</tr>)}</tbody></table>
+          <div key={b.id} className="preview-table min-w-0 overflow-x-auto" role="region" aria-label={'Document table '+(index+1)} tabIndex={0}>
+            <table className="w-full min-w-[30rem] table-fixed border-collapse font-sans text-sm"><tbody>{b.rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} className="border border-border px-2.5 py-1.5">{c}</td>)}</tr>)}</tbody></table>
+          </div>
         ) : b.text.trim() ? <p key={b.id} className="whitespace-pre-wrap">{b.text}</p> : <p key={b.id} className="font-sans text-sm italic text-muted-foreground">Empty paragraph</p>)}
       </div>
       {f.notes && <p className="mt-8 whitespace-pre-wrap border-t border-border pt-4 font-sans text-sm text-muted-foreground">{f.notes}</p>}

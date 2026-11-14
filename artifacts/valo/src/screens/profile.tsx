@@ -106,8 +106,9 @@ export default function ProfilePage() {
             <div className="grid gap-2">
               {p.activities.map((a, i) => (
                 <div key={i} className="flex gap-2">
+                  <label className="sr-only" htmlFor={'activity-'+i}>Business activity {i+1}</label>
                   <input id={'activity-' + i} className="field" maxLength={120} value={a} placeholder="e.g. Selling fabric wholesale" onChange={(e) => set('activities', p.activities.map((x, j) => (j === i ? e.target.value : x)))} data-testid={'input-activity-' + i} />
-                  {p.activities.length > 1 && <button type="button" aria-label="Remove activity" className="btn btn-ghost !px-3" onClick={() => set('activities', p.activities.filter((_, j) => j !== i))}><X className="h-4 w-4" /></button>}
+                  {p.activities.length > 1 && <button type="button" aria-label={'Remove business activity '+(i+1)} className="btn btn-ghost !px-3" onClick={() => set('activities', p.activities.filter((_, j) => j !== i))}><X className="h-4 w-4" /></button>}
                 </div>
               ))}
               {p.activities.length < 10 && <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => set('activities', [...p.activities, ''])} data-testid="button-add-activity"><Plus className="h-4 w-4" /> Add activity</button>}
