@@ -1,0 +1,59 @@
+{
+  "scope": "Partial development implementation, not formal acceptance",
+  "applicationRevision": "1012594b0bb614e76473ea684d97c3a5cf31999e",
+  "executedTests": {
+    "combinedDevelopmentDatabase": {"passed": 94, "failed": 0, "skipped": 0},
+    "budgetUnitAndDatabase": {"passed": 26, "failed": 0},
+    "targetedReceiptAndCommerce": {"passed": 19, "failed": 0, "skipped": 0},
+    "engineeringAndTraceability": {"passed": 174, "failed": 0},
+    "note": "Groups overlap; they must not be summed as distinct cases."
+  },
+  "editorialAuthored60": {
+    "controlledPasses": 14,
+    "failed": 0,
+    "blocked": 46,
+    "newProviderCalls": 0,
+    "formalAcceptance": false,
+    "C042": "Arithmetic rejection is partial; genuine passing review prerequisite absent",
+    "C052": "Native drafter denials proved; separate reviewer and denial-log prerequisites absent",
+    "C054": "Financial database and explicit filing/payment/price dispatch denials logged"
+  },
+  "receiptRecovery": {
+    "initialMissing": 94,
+    "firstRepaired": 76,
+    "secondObservedMissing": 18,
+    "secondRepaired": 18,
+    "remaining": 0,
+    "repeatObservedMissing": 0,
+    "orderHistoryPreserved": true,
+    "deliveryHeld": true,
+    "providerCalls": 0,
+    "emailSends": 0,
+    "actualSettlements": 0
+  },
+  "inference": {
+    "connectedDispatchTestedWithControlledTransport": true,
+    "historicalRecordsPreserved": 57,
+    "unresolvedLiabilities": 20,
+    "availableBalance": null,
+    "enabledApprovedBatches": 0,
+    "ownerApproval": false,
+    "newPaidCalls": 0,
+    "quotaChanges": false,
+    "finalWorkManifestPrepared": false
+  },
+  "privacy": {
+    "independentPrivacyRole": true,
+    "rawSessionTransportHTTPBoundaryTested": true,
+    "realPrivilegedManagedSessionTested": false,
+    "syntheticPhysicalErasureAndIdentityTombstoneTested": true,
+    "externalProcessorErasure": false,
+    "productionFulfilment": false
+  },
+  "cleanMigrations": {"passed": true, "journalledCount": 21, "environment": "disposable local PostgreSQL", "production": false},
+  "nativeStaticFindings": 0,
+  "R1Accepted": false,
+  "R2Accepted": false,
+  "publicLaunch": false,
+  "livePayments": false
+}

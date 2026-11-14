@@ -225,6 +225,13 @@ export function partialWorkflowEvidence(id:string){
   const privacyCaseProof={kind:"test" as const,path:"docs/valo/evidence/privacy-cases-checkpoint.json",
     hash:"352688315e3166dcbd4df5d15e26bec46de12be8b018fec3bdc22f5c85149f1e",result:"pass" as const};
   const currentValidation=[
+    {ids:["IAM-002","IAM-003","PRV-003","AI-007","AI-009","EDP-004","EDP-006","EDP-009","EDP-010","PAY-005","PAY-007","PAY-009"],
+      paths:["artifacts/api-server/src/routes/valo-customer-access.ts","artifacts/api-server/src/lib/valo-store.ts",
+        "artifacts/api-server/src/lib/valo-privacy-erasure.ts","artifacts/api-server/src/lib/inference-batch-dispatch.ts",
+        "artifacts/api-server/src/lib/inference-work-bindings.ts","artifacts/api-server/src/editorial/external-action-boundary.ts",
+        "artifacts/api-server/src/scripts/editorial-source-suite.ts","artifacts/api-server/src/lib/valo-commerce.ts"],
+      record:{kind:"test" as const,path:"docs/valo/evidence/privacy-budget-editorial-checkpoint.json",
+        hash:"42faf8268849b4e897e7e10d5dbd11c8c46274d5673526d5dce0975d31e9f1a7",result:"pass" as const}},
     {ids:["AI-007","AI-009","SEC-005","EDP-009","NFR-010","OPS-003"],
       paths:["artifacts/api-server/src/lib/inference-budget.ts","artifacts/api-server/src/lib/inference-budget-store.ts",
         "artifacts/api-server/src/lib/managed-inference.ts","artifacts/api-server/src/scripts/inference-budget-proposal.ts",
