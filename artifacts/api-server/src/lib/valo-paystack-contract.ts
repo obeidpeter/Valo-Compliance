@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-import { ValoProblem } from "./valo-store";
+import { ValoProblem } from "./valo-problem";
 
 export type WebhookConfiguration=
   |{mode:"timestamped";secrets:string[]}

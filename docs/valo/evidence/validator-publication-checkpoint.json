@@ -45,8 +45,8 @@
   },
   "executed": {
     "api": {
-      "total": 100,
-      "pass": 99,
+      "total": 101,
+      "pass": 100,
       "fail": 0,
       "skip": 1
     },
@@ -344,5 +344,12 @@
   "developmentObservations": [
     "Public homepage rendered after all relevant workflows restarted; signed-in UI was not reverified in this batch.",
     "Preview HMR websocket 502 and Clerk development/internal-CSS warnings were observed; these are not production acceptance."
-  ]
+  ],
+  "ciRegression": {
+    "failedHead": "efbbd9142d86c2dae74fc0e9ea15687a67c0b759",
+    "postgresJob": "passed",
+    "rootCause": "Pure payment contract had an implicit database-import dependency",
+    "localFixedRegression": "Both actual HMAC/order-match tests passed in a child with no database/provider credentials",
+    "remoteFixedRun": "not yet executed"
+  }
 }

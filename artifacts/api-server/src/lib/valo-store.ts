@@ -10,9 +10,8 @@ import { documentInput, documentUpdate, profileInput, ticketInput } from "./valo
 import { z } from "zod";
 import { consumeQuota,quotaPolicy,quotaSubjectHash } from "./valo-quota";
 
-export class ValoProblem extends Error {
-  constructor(public status: number, message: string, public currentRevision?: number,public retryAfter?:number) { super(message); }
-}
+import {ValoProblem} from "./valo-problem";
+export {ValoProblem} from "./valo-problem";
 export type WorkspaceActor = { workspaceId: string; identityId: string };
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /** Acquire after potentially blocking resource locks, immediately before writing.

@@ -54,7 +54,7 @@ rejection. Commercial licence acceptance and sales remain false.
 
 | Check | Actual outcome |
 | --- | --- |
-| API/component engineering suite | 100 tests: **99 passed, 0 failed, 1 opt-in skipped** |
+| API/component engineering suite | 101 tests: **100 passed, 0 failed, 1 opt-in skipped** |
 | Database integration | **49 passed**, no skips |
 | Controlled commerce mechanics | **14 passed**; not merchant execution |
 | Controlled raw-webhook HTTP | **5 passed** |
@@ -69,6 +69,15 @@ that all vulnerabilities are absent. The historical failed export attempts
 and actual v7/v8 reports remain alongside the successful regression evidence.
 CI explicitly installs Poppler and the locked Playwright Chromium for the new
 real-format tests; configuring those steps is not a claim that remote CI passed.
+
+The first remote run at `efbbd914` passed its PostgreSQL job but failed the
+unit-test job: importing the pure payment contract initialised the datastore
+because its safe error class lived there. The error class now has a
+credential-free module, re-exported by the datastore without changing error
+identity. A new regression runs both actual HMAC/order-match contract tests
+in a child with no database or provider credentials. No dummy database URL,
+new skip or fake payment success was added. The latest local results above
+include this fix; the failed remote evidence is retained separately.
 
 All relevant development workflows restarted successfully. The public Valo
 homepage rendered with the exact hero. Signed-in UI was not reverified in this
