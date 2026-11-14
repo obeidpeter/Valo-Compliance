@@ -2,6 +2,7 @@ import {randomUUID} from "node:crypto";
 import {and,eq,inArray,lte,sql} from "drizzle-orm";
 import {db,valoExportJobs,valoExportObjects,valoFileAssets,valoEvents} from "@workspace/db";
 import {deletePrivateFile} from "./valo-private-storage";
+import {assertDevelopmentRuntime} from "./valo-development-runtime";
 
 export const EXPORT_LEASE_MS=90_000;
 export const EXPORT_HEARTBEAT_MS=10_000;
@@ -10,6 +11,7 @@ export const EXPORT_HEARTBEAT_MS=10_000;
  * Rotate the generation before redispatch, fencing every prior worker.
  */
 export async function recoverAbandonedExports(jobId?:string){
+  assertDevelopmentRuntime();
   return db.transaction(async tx=>{
     const due=await tx.select().from(valoExportJobs).where(and(
       inArray(valoExportJobs.status,["queued","running","retrying"]),
@@ -34,6 +36,7 @@ export async function recoverAbandonedExports(jobId?:string){
  * untracked object after an earlier ignore-not-found deletion.
  */
 export async function reconcileExportOrphans(jobId?:string){
+  assertDevelopmentRuntime();
   const due=await db.select().from(valoExportObjects).where(and(eq(valoExportObjects.state,"cleanup"),
     lte(valoExportObjects.nextCleanupAt,new Date()),jobId?eq(valoExportObjects.jobId,jobId):undefined)).limit(25);
   let cleaned=0,failed=0;

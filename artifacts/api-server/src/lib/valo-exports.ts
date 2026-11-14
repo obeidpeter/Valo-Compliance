@@ -9,11 +9,13 @@ import { RENDER_VERSION, renderDocument, exportMime } from "./valo-render";
 import { readPrivateFile, writePrivateFile, deletePrivateFile } from "./valo-private-storage";
 import { documentInput } from "./valo-validation";
 import {EXPORT_HEARTBEAT_MS,EXPORT_LEASE_MS,recoverAbandonedExports} from "./valo-export-recovery";
+import {assertDevelopmentRuntime} from "./valo-development-runtime";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export function developmentExportsOnly() {
-  if (process.env.NODE_ENV === "production")
+  try{assertDevelopmentRuntime();}catch{
     throw new ValoProblem(503, "Exports remain disabled pending production storage, worker, recovery and privacy approval.");
+  }
 }
 export async function assertExportActor(actor: WorkspaceActor, connection: typeof db | Tx = db) {
   const [membership] = await connection.select().from(valoMemberships).where(and(

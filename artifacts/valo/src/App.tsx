@@ -155,7 +155,8 @@ function ClerkAccountState({children}:{children:ReactNode}) {
   const publicOnlyLoading=(!auth.isLoaded||!user.isLoaded)&&!auth.userId&&!user.user;
   const key=coherent?`${auth.userId??"anonymous"}/${auth.sessionId??"none"}/${user.user?.primaryEmailAddress?.verification.status??"none"}`:
     publicOnlyLoading?"unresolved":null;
-  return <AccountStateBoundary identityKey={key}>{children}</AccountStateBoundary>;
+  return <AccountStateBoundary identityKey={key}
+    sessionKey={auth.userId&&auth.sessionId?`${auth.userId}/${auth.sessionId}`:null}>{children}</AccountStateBoundary>;
 }
 
 function HomeRedirect() {

@@ -33,6 +33,7 @@ await boss.work(EXPORT_QUEUE, {batchSize:1,pollingIntervalSeconds:1}, async jobs
 let dispatching = false;
 let reminderCheckedAt=0;
 async function dispatch() {
+  developmentExportsOnly();
   if (dispatching) return;
   dispatching = true;
   try {

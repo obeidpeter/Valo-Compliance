@@ -15,3 +15,14 @@ even though the actual page's focus state was correct.
 **How to apply:** Type-check the harness and validate returned browser values
 separately. Retain and label harness failures; do not describe them as product
 failures or change the product to satisfy a broken observation.
+
+Cross-tab tests need pages created from one explicitly shared browser context.
+The browser-level single-page convenience creates an isolated, owned context;
+separate contexts do not share same-origin session communication.
+
+**Why:** A session-end broadcast regression initially tested isolated storage
+partitions instead of two tabs of the same browser session.
+
+**How to apply:** Establish a shared context before creating peers and prove the
+native cross-tab transport, while labelling controlled identity separately from
+a real managed-provider session test.

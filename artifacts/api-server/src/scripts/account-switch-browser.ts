@@ -14,10 +14,14 @@ const root=publicationWorkspaceRoot(),front=resolve(root,"artifacts/valo"),check
 const code=`
 import React,{useState} from "react";
 import{flushSync}from"react-dom";import{createRoot}from"react-dom/client";
-import{QueryClient,QueryClientProvider}from"@tanstack/react-query";
+import{QueryClient,QueryClientProvider,useMutation}from"@tanstack/react-query";
+import{customFetch}from"../../lib/api-client-react/src/custom-fetch";
 import{AccountStateBoundary}from"./src/components/account-state-boundary";
+import{Toaster}from"./src/components/ui/toaster";
+import{useToast}from"./src/hooks/use-toast";
 import Profile from"./src/screens/profile";import Checker from"./src/screens/checker";
-window.fixtureActor="A";window.submitted=[];window.delayed=[];window.delay=false;
+window.fixtureActor="A";window.submitted=[];window.delayed=[];window.delay=false;window.delayedPosts=[];window.delayPosts=false;
+window.staleCallbacks=[];window.deferredSends=[];window.unauthorized=false;
 const profile=(actor)=>({businessName:"PRIVATE_"+actor,legalForm:actor==="A"?"limited_company":"unknown",registrationStatus:"unknown",
  activities:["ACTIVITY_PRIVATE_"+actor],state:"unknown",lga:"PRIVATE_LGA_"+actor,employees:"unknown",
  turnoverBand:"unknown",turnoverYear:"unknown",turnoverMetric:"unknown",turnoverCurrency:"NGN",
@@ -25,20 +29,29 @@ const profile=(actor)=>({businessName:"PRIVATE_"+actor,legalForm:actor==="A"?"li
 const workspace=(actor)=>({id:actor,profile:profile(actor),profileRevision:actor==="B"?8:3,profileVersionId:null});
 window.fetch=async(url,options={})=>{
  const actor=window.fixtureActor,body=options.body?JSON.parse(options.body):null;
+ if(window.unauthorized)return Response.json({},{status:401});
  if(options.method&&options.method!=="GET"){
    window.submitted.push({actor,url:String(url),body});
+   if(window.delayPosts)return new Promise(resolve=>window.delayedPosts.push(()=>resolve(Response.json({...workspace(actor),profile:body?.profile,profileRevision:9}))));
    return Response.json({...workspace(actor),profile:body?.profile??profile(actor),profileRevision:9});
  }
  if(window.delay)return new Promise(resolve=>window.delayed.push({actor,resolve:()=>resolve(Response.json(workspace(actor)))}));
  return Response.json(workspace(actor));
 };
 const legacy=new QueryClient({defaultOptions:{queries:{retry:false}}});
+function MutationProbe(){
+ const{toast}=useToast();window.keepLateToast=()=>{window.lateToast=()=>toast({title:"LATE_PRIVATE_A"});};
+ const mutation=useMutation({mutationFn:()=>customFetch("/api/controlled",{method:"POST",body:JSON.stringify({name:"UNSENT_PRIVATE_A"})}),
+   onMutate:()=>new Promise(resolve=>window.deferredSends.push(resolve)),
+   onSuccess:()=>window.staleCallbacks.push("STALE_PRIVATE_A")});
+ window.deferMutation=()=>mutation.mutate();return null;
+}
 function Fixture(){
  const[state,setState]=useState({actor:"A",view:"profile",legacy:true});
  window.transition=(next)=>{window.fixtureActor=next.actor;legacy.clear();flushSync(()=>setState(next));};
  const child=state.view==="checker"?<Checker/>:state.actor==="anonymous"?<h1>Signed out</h1>:<Profile/>;
- return state.legacy?<QueryClientProvider client={legacy}>{child}</QueryClientProvider>:
-  <AccountStateBoundary identityKey={state.actor+"/test-session"}>{child}</AccountStateBoundary>;
+ return state.legacy?<QueryClientProvider client={legacy}>{child}<Toaster/></QueryClientProvider>:
+  <AccountStateBoundary identityKey={state.actor+"/test-session"}><MutationProbe/>{child}<Toaster/></AccountStateBoundary>;
 }createRoot(document.getElementById("root")).render(<Fixture/>);
 `;
 const result=await build({stdin:{contents:code,loader:"tsx",resolveDir:front},absWorkingDir:front,bundle:true,write:false,
@@ -74,7 +87,8 @@ const server=createServer((req,res)=>{
 server.listen(0,"127.0.0.1");await once(server,"listening");
 const address=server.address();if(!address||typeof address==="string")throw Error("NO_TEST_PORT");
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH||"/repl/tools/bin/chromium"});
-const page=await browser.newPage({viewport:{width:360,height:800}});
+const context=await browser.newContext({viewport:{width:360,height:800}});
+const page=await context.newPage();
 const transition=async(actor:string,view="profile",legacy=false)=>page.evaluate(`window.transition(${JSON.stringify({actor,view,legacy})})`);
 const report:{[key:string]:unknown}={startedAt:new Date().toISOString(),controlledIdentity:true,controlledApi:true,
   realClerkSessions:0,compiledProductCssSha256:createHash("sha256").update(css).digest("hex"),
@@ -96,8 +110,37 @@ try{
   await name.fill("PRIVATE_B_EDIT");
   await page.getByTestId("button-save-profile").click();
   await expect.poll(()=>page.evaluate("window.submitted.length")).toBe(1);
+  await expect(page.getByText("Profile saved",{exact:true})).toBeVisible();
   expect(JSON.stringify(await page.evaluate("window.submitted"))).not.toContain("PRIVATE_A");
   checks.push("B profile submission contained no A form marker");
+  await transition("A");await name.fill("UNSAVED_SAME_ACCOUNT_A");await transition("A");
+  await expect(name).toHaveValue("UNSAVED_SAME_ACCOUNT_A");
+  const beforeNavigation=page.url();
+  await page.evaluate("history.pushState({},'', '/another-screen')");
+  await expect(page.getByRole("dialog")).toBeVisible();
+  expect(page.url()).toBe(beforeNavigation);
+  await page.getByTestId("button-stay-editor").click();
+  await expect(name).toHaveValue("UNSAVED_SAME_ACCOUNT_A");
+  checks.push("Same-account rerender and cancelled routed navigation preserved unsaved profile");
+  await page.evaluate("window.delayPosts=true;window.keepLateToast()");
+  await page.getByTestId("button-save-profile").click();
+  await expect.poll(()=>page.evaluate("window.delayedPosts.length")).toBe(1);
+  await transition("B");await expect(name).toHaveValue("PRIVATE_B");
+  await page.evaluate("window.delayPosts=false;for(const resolve of window.delayedPosts)resolve();window.lateToast()");
+  await expect(name).toHaveValue("PRIVATE_B");
+  checks.push("Late A save response after B switch did not update B profile or show saved toast");
+  await expect(page.locator("body")).not.toContainText("Profile saved");
+  await expect(page.locator("body")).not.toContainText("LATE_PRIVATE_A");
+  await transition("A");
+  const beforeDeferred=await page.evaluate("window.submitted.length");
+  await page.evaluate("window.deferMutation()");
+  await expect.poll(()=>page.evaluate("window.deferredSends.length")).toBe(1);
+  await transition("B");
+  await page.evaluate("for(const resolve of window.deferredSends)resolve()");
+  await page.waitForTimeout(150);
+  expect(await page.evaluate("window.submitted.length")).toBe(beforeDeferred);
+  expect(await page.evaluate("window.staleCallbacks")).toEqual([]);
+  checks.push("Mutation paused before dispatch was discarded, with zero sends, after account switch");
   await page.evaluate("window.delay=true");await transition("A");
   await expect.poll(()=>page.evaluate("window.delayed.length")).toBeGreaterThan(0);
   await page.evaluate("window.delay=false");await transition("B");
@@ -110,6 +153,35 @@ try{
   await transition("anonymous","checker");
   await expect(page.locator('input[name="legalForm"][value="limited_company"]')).not.toBeChecked();
   checks.push("Public checker copied facts reset on controlled sign-out");
+  const peer=await page.context().newPage();
+  await peer.goto(`http://127.0.0.1:${address.port}`);
+  await peer.evaluate("window.transition({actor:'A',view:'profile',legacy:false})");
+  await expect(peer.getByTestId("input-business-name")).toHaveValue("PRIVATE_A");
+  await transition("A","checker");await page.getByTestId("button-prefill").click();
+  await expect(page.locator('input[name="legalForm"][value="limited_company"]')).toBeChecked();
+  await peer.evaluate("window.transition({actor:'anonymous',view:'profile',legacy:false})");
+  await expect(page.getByRole("alert")).toContainText("session ended or changed");
+  await expect(page.locator('input[name="legalForm"]')).toHaveCount(0);
+  checks.push("Actual cross-tab BroadcastChannel session-end cleared an open prefilled public checker");
+  await transition("B");await expect(name).toHaveValue("PRIVATE_B");
+  await peer.evaluate("window.transition({actor:'B',view:'profile',legacy:false})");
+  await expect(peer.getByTestId("input-business-name")).toHaveValue("PRIVATE_B");
+  await peer.getByTestId("input-business-name").fill("UNSAVED_PRIVATE_B");
+  await transition("anonymous","checker");
+  await expect(peer.getByRole("alert")).toContainText("session ended or changed");
+  await expect(peer.getByTestId("input-business-name")).toHaveCount(0);
+  await expect(peer.locator("body")).not.toContainText("UNSAVED_PRIVATE_B");
+  checks.push("Actual cross-tab session-end removed private profile and unsaved fields");
+  await peer.close();
+  await transition("A");await expect(name).toHaveValue("PRIVATE_A");
+  await name.fill("PRIVATE_A_BEFORE_401");
+  await page.evaluate("window.unauthorized=true");
+  await page.getByTestId("button-save-profile").click();
+  await expect(page.getByRole("alert")).toContainText("session ended or changed");
+  await expect(name).toHaveCount(0);
+  await page.evaluate("window.unauthorized=false");
+  await transition("B");await expect(name).toHaveValue("PRIVATE_B");
+  checks.push("Current API session loss scrubbed mounted private form before another workspace could use it");
   await transition("B");
   await expect(name).toHaveValue("PRIVATE_B");
   await page.evaluate("window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}))");
@@ -126,11 +198,13 @@ try{
   report.status="failed";report.failure=error instanceof Error?error.message.slice(0,1500):"BROWSER_CASE_FAILED";
   process.exitCode=1;
 }finally{
-  const paths=["src/components/account-state-boundary.tsx","src/App.tsx","src/screens/profile.tsx","src/screens/checker.tsx"];
+  const paths=["src/components/account-state-boundary.tsx","src/components/account-epoch-context.ts","src/hooks/use-toast.ts",
+    "src/App.tsx","src/screens/profile.tsx","src/screens/checker.tsx"];
   report.sourceHashes=await Promise.all(paths.map(async path=>({path:`artifacts/valo/${path}`,
     sha256:createHash("sha256").update(await readFile(resolve(front,path))).digest("hex")})));
   const out=resolve(root,"generated-artifacts/valo-completion");await mkdir(out,{recursive:true});
   await writeFile(resolve(out,"account-switch-browser.json"),JSON.stringify(report,null,2)+"\n");
+  await writeFile(resolve(out,`account-switch-browser-${Date.now()}.json`),JSON.stringify(report,null,2)+"\n");
   await page.screenshot({path:resolve(out,"account-switch-browser.jpg"),fullPage:true});
   await browser.close();await new Promise<void>((resolve,reject)=>server.close(e=>e?reject(e):resolve()));
   console.log(JSON.stringify(report,null,2));

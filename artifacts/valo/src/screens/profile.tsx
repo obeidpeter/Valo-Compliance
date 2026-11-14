@@ -12,6 +12,8 @@ import {useAccountEpoch} from '@/components/account-state-boundary';
 import { ErrorState, Notice, Skel } from '@/components/states';
 import { describeError } from '@/lib/api';
 import { WorkspaceNav } from '@/components/workspace-nav';
+import {useUnsavedNavigation} from '@/lib/use-unsaved-navigation';
+import {UnsavedNavigationDialog} from '@/components/unsaved-navigation-dialog';
 
 const EMPTY: Profile = {
   businessName: '', legalForm: 'unknown', registrationStatus: 'unknown', activities: [''], state: 'unanswered', lga: '',
@@ -31,6 +33,8 @@ export default function ProfilePage() {
   const [touched, setTouched] = useState(false);
   const [conflict, setConflict] = useState(false);
   const init = useRef(false);
+  const form=useRef<HTMLFormElement>(null),leaving=useRef(false);
+  const navigation=useUnsavedNavigation(()=>touched||save.isPending);
 
   useEffect(() => {
     if (ws.data && !init.current) {
@@ -39,7 +43,7 @@ export default function ProfilePage() {
     }
   }, [ws.data]);
 
-  const set = <K extends keyof Profile>(k: K, v: Profile[K]) => setP((o) => ({ ...o, [k]: v }));
+  const set = <K extends keyof Profile>(k: K, v: Profile[K]) => {setTouched(true);setP((o) => ({ ...o, [k]: v }));};
   const acts = p.activities.map((a) => a.trim()).filter(Boolean);
   const empMode = ['unknown', 'unanswered', 'not_applicable'].includes(p.employees) ? p.employees : 'number';
   const yearMode = p.turnoverYear === 'unknown' ? 'unknown' : 'year';
@@ -56,17 +60,22 @@ export default function ProfilePage() {
     save.mutate({ data: { expectedRevision: ws.data.profileRevision, profile: { ...p, businessName: p.businessName.trim(), activities: acts, state: p.state, lga: p.lga.trim() } } }, {
       onSuccess: (next) => {
         if(!currentAccount())return;
+        setTouched(false);
         setConflict(false);
         qc.setQueryData(getGetWorkspaceQueryKey(), next);
         toast({ title: 'Profile saved', description: 'Saved as revision ' + next.profileRevision + '.' });
+        if(leaving.current){leaving.current=false;navigation.proceed();}
       },
-      onError: (err) => { if (currentAccount()&&describeError(err).kind === 'conflict') setConflict(true); },
+      onError: (err) => { if(!currentAccount())return;leaving.current=false;
+        if (describeError(err).kind === 'conflict') setConflict(true); },
     });
   }
 
   async function reloadLatest() {
     const r = await ws.refetch();
+    if(!currentAccount())return;
     if (r.data?.profile) setP({ ...r.data.profile, activities: r.data.profile.activities.length ? r.data.profile.activities : [''] });
+    setTouched(false);
     setConflict(false);
     save.reset();
   }
@@ -93,7 +102,7 @@ export default function ProfilePage() {
       </div>
       <p className="mt-2 text-muted-foreground">Each save creates a new revision. "Unknown" is always an acceptable answer.</p>
 
-      <form onSubmit={submit} noValidate className="mt-8 grid gap-6">
+      <form ref={form} onSubmit={submit} noValidate className="mt-8 grid gap-6">
         <Section title="Identity">
           <Field label="Business name" id="businessName" error={touched ? errors.businessName : undefined}>
             <input id="businessName" className="field" maxLength={160} value={p.businessName} aria-invalid={touched && !!errors.businessName} onChange={(e) => set('businessName', e.target.value)} data-testid="input-business-name" />
@@ -172,6 +181,11 @@ export default function ProfilePage() {
           <button type="submit" className="btn btn-primary shadow-[var(--shadow-lg)]" disabled={save.isPending} data-testid="button-save-profile">{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save new revision</button>
         </div>
       </form>
+      <UnsavedNavigationDialog open={navigation.blocked} busy={save.isPending}
+        description="You have unsaved changes to your business profile. Save, explicitly discard, or stay here."
+        onSave={()=>{if(Object.keys(errors).length)return;leaving.current=true;form.current?.requestSubmit();}}
+        onDiscard={navigation.proceed} onStay={navigation.stay}
+        error={Object.keys(errors).length?"Correct the highlighted profile details before saving.":err?.message}/>
     </div>
   );
 }

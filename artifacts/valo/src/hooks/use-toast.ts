@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useAccountEpoch} from '@/components/account-epoch-context';
 import type { ToastActionElement, ToastProps } from '@/components/ui/toast';
 
 const TOAST_LIMIT = 1;
@@ -164,7 +165,9 @@ function toast({ ...props }: Toast) {
   };
 }
 
+export function resetAccountToasts(){dispatch({type:'REMOVE_TOAST'});}
 function useToast() {
+  const currentAccount=useAccountEpoch();
   const [state, setState] = React.useState<State>(memoryState);
 
   React.useEffect(() => {
@@ -179,8 +182,8 @@ function useToast() {
 
   return {
     ...state,
-    toast,
-    dismiss: (toastId?: string) => dispatch({ type: 'DISMISS_TOAST', toastId }),
+    toast:(...args:Parameters<typeof toast>)=>currentAccount()?toast(...args):{id:"discarded-account-toast",dismiss:()=>{},update:()=>{}},
+    dismiss: (toastId?: string) => {if(currentAccount())dispatch({ type: 'DISMISS_TOAST', toastId });},
   };
 }
 

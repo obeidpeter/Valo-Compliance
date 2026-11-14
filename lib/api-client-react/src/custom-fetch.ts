@@ -1,3 +1,7 @@
+import {captureRequestScope,assertRequestScope,combineRequestSignals} from "./request-scope";
+// Infer from each host's fetch declarations (browser or Node test runtime).
+type RequestInfo=Parameters<typeof fetch>[0];
+type HeadersInit=NonNullable<ConstructorParameters<typeof Headers>[0]>;
 export type CustomFetchOptions = RequestInit & {
   responseType?: "json" | "text" | "blob" | "auto";
 };
@@ -326,6 +330,7 @@ export async function customFetch<T = unknown>(
   input: RequestInfo | URL,
   options: CustomFetchOptions = {},
 ): Promise<T> {
+  const accountScope=captureRequestScope();
   input = applyBaseUrl(input);
   const { responseType = "auto", headers: headersInit, ...init } = options;
 
@@ -360,12 +365,19 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
-
-  if (!response.ok) {
-    const errorData = await parseErrorBody(response, method);
-    throw new ApiError(response, errorData, requestInfo);
-  }
-
-  return (await parseSuccessBody(response, responseType, requestInfo)) as T;
+  assertRequestScope(accountScope);
+  const cancellation=combineRequestSignals(init.signal,isRequest(input)?input.signal:undefined,accountScope?.signal);
+  try{
+    const response = await fetch(input, { ...init, method, headers,signal:cancellation.signal });
+    assertRequestScope(accountScope);
+    if(response.status===401)accountScope?.onUnauthorized?.();
+    if (!response.ok) {
+      const errorData = await parseErrorBody(response, method);
+      assertRequestScope(accountScope);
+      throw new ApiError(response, errorData, requestInfo);
+    }
+    const result=await parseSuccessBody(response,responseType,requestInfo);
+    assertRequestScope(accountScope);
+    return result as T;
+  }finally{cancellation.dispose();}
 }
