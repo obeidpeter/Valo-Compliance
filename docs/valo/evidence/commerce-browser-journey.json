@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-11-14T08:57:01.882Z",
+  "syntheticDevelopmentOnly": true,
+  "checks": [
+    {
+      "name": "public_auth_fields_and_account_help_reflow_without_clipping",
+      "status": "pass"
+    },
+    {
+      "name": "managed_verified_customer_can_open_private_routes",
+      "status": "pass"
+    },
+    {
+      "name": "real_private_purchase_history_empty_state_mobile_and_api_controls",
+      "status": "pass"
+    }
+  ],
+  "selection": "managed-identity-commerce-only",
+  "actualManagedIdentityUsed": true,
+  "realEmailDeliveryClaimed": false,
+  "actualNewPublications": 0,
+  "fixtureDisclosure": "An unpaid controlled order/licence fixture was saved in the actual database and displayed through authenticated APIs; it was not a released product, price approval or real payment. All owned fixture records were removed.",
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "cleanupErrors": 0,
+  "cleanup": "Owned synthetic identity and application rows removed; provider usage history untouched."
+}

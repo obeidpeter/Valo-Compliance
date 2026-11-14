@@ -11,6 +11,7 @@ import { ValoProblem } from "./lib/valo-store";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { requestReadQuota } from "./middlewares/valo-quota";
+import { paystackWebhookRouter } from "./routes/valo-paystack-webhook";
 
 const app: Express = express();
 
@@ -48,6 +49,7 @@ app.use((req,res,next) => {
   next();
 });
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
+app.use(paystackWebhookRouter);
 app.use(express.json({ limit: "128kb",inflate:false }));
 app.use(requestComplexityLimit);
 app.use(

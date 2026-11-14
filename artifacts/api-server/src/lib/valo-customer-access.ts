@@ -6,6 +6,7 @@ import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfil
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { authorizeWorkspaceWrite,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
+import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations } from "@workspace/db";
 export const accessMessage="Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack=(id:string)=>({reference:`VALO-ACCESS-${id}`,message:accessMessage,delivery:"not_dispatched" as const});
 export async function saveAccessSupport(raw:unknown,remoteAddress:string){
@@ -57,7 +58,9 @@ export async function workspaceDataExport(actor:WorkspaceActor){
     await authorizeWorkspaceWrite(tx,actor);
     const tables={profileVersions:valoProfileVersions,documents:valoDocuments,documentRevisions:valoDocumentRevisions,
       assessments:valoAssessments,tasks:valoTasks,reminderPreferences:valoReminderPreferences,
-      reminderDeliveries:valoReminderOutbox,supportRequests:valoSupportTickets,aiDrafts:valoAIDrafts};
+      reminderDeliveries:valoReminderOutbox,supportRequests:valoSupportTickets,aiDrafts:valoAIDrafts,
+      orders:valoOrders,entitlements:valoEntitlements,purchaseMessages:valoPurchaseOutbox,
+      refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations};
     const data:Record<string,unknown>={};
     let bytes=0;
     for(const [name,table] of Object.entries(tables)){
@@ -93,7 +96,16 @@ export async function staffOperations(identityId:string,recentMfa:boolean,area:S
       // Intake idempotency and payload hashes are not needed by staff.
       records=records.map(({payloadHash,idempotencyKey,...r})=>r);
     }
-    if(area==="finance")notice="Commerce is not enabled. There is no implemented server-verified order/receipt history to display. No settlement or refund can be performed here.";
+    if(area==="finance"){
+      const orders=await tx.select({id:valoOrders.id,reference:valoOrders.reference,amountKobo:valoOrders.amountKobo,
+        currency:valoOrders.currency,status:valoOrders.status,lastCheckedAt:valoOrders.lastCheckedAt}).from(valoOrders).orderBy(desc(valoOrders.createdAt)).limit(100);
+      const refunds=await tx.select({id:valoRefundRequests.id,orderId:valoRefundRequests.orderId,status:valoRefundRequests.status,
+        createdAt:valoRefundRequests.createdAt}).from(valoRefundRequests).orderBy(desc(valoRefundRequests.createdAt)).limit(100);
+      const reconciliation=await tx.select().from(valoPaymentReconciliations).orderBy(desc(valoPaymentReconciliations.createdAt)).limit(100);
+      records=[...orders.map(r=>({...r,kind:"test_order"})),...refunds.map(r=>({...r,kind:"refund_request"})),
+        ...reconciliation.map(r=>({...r,kind:"daily_reconciliation"}))];
+      notice="Test-mode financial records only. Refund requests are not completed refunds. This role cannot read document bodies, edit financial history or grant entitlement directly. Provider execution remains dependent on test-merchant setup.";
+    }
     if(area==="system")records=await tx.select().from(valoSafetySwitches).limit(100);
     return{area,notice,records};
   });

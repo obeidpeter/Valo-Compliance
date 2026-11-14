@@ -11,6 +11,7 @@ import {
 import { WorkspaceNav } from '@/components/workspace-nav';
 import { EmptyState, ErrorState, Notice, Skel } from '@/components/states';
 import { describeError, formatDate } from '@/lib/api';
+import { PurchaseHistoryPage } from './purchase-history';
 
 export function AccountPage() {
   return (
@@ -153,18 +154,5 @@ export function PrivacyPage() {
 }
 
 export function PurchasesPage() {
-  const q = useGetCustomerPurchases({ query: { queryKey: getGetCustomerPurchasesQueryKey() } });
-  return (
-    <div className="mx-auto max-w-6xl px-5 py-10 lg:px-8">
-      <WorkspaceNav />
-      <header className="mb-8"><p className="eyebrow">Your workspace</p><h1 className="font-display mt-2 text-4xl">Purchases</h1></header>
-      {q.isLoading ? <Skel className="h-48" /> : q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : (
-        <EmptyState mark={<ShoppingBag className="h-5 w-5 text-muted-foreground" />} title={q.data?.available ? 'Purchases' : 'Purchases are not enabled'}
-          action={<Link href="/workspace" className="btn btn-primary">Back to your drafts</Link>}>
-          <span data-testid="text-purchases-message">{q.data?.message}</span>
-        </EmptyState>
-      )}
-      <Notice className="mt-6" title="Nothing is charged">Valo takes no payments today. Everything that works in your workspace is free while it is in development.</Notice>
-    </div>
-  );
+  return <PurchaseHistoryPage/>;
 }

@@ -96,6 +96,100 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/CustomerPurchases" }
+  /workspace/orders:
+    post:
+      operationId: createCommerceOrder
+      tags: [valo]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommerceOrderInput" }
+      responses:
+        "201":
+          description: Server-priced test order; not a payment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommerceOrder" }
+  /workspace/orders/{id}/checkout:
+    post:
+      operationId: startCommerceCheckout
+      tags: [valo]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommerceActionInput" }
+      responses:
+        "200":
+          description: Validated hosted test checkout
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url: { type: string }
+  /workspace/orders/{id}/refresh:
+    post:
+      operationId: refreshCommerceOrder
+      tags: [valo]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommerceActionInput" }
+      responses:
+        "200":
+          description: Authoritative server verification result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommerceOrder" }
+  /workspace/orders/{id}/receipt:
+    get:
+      operationId: getCommerceReceipt
+      tags: [valo]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Test receipt available only after server verification
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: "#/components/schemas/CommerceOrder" }
+                  - type: object
+                    required: [notice, deliveryStatus]
+                    properties:
+                      notice: { type: string }
+                      deliveryStatus: { type: string }
+  /workspace/orders/{id}/refund:
+    post:
+      operationId: requestCommerceRefund
+      tags: [valo]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommerceRefundInput" }
+      responses:
+        "201":
+          description: Durable request, not an authorised or completed refund
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reference, status]
+                properties:
+                  reference: { type: string }
+                  status: { type: string }
   /admin/operations:
     get:
       operationId: getStaffOperations
@@ -744,10 +838,59 @@ components:
         data: { type: object, additionalProperties: true }
     CustomerPurchases:
       type: object
-      required: [available, message]
+      required: [available, message, orders, products, livePaymentsEnabled]
       properties:
         available: { type: boolean }
         message: { type: string }
+        livePaymentsEnabled: { type: boolean }
+        orders: { type: array, items: { $ref: "#/components/schemas/CommerceOrder" } }
+        products:
+          type: array
+          items:
+            type: object
+            required: [id, title, amountKobo, currency, licenceVersion, licenceText, taxTreatment]
+            properties:
+              id: { type: string }
+              title: { type: string }
+              amountKobo: { type: integer }
+              currency: { type: string }
+              licenceVersion: { type: string }
+              licenceText: { type: string }
+              taxTreatment: { type: string }
+    CommerceOrderInput:
+      type: object
+      required: [priceId, acceptedLicenceVersion, requestKey]
+      properties:
+        priceId: { type: string, format: uuid }
+        acceptedLicenceVersion: { type: string, minLength: 1, maxLength: 100 }
+        requestKey: { type: string, format: uuid }
+    CommerceRefundInput:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 10, maxLength: 1500 }
+    CommerceActionInput:
+      type: object
+      additionalProperties: false
+      properties: {}
+    CommerceOrder:
+      type: object
+      required: [id, reference, title, amountKobo, currency, status, createdAt, lastCheckedAt, licenceVersion, licenceText, taxTreatment, contentVersionId, refundStatus, receiptReference]
+      properties:
+        id: { type: string }
+        reference: { type: string }
+        title: { type: string }
+        amountKobo: { type: integer }
+        currency: { type: string }
+        status: { type: string, enum: [created, pending, abandoned, failed, verified_success, needs_review, reversed] }
+        createdAt: { type: string }
+        lastCheckedAt: { type: string, nullable: true }
+        licenceVersion: { type: string }
+        licenceText: { type: string }
+        taxTreatment: { type: string }
+        contentVersionId: { type: string }
+        refundStatus: { type: string, nullable: true }
+        receiptReference: { type: string, nullable: true }
     StaffOperations:
       type: object
       required: [area, notice, records]

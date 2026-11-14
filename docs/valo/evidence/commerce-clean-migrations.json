@@ -1,0 +1,22 @@
+{
+  "executedAt": "2026-11-14T08:54:11.588Z",
+  "scope": "Empty local PostgreSQL only; no managed DB copy or restore",
+  "productionApplied": false,
+  "managedDevelopmentSchemaChanged": false,
+  "migrationOutput": "Reading config file '/home/runner/workspace/lib/db/drizzle.config.ts'\nUsing 'pg' driver for database querying\n[⣷] applying migrations...\u001b[2K\u001b[1G[⣯] applying migrations...\u001b[2K\u001b[1G[⣟] applying migrations...\u001b[2K\u001b[1G[⡿] applying migrations...\u001b[2K\u001b[1G[✓] migrations applied successfully!",
+  "migrationsPassed": true,
+  "invariants": {
+    "orderTable": true,
+    "receiptOutbox": true,
+    "dailyReconciliation": true,
+    "noSeedOrders": true,
+    "noSeedPrices": true,
+    "tenantForeignKeys": 4,
+    "publisherCannotReadOrders": true,
+    "publisherCannotWriteOrders": true,
+    "publisherCannotWritePrices": true
+  },
+  "disasterRecoveryProved": false,
+  "productionCompatibilityProved": false,
+  "localTemporaryClusterRemoved": true
+}

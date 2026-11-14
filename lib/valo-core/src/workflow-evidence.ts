@@ -46,6 +46,15 @@ const businessNameEvidence={
   hash:"8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",result:"pass" as const,
 };
 const groups = [
+  {ids:["PAY-001","PAY-002","PAY-003","PAY-004","PAY-005","PAY-006","PAY-007","PAY-008","PAY-009",
+      "DOC-005","DOC-006","DOC-007","EDP-007","ADM-001","SEC-001","SEC-006","OPS-003","NFR-006","NFR-007","PRV-003"],
+    paths:["artifacts/api-server/src/lib/valo-commerce.ts","artifacts/api-server/src/lib/valo-paystack-contract.ts",
+      "artifacts/api-server/src/lib/valo-commerce.integration.test.ts","artifacts/api-server/src/lib/valo-paystack-http.integration.test.ts",
+      "artifacts/api-server/src/routes/valo-commerce.ts","artifacts/api-server/src/routes/valo-paystack-webhook.ts",
+      "artifacts/api-server/src/editorial/operational-read-permission.ts","artifacts/valo/src/screens/purchase-history.tsx",
+      "artifacts/api-server/src/scripts/commerce-clean-migrations.ts","lib/db/drizzle/0011_commerce_ledger.sql"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/commerce-development-checkpoint.json",
+      hash:"c546b978dd4b25d0344db715bb037c8e849e92f6314a9684d61f6f417e1e6a48",result:"pass" as const}},
   {ids:["DOC-006","EDP-004","EDP-012","ADM-002"],
     paths:["artifacts/api-server/src/editorial/rights-applicability.ts",
       "artifacts/api-server/src/editorial/operational-preparation.ts",

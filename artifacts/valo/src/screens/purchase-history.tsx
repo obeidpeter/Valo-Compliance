@@ -1,0 +1,82 @@
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { ShoppingBag } from "lucide-react";
+import { useGetCustomerPurchases,getGetCustomerPurchasesQueryKey,createCommerceOrder,startCommerceCheckout,
+  refreshCommerceOrder,getCommerceReceipt,requestCommerceRefund,type CommerceOrder } from "@workspace/api-client-react";
+import { WorkspaceNav } from "@/components/workspace-nav";
+import { EmptyState,ErrorState,Notice,Skel } from "@/components/states";
+import { describeError,formatDate } from "@/lib/api";
+const money=(n:number)=>new Intl.NumberFormat("en-NG",{style:"currency",currency:"NGN"}).format(n/100);
+const labels:Record<string,string>={created:"Order saved — not paid",pending:"Awaiting verified payment",abandoned:"Payment not completed",
+  failed:"Payment failed",verified_success:"Test purchase verified",needs_review:"Staff reconciliation required",reversed:"Payment reversed — access suspended"};
+function OrderCard({order,changed}:{order:CommerceOrder;changed:()=>Promise<unknown>}){
+  const [busy,setBusy]=useState(false),[error,setError]=useState<string|null>(null);
+  const [reason,setReason]=useState(""),[notice,setNotice]=useState<string|null>(null);
+  async function run(action:()=>Promise<void>){
+    setBusy(true);setError(null);setNotice(null);
+    try{await action();await changed();}catch(e){setError(describeError(e).message);}finally{setBusy(false);}
+  }
+  return <article className="rounded-2xl border bg-card p-5 sm:p-6">
+    <div className="flex flex-wrap justify-between gap-3"><div><h2 className="text-lg font-semibold">{order.title}</h2>
+      <p className="mt-1 text-sm">{labels[order.status]}</p></div><p className="font-semibold">{money(order.amountKobo)}</p></div>
+    <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Order reference</dt>
+      <dd className="break-all">{order.reference}</dd></div><div><dt className="text-muted-foreground">Saved</dt><dd>{formatDate(order.createdAt)}</dd></div>
+      <div><dt className="text-muted-foreground">Last server verification</dt><dd>{order.lastCheckedAt?formatDate(order.lastCheckedAt):"Not yet verified"}</dd></div>
+      <div><dt className="text-muted-foreground">Tax treatment</dt><dd>{order.taxTreatment}</dd></div></dl>
+    <details className="my-4 text-sm"><summary className="cursor-pointer py-2 font-medium">Licence at purchase · {order.licenceVersion}</summary>
+      <p className="whitespace-pre-wrap py-2">{order.licenceText}</p><p className="text-muted-foreground">Content version: <span className="break-all">{order.contentVersionId}</span></p></details>
+    <div className="flex flex-wrap gap-3">
+      {!["verified_success","needs_review","reversed"].includes(order.status)&&<button className="btn btn-primary" disabled={busy}
+        onClick={()=>void run(async()=>{const result=await startCommerceCheckout(order.id,{});window.location.assign(result.url);})}>Continue hosted test checkout</button>}
+      <button className="btn btn-secondary" disabled={busy} onClick={()=>void run(async()=>{await refreshCommerceOrder(order.id,{});setNotice("Status checked with Paystack. A browser return URL is never treated as proof of payment.");})}>Check payment status</button>
+      {order.receiptReference&&<button className="btn btn-secondary" disabled={busy} onClick={()=>void run(async()=>{
+        const result=await getCommerceReceipt(order.id),url=URL.createObjectURL(new Blob([JSON.stringify(result,null,2)],{type:"application/json"}));
+        const a=document.createElement("a");a.href=url;a.download=`${result.receiptReference}.json`;a.click();URL.revokeObjectURL(url);
+        setNotice(`${result.notice} Email delivery: ${result.deliveryStatus.replaceAll("_"," ")}.`);
+      })}>Download test purchase receipt</button>}
+    </div>
+    {order.status==="verified_success"&&(order.refundStatus?<p className="mt-4 text-sm" role="status">Refund: {order.refundStatus.replaceAll("_"," ")}. A request is not a completed refund.</p>:
+      <form className="mt-6 border-t pt-4" onSubmit={e=>{e.preventDefault();void run(async()=>{await requestCommerceRefund(order.id,{reason});setReason("");setNotice("Refund request saved for staff review. No refund has been authorised or completed; your drafts have not been deleted.");});}}>
+        <label className="block text-sm font-medium" htmlFor={`refund-${order.id}`}>Reason for refund request</label>
+        <textarea className="field my-2 w-full" id={`refund-${order.id}`} minLength={10} maxLength={1500} required
+          value={reason} onChange={e=>setReason(e.target.value)} />
+        <button className="btn btn-secondary" disabled={busy}>Request refund review</button>
+      </form>)}
+    {busy&&<p className="mt-3 text-sm" role="status">Checking your request…</p>}
+    {error&&<p className="mt-3 text-sm text-destructive" role="alert">{error}</p>}
+    {notice&&<p className="mt-3 text-sm" role="status">{notice}</p>}
+  </article>;
+}
+export function PurchaseHistoryPage(){
+  const qc=useQueryClient(),q=useGetCustomerPurchases({query:{queryKey:getGetCustomerPurchasesQueryKey(),refetchOnWindowFocus:true,refetchInterval:30000}});
+  const [licences,setLicences]=useState<Record<string,boolean>>({}),[busy,setBusy]=useState(false),[error,setError]=useState<string|null>(null);
+  const [keys]=useState(()=>new Map<string,string>());
+  const refresh=()=>qc.invalidateQueries({queryKey:getGetCustomerPurchasesQueryKey()});
+  return <div className="mx-auto max-w-6xl px-5 py-10 lg:px-8"><WorkspaceNav/>
+    <header className="mb-8"><p className="eyebrow">Your workspace</p><h1 className="font-display mt-2 text-4xl">Purchases and licences</h1>
+      <p className="mt-3 max-w-2xl text-muted-foreground" data-testid="text-purchases-message">Keep your order, verification, receipt and licence history together. A saved order or checkout return is not proof of payment.</p></header>
+    <Notice title="Live payments are off" className="mb-6">Only explicitly enabled Paystack test-mode checkout is supported. Do not use real payment or confidential customer information. Email receipts are not marked delivered without delivery evidence.</Notice>
+    {q.isLoading?<Skel className="h-48"/>:q.isError?<ErrorState error={q.error} onRetry={()=>q.refetch()}/>:<>
+      <section className="mb-8" aria-labelledby="purchase-choices"><h2 id="purchase-choices" className="font-display mb-4 text-2xl">Available documents</h2>
+        {!q.data?.products.length?<p className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">There are no released documents with approved prices and commercial licences available to buy. Your existing drafts and private exports remain available.</p>:
+          <ul className="grid gap-4 sm:grid-cols-2">{q.data.products.map(p=><li key={p.id} className="rounded-2xl border bg-card p-5">
+            <h3 className="font-semibold">{p.title} · {money(p.amountKobo)}</h3><p className="my-2 text-sm">{p.taxTreatment}</p>
+            <details className="text-sm"><summary className="cursor-pointer py-2">Licence · {p.licenceVersion}</summary><p className="whitespace-pre-wrap">{p.licenceText}</p></details>
+            <label className="my-3 flex items-start gap-2 text-sm"><input type="checkbox" checked={licences[p.id]??false}
+              onChange={e=>setLicences(s=>({...s,[p.id]:e.target.checked}))}/>I accept this version of the licence for this business.</label>
+            <button disabled={busy||!licences[p.id]} className="btn btn-primary" onClick={()=>void(async()=>{
+              setBusy(true);setError(null);
+              try{if(!keys.has(p.id))keys.set(p.id,crypto.randomUUID());await createCommerceOrder({priceId:p.id,
+                acceptedLicenceVersion:p.licenceVersion,requestKey:keys.get(p.id)!});await refresh();}
+              catch(e){setError(describeError(e).message);}finally{setBusy(false);}
+            })()}>Save test order</button></li>)}</ul>}
+        {error&&<p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
+      </section>
+      <section aria-labelledby="purchase-history"><h2 id="purchase-history" className="font-display mb-4 text-2xl">Order history</h2>
+        {!q.data?.orders.length?<EmptyState mark={<ShoppingBag className="h-5 w-5"/>} title="No orders saved"
+          action={<Link href="/workspace" className="btn btn-primary">Back to your drafts</Link>}>Orders will appear here when you choose an available document and accept its licence. No payment has been assumed.</EmptyState>:
+          <div className="space-y-4">{q.data.orders.map(order=><OrderCard key={order.id} order={order} changed={refresh}/>)}</div>}
+      </section></>}
+  </div>;
+}

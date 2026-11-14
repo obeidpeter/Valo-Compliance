@@ -1,7 +1,10 @@
 # Valo Compliance — Valo Platform
 
 Latest implementation checkpoint:
-[narrow CAC business-name source preparation](docs/valo/business-name-evidence-checkpoint.md).
+[purchase/history mechanics, content-read correction and responsive identity](docs/valo/commerce-development-checkpoint.md).
+
+This is partial development, not complete R1/R2 acceptance. No eligible content,
+real merchant settlement, public launch or live payments are claimed.
 
 Previous implementation checkpoint:
 [export crash recovery, correct pagination and accessible/mobile editing](docs/valo/export-recovery-accessibility-checkpoint.md).

@@ -6,25 +6,32 @@ import { clerkSetup,setupClerkTestingToken } from "@clerk/testing/playwright";
 import {mkdir as ensureReminderDirectory} from "node:fs/promises";
 import { clerkClient } from "@clerk/express";
 import { pool } from "@workspace/db";
-import { GetCustomerAccountResponse,GetDocumentResponse,DownloadWorkspaceDataResponse } from "@workspace/api-zod";
+import { GetCustomerAccountResponse,GetDocumentResponse,DownloadWorkspaceDataResponse,GetCustomerPurchasesResponse } from "@workspace/api-zod";
+import { z } from "zod";
 import { syntheticDocument } from "../lib/valo-test-fixtures";
 const checks:{name:string;status:string;diagnostic?:string}[]=[];
 const run=randomUUID(),email=`valo-ux-${run}+clerk_test@example.com`;
 let browser:Browser|undefined,page:Page|undefined,userId:string|undefined,workspaceId:string|undefined;
 let unknownAck:string|undefined,phase="guard";
 const ownIntakeIds:string[]=[];
+const ownCommercePriceIds:string[]=[];
 async function check(name:string,fn:()=>Promise<void>){
   if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"&&
     !["managed_verified_customer_can_open_private_routes","real_manual_reminder_records_past_due_dates_and_mobile_keyboard_flow"].includes(name))return;
+  if(process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"&&
+    !["public_auth_fields_and_account_help_reflow_without_clipping","managed_verified_customer_can_open_private_routes",
+      "real_private_purchase_history_empty_state_mobile_and_api_controls"].includes(name))return;
   phase=name;try{await fn();checks.push({name,status:"pass"});}
-  catch{
+  catch(error){
     const safe=await page?.evaluate(`({path:location.pathname,headings:document.querySelectorAll("main h1").length,
       width:innerWidth,scroll:document.documentElement.scrollWidth,focus:document.activeElement?.tagName,
       focusOutline:document.activeElement?getComputedStyle(document.activeElement).outline:null,
       focusId:document.activeElement?.id,focusVisible:document.activeElement?.matches(":focus-visible"),
+      alerts:Array.from(document.querySelectorAll('[role="alert"]')).slice(0,4).map(e=>e.textContent?.slice(0,350)),
       overflow:Array.from(document.querySelectorAll("main *")).filter(e=>e.getBoundingClientRect().right>innerWidth+1)
         .slice(0,5).map(e=>({tag:e.tagName,class:String(e.className)}))})`).catch(()=>null);
-    checks.push({name,status:"fail",diagnostic:JSON.stringify(safe??"Unavailable; raw form details suppressed")});process.exitCode=1;
+    const location=error instanceof Error?error.stack?.split("\n").find(line=>/customer-experience-journey\.ts:\d/.test(line)):undefined;
+    checks.push({name,status:"fail",diagnostic:JSON.stringify({state:safe??"Unavailable; raw form details suppressed",location})});process.exitCode=1;
   }
 }
 async function api(path:string,method="GET",body?:unknown){
@@ -147,6 +154,23 @@ try{
     expect((await api(`/api/workspace/templates/${id}/files/pdf`)).status).toBe(401);
     await page!.unroute("**/api/public/catalogue*");await page!.unroute(`**/api/public/templates/${slug}`);
   });
+  await check("public_auth_fields_and_account_help_reflow_without_clipping",async()=>{
+    for(const width of[320,360,390,768,1280]){
+      await page!.setViewportSize({width,height:900});
+      for(const route of["sign-in","sign-up"]){
+        await page!.goto(`/${route}`);
+        await page!.locator(route==="sign-in"?".cl-signIn-root":".cl-signUp-root").waitFor();
+        await reflow();
+        const emailField=page!.locator('input[name="identifier"],input[name="emailAddress"]').first();
+        await expect(emailField).toBeVisible();
+        const bounds=await emailField.boundingBox();expect(bounds!.x).toBeGreaterThanOrEqual(0);
+        expect(bounds!.x+bounds!.width).toBeLessThanOrEqual(width);
+        await expect(page!.getByTestId("link-auth-access-help")).toBeVisible();
+        await page!.getByTestId("link-auth-access-help").focus();
+        await page!.keyboard.press("Enter");await expect(page!).toHaveURL(/account-access/);
+      }
+    }
+  });
   await check("managed_verified_customer_can_open_private_routes",async()=>{
     await page!.setViewportSize({width:1280,height:900});await page!.goto("/sign-up");
     await page!.locator(".cl-signUp-root").waitFor();
@@ -168,6 +192,57 @@ try{
       await expect(page!.locator("main")).not.toContainText("Something went wrong");
     }
   });
+  await check("real_private_purchase_history_empty_state_mobile_and_api_controls",async()=>{
+    expect(workspaceId).toBeTruthy();
+    await page!.goto("/workspace/purchases");
+    await expect(page!.getByRole("heading",{name:"Purchases and licences"})).toBeVisible();
+    await expect(page!.getByText("No orders saved",{exact:true})).toBeVisible();
+    await expect(page!.getByText(/no released documents with approved prices/i)).toBeVisible();
+    const held=await pool.query("select id from valo_content_versions where status='held' limit 1");
+    expect(held.rowCount).toBe(1);
+    const price=randomUUID(),order=randomUUID(),reference=`valo-test-${order}`;
+    ownCommercePriceIds.push(price);
+    const line={title:"Controlled browser test order — not a payment",contentVersionId:held.rows[0].id,
+      licenceVersion:"controlled-not-approved",licenceText:"Controlled browser licence snapshot only; no sales approval.",
+      taxTreatment:"Test value only, no tax assertion."};
+    await pool.query(`insert into valo_prices(id,content_version_id,title,amount_kobo,licence_version,licence_text,tax_treatment,approval_reference,effective_from)
+      values($1,$2,$3,12345,$4,$5,$6,'CONTROLLED_BROWSER_FIXTURE_NOT_APPROVAL',now())`,
+      [price,held.rows[0].id,line.title,line.licenceVersion,line.licenceText,line.taxTreatment]);
+    await pool.query(`insert into valo_orders(id,workspace_id,requested_by,reference,request_key,price_id,line,amount_kobo)
+      values($1,$2,$3,$4,$5,$6,$7,12345)`,[order,workspaceId,userId,reference,randomUUID(),price,JSON.stringify(line)]);
+    // A clearly labelled controlled ledger record is real persisted UI data, NOT provider settlement/publication.
+    await page!.reload();
+    await expect(page!.getByRole("heading",{name:line.title})).toBeVisible();
+    await expect(page!.getByText("Order saved — not paid",{exact:true})).toBeVisible();
+    await page!.getByText(/Licence at purchase/).click();
+    await expect(page!.getByText(line.licenceText,{exact:true})).toBeVisible();
+    await expect(page!.getByRole("button",{name:"Download test purchase receipt"})).toHaveCount(0);
+    await expect(page!.getByRole("button",{name:"Request refund review"})).toHaveCount(0);
+    for(const width of[360,390,768,1280]){
+      await page!.setViewportSize({width,height:900});await reflow();
+      const refresh=page!.getByRole("button",{name:"Check payment status",exact:true});
+      await page!.keyboard.press("Tab");
+      await refresh.focus();await expect(refresh).toBeFocused();
+      await expect(refresh).toHaveCSS("outline-style","solid");
+      await expect(refresh).toHaveCSS("outline-width","2px");
+    }
+    await page!.getByRole("button",{name:"Check payment status",exact:true}).click();
+    const card=page!.locator("article").filter({has:page!.getByRole("heading",{name:line.title})});
+    await expect(card.getByRole("alert")).toContainText(/configured Paystack test merchant/);
+    await page!.getByRole("button",{name:"Continue hosted test checkout",exact:true}).click();
+    await expect(card.getByRole("alert")).toContainText(/unavailable for new checkout/);
+    await page!.reload();await expect(page!.getByText("Order saved — not paid",{exact:true})).toBeVisible();
+    const history=await api("/api/workspace/purchases");
+    expect(history.status).toBe(200);expect(history.cache).toContain("no-store");
+    const recorded=GetCustomerPurchasesResponse.parse(history.body);
+    expect(recorded.orders[0].reference).toBe(reference);expect(recorded.livePaymentsEnabled).toBe(false);
+    const receipt=await api(`/api/workspace/orders/${order}/receipt`);expect(receipt.status).toBe(409);
+    const data=await api("/api/workspace/data-export");expect(data.status).toBe(200);
+    const exported=DownloadWorkspaceDataResponse.parse(data.body);
+    expect(z.object({orders:z.array(z.object({id:z.string()}))}).parse(exported.data).orders.some(o=>o.id===order)).toBe(true);
+    await ensureReminderDirectory("../../generated-artifacts/valo-commerce",{recursive:true});
+    await page!.screenshot({path:"../../generated-artifacts/valo-commerce/purchase-history.png",fullPage:true});
+  });
   await check("real_private_privacy_request_reload_and_JSON_download",async()=>{
     expect(userId).toBeTruthy();await page!.goto("/workspace/privacy");
     const created=await api("/api/workspace/documents","POST",syntheticDocument);expect(created.status).toBe(201);
@@ -184,7 +259,7 @@ try{
     const exported=DownloadWorkspaceDataResponse.parse(raw.body);
     expect(exported.workspaceId).toBe(workspaceId);
     expect((exported.data.documentRevisions as {documentId:string}[]).some(r=>r.documentId===createdDocument.id)).toBe(true);
-    await page!.goto("/workspace/purchases");await expect(page!.getByTestId("text-purchases-message")).toContainText(/not enabled/);
+    await page!.goto("/workspace/purchases");await expect(page!.getByTestId("text-purchases-message")).toContainText(/not proof of payment/);
     await page!.goto("/staff");expect((await api("/api/admin/operations?area=support")).status).toBe(403);
   });
   await check("real_manual_reminder_records_past_due_dates_and_mobile_keyboard_flow",async()=>{
@@ -296,18 +371,24 @@ finally{
   await browser?.close();
   for(const id of ownIntakeIds)await pool.query("DELETE FROM valo_access_support WHERE id=$1",[id]).catch(()=>{cleanupErrors++;process.exitCode=1;});
   if(workspaceId){
-    for(const table of["valo_support_tickets","valo_reminder_outbox","valo_reminder_preferences","valo_tasks","valo_assessments",
+    for(const table of["valo_payment_reconciliations","valo_refund_requests","valo_purchase_outbox","valo_entitlements","valo_orders",
+      "valo_support_tickets","valo_reminder_outbox","valo_reminder_preferences","valo_tasks","valo_assessments",
       "valo_ai_drafts","valo_document_revisions","valo_documents","valo_profile_versions","valo_events","valo_memberships","valo_workspaces"]){
       await pool.query(`DELETE FROM ${table} WHERE ${table==="valo_workspaces"?"id":"workspace_id"}=$1`,[workspaceId])
         .catch(()=>{cleanupErrors++;process.exitCode=1;});
     }
   }
+  for(const id of ownCommercePriceIds)
+    await pool.query("DELETE FROM valo_prices WHERE id=$1",[id]).catch(()=>{cleanupErrors++;process.exitCode=1;});
   await pool.end();
   await writeFile(fileURLToPath(new URL("../../../../generated-artifacts/valo-customer-ux/browser.json",import.meta.url)),JSON.stringify({
     checkedAt:new Date().toISOString(),syntheticDevelopmentOnly:true,checks,
-    selection:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?"managed-identity-reminder-only":"full-existing-journey",
+    selection:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"?"managed-identity-commerce-only":
+      process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?"managed-identity-reminder-only":"full-existing-journey",
     actualManagedIdentityUsed:Boolean(userId),realEmailDeliveryClaimed:false,actualNewPublications:0,
-    fixtureDisclosure:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?
+    fixtureDisclosure:process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="commerce"?
+      "An unpaid controlled order/licence fixture was saved in the actual database and displayed through authenticated APIs; it was not a released product, price approval or real payment. All owned fixture records were removed.":
+      process.env.VALO_CUSTOMER_JOURNEY_SELECTION==="reminder"?
       "No intercepted content fixture groups were executed in this managed-identity/reminder subset.":
       "Resource and template fixtures were intercepted only in this browser, never inserted/published; no content eligibility or real published-master download proven.",
     r1Accepted:false,r2Accepted:false,cleanupErrors,

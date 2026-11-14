@@ -24,9 +24,6 @@ customerAccessRouter.get("/workspace/data-export",async(_req,res)=>{
     "X-Content-Type-Options":"nosniff"});
   res.json(WorkspaceDataExport.parse(await workspaceDataExport(res.locals.valoActor)));
 });
-customerAccessRouter.get("/workspace/purchases",(_req,res)=>{
-  res.json(CustomerPurchases.parse({available:false,message:"Purchases are not enabled yet. Server-verified checkout, receipts and licence history must be implemented and tested before purchase records are offered. Your saved drafts and their exports remain available."}));
-});
 export const staffOperationsRouter=Router();
 staffOperationsRouter.get("/admin/operations",async(req,res)=>{
   res.set("Cache-Control","private, no-store");

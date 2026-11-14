@@ -121,7 +121,144 @@ export const DownloadWorkspaceDataResponse = zod.object({
 
 export const GetCustomerPurchasesResponse = zod.object({
   "available": zod.boolean(),
-  "message": zod.string()
+  "message": zod.string(),
+  "livePaymentsEnabled": zod.boolean(),
+  "orders": zod.array(zod.object({
+  "id": zod.string(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.number().int(),
+  "currency": zod.string(),
+  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
+  "createdAt": zod.string(),
+  "lastCheckedAt": zod.string().nullable(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "contentVersionId": zod.string(),
+  "refundStatus": zod.string().nullable(),
+  "receiptReference": zod.string().nullable()
+})),
+  "products": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.number().int(),
+  "currency": zod.string(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string()
+}))
+})
+
+
+export const createCommerceOrderBodyAcceptedLicenceVersionMax = 100;
+
+
+
+export const CreateCommerceOrderBody = zod.object({
+  "priceId": zod.string().uuid(),
+  "acceptedLicenceVersion": zod.string().min(1).max(createCommerceOrderBodyAcceptedLicenceVersionMax),
+  "requestKey": zod.string().uuid()
+})
+
+export const CreateCommerceOrderResponse = zod.object({
+  "id": zod.string(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.number().int(),
+  "currency": zod.string(),
+  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
+  "createdAt": zod.string(),
+  "lastCheckedAt": zod.string().nullable(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "contentVersionId": zod.string(),
+  "refundStatus": zod.string().nullable(),
+  "receiptReference": zod.string().nullable()
+})
+
+
+export const StartCommerceCheckoutParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const StartCommerceCheckoutBody = zod.object({
+
+})
+
+export const StartCommerceCheckoutResponse = zod.object({
+  "url": zod.string()
+})
+
+
+export const RefreshCommerceOrderParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const RefreshCommerceOrderBody = zod.object({
+
+})
+
+export const RefreshCommerceOrderResponse = zod.object({
+  "id": zod.string(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.number().int(),
+  "currency": zod.string(),
+  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
+  "createdAt": zod.string(),
+  "lastCheckedAt": zod.string().nullable(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "contentVersionId": zod.string(),
+  "refundStatus": zod.string().nullable(),
+  "receiptReference": zod.string().nullable()
+})
+
+
+export const GetCommerceReceiptParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const GetCommerceReceiptResponse = zod.object({
+  "id": zod.string(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.number().int(),
+  "currency": zod.string(),
+  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
+  "createdAt": zod.string(),
+  "lastCheckedAt": zod.string().nullable(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "contentVersionId": zod.string(),
+  "refundStatus": zod.string().nullable(),
+  "receiptReference": zod.string().nullable()
+}).and(zod.object({
+  "notice": zod.string(),
+  "deliveryStatus": zod.string()
+}))
+
+
+export const RequestCommerceRefundParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const requestCommerceRefundBodyReasonMin = 10;
+export const requestCommerceRefundBodyReasonMax = 1500;
+
+
+
+export const RequestCommerceRefundBody = zod.object({
+  "reason": zod.string().min(requestCommerceRefundBodyReasonMin).max(requestCommerceRefundBodyReasonMax)
+})
+
+export const RequestCommerceRefundResponse = zod.object({
+  "reference": zod.string(),
+  "status": zod.string()
 })
 
 

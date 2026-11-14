@@ -352,3 +352,14 @@ textarea.field { line-height: 1.6; resize: vertical; }
 .cl-formFieldInput::placeholder { color: hsl(var(--muted-foreground)); opacity: 1; }
 .cl-formButtonPrimary:hover { background: hsl(155 42% 17%) !important; }
 .cl-footerActionLink:hover { text-decoration: underline; }
+
+/* The auth grid must size to the viewport, not the provider card's intrinsic
+   desktop width. Do not hide overflow: fields/help must remain reachable. */
+.valo-auth-panel .cl-rootBox,
+.valo-auth-panel .cl-cardBox,
+.valo-auth-panel .cl-card {
+  width: 100%;
+  min-width: 0;
+  max-width: 440px;
+  box-sizing: border-box;
+}

@@ -6,6 +6,7 @@ import { executeExport, developmentExportsOnly } from "../lib/valo-exports";
 import { logger } from "../lib/logger";
 import { reconcileDueReminders } from "../lib/valo-reminder-worker";
 import { recoverAbandonedExports,reconcileExportOrphans } from "../lib/valo-export-recovery";
+import { processPaymentEvents,reconcilePayments } from "../lib/valo-commerce";
 
 developmentExportsOnly();
 const payload = z.object({ jobId:z.string().uuid(),workspaceId:z.string().uuid() }).strict();
@@ -41,6 +42,8 @@ async function dispatch() {
       await boss.send(EXPORT_QUEUE, {jobId:job.id,workspaceId:job.workspaceId},{id:job.queueId});
     if(Date.now()-reminderCheckedAt>=60000){
       await reconcileDueReminders();
+      await processPaymentEvents();
+      await reconcilePayments();
       reminderCheckedAt=Date.now();
     }
   } catch { logger.error({event:"export.dispatch_failed"}); }

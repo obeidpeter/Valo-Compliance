@@ -113,10 +113,76 @@ export interface WorkspaceDataExport {
   data: WorkspaceDataExportData;
 }
 
+export type CustomerPurchasesProductsItem = {
+  id: string;
+  title: string;
+  amountKobo: number;
+  currency: string;
+  licenceVersion: string;
+  licenceText: string;
+  taxTreatment: string;
+};
+
+export type CommerceOrderStatus = typeof CommerceOrderStatus[keyof typeof CommerceOrderStatus];
+
+
+export const CommerceOrderStatus = {
+  created: 'created',
+  pending: 'pending',
+  abandoned: 'abandoned',
+  failed: 'failed',
+  verified_success: 'verified_success',
+  needs_review: 'needs_review',
+  reversed: 'reversed',
+} as const;
+
+export interface CommerceOrder {
+  id: string;
+  reference: string;
+  title: string;
+  amountKobo: number;
+  currency: string;
+  status: CommerceOrderStatus;
+  createdAt: string;
+  /** @nullable */
+  lastCheckedAt: string | null;
+  licenceVersion: string;
+  licenceText: string;
+  taxTreatment: string;
+  contentVersionId: string;
+  /** @nullable */
+  refundStatus: string | null;
+  /** @nullable */
+  receiptReference: string | null;
+}
+
 export interface CustomerPurchases {
   available: boolean;
   message: string;
+  livePaymentsEnabled: boolean;
+  orders: CommerceOrder[];
+  products: CustomerPurchasesProductsItem[];
 }
+
+export interface CommerceOrderInput {
+  priceId: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  acceptedLicenceVersion: string;
+  requestKey: string;
+}
+
+export interface CommerceRefundInput {
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  reason: string;
+}
+
+export interface CommerceActionInput { [key: string]: never }
 
 export type StaffOperationsArea = typeof StaffOperationsArea[keyof typeof StaffOperationsArea];
 
@@ -1383,6 +1449,20 @@ export type QuotaErrorResponse = ApiProblem;
  * Validation, access or concurrency error
  */
 export type AuthErrorResponse = ApiProblem;
+
+export type StartCommerceCheckout200 = {
+  url: string;
+};
+
+export type GetCommerceReceipt200 = CommerceOrder & {
+  notice: string;
+  deliveryStatus: string;
+};
+
+export type RequestCommerceRefund201 = {
+  reference: string;
+  status: string;
+};
 
 export type GetStaffOperationsParams = {
   area: GetStaffOperationsArea;

@@ -1,5 +1,5 @@
 import { and,eq } from "drizzle-orm";
-import { db,valoContentVersions,valoPublicationPolicies,valoDocuments } from "@workspace/db";
+import { db,valoContentVersions,valoPublicationPolicies,valoDocuments,valoPrices,valoEntitlements } from "@workspace/db";
 import { evaluatePublication,publicationSchema,coveragePlan } from "@workspace/valo-core";
 import { developmentPublicationOnly,operationalPolicy } from "../editorial/operational-policy";
 import { getPublicationArtifact,type ArtifactRef } from "../editorial/publication-artifacts";
@@ -7,6 +7,7 @@ import { createDocumentInTransaction,getDocument,ValoProblem,authorizeWorkspaceW
 import { documentInput } from "./valo-validation";
 import { loadRightsApplicability } from "../editorial/rights-applicability";
 import { paginateReleasedItems } from "./valo-catalogue";
+import { currentOperationalPermission } from "../editorial/operational-read-permission";
 export function releaseVisible(row:typeof valoContentVersions.$inferSelect,policyHash:string,now=new Date()){
   const parsed=publicationSchema.safeParse(row.bundle);
   return row.status==="published"&&+row.reviewBy>+now&&parsed.success&&
@@ -15,16 +16,18 @@ export function releaseVisible(row:typeof valoContentVersions.$inferSelect,polic
 }
 export async function liveReleasedVersions(){
   if(process.env.NODE_ENV!=="development"||process.env.REPLIT_DEPLOYMENT)return[];
-  const rights=await loadRightsApplicability();
   const currentPolicy=await operationalPolicy();
   const rows=await db.select({content:valoContentVersions,policy:valoPublicationPolicies}).from(valoContentVersions)
     .innerJoin(valoPublicationPolicies,eq(valoContentVersions.policyId,valoPublicationPolicies.id))
     .where(eq(valoContentVersions.status,"published"));
-  return rows.filter(r=>releaseVisible(r.content,r.policy.hash)&&(
-    publicationSchema.parse(r.content.bundle).candidate.evidenceMode!=="original_operational"||
-    (rights.verified&&r.policy.hash===currentPolicy.policy.hash&&
-      (r.content.attestations as {rightsApplicabilityHash?:string}).rightsApplicabilityHash===rights.hash)
-  )).map(r=>r.content)
+  const allowed=[];
+  for(const r of rows){
+    if(!releaseVisible(r.content,r.policy.hash))continue;
+    if(publicationSchema.parse(r.content.bundle).candidate.evidenceMode==="original_operational"&&
+      (r.policy.hash!==currentPolicy.policy.hash||!(await currentOperationalPermission(r.content))))continue;
+    allowed.push(r.content);
+  }
+  return allowed
     .sort((a,b)=>b.version-a.version).filter((r,i,all)=>all.findIndex(v=>v.templateId===r.templateId)===i);
 }
 export async function liveOperationalVersions(){
@@ -97,17 +100,27 @@ async function lockedLiveVersion(tx:Parameters<Parameters<typeof db.transaction>
   if(!policy||!releaseVisible(row,policy.hash))throw new ValoProblem(404,"Template withdrawn, expired or unavailable");
   const c=publicationSchema.parse(row.bundle).candidate;
   if(c.evidenceMode==="original_operational"){
-    const rights=await loadRightsApplicability(),current=await operationalPolicy();
-    if(!rights.verified||policy.hash!==current.policy.hash||
-      (row.attestations as {rightsApplicabilityHash?:string}).rightsApplicabilityHash!==rights.hash)
+    const current=await operationalPolicy();
+    if(policy.hash!==current.policy.hash||!(await currentOperationalPermission(row)))
       throw new ValoProblem(404,"Template unavailable while applicable rights or policy evidence is unresolved.");
   }
   return row;
+}
+async function requirePurchaseForPricedMaster(tx:Parameters<Parameters<typeof db.transaction>[0]>[0],actor:WorkspaceActor,row:typeof valoContentVersions.$inferSelect){
+  // Baseline TPL-01..12 are always free; a price record cannot silently change that contract.
+  if(/^TPL-(0[1-9]|1[0-2])$/.test(row.templateId))return;
+  const[price]=await tx.select({id:valoPrices.id}).from(valoPrices).where(eq(valoPrices.contentVersionId,row.id)).limit(1);
+  if(!price)throw new ValoProblem(403,"An approved licence and server-verified purchase are required for this premium document.");
+  const[grant]=await tx.select().from(valoEntitlements).where(and(eq(valoEntitlements.workspaceId,actor.workspaceId),
+    eq(valoEntitlements.contentVersionId,row.id),eq(valoEntitlements.status,"active"))).for("share");
+  if(!grant)throw new ValoProblem(403,"This workspace does not have an active purchase for this template version.");
 }
 export async function createReleasedTemplateDraft(actor:WorkspaceActor,id:string){
   developmentPublicationOnly();
   const documentId=await db.transaction(async tx=>{
     const row=await lockedLiveVersion(tx,id);
+    await authorizeWorkspaceWrite(tx,actor);
+    await requirePurchaseForPricedMaster(tx,actor,row);
     const document=documentInput.parse(JSON.parse(publicationSchema.parse(row.bundle).candidate.body));
     const documentId=await createDocumentInTransaction(tx,actor,document);
     await tx.update(valoDocuments).set({templateVersionId:id}).where(and(eq(valoDocuments.id,documentId),eq(valoDocuments.workspaceId,actor.workspaceId)));
@@ -121,6 +134,7 @@ export async function readReleasedMaster(id:string,format:"docx"|"pdf",actor?:Wo
     const row=await lockedLiveVersion(tx,id);
     if(!actor)throw new ValoProblem(403,"Template unavailable without an authorised workspace.");
     await authorizeWorkspaceWrite(tx,actor);
+    await requirePurchaseForPricedMaster(tx,actor,row);
     const a=row.attestations as {exports:Record<"docx"|"pdf",ArtifactRef>};
     return{bytes:await getPublicationArtifact(a.exports[format]),templateId:row.templateId,version:row.version};
   });

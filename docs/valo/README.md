@@ -1,5 +1,11 @@
 # Current operational publication refinement
 
+**Current implementation evidence:** [purchase/history mechanics and responsive
+identity](commerce-development-checkpoint.md). Private order/receipt/refund-request
+mechanics and authoring-aware content reads are implemented and development-tested.
+Published content is still zero; merchant execution, complete acceptance and R2
+remain unaccepted. Older entries below are retained historical checkpoints.
+
 Current source preparation is in [the business-name evidence checkpoint](business-name-evidence-checkpoint.md).
 The [export recovery and accessibility checkpoint](export-recovery-accessibility-checkpoint.md) records the preceding feature verification.
 The [customer-experience checkpoint](customer-experience-checkpoint.md) records its earlier source and results.

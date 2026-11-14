@@ -78,6 +78,13 @@
       "when": 1794615542750,
       "tag": "0010_export_recovery",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794615542751,
+      "tag": "0011_commerce_ledger",
+      "breakpoints": true
     }
   ]
 }

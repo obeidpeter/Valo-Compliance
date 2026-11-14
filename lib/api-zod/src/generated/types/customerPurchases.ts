@@ -5,8 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { CommerceOrder } from './commerceOrder';
+import type { CustomerPurchasesProductsItem } from './customerPurchasesProductsItem';
 
 export interface CustomerPurchases {
   available: boolean;
   message: string;
+  livePaymentsEnabled: boolean;
+  orders: CommerceOrder[];
+  products: CustomerPurchasesProductsItem[];
 }

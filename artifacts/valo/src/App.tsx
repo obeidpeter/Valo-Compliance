@@ -119,7 +119,7 @@ const clerkAppearance = {
 
 function AuthFrame({ children, side }: { children: ReactNode; side: 'in' | 'up' }) {
   return (
-    <div className="grid min-h-[100dvh] bg-background lg:grid-cols-[1fr_1.1fr]">
+    <div className="grid min-h-[100dvh] min-w-0 w-full bg-background lg:grid-cols-[1fr_1.1fr]">
       <aside className="relative hidden flex-col justify-between overflow-hidden bg-primary p-12 text-primary-foreground lg:flex">
         <div className="[&_a]:text-primary-foreground"><Wordmark /></div>
         <div className="max-w-md">
@@ -131,10 +131,10 @@ function AuthFrame({ children, side }: { children: ReactNode; side: 'in' | 'up' 
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full border border-primary-foreground/10" />
         <div aria-hidden className="pointer-events-none absolute -right-8 top-24 h-64 w-64 rounded-full border border-primary-foreground/10" />
       </aside>
-      <div className="flex flex-col items-center justify-center gap-6 px-4 py-12">
+      <div className="valo-auth-panel flex min-w-0 w-full flex-col items-center justify-center gap-6 px-4 py-12">
         <div className="lg:hidden"><Wordmark /></div>
         {children}
-        <p className="max-w-[440px] text-center text-sm text-muted-foreground">
+        <p className="w-full max-w-[440px] break-words text-center text-sm text-muted-foreground">
           Cannot sign in, unverified or suspended? <Link href="/account-access" className="font-medium text-primary underline underline-offset-4" data-testid="link-auth-access-help">Get account access help</Link>
         </p>
       </div>

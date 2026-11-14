@@ -14,6 +14,7 @@ import { GetReleasedTemplateResponse } from "@workspace/api-zod";
 import { GetReleasedResourceResponse as ReleasedResource } from "@workspace/api-zod";
 import { publicAccessRouter,customerAccessRouter,staffOperationsRouter } from "./valo-customer-access";
 import { releasedResources } from "../lib/valo-released-content";
+import { commerceRouter } from "./valo-commerce";
 
 const router = Router();
 router.use(publicAccessRouter);
@@ -80,6 +81,7 @@ router.get("/development/content", async (_req, res) => {
 });
 router.use("/workspace", sameOriginMutation, verifiedWorkspace);
 router.use(customerAccessRouter);
+router.use(commerceRouter);
 router.get("/workspace", async (_req, res) => { res.json(await store.getWorkspace(res.locals.valoActor)); });
 router.put("/workspace/profile", async (req, res) => { res.json(await store.saveProfile(res.locals.valoActor, req.body)); });
 router.get("/workspace/documents", async (_req, res) => { res.json(await store.listDocuments(res.locals.valoActor)); });

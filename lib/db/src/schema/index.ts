@@ -39,3 +39,4 @@ export * from "./valo-reminder-outbox";
 export * from "./valo-rule-releases";
 export * from "./valo-ai-drafts";
 export * from "./valo-publication";
+export * from "./valo-commerce";
