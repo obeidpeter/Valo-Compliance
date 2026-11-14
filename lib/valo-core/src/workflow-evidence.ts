@@ -193,7 +193,19 @@ export function partialWorkflowEvidence(id:string){
     hash:"6a377c1fe063785eb560ddb71a22c218e559f4c4421b72cf51b0c55e075ab98d",result:"pass" as const};
   const exactSourcePublication={kind:"test" as const,path:"docs/valo/evidence/operational-publication-v8.json",
     hash:"3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521",result:"fail" as const};
+  // Eight disagreements against the unchanged original oracle remain failures.
+  // Passing isolation controls do not convert them into RUL-008 acceptance.
+  const sourceCandidateOracle={kind:"test" as const,path:"docs/valo/evidence/source-checker-80-candidate-evaluation.json",
+    hash:"9f65bdfa78d6b5a1a1b8d39b402a91e7175aabd068fffd428c6c33698718468f",result:"fail" as const};
   const currentValidation=[
+    {ids:["CMP-002","CMP-003","CMP-004","RUL-002","RUL-003","RUL-004","RUL-006","RUL-008"],
+      paths:["lib/valo-core/src/checker-business-name.ts","lib/valo-core/src/checker-source-candidates.ts",
+        "artifacts/api-server/src/editorial/business-name-candidate-binding.ts",
+        "artifacts/api-server/src/editorial/source-candidate-bindings.ts",
+        "artifacts/api-server/src/scripts/source-checker-evaluation.ts",
+        "artifacts/api-server/src/scripts/capture-ndpa-passages.ts",
+        "artifacts/api-server/src/editorial/business-name-candidate-evaluation.test.ts",
+        "artifacts/api-server/src/editorial/source-candidate-evaluation.test.ts"],record:sourceCandidateOracle},
     {ids:["SEC-003","SEC-007","AI-002","AI-009","EDT-002","EDT-006","NFR-009","NFR-011"],
       paths:["artifacts/api-server/src/lib/provider-output-budget.ts","artifacts/api-server/src/lib/valo-revision-codec.ts",
         "artifacts/api-server/src/lib/valo-revision-codec.test.ts","artifacts/api-server/src/scripts/zod-upgrade-proof.ts",

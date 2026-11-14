@@ -1,6 +1,10 @@
 # Valo Compliance — Valo Platform
 
-Latest implementation checkpoint:
+Latest checker checkpoint:
+[all 80 supplied source cases executed, with 72 matches and eight retained oracle disagreements](docs/valo/source-checker-candidate-checkpoint.md).
+The 102 passing candidate-control TAP records are not formal legal/rule acceptance.
+
+Latest customer-journey checkpoint:
 [customer edit safety, paginated task totals, reminder fairness and original receipt recovery](docs/valo/customer-safety-reliability-checkpoint.md).
 This remains partial development, not full R1/R2 implementation or acceptance.
 The forty-template/thirty-guidance content inputs are not thereby published;

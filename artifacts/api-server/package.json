@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:valo-source-candidates": "tsx --test src/editorial/business-name-candidate-evaluation.test.ts src/editorial/source-candidate-evaluation.test.ts",
+    "evaluate:valo-source-checker": "tsx src/scripts/source-checker-evaluation.ts",
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
