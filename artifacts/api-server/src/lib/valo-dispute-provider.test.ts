@@ -89,7 +89,7 @@ test("dispute transport: official operations with controlled HTTP, not merchant 
     const bad=makeDisputeTransport(async(_p,_b,method)=>method==="POST"?{id:21,dispute:625}:canonical(),fetch,()=>true);
     await assert.rejects(()=>bad.evidence(context,supplied),{status:409});
   });
-  await t.test("fraud cannot omit structured evidence; API success never implies bank victory",async()=>{
+  await t.test("fraud declines require structured evidence; API success never implies bank victory",async()=>{
     const mutations:unknown[]=[];
     const p=makeDisputeTransport(async(_path,body,method)=>{
       if(method==="PUT"){mutations.push(body);return{status:"archived",resolution:null};}
@@ -100,6 +100,20 @@ test("dispute transport: official operations with controlled HTTP, not merchant 
     assert.equal(await p.resolve(context,{resolution:"declined",amountKobo:0,message:"Controlled fraud response.",
       uploadedFilename:"known-file",evidenceId:"21"}),undefined);
     assert.deepEqual(mutations,[{resolution:"declined",message:"Controlled fraud response.",refund_amount:0,uploaded_filename:"known-file",evidence:21}]);
+  });
+  await t.test("fraud acceptance can refund without fabricated evidence or delivery details",async()=>{
+    const mutations:unknown[]=[];let evidencePosts=0;
+    const p=makeDisputeTransport(async(path,body,method)=>{
+      if(method==="POST")evidencePosts++;
+      if(method==="PUT"){assert.equal(path,"/dispute/624/resolve");mutations.push(body);return{status:"resolved",resolution:"merchant-accepted"};}
+      return{...canonical(),category:"fraud"};
+    },fetch,()=>true);
+    for(const amountKobo of[4500,10000])
+      await p.resolve(context,{resolution:"merchant-accepted",amountKobo,message:"Accept controlled fraud claim."});
+    assert.equal(evidencePosts,0);
+    assert.deepEqual(mutations,[4500,10000].map(refund_amount=>({
+      resolution:"merchant-accepted",message:"Accept controlled fraud claim.",refund_amount,
+    })));
   });
   await t.test("timeout after acceptance makes only one mutation attempt",async()=>{
     let calls=0;const p=makeDisputeTransport(async(_path,_body,method)=>{
