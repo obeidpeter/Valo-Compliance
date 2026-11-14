@@ -6,9 +6,11 @@ import {join} from "node:path";
 import {collectOperationalSample,recordOperationalAlerts,recordWorkerHeartbeat,readinessQueries} from "./valo-operations";
 import {versionedEvidencePath} from "./versioned-evidence-path";
 test("operator report names reject traversal and non-integer versions",()=>{
-  for(const version of ["../../private","7",NaN,Infinity,0,-1,1.5,1000001,null,{}])
+  for(const version of ["../../private","7","1000000","1.5",NaN,Infinity,0,-1,1.5,1000001,Number.MAX_SAFE_INTEGER,1e21,null,undefined,{},[],true])
     assert.throws(()=>versionedEvidencePath("/synthetic/root",version),/INVALID_EVIDENCE_VERSION/);
   assert.equal(versionedEvidencePath("/synthetic/root",7),"/synthetic/root/docs/valo/evidence/operational-publication-v7.json");
+  for(const boundary of[1,1000000])
+    assert.equal(versionedEvidencePath("/synthetic/root",boundary),`/synthetic/root/docs/valo/evidence/operational-publication-v${boundary}.json`);
 });
 test("internal probes measure failures independently and persist/deduplicate/recover alerts without transports",async()=>{
   const old=process.env.NODE_ENV;process.env.NODE_ENV="development";

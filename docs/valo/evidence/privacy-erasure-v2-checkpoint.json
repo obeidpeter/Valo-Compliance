@@ -1,0 +1,24 @@
+{
+  "scope": "Partial development privacy and security evidence; not formal R1/R2 acceptance",
+  "baseRevision": "388b4d42ca0fcfee4483f4b958267a36d556b18c",
+  "tests": {
+    "developmentDatabase": {"passed": 101, "failed": 0, "skipped": 0},
+    "operations": {"passed": 2, "failed": 0, "skipped": 0},
+    "workspaceTypecheck": "passed"
+  },
+  "privacyScope": "development-application-content-erasure-v2",
+  "fileInventory": {"distinctJournalEntries": 4, "readyPendingCleanupCovered": true, "staleQueueFenced": true},
+  "signing": {"currentSigns": true, "historicalVerifies": true, "missingHistoricalMaterialHolds": true, "realSecretsRotated": false},
+  "retainedOrHeld": ["financial history", "minimal case references", "historical signed audit text", "external processors", "managed identity", "independent post-cutoff journal backup/import", "production recovery"],
+  "sourceBoundStaticDisposition": {
+    "classification": "narrow false positive for HTTP file-write vulnerability",
+    "helper": "artifacts/api-server/src/lib/versioned-evidence-path.ts",
+    "sha256": "35ff3131e133f01974189a5a3fd34b4f25e04afe0c93a2d75faf8159bd8ac40c",
+    "ruleSuppressed": false,
+    "newFullScanClaimed": false
+  },
+  "newPaidProviderCalls": 0,
+  "externalMessages": 0,
+  "ownerSpendingApproval": false,
+  "formalAcceptance": false
+}

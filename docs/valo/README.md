@@ -9,7 +9,14 @@ remain historical evidence and do not supersede these limits.
 
 # Historical operational publication refinement
 
-**Current implementation evidence:** [bounded AI instructions, manual-note preservation
+**Latest privacy/security checkpoint:** [rotation, multi-object deletion and scoped
+support/privacy redaction](privacy-erasure-v2-checkpoint.md): 101/101 database
+checks, 2/2 operations checks and typecheck passed. This is partial development
+evidence; independent deletion-journal recovery, full privacy fulfilment,
+unbounded resumable export, disputes, rich live checker and the finite inference
+manifest remain unfinished. No spending, messages or launch were enabled.
+
+**Earlier implementation evidence:** [bounded AI instructions, manual-note preservation
 and two supplied customer cases through private exports](customer-ai-source-checkpoint.md).
 
 Earlier implementation evidence: [40 source-bound draft bodies, review meters

@@ -1,7 +1,7 @@
 import {randomUUID} from "node:crypto";
-import {and,eq,sql} from "drizzle-orm";
+import {and,eq,ne,sql} from "drizzle-orm";
 import {db,valoPrivacyTombstones,valoWorkspaces,valoMemberships,valoExportJobs,
-  valoExportObjects,valoFileAssets} from "@workspace/db";
+  valoExportObjects,valoFileAssets,valoPrivacyCases} from "@workspace/db";
 import {ActOnStaffPrivacyCaseBody} from "@workspace/api-zod";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import {deletePrivateFile} from "./valo-private-storage";
@@ -12,14 +12,16 @@ import {assertPrivacyVersion} from "./valo-privacy-state";
 import {readPrivacyCase,requirePrivacyStaff,privacyChange,privacyDetail,type PrivacyStaffActor} from "./valo-privacy";
 
 // Static reviewed order: remove FK children before parents. Financial records,
-// support/privacy requests and security/audit evidence are explicit exclusions.
-// These exclusions are pending retention review, NOT a claim of statutory holds.
-const phases=[
+// V2 redacts support/privacy bodies without deleting minimal case references or
+// signed audit evidence. Exclusions await policy review, not statutory claims.
+const basePhases=[
   "valo_reminder_outbox","valo_tasks","valo_assessments","valo_ai_drafts",
   "valo_export_requests","valo_file_assets","valo_export_objects","valo_export_jobs",
   "valo_document_revisions","valo_documents","valo_profile_versions","valo_reminder_preferences",
 ] as const;
-const scope="development-application-content-erasure-v1";
+const phases=[...basePhases,"purchase_notifications","support_content","privacy_content"] as const;
+const scope="development-application-content-erasure-v2";
+const removedMessage="[Private content removed by verified workspace erasure]";
 type Input=ReturnType<typeof ActOnStaffPrivacyCaseBody.parse>;
 type DeleteObject=(key:string)=>Promise<void>;
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -28,7 +30,32 @@ function assertObjectScope(workspaceId:string,key:string){
     !/^valo\/development\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.(docx|pdf)$/.test(key))
     throw new ValoProblem(409,"Private-object deletion scope could not be verified.");
 }
-async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[number]){
+export async function holdUnsentPrivacyNotifications(tx:Tx,workspaceId:string){
+  return tx.execute(sql`UPDATE valo_purchase_outbox SET status='held_privacy_erasure'
+    WHERE ctid IN (SELECT ctid FROM valo_purchase_outbox WHERE workspace_id=${workspaceId}::uuid
+      AND status IN ('awaiting_email_configuration','pending','retry') LIMIT 100)`);
+}
+async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[number],currentCaseId:string){
+  if(section==="purchase_notifications"){
+    // Accepted messages cannot be retracted. Keep provider/financial evidence.
+    return holdUnsentPrivacyNotifications(tx,workspaceId);
+  }
+  if(section==="support_content")return tx.execute(sql`UPDATE valo_support_tickets SET
+    scope=${removedMessage},contact_email='erased@invalid'
+    WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
+      AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);
+  if(section==="privacy_content"){
+    const rows=await tx.select().from(valoPrivacyCases).where(and(eq(valoPrivacyCases.workspaceId,workspaceId),
+      ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100).for("update");
+    for(const target of rows){
+      const checked=await readPrivacyCase(tx,target.id);
+      await privacyChange(tx,checked,{identityId:"service:privacy-erasure",type:"worker"},"private_content_removed",
+        "Verified workspace erasure removed request text and prepared data; historical signed audit evidence is retained.",{
+          message:removedMessage,resultJson:null,resultScope:"Private prepared content removed by verified workspace erasure.",
+        });
+    }
+    return{rowCount:rows.length};
+  }
   if(section==="valo_ai_drafts"){
     // Usage/cost/quota receipts must survive content deletion. Never turn an
     // already incurred provider call into a free call by removing its ledger.
@@ -113,15 +140,18 @@ export async function processPrivacyErasure(actor:PrivacyStaffActor,id:string,in
     }else if((phases as readonly string[]).includes(start.phase)){
       // CTID selection stays within this locked transaction and static table
       // allowlist. A crash rolls back the batch; retries never need a cursor.
-      const result=await eraseSection(tx,row.workspaceId,start.phase as typeof phases[number]);
-      if((result.rowCount??0)<100)next=phases[phases.indexOf(start.phase as typeof phases[number])+1]??"application_erased";
-      detail=`Removed ${result.rowCount??0} rows from the current scoped application section. Remaining sections and exclusions are not claimed complete.`;
+      const[tombstone]=await tx.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,id));
+      const sections:readonly (typeof phases[number])[]=tombstone?.phase===scope?phases:basePhases;
+      const result=await eraseSection(tx,row.workspaceId,start.phase as typeof phases[number],row.id);
+      if((result.rowCount??0)<100)next=sections[sections.indexOf(start.phase as typeof phases[number])+1]??"application_erased";
+      detail=`Processed ${result.rowCount??0} records in the current scoped application section. Remaining sections and exclusions are not claimed complete.`;
     }else if(start.phase!=="application_erased")throw new ValoProblem(409,"Unknown erasure phase. Processing is held.");
     const done=next==="application_erased";
     if(done)await tx.update(valoWorkspaces).set({profileRevision:0}).where(eq(valoWorkspaces.id,row.workspaceId));
     row=await privacyChange(tx,row,{identityId:actor.identityId,type:"staff"},"erasure_batch_recorded",input.reason,{
+      ...(start.phase==="privacy_content"?{message:removedMessage,resultJson:null}:{}),
       erasurePhase:next,status:done?"partially_fulfilled":"in_progress",
-      resultScope:done?"Named application content and captured private objects erased in development. Membership remains revoked. Financial, support/privacy, audit, managed identity, backups and external-provider outcomes remain held; this is not complete account deletion.":row.resultScope,
+      resultScope:done?"Scoped application content and captured private objects erased in development. Membership remains revoked. V2 also removes support/contact copies, privacy request text and prepared results. Financial records, internal case references, signed audit text, managed identity, backups and external-provider outcomes remain retained or held; this is not complete account deletion.":row.resultScope,
       steps:row.steps.map(s=>s.system==="application"?{...s,status:done?"confirmed":"running",detail}:
         s.system==="private_files"?{...s,status:next!=="objects"&&next!=="quarantined"?"confirmed":"running",detail:next!=="objects"&&next!=="quarantined"?
           "Captured object deletions acknowledged; durable keys retained for restore/late-write replay.":detail}:
@@ -165,8 +195,8 @@ export async function replayErasedApplication(caseId:string,remove:DeleteObject=
     if(row.workspaceId!==tombstone.workspaceId||row.erasurePhase!=="application_erased")
       throw new ValoProblem(409,"Only a completed scoped application erasure can be physically replayed. Resume unfinished requests through privacy operations.");
     let applicationRowsRemoved=0,remaining=false;
-    for(const section of phases){
-      const result=await eraseSection(tx,tombstone.workspaceId,section);
+    for(const section of(tombstone.phase===scope?phases:basePhases)){
+      const result=await eraseSection(tx,tombstone.workspaceId,section,row.id);
       applicationRowsRemoved+=result.rowCount??0;
       if((result.rowCount??0)>=100){remaining=true;break;}
     }

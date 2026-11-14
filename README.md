@@ -1,6 +1,17 @@
 # Valo Compliance — Valo Platform
 
-## Current tested units — R1/R2 still unaccepted
+## Latest privacy/security checkpoint — R1/R2 still unaccepted
+
+Privacy keys now support current signing and pinned historical verification;
+missing historical material holds processing and identity matching. Scoped v2
+erasure removes support/contact and privacy prepared-result bodies, holds
+unsent notices and preserves recorded accepted outcomes. Ready, pending and
+cleanup objects are jointly tested with deduplication, retry and stale-worker
+fencing. **101/101 development database checks**, **2/2 operations checks** and
+typecheck passed. See [scope, evidence and remaining software gaps](docs/valo/privacy-erasure-v2-checkpoint.md).
+No new inference spending, external messages or live actions were enabled.
+
+## Earlier tested units — retained evidence, not completion
 
 The private development branch now includes independent privacy-role HTTP
 authorization, deletion-history checks that stop workspace recreation, resumable
