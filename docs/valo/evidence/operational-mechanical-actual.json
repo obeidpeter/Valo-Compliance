@@ -1,0 +1,80 @@
+{
+  "executedAt": "2026-11-14T09:07:24.719Z",
+  "actualPrivateArtifactsReread": true,
+  "candidate": {
+    "templateId": "TPL-07",
+    "version": 6,
+    "status": "held",
+    "hash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c"
+  },
+  "measuredChecks": [
+    {
+      "name": "schema",
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "result": "pass",
+      "evidenceHash": "293e1ac7d575f34c178b2832f917edbdd2e87a35d2bbfffa9171dcb9682ff5d8"
+    },
+    {
+      "name": "source_locators",
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "result": "pass",
+      "evidenceHash": "a04f721e2409bfd6a41f5f1aa26c53f30106197ee6174d63808de4ebd97f55e5"
+    },
+    {
+      "name": "dates",
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "result": "pass",
+      "evidenceHash": "828a15ebadef4c9acdbfa43ef238f7bbd45f2053cb4ee558c4f1ed30a7b24546"
+    },
+    {
+      "name": "scope",
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "result": "pass",
+      "evidenceHash": "4b939efadb024b5605bb62cb38a0b4df925abf680a25b8856f6ca3eac04becc1"
+    },
+    {
+      "name": "numeric_extraction",
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "result": "pass",
+      "evidenceHash": "046d575b0734d97743250d2497083ef189d68da3b54937e8a239d91909b2d511"
+    },
+    {
+      "name": "rights",
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "result": "pass",
+      "evidenceHash": "2d1860961d9ba8303fc0a430b5150d65a1505fc11725d248ad3d299f44622ecd"
+    },
+    {
+      "name": "required_fields",
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "result": "pass",
+      "evidenceHash": "a3eadfd951437907a046c32dcdaf245ad2fc61777b9c4b38136031a08b27592f"
+    },
+    {
+      "name": "disclosures",
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "result": "pass",
+      "evidenceHash": "efb2c944f7358f0fa28a7e667984ca778ab12fa342a13078b905c1a800ae2388"
+    },
+    {
+      "name": "arithmetic",
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "result": "pass",
+      "evidenceHash": "4b9121f9eb7a14417c018154078308aea9c7af88226a5a3c3bebf08634da254c"
+    },
+    {
+      "name": "rule_fixtures",
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "result": "pass",
+      "evidenceHash": "c3740e35aded2d4b4ce3c450ae868a5a976cbf15c9549564b8fce456fcaeb5d2"
+    }
+  ],
+  "passCount": 10,
+  "previousAttestationMatchesReexecutedChecks": false,
+  "consequence": "A fresh candidate/check manifest and independent passing reviews are required; old generic pass attestations cannot release.",
+  "contentWrites": 0,
+  "providerCalls": 0,
+  "quotaChanges": 0,
+  "publicationClaimed": false,
+  "sourceBackedEditorialAcceptanceClaimed": false
+}

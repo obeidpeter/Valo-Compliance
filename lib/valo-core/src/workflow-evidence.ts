@@ -46,6 +46,14 @@ const businessNameEvidence={
   hash:"8536ff9eea70993efe135105b2acba1bf4daec2b2509ab6db9b11e90a11d6ff0",result:"pass" as const,
 };
 const groups = [
+  {ids:["EDP-006","EDP-007","EDP-012","ADM-005"],
+    paths:["artifacts/api-server/src/editorial/operational-mechanical.ts",
+      "artifacts/api-server/src/editorial/operational-mechanical.test.ts",
+      "artifacts/api-server/src/editorial/operational-preparation.ts",
+      "artifacts/api-server/src/editorial/publication-publisher.ts",
+      "artifacts/api-server/src/scripts/mechanical-checkpoint.ts"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/operational-mechanical-actual.json",
+      hash:"c606a72ea199297d7f976b743c97e7f570a0938209f4fa48b9f3388cdab06dd5",result:"pass" as const}},
   {ids:["PAY-001","PAY-002","PAY-003","PAY-004","PAY-005","PAY-006","PAY-007","PAY-008","PAY-009",
       "DOC-005","DOC-006","DOC-007","EDP-007","ADM-001","SEC-001","SEC-006","OPS-003","NFR-006","NFR-007","PRV-003"],
     paths:["artifacts/api-server/src/lib/valo-commerce.ts","artifacts/api-server/src/lib/valo-paystack-contract.ts",

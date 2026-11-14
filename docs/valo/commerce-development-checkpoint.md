@@ -5,6 +5,38 @@ The aggregate execution evidence is
 [`evidence/commerce-development-checkpoint.json`](evidence/commerce-development-checkpoint.json).
 The complete original requirements and content candidates are preserved.
 
+## Subsequent merge and editorial validation correction
+
+Normal two-parent merge `34addf56e52fe70267d0eb459ad682ed28c62691` preserved the
+local application work and the remote content checkpoint
+`d097f8728d2e857b6d7152805bc988c6c1085acb`. The latter supplies forty template and
+thirty guidance **drafts**, not eligible releases. All twelve files in its intake
+manifest were independently checksum-verified; classifications retain 12 free,
+12 guided and four customer-AI templates. The earlier twelve practical guides,
+twenty industries and six deeper packs remain separate candidate inputs.
+See [`r1-expanded-intake-verification.json`](evidence/r1-expanded-intake-verification.json).
+
+The incoming review correctly identified a generic mandatory-check `pass`
+mapper. It has been removed. Ten named validators now execute explicit
+canonical schema/hash, actual passage/hash/locator, date, scope, permission,
+blank-master required-field, disclosure and arithmetic checks. Legal numeric
+extraction/rule applicability passes only for the supported no-legal-claims
+operational master, with that measured non-applicability recorded. This does
+not validate a regulatory rule or an unsupported template. Failed mechanical
+checks skip metered reviews and hold the candidate. The publisher independently
+reruns the validators against retained private artifacts and rejects mismatched
+check attestations; models cannot override them.
+
+Seventeen controlled validator tests passed, including altered body/source,
+missing permission/passages, expiry, future dates, employment scope, unverified
+legal scope, invented business facts and removed disclosure. The actual retained
+TPL-07 v6 was reread from private storage and passed ten mechanical validators.
+Its old generic attestation does **not** match these measured results and cannot
+release. Its status remains held; no content write, provider call, quota change
+or new publication occurred. See
+[`operational-mechanical-actual.json`](evidence/operational-mechanical-actual.json).
+This is not the 60-case editorial acceptance suite.
+
 ## Working implementation
 
 - Verified workspace customers have a durable purchases screen: server-priced
@@ -46,7 +78,7 @@ The complete original requirements and content candidates are preserved.
 
 | Check | Actual outcome |
 |---|---|
-| API/domain regression | 71 passed, zero failed, one opt-in skip |
+| Final API/domain regression | 88 passed, zero failed, one opt-in skip; includes the 17 mechanical-control tests |
 | PostgreSQL regression, explicitly enabled | 49 passed, zero skipped |
 | Controlled commerce database proof | 14 runner tests / 13 leaf cases passed |
 | Isolated real HTTP webhook controls | 5 runner tests / 4 leaf cases passed |
@@ -56,6 +88,12 @@ The complete original requirements and content candidates are preserved.
 | Empty local PostgreSQL migration installation | Registered SQL applied; four commercial tenant foreign keys and publisher-denial invariants passed; zero seeded prices/orders; local cluster removed |
 | Foundation | 166 passed; synthetic engine fixtures are not Nigerian rule acceptance |
 | Code generation, workspace types, Next.js build | Passed |
+
+The original 71-pass commerce regression is retained alongside the final
+88-pass run, not substituted or counted twice. Final logs are
+[`commerce-api-tests-final.txt`](evidence/commerce-api-tests-final.txt),
+[`commerce-typecheck-final.txt`](evidence/commerce-typecheck-final.txt) and
+[`commerce-foundation-after-merge.txt`](evidence/commerce-foundation-after-merge.txt).
 
 The database settlement responses and HTTP signing secret were explicitly
 controlled test inputs, **not Paystack execution or delivery**. The browser

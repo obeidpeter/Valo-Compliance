@@ -1,0 +1,85 @@
+{
+  "checkedAt": "2026-11-14T09:08:21.537Z",
+  "sourceCommit": "d097f8728d2e857b6d7152805bc988c6c1085acb",
+  "inputOnly": true,
+  "templates": 40,
+  "guidance": 30,
+  "freeTemplates": 12,
+  "guidedTemplates": 12,
+  "customerAITemplates": 4,
+  "publicationEvidenceClaimed": false,
+  "sourceFiles": [
+    {
+      "actual": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "expected": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "matched": true,
+      "path": "docs/content-candidates/operational-template-candidates.md"
+    },
+    {
+      "actual": "f0a427d404b8fc4d2c09b6444ca01760ac221836f52d8781dadc4248237ec664",
+      "expected": "f0a427d404b8fc4d2c09b6444ca01760ac221836f52d8781dadc4248237ec664",
+      "matched": true,
+      "path": "docs/content-candidates/operational-template-revisions.md"
+    },
+    {
+      "actual": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "expected": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "matched": true,
+      "path": "docs/content-candidates/additional-template-candidates-a.md"
+    },
+    {
+      "actual": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "expected": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "matched": true,
+      "path": "docs/content-candidates/additional-template-candidates-b.md"
+    },
+    {
+      "actual": "371c85bb8942cb046204ba8e4c27c69df032225590deabea82dc9a2b574a5bf9",
+      "expected": "371c85bb8942cb046204ba8e4c27c69df032225590deabea82dc9a2b574a5bf9",
+      "matched": true,
+      "path": "docs/content-candidates/privacy-template-candidates.md"
+    },
+    {
+      "actual": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "expected": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "matched": true,
+      "path": "docs/content-candidates/employment-template-candidates.md"
+    },
+    {
+      "actual": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "expected": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "matched": true,
+      "path": "docs/content-candidates/commercial-template-candidates.md"
+    },
+    {
+      "actual": "5a13329b1421103e2b7ea81c2d5e2c9cd43f4f7853b2bb42b0fedc27eb354dc5",
+      "expected": "5a13329b1421103e2b7ea81c2d5e2c9cd43f4f7853b2bb42b0fedc27eb354dc5",
+      "matched": true,
+      "path": "docs/content-candidates/governance-safety-template-candidates.md"
+    },
+    {
+      "actual": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "expected": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "matched": true,
+      "path": "docs/content-candidates/regulatory-guidance-registration-tax.md"
+    },
+    {
+      "actual": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+      "expected": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+      "matched": true,
+      "path": "docs/content-candidates/regulatory-guidance-privacy-consumer.md"
+    },
+    {
+      "actual": "71378067356626c35bf1a4b3b2f85783de4e5249cac176facbdfd12ee2e23a02",
+      "expected": "71378067356626c35bf1a4b3b2f85783de4e5249cac176facbdfd12ee2e23a02",
+      "matched": true,
+      "path": "docs/content-candidates/regulatory-guidance-products-operations.md"
+    },
+    {
+      "actual": "25e179eebff1e760dff099c5dbdab49f4749fc9b2c5d70ddcf1754bd9ccd2334",
+      "expected": "25e179eebff1e760dff099c5dbdab49f4749fc9b2c5d70ddcf1754bd9ccd2334",
+      "matched": true,
+      "path": "docs/content-candidates/regulatory-guidance-employment.md"
+    }
+  ]
+}

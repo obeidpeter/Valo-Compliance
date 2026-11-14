@@ -9,6 +9,7 @@ import { developmentPublicationOnly,operationalPolicy } from "./operational-poli
 import { operationalReviewSchema } from "./operational-review-contract";
 import { inventoryCandidate } from "./operational-content";
 import { originalFormSchema,formMarkdown } from "./operational-authoring-contract";
+import { operationalMechanicalChecks } from "./operational-mechanical";
 export type ReleaseAttestations={
   provenance:ArtifactRef;rights:ArtifactRef;reviews:ArtifactRef[];rightsApplicabilityHash?:string;
   exports:{docx:ArtifactRef;pdf:ArtifactRef};exportReport:ArtifactRef;
@@ -66,6 +67,11 @@ export async function publishOperationalVersion(id:string){
       if(!page||page.truncated||sha256(page.text)!==evidence.hash||!page.text.includes(evidence.quote))
         throw Error("APPLICABLE_TERMS_SNAPSHOT_MISSING");
     }
+    const measuredChecks=operationalMechanicalChecks({candidate:bundle.candidate,policy:bundle.policy,
+      provenance,provenanceArtifactHash:a.provenance.hash,rights,applicability,snapshot:provider});
+    if(measuredChecks.some(check=>check.result!=="pass")||
+      digest(measuredChecks)!==digest(bundle.mechanicalChecks))
+      throw Error("MECHANICAL_EXECUTION_ATTESTATION_INVALID");
     if(a.reviews.length!==2)throw Error("INDEPENDENT_REVIEWS_MISSING");
     const providerIds=new Set<string>();
     for(const ref of a.reviews){

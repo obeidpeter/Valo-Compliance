@@ -7,7 +7,7 @@ import { promisify } from "node:util";
 import { unzipSync,strFromU8 } from "fflate";
 import { and,eq,sql } from "drizzle-orm";
 import { db,valoPublicationPolicies,valoContentVersions } from "@workspace/db";
-import { candidateDigest,digest,evaluatePublication,mandatoryMechanicalChecks,disclosure,sha256,type PublicationBundle } from "@workspace/valo-core";
+import { candidateDigest,digest,evaluatePublication,disclosure,sha256,type PublicationBundle } from "@workspace/valo-core";
 import { renderDocument } from "../lib/valo-render";
 import { inventoryCandidate,type OperationalProvenance } from "./operational-content";
 import { recordOriginalAuthoring } from "./operational-authoring";
@@ -16,6 +16,7 @@ import { putPublicationArtifact } from "./publication-artifacts";
 import { reviewOperationalCandidate } from "./operational-review";
 import { publishOperationalVersion,recordActualPublicationHold,type ReleaseAttestations } from "./publication-publisher";
 import { loadRightsApplicability,loadChatGPTPermission,assertPermissionRoute } from "./rights-applicability";
+import { operationalMechanicalChecks } from "./operational-mechanical";
 const execFile=promisify(execCallback);
 export async function prepareInventoryRelease(snapshotPath:string){
   developmentPublicationOnly();
@@ -86,9 +87,11 @@ export async function prepareInventoryRelease(snapshotPath:string){
     checks:["Actual DOCX ZIP/XML parsed; required text present","Actual Chromium A4 PDF parsed with pdftotext; required text present","Renderer network disabled"],
     manualWordApplicationReview:false,manualAccessibilityReview:false};
   const reportRef=await putPublicationArtifact(Buffer.from(JSON.stringify(exportReport)),"json");
+  const checks=operationalMechanicalChecks({candidate,policy,provenance:content.provenance,
+    provenanceArtifactHash:provenance.hash,rights,applicability,snapshot,now});
   let reviewed:Awaited<ReturnType<typeof reviewOperationalCandidate>>=[];
-  let providerFailure:string|null=null;
-  try{reviewed=await reviewOperationalCandidate(candidate,
+  let providerFailure:string|null=checks.some(check=>check.result!=="pass")?"OPERATIONAL_MECHANICAL_VALIDATION_FAILED":null;
+  try{if(!providerFailure)reviewed=await reviewOperationalCandidate(candidate,
     {permissions:rights.permissions,conclusion:rights.conclusion,customerLicenceAccepted:false,
       actualProviderTerms:snapshot.pages.filter((p:{url:string})=>applicability.record.evidence.some(e=>e.url===p.url)),
       actualExecutionReceipt:authored?.receipt,environmentEvidence:{developmentOnly:true,
@@ -110,13 +113,6 @@ export async function prepareInventoryRelease(snapshotPath:string){
   }
   const reviews=reviewed.map(r=>({...r.record,runId:r.record.providerResponseId,
     verdict:r.record.output.verdict,findings:[...r.record.output.findings,...r.record.output.missingEvidence]}));
-  const arithmeticFixtures=[{before:1000n,received:250n,issued:500n,adjustment:-100n,expected:650n},
-    {before:0n,received:0n,issued:1n,adjustment:0n,expected:-1n},
-    {before:9007199254740993n,received:1n,issued:0n,adjustment:0n,expected:9007199254740994n}];
-  if(!arithmeticFixtures.every(f=>f.before+f.received-f.issued+f.adjustment===f.expected))throw Error("ARITHMETIC_FIXTURE_FAILED");
-  const checks=mandatoryMechanicalChecks.map(name=>({name,candidateHash:candidate.hash,result:"pass" as const,
-    evidenceHash:digest({name,document:content.documentDigest,rights:rightsRef.hash,exportReport:reportRef.hash,
-      applicability:name==="rule_fixtures"?"No legal predicates/thresholds; zero regulatory claims verified":name==="source_locators"?"No regulatory claims; actual authoring and terms locators verified":"operational schema/provenance/export checks"})}));
   const bundle:PublicationBundle={
     candidate,sources:[],rights:{status:"cleared",commercialUse:true,evidence:JSON.stringify(rights),evidenceHash:digest(rights)},
     policy,draftRun:{runId:authored?.receipt.providerResponseId??`source-import:${sha256(content.original)}`,
