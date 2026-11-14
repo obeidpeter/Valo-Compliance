@@ -84,7 +84,9 @@ test("new source-linked tasks recheck current eligibility before any insert",{
     });
     await t.test("a current legacy recommendation creates a task with reminders off and no date",async()=>{
       const created=await tasks.createTask(actor,input);
-      assert.equal(created.ruleId,rule.id);assert.equal(created.ruleVersion,1);
+      assert.equal(created.ruleId,rule.id);
+      const [stored]=await db.select({ruleVersion:valoTasks.ruleVersion}).from(valoTasks).where(eq(valoTasks.id,created.id));
+      assert.equal(stored.ruleVersion,1,"The persisted task binds the checked version without adding it to the public DTO");
       assert.equal(created.dueDate,null);assert.equal(created.needsReview,false);
       assert.ok(registryReads>0,"The real service must reach the controlled server registry dependency");
       assert.equal((await effects()).outbox.length,0);
@@ -129,7 +131,9 @@ test("new source-linked tasks recheck current eligibility before any insert",{
     await t.test("manual tasks still work while source-linked recommendations are held",async()=>{
       registry=registryFor([]);
       const created=await tasks.createTask(actor,{...input,ruleId:null});
-      assert.equal(created.ruleId,null);assert.equal(created.ruleVersion,null);
+      assert.equal(created.ruleId,null);
+      const [stored]=await db.select({ruleVersion:valoTasks.ruleVersion}).from(valoTasks).where(eq(valoTasks.id,created.id));
+      assert.equal(stored.ruleVersion,null);
     });
     assert.equal(digest(await db.select().from(valoRuleReleases)),registryBefore,
       "The controlled test must never publish or modify a registry row");
