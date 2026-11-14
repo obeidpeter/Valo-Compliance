@@ -4,7 +4,7 @@ import { and,eq,sql } from "drizzle-orm";
 import { db,valoPublicationPolicies,valoContentVersions } from "@workspace/db";
 import { candidateDigest,digest,evaluatePublication,disclosure,sha256,type PublicationBundle } from "@workspace/valo-core";
 import { renderDocument } from "../lib/valo-render";
-import { inventoryCandidate,type OperationalProvenance } from "./operational-content";
+import { templateCandidate,type OperationalProvenance } from "./operational-content";
 import { recordOriginalAuthoring } from "./operational-authoring";
 import { developmentPublicationOnly,operationalPolicy } from "./operational-policy";
 import { putPublicationArtifact } from "./publication-artifacts";
@@ -13,14 +13,26 @@ import { publishOperationalVersion,recordActualPublicationHold,type ReleaseAttes
 import { loadRightsApplicability,loadChatGPTPermission,assertPermissionRoute } from "./rights-applicability";
 import { operationalMechanicalChecks } from "./operational-mechanical";
 import {inspectOperationalExports} from "./operational-export-inspection";
+import {assertDevelopmentRuntime} from "../lib/valo-development-runtime";
+import {supportsOperationalInferenceTemplate} from "../lib/inference-operational-coverage";
 import {readOperationalIntake} from "./operational-intake";
 export async function prepareInventoryRelease(snapshotPath:string){
+  return prepareRelease("TPL-07",snapshotPath,true);
+}
+/** Saves actual canonical candidate/export evidence and a publication hold.
+ * This entry never authors, requests AI reviews, approves inference or publishes. */
+export async function prepareOperationalCandidateRelease(templateId:string,snapshotPath:string){
+  assertDevelopmentRuntime();
+  if(!supportsOperationalInferenceTemplate(templateId))throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
+  return prepareRelease(templateId,snapshotPath,false);
+}
+async function prepareRelease(templateId:string,snapshotPath:string,requestReviews:boolean){
   developmentPublicationOnly();
   const snapshot=JSON.parse(await readFile(snapshotPath,"utf8"));
-  const useRecordedAuthoring=process.env.VALO_OPERATIONAL_AUTHORING==="recorded";
-  const versions=await db.select().from(valoContentVersions).where(eq(valoContentVersions.templateId,"TPL-07"));
+  const useRecordedAuthoring=requestReviews&&process.env.VALO_OPERATIONAL_AUTHORING==="recorded";
+  const versions=await db.select().from(valoContentVersions).where(eq(valoContentVersions.templateId,templateId));
   const version=Math.max(0,...versions.map(r=>r.version))+1;
-  const intake=useRecordedAuthoring?null:await readOperationalIntake("TPL-07",version);
+  const intake=useRecordedAuthoring?null:await readOperationalIntake(templateId,version);
   const applicability=useRecordedAuthoring?await loadRightsApplicability():await loadChatGPTPermission(snapshot,intake!.provenance);
   // Verify the actual authoring route before any metered calls. ChatGPT's
   // documented free/paid permission is not a Replit account-plan assertion.
@@ -31,7 +43,7 @@ export async function prepareInventoryRelease(snapshotPath:string){
   await db.insert(valoPublicationPolicies).values({id:policy.version,hash:policy.hash,policy,authority}).onConflictDoNothing();
   const [storedPolicy]=await db.select().from(valoPublicationPolicies).where(eq(valoPublicationPolicies.id,policy.version));
   if(storedPolicy.hash!==policy.hash)throw Error("POLICY_VERSION_CHANGED_CREATE_NEW_VERSION");
-  const authored=process.env.VALO_OPERATIONAL_AUTHORING==="recorded"?await recordOriginalAuthoring():undefined;
+  const authored=useRecordedAuthoring?await recordOriginalAuthoring():undefined;
   let recorded: {original:string;provenance:OperationalProvenance}|undefined=intake?
     {original:intake.section.body,provenance:intake.provenance}:undefined;
   if(authored){
@@ -42,7 +54,7 @@ export async function prepareInventoryRelease(snapshotPath:string){
       transformation:"Validated original five-paragraph output plus code-defined blank stock-record fields and Valo disclosures",
       templateId:"TPL-07",version,generation:authored.artifact}};
   }
-  const content=await inventoryCandidate(version,now,recorded);
+  const content=await templateCandidate(templateId,version,now,recorded);
   const provenance=await putPublicationArtifact(Buffer.from(JSON.stringify(content.provenance)),"json");
   if(snapshot.kind!=="official_provider_terms_snapshot"||snapshot.pages.some((p:{truncated:boolean})=>p.truncated)||
     !Number.isFinite(Date.parse(snapshot.retrievedAt))||Date.parse(snapshot.retrievedAt)>+now||
@@ -61,9 +73,9 @@ export async function prepareInventoryRelease(snapshotPath:string){
     permissions:applicability.record.evidence};
   const rightsRef=await putPublicationArtifact(Buffer.from(JSON.stringify(rights)),"json");
   const rawCandidate:Omit<PublicationBundle["candidate"],"hash">={
-    id:"TPL-07",version,body:JSON.stringify(content.document),contentClass:"general_template" as const,
+    id:templateId,version,body:JSON.stringify(content.document),contentClass:"general_template" as const,
     jurisdiction:"NG",risk:"general" as const,scope:content.scope,limitations:content.limitations,
-    assumptions:["Quantities and business facts are entered by the user.","This is optional recordkeeping practice, not a regulated-sector or statutory register."],
+    assumptions:[templateId==="TPL-07"?"Quantities and business facts are entered by the user.":"Business facts and applicable terms are entered and checked by the user.","This is optional recordkeeping practice, not a regulated-sector or statutory register."],
     unresolvedMaterialIssues:[],missingEvidence:[],sourceCheckDate:now.toISOString(),reviewBy:content.reviewBy,
     disclosure,claims:[],evidenceMode:"original_operational" as const,legalScopeStatus:"not_applicable" as const,
   };
@@ -81,7 +93,7 @@ export async function prepareInventoryRelease(snapshotPath:string){
   let providerFailure:string|null=!exportReport.passed?"OPERATIONAL_EXPORT_VALIDATION_FAILED":
     checks.some(check=>check.result!=="pass")?"OPERATIONAL_MECHANICAL_VALIDATION_FAILED":null;
   const {evidence:includedInPermissions,...permissionScope}=applicability.record;
-  try{if(!providerFailure)reviewed=await reviewOperationalCandidate(candidate,
+  try{if(!providerFailure&&requestReviews)reviewed=await reviewOperationalCandidate(candidate,
     {permissions:rights.permissions,conclusion:rights.conclusion,customerLicenceAccepted:false,
       // Review the applicable actual quoted passages, not full unrelated
       // provider pages or all 70 intake rows. Full snapshots remain private,
@@ -100,7 +112,7 @@ export async function prepareInventoryRelease(snapshotPath:string){
       sourceAttribution:"Provided authoring note; not independent certification of upstream authorship",
       performedChecks:["Original source file SHA-256 matches the retained note","Provider passages occur in the exact retrieved full-page hashes",
         "DOCX/PDF generated from the exact canonical candidate and inspected before review"]});
-    if(!providerFailure&&reviewed.length!==2)providerFailure="OPERATIONAL_REVIEW_INCOMPLETE";
+    if(!providerFailure)providerFailure=requestReviews?(reviewed.length===2?null:"OPERATIONAL_REVIEW_INCOMPLETE"):"FINITE_REVIEW_NOT_RUN";
   }catch(error){
     reviewPlan=(error as {reviewPlan?:unknown})?.reviewPlan??null;
     providerFailure=error instanceof Error&&/^[A-Z_]{3,80}$/.test(error.message)?
@@ -130,14 +142,15 @@ export async function prepareInventoryRelease(snapshotPath:string){
     reviews:reviewed.map(r=>r.artifact),exports,exportReport:reportRef};
   await db.transaction(async tx=>{
     await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
-    await tx.insert(valoContentVersions).values({id,templateId:"TPL-07",version,slug:"inventory-register",
+    await tx.insert(valoContentVersions).values({id,templateId,version,slug:templateId==="TPL-07"?"inventory-register":templateId.toLowerCase(),
       policyId:policy.version,candidateHash:candidate.hash,bundle,attestations,reviewBy:new Date(content.reviewBy)});
   });
   const eligibility=evaluatePublication(bundle);
-  const release=eligibility.decision==="eligible"?await publishOperationalVersion(id):
+  const release=requestReviews&&eligibility.decision==="eligible"?await publishOperationalVersion(id):
     {...await recordActualPublicationHold(id,providerFailure??undefined),decision:"held"};
   return{id,version,candidateHash:candidate.hash,policyHash:policy.hash,eligibility,release,reviewPlan,
     reviews:reviewed.map(r=>({role:r.record.role,providerResponseId:r.record.providerResponseId,model:r.record.model,
       verdict:r.record.output.verdict,findings:r.record.output.findings,missingEvidence:r.record.output.missingEvidence})),
     exportReport,attestations,rightsScope: rights.conclusion,commercialLicenceAccepted:false,providerFailure};
 }
+

@@ -4,6 +4,8 @@ import {resolve} from "node:path";
 import {desc} from "drizzle-orm";
 import {publicationSchema} from "@workspace/valo-core";
 import {assertDevelopmentRuntime} from "../lib/valo-development-runtime";
+import {operationalInferenceTemplateIds,supportsOperationalInferenceTemplate} from "../lib/inference-operational-coverage";
+import {selectPreparedProposal} from "../lib/inference-prepared-report";
 import {requestDigest} from "../lib/inference-budget";
 import {prepareOperationalFiniteManifest,finiteManifestProposal} from "../lib/inference-manifest";
 import type {FiniteManifest} from "../lib/inference-batch-dispatch";
@@ -22,15 +24,21 @@ async function main(){
     import("../editorial/operational-policy"),import("../lib/inference-budget-store")]);
   try{
   const[mode,batchId,...extra]=process.argv.slice(2);
+  if(mode==="--prepare-candidate"){
+    if(!batchId||!supportsOperationalInferenceTemplate(batchId)||extra.length!==1||!extra[0])
+      throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+    const {prepareOperationalCandidateRelease}=await import("../editorial/operational-preparation");
+    const prepared=await prepareOperationalCandidateRelease(batchId,extra[0]);
+    console.log(JSON.stringify({...prepared,templateId:batchId,providerCalls:0,approvalRowsWritten:0,publicationAccepted:false}));return;
+  }
   if(mode==="--admit"){
-    const[artifactHash]=extra;
-    if(extra.length!==1||!batchId||!/^[a-f0-9-]{36}$/.test(batchId)||!artifactHash||!/^[a-f0-9]{64}$/.test(artifactHash))
+    const[artifactHash,candidateVersionId]=extra;
+    if(extra.length<1||extra.length>2||candidateVersionId&&!/^[a-f0-9-]{36}$/.test(candidateVersionId)||!batchId||!/^[a-f0-9-]{36}$/.test(batchId)||!artifactHash||!/^[a-f0-9]{64}$/.test(artifactHash))
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");
     const report=JSON.parse((await getPublicationArtifact({id:batchId,hash:artifactHash,extension:"json"})).toString());
-    if(!report.proposal?.manifest||!report.package||
-      report.proposal.manifest.packageId!==allocationPackageId(report.package))throw Error("PREPARED_PACKAGE_BINDING_INVALID");
+    const proposal=selectPreparedProposal(report,candidateVersionId);
     const admitted=await registerPreparedInferenceSubmanifest(new InferenceBudgetStore(pool,"public","additional-new"),
-      report.proposal.manifest,report.proposal.expiresAt,assertFiniteWorkBindings);
+      proposal.manifest,proposal.expiresAt,assertFiniteWorkBindings);
     console.log(JSON.stringify(admitted));return;
   }
   if(extra.length||!["--prepare","--execute"].includes(mode??"")||
@@ -43,9 +51,9 @@ async function main(){
     for(const row of await db.select().from(valoContentVersions).orderBy(desc(valoContentVersions.version)))
       if(!latest.has(row.templateId))latest.set(row.templateId,row);
     const holds:{candidateVersionId:string;templateId:string;reason:string}[]=[];
-    let prepared:null|ReturnType<typeof finiteManifestProposal>=null;
+    const prepared:ReturnType<typeof finiteManifestProposal>[]=[];
     for(const row of latest.values()){
-      if(row.templateId!=="TPL-07"){
+      if(!supportsOperationalInferenceTemplate(row.templateId)){
         holds.push({candidateVersionId:row.id,templateId:row.templateId,reason:"CANDIDATE_REQUEST_PREPARER_UNAVAILABLE"});continue;
       }
       try{
@@ -56,25 +64,26 @@ async function main(){
           bundleHash:requestDigest(current.bundle),sourceHashes:current.bundle.sources.map(s=>s.hash),sourceFiles:[],plan});
         manifest.packageId=packageId;
         for(const work of manifest.works)await assertFiniteWorkBindings(work);
-        prepared=finiteManifestProposal(manifest,existingPackage?
-          new Date(Math.min(Date.parse(existingPackage.expiresAt),Date.parse(plan.manifest.expiresAt))).toISOString():plan.manifest.expiresAt);
+        prepared.push(finiteManifestProposal(manifest,existingPackage?
+          new Date(Math.min(Date.parse(existingPackage.expiresAt),Date.parse(plan.manifest.expiresAt))).toISOString():plan.manifest.expiresAt));
       }catch(error){holds.push({candidateVersionId:row.id,templateId:row.templateId,
         reason:error instanceof Error&&/^[A-Z_]{3,100}$/.test(error.message)?error.message:"FINITE_PREPARATION_FAILED"});}
     }
     const report={preparedAt:new Date().toISOString(),scope:"one finite additional allocation with automatic exact submanifest admission",
       packageId,package:allocationPackage,ownerApprovalScope:"finite-allocation-package",ownerApproved:!!existingPackage,
-      executableScope:"first exact operational review pair only",
-      latestCandidatesInspected:latest.size,proposal:prepared,holds,providerCalls:0,approvalRowsWritten:0,
+      executableScope:"one exact operational review pair per verified saved candidate",
+      supportedTemplateIds:operationalInferenceTemplateIds,
+      latestCandidatesInspected:latest.size,proposals:prepared,proposal:prepared.length===1?prepared[0]:null,holds,providerCalls:0,approvalRowsWritten:0,
       nonpublicationCorpora:"Original 80/60/60 case rosters are frozen in the proposed package; executable preparers remain held.",
       excluded:["authoring","real customer confidential data","production","payments","emails"],
-      readiness:prepared?"disabled proposal ready for exact-manifest review":"no eligible prepared work"};
+      readiness:prepared.length?"disabled exact proposals ready; no inference approval created":"no eligible prepared work"};
     const artifact=await putPublicationArtifact(Buffer.from(JSON.stringify(report)),"json");
     const dir=resolve(publicationWorkspaceRoot(),"generated-artifacts/valo-completion");
     await mkdir(dir,{recursive:true,mode:0o700});
     const path=resolve(dir,`finite-inference-proposal-${randomUUID()}.json`);
     await writeFile(path,JSON.stringify({...report,privateReportArtifact:artifact},null,2)+"\n",{flag:"wx",mode:0o600});
-    console.log(JSON.stringify({ready:prepared!==null,manifestHash:prepared?.manifestHash??null,
-      attemptCount:prepared?.attemptCount??0,holds:holds.length,providerCalls:0,ownerApproved:false,
+    console.log(JSON.stringify({ready:prepared.length>0,manifestHashes:prepared.map(p=>p.manifestHash),
+      preparedPairs:prepared.length,attemptCount:prepared.reduce((sum,p)=>sum+p.attemptCount,0),holds:holds.length,providerCalls:0,ownerApproved:false,
       privateReportArtifact:artifact,report:path}));return;
   }
   const row=(await pool.query("SELECT manifest,manifest_hash FROM valo_inference_batches WHERE id=$1",[batchId])).rows[0];
@@ -109,3 +118,4 @@ async function main(){
 }
 main().catch(error=>{console.error(error instanceof Error&&/^[A-Z_]{3,100}$/.test(error.message)?error.message:
   "FINITE_INFERENCE_RUN_FAILED");process.exitCode=1;});
+
