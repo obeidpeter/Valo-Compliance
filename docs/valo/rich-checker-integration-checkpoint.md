@@ -34,7 +34,7 @@ Replit/CI must run the full application build and database/HTTP tests at the int
 
 Browser checks remain unrun: mobile layout, keyboard and screen-reader labels, opening/focusing a missing nested field, signed-out/in transitions, preserved answers, review/edit/re-preview/save/history/compare and all four result groups. Confirm an empty eligible registry still presents honest coverage-unavailable guidance. No rendered or cross-browser evidence is claimed.
 
-No paid AI, PSP call, email, deployment, database migration or release action was performed. Package/lock/CI, budget, privacy and receipt implementation files are outside this branch's scope.
+No paid AI, PSP call, email, deployment, database migration or release action was performed. Dependency/lock, budget, privacy and receipt implementation files remain outside this branch's scope. Two narrow test scripts and CI steps were subsequently authorized and registered as described below.
 
 CI follow-up: the first commit exposed a composite TypeScript project-boundary error because the contract test was placed in the core source project. It has been moved to `artifacts/api-server/src/lib/valo-checker-rich.test.ts`, which already owns both API-schema and core dependencies. No package scripts, dependency files or CI configuration were changed. Run this test explicitly with the UI helper test when integrating.
 
@@ -51,3 +51,6 @@ The task guard received a separate implementation review before this checkpoint.
 
 
 CI correction after `2aca65f4`: run 43649940135 found two test-only TypeScript errors where the newly authored database test asserted `ruleVersion` on the public task DTO. That DTO intentionally omits the internal binding. The assertions now read the persisted `valoTasks.ruleVersion` column instead, retaining the version-binding checks without changing the customer API. That run's full workspace typecheck failed; it is not claimed passed. Its existing PostgreSQL suite executed 81 tests (79 pass, 2 privacy-storage failures); it did not execute the newly authored checker or task-guard test because package test lists remain explicit. The task guard must still be run explicitly in the isolated integration environment.
+
+
+CI registration follow-up: `artifacts/api-server/package.json` now adds `test:valo-rich-checker` (the 18 engine/contract and 8 UI helper cases) and `test:valo-task-source-guard` (explicit synthetic marker, development mode and experimental Node test-module mocks). `.github/workflows/valo-foundation.yml` invokes the first immediately after full typechecking and the second immediately after migrations against the existing disposable loopback PostgreSQL service. No existing test command or coverage is removed, and the new tests execute before later unrelated suites. No dependency, lockfile, privacy, receipt or budget source change is involved. The pushed run's actual new-test results must be inspected before claiming database execution passed.
