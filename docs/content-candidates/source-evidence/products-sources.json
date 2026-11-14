@@ -1,0 +1,90 @@
+[
+  {
+    "id": "nafdac_gmp_2025",
+    "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Current-Good-Manufacturing-Practice-Guidelines-for-Food-and-Food-Products.pdf",
+    "final_url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Current-Good-Manufacturing-Practice-Guidelines-for-Food-and-Food-Products.pdf",
+    "status": 200,
+    "bytes": 1604108,
+    "sha256": "c01d8664329296b37977144d5c1c224576e56e29d87a0e234e71912f430f0f42",
+    "path": "analysis/governance_safety_sources/nafdac_gmp_2025.pdf",
+    "retrieved_at": "2026-11-14T08:40:03.010510+00:00",
+    "state": "retrieved_not_EDP_approved"
+  },
+  {
+    "id": "nafdac_hygiene_2025",
+    "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/NAFDAC-Guidelines-for-Food-Hygienic-Practices.pdf",
+    "final_url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/NAFDAC-Guidelines-for-Food-Hygienic-Practices.pdf",
+    "status": 200,
+    "bytes": 1026236,
+    "sha256": "f65f8912782749003aa7a2d09ad934480f9f799de671fe5e94a1fbdf7e1d7974",
+    "path": "analysis/governance_safety_sources/nafdac_hygiene_2025.pdf",
+    "retrieved_at": "2026-11-14T08:40:03.623497+00:00",
+    "state": "retrieved_not_EDP_approved"
+  },
+  {
+    "id": "nafdac_small_2025",
+    "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Small-Scale-Enterprises.pdf",
+    "final_url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Small-Scale-Enterprises.pdf",
+    "status": 200,
+    "bytes": 375979,
+    "sha256": "ed0eb2e3c7a93cefc8ceb7be1e49485c07f41d3b67bf5638c66e43649e71108b",
+    "path": "analysis/governance_safety_sources/nafdac_small_2025.pdf",
+    "retrieved_at": "2026-11-14T08:40:02.281132+00:00",
+    "state": "retrieved_not_EDP_approved"
+  },
+  {
+    "id": "nafdac_micro_2025",
+    "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Micro-Scale-Enterprises-in-Nigeria.pdf",
+    "final_url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guidelines-for-Inspection-of-Micro-Scale-Enterprises-in-Nigeria.pdf",
+    "status": 200,
+    "bytes": 390911,
+    "sha256": "e886bb426318c246fe0795fd3861e0c1b90f95629f6ac67aed4acb5c79f757d3",
+    "path": "analysis/governance_safety_sources/nafdac_micro_2025.pdf",
+    "retrieved_at": "2026-11-14T08:40:02.686024+00:00",
+    "state": "retrieved_not_EDP_approved"
+  },
+  {
+    "id": "nafdac_local_food_registration_2026",
+    "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Registration-of-Food-Products-Made-in-Nigeria.pdf",
+    "final_url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Registration-of-Food-Products-Made-in-Nigeria.pdf",
+    "status": 200,
+    "bytes": 179300,
+    "sha256": "cd126bb61bd7593b35d1a1ea4ef4f2ee6ce294cbc538cd777a63b1c72bf8204a",
+    "path": "analysis/governance_safety_sources/nafdac_local_food_registration_2026.pdf",
+    "retrieved_at": "2026-11-14T08:45:00.897593+00:00",
+    "state": "retrieved_not_EDP_approved"
+  },
+  {
+    "id": "nafdac_food_advertisement_2026",
+    "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Advertisement-Control-of-Food-Products-in-Nigeria-Revised.pdf",
+    "final_url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FR_and_R/Guidelines-for-Advertisement-Control-of-Food-Products-in-Nigeria-Revised.pdf",
+    "status": 200,
+    "bytes": 211612,
+    "sha256": "31c5bb7228b000f51de736bcf9610fd5e2fa97b17a6b0d549083b958641f87ce",
+    "path": "analysis/governance_safety_sources/nafdac_food_advertisement_2026.pdf",
+    "retrieved_at": "2026-11-14T08:45:00.182973+00:00",
+    "state": "retrieved_not_EDP_approved"
+  },
+  {
+    "id": "nafdac_prepackaged_facility_2025",
+    "url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guideline-for-Inspection-and-Requirements-for-Pre-Packaged-Food-Facilities-in-Nigeria.pdf",
+    "final_url": "https://nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/FSAN/2025-2030/Guideline-for-Inspection-and-Requirements-for-Pre-Packaged-Food-Facilities-in-Nigeria.pdf",
+    "status": 200,
+    "bytes": 529685,
+    "sha256": "73d97cf33bce46abd7a49a0861a1d1b2d2882f641d2c2418855bec96c4e0a01e",
+    "path": "analysis/governance_safety_sources/nafdac_prepackaged_facility_2025.pdf",
+    "retrieved_at": "2026-11-14T08:45:00.777973+00:00",
+    "state": "retrieved_not_EDP_approved"
+  },
+  {
+    "id": "nafdac_disposal_2024",
+    "url": "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/INVESTIGATION_ENFORCEMENT_GUIDELINES/Guidelines-for-Handling-and-Disposal-of-Unwholesome-Medicines-and-Other-NAFDAC-Regulated-Products.pdf",
+    "final_url": "https://www.nafdac.gov.ng/wp-content/uploads/Files/Resources/Guidelines/INVESTIGATION_ENFORCEMENT_GUIDELINES/Guidelines-for-Handling-and-Disposal-of-Unwholesome-Medicines-and-Other-NAFDAC-Regulated-Products.pdf",
+    "status": 200,
+    "bytes": 81923,
+    "sha256": "5af7328e2d8b26dcaed2ddc493dce02d20b01b759dfb124a11ca2aed3ba4d239",
+    "path": "analysis/governance_safety_sources/nafdac_disposal_2024.pdf",
+    "retrieved_at": "2026-11-14T08:45:00.772748+00:00",
+    "state": "retrieved_not_EDP_approved"
+  }
+]
