@@ -4,12 +4,12 @@
   "enabled": false,
   "approvalRowsWritten": 0,
   "providerCalls": 0,
-  "packageId": "finite-package:46a5933fd296adb648dae1becaaabd835d5b203ce5a5d470887ec74cb27bba37",
-  "packageHash": "46a5933fd296adb648dae1becaaabd835d5b203ce5a5d470887ec74cb27bba37",
+  "packageId": "finite-package:3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8",
+  "packageHash": "3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8",
   "package": {
     "version": 3,
     "kind": "finite-inference-package",
-    "preparedAt": "2026-11-14T23:07:44.777Z",
+    "preparedAt": "2026-11-14T23:49:19.778Z",
     "policyVersion": "public-gpt-5.4-mini-2026-11-14",
     "allocation": {
       "id": "valo-additional-inference-30-20261114-v1",
@@ -22,31 +22,31 @@
     "sourceFiles": [
       {
         "path": "docs/registers/content-inventory.json",
-        "sha256": "2d1c3bf46b76f617753429820fe732e695338833e8634bf10cbc7ceace378cc3"
+        "sha256": "97afb417f68173fd8ec621e4b041d3e85e3407ae04f6773ba892cccbf5328a28"
       },
       {
         "path": "docs/content-candidates/r1-content-intake-manifest.json",
-        "sha256": "d3295d27df15a37d40d6b5c84b567c480730a287411b2ef054e7f58b4aa02982"
+        "sha256": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e"
       },
       {
         "path": "docs/evaluation-candidates/editorial.json",
-        "sha256": "ccb0220ea609c9a69cdd57a8bab81e3d33d8894adbe1b3d223e9132ac19bdc2d"
+        "sha256": "0ab6541ff3336e886ef42efff1d1f9ad38bcd2df0cdec65d62f50327c38e9f9c"
       },
       {
         "path": "docs/evaluation-candidates/checker.json",
-        "sha256": "83f943bbe4f42b45e99b47671b328630491ac7eb9a12fcba0ae56c3f5529f65e"
+        "sha256": "5e333b3f472263e16f767b3165e29c1b1e210fdbac922873d1ffc086027ae1a0"
       },
       {
         "path": "docs/evaluation-candidates/customer-ai.json",
-        "sha256": "65d51a2b52ab01c70a222a9a02ae84602a53629cc244552cbcc6a0802ca1796b"
+        "sha256": "8c828ad115a855da9d725aaa8ecb76d91e36daa4a9142571c0a45d306ec995e2"
       },
       {
         "path": "docs/content-candidates/practical-guide-candidates.md",
-        "sha256": "27a0d146665194f02c46e50a3d81406169200d3859e601714cc78f2f2a034874"
+        "sha256": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82"
       },
       {
         "path": "docs/content-candidates/industry-content-candidates.md",
-        "sha256": "f0ad13bb78cc4dea8bb6bc22d692e19ee7b280e8dc67b1275ee29b17e4542ac9"
+        "sha256": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897"
       }
     ],
     "contentIds": [
@@ -203,7 +203,7 @@
         "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C12 — Organise business records so you can find the answer",
         "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
         "heading": "GUIDE-C12 — Organise business records so you can find the answer",
-        "baselineSectionSha256": "9f4d2fc36072173a7dfa57e72882724b1ea1b8e7474bb58c95905355a03b154b",
+        "baselineSectionSha256": "7fd7dfc4750729a78cf1bdd30321be1127125fa8c138290a18351b5451857adf",
         "category": "practical-guide"
       },
       {
@@ -1221,7 +1221,7 @@
       "operational-template-pair-v1"
     ],
     "holds": [
-      "Only the existing TPL-07 exact operational review preparer is executable in this revision.",
+      "Supported exact operational preparers: TPL-01, TPL-02, TPL-03, TPL-04, TPL-05, TPL-06, TPL-07, TPL-08, TPL-09, TPL-10, TPL-11; each requires a saved candidate and verified private evidence.",
       "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
       "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt."
     ]
@@ -1229,12 +1229,7 @@
   "proposedApprovalLifetimeHours": 24,
   "expirySemantics": "The owner-approved record fixes its expiry. Every child expires no later than its parent and retained review plan. Revocation stops every new dispatch, including already reserved work. Valid in-flight usage is still accounted.",
   "scopeNotice": "One up-to-$30 additional inference allocation for 108 actual content units (70 canonical intake IDs plus 12 practical guides, 20 industry landing sections and six deeper packs) and the original 80/60/60 case rosters. Named sections use actual source headings, not invented runtime UUIDs. Same-identity candidate revisions still require real eligibility checks; original evaluation corpus bytes stay pinned. Prior unknown charges, tax, Agent usage, hosting and other projects are excluded. Completion of all allowed work is not promised.",
-  "delegationNotice": "Once this package is actually approved, the server may admit exact immutable submanifests within its scope without asking for per-item spending or publication approval. Current implementation only prepares the original TPL-07 operational pair.",
-  "currentExecutableCeiling": {
-    "attempts": 2,
-    "worstCaseNanoUsd": "741100800",
-    "actualRuntimePlanPrepared": false
-  },
+  "delegationNotice": "Once this package is actually approved, the server may admit exact immutable submanifests within its scope without per-item spending or publication approval. This revision supports preparing TPL-01 through TPL-11, each only after actual saved-version evidence checks. All other preparers remain held.",
   "actualSourceCounts": {
     "canonicalIntakeIds": 70,
     "namedSourceSections": 38,
@@ -1253,5 +1248,48 @@
         "cases": 60
       }
     ]
+  },
+  "currentPreparedWork": {
+    "pairs": 0,
+    "attempts": 0,
+    "worstCaseNanoUsd": "0",
+    "actualRuntimePlanPrepared": false
+  },
+  "preparationCapability": {
+    "supportedTemplateIds": [
+      "TPL-01",
+      "TPL-02",
+      "TPL-03",
+      "TPL-04",
+      "TPL-05",
+      "TPL-06",
+      "TPL-07",
+      "TPL-08",
+      "TPL-09",
+      "TPL-10",
+      "TPL-11"
+    ],
+    "maximumInitialReviewAttempts": 22,
+    "maximumInitialReviewReservationNanoUsd": "8152108800",
+    "conditionalOnAllSupportedCandidatesPassingTheirOwnReadinessChecks": true
+  },
+  "sourceBindingAudit": {
+    "repositoryCommit": "f01a9abae2b789ded2488ea88f86e82beac3df77",
+    "checkedAt": "2026-11-14T23:49:19.818Z",
+    "originalProposalInvalidated": true,
+    "reason": "Original proposal hashes reflected extra local trailing newlines. Corrected from byte-exact repository files; no corpus cases or approved authority were changed.",
+    "correctedSourceFiles": [
+      "docs/registers/content-inventory.json",
+      "docs/content-candidates/r1-content-intake-manifest.json",
+      "docs/evaluation-candidates/editorial.json",
+      "docs/evaluation-candidates/checker.json",
+      "docs/evaluation-candidates/customer-ai.json",
+      "docs/content-candidates/practical-guide-candidates.md",
+      "docs/content-candidates/industry-content-candidates.md"
+    ],
+    "correctedNamedSections": [
+      "GUIDE-C12 — Organise business records so you can find the answer"
+    ],
+    "corpusCaseHashChanges": 0
   }
 }
