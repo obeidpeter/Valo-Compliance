@@ -1,5 +1,8 @@
 # Valo Compliance — Valo Platform
 
+Latest privacy checkpoint: [verified requests, staff operations and scoped private results](docs/valo/privacy-cases-checkpoint.md).
+These are working partial processing flows, not completed erasure, provider-wide privacy fulfilment or accepted R1/R2.
+
 Latest private-editor checkpoint: [twelve question-led drafts and verified private exports](docs/valo/guided-private-layouts-checkpoint.md).
 These are personal draft forms, not released catalogue masters or accepted R1/R2.
 

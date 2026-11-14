@@ -203,7 +203,14 @@ export function partialWorkflowEvidence(id:string){
   // This is engineering evidence, not complete EDT or 80/60/60 acceptance.
   const guidedPrivateProof={kind:"test" as const,path:"docs/valo/evidence/guided-private-layouts.json",
     hash:"0c70e6363821b87a1712b60cd939a162dd189aa6107a7a9c7b4d84c256c5eb5e",result:"pass" as const};
+  // Partial request processing only; erasure and provider fulfilment remain false.
+  const privacyCaseProof={kind:"test" as const,path:"docs/valo/evidence/privacy-cases-checkpoint.json",
+    hash:"352688315e3166dcbd4df5d15e26bec46de12be8b018fec3bdc22f5c85149f1e",result:"pass" as const};
   const currentValidation=[
+    {ids:["PRO-002","PRV-003","ADM-001","ADM-009","SEC-001","SEC-006","WRK-006","NFR-009"],
+      paths:["artifacts/api-server/src/lib/valo-privacy.ts","artifacts/api-server/src/lib/valo-privacy-processing.ts",
+        "artifacts/api-server/src/lib/valo-privacy-state.ts","artifacts/api-server/src/scripts/privacy-case-proof.ts",
+        "artifacts/valo/src/components/privacy-cases.tsx","artifacts/valo/src/screens/privacy-operations.tsx"],record:privacyCaseProof},
     {ids:["EDT-001","EDT-002","EDT-003","EDT-005","EDT-006","EDT-009","NFR-006","NFR-007","NFR-008"],
       paths:["lib/valo-core/src/guided-specs-v1.ts","lib/valo-core/src/guided-runtime-v1.ts",
         "artifacts/valo/src/components/guided-fields.tsx","artifacts/valo/src/components/guided-draft-starter.tsx",

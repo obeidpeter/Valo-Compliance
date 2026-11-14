@@ -1,0 +1,12 @@
+✔ privacy states preserve verification and irreversible terminal boundaries (5.525942ms)
+✔ privacy stale writes are rejected, not overwritten (0.245956ms)
+✔ all six exact privacy systems need genuine complete dispositions (0.647004ms)
+✔ privacy audit binds exact actor, tenant, state and reason; JSONB order is stable (3.05093ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 584.903801
