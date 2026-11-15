@@ -80,6 +80,15 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
         await db.update(valoMemberships).set({active:'yes'}).where(eq(valoMemberships.workspaceId,a.workspaceId));
       }
     });
+    await t.test('managed session revocation while final job lock is held wins before headers',async()=>{
+      const actor=await owner(),row=await prepare(actor),blocker=await pool.connect(),rechecked=deferred();let checks=0,revoked=false,released=0;
+      try{
+        await blocker.query('begin');await blocker.query('select id from valo_workspace_exports where id=$1 for update',[row.id]);
+        const waiting=release(actor,row.id,async()=>{released++;},async()=>{checks++;if(checks===2)rechecked.resolve();if(revoked)throw Error('CONTROLLED_SESSION_REVOKED_AFTER_LOCK_WAIT');});
+        await bounded(rechecked.promise);await new Promise(r=>setTimeout(r,25));revoked=true;await blocker.query('commit');
+        await assert.rejects(waiting,/CONTROLLED_SESSION_REVOKED_AFTER_LOCK_WAIT/);assert.equal(checks,3);assert.equal(released,0);
+      }finally{await blocker.query('rollback');blocker.release();}
+    });
     await t.test('exact attempt/workspace key binding and checksum corruption deny release',async()=>{
       const actor=await owner(),row=await prepare(actor),obj=await attempt(row.id);let reads=0;
       await db.update(attempts).set({objectKey:`valo/development/${b.workspaceId}/${obj.id}.json`}).where(eq(attempts.id,obj.id));

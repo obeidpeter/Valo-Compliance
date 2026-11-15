@@ -220,12 +220,16 @@ export async function withPreparedWorkspaceExport<T>(actor:WorkspaceActor,id:str
     if(proof.checksum!==result.row.checksum||proof.size!==result.row.size)throw new ValoProblem(409,"Private result integrity check failed. No bytes were released.");
     await abortable(bounded,verify);
     return await db.transaction(async tx=>{
+      await tx.execute(sql`set local lock_timeout='1000ms'`);
       const row=await owned(tx,actor,id,true);await authorizeWorkspaceWrite(tx,actor);bounded.throwIfAborted();
       if(row.status!=="ready"||row.version!==result.row.version||row.currentAttemptId!==result.row.currentAttemptId||row.expiresAt.getTime()<=Date.now())
         throw new ValoProblem(409,"Result access changed during retrieval.");
       const[a]=await tx.select().from(attempts).where(eq(attempts.id,row.currentAttemptId!));
       if(!a||a.status!=="ready"||a.objectKey!==result.key||a.workspaceId!==actor.workspaceId||a.jobId!==id)
         throw new ValoProblem(409,"Private artifact verification changed.");
+      // A competing release may have delayed the job lock. Check the managed
+      // session again after that wait, immediately before attachment release.
+      await abortable(bounded,verify);bounded.throwIfAborted();
       return await consume(path,proof,bounded);
     });
   }finally{await rm(directory,{force:true,recursive:true});}
