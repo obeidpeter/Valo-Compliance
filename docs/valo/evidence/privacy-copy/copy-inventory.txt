@@ -1,0 +1,14 @@
+▶ new synthetic private-copy inventory: scoped export, physical redaction, signed proof and crash scratch replay
+  ✔ export includes owned charge/refund/dispute events, not another tenant or unlinked email intake or nested snapshots (126.98456ms)
+  ✔ all recorded copied private text is erased while finance facts and signed history remain (37.391611ms)
+{"scope":"new synthetic fixtures only","financialFactsRetained":true,"externalProviderActions":0,"completeAccountDeletionClaimed":false,"sharedUsageUnchanged":true,"fixtureWorkspace":"2a01df4e-eb2e-4b9c-b65f-7fa61d23da19"}
+  ✔ every object alias and abandoned scratch path remains signed and retryable after process leftovers (191.398385ms)
+✔ new synthetic private-copy inventory: scoped export, physical redaction, signed proof and crash scratch replay (2548.936421ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5852.680394

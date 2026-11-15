@@ -1,6 +1,34 @@
 # Valo Compliance — Valo Platform
 
-## Latest application checkpoint — finite inference controls and exact export proof
+## Latest application checkpoint — private-copy erasure and scoped exports
+
+Saved application: `37ebcc9`, including the privacy/export implementation in
+`2eb03d0`, CI prerequisite/scan-disposition follow-up `453969b`, and orphaned
+queue payload / conflicting-ownership protection. All were pushed
+normally to the existing private development branch and draft PR2.
+
+Versioned synthetic erasure now minimises copied financial text, preserves
+authenticated audit proof, cancels scoped queued payloads, and retains signed
+object/scratch cleanup inventories. Scoped exports include linked payment,
+refund/dispute and privacy-case metadata without recursively embedding old
+full workspace exports or inferring public-contact ownership from email.
+
+**90 distinct selected engineering tests passed**, plus typecheck, API build,
+isolated migration DDL and the dependency/redacted-secret scan with detector
+canaries. These are **not** formal 80/60/60 acceptance or complete privacy
+fulfilment. The initial CI run failed; prerequisite fixes are committed, but
+no green GitHub result is claimed here.
+
+Important remaining implementation includes physical re-erasure after an
+older-snapshot restore with independently preserved controls/witnesses.
+The development schema's legacy migration journal is empty; no old migration
+executions were fabricated. Retention/processor outcomes, production recovery,
+full R1/R2 and launch remain unaccepted. No new inference, external message,
+real merchant action, spending approval or launch occurred.
+
+See [exact scope, test commands and remaining gaps](docs/valo/privacy-copy-checkpoint.md).
+
+## Previous application checkpoint — finite inference controls and exact export proof
 
 Saved application: `c6bca11`. The real managed dispatch path was exercised offline,
 corpus/role and independent-review bindings were tightened, and default customer
