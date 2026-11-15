@@ -25,8 +25,11 @@ await mock.module(url,{namedExports:{
     await onUploading?.();await writing;return{checksum:checksum(bytes),size:bytes.length};
   },
   readPrivateFile:async(key:string,expected:string)=>{
-    const bytes=await readFile(target(key));
-    assert.ok(bytes.length<=10*1024*1024);assert.equal(checksum(bytes),expected);return bytes;
+    const path=target(key);
+    let bytes:Buffer;
+    try{bytes=await readFile(path);}catch{throw Error("PRIVATE_STORAGE_READ_FAILED");}
+    if(bytes.length>10*1024*1024||checksum(bytes)!==expected)throw Error("PRIVATE_FILE_CHECKSUM_MISMATCH");
+    return bytes;
   },
   deletePrivateFile:async(key:string)=>{
     try{await unlink(target(key));}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
