@@ -1,6 +1,12 @@
 # Current development state — still not accepted
 
-Current checkpoint: [native storage, worker and browser runtime](native-runtime-checkpoint.md):
+Current checkpoint: [real disabled TPL-07 pair](tpl07-disabled-runtime-checkpoint.md):
+v10/current evidence passed; exact private plan/child reverified without model
+calls, approval or reservations. 16 focused controls/full typecheck passed.
+US$0.7411008 maximum; child expires 15 November 2026 at 12:28:14.070 UTC.
+Held, not published. Real managed browser save/history still unverified.
+
+Retained [native storage, worker and browser runtime](native-runtime-checkpoint.md):
 62 engineering passes/no skips, four namespace controls and seven public-browser
 checks; full typecheck passed. Native prefix cleaned, only disposable DB migrated.
 Real managed sign-in/save/history remains blocked by unavailable test tooling.

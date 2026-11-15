@@ -1,26 +1,25 @@
 # Valo Compliance — Valo Platform
 
-## Current checkpoint — native storage and worker runtime
+## Current checkpoint — one disabled TPL-07 review pair
 
-Supplied combined merge `a274cb0` already exists in the preserved development
-history. Privacy migration 0022/index 22 and the full tracked journal applied
-only to disposable PostgreSQL; no duplicate integration or primary DB migration.
+Reviewed budget merge `2bbd6b4` was already in synchronized development history.
+The real saved TPL-07 v10 passed current source/rights/mechanical and real saved
+DOCX/PDF inspections. Its exact factual/challenge plan and child manifest were
+saved privately and reverified: **zero model calls, approvals or reservations**.
 
-**62 engineering checks passed without skips**, including 20 erasure checks
-with native storage selected and 12 real-process/native export-worker checks.
-The fresh private test prefix was verified empty afterward. Four additional
-namespace safety tests and full workspace typecheck passed.
+Pair ceiling **US$0.7411008**, within the one proposed shared additional US$30 cap.
+Owner approval remains false. The child expires **15 November 2026 at
+12:28:14.070 UTC**, separately from the proposed parent's 24-hour approval
+lifetime. Candidate remains held; no publication or completed AI review.
+**16 focused controls and full workspace typecheck passed.**
 
-Seven actual anonymous browser checks passed, including a 200 preview and
-360px/1280px overflow checks. **Real managed sign-in/save/history remains
-unverified:** the supported testing service rejected its documented agent kind.
-Controlled HTTP checks do not replace it.
-
-Only test composition/evidence changed. No paid inference, PSP/email, existing
-cohort maintenance, production erasure, publication, PR15 or main merge.
-R1/R2 remain incomplete and unaccepted. See
-[current evidence and failures](docs/valo/native-runtime-checkpoint.md) and
-[retained receipt integration](docs/valo/receipt-integration-current.md).
+Prior genuine native/worker and public-browser evidence remains valid and
+separately recorded, not rerun or recounted. Real managed save/history remains
+unverified: the supported testing service again refused its agent kind.
+No separate recovery fix, paid inference, PSP/email, production, publication or
+main merge. R1/R2 remain incomplete. See
+[exact IDs, hashes, expiry and holds](docs/valo/tpl07-disabled-runtime-checkpoint.md)
+and [retained native/browser proof](docs/valo/native-runtime-checkpoint.md).
 
 ## Retained checker runtime checkpoint
 
