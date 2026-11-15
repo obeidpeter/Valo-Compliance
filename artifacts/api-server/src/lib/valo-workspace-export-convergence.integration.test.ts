@@ -14,8 +14,9 @@ import {db,pool,valoWorkspaceExports as jobs,valoWorkspaceExportAttempts as atte
   valoPrivacyEvents,valoPrivacyTombstones,valoPrivacyErasureObjects,valoStaffAssignments,valoStaffAccessAudit,valoSupportTickets} from '@workspace/db';
 import {resolveWorkspace,createDocument,ValoProblem} from './valo-store';
 import {createWorkspaceExport,getWorkspaceExport,listWorkspaceExports,cancelWorkspaceExport,retryWorkspaceExport,executeWorkspaceExport,
-  recoverWorkspaceExports,cleanupWorkspaceExports,withPreparedWorkspaceExport} from './valo-workspace-export-jobs';
+  recoverWorkspaceExports,cleanupWorkspaceExports,withPreparedWorkspaceExport,pendingWorkspaceExports,WORKSPACE_EXPORT_QUEUE} from './valo-workspace-export-jobs';
 import {fixtureWorkspaceStorage} from './test-support/workspace-export-storage';
+import {exportQueue} from './valo-export-queue';
 import {makeWorkspaceExportRouter} from './valo-workspace-export-http';
 import {syntheticDocument} from './valo-test-fixtures';
 import {requestExport} from './valo-exports';
@@ -47,11 +48,30 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
       await assert.rejects(getWorkspaceExport(b,x.id),{status:404});
       for(const secret of ['queueId','objectKey','leaseUntil','requesterId'])assert.ok(!JSON.stringify(x).includes(secret));
       await cancelWorkspaceExport(a,x.id,x.version);assert.equal((await createWorkspaceExport(a,key)).status,'cancelled');
+      await db.update(jobs).set({expiresAt:new Date(0)}).where(eq(jobs.id,x.id));assert.equal((await getWorkspaceExport(a,x.id)).status,'cancelled','history preserves cancellation after its former expiry');
       const actor=await owner();await db.insert(jobs).values(Array.from({length:30},(_,i)=>({id:randomUUID(),workspaceId:actor.workspaceId,requesterId:actor.identityId,
         requestKey:randomUUID(),status:'cancelled' as const,expiresAt:new Date(Date.now()+86400000),createdAt:new Date(Date.now()-172800000-i*1000)})));
       const newest=await createWorkspaceExport(actor,randomUUID()),first=await listWorkspaceExports(actor),second=await listWorkspaceExports(actor,first.nextCursor!);
       assert.equal(first.items[0]!.id,newest.id);assert.equal(first.items.length,25);assert.equal(second.items.length,6);
       assert.equal(new Set([...first.items,...second.items].map(j=>j.id)).size,31);await assert.rejects(listWorkspaceExports(b,newest.id),{status:409});
+    });
+    await t.test('actual pg-boss dispatch consumes one persisted native request without a download request',async()=>{
+      const actor=await owner(),j=await createWorkspaceExport(actor,randomUUID()),row=await raw(j.id);
+      const installed=await pool.query("select to_regclass('valo_jobs.version') as installed");
+      if(!installed.rows[0].installed)await pool.query(await readFile(new URL('../../../../lib/db/drizzle/pg-boss-development.sql',import.meta.url),'utf8'));
+      const boss=exportQueue(),errors:unknown[]=[];boss.on('error',error=>errors.push(error));await boss.start();
+      try{
+        await boss.createQueue(WORKSPACE_EXPORT_QUEUE,{retryLimit:0,expireInSeconds:360});
+        const done=deferred();let executions=0;
+        await boss.work<{jobId:string;workspaceId:string}>(WORKSPACE_EXPORT_QUEUE,{batchSize:1,pollingIntervalSeconds:1},async entries=>{
+          for(const entry of entries){assert.equal(entry.data.jobId,j.id);assert.equal(entry.data.workspaceId,actor.workspaceId);executions++;
+            await executeWorkspaceExport(entry.data.jobId,entry.data.workspaceId,entry.id,{storage});done.resolve();}
+        });
+        assert.ok((await pendingWorkspaceExports()).some(x=>x.id===j.id&&x.queueId===row.queueId));
+        await boss.send(WORKSPACE_EXPORT_QUEUE,{jobId:j.id,workspaceId:actor.workspaceId},{id:row.queueId});
+        await boss.send(WORKSPACE_EXPORT_QUEUE,{jobId:j.id,workspaceId:actor.workspaceId},{id:row.queueId});
+        await bounded(done.promise,15000);assert.equal(executions,1);assert.equal((await raw(j.id)).status,'ready');assert.equal((await raw(j.id)).attempts,1);assert.deepEqual(errors,[]);
+      }finally{await boss.stop({graceful:true,timeout:60000});}
     });
     await t.test('background preparation above 8 MB and 5000 rows releases complete tenant-scoped snapshot after reload',async()=>{
       const expectedEvents=Array.from({length:6001},(_,i)=>({id:randomUUID(),workspaceId:a.workspaceId,actorId:a.identityId,entityId:a.workspaceId,action:`row-${i}-${'x'.repeat(1400)}`}));
@@ -79,6 +99,14 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
         },async()=>{released++;},storage));assert.equal(released,0);assert.equal(checks,2);
         await db.update(valoMemberships).set({active:'yes'}).where(eq(valoMemberships.workspaceId,a.workspaceId));
       }
+    });
+    await t.test('a blocked cancel times out without changing the ready job or its private attempt',async()=>{
+      const actor=await owner(),row=await prepare(actor),blocker=await pool.connect();
+      try{
+        await blocker.query('begin');await blocker.query('select id from valo_workspace_exports where id=$1 for update',[row.id]);
+        await assert.rejects(bounded(cancelWorkspaceExport(actor,row.id,row.version)),{code:'55P03'});
+        assert.equal((await raw(row.id)).status,'ready');assert.equal((await raw(row.id)).version,row.version);assert.equal((await attempt(row.id)).status,'ready');
+      }finally{await blocker.query('rollback');blocker.release();}
     });
     await t.test('managed session revocation while final job lock is held wins before headers',async()=>{
       const actor=await owner(),row=await prepare(actor),blocker=await pool.connect(),rechecked=deferred();let checks=0,revoked=false,released=0;

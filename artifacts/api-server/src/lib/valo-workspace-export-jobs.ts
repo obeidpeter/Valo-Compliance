@@ -15,12 +15,13 @@ export const WORKSPACE_EXPORT_QUEUE="valo-workspace-data-v1";
 export const WORKSPACE_EXPORT_LEASE_MS=90_000;
 export const WORKSPACE_EXPORT_NOTICE="Includes the named application sections, not complete privacy fulfilment. External processors, identity records, other people's activity and private document files are excluded. Background preparation continues when this page closes. Retry creates a new dated copy; partial copies are never combined. Results are available until the displayed expiry (24 hours after the original request).";
 export const workspaceExportScratch=(attempt:string)=>join(tmpdir(),"valo-workspace-export-"+attempt);
-const view=(r:WorkspaceExport)=>({id:r.id,status:r.expiresAt.getTime()<=Date.now()?"expired" as const:r.status,version:r.version,
+const view=(r:WorkspaceExport)=>({id:r.id,status:r.status!=="cancelled"&&r.expiresAt.getTime()<=Date.now()?"expired" as const:r.status,version:r.version,
   attempts:r.attempts,createdAt:r.createdAt.toISOString(),expiresAt:r.expiresAt.toISOString(),snapshotAt:r.snapshotAt?.toISOString()??null,
   size:r.size,counts:r.counts,errorCode:r.errorCode,notice:WORKSPACE_EXPORT_NOTICE,
   progress:{section:r.progressSection,rows:r.rowsProcessed,bytes:r.bytesPrepared},
   retryAvailable:r.status==="interrupted"&&r.attempts<5&&r.expiresAt.getTime()>Date.now()});
 async function owned(tx:Tx,actor:WorkspaceActor,id:string,lock=false){
+  if(lock)await tx.execute(sql`set local lock_timeout='1000ms'`);
   const q=tx.select().from(jobs).where(and(eq(jobs.id,id),eq(jobs.workspaceId,actor.workspaceId),eq(jobs.requesterId,actor.identityId)));
   const[row]=await(lock?q.for("update"):q);
   if(!row)throw new ValoProblem(404,"Workspace export not found.");
@@ -80,6 +81,7 @@ export async function retryWorkspaceExport(actor:WorkspaceActor,id:string,expect
 }
 async function current(tx:Tx,actor:WorkspaceActor,id:string,attemptId:string,queueId:string,heartbeat=false){
   if(heartbeat){await tx.execute(sql`set local lock_timeout='250ms'`);await tx.execute(sql`set local statement_timeout='1000ms'`);}
+  else await tx.execute(sql`set local lock_timeout='1000ms'`);
   const[row]=await tx.select().from(jobs).where(and(eq(jobs.id,id),eq(jobs.workspaceId,actor.workspaceId)))
     .for("update",heartbeat?{skipLocked:true}:{});
   if(!row||row.currentAttemptId!==attemptId||row.queueId!==queueId||row.status!=="preparing"||
@@ -99,6 +101,7 @@ export async function executeWorkspaceExport(id:string,workspaceId:string,queueI
 }={}){
   assertDevelopmentRuntime();const storage=options.storage??workspaceExportStorage;
   const claim=await db.transaction(async tx=>{
+    await tx.execute(sql`set local lock_timeout='1000ms'`);
     const[old]=await tx.select().from(jobs).where(and(eq(jobs.id,id),eq(jobs.workspaceId,workspaceId))).for("update");
     if(!old||old.queueId!==queueId||old.status!=="queued"||old.attempts>=5||old.expiresAt.getTime()<=Date.now())return null;
     const actor={workspaceId,identityId:old.requesterId};
@@ -247,8 +250,13 @@ export async function retireWorkspaceExports(tx:Tx,workspaceId:string){
 }
 export async function cleanupWorkspaceExports(storage:WorkspaceExportStorage=workspaceExportStorage,workspaceId?:string){
   assertDevelopmentRuntime();await recoverWorkspaceExports(workspaceId);
-  await db.update(jobs).set({status:"expired",version:sql`${jobs.version}+1`,queueId:randomUUID(),leaseUntil:null})
-    .where(and(lt(jobs.expiresAt,new Date()),sql`${jobs.status} NOT IN ('expired','cancelled')`,workspaceId?eq(jobs.workspaceId,workspaceId):undefined));
+  await db.transaction(async tx=>{
+    const due=await tx.select({id:jobs.id}).from(jobs).where(and(lt(jobs.expiresAt,new Date()),
+      sql`${jobs.status} NOT IN ('expired','cancelled')`,workspaceId?eq(jobs.workspaceId,workspaceId):undefined))
+      .orderBy(jobs.expiresAt,jobs.id).limit(25).for("update",{skipLocked:true});
+    if(due.length)await tx.update(jobs).set({status:"expired",version:sql`${jobs.version}+1`,queueId:randomUUID(),leaseUntil:null})
+      .where(inArray(jobs.id,due.map(row=>row.id)));
+  });
   const rows=await db.select({a:attempts,j:jobs}).from(attempts).innerJoin(jobs,and(eq(attempts.jobId,jobs.id),eq(attempts.workspaceId,jobs.workspaceId)))
     .where(and(sql`(${attempts.status}='cleanup' OR ${jobs.status} IN ('cancelled','expired'))`,
       sql`(${attempts.cleanupCheckedAt} IS NULL OR ${attempts.cleanupCheckedAt}<now()-interval '1 hour')`,workspaceId?eq(attempts.workspaceId,workspaceId):undefined))

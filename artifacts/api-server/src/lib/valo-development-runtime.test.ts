@@ -47,6 +47,7 @@ test("actual export entries and worker startup reject before database, queue or 
     ["valo-commerce","export const processPaymentEvents=async()=>{globalThis.guardEffects.services++},reconcilePayments=processPaymentEvents;"],
     ["valo-refunds","export const processRefundQueue=async()=>{globalThis.guardEffects.services++};"],
     ["valo-payment-disputes","export const reconcileKnownDisputes=async()=>{globalThis.guardEffects.services++};"],
+    ["valo-dispute-actions","export const reconcileDisputeActions=async()=>{globalThis.guardEffects.services++};"],
     ["valo-operational-dispatch","export const dispatchOperationalJobs=async()=>{globalThis.guardEffects.services++};"],
     ["valo-privacy-erasure",`const hit=async()=>{globalThis.guardEffects.services++;throw Error("PRIVACY_SERVICE_EFFECT")};
       export const reconcileErasedObjects=hit,closePrivacyErasureLocks=hit;`],
