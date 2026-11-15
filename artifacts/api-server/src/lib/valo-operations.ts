@@ -1,7 +1,7 @@
 import {mkdir,open,readFile,rename,unlink,stat} from "node:fs/promises";
 import {join,resolve} from "node:path";
 import {randomUUID} from "node:crypto";
-import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {assertApplicationRuntime,runtimeEnvironment} from "./valo-runtime-activation";
 import {workerReadiness,type WorkerHeartbeat} from "./valo-worker-health";
 export const operationsDirectory=resolve("generated-artifacts/valo-operations");
 export const readinessQueries={
@@ -17,7 +17,7 @@ export const readinessQueries={
     OR NOT EXISTS(SELECT 1 FROM valo_purchase_outbox r WHERE r.order_id=o.id AND r.workspace_id=o.workspace_id AND r.kind='purchase_receipt')) LIMIT 10001) bounded`,
 }as const;
 type Metric={status:"ok"|"unavailable";value:number|null;elapsedMs:number};
-export type OperationalSample={checkedAt:string;scope:"development-project-local";database:Metric;exports:Metric;cleanup:Metric;workspaceCleanup:Metric;payments:Metric;
+export type OperationalSample={checkedAt:string;scope:"development-project-local"|"production-rehearsal-local";database:Metric;exports:Metric;cleanup:Metric;workspaceCleanup:Metric;payments:Metric;
   worker:{status:"healthy"|"stale"|"unavailable";ageMs:number|null};limits:{exports:number;cleanup:number;workspaceCleanup:number;workerAgeMs:number}};
 async function atomicJson(file:string,value:unknown){
   const temp=file+"."+randomUUID()+".tmp";const fd=await open(temp,"wx",0o600);
@@ -25,11 +25,11 @@ async function atomicJson(file:string,value:unknown){
   try{await rename(temp,file);}finally{await unlink(temp).catch(()=>{});}
 }
 export async function recordWorkerHeartbeat(health:WorkerHeartbeat,directory=operationsDirectory){
-  assertDevelopmentRuntime();await mkdir(directory,{recursive:true,mode:0o700});
+  assertApplicationRuntime();await mkdir(directory,{recursive:true,mode:0o700});
   await atomicJson(join(directory,"worker.json"),{...health,at:new Date().toISOString(),pid:process.pid});
 }
 export async function collectOperationalSample(query:(sql:string)=>Promise<{rows:{value:unknown}[]}>,directory=operationsDirectory):Promise<OperationalSample>{
-  assertDevelopmentRuntime();
+  assertApplicationRuntime();
   const metrics=await Promise.all(Object.entries(readinessQueries).map(async([key,sql])=>{
     const start=performance.now();let timer:ReturnType<typeof setTimeout>|undefined;
     try{
@@ -49,7 +49,7 @@ export async function collectOperationalSample(query:(sql:string)=>Promise<{rows
     process.kill(heartbeat.pid,0);
     worker={status:ageMs>90000?"stale":workerReadiness(heartbeat),ageMs};
   }catch{/* Absence, malformed data or a dead worker is not a healthy heartbeat. */}
-  return{...Object.fromEntries(metrics),checkedAt:new Date().toISOString(),scope:"development-project-local",
+  return{...Object.fromEntries(metrics),checkedAt:new Date().toISOString(),scope:runtimeEnvironment()==="production"?"production-rehearsal-local":"development-project-local",
     worker,limits:{exports:100,cleanup:0,workspaceCleanup:0,workerAgeMs:90000}}as OperationalSample;
 }
 type Alert={id:string;at:string;code:string;state:"active"|"resolved"};
@@ -57,7 +57,7 @@ type AlertState={sequence:number;active:string[];events:Alert[];sample?:Operatio
 /** Internal only. Atomic bounded project-local journal, not a production monitor/audit archive. */
 const pendingAlertWrites=new Map<string,Promise<void>>();
 export async function recordOperationalAlerts(sample:OperationalSample,directory=operationsDirectory){
-  assertDevelopmentRuntime();
+  assertApplicationRuntime();
   const key=join(directory,"."),previous=pendingAlertWrites.get(key)??Promise.resolve();
   // Local contention waits in FIFO order instead of consuming the interprocess
   // lock's bounded retry window. The file lock still protects separate workers.
@@ -67,7 +67,7 @@ export async function recordOperationalAlerts(sample:OperationalSample,directory
   try{return await result;}finally{if(pendingAlertWrites.get(key)===tail)pendingAlertWrites.delete(key);}
 }
 async function recordOperationalAlertsLocked(sample:OperationalSample,directory:string){
-  assertDevelopmentRuntime();await mkdir(directory,{recursive:true,mode:0o700});
+  assertApplicationRuntime();await mkdir(directory,{recursive:true,mode:0o700});
   const lock=join(directory,"alerts.lock"),file=join(directory,"alerts.json");
   let acquired=false;
   for(let n=0;n<200&&!acquired;n++){

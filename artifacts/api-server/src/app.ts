@@ -32,6 +32,14 @@ app.use((req,res,next) => {
   }) as typeof res.json;
   next();
 });
+// Rehearsal is deliberately non-serving, before auth, webhooks and request bodies.
+app.use((req,res,next)=>{
+  if(process.env.NODE_ENV!=="production")return next();
+  res.setHeader("Cache-Control","no-store");
+  res.setHeader("X-Robots-Tag","noindex, nofollow, noarchive");
+  if(req.method==="GET"&&req.path==="/api/healthz")return res.json({status:"ok",mode:"production-rehearsal",customerTrafficEnabled:false});
+  return res.status(503).json({error:"Valo is undergoing private launch validation.",code:"PRODUCTION_REHEARSAL_ONLY"});
+});
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 app.use(paystackWebhookRouter);
 app.use(express.json({ limit: "128kb",inflate:false }));

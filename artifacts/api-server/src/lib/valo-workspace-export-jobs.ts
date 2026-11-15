@@ -8,7 +8,7 @@ import {authorizeWorkspaceRead,authorizeWorkspaceWrite,type WorkspaceActor,ValoP
 import {workspaceDataExport} from "./valo-customer-access";
 import {workspaceExportStorage,workspaceFileDigest,WORKSPACE_EXPORT_MAX_BYTES,WORKSPACE_EXPORT_ATTEMPT_MS,type WorkspaceExportStorage} from "./valo-workspace-export-storage";
 import {abortable} from "./valo-abort";
-import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {assertApplicationRuntime,runtimeEnvironment} from "./valo-runtime-activation";
 import {privateCleanupAuthority} from "./valo-private-cleanup-authority";
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
 export const WORKSPACE_EXPORT_QUEUE="valo-workspace-data-v1";
@@ -28,7 +28,7 @@ async function owned(tx:Tx,actor:WorkspaceActor,id:string,lock=false){
   await authorizeWorkspaceRead(tx,actor);return row;
 }
 export async function listWorkspaceExports(actor:WorkspaceActor,cursor?:string){
-  assertDevelopmentRuntime();return db.transaction(async tx=>{await authorizeWorkspaceRead(tx,actor);
+  assertApplicationRuntime();return db.transaction(async tx=>{await authorizeWorkspaceRead(tx,actor);
     const scope=and(eq(jobs.workspaceId,actor.workspaceId),eq(jobs.requesterId,actor.identityId));
     const[anchor]=cursor?await tx.select({id:jobs.id,createdAt:jobs.createdAt}).from(jobs).where(and(scope,eq(jobs.id,cursor))):[];
     if(cursor&&!anchor)throw new ValoProblem(409,"The export list changed. Reload the newest requests.");
@@ -38,10 +38,10 @@ export async function listWorkspaceExports(actor:WorkspaceActor,cursor?:string){
   });
 }
 export async function getWorkspaceExport(actor:WorkspaceActor,id:string){
-  assertDevelopmentRuntime();return db.transaction(async tx=>view(await owned(tx,actor,id)));
+  assertApplicationRuntime();return db.transaction(async tx=>view(await owned(tx,actor,id)));
 }
 export async function createWorkspaceExport(actor:WorkspaceActor,requestKey:string){
-  assertDevelopmentRuntime();return db.transaction(async tx=>{
+  assertApplicationRuntime();return db.transaction(async tx=>{
     await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${actor.workspaceId+"workspace-export"},0))`);
     await authorizeWorkspaceRead(tx,actor);
     const[old]=await tx.select().from(jobs).where(and(eq(jobs.workspaceId,actor.workspaceId),eq(jobs.requesterId,actor.identityId),eq(jobs.requestKey,requestKey)));
@@ -59,7 +59,7 @@ export async function createWorkspaceExport(actor:WorkspaceActor,requestKey:stri
   });
 }
 export async function cancelWorkspaceExport(actor:WorkspaceActor,id:string,expectedVersion?:number){
-  assertDevelopmentRuntime();return db.transaction(async tx=>{const job=await owned(tx,actor,id,true);
+  assertApplicationRuntime();return db.transaction(async tx=>{const job=await owned(tx,actor,id,true);
     if(expectedVersion!==undefined&&job.version!==expectedVersion)throw new ValoProblem(409,"This export changed. Reload its current status before trying again.");
     await authorizeWorkspaceWrite(tx,actor);
     const[row]=await tx.update(jobs).set({status:"cancelled",version:job.version+1,queueId:randomUUID(),leaseUntil:null,updatedAt:new Date()}).where(eq(jobs.id,id)).returning();
@@ -67,7 +67,7 @@ export async function cancelWorkspaceExport(actor:WorkspaceActor,id:string,expec
     return view(row!);});
 }
 export async function retryWorkspaceExport(actor:WorkspaceActor,id:string,expectedVersion:number){
-  assertDevelopmentRuntime();return db.transaction(async tx=>{
+  assertApplicationRuntime();return db.transaction(async tx=>{
     await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${actor.workspaceId+"workspace-export"},0))`);
     const job=await owned(tx,actor,id,true);
     if(job.version!==expectedVersion)throw new ValoProblem(409,"This export changed. Reload its current status before trying again.");
@@ -99,7 +99,7 @@ export async function executeWorkspaceExport(id:string,workspaceId:string,queueI
   storage?:WorkspaceExportStorage;signal?:AbortSignal;onStage?:(stage:WorkspaceExportStage)=>Promise<void>;
   onPage?:(section:string,rows:number)=>Promise<void>;
 }={}){
-  assertDevelopmentRuntime();const storage=options.storage??workspaceExportStorage;
+  assertApplicationRuntime();const storage=options.storage??workspaceExportStorage;
   const claim=await db.transaction(async tx=>{
     await tx.execute(sql`set local lock_timeout='1000ms'`);
     const[old]=await tx.select().from(jobs).where(and(eq(jobs.id,id),eq(jobs.workspaceId,workspaceId))).for("update");
@@ -109,7 +109,7 @@ export async function executeWorkspaceExport(id:string,workspaceId:string,queueI
       if(!(error instanceof ValoProblem)||error.status!==403)throw error;
       await tx.update(jobs).set({status:"interrupted",version:old.version+1,queueId:randomUUID(),errorCode:"WORKSPACE_EXPORT_ACCESS_REVOKED",updatedAt:new Date()}).where(eq(jobs.id,id));return null;
     }
-    const attemptId=randomUUID(),key=`valo/development/${workspaceId}/${attemptId}.json`;
+    const attemptId=randomUUID(),key=`valo/${runtimeEnvironment()}/${workspaceId}/${attemptId}.json`;
     await tx.update(attempts).set({status:"cleanup",cleanupCheckedAt:null,nextCleanupAt:new Date(),cleanupErrorCode:null}).where(eq(attempts.jobId,id));
     await tx.insert(attempts).values({id:attemptId,jobId:id,workspaceId,objectKey:key});
     await tx.update(jobs).set({status:"preparing",attempts:old.attempts+1,version:old.version+1,currentAttemptId:attemptId,
@@ -180,16 +180,16 @@ async function requestAttemptCleanup(workspaceId:string,id:string,attemptId:stri
  * Customer HTTP never invokes it. Session verification is still used at release. */
 export async function prepareWorkspaceExport(actor:WorkspaceActor,id:string,signal:AbortSignal,verify:()=>Promise<void>,
   storage:WorkspaceExportStorage=workspaceExportStorage,onPage?:(section:string,rows:number)=>Promise<void>){
-  assertDevelopmentRuntime();await abortable(signal,verify);
+  assertApplicationRuntime();await abortable(signal,verify);
   const row=await db.transaction(tx=>owned(tx,actor,id));
   await executeWorkspaceExport(id,actor.workspaceId,row.queueId,{storage,signal,onPage:async(s,n)=>{await verify();await onPage?.(s,n);}});
 }
 export async function pendingWorkspaceExports(){
-  assertDevelopmentRuntime();return db.select({id:jobs.id,workspaceId:jobs.workspaceId,queueId:jobs.queueId}).from(jobs)
+  assertApplicationRuntime();return db.select({id:jobs.id,workspaceId:jobs.workspaceId,queueId:jobs.queueId}).from(jobs)
     .where(and(eq(jobs.status,"queued"),sql`${jobs.expiresAt}>now()`)).orderBy(jobs.createdAt,jobs.id).limit(25);
 }
 export async function recoverWorkspaceExports(workspaceId?:string){
-  assertDevelopmentRuntime();return db.transaction(async tx=>{
+  assertApplicationRuntime();return db.transaction(async tx=>{
     const rows=await tx.select().from(jobs).where(and(
       sql`((${jobs.status}='preparing' AND ${jobs.leaseUntil}<now()) OR (${jobs.status}='queued' AND ${jobs.updatedAt}<now()-interval '90 seconds'))`,
       workspaceId?eq(jobs.workspaceId,workspaceId):undefined)).limit(25).for("update",{skipLocked:true});
@@ -205,7 +205,7 @@ export async function recoverWorkspaceExports(workspaceId?:string){
  * wins. Browser-owned bytes already released cannot be recalled. */
 export async function withPreparedWorkspaceExport<T>(actor:WorkspaceActor,id:string,signal:AbortSignal,
   verify:()=>Promise<void>,consume:(path:string,proof:{size:number;checksum:string},signal:AbortSignal)=>Promise<T>,storage:WorkspaceExportStorage=workspaceExportStorage){
-  assertDevelopmentRuntime();await abortable(signal,verify);
+  assertApplicationRuntime();await abortable(signal,verify);
   const bounded=AbortSignal.any([signal,AbortSignal.timeout(WORKSPACE_EXPORT_ATTEMPT_MS)]);
   const result=await db.transaction(async tx=>{
     const row=await owned(tx,actor,id);
@@ -213,7 +213,7 @@ export async function withPreparedWorkspaceExport<T>(actor:WorkspaceActor,id:str
       throw new ValoProblem(409,"No complete unexpired artifact is available. Check the recorded preparation status.");
     const[attempt]=await tx.select().from(attempts).where(and(eq(attempts.id,row.currentAttemptId),eq(attempts.jobId,id),
       eq(attempts.workspaceId,actor.workspaceId),eq(attempts.status,"ready")));
-    if(!attempt||attempt.objectKey!==`valo/development/${actor.workspaceId}/${attempt.id}.json`)
+    if(!attempt||attempt.objectKey!==`valo/${runtimeEnvironment()}/${actor.workspaceId}/${attempt.id}.json`)
       throw new ValoProblem(409,"Private artifact verification is unavailable.");
     return{row,key:attempt.objectKey};
   });
@@ -255,7 +255,7 @@ export async function retireWorkspaceExports(tx:Tx,workspaceId:string){
   return{rowCount:used};
 }
 export async function cleanupWorkspaceExports(storage:WorkspaceExportStorage=workspaceExportStorage,workspaceId?:string){
-  assertDevelopmentRuntime();await recoverWorkspaceExports(workspaceId);
+  assertApplicationRuntime();await recoverWorkspaceExports(workspaceId);
   await db.transaction(async tx=>{
     const due=await tx.select({id:jobs.id}).from(jobs).where(and(lt(jobs.expiresAt,new Date()),
       sql`${jobs.status} NOT IN ('expired','cancelled')`,workspaceId?eq(jobs.workspaceId,workspaceId):undefined))
@@ -289,7 +289,7 @@ export async function cleanupWorkspaceExports(storage:WorkspaceExportStorage=wor
       await tx.update(attempts).set({cleanupErrorCode:authority.privacyOwned?"PRIVACY_REPLAY_OWNED":"PRIVACY_HOLD"})
         .where(eq(attempts.id,a.id));return;
     }
-    if(currentAttempt.workspaceId!==a.workspaceId||currentAttempt.objectKey!==`valo/development/${a.workspaceId}/${a.id}.json`){
+    if(currentAttempt.workspaceId!==a.workspaceId||currentAttempt.objectKey!==`valo/${runtimeEnvironment()}/${a.workspaceId}/${a.id}.json`){
       failed++;await tx.update(attempts).set({cleanupErrorCode:"INVALID_PRIVATE_KEY",nextCleanupAt:new Date(Date.now()+3_600_000)})
         .where(eq(attempts.id,a.id));return;
     }

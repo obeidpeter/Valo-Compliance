@@ -1,3 +1,4 @@
+import {initializeApplicationRuntime,verifyRehearsalDatabase} from "../lib/valo-runtime-activation";
 import { z } from "zod";
 import {closePrivacyErasureLocks} from "../lib/valo-privacy-erasure";
 import { db, pool, valoExportJobs } from "@workspace/db";
@@ -17,6 +18,7 @@ import {cleanupWorkspaceExports,pendingWorkspaceExports,executeWorkspaceExport,W
 import {recordWorkerHeartbeat,collectOperationalSample,recordOperationalAlerts} from "../lib/valo-operations";
 import {WorkerHealth,workerHealthServer,drainWithDeadline} from "../lib/valo-worker-health";
 
+await initializeApplicationRuntime();
 developmentExportsOnly();
 assertRecoveryEffectsAllowed();
 const payload = z.object({ jobId:z.string().uuid(),workspaceId:z.string().uuid() }).strict();
@@ -93,6 +95,7 @@ async function dispatch() {
   let succeeded=false;
   let finishDispatch!:()=>void;dispatchIdle=new Promise(resolve=>{finishDispatch=resolve;});
   try {
+    if(process.env.NODE_ENV==="production")await verifyRehearsalDatabase(sql=>pool.query(sql),process.env);
     // An idle queue must still prove that both configured queues are reachable.
     const queueQuery={text:"SELECT name,retry_limit,expire_seconds FROM valo_jobs.queue WHERE name=ANY($1::text[])",values:[[EXPORT_QUEUE,WORKSPACE_EXPORT_QUEUE]],query_timeout:1500};
     const queues=await pool.query(queueQuery);
@@ -114,7 +117,7 @@ async function dispatch() {
       if(stopping)break;
       await boss.send(EXPORT_QUEUE, {jobId:job.id,workspaceId:job.workspaceId},{id:job.queueId});
     }
-    if(!stopping&&Date.now()-reminderCheckedAt>=60000){
+    if(process.env.NODE_ENV!=="production"&&!stopping&&Date.now()-reminderCheckedAt>=60000){
       reminderCheckedAt=Date.now();
       const failures=await dispatchOperationalJobs({reminders:()=>reconcileDueReminders(),
         paymentEvents:()=>processPaymentEvents(),refunds:()=>processRefundQueue(),
