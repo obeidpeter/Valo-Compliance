@@ -1,3 +1,4 @@
+import {activeStaffAssignment,assertStaffAssignmentCurrent,requireFreshStaffSession} from "./valo-staff-authority";
 import {randomUUID,createHash} from "node:crypto";
 import {and,eq,desc,asc,sql} from "drizzle-orm";
 import {db,valoPrivacyCases,valoPrivacyEvents,valoPrivacyMessages,valoStaffAssignments,valoStaffAccessAudit,valoWorkspaces,valoProfileVersions,type PrivacyStep} from "@workspace/db";
@@ -21,11 +22,12 @@ function stateHash(row:Partial<PrivacyRow>){
     row.createdAt,row.updatedAt]);
 }
 export async function requirePrivacyStaff(tx:Tx,actor:PrivacyStaffActor){
-  if(!actor.recentMfa||!Number.isFinite(actor.verifiedAt)||actor.verifiedAt>Date.now()+1000||Date.now()-actor.verifiedAt>30_000)
-    throw new ValoProblem(403,"A recently server-verified staff session with fresh MFA is required.");
+  requireFreshStaffSession(actor);
   const[role]=await tx.select().from(valoStaffAssignments).where(and(eq(valoStaffAssignments.identityId,actor.identityId),
-    eq(valoStaffAssignments.role,"privacy"),eq(valoStaffAssignments.active,true))).for("share");
+    eq(valoStaffAssignments.role,"privacy"),activeStaffAssignment())).for("share");
   if(!role)throw new ValoProblem(403,"An active privacy-operations assignment is required. Other staff roles cannot access this queue.");
+  await assertStaffAssignmentCurrent(tx,role.id);
+  requireFreshStaffSession(actor);
   return role;
 }
 export async function readPrivacyCase(tx:Tx,id:string,actor?:WorkspaceActor){

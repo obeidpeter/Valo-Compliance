@@ -63,6 +63,7 @@ import type {
   FinanceRefunds,
   GetCommerceReceipt200,
   GetStaffOperationsParams,
+  GetStaffRoleAdministrationParams,
   HealthStatus,
   ListPublicCatalogueParams,
   ListStaffPrivacyCases200,
@@ -96,6 +97,9 @@ import type {
   SavedAssessmentInput,
   SourceEvidenceRegister,
   StaffOperations,
+  StaffRoleAdministration,
+  StaffRoleChangeInput,
+  StaffRoleChangeReceipt,
   StartCommerceCheckout200,
   TaskArchiveInput,
   TaskInput,
@@ -103,6 +107,8 @@ import type {
   TaskUpdate,
   TicketInput,
   TicketReceipt,
+  VerifyStaffRoleTarget200,
+  VerifyStaffRoleTargetInput,
   Workspace,
   WorkspaceDataExport,
   WorkspaceDisputes,
@@ -140,6 +146,271 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetStaffRoleAdministrationUrl = (params?: GetStaffRoleAdministrationParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/staff-roles?${stringifiedParams}` : `/api/admin/staff-roles`
+}
+
+export const getStaffRoleAdministration = async (params?: GetStaffRoleAdministrationParams, options?: Parameters<typeof customFetch>[1]): Promise<StaffRoleAdministration> => {
+
+  return customFetch<StaffRoleAdministration>(getGetStaffRoleAdministrationUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStaffRoleAdministrationQueryKey = (params?: GetStaffRoleAdministrationParams,) => {
+    return [
+    `/api/admin/staff-roles`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetStaffRoleAdministrationQueryOptions = <TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>(params?: GetStaffRoleAdministrationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStaffRoleAdministrationQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStaffRoleAdministration>>> = ({ signal }) => getStaffRoleAdministration(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetStaffRoleAdministrationQueryResult = NonNullable<Awaited<ReturnType<typeof getStaffRoleAdministration>>>
+export type GetStaffRoleAdministrationQueryError = ErrorType<unknown>
+
+
+export function useGetStaffRoleAdministration<TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>(
+ params: undefined |  GetStaffRoleAdministrationParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStaffRoleAdministration>>,
+          TError,
+          Awaited<ReturnType<typeof getStaffRoleAdministration>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStaffRoleAdministration<TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>(
+ params?: GetStaffRoleAdministrationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStaffRoleAdministration>>,
+          TError,
+          Awaited<ReturnType<typeof getStaffRoleAdministration>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStaffRoleAdministration<TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>(
+ params?: GetStaffRoleAdministrationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetStaffRoleAdministration<TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>(
+ params?: GetStaffRoleAdministrationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetStaffRoleAdministrationQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getChangeStaffRoleUrl = () => {
+
+
+
+
+  return `/api/admin/staff-roles`
+}
+
+export const changeStaffRole = async (staffRoleChangeInput: StaffRoleChangeInput, options?: Parameters<typeof customFetch>[1]): Promise<StaffRoleChangeReceipt> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<StaffRoleChangeReceipt>(getChangeStaffRoleUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(staffRoleChangeInput)
+  }
+);}
+
+
+
+
+
+export const getChangeStaffRoleMutationKey = () => ['changeStaffRole'] as const;
+
+export const getChangeStaffRoleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeStaffRole>>, TError,ChangeStaffRoleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof changeStaffRole>>, TError,ChangeStaffRoleMutationVariables, TContext> => {
+
+const mutationKey = getChangeStaffRoleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof changeStaffRole>>, ChangeStaffRoleMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  changeStaffRole(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChangeStaffRoleMutationResult = NonNullable<Awaited<ReturnType<typeof changeStaffRole>>>
+    export type ChangeStaffRoleMutationBody = BodyType<StaffRoleChangeInput>
+    export type ChangeStaffRoleMutationError = ErrorType<unknown>
+    export type ChangeStaffRoleMutationVariables = {data: BodyType<StaffRoleChangeInput>}
+
+    export const useChangeStaffRole = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeStaffRole>>, TError,ChangeStaffRoleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof changeStaffRole>>,
+        TError,
+        ChangeStaffRoleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getChangeStaffRoleMutationOptions(options), queryClient);
+    }
+
+export const getVerifyStaffRoleTargetUrl = () => {
+
+
+
+
+  return `/api/admin/staff-role-target`
+}
+
+export const verifyStaffRoleTarget = async (verifyStaffRoleTargetInput: VerifyStaffRoleTargetInput, options?: Parameters<typeof customFetch>[1]): Promise<VerifyStaffRoleTarget200> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VerifyStaffRoleTarget200>(getVerifyStaffRoleTargetUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(verifyStaffRoleTargetInput)
+  }
+);}
+
+
+
+
+
+export const getVerifyStaffRoleTargetMutationKey = () => ['verifyStaffRoleTarget'] as const;
+
+export const getVerifyStaffRoleTargetMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyStaffRoleTarget>>, TError,VerifyStaffRoleTargetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyStaffRoleTarget>>, TError,VerifyStaffRoleTargetMutationVariables, TContext> => {
+
+const mutationKey = getVerifyStaffRoleTargetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyStaffRoleTarget>>, VerifyStaffRoleTargetMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  verifyStaffRoleTarget(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyStaffRoleTargetMutationResult = NonNullable<Awaited<ReturnType<typeof verifyStaffRoleTarget>>>
+    export type VerifyStaffRoleTargetMutationBody = BodyType<VerifyStaffRoleTargetInput>
+    export type VerifyStaffRoleTargetMutationError = ErrorType<unknown>
+    export type VerifyStaffRoleTargetMutationVariables = {data: BodyType<VerifyStaffRoleTargetInput>}
+
+    export const useVerifyStaffRoleTarget = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyStaffRoleTarget>>, TError,VerifyStaffRoleTargetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof verifyStaffRoleTarget>>,
+        TError,
+        VerifyStaffRoleTargetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getVerifyStaffRoleTargetMutationOptions(options), queryClient);
+    }
 
 export const getRequestAccessSupportUrl = () => {
 
