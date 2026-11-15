@@ -5,6 +5,114 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type DisputeHistoryActorType = typeof DisputeHistoryActorType[keyof typeof DisputeHistoryActorType];
+
+
+export const DisputeHistoryActorType = {
+  customer: 'customer',
+  finance: 'finance',
+  worker: 'worker',
+} as const;
+
+export interface DisputeHistory {
+  id: string;
+  action: string;
+  reason: string;
+  actorType: DisputeHistoryActorType;
+  createdAt: string;
+}
+
+export type PaymentConcernStatus = typeof PaymentConcernStatus[keyof typeof PaymentConcernStatus];
+
+
+export const PaymentConcernStatus = {
+  open: 'open',
+  needs_information: 'needs_information',
+  responded: 'responded',
+  closed: 'closed',
+} as const;
+
+export interface PaymentConcern {
+  id: string;
+  orderId: string;
+  orderReference: string;
+  message: string;
+  status: PaymentConcernStatus;
+  /** @nullable */
+  latestReply: string | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  history: DisputeHistory[];
+}
+
+export interface PaymentConcernInput {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 2000
+     */
+  message: string;
+  acknowledgement: true;
+}
+
+export interface PaymentConcernResponse {
+  /** @minimum 1 */
+  expectedVersion: number;
+  /**
+     * @minLength 10
+     * @maxLength 2000
+     */
+  message: string;
+}
+
+export type PaymentConcernActionAction = typeof PaymentConcernActionAction[keyof typeof PaymentConcernActionAction];
+
+
+export const PaymentConcernActionAction = {
+  reply: 'reply',
+  request_information: 'request_information',
+  close: 'close',
+} as const;
+
+export interface PaymentConcernAction {
+  /** @minimum 1 */
+  expectedVersion: number;
+  action: PaymentConcernActionAction;
+  /**
+     * @minLength 10
+     * @maxLength 2000
+     */
+  message: string;
+}
+
+export interface WorkspaceDisputes {
+  concerns: PaymentConcern[];
+  notice: string;
+}
+
+export interface FinancePaymentConcerns {
+  concerns: PaymentConcern[];
+  notice: string;
+}
+
+export interface DisputeHoldInput {
+  /** @minimum 1 */
+  expectedVersion: number;
+  held: boolean;
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  reason: string;
+}
+
+export interface FinanceDisputeLink {
+  orderId: string;
+  /** @pattern ^\d{1,40}$ */
+  providerId: string;
+}
+
 export type AccessSupportInputTopic = typeof AccessSupportInputTopic[keyof typeof AccessSupportInputTopic];
 
 
@@ -245,6 +353,11 @@ export interface WorkspaceExportRequest {
   requestKey: string;
 }
 
+export interface WorkspaceExportAction {
+  /** @minimum 1 */
+  expectedVersion: number;
+}
+
 export type WorkspaceExportJobStatus = typeof WorkspaceExportJobStatus[keyof typeof WorkspaceExportJobStatus];
 
 
@@ -257,6 +370,15 @@ export const WorkspaceExportJobStatus = {
   expired: 'expired',
 } as const;
 
+export type WorkspaceExportJobProgress = {
+  /** @nullable */
+  section: string | null;
+  /** @minimum 0 */
+  rows: number;
+  /** @minimum 0 */
+  bytes: number;
+};
+
 /**
  * @nullable
  */
@@ -265,6 +387,10 @@ export type WorkspaceExportJobCounts = {[key: string]: number} | null;
 export interface WorkspaceExportJob {
   id: string;
   status: WorkspaceExportJobStatus;
+  /** @minimum 1 */
+  version: number;
+  retryAvailable: boolean;
+  progress: WorkspaceExportJobProgress;
   attempts: number;
   createdAt: string;
   expiresAt: string;
@@ -277,6 +403,12 @@ export interface WorkspaceExportJob {
   /** @nullable */
   errorCode: string | null;
   notice: string;
+}
+
+export interface WorkspaceExportPage {
+  items: WorkspaceExportJob[];
+  /** @nullable */
+  nextCursor: string | null;
 }
 
 export type WorkspaceDataExportData = { [key: string]: unknown };
@@ -495,6 +627,7 @@ export interface DisputeIntentInput {
 }
 
 export interface DisputeControlInput {
+  acknowledgement?: boolean;
   /** @minimum 1 */
   expectedVersion: number;
 }
@@ -524,6 +657,13 @@ export type FinanceDisputeInformationItem = { [key: string]: unknown };
 export type FinanceDisputeHistoryItem = { [key: string]: unknown };
 
 export interface FinanceDispute {
+  providerId: string;
+  held: boolean;
+  controlVersion: number;
+  /** @nullable */
+  category: string | null;
+  /** @nullable */
+  entitlementStatus: string | null;
   id: string;
   orderReference: string;
   amountKobo: number;
@@ -2416,6 +2556,10 @@ export type ConflictErrorResponse = {
  * Validation, access or concurrency error
  */
 export type AuthErrorResponse = ApiProblem;
+
+export type ListWorkspaceDataExportsParams = {
+  cursor?: string;
+};
 
 export type StartCommerceCheckout200 = {
   url: string;

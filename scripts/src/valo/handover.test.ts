@@ -8,11 +8,27 @@ test("documentation checkpoint is a real ancestor, not a copied revision label",
   assert.doesNotThrow(()=>execFileSync("git",["merge-base","--is-ancestor",handoverCheckpoint.baselineCommit,"HEAD"]));
   assert.equal(handoverCheckpoint.localHistoryIncorporated,true);
 });
-test("all retained specification/register files still match their source checkpoint hashes",()=>{
+test("original specification bytes and requirement facts remain pinned; evidence annotations may only append",()=>{
   for(const f of handoverCheckpoint.files){
     const bytes=readFileSync(new URL("../../../"+f.path,import.meta.url));
-    assert.equal(createHash("sha256").update(bytes).digest("hex"),f.sha256);
-    assert.equal(bytes.length,f.bytes);
+    const original=execFileSync("git",["show",`${handoverCheckpoint.baselineCommit}:${f.path}`]);
+    assert.equal(createHash("sha256").update(original).digest("hex"),f.sha256,f.path);
+    assert.equal(original.length,f.bytes,f.path);
+    if(f.path==="docs/registers/requirements.json"){
+      const baseline=JSON.parse(original.toString()),current=JSON.parse(bytes.toString());
+      const rows=current.requirements;
+      assert.equal(rows.length,baseline.requirements.length);
+      current.requirements=rows.map((row:Record<string,unknown>,i:number)=>{
+        const source=baseline.requirements[i];
+        assert.ok(Array.isArray(row.evidence));
+        assert.deepEqual(row.evidence.slice(0,source.evidence.length),source.evidence);
+        assert.ok(row.evidence.every((entry:unknown)=>typeof entry==="string"&&entry.length>0));
+        return{...row,evidence:source.evidence};
+      });
+      // Added engineering references cannot change requirement text, scope,
+      // implementation status or acceptance claims from the original record.
+      assert.deepEqual(current,baseline);
+    }else assert.deepEqual(bytes,original,f.path);
   }
   assert.equal(handoverCheckpoint.files.length,10);
   assert.deepEqual(handoverCheckpoint.counts,{exactRequirements:127,baselineTemplates:40,supplementaryMappings:27,regulatoryRows:79});

@@ -22,8 +22,8 @@ export type DisputeTransport={
   configured():boolean;
   fetch(context:DisputeContext):Promise<z.infer<typeof verifiedDispute>>;
   upload(context:DisputeContext,name:string,bytes:Buffer,beforePut?:(proof:{filename:string;checksum:string})=>Promise<void>):Promise<{filename:string;checksum:string}>;
-  evidence(context:DisputeContext,information:unknown):Promise<{evidenceId:string}>;
-  resolve(context:DisputeContext,input:MerchantDecision):Promise<void>;
+  evidence(context:DisputeContext,information:unknown,beforeSend?:()=>Promise<void>):Promise<{evidenceId:string}>;
+  resolve(context:DisputeContext,input:MerchantDecision,beforeSend?:()=>Promise<void>):Promise<void>;
 };
 export function matchDispute(context:DisputeContext,raw:unknown){
   providerId.parse(context.providerId);providerId.parse(context.transactionId);
@@ -84,40 +84,44 @@ export function makeDisputeTransport(api:Api,upload:typeof fetch=fetch,enabled=(
   return{
     configured:enabled,fetch:read,
     async upload(c,name,bytes,beforePut){
-      check();filename.parse(name);
+      await beforeMutation(async()=>{check();filename.parse(name);
       if(!name.endsWith(".pdf")||bytes.length<20||bytes.length>2*1024*1024||bytes.subarray(0,5).toString()!=="%PDF-")
-        throw new ValoProblem(422,"Only a bounded server-generated purchase receipt PDF is supported.");
+        throw new ValoProblem(422,"Only a bounded server-generated purchase receipt PDF is supported.");});
       await beforeMutation(()=>actionable(c));
       const data=await beforeMutation(async()=>z.object({signedUrl:z.string().url(),fileName:filename}).parse(
         await api("/dispute/"+c.providerId+"/upload_url?upload_filename="+encodeURIComponent(name))));
       const target=await beforeMutation(async()=>validateDisputeUpload(data.signedUrl,clock()));
       const proof={filename:data.fileName,checksum:createHash("sha256").update(bytes).digest("hex")};
       if(beforePut)await beforeMutation(()=>beforePut(proof));
+      await beforeMutation(async()=>check());
       const response=await upload(target,{method:"PUT",headers:{"Content-Type":"application/pdf"},
         body:new Uint8Array(bytes),redirect:"error",signal:AbortSignal.timeout(12000)});
       if(!response.ok)throw new ValoProblem(503,"The receipt upload was not acknowledged. Its outcome needs reconciliation.");
       // Successful S3 PUT may have an empty body. Do not parse it as JSON.
       return proof;
     },
-    async evidence(c,raw){
-      check();const data=disputeInformation.parse(raw);await beforeMutation(()=>actionable(c));
+    async evidence(c,raw,beforeSend){
+      const data=await beforeMutation(async()=>{check();return disputeInformation.parse(raw);});await beforeMutation(()=>actionable(c));
+      if(beforeSend)await beforeMutation(beforeSend);await beforeMutation(async()=>check());
       const result=z.object({id:z.union([providerId,z.number().int().nonnegative().safe()]).transform(String),
         dispute:z.union([providerId,z.number().int().nonnegative().safe()]).transform(String)}).parse(
         await api("/dispute/"+c.providerId+"/evidence",data,"POST"));
       if(result.dispute!==c.providerId)throw new ValoProblem(409,"The evidence receipt belongs to a different dispute.");
       return{evidenceId:result.id};
     },
-    async resolve(c,input){
-      check();const payload=resolutionPayload(input,c.amountKobo),current=await beforeMutation(()=>actionable(c));
+    async resolve(c,input,beforeSend){
+      const payload=await beforeMutation(async()=>{check();return resolutionPayload(input,c.amountKobo);}),current=await beforeMutation(()=>actionable(c));
       if(current.category==="fraud"&&payload.resolution==="declined"&&payload.evidence===undefined)
         throw new DisputeMutationNotSent(422,"This fraud claim also requires acknowledged structured evidence.");
       if(!["general","fraud"].includes(current.category??""))
         throw new DisputeMutationNotSent(409,"The provider claim category is unknown. Hold the decision pending verified classification.");
       // No automatic mutation retry, even on timeout. The durable caller records
       // intent first and reconciles a subsequent canonical GET.
+      if(beforeSend)await beforeMutation(beforeSend);await beforeMutation(async()=>check());
       await api("/dispute/"+c.providerId+"/resolve",payload,"PUT");
     },
   };
 }
 export const disputeTransport=makeDisputeTransport(paystackRequest,fetch,
   ()=>sandboxPaymentsConfigured()&&process.env.VALO_SANDBOX_DISPUTES_ENABLED==="true");
+

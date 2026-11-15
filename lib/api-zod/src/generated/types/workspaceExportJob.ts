@@ -6,11 +6,16 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { WorkspaceExportJobCounts } from './workspaceExportJobCounts';
+import type { WorkspaceExportJobProgress } from './workspaceExportJobProgress';
 import type { WorkspaceExportJobStatus } from './workspaceExportJobStatus';
 
 export interface WorkspaceExportJob {
   id: string;
   status: WorkspaceExportJobStatus;
+  /** @minimum 1 */
+  version: number;
+  retryAvailable: boolean;
+  progress: WorkspaceExportJobProgress;
   attempts: number;
   createdAt: Date;
   expiresAt: Date;

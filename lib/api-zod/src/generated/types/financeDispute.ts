@@ -10,6 +10,13 @@ import type { FinanceDisputeHistoryItem } from './financeDisputeHistoryItem';
 import type { FinanceDisputeInformationItem } from './financeDisputeInformationItem';
 
 export interface FinanceDispute {
+  providerId: string;
+  held: boolean;
+  controlVersion: number;
+  /** @nullable */
+  category: string | null;
+  /** @nullable */
+  entitlementStatus: string | null;
   id: string;
   orderReference: string;
   amountKobo: number;

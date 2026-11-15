@@ -1,0 +1,237 @@
+{
+  "commit": "3a44b02834fa9b152c42209dc5971bc2c103d829",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794589853460,
+      "tag": "0000_valo_p0",
+      "breakpoints": true,
+      "sha256": "8f8df7e4affea9f8889f54288d3fd79cbdcaaf912069243637ea1cfe982e4951"
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794591642138,
+      "tag": "0001_valo_rate_quotas",
+      "breakpoints": true,
+      "sha256": "179e0cc229d68cd28393d3519dec8dbfc649cc5739d62db99497523c896970ee"
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794593568470,
+      "tag": "0002_fresh_alice",
+      "breakpoints": true,
+      "sha256": "5b8bd02b1c94426108c219666ea79d33d1aad18fb92e9b667233d998195a76c9"
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794596538295,
+      "tag": "0003_breezy_whiplash",
+      "breakpoints": true,
+      "sha256": "190fd3227705cf53065690b1721351e1adc5b89ad4e6d0d099cc108c8c8cf17a"
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794600198354,
+      "tag": "0004_valo_editorial_runs",
+      "breakpoints": true,
+      "sha256": "4db470139464a66f51709f85b46908ecc7d59bf19b62bdd3b93960f3012f9d74"
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794606265000,
+      "tag": "0005_checker_assessments_tasks",
+      "breakpoints": true,
+      "sha256": "fd3dd60f0622d16d8f737dcc92ce351a56f562efff6b4e87cbe37345fde816dd"
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794608085075,
+      "tag": "0006_customer_ai_drafting",
+      "breakpoints": true,
+      "sha256": "977aa9950a43775d41b94a8f3a4214e18ce1d5a02fc1a4e9649a912cd0d9fb6e"
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794615542747,
+      "tag": "0007_operational_publication",
+      "breakpoints": true,
+      "sha256": "fa9821cf55878535ba745716acf0f46a26649777106a1e47dd750fbe27cccc55"
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794615542748,
+      "tag": "0008_operational_authoring_budget",
+      "breakpoints": true,
+      "sha256": "c6b32b9b2b5926c6614f8c09003403bf07997f3311b2817cb3a015a1affa772b"
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794615542749,
+      "tag": "0009_customer_access",
+      "breakpoints": true,
+      "sha256": "2338ff5bb389092cbd69231b9c6279e822d5d77f63e3b62d0ec5eb13abba1f18"
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794615542750,
+      "tag": "0010_export_recovery",
+      "breakpoints": true,
+      "sha256": "95cdc753c8ce78680a19067846e4091ab55c5d7919cf98ae86471eb42cf67cf2"
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794615542751,
+      "tag": "0011_commerce_ledger",
+      "breakpoints": true,
+      "sha256": "0a1a2c67e1dfbf8684aa77bec91dc5398f0f863f078f17569cad0517c243dd19"
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794640000000,
+      "tag": "0012_editorial_usage_meter",
+      "breakpoints": true,
+      "sha256": "c0cc277965875da564bd5792d4f9d137b17a61f390bc517ca0d2d1ef368c8d0f"
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794640000001,
+      "tag": "0013_reminder_delivery_retry",
+      "breakpoints": true,
+      "sha256": "4f14e1668892998f491ef504bfe105aabce3e5ef484ba0100e5ee9103bd46504"
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794640000002,
+      "tag": "0014_reminder_replay_window",
+      "breakpoints": true,
+      "sha256": "c23302abed3200dc237157cb4f10c074d8f9275eb5256768c432b6613c9f58e1"
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1794640000003,
+      "tag": "0015_refund_lifecycle",
+      "breakpoints": true,
+      "sha256": "b3351c742e1d9be69530174b950875fc83ecdcb2cec2abbf6fd8ab4cadf88635"
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794640000004,
+      "tag": "0016_refund_audit_integrity",
+      "breakpoints": true,
+      "sha256": "776d8577957675e5896cbc0411e85bad0078ab8a4ecf706a8ac2325a3cc75e41"
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794670552590,
+      "tag": "0017_privacy_cases",
+      "breakpoints": true,
+      "sha256": "9b9b9133afb715f8d5457f4b8642686dd587855a292e4ba5df1126d6486993b1"
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794678000000,
+      "tag": "0018_inference_budget",
+      "breakpoints": true,
+      "sha256": "a414ce8304cc2ace140fcf38da7fba08a8c7f89f9eabe2489fe88fcca4084aa1"
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794680000000,
+      "tag": "0019_privacy_erasure_objects",
+      "breakpoints": true,
+      "sha256": "bf5dd3b0e44a5ebe30a6deac548259c3e7ec66ba9f0e7ceb50f0aadafdf7a90c"
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794699000000,
+      "tag": "0020_inference_batch_authorization",
+      "breakpoints": true,
+      "sha256": "9909edcbcd3ae6f4648974f1046f9ed598241530380780d3af9307c1ee96a9ab"
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794700000000,
+      "tag": "0021_privacy_key_versions",
+      "breakpoints": true,
+      "sha256": "ee00d4e88fb5149a73ff302cb7badbe1dfcc5ac078cf7231c9a5cbafe9e37cb0"
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794700000001,
+      "tag": "0022_privacy_erasure_hardening",
+      "breakpoints": true,
+      "sha256": "8766ba62ee2065953ff62ba68cece0e914b2de6d17ab4dac728551f4b7b9052e"
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794701000000,
+      "tag": "0023_privacy_information",
+      "breakpoints": true,
+      "sha256": "ef0272e4b54699fea96ba5d87ce16b77195c215f33e16f99fa31b8d7fbbf815e"
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794702000000,
+      "tag": "0025_dispute_merchant",
+      "breakpoints": true,
+      "sha256": "8cc55743642c4a01ae5db8df3a7231a1e5caa7586324df511113f1c53b3894f2"
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794702000001,
+      "tag": "0026_dispute_category",
+      "breakpoints": true,
+      "sha256": "611ad44aeb636ffc8c241a89c6d6b1c010e68d8c9471b0beff04115792e89fc8"
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794702000002,
+      "tag": "0027_workspace_exports",
+      "breakpoints": true,
+      "sha256": "a19d1116357efae1f70767258e45c63f4fec625abfed8e9d5de348f23b05c115"
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794702000003,
+      "tag": "0028_workspace_export_cleanup",
+      "breakpoints": true,
+      "sha256": "a563a03a462c653bdef98121ab7f5359dfdd8c33b4ce88eee83ecde73fcde339"
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794705000000,
+      "tag": "0029_privacy_copy_redaction",
+      "breakpoints": true,
+      "sha256": "920c678e7a55eb884a46f000e1aee9e22d9fc26a799058352ed4a949a7c52e87"
+    }
+  ]
+}

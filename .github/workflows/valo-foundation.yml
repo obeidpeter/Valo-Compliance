@@ -2,7 +2,7 @@ name: Valo foundation CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, "feature/valo-p0-foundation"]
   push:
     branches: [main, "feature/valo-*"]
 
@@ -91,6 +91,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
+      - name: Prove bounded native workspace storage and versioned UI helpers
+        run: pnpm --filter @workspace/api-server test:valo-workspace-export-controls
       - name: Prove unit imports and disabled inference need no database or native storage
         run: pnpm --filter @workspace/api-server exec tsx --test src/lib/inference-no-database.test.ts
       - name: Prove workspace download release requires the current session
@@ -128,7 +130,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: controlled-workspace-download-browser
-          path: generated-artifacts/valo-completion/workspace-data-download-*
+          path: generated-artifacts/valo-completion/workspace-export-jobs-*
       - name: Reject unsafe export modes and stale account requests
         run: pnpm --filter @workspace/api-server test:valo-runtime-boundaries
       - name: Prove scratch replay cursors preserve tenant and legacy scope
@@ -142,6 +144,8 @@ jobs:
           echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
       - name: Restore disposable synthetic database and fixture objects
         run: pnpm --filter @workspace/api-server test:valo-isolated-recovery
+      - name: Validate phase 1 clean, tracked and unjournalled migration paths
+        run: VALO_RUN_MIGRATION_TESTS=synthetic-isolated-only pnpm --filter @workspace/db test:phase1-migrations
       - name: Retain isolated recovery report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -156,6 +160,14 @@ jobs:
         run: pnpm --filter @workspace/valo run build
       - name: Prove controlled profile and checker state does not cross accounts
         run: NODE_ENV=development VALO_RUN_ACCOUNT_SCOPE_BROWSER=synthetic-development-only pnpm --filter @workspace/api-server exec tsx src/scripts/account-switch-browser.ts
+      - name: Prove native dispute workflow and payment concerns in a controlled browser
+        run: pnpm --filter @workspace/api-server test:valo-dispute-browser
+      - name: Retain controlled dispute browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: controlled-dispute-workflow-browser
+          path: generated-artifacts/valo-completion/dispute-*
       - name: Print factual readiness
         run: pnpm --filter @workspace/scripts valo:readiness
   postgres:
@@ -202,6 +214,10 @@ jobs:
         run: NODE_ENV=development VALO_DEV_QUEUE_MIGRATION=reviewed-synthetic-development pnpm --filter @workspace/api-server exec tsx src/scripts/queue-migration.ts apply-development
       - name: Prove dispute HTTP and transport controls without merchant calls
         run: pnpm --filter @workspace/api-server test:valo-disputes
+      - name: Prove canonical background exports, restart, holds and final byte release
+        run: pnpm --filter @workspace/api-server test:valo-workspace-export-convergence-db
+      - name: Prove dispute immutability and authenticated privacy-copy redaction coexist
+        run: VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-private-copy-inventory.integration.test.ts
       - name: Prove paged workspace attachment, final authorization and disconnect cleanup
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-db
       - name: Prove current-rule task guards against synthetic PostgreSQL
@@ -235,3 +251,4 @@ jobs:
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce
           pnpm --filter @workspace/api-server test:valo-refunds
+

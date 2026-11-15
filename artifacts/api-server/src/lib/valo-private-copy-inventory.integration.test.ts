@@ -112,6 +112,12 @@ test("new synthetic private-copy inventory: scoped export, physical redaction, s
       assert.equal(result.data.privacyRequests.length,2);assert.ok(!JSON.stringify(result).includes("nestedFullSnapshot"));
       assert.ok(!JSON.stringify(result).includes(publicIntake));assert.ok(!JSON.stringify(result).includes("objectKey"));
     });
+    await t.test("unwitnessed payload redaction and financial changes cannot bypass intent immutability",async()=>{
+      await assert.rejects(()=>db.execute(sql`UPDATE valo_dispute_actions SET payload='{}'::jsonb,
+        result=NULL,failure='PRIVACY_ERASURE' WHERE id=${action}::uuid`));
+      await assert.rejects(()=>db.execute(sql`UPDATE valo_dispute_actions SET payload='{"amountKobo":51}'::jsonb
+        WHERE id=${action}::uuid`));
+    });
     await act("start_erasure");
     assert.equal((await db.select().from(valoDisputeActions).where(eq(valoDisputeActions.id,action)))[0]!.status,"cancelled");
     for(let n=0;n<70&&detail.request.status!=="partially_fulfilled";n++)await act("resume_erasure");
@@ -128,6 +134,15 @@ test("new synthetic private-copy inventory: scoped export, physical redaction, s
       assert.equal(o.amountKobo,100);assert.equal(o.checkoutUrl,null);assert.equal(o.requestedBy,"privacy-erased");
       const[di]=await db.select().from(valoDisputeActions).where(eq(valoDisputeActions.id,action));
       assert.deepEqual(di.payload,{amountKobo:50});assert.equal(di.result,null);
+      assert.equal(di.sourceHash,"a".repeat(64));
+      const witness=await db.execute<{projection:Record<string,unknown>;mac:string}>(sql`
+        SELECT projection,mac FROM valo_privacy_redactions WHERE table_name='valo_dispute_actions' AND row_id=${action}::uuid`);
+      assert.equal(witness.rows.length,1);assert.match(witness.rows[0]!.mac,/^[a-f0-9]{64}$/);
+      assert.ok(!JSON.stringify(witness.rows).includes(marker));
+      await assert.rejects(()=>db.execute(sql`UPDATE valo_dispute_actions SET payload='{"amountKobo":51}'::jsonb
+        WHERE id=${action}::uuid`));
+      await assert.rejects(()=>db.execute(sql`UPDATE valo_dispute_actions SET source_hash=${"c".repeat(64)}
+        WHERE id=${action}::uuid`));
       assert.equal((await db.select().from(valoPrivacyMessages).where(eq(valoPrivacyMessages.workspaceId,a.workspaceId))).length,0);
       await db.transaction(tx=>readPrivacyCase(tx,caseId)); // Actual signed chain with JSONB-redaction witnesses.
       assert.equal((await db.select().from(valoAccessSupport).where(eq(valoAccessSupport.id,publicIntake)))[0]!.message,marker);

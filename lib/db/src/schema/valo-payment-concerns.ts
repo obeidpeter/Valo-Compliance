@@ -1,0 +1,20 @@
+import {pgTable,uuid,text,integer,timestamp,boolean,uniqueIndex,foreignKey} from "drizzle-orm/pg-core";
+import {valoOrders} from "./valo-commerce";
+const time=(name:string)=>timestamp(name,{withTimezone:true});
+export const valoPaymentConcerns=pgTable("valo_payment_concerns",{
+ id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),orderId:uuid("order_id").notNull(),
+ requestKey:uuid("request_key").notNull(),inputHash:text("input_hash").notNull(),message:text("message").notNull(),
+ status:text("status").notNull().default("open"),latestReply:text("latest_reply"),version:integer("version").notNull().default(1),
+ createdAt:time("created_at").notNull().defaultNow(),updatedAt:time("updated_at").notNull().defaultNow(),
+},t=>[uniqueIndex("valo_concern_request_once").on(t.workspaceId,t.requestKey),
+ foreignKey({name:"valo_concern_order_scope",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
+
+export const valoPaymentConcernEvents=pgTable("valo_payment_concern_events",{
+ id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),orderId:uuid("order_id").notNull(),
+ concernId:uuid("concern_id").notNull().references(()=>valoPaymentConcerns.id),actorType:text("actor_type").notNull(),actorId:text("actor_id").notNull(),
+ action:text("action").notNull(),reason:text("reason").notNull(),customerVisible:boolean("customer_visible").notNull().default(true),createdAt:time("created_at").notNull().defaultNow(),
+},t=>[foreignKey({name:"valo_concern_event_order_scope",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
+export const valoConcernMessages=pgTable("valo_concern_messages",{
+ id:uuid("id").primaryKey().references(()=>valoPaymentConcernEvents.id),workspaceId:uuid("workspace_id").notNull(),orderId:uuid("order_id").notNull(),
+ concernId:uuid("concern_id").notNull().references(()=>valoPaymentConcerns.id),body:text("body").notNull(),createdAt:time("created_at").notNull().defaultNow(),
+},t=>[foreignKey({name:"valo_concern_message_order_scope",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);

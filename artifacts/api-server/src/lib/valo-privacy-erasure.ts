@@ -124,6 +124,20 @@ export async function holdUnsentPrivacyNotifications(tx:Tx,workspaceId:string){
     WHERE ctid IN (SELECT ctid FROM valo_purchase_outbox WHERE workspace_id=${workspaceId}::uuid
       AND status IN ('awaiting_email_configuration','pending','retry') LIMIT 100)`);
 }
+/** One shared row budget. Returning fewer than 100 means every family below
+ * is exhausted, so the signed cursor can safely advance to its next phase. */
+export async function eraseSupportContentBatch(tx:Tx,workspaceId:string){
+ let count=0;
+ const support=await tx.execute(sql`UPDATE valo_support_tickets SET scope=${removedMessage},contact_email='erased@invalid'
+  WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
+    AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);count+=support.rowCount??0;
+ if(count<100){const concerns=await tx.execute(sql`UPDATE valo_payment_concerns SET message=${removedMessage},latest_reply=NULL
+  WHERE ctid IN (SELECT ctid FROM valo_payment_concerns WHERE workspace_id=${workspaceId}::uuid
+    AND (message<>${removedMessage} OR latest_reply IS NOT NULL) LIMIT ${100-count})`);count+=concerns.rowCount??0;}
+ if(count<100){const messages=await tx.execute(sql`DELETE FROM valo_concern_messages WHERE ctid IN
+  (SELECT ctid FROM valo_concern_messages WHERE workspace_id=${workspaceId}::uuid LIMIT ${100-count})`);count+=messages.rowCount??0;}
+ return{rowCount:count};
+}
 async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[number],currentCaseId:string){
   if((copyPhases as readonly string[]).includes(section))
     return erasePrivateCopyPhase(tx,workspaceId,section as typeof copyPhases[number],id=>readPrivacyCase(tx,id));
@@ -131,13 +145,20 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
   if(section==="privacy_messages")return tx.execute(sql`DELETE FROM valo_privacy_messages WHERE ctid IN
     (SELECT ctid FROM valo_privacy_messages WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
   if(section==="purchase_notifications")return holdUnsentPrivacyNotifications(tx,workspaceId);
-  if(section==="support_content")return tx.execute(sql`UPDATE valo_support_tickets SET
-    scope=${removedMessage},contact_email='erased@invalid'
-    WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
-      AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);
+  if(section==="support_content")return eraseSupportContentBatch(tx,workspaceId);
   if(section==="privacy_content"){
+    // Keep historical signed phase indices. The exact JSON keys are already
+    // sealed independently before removing their customer-bearing metadata.
+    const removedAttempts=await tx.execute(sql`DELETE FROM valo_workspace_export_attempts WHERE ctid IN
+      (SELECT ctid FROM valo_workspace_export_attempts WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
+    let used=removedAttempts.rowCount??0;
+    if(used<100){const removedJobs=await tx.execute(sql`DELETE FROM valo_workspace_exports WHERE ctid IN
+      (SELECT ctid FROM valo_workspace_exports j WHERE workspace_id=${workspaceId}::uuid
+       AND NOT EXISTS (SELECT 1 FROM valo_workspace_export_attempts a WHERE a.job_id=j.id) LIMIT ${100-used})`);
+      used+=removedJobs.rowCount??0;}
+    if(used===100)return{rowCount:used};
     const rows=await tx.select().from(valoPrivacyCases).where(and(eq(valoPrivacyCases.workspaceId,workspaceId),
-      ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100).for("update");
+      ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100-used).for("update");
     for(const target of rows){
       const checked=await readPrivacyCase(tx,target.id);
       await privacyChange(tx,checked,{identityId:"service:privacy-erasure",type:"worker"},"private_content_removed",
@@ -146,7 +167,7 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
           steps:checked.steps.map(s=>({...s,detail:removedMessage})),
         });
     }
-    return{rowCount:rows.length};
+    return{rowCount:used+rows.length};
   }
   if(section==="valo_ai_drafts")return tx.execute(sql`UPDATE valo_ai_drafts SET preview='{}'::jsonb,plan=NULL,
     accepted_document_id=NULL,status='privacy_erased',updated_at=now()
@@ -394,3 +415,4 @@ export async function reconcileErasedObjects(remove:DeleteObject=deletePrivateFi
   }
   return{cleaned,failed,held};
 }
+

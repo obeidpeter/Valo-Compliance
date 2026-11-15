@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, jsonb, uniqueIndex, index, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp, jsonb, boolean, uniqueIndex, index, foreignKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoContentVersions } from "./valo-publication";
@@ -71,6 +71,7 @@ export const valoRefundTransitions=pgTable("valo_refund_transitions",{
 export const valoPaymentDisputes=pgTable("valo_payment_disputes",{
   id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),orderId:uuid("order_id").notNull(),
   providerId:text("provider_id").notNull().unique(),status:text("status").notNull(),resolution:text("resolution"),
+  held:boolean("held").notNull().default(false),controlVersion:integer("control_version").notNull().default(1),
   amountKobo:integer("amount_kobo"),checkedAt:timestamp("checked_at",{withTimezone:true}).notNull().defaultNow(),
   providerUpdatedAt:timestamp("provider_updated_at",{withTimezone:true}),snapshotHash:text("snapshot_hash"),category:text("category"),
 },t=>[foreignKey({name:"valo_dispute_order_tenant_fk",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
@@ -91,7 +92,7 @@ export const valoDisputeActions=pgTable("valo_dispute_actions",{
   informationId:uuid("information_id").references(()=>valoDisputeInformation.id),
   payload:jsonb("payload").$type<Record<string,string|number>>().notNull(),sourceHash:text("source_hash").notNull(),
   policyVersion:text("policy_version").notNull(),authorisedBy:text("authorised_by").notNull(),
-  attempts:integer("attempts").notNull().default(0),claimToken:uuid("claim_token"),
+  attempts:integer("attempts").notNull().default(0),claimToken:uuid("claim_token"),leaseUntil:timestamp("lease_until",{withTimezone:true}),
   result:jsonb("result").$type<Record<string,string>>(),failure:text("failure"),
   createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
   updatedAt:timestamp("updated_at",{withTimezone:true}).notNull().defaultNow(),
@@ -112,3 +113,4 @@ export const valoPaymentReconciliations=pgTable("valo_payment_reconciliations",{
   createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
 },t=>[uniqueIndex("valo_reconciliation_order_day_unique").on(t.orderId,t.day),
   foreignKey({name:"valo_reconciliation_order_tenant_fk",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
+
