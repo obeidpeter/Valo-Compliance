@@ -85,7 +85,7 @@ export async function actOnWorkspaceExport(actor:WorkspaceActor,id:string,raw:un
   });
 }
 async function currentWorker(tx:Tx,id:string,queueId:string,actor:WorkspaceActor,authorize=true){
-  const[row]=await tx.select().from(jobs).where(and(eq(jobs.id,id),eq(jobs.workspaceId,actor.workspaceId))).for("update",{skipLocked:!authorize});
+  const[row]=await tx.select().from(jobs).where(and(eq(jobs.id,id),eq(jobs.workspaceId,actor.workspaceId))).for("update",authorize?{}:{skipLocked:true});
   if(!row||row.status!=="running"||row.queueId!==queueId||!row.leaseExpiresAt||row.leaseExpiresAt.getTime()<=Date.now())
     throw Error("WORKSPACE_EXPORT_GENERATION_ENDED");
   if(authorize)await authorizeWorkspaceWrite(tx,actor);return row;

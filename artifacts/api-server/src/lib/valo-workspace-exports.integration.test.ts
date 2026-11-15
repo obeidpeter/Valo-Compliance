@@ -91,8 +91,12 @@ test("durable workspace exports use real PostgreSQL, leases and private fixture 
         if(stage==="collecting"&&!paused){paused=true;collecting.resolve();await continueProgress.promise;}
       }});
       await collecting.promise;
-      const revoker=await pool.connect();let revoked:Promise<unknown>|undefined,cancelled:Promise<unknown>|undefined;
+      const revoker=await pool.connect(),jobBlocker=await pool.connect();let revoked:Promise<unknown>|undefined,cancelled:Promise<unknown>|undefined;
       try{
+        // Hold the job lock explicitly: PostgreSQL may otherwise grant a new
+        // compatible SHARE lock before a waiting updater, so a second wait is
+        // not a deterministic way to test the dangerous progress dependency.
+        await jobBlocker.query("begin");await jobBlocker.query("select id from valo_workspace_exports where id=$1 for update",[row.id]);
         const pid=(await revoker.query("select pg_backend_pid() as pid")).rows[0].pid;
         revoked=revoker.query("update valo_memberships set active='no' where workspace_id=$1",[actor.workspaceId]);
         const waitFor=async(predicate:()=>Promise<boolean>)=>{
@@ -102,15 +106,19 @@ test("durable workspace exports use real PostgreSQL, leases and private fixture 
         await waitFor(async()=>!!(await pool.query("select 1 from pg_stat_activity where pid=$1 and wait_event_type='Lock'",[pid])).rowCount);
         const running=await raw(row.id);
         cancelled=actOnWorkspaceExport(actor,row.id,{expectedVersion:running.version},"cancel").catch(error=>error);
-        // The actual cancel service holds the job row while queued behind the
-        // revoker on membership. A separate heartbeat must never wait for it.
-        await waitFor(async()=>Number((await pool.query("select count(*)::int as n from pg_stat_activity where wait_event_type='Lock' and query like '%valo_memberships%'")).rows[0].n)>=2);
+        // The real cancellation now waits for the controlled job holder while
+        // membership revocation waits for the real collecting snapshot.
+        await waitFor(async()=>!!(await pool.query("select 1 from pg_stat_activity where wait_event_type='Lock' and query like '%valo_workspace_exports%' and query like '%for update%' limit 1")).rowCount);
         continueProgress.resolve();
-        const result=await Promise.race([Promise.all([work,revoked,cancelled]),new Promise<never>((_,reject)=>setTimeout(()=>reject(Error("CONTROLLED_LOCK_CYCLE_NOT_RELEASED")),5000).unref())]);
+        // Nonblocking heartbeat must release the snapshot BEFORE the job lock
+        // is released. Otherwise revocation cannot finish and this times out.
+        await Promise.race([revoked,new Promise<never>((_,reject)=>setTimeout(()=>reject(Error("CONTROLLED_LOCK_CYCLE_NOT_RELEASED")),5000).unref())]);
+        await jobBlocker.query("commit");
+        const result=await Promise.all([work,revoked,cancelled]);
         assert.equal((result[2] as {status:number}).status,403);
         assert.notEqual((await raw(row.id)).status,"ready");
         assert.equal((await db.select().from(valoFileAssets).where(eq(valoFileAssets.workspaceExportJobId,row.id))).length,0);
-      }finally{continueProgress.resolve();await revoked;await cancelled;revoker.release();}
+      }finally{continueProgress.resolve();await jobBlocker.query("rollback");await revoked;await cancelled;jobBlocker.release();revoker.release();}
     });
     for(const stage of["claimed","uploaded","completing"] as const){
       await t.test(`kernel SIGKILL at ${stage}, lease recovery and duplicate generation fencing`,async()=>{

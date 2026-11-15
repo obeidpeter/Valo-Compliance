@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 /** Real React/account-boundary/native-download journey with controlled HTTP
  * jobs and synthetic cookies. No real identity, database, worker or provider. */
 import { createServer, type ServerResponse } from 'node:http';
@@ -8,7 +9,7 @@ import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 import { chromium, expect } from '@playwright/test';
 import { developmentPublicationOnly, publicationWorkspaceRoot } from '../editorial/operational-policy';
-import type { WorkspaceDataExportJob } from '@workspace/api-client-react';
+import type { WorkspaceDataExportJob } from '../../../../lib/api-client-react/src/generated/api.schemas';
 
 developmentPublicationOnly();
 if (process.env.VALO_RUN_WORKSPACE_EXPORT_JOBS_BROWSER !== 'synthetic-development-only') throw Error('EXPLICIT_SYNTHETIC_BROWSER_FLAG_REQUIRED');
@@ -119,7 +120,7 @@ const browser = await chromium.launch({ headless: true, executablePath: process.
 const context = await browser.newContext({ viewport: { width: 360, height: 800 }, acceptDownloads: true });
 await context.addInitScript(() => {
   const fetch = window.fetch;
-  window.fetch = (...args) => { if (/\/data-exports\/[^/]+\/file/.test(String(args[0]))) throw Error('FILE_MUST_USE_NATIVE_ATTACHMENT'); return fetch(...args); };
+  window.fetch = (...args: Parameters<typeof window.fetch>) => { if (/\/data-exports\/[^/]+\/file/.test(String(args[0]))) throw Error('FILE_MUST_USE_NATIVE_ATTACHMENT'); return fetch(...args); };
   window.Blob = new Proxy(window.Blob, { construct() { throw Error('NO_EXPORT_BLOB'); } });
   URL.createObjectURL = () => { throw Error('NO_EXPORT_OBJECT_URL'); };
   const parse = JSON.parse;
