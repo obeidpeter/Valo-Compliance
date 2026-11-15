@@ -2,6 +2,14 @@
 
 ## Latest application unit — usable disabled inference budget and reconciliation
 
+**Independent-review correction:** every new transport admission rechecks the
+locked financial holds, including previously reserved work. Actual operational
+reviews use blind, distinct role contexts with sequential admission; whole-review
+single-work wrappers fail before attempt creation. The standard database suite
+now also runs **11 real-caller/binding checks**, without paid inference.
+See [review correction evidence](docs/valo/finite-dispatch-review-fixes.md).
+The batch remains disabled and pending independent re-review, not approval-ready.
+
 **Current application unit:** eleven actual operational candidates now have
 22 exact factual/challenge requests, separately stored private manifests,
 source/version bindings, real export checks and a read-only verification command.

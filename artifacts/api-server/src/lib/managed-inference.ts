@@ -21,6 +21,7 @@ let runtime:Promise<FiniteInferenceDispatcher>|undefined;
 function requireDevelopment(){try{assertDevelopmentRuntime();}catch{throw new InferenceHeld("INFERENCE_DEVELOPMENT_ONLY");}}
 async function dispatcher(){
   requireDevelopment();
+  const composed=active.getStore();if(composed)return composed;
   runtime??=(async()=>{
     const[{pool},{InferenceBudgetStore},{FiniteInferenceDispatcher},{assertFiniteWorkBindings}]=await Promise.all([
       import("@workspace/db"),import("./inference-budget-store"),import("./inference-batch-dispatch"),import("./inference-work-bindings")]);
@@ -54,6 +55,7 @@ export const managedInferenceLane=(fallback:BudgetLane)=>active.getStore()?.curr
 export const hasApprovedInferenceContext=(lane?:BudgetLane)=>{
   const ctx=active.getStore()?.current();return !!ctx&&(!lane||ctx.lane===lane);
 };
+export const hasApprovedInferencePairContext=()=>!!active.getStore()?.current()?.pair;
 /** All provider paths require the same durable finite-work authorization. */
 export async function managedCompletion(lane:BudgetLane,request:ManagedRequest,
   options:{timeout:number;maxRetries:0;onOutbound?:()=>void}):Promise<ManagedCompletionResult>{

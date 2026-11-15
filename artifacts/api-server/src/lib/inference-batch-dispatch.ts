@@ -1,4 +1,5 @@
 import {AsyncLocalStorage} from "node:async_hooks";
+import {assertFinancialDispatchAllowed} from "./inference-budget";
 import {InferenceBudgetStore} from "./inference-budget-store";
 import {inferenceProposal,additionalInferenceAllocation,acceptedInferenceModels,inferenceTimestamp,requestDigest,reserveBudget,reserveReviewPair,
   transitionBudget,settleBudget,type BudgetLane,type BudgetState,type ReserveInput} from "./inference-budget";
@@ -161,6 +162,9 @@ export class FiniteInferenceDispatcher{
         }else s=reserveBudget(s,{enabled:true,ownerApproved:true,tokenizationVerified:false,
           managedPriceUpperBoundVerified:true,contextCapacityVerified:true},input).state;
       }
+      // Reuse above is free; every new transport admission below must observe
+      // holds established since reservation, including by its sibling role.
+      assertFinancialDispatchAllowed(s);
       s=transitionBudget(s,key,"dispatch");
       return{state:s,value:{key,reused:null}};
     });

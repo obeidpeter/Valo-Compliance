@@ -157,14 +157,19 @@ export function transitionBudget(s:BudgetState,key:string,action:"dispatch"|"unk
   const target=action==="dispatch"?"dispatched":action==="unknown"?"unknown":"cancelled";
   // Reservation is not a permanent permission to spend. A sibling's bound
   // breach, reconciliation hold or suspension must stop already-reserved work.
-  if(action==="dispatch"&&(s.suspended||!s.priorUseReconciled||s.unboundedPrior.length))
-    throw Error("PRIOR_CHARGES_UNRECONCILED");
+  if(action==="dispatch")assertFinancialDispatchAllowed(s);
   if(e.status===target)return s;
   if(action==="dispatch"&&s.entries.filter(x=>!x.legacy&&["dispatched","unknown"].includes(x.status)).length>=
     inferenceProposal.batch.concurrency)throw Error("INFERENCE_CONCURRENCY_EXHAUSTED");
   if(action==="dispatch"&&e.status!=="reserved"||action==="unknown"&&!["reserved","dispatched"].includes(e.status)||
     action==="cancel"&&e.status!=="reserved")throw Error("UNSAFE_BUDGET_TRANSITION");
   return{...s,entries:s.entries.map(x=>x===e?{...x,status:target as BudgetEntry["status"]}:x)};
+}
+/** Rechecked on the locked current ledger, never inferred from reservation age. */
+export function assertFinancialDispatchAllowed(s:BudgetState){
+  validateBudgetState(s);
+  if(s.suspended||!s.priorUseReconciled||s.unboundedPrior.length)
+    throw Error("PRIOR_CHARGES_UNRECONCILED");
 }
 export function settleBudget(s:BudgetState,key:string,usage:{input:number;output:number;responseId:string;resultRef:string;freshUntil:number}){
   validateBudgetState(s);
