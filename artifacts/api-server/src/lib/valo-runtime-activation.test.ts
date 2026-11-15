@@ -4,7 +4,8 @@ import {rehearsalConfiguration,verifyRehearsalDatabase,assertApplicationRuntime}
 const env={NODE_ENV:"production",PRIVATE_OBJECT_DIR:"/synthetic-bucket/development",VALO_PRODUCTION_PRIVATE_OBJECT_DIR:"/synthetic-bucket/production",
   VALO_WORKER_TOPOLOGY:"replit-reserved-vm-same-app",VALO_WORKER_REPLICAS:"1",VALO_RELEASE_SHA:"a".repeat(40),VALO_WORKER_HEALTH_PORT:"8082",PORT:"8080",
   VALO_RUNTIME_ACTIVATION:"private-rehearsal-v1",VALO_PRODUCTION_DATABASE_ID:"11111111-1111-4111-8111-111111111111",
-  VALO_EXTERNAL_MONITORING:"healthchecks",VALO_WORKER_MONITOR_URL:"present",VALO_OPERATIONS_MONITOR_URL:"present",
+  VALO_EXTERNAL_MONITORING:"healthchecks",VALO_WORKER_MONITOR_URL:"https://hc-ping.com/"+"11111111-1111-4111-8111-111111111111",VALO_OPERATIONS_MONITOR_URL:"https://hc-ping.com/"+"22222222-2222-4222-8222-222222222222",
+  SESSION_SECRET:"synthetic-production-rehearsal-only-key",
   VALO_CUSTOMER_AI_ENABLED:"false",VALO_SANDBOX_CHECKOUT_ENABLED:"false",VALO_SANDBOX_REFUNDS_ENABLED:"false",VALO_SANDBOX_DISPUTES_ENABLED:"false"};
 test("production activation cannot be granted by configuration inspection or a development copy",async()=>{
   const config=rehearsalConfiguration(env);

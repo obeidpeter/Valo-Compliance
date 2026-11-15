@@ -1,7 +1,7 @@
 """Outer API/worker process supervision for one POSIX host.
 
-Production runs the existing release gate before spawning any service. That gate
-currently declines activation; this manager cannot bypass the application guards.
+Production verifies the built release and database-bound private rehearsal gate
+before spawning services. Customer traffic stays closed.
 """
 from collections import deque
 import json

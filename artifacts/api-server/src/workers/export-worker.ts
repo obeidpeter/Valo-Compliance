@@ -95,7 +95,7 @@ async function dispatch() {
   let succeeded=false;
   let finishDispatch!:()=>void;dispatchIdle=new Promise(resolve=>{finishDispatch=resolve;});
   try {
-    if(process.env.NODE_ENV==="production")await verifyRehearsalDatabase(sql=>pool.query(sql),process.env);
+    if(process.env.NODE_ENV==="production")await verifyRehearsalDatabase(sql=>{const query={text:sql,query_timeout:1500};return pool.query(query);},process.env);
     // An idle queue must still prove that both configured queues are reachable.
     const queueQuery={text:"SELECT name,retry_limit,expire_seconds FROM valo_jobs.queue WHERE name=ANY($1::text[])",values:[[EXPORT_QUEUE,WORKSPACE_EXPORT_QUEUE]],query_timeout:1500};
     const queues=await pool.query(queueQuery);

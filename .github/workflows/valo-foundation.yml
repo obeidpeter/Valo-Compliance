@@ -155,6 +155,8 @@ jobs:
           node --test scripts/ops/recovery_contract.test.mjs
           VALO_REQUIRE_REAL_RESTIC=1 python3 -m unittest discover -s scripts/ops -p 'test_*.py'
           systemd-analyze verify scripts/ops/systemd/*.service scripts/ops/systemd/*.timer
+      - name: Activate real production-mode API and worker against an isolated empty database
+        run: pnpm --filter @workspace/api-server test:valo-production-rehearsal
       - name: Restore disposable synthetic database and fixture objects
         run: pnpm --filter @workspace/api-server test:valo-isolated-recovery
       - name: Validate phase 2 migrations, applied phase 1 bytes and existing staff preservation

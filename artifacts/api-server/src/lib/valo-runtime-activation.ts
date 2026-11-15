@@ -1,5 +1,6 @@
 import {createHash} from "node:crypto";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {externalMonitorConfiguration} from "./valo-external-monitor";
 import {productionPreflight} from "./valo-production-readiness";
 import {privateStorageScope,privateObjectName} from "./valo-storage-scope";
 
@@ -21,6 +22,8 @@ export function rehearsalConfiguration(env:Environment){
     fail("PRODUCTION_REHEARSAL_CONFIGURATION_REQUIRED");
   for(const name of ["VALO_CUSTOMER_AI_ENABLED","VALO_SANDBOX_CHECKOUT_ENABLED","VALO_SANDBOX_REFUNDS_ENABLED","VALO_SANDBOX_DISPUTES_ENABLED"])
     if(env[name]!=="false")fail("PRODUCTION_REHEARSAL_EFFECTS_MUST_BE_DISABLED");
+  if(!env.SESSION_SECRET||env.SESSION_SECRET.length<32)fail("PRODUCTION_SIGNING_KEY_REQUIRED");
+  externalMonitorConfiguration(env);
   if(env.VALO_ISOLATED_RECOVERY)fail("RECOVERY_CANNOT_ACTIVATE_PRODUCTION");
   return {profile,databaseId:env.VALO_PRODUCTION_DATABASE_ID,storageFingerprint:privateStorageScope("production",env).fingerprint};
 }

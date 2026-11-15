@@ -74,7 +74,7 @@ test("actual export entries and worker startup reject before database, queue or 
       ()=>cancelWorkspaceExport(actor,"id",1),()=>retryWorkspaceExport(actor,"id",1),()=>executeWorkspaceExport("id","ws","queue"),
       ()=>recoverWorkspaceExports(),()=>cleanupWorkspaceExports(),()=>pendingWorkspaceExports(),
       ()=>withPreparedWorkspaceExport(actor,"id",new AbortController().signal,async()=>{},async()=>{})];
-    let rejected=0;for(const op of ops){try{await op()}catch(e){if(e.status!==503&&e.code!=="DEVELOPMENT_RUNTIME_REQUIRED")throw e;rejected++;}}
+    let rejected=0;for(const op of ops){try{await op()}catch(e){if(e.status!==503&&e.code!=="DEVELOPMENT_RUNTIME_REQUIRED"&&e.code!=="PRODUCTION_REHEARSAL_CONFIGURATION_REQUIRED"&&e.code!=="PRODUCTION_RUNTIME_NOT_VERIFIED")throw e;rejected++;}}
     if(rejected!==ops.length)throw Error("UNGUARDED_EXPORT_ENTRY");`;
   try{
     const authorizationCanary=`import{authorizeWorkspaceWrite}from${JSON.stringify(resolve("src/lib/valo-store.ts"))};
