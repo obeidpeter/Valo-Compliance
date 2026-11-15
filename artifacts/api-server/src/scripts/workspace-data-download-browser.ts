@@ -132,8 +132,14 @@ const waitFor = async (check: () => boolean, label: string) => {
 };
 const open = async (query = '') => { await page.goto(origin + '/' + query); await page.getByTestId('button-download-workspace').waitFor(); };
 const checks: string[] = [];
+let heapEvidence:{baseline:number;peak:number;increase:number;bound:number}|undefined;
 try {
   await open();
+  const metricsSession=await context.newCDPSession(page);await metricsSession.send('Performance.enable');
+  await metricsSession.send('HeapProfiler.collectGarbage');
+  const heap=async()=>((await metricsSession.send('Performance.getMetrics')).metrics.find(m=>m.name==='JSHeapUsedSize')?.value??NaN);
+  const baseline=await heap();let peak=baseline;
+  const sampler=setInterval(()=>{void heap().then(value=>{peak=Math.max(peak,value);}).catch(()=>{});},10);
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate("document.activeElement?.getAttribute('data-testid')"), 'button-download-workspace');
   const received = page.waitForEvent('download');
@@ -142,11 +148,16 @@ try {
   assert.equal(download.suggestedFilename(), 'valo-workspace-data.json');
   const downloadedPath = join(downloadScratch, 'synthetic-workspace-data.json');
   await download.saveAs(downloadedPath);
+  peak=Math.max(peak,await heap());clearInterval(sampler);
+  heapEvidence={baseline,peak,increase:peak-baseline,bound:8*1024*1024};
+  assert.ok(Number.isFinite(peak)&&peak-baseline<heapEvidence.bound,'fixture page JS heap increase stayed below 8 MiB');
   const raw = await readFile(downloadedPath, 'utf8');
   assert.ok(Buffer.byteLength(raw) > 8_000_000);
   const data = JSON.parse(raw);
   assert.equal(data.data.records.length, 6001);
   assert.equal(new Set(data.data.records.map((row: { id: number }) => row.id)).size, 6001);
+  assert.deepEqual(data.data.records.map((row:{id:number})=>row.id).sort((a:number,b:number)=>a-b),
+    Array.from({length:6001},(_,index)=>index));
   assert.ok(data.data.records.every((row: { workspaceId: string }) => row.workspaceId === 'synthetic-owner-a'));
   assert.doesNotMatch(raw, /storageLocator|another-tenant/);
   assert.match(await page.getByRole('status').first().innerText(), /Download requested; check browser downloads/);
@@ -191,7 +202,9 @@ try {
   assert.equal(downloads, 1, 'cancelled or denied requests must not produce late downloads');
   assert.deepEqual(errors, []);
   assert.ok(metrics.cookieAuthorized > 0);
-  const report = { passed: true, scope: 'Actual component with controlled HTTP/cookie fixture; no production identity, database or full-app layout test.', checks, metrics, downloads, errors };
+  const report = { passed: true, scope: 'Actual component with controlled HTTP/cookie fixture; no production identity, database or full-app layout test.',
+    exactExpectedIds:true,resourceScope:'Page JavaScript heap sampled every 10ms, not OS/download-manager or backend memory. Test Node process validates the saved file separately.',
+    heapEvidence,checks, metrics, downloads, errors };
   await writeFile(join(evidence, 'workspace-data-download-browser.json'), JSON.stringify(report, null, 2));
   console.log(JSON.stringify({ ...report, evidence }, null, 2));
 } catch (error) {

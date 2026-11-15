@@ -21,6 +21,10 @@ test("durable workspace export: native HTTP cancellation, live authorization, pr
   assert.equal(process.env.NODE_ENV,"development");assert.ok(!process.env.REPLIT_DEPLOYMENT);
   const a=await resolveWorkspace("synthetic-workspace-export-a-"+randomUUID()),b=await resolveWorkspace("synthetic-workspace-export-b-"+randomUUID());
   const marker="OWNED_SYNTHETIC_EXPORT_"+randomUUID();let access="active",pause=false,seen=deferred(),release=deferred(),pageCount=0;
+  const expectedEvents=Array.from({length:5001},(_,i)=>({id:randomUUID(),workspaceId:a.workspaceId,
+    actorId:a.identityId,entityId:a.workspaceId,action:marker+"_"+i+"_"+"x".repeat(2000)}));
+  const lateEvent={id:randomUUID(),workspaceId:a.workspaceId,actorId:a.identityId,entityId:a.workspaceId,action:"NEW_DATED_COPY_ONLY"};
+  let mutateSnapshot=false;
   const startedAt=new Date().toISOString(),measurements:Record<string,unknown>[]=[];let storageCalls=0;
   const observedStorage:typeof workspaceExportStorage={
     put:async(...args)=>{storageCalls++;return workspaceExportStorage.put(...args);},
@@ -33,6 +37,7 @@ test("durable workspace export: native HTTP cancellation, live authorization, pr
       emailAddresses:[{id:"primary",verification:{status:"verified"}}]}),
   }),async(section,rows)=>{
     if(section==="yourActivity"){pageCount++;
+      if(mutateSnapshot&&rows===500){mutateSnapshot=false;await db.insert(valoEvents).values(lateEvent);}
       if(pause&&rows===500){seen.resolve();await release.promise;}
     }
   },observedStorage);
@@ -80,8 +85,7 @@ test("durable workspace export: native HTTP cancellation, live authorization, pr
       assert.equal((await db.select().from(jobs).where(eq(jobs.workspaceId,a.workspaceId))).length,before);
       assert.equal(storageCalls,io);
     });
-    await db.insert(valoEvents).values(Array.from({length:5001},(_,i)=>({id:randomUUID(),workspaceId:a.workspaceId,
-      actorId:a.identityId,entityId:a.workspaceId,action:marker+"_"+i+"_"+"x".repeat(2000)})));
+    await db.insert(valoEvents).values(expectedEvents);
     await db.insert(valoEvents).values({id:randomUUID(),workspaceId:b.workspaceId,actorId:b.identityId,entityId:b.workspaceId,action:"OTHER_TENANT_PRIVATE_MARKER"});
     await t.test("actual HTTP disconnect mid-page stops preparation promptly and same durable job can restart",async()=>{
       reset();const id=await create(),abort=new AbortController(),response=request("/"+id+"/download",{signal:abort.signal});
@@ -89,11 +93,13 @@ test("durable workspace export: native HTTP cancellation, live authorization, pr
       const start=Date.now(),before=pageCount;abort.abort();await assert.rejects(response);await interrupted(id);
       assert.ok(Date.now()-start<2500);assert.equal(pageCount,before);
       measurements.push({boundary:"disconnect",elapsedMs:Date.now()-start,activityRowsAtStop:500,scratchRemoved:true});
-      release.resolve();pause=false;
+      release.resolve();pause=false;mutateSnapshot=true;
       const retry=await request("/"+id+"/download");assert.equal(retry.status,200);
       const text=await retry.text();assert.ok(Buffer.byteLength(text)>8_000_000);
       const data=JSON.parse(text);assert.equal(data.complete,true);assert.equal(data.data.yourActivity.length,5001);
       assert.equal(new Set(data.data.yourActivity.map((r:{id:string})=>r.id)).size,5001);
+      assert.deepEqual(data.data.yourActivity.map((r:{id:string})=>r.id).sort(),expectedEvents.map(r=>r.id).sort(),
+        "exact snapshot IDs, including exclusion of a row inserted during pagination");
       assert.equal(data.counts.yourActivity,5001);assert.ok(!text.includes("OTHER_TENANT_PRIVATE_MARKER"));
       const result=await row(id);assert.equal(result.attempts,2);assert.equal(result.status,"ready");
       measurements.push({boundary:"complete native private result",bytes:Buffer.byteLength(text),sourceRows:5001,
@@ -135,7 +141,9 @@ test("durable workspace export: native HTTP cancellation, live authorization, pr
       await cleanupWorkspaceExports(workspaceExportStorage,a.workspaceId);
       const response=await request("/"+id+"/download");assert.equal(response.status,200);
       const data=await response.json() as {complete:boolean;counts:{yourActivity:number}};
-      assert.equal(data.complete,true);assert.equal(data.counts.yourActivity,5001);assert.equal((await row(id)).attempts,2);
+      assert.equal(data.complete,true);assert.equal(data.counts.yourActivity,5002);assert.equal((await row(id)).attempts,2);
+      assert.deepEqual((data as unknown as {data:{yourActivity:{id:string}[]}}).data.yourActivity.map(r=>r.id).sort(),
+        [...expectedEvents.map(r=>r.id),lateEvent.id].sort(),"restarted whole snapshot includes the exactly identified later row");
       await request("/"+id+"/cancel",{method:"POST"});
     });
     console.log(JSON.stringify({startedAt,finishedAt:new Date().toISOString(),measurements,realNativePrivateStorage:true,sourceRows:5001,minimumBytes:8000000,

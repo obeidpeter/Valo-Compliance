@@ -2,6 +2,7 @@ import {AsyncLocalStorage} from "node:async_hooks";
 import {inferenceProposal,type BudgetLane} from "./inference-budget";
 import type {FiniteInferenceDispatcher} from "./inference-batch-dispatch";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {createManagedSDKTransport,type ManagedSDKClient} from "./managed-sdk-transport";
 export type ManagedRequest={model:string;max_completion_tokens?:number;messages:readonly unknown[];
   response_format?:unknown;stream?:boolean;tools?:unknown[];n?:number;tool_choice?:unknown};
 export class InferenceHeld extends Error{
@@ -17,14 +18,10 @@ async function dispatcher(){
   runtime??=(async()=>{
     const[{pool},{InferenceBudgetStore},{FiniteInferenceDispatcher},{assertFiniteWorkBindings}]=await Promise.all([
       import("@workspace/db"),import("./inference-budget-store"),import("./inference-batch-dispatch"),import("./inference-work-bindings")]);
-    return new FiniteInferenceDispatcher(new InferenceBudgetStore(pool,"public","additional-new"),async(request,options)=>{
+    return new FiniteInferenceDispatcher(new InferenceBudgetStore(pool,"public","additional-new"),createManagedSDKTransport(async()=>{
       const {openai}=await import("@workspace/integrations-openai-ai-server");
-      // The ledger has already admitted this attempt. Import failures retain a
-      // conservative unknown reservation, but are not labelled outbound calls.
-      options.onOutbound?.();
-      return await openai.chat.completions.create(request as Parameters<typeof openai.chat.completions.create>[0],
-        {timeout:options.timeout,maxRetries:0}) as ManagedCompletionResult;
-    },assertFiniteWorkBindings);
+      return openai as unknown as ManagedSDKClient;
+    }),assertFiniteWorkBindings);
   })();
   return runtime;
 }

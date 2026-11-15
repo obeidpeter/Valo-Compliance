@@ -94,3 +94,28 @@ export function proposeHistoricalReceiptResolutions(state:BudgetState,attempts:H
     reconciliationApplied:false,unboundedLiabilitiesUnchanged:state.unboundedPrior.length,
     note:"Reported-token estimates are not account invoices. Proposed joins do not alter or discharge any liability."};
 }
+
+/** Read-only exposure reconstruction. Retained receipt proposals can refine a
+ * projection, never erase old rows or manufacture a remaining balance. */
+export function projectHistoricalExposure(state:BudgetState,report:ReturnType<typeof proposeHistoricalReceiptResolutions>){
+  validateBudgetState(state);
+  if(report.historyHash!==requestDigest(state))throw Error("HISTORY_PROJECTION_CHANGED");
+  const entries=structuredClone(state.entries),resolved=new Set<string>();
+  for(const p of report.proposed){
+    const e=entries.find(x=>x.runKey===p.ledgerRunKey);
+    const{proposalHash,...bound}=p;
+    if(!e||e.status!=="unknown"||!e.legacy||requestDigest(e)!==p.beforeEntryHash||
+      requestDigest(bound)!==proposalHash||!acceptedInferenceModels.has(p.receipt.model)||
+      tokenCost(p.receipt.inputTokens,p.receipt.outputTokens).toString()!==p.estimatedNanoUsd)
+      throw Error("HISTORY_PROJECTION_BINDING_CHANGED");
+    e.status="settled";e.charged=p.estimatedNanoUsd;e.reserved=p.estimatedNanoUsd;
+    resolved.add(e.runKey);
+  }
+  const unresolved=state.unboundedPrior.filter(key=>!resolved.has(key));
+  return{potentialChargeRecords:entries.length,metadataReportedUsageRecords:state.entries.filter(e=>e.status==="settled").length,
+    retainedReceiptRefinements:resolved.size,unresolvedLiabilities:unresolved.length,
+    projectedUsageEstimateNanoUsd:entries.reduce((sum,e)=>sum+BigInt(e.status==="settled"?e.charged:e.reserved),0n).toString(),
+    inclusiveRemainingNanoUsd:null,actualBillingVerified:false,ledgerWrites:0,sourceRowsChanged:0,
+    modelCapacityAssumptionsApplied:0,
+    note:"No unsupported model-cap assumptions were applied. Missing per-attempt request/model evidence remains held; committed code alone does not prove what was dispatched. These are potential charges and usage estimates, not verified paid calls."};
+}
