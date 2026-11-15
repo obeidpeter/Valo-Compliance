@@ -1,6 +1,6 @@
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import {acceptedInferenceModels,requestDigest} from "./inference-budget";
-import {customerPromptVersion,hashAI,type CustomerPreview} from "./valo-customer-ai-domain";
+import {customerPromptVersion,customerNoticeVersion,hashAI,type CustomerPreview} from "./valo-customer-ai-domain";
 import type {CustomerEvaluationActor,CustomerEvaluationPlan,CustomerCasePreparation} from "./inference-customer-evaluation";
 import type {FiniteManifest} from "./inference-batch-dispatch";
 type Query=(text:string,values:unknown[])=>Promise<{rows:Record<string,any>[]} >;
@@ -31,9 +31,9 @@ export async function assertCustomerEvaluationActor(plan:CustomerEvaluationPlan,
   if(!anchor)throw Error("EXISTING_SYNTHETIC_ACTOR_UNAVAILABLE");
   const {idempotencyKey,...facts}=entry.input,inputHash=hashAI(facts);
   const prior=(await read(`select id,workspace_id,idempotency_key,input_hash,provider_input_hash,prompt_version,
-    provider_runs,status,created_at from valo_ai_drafts where (input_hash=$1 and prompt_version like $2)
-    or (workspace_id=$3 and idempotency_key=$4)`,
-    [inputHash,`${customerPromptVersion}/%`,actor.workspaceId,idempotencyKey])).rows;
+    provider_runs,status,created_at from valo_ai_drafts where input_hash=$1
+    or (workspace_id=$2 and idempotency_key=$3)`,
+    [inputHash,actor.workspaceId,idempotencyKey])).rows;
   let reusableExisting=false;
   for(const row of prior){
     const own=row.workspace_id===actor.workspaceId&&row.idempotency_key===idempotencyKey;
@@ -41,10 +41,13 @@ export async function assertCustomerEvaluationActor(plan:CustomerEvaluationPlan,
     if(!Array.isArray(row.provider_runs))throw Error("HISTORICAL_CUSTOMER_RECEIPT_UNKNOWN");
     if(row.provider_runs.some((r:Record<string,any>)=>r.outboundAttempted===true&&!measuredReceipt(r)))
       throw Error("HISTORICAL_CUSTOMER_RECEIPT_UNKNOWN");
+    if(own&&row.status==="ready"&&!row.provider_runs.some((r:Record<string,any>)=>r.outboundAttempted===true&&measuredReceipt(r)))
+      throw Error("HISTORICAL_CUSTOMER_RECEIPT_UNKNOWN");
     if(row.status==="running"&&(!own||+new Date(row.created_at)<Date.parse(plan.preparedAt)))
       throw Error("HISTORICAL_CUSTOMER_COMPLETION_UNKNOWN");
     if(own&&row.status!=="running"&&row.status!=="ready")throw Error("EXISTING_CUSTOMER_FALLBACK_REQUIRES_REVIEW");
-    if(own&&row.status==="ready"&&(row.provider_input_hash!==entry.providerInputHash||
+    if(own&&row.status==="ready"&&(row.prompt_version!==`${customerPromptVersion}/${customerNoticeVersion}`||
+      row.provider_input_hash!==entry.providerInputHash||
       Date.now()-+new Date(row.created_at)>=86400000))throw Error("EXISTING_CUSTOMER_RESULT_STALE_OR_CHANGED");
     if(own&&row.status==="ready")reusableExisting=true;
   }

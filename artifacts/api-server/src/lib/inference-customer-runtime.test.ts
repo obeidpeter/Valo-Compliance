@@ -15,6 +15,7 @@ test("existing actor, safety and exact historical uncertainty checks make no mut
     if(sql.startsWith("select d.id")){assert.match(sql,/m.active='yes'/);assert.match(sql,/valo_privacy_tombstones/);
       return{rows:active?[{id:actor.anchorDraftId,workspace_id:actor.workspaceId,actor_id:actor.identityId}]:[]};}
     if(sql.startsWith("select enabled"))return{rows:paused?[{enabled:false}]:[]};
+    assert.doesNotMatch(sql,/prompt_version\s+(?:like|=)/i,"A prompt upgrade must not hide exact-input historical uncertainty");
     return{rows};
   };
   assert.deepEqual(await existingCustomerEvaluationActor(read),actor);
@@ -34,6 +35,17 @@ test("existing actor, safety and exact historical uncertainty checks make no mut
   rows=[{...original,status:"ready",provider_runs:[{outboundAttempted:true,responseId:"controlled-not-real",model:"gpt-5.4-mini",
     usage:{inputTokens:10,outputTokens:1,totalTokens:11}}]}];paused=true;
   assert.deepEqual(await assertCustomerEvaluationActor(plan,entry,read),{reusableExisting:true});
+  const ready=rows[0]!;
+  rows=[{...ready,provider_runs:[]}];
+  await assert.rejects(()=>assertCustomerEvaluationActor(plan,entry,read),/RECEIPT_UNKNOWN/);
+  rows=[{...ready,prompt_version:`customer-extractive-v2/${customerNoticeVersion}`}];
+  await assert.rejects(()=>assertCustomerEvaluationActor(plan,entry,read),/STALE_OR_CHANGED/);
+  rows=[{...ready,prompt_version:`${customerPromptVersion}/old-notice`}];
+  await assert.rejects(()=>assertCustomerEvaluationActor(plan,entry,read),/STALE_OR_CHANGED/);
+  rows=[{...original,prompt_version:`customer-extractive-v2/${customerNoticeVersion}`,workspace_id:"another-retained-workspace",
+    status:"manual_fallback",provider_runs:[{outboundAttempted:true,responseId:null,usage:null}]}];
+  await assert.rejects(()=>assertCustomerEvaluationActor(plan,entry,read),/RECEIPT_UNKNOWN/);
+  rows=[ready];
   rows=[{...rows[0],created_at:new Date(Date.now()-86400001)}];
   await assert.rejects(()=>assertCustomerEvaluationActor(plan,entry,read),/STALE_OR_CHANGED/);
   assert.ok(reads>10);
