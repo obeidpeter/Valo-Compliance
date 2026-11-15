@@ -1,6 +1,6 @@
 # Valo setup and disabled inference proposal
 
-Current private-development guide, updated with the corrected frozen package and conditional preparation coverage in [PR21](https://github.com/obeidpeter/Valo-Compliance/pull/21). The [decision packet](../reviews/external-completion-decisions-2026-11-14.md) is the current owner-facing proposal. Earlier estimates and implementation states remain in Git history and must not be used as current activation instructions.
+Current private-development guide. The latest [executed checkpoint and native next-review manifest](inference-hardening-checkpoint.md) supersede the preparation counts below from [PR21](https://github.com/obeidpeter/Valo-Compliance/pull/21). The [decision packet](../reviews/external-completion-decisions-2026-11-14.md) remains an unapproved proposal. Earlier estimates and implementation states remain in Git history and must not be used as activation instructions.
 
 ## What exists
 
@@ -10,9 +10,9 @@ The [disabled package](evidence/finite-allocation-package-disabled.json) propose
 
 The full-context fallback reserves $0.3705504 per attempt and $0.7411008 for an independent pair. Exact tokenization is not a prerequisite to this fallback. The earlier 32,000/4,096-token calculations are not the implemented full-context maximum. Pending or unknown outcomes retain their reservation; valid usage can settle it. Concurrency is two and a timeout does not authorize an automatic retry.
 
-TPL-01 through TPL-11 now have a conditional preparation path; every saved version must still pass actual retained source/rights/mechanical/final-export checks. The corrected artifact records zero confirmed native current-plan pairs. The 108 content units and original 200 evaluation cases describe the permitted package scope, not implemented preparation for all units or completed acceptance.
+TPL-01 through TPL-11 have a conditional preparation path; every saved version must still pass actual retained source/rights/mechanical/final-export checks. The older corrected artifact recorded zero confirmed native current-plan pairs. Current TPL-07 v9 preparation now has **one exact native pair / two attempts**, still disabled, unreviewed and unpublished. The 108 content units and original 200 evaluation cases describe package scope, not implemented preparation for all units or completed acceptance.
 
-The earlier frozen artifact was invalidated after all seven file hashes were found to differ from repository bytes. The corrected package ID is `finite-package:3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8`. Original case identities/hashes are unchanged. The source-hash regression checks the exact frozen package, source bytes, named sections and corpus cases; see PR21 for execution evidence.
+The earlier frozen artifact was invalidated after all seven file hashes differed from repository bytes. PR21's corrected package remains historical. The newly prepared package is `finite-package:c4696c9b9bddf9baa8cb30a6f7c421b25b6dfb2d1560002adcc76125a0a508ec`; its next exact manifest and expiry are retained in the current checkpoint. Original case identities/hashes are unchanged. The source-hash regression checks exact source bytes, named sections and corpus cases.
 
 One real package approval can admit exact eligible child manifests without routine per-item approval. Source, rights, freshness, export, editorial and publication requirements still apply. Parent revocation or expiry prevents further dispatch, including a previously reserved sibling. An already admitted valid response is still accounted after expiry.
 

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface WorkspaceDataExportRequest {
-  idempotencyKey: string;
+export interface WorkspaceExportAction {
+  /** @minimum 1 */
+  expectedVersion: number;
 }

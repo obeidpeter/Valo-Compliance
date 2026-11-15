@@ -30,5 +30,21 @@ identity, publication acceptance or production visual acceptance.
 The product-owner 50-query relevance threshold has not been agreed, and the
 controlled benchmark is not that formal acceptance. Exact CI outcomes are recorded
 on the pull request. The combined R1/R2 release remains incomplete and unaccepted.
-Migration0030 is additive and has not been applied to the native development
+Migration0032 is additive and has not been applied to the native development
 database; integrate pending migrations in their reviewed chronological order.
+
+Private convergence checkpoint (15 November 2026): the proposed normal merge
+retains catalogue4d221379, canonical dispute/export3db903c7 and native26f07c18
+evidence. Migration0032 follows the unchanged native0025–0028 and additive
+export0029/dispute0030 history; it introduces no placeholder for source0031.
+Saved metadata shares the existing100-row privacy-content budget with native
+export attempts/jobs and other private case content. Original phase indices and
+bounded concern cleanup remain unchanged. The obsolete pre-convergence export
+API, scripts and migrations are not restored.
+
+On this local combined tree, five catalogue/metadata/migration test records pass.
+The actual-component browser run is blocked by missing local UI dependencies
+(wouter, lucide-react, tailwind-merge and clsx); full local workspace typing is
+also blocked by missing dependencies. No PostgreSQL rerun or final combined CI
+success is asserted here. Earlier native/CI evidence remains tied to its recorded
+commit. This checkpoint does not grant publication, financial or release approval.

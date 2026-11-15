@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface WorkspaceDataExportAction {
-  /** @minimum 1 */
-  expectedVersion: number;
+export interface WorkspaceExportRequest {
+  requestKey: string;
 }

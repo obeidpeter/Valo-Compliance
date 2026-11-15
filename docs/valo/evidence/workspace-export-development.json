@@ -1,0 +1,113 @@
+{
+  "sourceCommit": "f72171180a8e25a7c428fc095dc044637edaa44e",
+  "recordedAt": "2026-11-15T00:41:54.751Z",
+  "kind": "development engineering, not formal 80/60/60 or production acceptance",
+  "results": {
+    "newIntegration": {
+      "tests": 10,
+      "passed": 10,
+      "failed": 0
+    },
+    "relatedRegressions": {
+      "tests": 43,
+      "passed": 43,
+      "failed": 0
+    },
+    "browser": {
+      "passed": true,
+      "checks": 9,
+      "scope": "Actual component with controlled HTTP/cookie fixture; no production identity, database or full-app layout test.",
+      "checksExecuted": [
+        "6001-row >8MB native attachment; small metadata only; keyboard/mobile; no export fetch/Blob/object URL/JSON parsing",
+        "cancel: cancelled preparation before attachment headers",
+        "unmount: cancelled preparation before attachment headers",
+        "account: cancelled preparation before attachment headers",
+        "reload: cancelled preparation before attachment headers",
+        "bounded timeout has no completion claim and aborts preparation",
+        "unauthorized: bounded readable error, no raw response or download-success claim",
+        "forbidden: bounded readable error, no raw response or download-success claim",
+        "oversized-error: bounded readable error, no raw response or download-success claim"
+      ]
+    },
+    "typecheck": "passed",
+    "nextProductionBuild": "passed"
+  },
+  "measurements": {
+    "startedAt": "2026-11-15T00:38:40.257Z",
+    "finishedAt": "2026-11-15T00:38:58.589Z",
+    "measurements": [
+      {
+        "boundary": "disconnect",
+        "elapsedMs": 49,
+        "activityRowsAtStop": 500,
+        "scratchRemoved": true
+      },
+      {
+        "boundary": "complete native private result",
+        "bytes": 11797601,
+        "sourceRows": 5001,
+        "checksum": "b8b9feceaa09749c7cca472b5d56037724899ba70d8216065947cd03ad280d91",
+        "snapshotAt": "2026-11-15T00:38:41.613Z"
+      },
+      {
+        "boundary": "membership revocation commit",
+        "elapsedMs": 3
+      }
+    ],
+    "realNativePrivateStorage": true,
+    "sourceRows": 5001,
+    "minimumBytes": 8000000,
+    "actualHttpDisconnect": true,
+    "realProcessSigkill": true,
+    "leaseExpiry": "owned fixture clock advanced",
+    "realManagedProviderSession": false,
+    "controlledIdentityReader": true,
+    "externalMessages": 0,
+    "inferenceCalls": 0,
+    "productionProof": false
+  },
+  "logs": {
+    "integration": {
+      "path": "docs/valo/evidence/workspace-export/integration.txt",
+      "sha256": "7ce66cd28797d6b8b464d29afd64fff8bf34ffbb9cfc926bbd6d28b8f5f7313c"
+    },
+    "regressions": {
+      "path": "docs/valo/evidence/workspace-export/regressions.txt",
+      "sha256": "7007c98714bd929bb42cbfcff7102f56b67e542c186a21565b166cac7675824e"
+    },
+    "browser": {
+      "path": "docs/valo/evidence/workspace-export/browser.txt",
+      "sha256": "ed7e6eb923a9a79add9c2c5fbb4db6e8541840acbcdfefbb412f03dba9642979"
+    },
+    "typecheck": {
+      "path": "docs/valo/evidence/workspace-export/typecheck.txt",
+      "sha256": "ba0130e4c1ce10c9b900b86bd79da6c401689a632c20277ec7a959204618f331"
+    },
+    "build": {
+      "path": "docs/valo/evidence/workspace-export/build.txt",
+      "sha256": "f8146da905756d1146283872c8af0ada9bdd856c62273f7d2db62428df2fdccc"
+    }
+  },
+  "sourceHashes": {
+    "artifacts/api-server/src/lib/valo-workspace-export-jobs.ts": "37e213e4f587f558bc82720a0e6fc59a1b830102845b818178a29baed06a506b",
+    "artifacts/api-server/src/lib/valo-workspace-export-http.ts": "6c140f689ff63f84d988c3ef7e55690f5cb319bc0fd8c9825552edb622199eb4",
+    "artifacts/api-server/src/lib/valo-workspace-export-storage.ts": "526e57d6222cb8da29922b134328257227eff102e9958e5757a83c1728e8c1b9",
+    "artifacts/api-server/src/lib/valo-customer-access.ts": "82b6753852cf7b5034a07ec98eeb9c27ac32e44c1dfa4330254b7b8e44b1a65d",
+    "artifacts/valo/src/components/workspace-data-download.tsx": "68a43b0480eb9f25b76a1ce28bbcfef389e04406fe6e7aa3537283d1da5df67b",
+    "lib/db/drizzle/0027_workspace_exports.sql": "a19d1116357efae1f70767258e45c63f4fec625abfed8e9d5de348f23b05c115",
+    "lib/db/drizzle/0028_workspace_export_cleanup.sql": "a563a03a462c653bdef98121ab7f5359dfdd8c33b4ce88eee83ecde73fcde339"
+  },
+  "correctionsRetained": [
+    "Initial cancellation assertion exposed status publication before local scratch cleanup. Local cleanup moved before status and remote delete; rerun passed.",
+    "Browser harness initially selected an unavailable /usr/bin/chromium; aligned with installed renderer executable and reran."
+  ],
+  "limitations": [
+    "Identity reader in HTTP races is controlled, not real Clerk session revocation.",
+    "SIGKILL is real; lease expiry was advanced only on its owned synthetic fixture, not measured as elapsed production recovery.",
+    "A failed preparation restarts a new dated consistent snapshot; completed artifacts support byte-range retrieval.",
+    "Scope excludes external processors, identity and private document file bytes; this is not complete privacy fulfilment.",
+    "Production deployment/recovery, 35-day retention, full accessibility, R1/R2 and formal acceptance remain unaccepted.",
+    "Public preview rendered at 360px; private signed-in full-app UI was not visually verified.",
+    "Preview retains HMR websocket 502 and Clerk development/structural-CSS warnings; no clean-console claim."
+  ]
+}

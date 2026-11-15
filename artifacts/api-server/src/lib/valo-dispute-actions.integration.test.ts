@@ -50,13 +50,14 @@ test("durable dispute intents: development PostgreSQL, controlled PSP and actual
     assert.ok(planned.result!.attemptChecksum,"exact upload checksum is durable before object PUT");
     return new Response(null,{status:204});}) as typeof fetch,
   ()=>true,()=>Date.parse("2026-11-14T12:00:00Z"));
-  async function fixture(status="awaiting-merchant-feedback",category="general"){
+  let concernActor=owner;
+  async function fixture(status="awaiting-merchant-feedback",category="general",customer=owner){
     const order=randomUUID(),providerId=String(++serial),transactionId=String(++serial);
-    await db.insert(valoOrders).values({id:order,workspaceId:owner.workspaceId,requestedBy:owner.identityId,requestKey:randomUUID(),priceId:price,
+    await db.insert(valoOrders).values({id:order,workspaceId:customer.workspaceId,requestedBy:customer.identityId,requestKey:randomUUID(),priceId:price,
       reference:"valo-test-"+order,amountKobo:10000,status:"verified_success",providerTransactionId:transactionId,
       line:{title:"Controlled purchase",contentVersionId:held.id,licenceVersion:"test-only",licenceText:"No live commercial approval.",taxTreatment:"No tax claim."}});
-    await db.insert(valoEntitlements).values({id:randomUUID(),workspaceId:owner.workspaceId,orderId:order,contentVersionId:held.id});
-    await db.insert(valoPurchaseOutbox).values({id:randomUUID(),workspaceId:owner.workspaceId,orderId:order});
+    await db.insert(valoEntitlements).values({id:randomUUID(),workspaceId:customer.workspaceId,orderId:order,contentVersionId:held.id});
+    await db.insert(valoPurchaseOutbox).values({id:randomUUID(),workspaceId:customer.workspaceId,orderId:order});
     const raw={id:providerId,domain:"test",status,resolution:null,refund_amount:null,currency:"NGN",category,
       updatedAt:new Date(Date.parse("2026-11-14T12:00:00Z")+(++stamp)*1000).toISOString(),
       transaction:{id:transactionId,domain:"test",reference:"valo-test-"+order,amount:10000,currency:"NGN"}};
@@ -137,7 +138,9 @@ test("durable dispute intents: development PostgreSQL, controlled PSP and actual
       await controlDisputeAction(actor,a.id,"reconcile",{acknowledgement:true,expectedVersion:(await row(a.id)).version},p);
       assert.equal((await row(a.id)).status,"observed");
       assert.equal((await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,f.order)))[0].status,"suspended");
-      assert.match((await row(a.id)).result!.observation,/final bank outcome not inferred/);
+      const observation=(await row(a.id)).result!.observation;
+      assert.match(observation,/Matching merchant financial effect seen in canonical state/);
+      assert.match(observation,/original transmission acknowledgement and final bank outcome are not inferred/);
     });
     await t.test("fraud decline binds the acknowledged receipt and exact customer evidence before preparation",async()=>{
       const f=await fixture("awaiting-merchant-feedback","fraud");
@@ -215,16 +218,18 @@ test("durable dispute intents: development PostgreSQL, controlled PSP and actual
       for(const u of unknown)assert.equal((await row(u.id)).status,"unknown");
     });
     await t.test("standalone customer concerns retain thread text, tenant privacy and safe exported financial status",async()=>{
-      const f=await fixture(),input={requestKey:randomUUID(),message:"A separate synthetic customer payment concern, not a bank dispute.",acknowledgement:true};
-      await assert.rejects(createPaymentConcern(other,f.order,input),{status:404});const c=await createPaymentConcern(owner,f.order,input);
-      assert.deepEqual(await createPaymentConcern(owner,f.order,input),c);
-      await assert.rejects(createPaymentConcern(owner,f.order,{...input,message:"Different synthetic details cannot reuse this concern key."}),{status:409});
+      concernActor=await resolveWorkspace("synthetic-dispute-concern-"+randomUUID());
+      const f=await fixture("awaiting-merchant-feedback","general",concernActor),input={requestKey:randomUUID(),message:"A separate synthetic customer payment concern, not a bank dispute.",acknowledgement:true};
+      await assert.rejects(createPaymentConcern(other,f.order,input),{status:404});const c=await createPaymentConcern(concernActor,f.order,input);
+      assert.deepEqual(await createPaymentConcern(concernActor,f.order,input),c);
+      await assert.rejects(createPaymentConcern(concernActor,f.order,{...input,message:"Different synthetic details cannot reuse this concern key."}),{status:409});
       const reply=await actOnPaymentConcern(actor,c.id,{expectedVersion:c.version,action:"request_information",message:"Please clarify this payment concern without sharing a private document."});
-      const next=await respondPaymentConcern(owner,c.id,{expectedVersion:reply.version,message:"Requested synthetic payment clarification is now provided."});
+      const next=await respondPaymentConcern(concernActor,c.id,{expectedVersion:reply.version,message:"Requested synthetic payment clarification is now provided."});
       assert.equal(next.message,input.message);assert.equal(next.history.length,3);assert.ok(next.history.some(x=>x.reason===reply.latestReply));
       assert.equal((await getWorkspaceDisputes(other)).concerns.length,0);
-      const exported=await workspaceDataExport(owner);assert.ok(JSON.stringify(exported).includes("Requested synthetic payment clarification"));
-      const rows=exported.data.disputeIntents as Record<string,unknown>[];assert.ok(rows.every(x=>!("claimToken" in x)&&!("authorisedBy" in x)&&!("payload" in x)));
+      await action(f,"merchant_decision",{resolution:"merchant-accepted",amountKobo:1000});
+      const exported=await workspaceDataExport(concernActor);assert.ok(JSON.stringify(exported).includes("Requested synthetic payment clarification"));
+      const rows=exported.data.disputeIntents as Record<string,unknown>[];assert.ok(rows.length>0,"projection exercises a persisted financial intent");assert.ok(rows.every(x=>!("claimToken" in x)&&!("authorisedBy" in x)&&!("payload" in x)));
     });
     await t.test("saved action requires separate acknowledgement, hold revision and immutable payload",async()=>{
       const f=await fixture(),a=await action(f,"merchant_decision",{resolution:"merchant-accepted",amountKobo:1000});
@@ -271,7 +276,7 @@ test("durable dispute intents: development PostgreSQL, controlled PSP and actual
       const counts=[];for(let n=0;n<4;n++){const result=await db.transaction(tx=>eraseSupportContentBatch(tx,fresh.workspaceId));counts.push(result.rowCount);if(result.rowCount<100)break;}
       assert.deepEqual(counts,[100,100,3]);assert.equal((await db.select().from(valoConcernMessages).where(eq(valoConcernMessages.workspaceId,fresh.workspaceId))).length,0);
       const after=await db.select().from(valoPaymentConcerns).where(eq(valoPaymentConcerns.workspaceId,fresh.workspaceId));assert.ok(after.every(c=>c.message.includes("removed by verified workspace erasure")&&c.latestReply===null));
-      assert.ok((await getWorkspaceDisputes(owner)).concerns.some(c=>c.message.includes("separate synthetic")),"other workspace content unchanged");
+      assert.ok((await getWorkspaceDisputes(concernActor)).concerns.some(c=>c.message.includes("separate synthetic")),"other workspace content unchanged");
       assert.equal((await db.select().from(valoPaymentConcernEvents).where(eq(valoPaymentConcernEvents.workspaceId,fresh.workspaceId))).length,101,"immutable metadata remains");
     });
     await t.test("awaiting canonical labels cannot establish an observed financial decision",async()=>{

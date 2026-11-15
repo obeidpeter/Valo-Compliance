@@ -187,22 +187,36 @@
     {
       "idx": 26,
       "version": "7",
-      "when": 1794703000000,
-      "tag": "0027_workspace_data_exports",
+      "when": 1794702000002,
+      "tag": "0027_workspace_exports",
       "breakpoints": true
     },
     {
       "idx": 27,
       "version": "7",
-      "when": 1794703000001,
-      "tag": "0028_dispute_convergence",
+      "when": 1794702000003,
+      "tag": "0028_workspace_export_cleanup",
       "breakpoints": true
     },
     {
       "idx": 28,
       "version": "7",
+      "when": 1794703000000,
+      "tag": "0029_workspace_export_convergence",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794703000001,
+      "tag": "0030_dispute_convergence",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
       "when": 1794703000003,
-      "tag": "0030_saved_templates",
+      "tag": "0032_saved_templates",
       "breakpoints": true
     }
   ]

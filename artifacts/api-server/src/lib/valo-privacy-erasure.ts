@@ -4,7 +4,7 @@ import {logger} from "./logger";
 import {withPrivacyCaseLock,ErasureLockBusyError} from "./valo-erasure-lock";
 import {and,eq,ne,sql,lte,asc} from "drizzle-orm";
 import {db,valoPrivacyCases,valoPrivacyTombstones,valoPrivacyEvents,valoWorkspaces,valoMemberships,valoExportJobs,
-  valoExportObjects,valoWorkspaceExports} from "@workspace/db";
+  valoExportObjects} from "@workspace/db";
 import {ActOnStaffPrivacyCaseBody} from "@workspace/api-zod";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import {deletePrivateFile} from "./valo-private-storage";
@@ -14,6 +14,7 @@ import {assertErasureObjectScope,inventoryHasher,signErasureSeal,verifyErasureSe
   assertSealedInventory,startReplay,signReplayState,verifyReplayState,type ErasureSeal,type ReplayState} from "./valo-erasure-seal";
 import {ValoProblem} from "./valo-problem";
 import {cancelUnsentDisputeWork} from "./valo-dispute-actions";
+import {retireWorkspaceExports} from "./valo-workspace-export-jobs";
 import {assertPrivacyVersion} from "./valo-privacy-state";
 import {readPrivacyCase,requirePrivacyStaff,privacyChange,privacyDetail,type PrivacyStaffActor,type PrivacyRow} from "./valo-privacy";
 
@@ -118,14 +119,21 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
   if(section==="purchase_notifications")return holdUnsentPrivacyNotifications(tx,workspaceId);
   if(section==="support_content")return eraseSupportContentBatch(tx,workspaceId);
   if(section==="privacy_content"){
-    // Preserve the signed historical phase indices. Replays also remove saved
-    // metadata added after the original erasure engine was introduced.
+    // Preserve historical signed phase indices and one shared 100-row budget.
+    // Exact native export object keys are sealed before customer metadata goes.
     const saved=await tx.execute(sql`DELETE FROM valo_saved_templates WHERE ctid IN
       (SELECT ctid FROM valo_saved_templates WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
-    const remaining=100-(saved.rowCount??0);
-    if(!remaining)return saved;
+    let used=saved.rowCount??0;
+    if(used<100){const removedAttempts=await tx.execute(sql`DELETE FROM valo_workspace_export_attempts WHERE ctid IN
+      (SELECT ctid FROM valo_workspace_export_attempts WHERE workspace_id=${workspaceId}::uuid LIMIT ${100-used})`);
+      used+=removedAttempts.rowCount??0;}
+    if(used<100){const removedJobs=await tx.execute(sql`DELETE FROM valo_workspace_exports WHERE ctid IN
+      (SELECT ctid FROM valo_workspace_exports j WHERE workspace_id=${workspaceId}::uuid
+       AND NOT EXISTS (SELECT 1 FROM valo_workspace_export_attempts a WHERE a.job_id=j.id) LIMIT ${100-used})`);
+      used+=removedJobs.rowCount??0;}
+    if(used===100)return{rowCount:used};
     const rows=await tx.select().from(valoPrivacyCases).where(and(eq(valoPrivacyCases.workspaceId,workspaceId),
-      ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(remaining).for("update");
+      ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100-used).for("update");
     for(const target of rows){
       const checked=await readPrivacyCase(tx,target.id);
       await privacyChange(tx,checked,{identityId:"service:privacy-erasure",type:"worker"},"private_content_removed",
@@ -133,20 +141,12 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
           message:removedMessage,resultJson:null,resultScope:"Private prepared content removed by verified workspace erasure.",
         });
     }
-    return{rowCount:(saved.rowCount??0)+rows.length};
+    return{rowCount:used+rows.length};
   }
   if(section==="valo_ai_drafts")return tx.execute(sql`UPDATE valo_ai_drafts SET preview='{}'::jsonb,plan=NULL,
     accepted_document_id=NULL,status='privacy_erased',updated_at=now()
     WHERE ctid IN (SELECT ctid FROM valo_ai_drafts WHERE workspace_id=${workspaceId}::uuid
     AND status<>'privacy_erased' LIMIT 100)`);
-  if(section==="valo_export_jobs"){
-    const workspaceJobs=await tx.execute(sql`DELETE FROM valo_workspace_exports WHERE ctid IN
-      (SELECT ctid FROM valo_workspace_exports WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
-    const removed=workspaceJobs.rowCount??0;
-    const documentJobs=removed<100?await tx.execute(sql`DELETE FROM valo_export_jobs WHERE ctid IN
-      (SELECT ctid FROM valo_export_jobs WHERE workspace_id=${workspaceId}::uuid LIMIT ${100-removed})`):{rowCount:0};
-    return{rowCount:removed+(documentJobs.rowCount??0)};
-  }
   const table=sql.identifier(section);
   return tx.execute(sql`DELETE FROM ${table} WHERE ctid IN
     (SELECT ctid FROM ${table} WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
@@ -219,9 +219,7 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
     const journal=await readTombstone(tx,id);await privacySigner(tx);
     let next=start.phase,detail="Private-object deletion remains pending; failed keys are retryable.";
     if(start.phase==="quarantined"){
-      await tx.update(valoWorkspaceExports).set({status:"cancelled",queueId:randomUUID(),errorCode:"PRIVACY_ERASURE",
-        version:sql`${valoWorkspaceExports.version}+1`,leaseExpiresAt:null,updatedAt:new Date()})
-        .where(eq(valoWorkspaceExports.workspaceId,row.workspaceId));
+      await retireWorkspaceExports(tx,row.workspaceId);
       await tx.update(valoExportJobs).set({status:"failed",queueId:randomUUID(),errorCode:"PRIVACY_ERASURE",
         updatedAt:new Date()}).where(eq(valoExportJobs.workspaceId,row.workspaceId));
       await tx.update(valoExportObjects).set({state:"cleanup"}).where(eq(valoExportObjects.workspaceId,row.workspaceId));
@@ -229,6 +227,7 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
       await tx.execute(sql`INSERT INTO valo_privacy_erasure_objects(workspace_id,case_id,object_key)
         SELECT workspace_id,${row.id}::uuid,object_key FROM valo_export_objects WHERE workspace_id=${row.workspaceId}::uuid
         UNION SELECT workspace_id,${row.id}::uuid,object_key FROM valo_file_assets WHERE workspace_id=${row.workspaceId}::uuid
+        UNION SELECT workspace_id,${row.id}::uuid,object_key FROM valo_workspace_export_attempts WHERE workspace_id=${row.workspaceId}::uuid
         ON CONFLICT DO NOTHING`);
       const exact=await inventory(tx,journal.t);
       await tx.update(valoPrivacyTombstones).set({erasureSeal:await signSeal(tx,{...journal.seal,

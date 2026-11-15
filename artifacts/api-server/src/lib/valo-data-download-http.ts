@@ -7,13 +7,14 @@ import {withWorkspaceDataFile} from "./valo-data-download";
 import {assertWorkspaceDownloadSession} from "./valo-download-session";
 import type {WorkspaceActor} from "./valo-store";
 
-const liveSession=async(req:Request,actor:WorkspaceActor)=>assertWorkspaceDownloadSession(actor,getAuth(req),{
+const liveSession=async(req:Request,actor:WorkspaceActor,_phase?:"preparation"|"release")=>assertWorkspaceDownloadSession(actor,getAuth(req),{
   session:id=>clerkClient.sessions.getSession(id),user:id=>clerkClient.users.getUser(id),
 });
 
 /** The override is a server-owned identity dependency for controlled HTTP tests;
  * the production route always uses the live managed-session reader above. */
-export function makeWorkspaceDataDownloadHandler(revalidate:typeof liveSession=liveSession){
+export function makeWorkspaceDataDownloadHandler(revalidate:typeof liveSession=liveSession,
+  onPage?:(section:string,rows:number)=>Promise<void>){
   return async(req:Request,res:Response)=>{
     const actor={...res.locals.valoActor};
     const controller=new AbortController();
@@ -27,7 +28,8 @@ export function makeWorkspaceDataDownloadHandler(revalidate:typeof liveSession=l
         res.set({"Content-Disposition":'attachment; filename="valo-workspace-data.json"',
           "Content-Type":"application/json; charset=utf-8","Content-Length":String(file.size)});
         await pipeline(createReadStream(path),res,{signal:controller.signal});
-      },{signal:controller.signal,beforeRelease:()=>revalidate(req,actor)});
+      },{signal:controller.signal,beforeRelease:()=>revalidate(req,actor,"release"),
+        duringPreparation:async(section,rows)=>{await revalidate(req,actor,"preparation");await onPage?.(section,rows);}});
     }catch(error){
       // A disconnected browser cannot receive an error response; cleanup still ran.
       if(!controller.signal.aborted)throw error;

@@ -3,7 +3,8 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {db} from "@workspace/db";
 import {workspaceDataExport} from "./valo-customer-access";
-import {authorizeWorkspaceWrite,type WorkspaceActor} from "./valo-store";
+import {authorizeWorkspaceRead,type WorkspaceActor} from "./valo-store";
+import {abortable} from "./valo-abort";
 
 /** Build a complete snapshot before sending headers. Private scratch bytes are
  * removed on success, denied authorization, reader failure or client disconnect.
@@ -12,6 +13,7 @@ export async function withWorkspaceDataFile<T>(actor:WorkspaceActor,consume:(pat
   signal?:AbortSignal;
   /** Server-owned live-session check, after preparation and before the final DB guard. */
   beforeRelease?:()=>Promise<void>;
+  duringPreparation?:(section:string,rows:number)=>Promise<void>;
 }={}){
   const {signal,beforeRelease}=options;
   signal?.throwIfAborted();
@@ -22,13 +24,13 @@ export async function withWorkspaceDataFile<T>(actor:WorkspaceActor,consume:(pat
     try{
       await workspaceDataExport(actor,async chunk=>{
         signal?.throwIfAborted();await file.writeFile(chunk,"utf8");
-      },signal);
+      },signal,options.duringPreparation);
     }finally{await file.close();}
     signal?.throwIfAborted();
-    await beforeRelease?.();
+    await abortable(signal,async()=>{await beforeRelease?.();});
     signal?.throwIfAborted();
     // Do not release a completed snapshot to a membership revoked while it built.
-    await db.transaction(async tx=>{await authorizeWorkspaceWrite(tx,actor);});
+    await db.transaction(async tx=>{await authorizeWorkspaceRead(tx,actor);});
     signal?.throwIfAborted();
     return await consume(path);
   }finally{await rm(directory,{recursive:true,force:true});}

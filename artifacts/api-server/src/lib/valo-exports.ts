@@ -1,3 +1,4 @@
+import {reconcileExportOrphans} from "./valo-export-recovery";
 import {serializeRevision} from "./valo-revision-codec";
 import { randomUUID } from "node:crypto";
 import { and, eq, ne, desc } from "drizzle-orm";
@@ -173,10 +174,7 @@ export async function executeExport(id: string, workspaceId: string, queueId: st
       // releasing job/object locks so cleanup cannot introduce the reverse order.
       if(cleanup.privacy)await db.update(valoPrivacyTombstones).set({nextReplayAt:new Date()})
         .where(eq(valoPrivacyTombstones.workspaceId,workspaceId));
-      if(cleanup.cleanup){
-        const {reconcileExportOrphans}=await import("./valo-export-recovery");
-        await reconcileExportOrphans(id,storage.remove);
-      }
+      if(cleanup.cleanup)try{await reconcileExportOrphans(id,storage.remove);}catch{/* Recorded holds and retryable journals remain authoritative. */}
   };
   try {
     await onStage?.("claimed");

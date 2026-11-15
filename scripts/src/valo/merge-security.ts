@@ -46,7 +46,7 @@ try{
     "--no-banner","--redact=100","--report-format=json","--report-path",secretPath]);
   if(![0,1].includes(secrets.code))throw Error("SECRET_SCANNER_EXECUTION_FAILED");
   const findings=JSON.parse(await readFile(secretPath,"utf8")),remaining=withoutVerifiedSourceHashFindings(findings);
-  report.reviewedSourceHashExceptions={count:findings.length-remaining.length,scope:"Two exact immutable source-binding findings independently verified; no general hash/path exclusion"};
+  report.reviewedSourceHashExceptions={count:findings.length-remaining.length,scope:"Exact immutable source-binding findings independently verified; no general hash/path exclusion"};
   report.secrets=secretSummary(remaining);
   report.passed=(report.dependencies as {status:string}).status==="pass"&&(report.secrets as {status:string}).status==="pass";
 }catch{
