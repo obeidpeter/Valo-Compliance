@@ -32,7 +32,9 @@ and external processor copies as unresolved rather than falsely erased.
 A database restored to a point before deletion cannot contain a later
 tombstone by itself. Recovery needs a separately preserved, authenticated
 post-cutoff deletion journal, imported and replayed before restored access is
-opened. Re-delete private objects, including delayed writes, after restoring
+opened. Keep its verification key outside the journal payload; a payload that
+supplies its own verification key cannot establish independent authority.
+Re-delete private objects, including delayed writes, after restoring
 both the database and its object storage.
 
 **Why:** A local restore drill proves neither managed backups nor resurrection

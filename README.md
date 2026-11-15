@@ -2,7 +2,7 @@
 
 ## Latest application checkpoint — private-copy erasure and scoped exports
 
-Saved application: `37ebcc9`, including the privacy/export implementation in
+Saved application: `96efe764e977cae7299f44b2e4ad26ed62432617`, including the privacy/export implementation in
 `2eb03d0`, CI prerequisite/scan-disposition follow-up `453969b`, and orphaned
 queue payload / conflicting-ownership protection. All were pushed
 normally to the existing private development branch and draft PR2.
@@ -19,14 +19,34 @@ canaries. These are **not** formal 80/60/60 acceptance or complete privacy
 fulfilment. The initial CI run failed; prerequisite fixes are committed, but
 no green GitHub result is claimed here.
 
-Important remaining implementation includes physical re-erasure after an
-older-snapshot restore with independently preserved controls/witnesses.
+The isolated development restore now physically re-erases restored application
+rows and local fixture objects using separately retained authenticated receipts.
+It rejects a changed sealed receipt with a complete transaction rollback, holds
+on storage failure, resumes after an observed SIGKILL immediately after object
+deletion, preserves other tenants, and prevents deleted/revoked identity
+recreation. Actual elapsed time: 63,927 ms total; restore/validation 33,528 ms;
+recovery cutoff age 40,874 ms. This is not production or App Storage restore proof.
+
+Additional selected checks: 177 foundation/traceability tests, 45 runtime/account-boundary tests, six private-copy/
+scratch-cursor regressions and 15 customer-access/isolation tests passed. The
+configured and unconfigured HTTP suites each passed 18 tests with one explicitly
+inapplicable case skipped; these results are not additive formal acceptance
+counts. Earlier failed restore attempts remain retained beside the final result.
+GitHub at `96efe76` passed foundation, static and dependency/secret checks but
+failed an obsolete export-disclosure assertion; its correction passed all 15
+local access tests. The subsequent evidence/test update triggers a fresh run;
+its result must be checked before claiming the entire workflow passed.
+
+Remaining gaps include production/managed-object recovery, supported 35-day
+retention, adoption of older unsigned/quarantine-only journals and field-level
+retention/processor outcomes.
 The development schema's legacy migration journal is empty; no old migration
 executions were fabricated. Retention/processor outcomes, production recovery,
 full R1/R2 and launch remain unaccepted. No new inference, external message,
 real merchant action, spending approval or launch occurred.
 
 See [exact scope, test commands and remaining gaps](docs/valo/privacy-copy-checkpoint.md).
+See [physical restore evidence and limitations](docs/valo/physical-recovery-checkpoint.md).
 
 ## Previous application checkpoint — finite inference controls and exact export proof
 

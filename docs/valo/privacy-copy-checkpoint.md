@@ -1,3 +1,11 @@
+# Update after the original checkpoint
+
+The application subsequently advanced to `96efe76`. Physical older-snapshot
+replay is no longer quarantine-only in the isolated development harness.
+See [the actual restore, crash and access evidence](physical-recovery-checkpoint.md).
+The original checkpoint below remains historical; its production, processor,
+retention and full-product acceptance limitations still apply.
+
 # Private-copy erasure and scoped export checkpoint
 
 ## Saved source and boundaries
