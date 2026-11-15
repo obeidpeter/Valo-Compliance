@@ -7,6 +7,7 @@ import {join,resolve} from "node:path";
 import {randomBytes} from "node:crypto";
 import assert from "node:assert/strict";
 import {dependencySummary,secretSummary} from "./security-reports";
+import {verifyHistoricalDigestDispositions} from "./merge-security-dispositions";
 const exec=promisify(execFile),root=resolve(import.meta.dirname,"../../../");
 const dir=await mkdtemp(join(tmpdir(),"valo-scan-"));
 const run=async(command:string,args:string[],cwd=root)=>{
@@ -16,6 +17,7 @@ const run=async(command:string,args:string[],cwd=root)=>{
 const report:Record<string,unknown>={recordedAt:new Date().toISOString(),scope:"tracked full Git history and frozen-lock dependency audit",
   rawSecretsRetained:false,detectorCanaries:false};
 try{
+  report.historicalDigestDispositions=await verifyHistoricalDigestDispositions(root);
   // Generated locally, never a valid issued credential, never committed/printed.
   const canary="sk_"+"live_"+randomBytes(24).toString("hex");
   await writeFile(join(dir,"canary.txt"),`payment_key = "${canary}"\n`,{mode:0o600});

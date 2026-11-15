@@ -2,12 +2,14 @@ import { getConstructionPlans } from "pg-boss";
 import { readFile, writeFile } from "node:fs/promises";
 import { pool } from "@workspace/db";
 import { exportQueue, EXPORT_QUEUE } from "../lib/valo-export-queue";
+import {assertDevelopmentRuntime} from "../lib/valo-development-runtime";
 const sqlPath = new URL("../../../../lib/db/drizzle/pg-boss-development.sql", import.meta.url);
 try {
   if (process.argv[2] === "generate") {
     await writeFile(sqlPath, getConstructionPlans("valo_jobs"));
     console.log("Generated pinned pg-boss development construction SQL; review before applying.");
   } else {
+    assertDevelopmentRuntime();
     if (process.argv[2] !== "apply-development" || process.env.NODE_ENV === "production" ||
       process.env.VALO_DEV_QUEUE_MIGRATION !== "reviewed-synthetic-development")
       throw new Error("DEVELOPMENT_MIGRATION_GUARD");

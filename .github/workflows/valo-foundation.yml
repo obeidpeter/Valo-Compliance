@@ -99,8 +99,6 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-rich-checker
       - name: Prove signed erasure inventory and isolated lock controls
         run: pnpm --filter @workspace/api-server test:valo-erasure-controls
-      - name: Prove dispute HTTP and transport controls without merchant calls
-        run: pnpm --filter @workspace/api-server test:valo-disputes
       - name: Run foundation unit tests
         run: pnpm --filter @workspace/scripts test:valo
       - name: Install standard PDF readers
@@ -186,6 +184,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Apply tracked migrations to empty synthetic database
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
+      - name: Install reviewed durable queue before payload and erasure tests
+        run: NODE_ENV=development VALO_DEV_QUEUE_MIGRATION=reviewed-synthetic-development pnpm --filter @workspace/api-server exec tsx src/scripts/queue-migration.ts apply-development
+      - name: Prove dispute HTTP and transport controls without merchant calls
+        run: pnpm --filter @workspace/api-server test:valo-disputes
       - name: Prove paged workspace attachment, final authorization and disconnect cleanup
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-db
       - name: Prove current-rule task guards against synthetic PostgreSQL
