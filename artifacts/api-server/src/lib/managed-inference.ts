@@ -2,7 +2,7 @@ import {AsyncLocalStorage} from "node:async_hooks";
 import {inferenceProposal,type BudgetLane} from "./inference-budget";
 import type {FiniteInferenceDispatcher} from "./inference-batch-dispatch";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
-import {createManagedSDKTransport,type ManagedSDKClient} from "./managed-sdk-transport";
+import type {ManagedSDKClient} from "./managed-sdk-transport";
 export type ManagedRequest={model:string;max_completion_tokens?:number;messages:readonly unknown[];
   response_format?:unknown;stream?:boolean;tools?:unknown[];n?:number;tool_choice?:unknown};
 export class InferenceHeld extends Error{
@@ -29,8 +29,9 @@ async function dispatcher(){
   requireDevelopment();
   const composed=active.getStore();if(composed)return composed;
   runtime??=(async()=>{
-    const[{pool},{InferenceBudgetStore},{FiniteInferenceDispatcher},{assertFiniteWorkBindings}]=await Promise.all([
-      import("@workspace/db"),import("./inference-budget-store"),import("./inference-batch-dispatch"),import("./inference-work-bindings")]);
+    const[{pool},{InferenceBudgetStore},{FiniteInferenceDispatcher},{assertFiniteWorkBindings},{createManagedSDKTransport}]=await Promise.all([
+      import("@workspace/db"),import("./inference-budget-store"),import("./inference-batch-dispatch"),import("./inference-work-bindings"),
+      import("./managed-sdk-transport")]);
     return new FiniteInferenceDispatcher(new InferenceBudgetStore(pool,"public","additional-new"),createManagedSDKTransport(async()=>{
       const {openai}=await import("@workspace/integrations-openai-ai-server");
       return openai as unknown as ManagedSDKClient;

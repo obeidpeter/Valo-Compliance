@@ -91,6 +91,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
+      - name: Prove unit imports and disabled inference need no database or native storage
+        run: pnpm --filter @workspace/api-server exec tsx --test src/lib/inference-no-database.test.ts
       - name: Prove workspace download release requires the current session
         run: pnpm --filter @workspace/api-server test:valo-workspace-download
       - name: Prove finite inference scope, actual callers and disabled entry without network
@@ -203,7 +205,11 @@ jobs:
       - name: Prove current-rule task guards against synthetic PostgreSQL
         run: pnpm --filter @workspace/api-server test:valo-task-source-guard
       - name: Prove synthetic erasure holds, late-upload races and bounded recovery
-        run: pnpm --filter @workspace/api-server test:valo-erasure-db
+        run: pnpm --filter @workspace/api-server test:valo-erasure-portable-db
+        env:
+          PRIVATE_OBJECT_DIR: ""
+          DEFAULT_OBJECT_STORAGE_BUCKET_ID: ""
+          PUBLIC_OBJECT_SEARCH_PATHS: ""
       - name: Install Chromium and independent PDF reader before actual render proofs
         run: |
           sudo apt-get update

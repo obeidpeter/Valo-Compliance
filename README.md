@@ -2,6 +2,14 @@
 
 ## Latest application unit — usable disabled inference budget and reconciliation
 
+**CI boundary follow-up:** credential-free foundation execution passed **201
+tests with one existing skip**. Three explicit no-database/zero-dispatch/storage
+canary checks and all 55 finite controls passed. Portable erasure passed **18
+checks with one explicitly native-only skip**, with every native storage operation
+forbidden by a detector; a separate Replit-native run passed **11 checks**.
+See [CI import and storage boundary evidence](docs/valo/finite-ci-import-storage-repair.md).
+Spending remains disabled; none of these are formal 80/60/60 acceptance.
+
 **Independent-review correction:** every new transport admission rechecks the
 locked financial holds, including previously reserved work. Actual operational
 reviews use blind, distinct role contexts with sequential admission; whole-review
