@@ -91,10 +91,10 @@ export function ContentEscalations({onDirtyChange}: {onDirtyChange?: (dirty: boo
       <div><h4 className="text-sm font-semibold">Referral reason</h4><p className="mt-2 whitespace-pre-wrap text-sm [overflow-wrap:anywhere]">{row.reason}</p></div>
       {!current && <p className="text-sm" role="status">This referral is no longer present on the current page. Operations are disabled. Discard any unsaved triage reason before choosing another page.</p>}
       {row.status === 'resolved' ? <p className="rounded-xl bg-secondary p-3 text-sm">This triage item is resolved. No further triage operations are available here. Closure does not release content or establish publication eligibility.</p> : <>
-        <label className="grid gap-2 text-sm" htmlFor="content-referral-reason">Triage reason and relevant evidence
+        <div className="grid gap-2 text-sm"><label htmlFor="content-referral-reason">Triage reason and relevant evidence</label>
           <textarea id="content-referral-reason" className="field min-h-28" value={body} onChange={e => {setBody(e.target.value); setSaved('');}}
             disabled={mutation.isPending || uncertain} minLength={8} maxLength={4000} aria-describedby="content-referral-reason-hint"/>
-        </label>
+        </div>
         <p id="content-referral-reason-hint" className="text-xs text-muted-foreground">8–4,000 characters. Record the content issue and triage decision. Do not copy personal complaint details into source audit notes.</p>
         <p className="rounded-xl bg-secondary p-3 text-sm">“Hold version and queue reassessment” changes the exact referred version's safety state. Reassessment stays queued; this action does not dispatch AI or approve publication.</p>
         <div className="flex flex-wrap gap-3">

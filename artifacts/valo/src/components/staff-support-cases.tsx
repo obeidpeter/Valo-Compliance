@@ -82,12 +82,12 @@ export function StaffSupportCases({onDirtyChange}: {onDirtyChange?: (dirty: bool
     <h2 id="staff-support-heading" className="font-display text-3xl">Support case operations</h2>
     <p className="mt-2 max-w-3xl text-sm text-muted-foreground">Assignment, portal replies, resolution and content-review referrals are recorded here. Each operation requires an active support role and recent multi-factor verification.</p>
     <div className="mt-5 flex flex-wrap items-end gap-3">
-      <label className="grid gap-2 text-sm" htmlFor="support-status-filter">Case status
+      <div className="grid gap-2 text-sm"><label htmlFor="support-status-filter">Case status</label>
         <select id="support-status-filter" className="field" value={status} disabled={dirty || list.isFetching}
           onChange={e => {setStatus(e.target.value as SupportStatus | 'all'); setPage(1); setSelected(null); discard();}}>
           {statuses.map(value => <option key={value} value={value}>{value === 'all' ? 'All cases' : value.replaceAll('_', ' ')}</option>)}
         </select>
-      </label>
+      </div>
       <button type="button" className="btn btn-ghost btn-sm" disabled={list.isFetching || mutation.isPending} onClick={() => void list.refetch()}>Refresh support queue</button>
     </div>
     {list.isLoading && <p role="status" className="mt-5">Loading support cases…</p>}
@@ -170,10 +170,10 @@ export function StaffSupportCases({onDirtyChange}: {onDirtyChange?: (dirty: bool
             {!assignees.isLoading && !assignees.isError && !assignees.data?.assignees.length && <p className="text-sm">No active support identities were returned. Assignment is unavailable.</p>}
             <p className="text-xs text-muted-foreground">Only existing active support identities can be assigned. This does not grant a staff role.</p>
           </div> : <>
-            <label className="grid gap-2 text-sm" htmlFor="support-operation-body">{action === 'reply' ? row.sourceKind === 'access' ? 'Reply text to save internally' : 'Reply for the customer portal' : 'Reason and relevant scope'}
+            <div className="grid gap-2 text-sm"><label htmlFor="support-operation-body">{action === 'reply' ? row.sourceKind === 'access' ? 'Reply text to save internally' : 'Reply for the customer portal' : 'Reason and relevant scope'}</label>
               <textarea id="support-operation-body" className="field min-h-32" value={body} onChange={e => setBody(e.target.value)}
                 disabled={fieldsLocked} required minLength={8} maxLength={4000} aria-describedby="support-operation-body-hint"/>
-            </label>
+            </div>
             <p id="support-operation-body-hint" className="text-xs text-muted-foreground">8–4,000 characters. Do not add passwords, payment credentials or identity documents.
               {action === 'reply' && (row.sourceKind === 'access' ? ' This anonymous case has no customer portal. The reply is stored internally and is not sent to the email address.' : ' This reply appears in the signed-in customer portal. It is not emailed.')}</p>
           </>}
@@ -183,10 +183,10 @@ export function StaffSupportCases({onDirtyChange}: {onDirtyChange?: (dirty: bool
                 <option value="content">Content record</option><option value="rule">Rule record</option>
               </select>
             </div>
-            <label className="grid gap-2 text-sm" htmlFor="support-target-id">Existing target record UUID
+            <div className="grid gap-2 text-sm"><label htmlFor="support-target-id">Existing target record UUID</label>
               <input id="support-target-id" className="field font-mono text-sm" value={targetId} onChange={e => setTargetId(e.target.value)} disabled={fieldsLocked} required
                 autoComplete="off" maxLength={36} pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"/>
-            </label>
+            </div>
             <p className="rounded-xl bg-secondary p-3 text-sm">Internal content triage creates a queue item for authorised content staff. Include only the issue and relevant version details; leave out contact details and private document text. This does not share externally, contact an adviser, place a hold or change publication.</p>
           </>}
           {!mayEscalate && <p className="text-xs text-muted-foreground">Internal content triage is available for workspace cases. Anonymous account-access cases cannot use this path.</p>}
