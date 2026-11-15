@@ -44,3 +44,14 @@ prevention unless it includes the deletion events absent from the old backup.
 revocation events into the isolated restore, and verify tenant/object scope
 before opening customer traffic. Do not call a local replay production RPO/RTO
 evidence.
+
+Treat missing historical privacy keys as a containment condition, not permission
+to treat an old identity as a new customer. Key rotation must preserve audit
+verification and deletion-identity matching.
+
+**Why:** The user repeatedly required old restored memberships to remain
+quarantined across rotation, with explicit holds when historical keys are absent.
+
+**How to apply:** Sign new records with the current version; verify old records
+with their pinned historical versions before any destructive dispatch or access
+provisioning. Never silently fall back to the current session secret.

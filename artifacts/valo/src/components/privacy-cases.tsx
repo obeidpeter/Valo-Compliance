@@ -12,7 +12,7 @@ export function PrivacyCases(){
   return <section className="mt-8" aria-labelledby="privacy-cases-heading">
     <h2 id="privacy-cases-heading" className="font-display text-2xl">Request processing and results</h2>
     <p className="mt-2 text-sm text-muted-foreground">Verification, assignment and preparation are separate steps. A received or partially fulfilled request is not a confirmed deletion or complete provider-wide export.</p>
-    <p className="mt-2 text-sm text-muted-foreground">Up to 100 recent requests are shown. You can read and answer your own requests after workspace access is quarantined; this does not restore business-data access.</p>
+    <p className="mt-2 text-sm text-muted-foreground">Up to 100 recent requests are shown. You can read and answer your own requests after workspace access is restricted for deletion; this does not restore business-data access.</p>
     {cases.isLoading&&<p role="status" className="mt-4">Loading your requests…</p>}
     {cases.isError&&<ErrorState error={cases.error} onRetry={()=>cases.refetch()}/>}
     {cases.data?.length===0&&<p className="mt-4 text-sm text-muted-foreground">No structured privacy requests yet. Older support-only requests remain listed separately.</p>}
@@ -39,7 +39,8 @@ function PrivacyCaseCard({request,onChanged,replyText,onReplyText}:{request:Priv
   const respond=useRespondPrivacyCase({mutation:{onSuccess:async()=>{onReplyText("");await refresh();}}});
   const row=detail.data?.request??request,busy=verify.isPending||cancel.isPending||respond.isPending;
   const mayVerify=!row.verifiedAt&&["awaiting_verification","needs_information"].includes(row.status);
-  const mayCancel=["awaiting_verification","verified","assigned","needs_information","held","failed"].includes(row.status);
+  const begun=detail.data?.events.some(event=>event.action==="erasure_quarantined")??false;
+  const mayCancel=!!detail.data&&!begun&&["awaiting_verification","verified","assigned","needs_information","held","failed"].includes(row.status);
   return <article className="surface min-w-0 p-5" data-testid="privacy-case">
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
@@ -53,6 +54,7 @@ function PrivacyCaseCard({request,onChanged,replyText,onReplyText}:{request:Priv
     {open&&<div id={`privacy-${row.id}`} className="mt-5 grid gap-4">
       <p className="whitespace-pre-wrap break-words text-sm">{row.message}</p>
       <p className="rounded-xl bg-accent/50 p-3 text-sm">{row.resultScope}</p>
+      {begun&&<p className="text-sm text-muted-foreground">Processing has begun and cannot be cancelled as though no data had been removed. You can still read this case and answer an information request; doing so does not restore workspace access or confirm completion.</p>}
       {detail.data?.mayRespond&&<form className="grid gap-3 rounded-xl border border-border p-4" onSubmit={e=>{
         e.preventDefault();if(replyText.trim().length>=10&&!busy)respond.mutate({id:row.id,data:{expectedVersion:row.version,message:replyText.trim()}});
       }}>

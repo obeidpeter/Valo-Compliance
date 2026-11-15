@@ -1,6 +1,35 @@
 # Valo Compliance — Valo Platform
 
-## Latest application checkpoint — private-copy erasure and scoped exports
+## Latest repair checkpoint — replay authentication and case access
+
+Application repair: `404b1a102e4d7fbfb26ec3888374b72357528b89`, pushed normally
+to the existing private development branch and draft PR2.
+
+Full signed inventory validation now precedes **every application replay
+phase**, membership fencing and object dispatch. Invalid empty keys cannot be
+silently skipped. Actual restored same-workspace inventory/case corruption
+tests preserved the active fixture membership and profile with zero deletions.
+
+Verified requesters can read and answer their own cases after workspace
+quarantine without regaining business access. Replies return to the assigned
+operator; they do not resume erasure or claim fulfilment. The customer UI hides
+pre-processing cancellation once the authenticated history records quarantine.
+
+**31 targeted tests passed**, including native private-storage late uploads,
+SIGKILL/automatic maintenance, hold/role boundaries, historical keys and actual
+privacy HTTP routes. A further requester list/reply HTTP run passed 7 tests
+(overlapping that suite). The isolated restore rerun passed in 67,369 ms.
+**23 separate controlled inference-dispatch tests passed** with zero paid calls;
+the real allocation remains disabled and owner approval/quotas were not changed.
+
+Unknown uploads remain subject to the retained journal's hourly automatic
+rescan, not an invented immediate provider-settlement guarantee. This is not
+complete account erasure, production restore, formal 80/60/60 acceptance or full
+R1/R2 completion. External processor/retention/production decisions remain open.
+
+See [finding-by-finding repair evidence](docs/valo/erasure-review-repair.md).
+
+## Prior application checkpoint — retained history
 
 Saved application: `96efe764e977cae7299f44b2e4ad26ed62432617`, including the privacy/export implementation in
 `2eb03d0`, CI prerequisite/scan-disposition follow-up `453969b`, and orphaned
