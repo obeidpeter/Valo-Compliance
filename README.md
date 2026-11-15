@@ -7,7 +7,7 @@ prepared intents, generated receipt evidence, structured evidence, single-attemp
 merchant decisions, cancellation and canonical reconciliation. Unknown outcomes
 remain held rather than automatically retried or called final bank resolutions.
 Privacy fencing cancels only provably unsent work. **12 native dispute checks,
-17 HTTP/transport checks, 114 customer/privacy regression checks and 17 refund
+18 HTTP/transport checks, 114 customer/privacy regression checks and 17 refund
 checks passed**, with overlapping counts; these are not formal 80/60/60 acceptance.
 See the [current application evidence and remaining boundaries](docs/valo/dispute-customer-checkpoint.md).
 No actual merchant action, external message, new inference spending, publication

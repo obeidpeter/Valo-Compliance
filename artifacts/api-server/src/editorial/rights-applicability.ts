@@ -87,7 +87,9 @@ export function chatGPTPermissionRecord(raw:unknown,source:string,note:string,no
 export async function loadChatGPTPermission(snapshot:unknown,provenance?:{
   path:string;templateId:string;version:number;hash:string;sourceText:string;note:string;noteHash:string}){
   const root=publicationWorkspaceRoot();
-  if(provenance&&provenance.path!==chatGPTSourcePath){
+  // TPL-09 shares the legacy source file but uses the exact intake-manifest
+  // lineage. Select that route by the retained note, never by source path alone.
+  if(provenance&&(provenance.path!==chatGPTSourcePath||provenance.note.trimStart().startsWith("{"))){
     const intake=await readOperationalIntake(provenance.templateId,provenance.version);
     if(provenance.path!==intake.sourcePath||provenance.hash!==intake.sourceHash||
       provenance.sourceText!==intake.provenance.sourceText||provenance.note!==intake.provenance.note||
@@ -95,8 +97,10 @@ export async function loadChatGPTPermission(snapshot:unknown,provenance?:{
     return chatGPTPermissionRecord(snapshot,provenance.sourceText,provenance.note,new Date(),
       {path:provenance.path,notePath:"docs/content-candidates/r1-content-intake-manifest.json",templateId:provenance.templateId});
   }
-  return chatGPTPermissionRecord(snapshot,await readFile(resolve(root,chatGPTSourcePath),"utf8"),
-    await readFile(resolve(root,notePath),"utf8"));
+  const source=await readFile(resolve(root,chatGPTSourcePath),"utf8"),note=await readFile(resolve(root,notePath),"utf8");
+  if(provenance&&(provenance.hash!==sha256(source)||provenance.sourceText!==source||
+    provenance.note!==note||provenance.noteHash!==sha256(note)))throw Error("INTAKE_AUTHORING_LINEAGE_MISMATCH");
+  return chatGPTPermissionRecord(snapshot,source,note);
 }
 export function assertPermissionRoute(record:{integration:string},recordedAuthoring:boolean){
   if(record.integration!==(recordedAuthoring?"replit_managed_openai":"chatgpt"))
@@ -107,3 +111,4 @@ export async function loadRightsApplicability(){
   const record=schema.parse(JSON.parse(bytes.toString()));
   return{record,hash:sha256(bytes),verified:verifiedRightsApplicability(record)};
 }
+

@@ -1,16 +1,10 @@
 import {randomUUID,createHash} from "node:crypto";
 import {and,eq,sql} from "drizzle-orm";
-import {z} from "zod";
 import {db,valoOrders,valoEntitlements,valoPaymentDisputes,valoEvents} from "@workspace/db";
 import {paystackRequest,sandboxPaymentsConfigured} from "./valo-paystack-contract";
 import {ValoProblem} from "./valo-problem";
-const id=z.union([z.string().regex(/^\d{1,40}$/),z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)]).transform(String);
-export const verifiedDispute=z.object({id,domain:z.literal("test"),status:z.enum(["awaiting-merchant-feedback","awaiting-bank-feedback","pending","resolved","archived"]),
-  resolution:z.string().max(100).nullable(),refund_amount:z.number().int().nonnegative().max(2147483647).nullable(),
-  category:z.string().max(100).nullable().optional(),updatedAt:z.string().datetime().optional(),
-  evidence:z.unknown().optional(),
-  currency:z.literal("NGN").nullable(),transaction:z.object({id,domain:z.literal("test"),reference:z.string().max(150),
-    amount:z.number().int().positive().max(2147483647),currency:z.literal("NGN")})});
+import {verifiedDispute} from "./valo-dispute-schema";
+export {verifiedDispute} from "./valo-dispute-schema";
 export function disputeSnapshotHash(data:ReturnType<typeof verifiedDispute.parse>){
   return createHash("sha256").update(JSON.stringify({id:data.id,transaction:data.transaction,status:data.status,
     resolution:data.resolution,refund_amount:data.refund_amount,category:data.category??null,
@@ -50,7 +44,7 @@ export async function storeVerifiedDispute(providerId:string,raw:unknown){
 }
 export async function syncDispute(providerId:string){
   if(!sandboxPaymentsConfigured())return false;
-  id.parse(providerId);
+  verifiedDispute.shape.id.parse(providerId);
   await storeVerifiedDispute(providerId,await paystackRequest("/dispute/"+encodeURIComponent(providerId)));
   return true;
 }

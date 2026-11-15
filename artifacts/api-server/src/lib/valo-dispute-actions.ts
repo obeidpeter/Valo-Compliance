@@ -135,7 +135,7 @@ export async function prepareDisputeAction(actor:FinanceActor,id:string,raw:unkn
       const upload=existing.find(a=>a.kind==="upload_receipt"&&a.status==="acknowledged");
       const evidence=existing.find(a=>a.kind==="submit_evidence"&&a.status==="acknowledged");
       if(!["general","fraud"].includes(row.category??""))throw new ValoProblem(422,"Provider claim classification needs verified refresh before a merchant decision can be prepared.");
-      if(row.category==="fraud"&&!evidence)throw new ValoProblem(422,"Fraud claims require acknowledged structured evidence before a decision can be prepared.");
+      if(row.category==="fraud"&&input.resolution==="declined"&&!evidence)throw new ValoProblem(422,"Fraud declines require acknowledged structured evidence before a decision can be prepared.");
       if(upload?.result?.filename)payload.uploadedFilename=upload.result.filename;
       if(evidence?.result?.evidenceId)payload.evidenceId=evidence.result.evidenceId;
       resolutionPayload({resolution:input.resolution,amountKobo:input.amountKobo,message:input.message,

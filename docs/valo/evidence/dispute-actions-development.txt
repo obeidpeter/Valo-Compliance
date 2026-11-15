@@ -3,19 +3,19 @@
 > NODE_ENV=development VALO_RUN_DISPUTE_TESTS=synthetic-development-only node --import tsx --test src/lib/valo-dispute-actions.integration.test.ts
 
 ▶ durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF
-  ✔ terminal/archived observations alone do not suspend or restore access (44.467306ms)
-  ✔ actual HTTP read/prepare checks finance permission, fresh MFA and hostile origins (168.340944ms)
-  ✔ customer statements are selected-order scoped, consented, exact and retry-safe (163.591446ms)
-  ✔ real generated purchase PDF is readable and uploaded once under racing clicks (5078.551269ms)
-  ✔ timeout after acceptance remains unknown, is never re-sent and reconciles exact merchant state (182.159038ms)
-  ✔ fraud decline binds the acknowledged receipt and exact customer evidence before preparation (261.28194ms)
-  ✔ unknown terminal/null resolution, mismatched and stale state cannot establish success (114.872441ms)
-  ✔ revocation before dispatch cancels safely, preserving the immutable financial trail (81.950182ms)
-  ✔ a pre-existing uncertain refund cannot be spent again by a merchant acceptance (88.258968ms)
-  ✔ altered source records and stale finance MFA cannot dispatch a prepared decision (137.97795ms)
+  ✔ terminal/archived observations alone do not suspend or restore access (157.321267ms)
+  ✔ actual HTTP read/prepare checks finance permission, fresh MFA and hostile origins (192.338758ms)
+  ✔ customer statements are selected-order scoped, consented, exact and retry-safe (181.642983ms)
+  ✔ real generated purchase PDF is readable and uploaded once under racing clicks (5154.602272ms)
+  ✔ timeout after acceptance remains unknown, is never re-sent and reconciles exact merchant state (226.261522ms)
+  ✔ fraud decline binds the acknowledged receipt and exact customer evidence before preparation (334.911915ms)
+  ✔ unknown terminal/null resolution, mismatched and stale state cannot establish success (381.457106ms)
+  ✔ revocation before dispatch cancels safely, preserving the immutable financial trail (100.553504ms)
+  ✔ a pre-existing uncertain refund cannot be spent again by a merchant acceptance (83.23994ms)
+  ✔ altered source records and stale finance MFA cannot dispatch a prepared decision (152.894132ms)
 {"realMerchantCalls":0,"externalMessages":0,"actualPdfReader":"pdftotext","syntheticFinancialHistoryRetained":true}
-  ✔ unsent cancellation and privacy fencing preserve unknown liabilities (122.487578ms)
-✔ durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF (6541.392376ms)
+  ✔ unsent cancellation and privacy fencing preserve unknown liabilities (117.901715ms)
+✔ durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF (7218.611306ms)
 ℹ tests 12
 ℹ suites 0
 ℹ pass 12
@@ -23,4 +23,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 10539.609212
+ℹ duration_ms 12501.584174

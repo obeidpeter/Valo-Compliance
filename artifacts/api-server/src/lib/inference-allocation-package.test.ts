@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {prepareFiniteAllocationPackage,allocationPackageId,validateAllocationPackage,assertWorkPackageMembership} from "./inference-allocation-package";
 import {additionalInferenceAllocation,requestDigest} from "./inference-budget";
 import type {FiniteWork} from "./inference-batch-dispatch";
+import {readFile} from "node:fs/promises";
 const work=():FiniteWork=>({key:"controlled-factual",lane:"publication",role:"factual",pair:"controlled-pair",
   candidateHash:"a".repeat(64),caseHash:"b".repeat(64),sourceHashes:[],
   request:{model:"gpt-5.4-mini",max_completion_tokens:8192,messages:[{role:"user",content:"controlled review"}]},
@@ -21,7 +22,8 @@ test("delegated membership cannot broaden the content inventory or enable unsupp
   const pkg=await prepareFiniteAllocationPackage(),w=work();
   assert.doesNotThrow(()=>assertWorkPackageMembership(w,pkg,"TPL-07"));
   assert.throws(()=>assertWorkPackageMembership(w,pkg,"unapproved-content"),/OUTSIDE_PACKAGE/);
-  assert.throws(()=>assertWorkPackageMembership(w,pkg,"TPL-01"),/PREPARER_UNAVAILABLE/);
+  for(const id of ["TPL-01","TPL-06","TPL-09","TPL-11"])assert.doesNotThrow(()=>assertWorkPackageMembership(w,pkg,id));
+  for(const id of ["TPL-12","TPL-13","TPL-40","GUD-01"])assert.throws(()=>assertWorkPackageMembership(w,pkg,id),/PREPARER_UNAVAILABLE/);
   const customer={...w,lane:"customer" as const,role:"customer" as const,pair:null,
     caseHash:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.hash,
     bindings:{...w.bindings,corpus:"customer-ai" as const,caseId:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.id}};
@@ -34,4 +36,18 @@ test("package allocation, lane ceilings and allowed roles are immutable policy d
     (p:any)=>{p.sourceFiles[0].path="../secret";}]){
     const pkg=await prepareFiniteAllocationPackage();edit(pkg);assert.throws(()=>validateAllocationPackage(pkg),/INVALID/);
   }
+});
+test("frozen disabled owner-review artifact matches exact repository bytes, cases and named sections",async()=>{
+  const frozen=JSON.parse(await readFile(new URL("../../../../docs/valo/evidence/finite-allocation-package-disabled.json",import.meta.url),"utf8"));
+  assert.equal(frozen.status,"DISABLED_PROPOSAL_ONLY");assert.equal(frozen.ownerApproved,false);assert.equal(frozen.enabled,false);
+  assert.equal(frozen.approvalRowsWritten,0);assert.equal(frozen.providerCalls,0);
+  validateAllocationPackage(frozen.package);
+  assert.equal(frozen.packageHash,requestDigest(frozen.package));assert.equal(frozen.packageId,allocationPackageId(frozen.package));
+  const actual=await prepareFiniteAllocationPackage(new Date(frozen.package.preparedAt));
+  // In particular, do not normalize/trim JSON or Markdown before file hashing.
+  // Object-equivalent corpus data with a changed newline still changes its pin.
+  assert.deepEqual(frozen.package.sourceFiles,actual.sourceFiles);
+  assert.deepEqual(frozen.package.corpora,actual.corpora);
+  assert.deepEqual(frozen.package.contentIds,actual.contentIds);
+  assert.deepEqual(frozen.package.namedContentSections,actual.namedContentSections);
 });

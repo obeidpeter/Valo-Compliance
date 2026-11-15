@@ -5,6 +5,7 @@ import {additionalInferenceAllocation,inferenceProposal,inferenceTimestamp,reque
 import type {FiniteManifest,FiniteWork} from "./inference-batch-dispatch";
 import type {InferenceBudgetStore} from "./inference-budget-store";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {operationalInferenceTemplateIds,supportsOperationalInferenceTemplate} from "./inference-operational-coverage";
 const root=resolve(import.meta.dirname,"../../../..");
 const sha=(bytes:Buffer)=>createHash("sha256").update(bytes).digest("hex");
 type SourceRef={path:string;sha256:string};
@@ -56,7 +57,7 @@ export async function prepareFiniteAllocationPackage(now=new Date()):Promise<Fin
     contentIds:[...new Set([...intake.templates,...intake.guidance].map(c=>c.id))].sort(),namedContentSections:sections,corpora,
     laneAttemptLimits:{publication:216,editorial_evaluation:68,checker_challenge:80,customer:94},
     allowedRoles:["factual","challenge","customer"],supportedPreparers:["operational-template-pair-v1"],
-    holds:["Only the existing TPL-07 exact operational review preparer is executable in this revision.",
+    holds:[`Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
       "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
       "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt."]};
 }
@@ -90,7 +91,7 @@ export function assertWorkPackageMembership(work:FiniteWork,pkg:FiniteAllocation
   if(work.lane==="publication"&&(!contentId||!pkg.contentIds.includes(contentId)))throw Error("WORK_OUTSIDE_PACKAGE");
   // Scope may authorize these lanes, but scope alone cannot manufacture an
   // implemented safe request preparer or weaken the actual readiness checks.
-  if(work.lane!=="publication"||contentId!=="TPL-07"||!work.bindings.operationalPlan)
+  if(work.lane!=="publication"||!contentId||!supportsOperationalInferenceTemplate(contentId)||!work.bindings.operationalPlan)
     throw Error("PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE");
 }
 async function packageRow(c:import("pg").PoolClient,schema:string,id:string,admitting:boolean){
@@ -177,3 +178,4 @@ export async function registerPreparedInferenceSubmanifest(store:InferenceBudget
     return{state:s,value:{batchId,manifestHash,packageId:manifest.packageId,providerCalls:0}};
   });
 }
+

@@ -8,10 +8,10 @@
 
 Scope: 4 of 11 workspace projects
 artifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit
-artifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit
 artifacts/valo typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit
 scripts typecheck$ tsc -p tsconfig.json --noEmit
 scripts typecheck: Done
-artifacts/valo typecheck: Done
 artifacts/mockup-sandbox typecheck: Done
+artifacts/valo typecheck: Done
 artifacts/api-server typecheck: Done

@@ -7,7 +7,7 @@
       "skipped": 0
     },
     "transportAndWebhookHttp": {
-      "passed": 17,
+      "passed": 18,
       "failed": 0,
       "skipped": 0
     },
@@ -52,9 +52,9 @@
     "R1 and R2 remain unaccepted; no launch, spend, commercial licence or processor approval was created."
   ],
   "bindings": {
-    "artifacts/api-server/src/lib/valo-dispute-actions.ts": "f30d45f9286326828b939d17645b867c10a61f4809666cd1a07e01c50515f5f1",
-    "artifacts/api-server/src/lib/valo-dispute-provider.ts": "b00a8bc2f02edd33cd6b0e237ce03483e3715abc2a966899d52ea0c70bf4172e",
-    "artifacts/api-server/src/lib/valo-payment-disputes.ts": "2564eb7187464875ec087668bbd9c9128b8f16a86a14ede80b4c64d57178876d",
+    "artifacts/api-server/src/lib/valo-dispute-actions.ts": "ed51e612ee4c9824116940458e21022903d752d24958c5c796010442e07035de",
+    "artifacts/api-server/src/lib/valo-dispute-provider.ts": "ead97b08f40996a505eab903bff5815cfd3d70d1652feee5dcf6a40eee978530",
+    "artifacts/api-server/src/lib/valo-payment-disputes.ts": "03aa6c2750e278d45db2dfc57679e38270ce5fc754e3ce6463788dcea2d8d10f",
     "artifacts/api-server/src/lib/valo-render.ts": "891d9a9a406d56af3d6d4c5db35cdfe68fb0681b1fc65c014f5e77595534363a",
     "artifacts/api-server/src/lib/valo-privacy-erasure.ts": "f4bb68b48cd14ccac68c542c096958c8bf8ca7f4cebdfdacc558465bdaea0c42",
     "artifacts/api-server/src/routes/valo-customer-access.ts": "f64cdcf24944fb98679fcd38ef57bd07bb5c45172356e91309496809bb74085d",
@@ -64,10 +64,17 @@
     "lib/db/drizzle/0025_dispute_merchant.sql": "8cc55743642c4a01ae5db8df3a7231a1e5caa7586324df511113f1c53b3894f2",
     "lib/db/drizzle/0026_dispute_category.sql": "611ad44aeb636ffc8c241a89c6d6b1c010e68d8c9471b0beff04115792e89fc8",
     "artifacts/api-server/src/lib/valo-dispute-actions.integration.test.ts": "5e23f4553e20f5fa346fd41e97614c5f03da25b41772aa2f762c3e0b2e3a3b5f",
-    "docs/valo/evidence/dispute-actions-development.txt": "4b192634c0082e5d9c004ee4b979deb74184d7d99b6b7219a36cb73eaa976cda",
-    "docs/valo/evidence/dispute-http-current.txt": "0e2de82d9e38f7582815dd32a26156518e98a809a6885c378e2d2e3f1fd27341",
-    "docs/valo/evidence/dispute-privacy-regression.txt": "3be5099b922cfe9ff77d8f4a2ed0d25af936ef625f188b02da47cbe4e0519aef",
-    "docs/valo/evidence/dispute-refund-current.txt": "019adf1c402fe9df2edc27385b8e0d28a92ec887da65036d7005bcf7af661b6f"
+    "docs/valo/evidence/dispute-actions-development.txt": "1dd57b6cd6e7ecc2b1ebf02b034dc134af0162bec0c6872d6e0b9983e93db188",
+    "docs/valo/evidence/dispute-http-current.txt": "4f79ab3e9fd558837c3093a0bf0b5d1a5087c253720c31f218364c3506100377",
+    "docs/valo/evidence/dispute-privacy-regression.txt": "3be9b0851ba161d9e541ddb0998f77f095c93bd3bedb79065f485edd2252b360",
+    "docs/valo/evidence/dispute-refund-current.txt": "019adf1c402fe9df2edc27385b8e0d28a92ec887da65036d7005bcf7af661b6f",
+    "artifacts/api-server/src/lib/valo-dispute-schema.ts": "9d9aef8e530d30fcf7cebc5e0252343e0e8cf75598aeb2d964a30f9c80dfc8c2"
   },
-  "recordedAt": "2026-11-15T00:00:14.031Z"
+  "recordedAt": "2026-11-15T00:07:56.933Z",
+  "mergeReconciliation": {
+    "preservedApplicationCommit": "6059bb3",
+    "sharedHead": "7b6a356",
+    "largeExportAncestor": "7c3ec83",
+    "changes": "Preserved shared DB-free schema, fraud-decline contract, editorial/preparation work and large-export ancestry; affected native and HTTP regressions rerun."
+  }
 }

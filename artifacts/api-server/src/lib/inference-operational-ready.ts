@@ -3,7 +3,8 @@ import {db,valoContentVersions} from "@workspace/db";
 import {candidateDigest,digest,publicationSchema} from "@workspace/valo-core";
 import {getPublicationArtifact} from "../editorial/publication-artifacts";
 import {readOperationalIntake} from "../editorial/operational-intake";
-import {inventoryCandidate} from "../editorial/operational-content";
+import {templateCandidate} from "../editorial/operational-content";
+import {supportsOperationalInferenceTemplate} from "./inference-operational-coverage";
 import {loadChatGPTPermission} from "../editorial/rights-applicability";
 import {operationalPolicy} from "../editorial/operational-policy";
 import {operationalMechanicalChecks} from "../editorial/operational-mechanical";
@@ -11,25 +12,25 @@ import {inspectOperationalExports} from "../editorial/operational-export-inspect
 import type {OperationalServerEvidence} from "../editorial/operational-review";
 import type {ReleaseAttestations} from "../editorial/publication-publisher";
 
-/** This first prepared batch supports the existing original inventory form.
- * Other candidates stay explicit holds until their actual request preparer and
- * source/rights checks are implemented. No generic pass or source substitution. */
+/** Reconstruct a supported saved original form and recheck all its retained
+ * private evidence. Intake coverage alone never establishes readiness. */
 export async function readOperationalInferenceReadiness(candidateVersionId:string){
   if(!/^[a-f0-9-]{36}$/.test(candidateVersionId))throw Error("CANDIDATE_VERSION_REQUIRED");
   const[row]=await db.select().from(valoContentVersions).where(eq(valoContentVersions.id,candidateVersionId));
   if(!row||["withdrawn","superseded"].includes(row.status)||row.reviewBy.getTime()<=Date.now())
     throw Error("CANDIDATE_UNAVAILABLE_OR_STALE");
-  if(row.templateId!=="TPL-07")throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
+  if(!supportsOperationalInferenceTemplate(row.templateId))throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
   const bundle=publicationSchema.parse(row.bundle),candidate=bundle.candidate,a=row.attestations as ReleaseAttestations;
-  if(candidateDigest(candidate)!==row.candidateHash||candidate.hash!==row.candidateHash)
+  if(candidate.id!==row.templateId||candidate.version!==row.version||
+    candidateDigest(candidate)!==row.candidateHash||candidate.hash!==row.candidateHash)
     throw Error("CANDIDATE_BINDING_CHANGED");
   const provenance=JSON.parse((await getPublicationArtifact(a.provenance)).toString());
   const rights=JSON.parse((await getPublicationArtifact(a.rights)).toString());
   const snapshot=JSON.parse((await getPublicationArtifact(rights.snapshot)).toString());
-  const intake=await readOperationalIntake("TPL-07",row.version),{policy}=await operationalPolicy();
+  const intake=await readOperationalIntake(row.templateId,row.version),{policy}=await operationalPolicy();
   if(intake.sourceHash!==provenance.hash||intake.manifestHash!==provenance.noteHash||policy.hash!==bundle.policy.hash)
     throw Error("SAVED_PLAN_INPUT_CHANGED");
-  const original=await inventoryCandidate(row.version,new Date(candidate.sourceCheckDate),
+  const original=await templateCandidate(row.templateId,row.version,new Date(candidate.sourceCheckDate),
     {original:intake.section.body,provenance});
   if(JSON.stringify(original.document)!==candidate.body)throw Error("SAVED_BODY_NOT_EXACT_CURRENT_INTAKE");
   const applicability=await loadChatGPTPermission(snapshot,provenance);

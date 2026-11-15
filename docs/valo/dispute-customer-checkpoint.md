@@ -22,7 +22,7 @@ email dispatch, live payments or launch.
   not a customer document, delivery assertion, bank decision or government tax
   invoice. The provider filename and exact checksum are durable before object PUT;
   no signed URL is retained. No arbitrary customer attachment upload was added.
-- Decline uses the acknowledged provider filename. Fraud also needs acknowledged
+- Decline uses the acknowledged provider filename. Fraud declines also need acknowledged
   structured evidence. Unverified classifications remain held, not guessed.
   Current official operations, empty successful upload responses and short-lived
   destination validation are covered by the retained transport checks.
@@ -57,8 +57,10 @@ journey review. Source passages/hashes are retained in
 
 Only additive development SQL 0025/0026 was applied. No production migration or
 existing-database baseline adoption was claimed. SQL 0024 remains available for
-the separately saved large-export unit; that checkpoint has not yet been
-incorporated into this local history.
+the separately saved large-export unit. The normal reconciliation with shared
+head `7b6a356` incorporated its `7c3ec83` ancestry, shared DB-free dispute schema,
+terminal-state regression and updated preparation/editorial work. The present
+dispute checkpoint does not replace that unit's independent review or evidence.
 
 ## Remaining boundaries
 

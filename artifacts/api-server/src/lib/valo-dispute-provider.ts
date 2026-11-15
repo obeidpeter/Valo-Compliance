@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {z} from "zod";
 import {ValoProblem} from "./valo-problem";
-import {verifiedDispute} from "./valo-payment-disputes";
+import {verifiedDispute} from "./valo-dispute-schema";
 import {paystackRequest,sandboxPaymentsConfigured} from "./valo-paystack-contract";
 import {assertRecoveryEffectsAllowed} from "./valo-recovery-effects";
 
@@ -109,7 +109,7 @@ export function makeDisputeTransport(api:Api,upload:typeof fetch=fetch,enabled=(
     },
     async resolve(c,input){
       check();const payload=resolutionPayload(input,c.amountKobo),current=await beforeMutation(()=>actionable(c));
-      if(current.category==="fraud"&&payload.evidence===undefined)
+      if(current.category==="fraud"&&payload.resolution==="declined"&&payload.evidence===undefined)
         throw new DisputeMutationNotSent(422,"This fraud claim also requires acknowledged structured evidence.");
       if(!["general","fraud"].includes(current.category??""))
         throw new DisputeMutationNotSent(409,"The provider claim category is unknown. Hold the decision pending verified classification.");
