@@ -44,6 +44,10 @@ GitHub uses `VALO_ERASURE_STORAGE_PROOF=portable`, without native credentials.
 The PostgreSQL job also installs the existing locked Playwright browser and
 sets its actual executable path for the controlled dispute-PDF check; it no
 longer assumes a Replit-only binary path exists on Ubuntu.
+The first repaired head reached the real PDF-reading assertion and exposed a
+second missing runner prerequisite: `pdftotext`. The job now installs Poppler,
+and the test reports a missing executable explicitly rather than treating it
+as a PDF-read or provider failure. Real PDF parsing assertions are unchanged.
 
 ## Executed locally on this source
 
@@ -54,6 +58,7 @@ longer assumes a Replit-only binary path exists on Ubuntu.
 | Portable erasure suite, CI=true and native config removed | 18 passed, 1 explicitly native-only skip |
 | Native Replit erasure/race suite | 19 passed, 0 skipped |
 | Finite inference budget controls | 47 passed |
+| Controlled dispute intents with actual PDF reader | 12 passed, zero merchant calls/messages |
 | Workspace types | passed |
 
 The native suite includes a genuine private upload spanning erasure and
@@ -67,6 +72,11 @@ A broad local API engineering rerun exceeded its 90-second process timeout
 after two export tests. It is recorded as incomplete, not a new 177-case pass.
 The previous 177/one-skip result remains historical; it cannot waive failed CI.
 Exact-head GitHub job outcomes must be checked independently after pushing.
+At the first repaired head `3e4583c`, GitHub confirmed both reported regression
+steps passed: runtime boundaries and the portable PostgreSQL erasure/tenant
+suite. Foundation CI completed successfully. The PostgreSQL job then reached
+the separate missing-Poppler prerequisite; that is addressed by the subsequent
+runner dependency change above. Wider secret/static findings were not waived.
 
 No model spending/approval, quota change, email, PSP action, production
 migration or launch was performed. Existing budget/privacy implementation and

@@ -1,0 +1,57 @@
+{
+  "head": "3e4583c3409aced026cc2248d04441a2c32df431",
+  "jobs": [
+    {
+      "conclusion": "success",
+      "name": "Foundation typecheck and unit tests",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Prove portable storage bytes and fail-closed native proof selection",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Reject unsafe export modes and stale account requests",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "name": "Dependency and redacted secret checks on actual merges",
+      "status": "completed",
+      "steps": []
+    },
+    {
+      "conclusion": "failure",
+      "name": "Synthetic PostgreSQL isolation and concurrency",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Prove synthetic erasure holds, late-upload races and bounded recovery",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Prove tenant boundaries, conflicts and history",
+          "status": "completed"
+        },
+        {
+          "conclusion": "failure",
+          "name": "Prove durable dispute intents against synthetic orders and controlled transport",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "name": "Static security checks with detector canary",
+      "status": "completed",
+      "steps": []
+    }
+  ],
+  "run": 43679960672
+}

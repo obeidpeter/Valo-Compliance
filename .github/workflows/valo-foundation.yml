@@ -202,8 +202,10 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-erasure-db
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db
-      - name: Install the locked Chromium for controlled dispute PDF evidence
+      - name: Install Chromium and the independent PDF reader for dispute evidence
         run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
           pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
           echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Prove durable dispute intents against synthetic orders and controlled transport
