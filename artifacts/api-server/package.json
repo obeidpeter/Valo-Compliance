@@ -43,7 +43,7 @@
     "test:valo-sources": "tsx --test src/editorial/source-controls.test.ts src/editorial/business-name-evidence.test.ts",
     "test:valo-source-db": "tsx --test src/editorial/source-store.integration.test.ts",
     "queue:apply-development": "tsx src/scripts/queue-migration.ts apply-development",
-    "test:valo-erasure-controls": "node --import tsx --test src/lib/valo-erasure-seal.test.ts src/lib/valo-erasure-lock.test.ts",
+    "test:valo-erasure-controls": "node --import tsx --test src/lib/valo-erasure-seal.test.ts src/lib/valo-erasure-lock.test.ts src/lib/valo-erasure-inventory-cache.test.ts",
     "test:valo-disputes": "NODE_ENV=development node --import tsx --test src/lib/valo-dispute-provider.test.ts src/lib/valo-paystack-http.integration.test.ts",
     "test:valo-disputes-db": "NODE_ENV=development VALO_RUN_DISPUTE_TESTS=synthetic-development-only node --import tsx --test src/lib/valo-dispute-actions.integration.test.ts",
     "test:valo-erasure-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts",

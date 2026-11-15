@@ -1,3 +1,4 @@
+import {ErasureInventoryAttestations,inventoryGuardStamp} from "./valo-erasure-inventory-cache";
 import {randomUUID} from "node:crypto";
 import {rm} from "node:fs/promises";
 import {Pool} from "pg";
@@ -91,6 +92,25 @@ async function verifyInventory(tx:Tx,t:Tombstone,seal:ErasureSeal){
   if(!seal.inventoryHash)throw new ValoProblem(409,"The exact erasure inventory has not been sealed.");
   const actual=await inventory(tx,t);
   assertSealedInventory(seal,actual);
+}
+const replayInventory=new ErasureInventoryAttestations();
+export function erasureReplayVerificationCounts(){return{fullScans:replayInventory.scans,cacheHits:replayInventory.hits};}
+async function verifyReplayInventory(tx:Tx,t:Tombstone,seal:ErasureSeal,fresh:boolean){
+  // Constant-size catalog lookup. Normal writes cannot mutate sealed keys.
+  // Even disable/edit/re-enable in one transaction changes trigger xmin.
+  const result=await tx.execute<{epoch:string;table_oid:string;trigger_oid:string;trigger_revision:string;
+    function_oid:string;function_revision:string;enabled:string;definition:string;body:string;security_definer:boolean;
+    settings:string[]|null;language:string;function_schema:string}>(sql`
+    SELECT current_database()||':'||pg_postmaster_start_time()::text epoch,
+      g.tgrelid::text table_oid,g.oid::text trigger_oid,g.xmin::text trigger_revision,
+      p.oid::text function_oid,p.xmin::text function_revision,g.tgenabled::text enabled,
+      pg_get_triggerdef(g.oid) definition,p.prosrc body,p.prosecdef security_definer,
+      p.proconfig settings,l.lanname language,n.nspname function_schema
+    FROM pg_trigger g JOIN pg_proc p ON p.oid=g.tgfoid
+    JOIN pg_language l ON l.oid=p.prolang JOIN pg_namespace n ON n.oid=p.pronamespace
+    WHERE g.tgrelid='public.valo_privacy_erasure_objects'::regclass AND g.tgname='valo_erasure_inventory_immutable'`);
+  await replayInventory.verify(t.caseId,erasureSealHash(seal),inventoryGuardStamp(result.rows[0]),
+    ()=>verifyInventory(tx,t,seal),fresh);
 }
 function assertProcessing(row:PrivacyRow,actor:PrivacyStaffActor,version?:number){
   if(version!==undefined)assertPrivacyVersion(row.version,version);
@@ -258,7 +278,7 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
     return privacyDetail(tx,row);
   });
 }
-async function replayReady(tx:Tx,caseId:string,verifyObjects=false){
+async function replayReady(tx:Tx,caseId:string,verifyObjects:false|"cached"|"fresh"=false){
   await privacySigner(tx); // A valid historical proof cannot bypass a broken current signer.
   const row=await readPrivacyCase(tx,caseId),{t,seal}=await readTombstone(tx,caseId);
   if(row.workspaceId!==t.workspaceId||row.kind!=="deletion"||!row.verifiedAt||row.erasurePhase!=="application_erased"||
@@ -270,13 +290,13 @@ async function replayReady(tx:Tx,caseId:string,verifyObjects=false){
     eq(valoPrivacyEvents.caseId,caseId),eq(valoPrivacyEvents.workspaceId,t.workspaceId),
     eq(valoPrivacyEvents.eventHash,seal.completedEventHash),eq(valoPrivacyEvents.action,"erasure_batch_recorded"))).limit(1);
   if(!event)throw new ValoProblem(409,"The completion receipt is absent from the authenticated case history.");
-  if(verifyObjects)await verifyInventory(tx,t,seal);
+  if(verifyObjects)await verifyReplayInventory(tx,t,seal,verifyObjects==="fresh");
   return{row,t,seal};
 }
 /** Operator recovery imports must validate the real completion chain and the
  * entire immutable inventory before any physical replay is authorised. */
 export async function verifyCompletedErasureReceipt(tx:Tx,caseId:string){
-  const {t,seal}=await replayReady(tx,caseId,true);
+  const {t,seal}=await replayReady(tx,caseId,"fresh");
   return{workspaceId:t.workspaceId,sealHash:erasureSealHash(seal),inventoryCount:seal.inventoryCount};
 }
 async function persistReplay(t:Tombstone,input:Omit<ReplayState,"keyVersion"|"mac">,done=false){
@@ -289,13 +309,12 @@ async function persistReplay(t:Tombstone,input:Omit<ReplayState,"keyVersion"|"ma
 }
 async function replay(caseId:string,mode:ReplayState["mode"],remove:DeleteObject){
   let {t,seal,state,candidates}=await db.transaction(async tx=>{
-    const ready=await replayReady(tx,caseId,true);
+    const ready=await replayReady(tx,caseId,"cached");
     let state=ready.t.replayState?await progressOf(tx,ready.t.replayState,ready.seal):null;
     if(state&&state.phase!=="done"&&state.mode!==mode)throw new ValoProblem(409,"Another recovery mode has unfinished recorded progress.");
     if(!state||state.phase==="done")state=startReplay(ready.seal,mode,await privacySigner(tx));
     let candidates:{object_key:string}[]=[];
     if(state.phase==="objects"){
-      await verifyInventory(tx,ready.t,ready.seal);
       const batch=await tx.execute<{object_key:string}>(sql`SELECT object_key FROM valo_privacy_erasure_objects
         WHERE case_id=${caseId}::uuid AND object_key COLLATE "C">${state.cursor} ORDER BY object_key COLLATE "C" LIMIT 10`);
       candidates=batch.rows;
@@ -311,7 +330,7 @@ async function replay(caseId:string,mode:ReplayState["mode"],remove:DeleteObject
     // authenticated inventory; no later untrusted candidate query is allowed.
     for(const object of candidates){
       await db.transaction(async tx=>{
-        const now=await replayReady(tx,caseId,true);
+        const now=await replayReady(tx,caseId,"cached");
         if(erasureSealHash(now.seal)!==state.sealHash)throw Error("ERASURE_SEAL_CHANGED");
         assertErasureLocatorScope(t.workspaceId,object.object_key);
       });
@@ -328,7 +347,7 @@ async function replay(caseId:string,mode:ReplayState["mode"],remove:DeleteObject
   if(typeof state.phase==="number"){
     const phase=state.phase;
     await db.transaction(async tx=>{
-      const now=await replayReady(tx,caseId,true);
+      const now=await replayReady(tx,caseId,"cached");
       const persisted=await progressOf(tx,now.t.replayState,now.seal);
       if(persisted.mac!==state.mac)throw new ValoProblem(409,"Recovery progress changed.");
       // One bounded application section; no object inventory rescan/redelete.

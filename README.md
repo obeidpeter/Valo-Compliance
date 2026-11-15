@@ -1,6 +1,19 @@
 # Valo Compliance — Valo Platform
 
-## Latest saved unit — scoped purchase receipt recovery
+## Latest repair unit — bounded authenticated erasure replay
+
+Full inventory proofs can be reused only under the exact reviewed immutable
+database guard and signed case/seal; new processes, changed guards and recovery
+imports recheck. Missing guards fall back to full verification. Native evidence
+resumed **13 objects / 205 restored revisions** across two killed workers:
+13 deletions, no duplicates, maximum 10 objects / 100 rows per batch.
+
+**32 native tests**, **13 seal/lock/cache controls**, **11 large-download tests**
+and **23 controlled inference-dispatch tests** passed. These are engineering
+checks, not formal 80/60/60 acceptance. Spending and launch remain disabled.
+See [scope, guard assumptions and actual evidence](docs/valo/bounded-erasure-replay.md).
+
+## Prior saved unit — scoped purchase receipt recovery
 
 The shared repair explicitly creates a `purchase_receipt`; a refund notification
 cannot substitute. Maintenance inserts a held receipt atomically. **26 targeted

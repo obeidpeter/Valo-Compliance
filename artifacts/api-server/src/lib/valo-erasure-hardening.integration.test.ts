@@ -1,4 +1,6 @@
 import {test} from "node:test";
+import {spawn} from "node:child_process";
+import {once} from "node:events";
 import {Pool} from "pg";
 import {withPrivacyCaseLock} from "./valo-erasure-lock";
 import assert from "node:assert/strict";
@@ -74,6 +76,54 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
     }
   };
   try{
+    await t.test("13 objects and 205 restored profile rows resume across killed workers without repeated object traversal",async()=>{
+      const f=await setup();
+      await saveProfile(f.owner,{expectedRevision:0,profile:syntheticProfile});
+      const [profile]=await db.select().from(valoProfileVersions).where(eq(valoProfileVersions.workspaceId,f.owner.workspaceId));
+      const keys=Array.from({length:13},()=>`valo/development/${f.owner.workspaceId}/${randomUUID()}.docx`).sort();
+      await db.insert(valoPrivacyErasureObjects).values(keys.map(objectKey=>({caseId:f.id,workspaceId:f.owner.workspaceId,objectKey})));
+      await finish(f,async()=>{});
+      await db.update(valoPrivacyTombstones).set({nextReplayAt:new Date(Date.now()+3_600_000)})
+        .where(eq(valoPrivacyTombstones.caseId,f.id));
+      await db.insert(valoProfileVersions).values(Array.from({length:205},(_,i)=>({...profile,id:randomUUID(),revision:i+1})));
+      type Batch={type:string;message?:string;keys:string[];result:{deleted:number;applicationRowsRemoved:number;remaining:boolean};
+        verification:{fullScans:number;cacheHits:number}};
+      const start=async()=>{
+        const child=spawn(process.execPath,["--import","tsx",new URL("../scripts/erasure-replay-batch-child.ts",import.meta.url).pathname],
+          {env:{...process.env,VALO_ERASURE_BATCH_CHILD:"new-synthetic-fixture-only"},stdio:["ignore","ignore","pipe","ipc"]});
+        children.push(child);const [ready]=await once(child,"message",{signal:AbortSignal.timeout(20000)});
+        assert.equal(ready.type,"ready");return child;
+      };
+      const next=async(child:ChildProcess)=>{
+        const message=once(child,"message",{signal:AbortSignal.timeout(20000)});
+        child.send!({caseId:f.id});const [raw]=await message;const result=raw as Batch;
+        assert.equal(result.type,"batch",result.message);
+        assert.ok(result.keys.length<=10);assert.ok(result.result.applicationRowsRemoved<=100);
+        assert.equal(result.verification.fullScans,1);return result;
+      };
+      const kill=async(child:ChildProcess)=>{const exit=once(child,"exit");child.kill("SIGKILL");await exit;};
+      const deleted:string[]=[];
+      let child=await start(),batch=await next(child);deleted.push(...batch.keys);
+      assert.equal(batch.keys.length,10);await kill(child);
+      child=await start();batch=await next(child);deleted.push(...batch.keys);
+      assert.equal(batch.keys.length,3);
+      let removed=0;
+      for(let i=0;i<25&&removed===0;i++){batch=await next(child);deleted.push(...batch.keys);removed+=batch.result.applicationRowsRemoved;}
+      assert.equal(removed,100);await kill(child);
+      child=await start();
+      for(let i=0;i<40;i++){
+        batch=await next(child);deleted.push(...batch.keys);removed+=batch.result.applicationRowsRemoved;
+        if(!batch.result.remaining)break;
+      }
+      assert.equal(batch.result.remaining,false);assert.equal(removed,205);
+      assert.deepEqual(deleted.sort(),keys);assert.equal(new Set(deleted).size,13);
+      assert.ok(batch.verification.cacheHits>10);
+      assert.equal((await db.select().from(valoProfileVersions).where(eq(valoProfileVersions.workspaceId,f.owner.workspaceId))).length,0);
+      t.diagnostic(JSON.stringify({boundedReplay:{objects:13,deleteCalls:deleted.length,duplicateDeletes:0,
+        restoredProfiles:205,removedProfiles:removed,killedWorkers:2,maxObjectsPerBatch:10,maxRowsPerBatch:100,
+        finalWorkerFullInventoryChecks:batch.verification.fullScans,finalWorkerCachedChecks:batch.verification.cacheHits}}));
+      const stopped=once(child,"exit");child.send!("stop");await stopped;
+    });
     await t.test("application replay authenticates the entire inventory and case before revocation or profile deletion",async()=>{
       const f=await setup(),key=`valo/development/${f.owner.workspaceId}/${randomUUID()}.docx`,
         altered=`valo/development/${f.owner.workspaceId}/${randomUUID()}.docx`;

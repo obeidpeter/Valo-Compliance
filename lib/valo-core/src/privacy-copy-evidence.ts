@@ -12,6 +12,7 @@ export function partialPrivacyCopyEvidence(id:string){
       "artifacts/api-server/src/lib/valo-recovery-erasure.ts",
       "artifacts/api-server/src/lib/valo-recovery-controls.ts",
       "artifacts/api-server/src/lib/valo-privacy-requester.ts",
+      "artifacts/api-server/src/lib/valo-erasure-inventory-cache.ts",
       "artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts",
       "artifacts/api-server/src/scripts/isolated-recovery.ts",
       "lib/db/drizzle/0029_privacy_copy_redaction.sql"],
@@ -20,6 +21,8 @@ export function partialPrivacyCopyEvidence(id:string){
       {kind:"test" as const,path:"docs/valo/evidence/physical-recovery-development.json",
         hash:"c48c947f5f1944ba941fa53795512a2ea1b19bb616bfbb207110e648c8dfee96",result:"pass" as const},
       {kind:"test" as const,path:"docs/valo/evidence/erasure-review-repair.json",
-        hash:"2ca98efc965e4b99257783fd25b2d56c4aa979150a7f47d7fa7e472a21257afe",result:"pass" as const}],
+        hash:"2ca98efc965e4b99257783fd25b2d56c4aa979150a7f47d7fa7e472a21257afe",result:"pass" as const},
+      {kind:"test" as const,path:"docs/valo/evidence/bounded-erasure-replay.json",
+        hash:"dd7360359b335bfed3ac15f0218248e4409e9cce7727ea8ee89276698009abb4",result:"pass" as const}],
   };
 }

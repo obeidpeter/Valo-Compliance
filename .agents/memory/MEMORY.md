@@ -14,4 +14,5 @@
 - [Supply-chain controls](supply-chain-controls.md) — npm cooldown uses days, pnpm minutes; a frozen install is not proof of every negative policy boundary.
 - [Privacy erasure and recovery](privacy-erasure.md) — preserve metering and immutable records while deleting private content; old backups need a post-cutoff deletion journal.
 - [Paystack outcome boundaries](payment-status-evidence.md) — merchant responses and terminal-looking dispute statuses do not establish final bank outcomes.
+- [Recovery evidence](recovery-evidence.md) — later aggregate success cannot establish original per-record failure causes.
 - [Workspace export consistency](workspace-export-consistency.md) — fixed data snapshots cannot freeze authorization; incomplete attempts restart a new dated snapshot, never splice pages.

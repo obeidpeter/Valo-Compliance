@@ -55,3 +55,13 @@ quarantined across rotation, with explicit holds when historical keys are absent
 **How to apply:** Sign new records with the current version; verify old records
 with their pinned historical versions before any destructive dispatch or access
 provisioning. Never silently fall back to the current session secret.
+
+Inventory verification reuse must be bounded and invalidated by recovery or
+changes to its immutable database guard; an absent guard is never proof.
+
+**Why:** Repeated journal traversal prevented bounded recovery, but performance
+work must preserve corruption/hold checks. Schema publishing can omit triggers.
+
+**How to apply:** Recovery imports force fresh independent validation. Keep live
+authority checks before dispatch and fail back to full checks when guard
+semantics cannot be established; do not claim protection from a database owner.

@@ -1,0 +1,26 @@
+
+> workspace@0.0.0 typecheck /home/runner/workspace
+> pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+
+
+> workspace@0.0.0 typecheck:libs /home/runner/workspace
+> tsc --build
+
+Scope: 4 of 11 workspace projects
+artifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/valo typecheck$ tsc -p tsconfig.json --noEmit
+scripts typecheck$ tsc -p tsconfig.json --noEmit
+scripts typecheck: Done
+artifacts/valo typecheck: Done
+artifacts/mockup-sandbox typecheck: Done
+artifacts/api-server typecheck: src/lib/valo-erasure-hardening.integration.test.ts(90,21): error TS2304: Cannot find name 'spawn'.
+artifacts/api-server typecheck: src/lib/valo-erasure-hardening.integration.test.ts(92,50): error TS2304: Cannot find name 'once'.
+artifacts/api-server typecheck: src/lib/valo-erasure-hardening.integration.test.ts(96,23): error TS2304: Cannot find name 'once'.
+artifacts/api-server typecheck: src/lib/valo-erasure-hardening.integration.test.ts(102,57): error TS2304: Cannot find name 'once'.
+artifacts/api-server typecheck: src/scripts/erasure-replay-batch-child.ts(10,70): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+artifacts/api-server typecheck: Failed
+/home/runner/workspace/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 typecheck: `tsc -p tsconfig.json --noEmit`
+Exit status 2
+ ELIFECYCLE  Command failed with exit code 2.
