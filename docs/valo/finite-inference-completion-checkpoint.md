@@ -1,5 +1,7 @@
 # Finite inference completion checkpoint
 
+This records the PR15 implementation baseline. Its TPL-07-only preparation and original frozen-package statements are historical; current TPL-01–11 conditional coverage and the corrected byte-exact package are documented in operational-preparer-coverage-checkpoint.md and the current setup guide. No native prepared pairs, spending approval or release acceptance is implied.
+
 This is private development engineering, not an approved budget, completed corpus, publication or production release.
 
 The disabled allocation package in `evidence/finite-allocation-package-disabled.json` was generated from actual repository files. It freezes 108 actual content units: 70 canonical intake IDs plus 12 practical-guide, 20 industry-landing and six deeper-pack source sections, together with the original 60 editorial, 80 checker and 60 customer-AI case IDs/hashes. The proposed allowance is up to $30 in additional new application inference, excluding historical unknown account charges, tax, Agent development, hosting and other projects. The supported executable preparer currently covers only the original TPL-07 operational review pair; its worst-case reservation is $0.7411008. No database-backed exact plan or provider call is claimed by the repository proposal.
