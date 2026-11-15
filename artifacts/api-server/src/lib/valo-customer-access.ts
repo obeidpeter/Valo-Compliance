@@ -6,7 +6,7 @@ import {abortable} from "./valo-abort";
 import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoAssessments,valoTasks,valoReminderPreferences,
   valoReminderOutbox,valoAIDrafts,valoContentVersions,valoSafetySwitches,valoStaffAccessAudit,
-  valoExportJobs,valoFileAssets,valoEvents } from "@workspace/db";
+  valoExportJobs,valoFileAssets,valoEvents,valoWorkspaceExports } from "@workspace/db";
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { authorizeWorkspaceWrite,authorizeWorkspaceRead,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
@@ -73,7 +73,7 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
       reminderDeliveries:valoReminderOutbox,supportRequests:valoSupportTickets,aiDrafts:valoAIDrafts,
       orders:valoOrders,entitlements:valoEntitlements,purchaseMessages:valoPurchaseOutbox,
       refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations,privacyInformation:valoPrivacyMessages,
-      disputeInformation:valoDisputeInformation,disputeIntents:valoDisputeActions};
+      disputeInformation:valoDisputeInformation};
     const data:Record<string,unknown>={};
     let bytes=0;
     let sections=0;
@@ -112,6 +112,16 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
         .orderBy("id" in table?table.id:table.workspaceId).limit(sink?500:5001).offset(offset));
     }
     // Explicit projections: never include storage locators, queue identifiers or leases.
+    await collect("disputeIntents",offset=>tx.select({id:valoDisputeActions.id,orderId:valoDisputeActions.orderId,
+      disputeId:valoDisputeActions.disputeId,kind:valoDisputeActions.kind,status:valoDisputeActions.status,
+      createdAt:valoDisputeActions.createdAt,updatedAt:valoDisputeActions.updatedAt}).from(valoDisputeActions)
+      .where(eq(valoDisputeActions.workspaceId,actor.workspaceId)).orderBy(valoDisputeActions.id).limit(sink?500:5001).offset(offset));
+    await collect("workspaceDataExports",offset=>tx.select({id:valoWorkspaceExports.id,status:valoWorkspaceExports.status,
+      version:valoWorkspaceExports.version,attempts:valoWorkspaceExports.attempts,createdAt:valoWorkspaceExports.createdAt,
+      expiresAt:valoWorkspaceExports.expiresAt,snapshotAt:valoWorkspaceExports.snapshotAt,size:valoWorkspaceExports.size,
+      counts:valoWorkspaceExports.counts,scope:valoWorkspaceExports.scope,errorCode:valoWorkspaceExports.errorCode})
+      .from(valoWorkspaceExports).where(and(eq(valoWorkspaceExports.workspaceId,actor.workspaceId),eq(valoWorkspaceExports.requesterId,actor.identityId)))
+      .orderBy(valoWorkspaceExports.id).limit(sink?500:5001).offset(offset));
     await collect("exportJobs",offset=>tx.select({id:valoExportJobs.id,workspaceId:valoExportJobs.workspaceId,
       documentId:valoExportJobs.documentId,revisionId:valoExportJobs.revisionId,revision:valoExportJobs.revision,
       format:valoExportJobs.format,renderVersion:valoExportJobs.renderVersion,sourceHash:valoExportJobs.sourceHash,

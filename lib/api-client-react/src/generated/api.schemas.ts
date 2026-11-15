@@ -245,6 +245,11 @@ export interface WorkspaceExportRequest {
   requestKey: string;
 }
 
+export interface WorkspaceExportAction {
+  /** @minimum 1 */
+  expectedVersion: number;
+}
+
 export type WorkspaceExportJobStatus = typeof WorkspaceExportJobStatus[keyof typeof WorkspaceExportJobStatus];
 
 
@@ -257,6 +262,15 @@ export const WorkspaceExportJobStatus = {
   expired: 'expired',
 } as const;
 
+export type WorkspaceExportJobProgress = {
+  /** @nullable */
+  section: string | null;
+  /** @minimum 0 */
+  rows: number;
+  /** @minimum 0 */
+  bytes: number;
+};
+
 /**
  * @nullable
  */
@@ -265,6 +279,10 @@ export type WorkspaceExportJobCounts = {[key: string]: number} | null;
 export interface WorkspaceExportJob {
   id: string;
   status: WorkspaceExportJobStatus;
+  /** @minimum 1 */
+  version: number;
+  retryAvailable: boolean;
+  progress: WorkspaceExportJobProgress;
   attempts: number;
   createdAt: string;
   expiresAt: string;
@@ -277,6 +295,12 @@ export interface WorkspaceExportJob {
   /** @nullable */
   errorCode: string | null;
   notice: string;
+}
+
+export interface WorkspaceExportPage {
+  items: WorkspaceExportJob[];
+  /** @nullable */
+  nextCursor: string | null;
 }
 
 export type WorkspaceDataExportData = { [key: string]: unknown };
@@ -2416,6 +2440,10 @@ export type ConflictErrorResponse = {
  * Validation, access or concurrency error
  */
 export type AuthErrorResponse = ApiProblem;
+
+export type ListWorkspaceDataExportsParams = {
+  cursor?: string;
+};
 
 export type StartCommerceCheckout200 = {
   url: string;

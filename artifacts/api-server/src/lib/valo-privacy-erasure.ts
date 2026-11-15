@@ -108,8 +108,18 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
     WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
       AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);
   if(section==="privacy_content"){
+    // Keep historical signed phase indices. The exact JSON keys are already
+    // sealed independently before removing their customer-bearing metadata.
+    const removedAttempts=await tx.execute(sql`DELETE FROM valo_workspace_export_attempts WHERE ctid IN
+      (SELECT ctid FROM valo_workspace_export_attempts WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
+    let used=removedAttempts.rowCount??0;
+    if(used<100){const removedJobs=await tx.execute(sql`DELETE FROM valo_workspace_exports WHERE ctid IN
+      (SELECT ctid FROM valo_workspace_exports j WHERE workspace_id=${workspaceId}::uuid
+       AND NOT EXISTS (SELECT 1 FROM valo_workspace_export_attempts a WHERE a.job_id=j.id) LIMIT ${100-used})`);
+      used+=removedJobs.rowCount??0;}
+    if(used===100)return{rowCount:used};
     const rows=await tx.select().from(valoPrivacyCases).where(and(eq(valoPrivacyCases.workspaceId,workspaceId),
-      ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100).for("update");
+      ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100-used).for("update");
     for(const target of rows){
       const checked=await readPrivacyCase(tx,target.id);
       await privacyChange(tx,checked,{identityId:"service:privacy-erasure",type:"worker"},"private_content_removed",
@@ -117,7 +127,7 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
           message:removedMessage,resultJson:null,resultScope:"Private prepared content removed by verified workspace erasure.",
         });
     }
-    return{rowCount:rows.length};
+    return{rowCount:used+rows.length};
   }
   if(section==="valo_ai_drafts")return tx.execute(sql`UPDATE valo_ai_drafts SET preview='{}'::jsonb,plan=NULL,
     accepted_document_id=NULL,status='privacy_erased',updated_at=now()

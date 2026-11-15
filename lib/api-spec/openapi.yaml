@@ -89,12 +89,14 @@ paths:
   /workspace/data-exports:
     get:
       operationId: listWorkspaceDataExports
+      parameters:
+        - {in: query, name: cursor, required: false, schema: {type: string, format: uuid}}
       responses:
         "200":
           description: Current user's durable private exports.
           content:
             application/json:
-              schema: {type: array, items: {$ref: "#/components/schemas/WorkspaceExportJob"}}
+              schema: {$ref: "#/components/schemas/WorkspaceExportPage"}
     post:
       operationId: createWorkspaceDataExport
       requestBody:
@@ -109,14 +111,46 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}:
+    get:
+      operationId: getWorkspaceDataExport
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Current recorded status for the owning account.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
   /workspace/data-exports/{id}/cancel:
     post:
       operationId: cancelWorkspaceDataExport
       parameters:
         - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/WorkspaceExportAction"}
       responses:
         "200":
-          description: Discarded with private cleanup scheduled; not a processor erasure claim.
+          description: Recorded action; neither download receipt nor physical deletion proof.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}/retry:
+    post:
+      operationId: retryWorkspaceDataExport
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/WorkspaceExportAction"}
+      responses:
+        "200":
+          description: Recorded action; neither download receipt nor physical deletion proof.
           content:
             application/json:
               schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
@@ -1245,12 +1279,33 @@ components:
       additionalProperties: false
       properties:
         requestKey: {type: string, format: uuid}
+    WorkspaceExportAction:
+      type: object
+      required: [expectedVersion]
+      additionalProperties: false
+      properties:
+        expectedVersion: {type: integer, minimum: 1}
+    WorkspaceExportPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items: {type: array, items: {$ref: "#/components/schemas/WorkspaceExportJob"}}
+        nextCursor: {type: string, nullable: true}
     WorkspaceExportJob:
       type: object
-      required: [id, status, attempts, createdAt, expiresAt, snapshotAt, size, counts, errorCode, notice]
+      required: [id, status, version, attempts, createdAt, expiresAt, snapshotAt, size, counts, errorCode, notice, progress, retryAvailable]
       properties:
         id: {type: string, format: uuid}
         status: {type: string, enum: [queued, preparing, interrupted, ready, cancelled, expired]}
+        version: {type: integer, minimum: 1}
+        retryAvailable: {type: boolean}
+        progress:
+          type: object
+          required: [section, rows, bytes]
+          properties:
+            section: {type: string, nullable: true}
+            rows: {type: integer, minimum: 0}
+            bytes: {type: integer, minimum: 0}
         attempts: {type: integer}
         createdAt: {type: string, format: date-time}
         expiresAt: {type: string, format: date-time}

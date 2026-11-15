@@ -120,9 +120,62 @@ export const DownloadWorkspaceDataResponse = zod.object({
 })
 
 
-export const ListWorkspaceDataExportsResponseItem = zod.object({
+export const ListWorkspaceDataExportsQueryParams = zod.object({
+  "cursor": zod.uuid().optional()
+})
+
+
+export const listWorkspaceDataExportsResponseItemsItemProgressRowsMin = 0;
+
+export const listWorkspaceDataExportsResponseItemsItemProgressBytesMin = 0;
+
+
+
+export const ListWorkspaceDataExportsResponse = zod.object({
+  "items": zod.array(zod.object({
   "id": zod.uuid(),
   "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "retryAvailable": zod.boolean(),
+  "progress": zod.object({
+  "section": zod.string().nullable(),
+  "rows": zod.int().min(listWorkspaceDataExportsResponseItemsItemProgressRowsMin),
+  "bytes": zod.int().min(listWorkspaceDataExportsResponseItemsItemProgressBytesMin)
+}),
+  "attempts": zod.int(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "snapshotAt": zod.string().nullable(),
+  "size": zod.number().nullable(),
+  "counts": zod.record(zod.string(), zod.int()).nullable(),
+  "errorCode": zod.string().nullable(),
+  "notice": zod.string()
+})),
+  "nextCursor": zod.string().nullable()
+})
+
+
+export const CreateWorkspaceDataExportBody = zod.object({
+  "requestKey": zod.uuid()
+})
+
+
+export const createWorkspaceDataExportResponseProgressRowsMin = 0;
+
+export const createWorkspaceDataExportResponseProgressBytesMin = 0;
+
+
+
+export const CreateWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "retryAvailable": zod.boolean(),
+  "progress": zod.object({
+  "section": zod.string().nullable(),
+  "rows": zod.int().min(createWorkspaceDataExportResponseProgressRowsMin),
+  "bytes": zod.int().min(createWorkspaceDataExportResponseProgressBytesMin)
+}),
   "attempts": zod.int(),
   "createdAt": zod.coerce.date(),
   "expiresAt": zod.coerce.date(),
@@ -132,16 +185,29 @@ export const ListWorkspaceDataExportsResponseItem = zod.object({
   "errorCode": zod.string().nullable(),
   "notice": zod.string()
 })
-export const ListWorkspaceDataExportsResponse = zod.array(ListWorkspaceDataExportsResponseItem)
 
 
-export const CreateWorkspaceDataExportBody = zod.object({
-  "requestKey": zod.uuid()
+export const GetWorkspaceDataExportParams = zod.object({
+  "id": zod.uuid()
 })
 
-export const CreateWorkspaceDataExportResponse = zod.object({
+
+export const getWorkspaceDataExportResponseProgressRowsMin = 0;
+
+export const getWorkspaceDataExportResponseProgressBytesMin = 0;
+
+
+
+export const GetWorkspaceDataExportResponse = zod.object({
   "id": zod.uuid(),
   "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "retryAvailable": zod.boolean(),
+  "progress": zod.object({
+  "section": zod.string().nullable(),
+  "rows": zod.int().min(getWorkspaceDataExportResponseProgressRowsMin),
+  "bytes": zod.int().min(getWorkspaceDataExportResponseProgressBytesMin)
+}),
   "attempts": zod.int(),
   "createdAt": zod.coerce.date(),
   "expiresAt": zod.coerce.date(),
@@ -157,9 +223,69 @@ export const CancelWorkspaceDataExportParams = zod.object({
   "id": zod.uuid()
 })
 
+
+
+
+export const CancelWorkspaceDataExportBody = zod.object({
+  "expectedVersion": zod.int().min(1)
+})
+
+
+export const cancelWorkspaceDataExportResponseProgressRowsMin = 0;
+
+export const cancelWorkspaceDataExportResponseProgressBytesMin = 0;
+
+
+
 export const CancelWorkspaceDataExportResponse = zod.object({
   "id": zod.uuid(),
   "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "retryAvailable": zod.boolean(),
+  "progress": zod.object({
+  "section": zod.string().nullable(),
+  "rows": zod.int().min(cancelWorkspaceDataExportResponseProgressRowsMin),
+  "bytes": zod.int().min(cancelWorkspaceDataExportResponseProgressBytesMin)
+}),
+  "attempts": zod.int(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "snapshotAt": zod.string().nullable(),
+  "size": zod.number().nullable(),
+  "counts": zod.record(zod.string(), zod.int()).nullable(),
+  "errorCode": zod.string().nullable(),
+  "notice": zod.string()
+})
+
+
+export const RetryWorkspaceDataExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const RetryWorkspaceDataExportBody = zod.object({
+  "expectedVersion": zod.int().min(1)
+})
+
+
+export const retryWorkspaceDataExportResponseProgressRowsMin = 0;
+
+export const retryWorkspaceDataExportResponseProgressBytesMin = 0;
+
+
+
+export const RetryWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "retryAvailable": zod.boolean(),
+  "progress": zod.object({
+  "section": zod.string().nullable(),
+  "rows": zod.int().min(retryWorkspaceDataExportResponseProgressRowsMin),
+  "bytes": zod.int().min(retryWorkspaceDataExportResponseProgressBytesMin)
+}),
   "attempts": zod.int(),
   "createdAt": zod.coerce.date(),
   "expiresAt": zod.coerce.date(),

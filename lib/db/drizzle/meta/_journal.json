@@ -197,6 +197,13 @@
       "when": 1794702000003,
       "tag": "0028_workspace_export_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794703000000,
+      "tag": "0029_workspace_export_convergence",
+      "breakpoints": true
     }
   ]
 }

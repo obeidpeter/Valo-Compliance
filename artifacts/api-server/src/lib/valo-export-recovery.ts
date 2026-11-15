@@ -3,6 +3,7 @@ import {and,eq,inArray,lte,sql} from "drizzle-orm";
 import {db,valoExportJobs,valoExportObjects,valoFileAssets,valoEvents,valoPrivacyTombstones} from "@workspace/db";
 import {assertErasureObjectScope} from "./valo-erasure-seal";
 import {deletePrivateFile} from "./valo-private-storage";
+import {privateCleanupAuthority} from "./valo-private-cleanup-authority";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 
 export const EXPORT_LEASE_MS=90_000;
@@ -43,6 +44,7 @@ export async function reconcileExportOrphans(jobId?:string,remove:(key:string)=>
   let cleaned=0,failed=0,privacyHeld=0;
   for(const object of due){
     await db.transaction(async tx=>{
+      if(!(await privateCleanupAuthority(tx,object.workspaceId)).allowed){privacyHeld++;return;}
       const [locked]=await tx.select().from(valoExportObjects).where(and(eq(valoExportObjects.objectKey,object.objectKey),
         eq(valoExportObjects.state,"cleanup"),lte(valoExportObjects.nextCleanupAt,new Date()))).for("update",{skipLocked:true});
       if(!locked)return;
