@@ -103,3 +103,51 @@ EDP-004/009 and OPS-005 but does not make their whole release scope accepted.
 The existing exact finite request preparation must be fresh and independently
 reviewed before an owner can authorize any actual batch. Expiry, source changes,
 financial holds and missing authority still stop it.
+
+## Saved-head CI failures and environment correction
+
+Application checkpoint `b6f435a020f03a3ecd22637c761fc22e9ef20b40`
+was pushed normally. Its runs
+[43687118608](https://github.com/obeidpeter/Valo-Compliance/actions/runs/43687118608)
+and
+[43687114935](https://github.com/obeidpeter/Valo-Compliance/actions/runs/43687114935)
+retain the failed evidence:
+
+- The new actual database caller reached real rendering before that job's
+  Chromium installation step. It failed on the missing Replit-default binary,
+  not a financial rejection. The existing Chromium/Poppler installation and
+  explicit portable executable path now precede the real-caller step.
+- The runner log identifies `ubuntu-26.04`; `ubuntu-latest` had advanced and
+  `postgresql-16` was unavailable. The foundation and database jobs are pinned
+  to supported `ubuntu-24.04`, retaining the intended PostgreSQL 16 recovery
+  target rather than dropping the restore test.
+- Static checks with canaries and dependency/redacted-secret checks passed.
+  Neither those passes nor local results cancel either failed CI run.
+
+The corrected configuration must pass on its new exact saved head.
+
+## Refreshed disabled packet
+
+Preparation completed at `2026-11-15T06:48:26.983Z`, with **zero provider calls
+and zero approval rows written**. An earlier 60-second operator timeout did not
+constitute a preparation pass; the bounded rerun completed successfully.
+
+- Package: `finite-package:1ed5cf253bcc0ea5483d038cc0e7f1cba760dcce49fb30f7f2a6c4832ecbda25`.
+- Exact roster: **11 operational pairs / 22 attempts**, not 11 publications.
+- Decision packet hash: `fce0eb7b59e08c1ab82ed398c08631ae92ce6be1cfe453c9a76667605c1c4943`.
+- Expiry: `2026-11-15T07:47:54.999Z`; expiry requires fresh preparation, never
+  elapsed-time authorization.
+- Worst-case reserved exposure if authorized: **$8.1521088** using the complete
+  context fallback, inside the proposed **$30 pre-tax additional-use ceiling**.
+- Concurrency two, one completion, no tools or automatic retries. Current
+  execution admits the two operational roles sequentially.
+- `ownerApproved`, `enabled` and `authorizesDispatch` are **false**.
+- Independent review is **pending**. This is prepared, not activation approval.
+
+The exact request manifests and private report are retained in the existing
+private artifact adapter; report ID `fe037e74-4050-4dc3-8e6f-32f1d72af430`,
+SHA-256 `c20a98110b81e5102b2141d1cd230034ba5298ff7ce113969b9bac91947a2eaf`.
+The original case rosters remain frozen, but nonpublication executable
+preparers are still held. No unsupported evaluation work is implied by these
+22 actual requests. Historical accounting remains separate from this proposed
+new-allocation start boundary.
