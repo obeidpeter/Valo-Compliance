@@ -7,8 +7,8 @@
  *
  * AUTH CONFIGURATION: To manage users, enable/disable login providers
  * (Google, GitHub, etc.), change app branding, or configure OAuth credentials,
- * use the Auth pane in the workspace toolbar. There is no external Clerk
- * dashboard — all auth configuration is done through the Auth pane.
+ * use the Auth pane in the workspace toolbar. Its advanced configuration can
+ * open the scoped Clerk dashboard; select the intended environment explicitly.
  *
  * IMPORTANT:
  * - Only active in production (Clerk proxying doesn't work for dev instances)
@@ -20,9 +20,10 @@
  */
 
 import type { IncomingHttpHeaders } from 'http';
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { trustedSiteOrigin } from "../lib/valo-site-origin";
+import {clientAddress} from "../lib/valo-proxy-boundary";
 
 const CLERK_FAPI = 'https://frontend-api.clerk.dev';
 export const CLERK_PROXY_PATH = '/api/__clerk';
@@ -68,14 +69,12 @@ export function clerkProxyMiddleware(): RequestHandler {
         proxyReq.setHeader('Clerk-Proxy-Url', proxyUrl);
         proxyReq.setHeader('Clerk-Secret-Key', secretKey);
 
-        const xff = req.headers['x-forwarded-for'];
-        const clientIp =
-          (Array.isArray(xff) ? xff[0] : xff)?.split(',')[0]?.trim() ||
-          req.socket?.remoteAddress ||
-          '';
-        if (clientIp) {
-          proxyReq.setHeader('X-Forwarded-For', clientIp);
-        }
+        for(const header of ['forwarded','x-real-ip','x-forwarded-for','x-forwarded-host','x-forwarded-proto','x-forwarded-port'])proxyReq.removeHeader(header);
+        const clientIp=clientAddress(req as Request);
+        if(clientIp!=="unknown-socket")proxyReq.setHeader('X-Forwarded-For',clientIp);
+        const configured=new URL(siteOrigin);
+        proxyReq.setHeader('X-Forwarded-Host',configured.host);
+        proxyReq.setHeader('X-Forwarded-Proto',configured.protocol.slice(0,-1));
       },
       // Clerk's dynamic Frontend API responses (/v1/environment, /v1/client,
       // JWKS, ...) arrive without a Content-Length, so relaying them would use

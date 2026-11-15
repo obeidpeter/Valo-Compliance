@@ -17,11 +17,11 @@ const App = dynamic(() => import('./App'), {
   loading: LoadingApp,
 });
 
-export default function ClientApp() {
+export default function ClientApp({nonce}:{nonce?:string}) {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => { setMounted(true); }, []);
 
   // Render identical HTML on the server and the first client pass, even if the
   // dynamic chunk is already cached. Mount the browser router after hydration.
-  return mounted ? <App /> : <LoadingApp />;
+  return mounted ? <App nonce={nonce}/> : <LoadingApp />;
 }

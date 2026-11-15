@@ -17,7 +17,9 @@ import { releasedResources } from "../lib/valo-released-content";
 import { commerceRouter } from "./valo-commerce";
 
 import {customerPaymentConcernsRouter,financePaymentConcernsRouter} from "./valo-payment-concerns";
+import {createSessionVerificationRouter} from "./valo-session-verification";
 const router = Router();
+router.use(createSessionVerificationRouter());
 router.use(publicAccessRouter);
 router.use(staffOperationsRouter);
 router.use(financePaymentConcernsRouter);

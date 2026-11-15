@@ -1,7 +1,7 @@
 /** Trust deployment configuration, never request Host/Forwarded headers. */
 export function trustedSiteOrigin(env:NodeJS.ProcessEnv=process.env):string|undefined{
   const raw=env.VALO_TRUSTED_ORIGIN ??
-    (env.NODE_ENV==="development"&&!env.REPLIT_DEPLOYMENT&&env.REPLIT_DEV_DOMAIN?`https://${env.REPLIT_DEV_DOMAIN}`:undefined);
+    (env.NODE_ENV==="development"&&!Object.keys(env).some(k=>(k==="REPLIT_DEPLOYMENT"||k.startsWith("REPLIT_DEPLOYMENT_"))&&Boolean(env[k]?.length))&&env.REPLIT_DEV_DOMAIN?`https://${env.REPLIT_DEV_DOMAIN}`:undefined);
   if(!raw)return undefined;
   try{
     const parsed=new URL(raw);

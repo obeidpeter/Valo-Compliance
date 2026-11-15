@@ -15,6 +15,7 @@ import { PurchaseHistoryPage } from './purchase-history';
 import {PrivacyCases} from "@/components/privacy-cases";
 import {getListPrivacyCasesQueryKey} from "@workspace/api-client-react";
 import { WorkspaceDataDownload } from '@/components/workspace-data-download';
+import {MfaVerification} from '@/components/mfa-verification';
 
 export function AccountPage() {
   return (
@@ -28,6 +29,7 @@ export function AccountPage() {
       <Notice className="mb-6" title="Deleting your sign-in account is not a Valo data deletion" >
         Changes made below, including deleting your sign-in account, affect only the sign-in provider. They do not delete your Valo workspace, drafts, assessments, tasks or requests. To have your Valo data deleted, save a verified request on <Link href="/workspace/privacy" className="underline underline-offset-2" data-testid="link-account-privacy">Privacy and data</Link>, and do that before deleting your sign-in account, because you will need to be signed in.
       </Notice>
+      <MfaVerification/>
       <div className="overflow-x-auto" data-testid="account-profile">
         <UserProfile routing="hash" />
       </div>
