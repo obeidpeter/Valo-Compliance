@@ -115,7 +115,8 @@ out after 90 seconds. Do not expose this port through the public reverse proxy. 
 bounded supervisor candidate now checks child-bound health reports and restarts an
 unresponsive worker; see [worker supervision](phase2-worker-supervision.md).
 Deployment still needs an outer process manager and external alert delivery; the
-local heartbeat/alert files are not an external monitor.
+local heartbeat/alert files are not an external monitor. The opt-in independent
+monitor and provider provisioning steps are in [infrastructure setup](phase2-infrastructure-setup.md).
 
 Every dispatch verifies the existing `valo_jobs` queues:
 
