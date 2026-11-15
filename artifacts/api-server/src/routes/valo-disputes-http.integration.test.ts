@@ -15,9 +15,9 @@ test("actual dispute HTTP routers enforce managed finance authority, tenant bind
  process.env.VALO_RUN_DISPUTE_TESTS="synthetic-development-only";const f=await disputeFixture();
  const support=`synthetic-dispute-support-${randomUUID()}`;await db.insert(valoStaffAssignments).values({id:randomUUID(),identityId:support,role:"support",grantedBy:"synthetic",reason:"Verify support cannot mutate finance."});
  let active=true,verified=true,matched=true,fresh=true;
- const auth=makeVerifiedStaffSession({auth:req=>{const id=req.header("x-test-staff");return{userId:id??null,sessionId:id?`session:${id}`:null,has:()=>fresh};},
+ const auth=makeVerifiedStaffSession({auth:req=>{const id=req.header("x-test-staff");return{userId:id??null,sessionId:id?`session:${id}`:null,sessionClaims:{fva:fresh?[0,0]:[0,-1]},has:()=>fresh};},
  session:async id=>({status:active?"active":"revoked",userId:matched?id.slice(8):"mismatched"}),
- user:async id=>({id,banned:false,locked:false,primaryEmailAddressId:"primary",emailAddresses:[{id:"primary",verification:{status:verified?"verified":"unverified"}}]})});
+ user:async id=>({id,banned:false,locked:false,twoFactorEnabled:true,primaryEmailAddressId:"primary",emailAddresses:[{id:"primary",verification:{status:verified?"verified":"unverified"}}]})});
  const app=express();app.use(express.json());app.use(createFinancePaymentConcernsRouter(auth));app.use(makeDisputeOperationsRouter(auth));
  app.use((req,res,next)=>{const who=req.header("x-test-customer");if(who!=="owner"&&who!=="other"){res.status(401).json({error:"Controlled customer required"});return;}res.locals.valoActor=who==="owner"?f.owner:f.other;next();},customerPaymentConcernsRouter);
  app.use((e:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>res.status(e instanceof ValoProblem?e.status:e instanceof z.ZodError?422:503).json({error:e instanceof Error?e.message:"Unavailable"}));

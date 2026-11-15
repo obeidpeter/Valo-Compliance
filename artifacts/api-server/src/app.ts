@@ -12,8 +12,10 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { requestReadQuota } from "./middlewares/valo-quota";
 import { paystackWebhookRouter } from "./routes/valo-paystack-webhook";
+import {configureProxyBoundary} from "./lib/valo-proxy-boundary";
 
 const app: Express = express();
+configureProxyBoundary(app);
 
 app.use(requestLogging(logger));
 app.disable("x-powered-by");

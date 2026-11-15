@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { getAuth } from "@clerk/express";
 import { consumeQuota, purgeExpiredQuotaBuckets, quotaSubjectHash } from "../lib/valo-quota";
+import {clientAddress} from "../lib/valo-proxy-boundary";
 
 export const requestReadQuota: RequestHandler = async (req, res, next): Promise<void> => {
   if (!["GET", "HEAD"].includes(req.method) || !req.path.startsWith("/api/") || req.path === "/api/healthz") {
@@ -8,9 +9,7 @@ export const requestReadQuota: RequestHandler = async (req, res, next): Promise<
   }
   // Clerk's supported server validation, never a client-supplied identity header.
   const { userId } = getAuth(req);
-  // Do not trust caller-controlled X-Forwarded-For. Behind the Replit proxy this
-  // is a conservative shared-socket limit until trusted end-user IP is proven.
-  const subject = userId ?? req.socket.remoteAddress;
+  const subject = userId ?? clientAddress(req);
   const key = quotaSubjectHash(process.env.SESSION_SECRET, userId ? "user" : "ip", subject ?? "");
   await purgeExpiredQuotaBuckets();
   const bucket = userId ? "authenticated-read" : "anonymous-read";

@@ -1,6 +1,8 @@
 import {createStaffRoleRouter} from "./valo-staff-roles";
 import { Router,type Request } from "express";
-import { getAuth,clerkClient } from "@clerk/express";
+import {verifiedStaffSession} from "../lib/valo-managed-session";
+export {makeVerifiedStaffSession} from "../lib/valo-managed-session";
+import {clientAddress} from "../lib/valo-proxy-boundary";
 import { z } from "zod";
 import { RequestAccessSupportResponse as AccessSupportAck,GetCustomerAccountResponse as CustomerAccount,
   GetCustomerPurchasesResponse as CustomerPurchases,
@@ -24,7 +26,7 @@ import {requesterPrivacyList,requesterPrivacyDetail,requesterPrivacyReply} from 
 export const publicAccessRouter=Router();
 publicAccessRouter.post("/public/access-support",sameOriginMutation,async(req,res)=>{
   res.set("Cache-Control","private, no-store");
-  res.status(201).json(AccessSupportAck.parse(await saveAccessSupport(req.body,req.socket.remoteAddress??"unknown-socket")));
+  res.status(201).json(AccessSupportAck.parse(await saveAccessSupport(req.body,clientAddress(req))));
 });
 export const customerAccessRouter=Router();
 customerAccessRouter.get("/workspace/orders/:id/dispute-information",async(req,res)=>{
@@ -65,27 +67,7 @@ customerAccessRouter.get("/workspace/privacy-cases/:id/result",async(req,res)=>{
   res.json(await privacyPreparedResult(res.locals.valoActor,id));
 });
 export const staffOperationsRouter=Router();
-type StaffSessionDependencies={
-  auth:(req:Request)=>{userId:string|null;sessionId:string|null;has:(check:{reverification:"strict_mfa"})=>boolean};
-  session:(id:string)=>Promise<{status:string;userId:string}>;
-  user:(id:string)=>Promise<{id:string;banned:boolean;locked:boolean;primaryEmailAddressId:string|null;
-    emailAddresses:{id:string;verification:{status:string}|null}[]}>;
-};
-export function makeVerifiedStaffSession(deps:StaffSessionDependencies={
-  auth:getAuth,session:id=>clerkClient.sessions.getSession(id),user:id=>clerkClient.users.getUser(id),
-}){
-return async(req:Request):Promise<PrivacyStaffActor>=>{
-  const auth=deps.auth(req);
-  if(!auth.userId||!auth.sessionId)throw new ValoProblem(401,"Sign in to a staff account.");
-  const[session,user]=await Promise.all([deps.session(auth.sessionId),deps.user(auth.userId)]);
-  const primary=user.emailAddresses.find(e=>e.id===user.primaryEmailAddressId);
-  if(session.status!=="active"||session.userId!==auth.userId||user.id!==auth.userId||user.banned||user.locked||primary?.verification?.status!=="verified")
-    throw new ValoProblem(403,"An active verified staff session is required.");
-  const actor={identityId:user.id,recentMfa:auth.has({reverification:"strict_mfa"}),verifiedAt:Date.now()};
-  return actor;
-};
-}
-export const verifiedStaffSession=makeVerifiedStaffSession();
+export {verifiedStaffSession};
 staffOperationsRouter.use(createStaffRoleRouter(verifiedStaffSession));
 /** Uses the same live session/user checks but grants only original-requester
  * case access. Staff roles/MFA are not required of ordinary customers. */
@@ -103,7 +85,7 @@ export function createPrivacyRequesterRouter(authenticate:(req:Request)=>Promise
   });
   return router;
 }
-async function financeIdentity(req:Request){
+async function financeIdentity(req:Request):Promise<PrivacyStaffActor>{
   const actor=await verifiedStaffSession(req);
   await assertFinanceActor(actor);return actor;
 }

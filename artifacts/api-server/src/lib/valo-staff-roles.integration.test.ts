@@ -110,8 +110,8 @@ test("staff role governance: disposable PostgreSQL, managed-session boundary and
   });
   await t.test("real HTTP uses managed session, exact account binding, fresh MFA and same-origin JSON",async()=>{
    let session={status:"active",userId:a},userId:string|null=a,sessionId:string|null="controlled-session",mfa=true;
-   const authenticate=makeVerifiedStaffSession({auth:()=>({userId,sessionId,has:()=>mfa}),session:async()=>session,
-    user:async id=>({id,banned:false,locked:false,primaryEmailAddressId:"email",emailAddresses:[{id:"email",verification:{status:"verified"}}]})});
+   const authenticate=makeVerifiedStaffSession({auth:()=>({userId,sessionId,sessionClaims:{fva:mfa?[0,0]:[0,-1]},has:()=>mfa}),session:async()=>session,
+    user:async id=>({id,banned:false,locked:false,twoFactorEnabled:true,primaryEmailAddressId:"email",emailAddresses:[{id:"email",verification:{status:"verified"}}]})});
    const app=express();app.use(express.json());app.use(createStaffRoleRouter(authenticate,service));app.use((e:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>res.status(e instanceof ValoProblem?e.status:422).json({error:"controlled-boundary-error"}));
    const server=app.listen(0,"127.0.0.1");await new Promise<void>(r=>server.once("listening",r));const base="http://127.0.0.1:"+(server.address() as {port:number}).port;
    const origin=process.env.VALO_TRUSTED_ORIGIN;process.env.VALO_TRUSTED_ORIGIN=base;

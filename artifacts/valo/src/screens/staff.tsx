@@ -1,4 +1,5 @@
 import {StaffRoleAdministration} from "@/components/staff-role-administration";
+import {MfaVerification} from "@/components/mfa-verification";
 import { useState } from 'react';
 import { Link } from 'wouter';
 import { KeyRound, Lock, ShieldAlert } from 'lucide-react';
@@ -47,7 +48,7 @@ export default function StaffPage() {
         {q.isLoading ? <Skel className="h-48" /> : status === 401 ? (
           <EmptyState mark={<Lock className="h-5 w-5 text-muted-foreground" />} title="Sign in required" action={<Link href="/sign-in" className="btn btn-primary">Sign in</Link>}>Staff operations need a signed-in staff account.</EmptyState>
         ) : mfa ? (
-          <EmptyState mark={<KeyRound className="h-5 w-5 text-muted-foreground" />} title="Recent verification needed" action={<Link href="/workspace/account" className="btn btn-primary">Manage sign-in security</Link>}>This area requires multi-factor authentication completed recently. Set up or re-verify a second factor, then sign in again.</EmptyState>
+          <EmptyState mark={<KeyRound className="h-5 w-5 text-muted-foreground" />} title="Recent verification needed" action={<MfaVerification onVerified={()=>void q.refetch()}/>}>This area requires both sign-in factors to have been verified recently.</EmptyState>
         ) : status === 403 ? (
           <EmptyState mark={<ShieldAlert className="h-5 w-5 text-muted-foreground" />} title="Not a staff account" action={<Link href="/workspace" className="btn btn-ghost">Back to workspace</Link>}>Your account does not have a staff role for this area. Roles are assigned on the server; there is no way to request one here.</EmptyState>
         ) : q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : q.data ? (
