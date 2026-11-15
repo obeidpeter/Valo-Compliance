@@ -5,6 +5,143 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface VerifyStaffRoleTargetInput {
+  /**
+     * @maxLength 128
+     * @pattern ^user_[A-Za-z0-9_-]+$
+     */
+  identityId: string;
+}
+
+export type StaffRoleAssignmentRole = typeof StaffRoleAssignmentRole[keyof typeof StaffRoleAssignmentRole];
+
+
+export const StaffRoleAssignmentRole = {
+  content: 'content',
+  support: 'support',
+  finance: 'finance',
+  system: 'system',
+  privacy: 'privacy',
+} as const;
+
+export type StaffRoleAssignmentGrantMode = typeof StaffRoleAssignmentGrantMode[keyof typeof StaffRoleAssignmentGrantMode];
+
+
+export const StaffRoleAssignmentGrantMode = {
+  permanent: 'permanent',
+  break_glass: 'break_glass',
+} as const;
+
+export interface StaffRoleAssignment {
+  id: string;
+  identityId: string;
+  role: StaffRoleAssignmentRole;
+  active: boolean;
+  grantMode: StaffRoleAssignmentGrantMode;
+  /** @nullable */
+  expiresAt: string | null;
+  /** @minimum 1 */
+  version: number;
+  grantedBy: string;
+  grantedAt: string;
+  reason: string;
+}
+
+export type StaffRoleChangeReceiptAction = typeof StaffRoleChangeReceiptAction[keyof typeof StaffRoleChangeReceiptAction];
+
+
+export const StaffRoleChangeReceiptAction = {
+  grant: 'grant',
+  revoke: 'revoke',
+} as const;
+
+/**
+ * @nullable
+ */
+export type StaffRoleChangeReceiptBefore = { [key: string]: unknown } | null;
+
+export type StaffRoleChangeReceiptAfter = { [key: string]: unknown };
+
+export interface StaffRoleChangeReceipt {
+  id: string;
+  requestKey: string;
+  actorId: string;
+  assignmentId: string;
+  targetIdentityId: string;
+  action: StaffRoleChangeReceiptAction;
+  role: string;
+  reason: string;
+  /** @nullable */
+  incidentReference: string | null;
+  /** @nullable */
+  before: StaffRoleChangeReceiptBefore;
+  after: StaffRoleChangeReceiptAfter;
+  createdAt: string;
+}
+
+export type StaffRoleChangeInputRole = typeof StaffRoleChangeInputRole[keyof typeof StaffRoleChangeInputRole];
+
+
+export const StaffRoleChangeInputRole = {
+  content: 'content',
+  support: 'support',
+  finance: 'finance',
+  system: 'system',
+  privacy: 'privacy',
+} as const;
+
+export type StaffRoleChangeInputAction = typeof StaffRoleChangeInputAction[keyof typeof StaffRoleChangeInputAction];
+
+
+export const StaffRoleChangeInputAction = {
+  grant: 'grant',
+  revoke: 'revoke',
+} as const;
+
+export type StaffRoleChangeInputGrantMode = typeof StaffRoleChangeInputGrantMode[keyof typeof StaffRoleChangeInputGrantMode];
+
+
+export const StaffRoleChangeInputGrantMode = {
+  permanent: 'permanent',
+  break_glass: 'break_glass',
+} as const;
+
+export interface StaffRoleChangeInput {
+  requestKey: string;
+  /**
+     * @maxLength 128
+     * @pattern ^user_[A-Za-z0-9_-]+$
+     */
+  identityId: string;
+  role: StaffRoleChangeInputRole;
+  action: StaffRoleChangeInputAction;
+  /** @minimum 0 */
+  expectedVersion: number;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  acknowledgement: true;
+  grantMode?: StaffRoleChangeInputGrantMode;
+  /**
+     * @minimum 5
+     * @maximum 60
+     */
+  durationMinutes?: number;
+  /**
+     * @minLength 5
+     * @maxLength 200
+     */
+  incidentReference?: string;
+}
+
+export interface StaffRoleAdministration {
+  assignments: StaffRoleAssignment[];
+  changes: StaffRoleChangeReceipt[];
+  notice: string;
+}
+
 export type DisputeHistoryActorType = typeof DisputeHistoryActorType[keyof typeof DisputeHistoryActorType];
 
 
@@ -2556,6 +2693,20 @@ export type ConflictErrorResponse = {
  * Validation, access or concurrency error
  */
 export type AuthErrorResponse = ApiProblem;
+
+export type GetStaffRoleAdministrationParams = {
+  /**
+   * @maxLength 128
+   * @pattern ^user_[A-Za-z0-9_-]+$
+   */
+  identityId?: string;
+};
+
+export type VerifyStaffRoleTarget200 = {
+  identityId: string;
+  label: string;
+  verifiedAt: string;
+};
 
 export type ListWorkspaceDataExportsParams = {
   cursor?: string;

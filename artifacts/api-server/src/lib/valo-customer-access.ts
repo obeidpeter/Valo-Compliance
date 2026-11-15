@@ -1,3 +1,4 @@
+import {activeStaffAssignment,assertStaffAssignmentCurrent,requireFreshStaffSession,type StaffActor} from "./valo-staff-authority";
 import { randomUUID,createHash } from "node:crypto";
 import {createPrivacyCase} from "./valo-privacy";
 import { and,eq,desc,like,sql } from "drizzle-orm";
@@ -174,12 +175,15 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
   },{isolationLevel:"repeatable read"});
 }
 export type StaffArea="content"|"support"|"finance"|"system";
-export async function staffOperations(identityId:string,recentMfa:boolean,area:StaffArea){
+export async function staffOperations(actor:StaffActor,area:StaffArea){
+  requireFreshStaffSession(actor);
+  const {identityId}=actor;
   return db.transaction(async tx=>{
     const[assignment]=await tx.select().from(valoStaffAssignments).where(and(eq(valoStaffAssignments.identityId,identityId),
-      eq(valoStaffAssignments.role,area),eq(valoStaffAssignments.active,true))).for("share");
+      eq(valoStaffAssignments.role,area),activeStaffAssignment())).for("share");
     if(!assignment)throw new ValoProblem(403,"This account has no active permission for this staff area. Customer sign-in does not grant staff access.");
-    if(!recentMfa)throw new ValoProblem(403,"Recent multi-factor verification is required for staff access.");
+    await assertStaffAssignmentCurrent(tx,assignment.id);
+    requireFreshStaffSession(actor);
     await tx.insert(valoStaffAccessAudit).values({id:randomUUID(),assignmentId:assignment.id,actorId:identityId,area,
       reason:"Read-only operational access after active role and recent MFA checks"});
     let records:Record<string,unknown>[]=[];
@@ -208,4 +212,3 @@ export async function staffOperations(identityId:string,recentMfa:boolean,area:S
     return{area,notice,records};
   });
 }
-

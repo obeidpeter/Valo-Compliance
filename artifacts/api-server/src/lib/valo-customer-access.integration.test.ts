@@ -137,17 +137,18 @@ test("real development access intake, privacy isolation and staff boundaries",{
         await assert.rejects(action,(e:unknown)=>e instanceof ValoProblem&&e.status===403);
     });
     await t.test("no staff permission, missing MFA and cross-area substitution all fail",async()=>{
-      await assert.rejects(()=>staffOperations(staff,true,"finance"),/no active permission/);
+      const staffActor=(recentMfa=true)=>({identityId:staff,recentMfa,verifiedAt:Date.now()});
+      await assert.rejects(()=>staffOperations(staffActor(),"finance"),/no active permission/);
       await db.insert(valoStaffAssignments).values({id:role,identityId:staff,role:"finance",grantedBy:"synthetic-fixture",
         reason:"Isolated service-level negative test; not an actual staff approval"});
-      await assert.rejects(()=>staffOperations(staff,false,"finance"),/multi-factor/);
-      await assert.rejects(()=>staffOperations(staff,true,"support"),/no active permission/);
-      const r=await staffOperations(staff,true,"finance");
+      await assert.rejects(()=>staffOperations(staffActor(false),"finance"),/multi-factor/);
+      await assert.rejects(()=>staffOperations(staffActor(),"support"),/no active permission/);
+      const r=await staffOperations(staffActor(),"finance");
       assert.ok(r.records.every(record=>!Object.hasOwn(record,"body")&&!Object.hasOwn(record,"content")&&!Object.hasOwn(record,"line")));
       assert.match(r.notice,/Test-mode financial records/);
       assert.equal((await db.select().from(valoStaffAccessAudit).where(eq(valoStaffAccessAudit.assignmentId,role))).length,1);
       await db.update(valoStaffAssignments).set({active:false}).where(eq(valoStaffAssignments.id,role));
-      await assert.rejects(()=>staffOperations(staff,true,"finance"),/no active permission/);
+      await assert.rejects(()=>staffOperations(staffActor(),"finance"),/no active permission/);
     });
   }finally{
     await db.delete(valoStaffAccessAudit).where(eq(valoStaffAccessAudit.assignmentId,role));
