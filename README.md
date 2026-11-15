@@ -1,6 +1,20 @@
 # Valo Compliance — Valo Platform
 
-## Latest application checkpoint — restartable private workspace exports
+## Latest application checkpoint — finite inference controls and exact export proof
+
+Saved application: `c6bca11`. The real managed dispatch path was exercised offline,
+corpus/role and independent-review bindings were tightened, and default customer
+retry/observation behavior verified. **39/39** entry/preparation and **23/23**
+PostgreSQL checks passed. Export **10/10** integration and **9** browser checks
+now cover exact IDs and bounded page JS heap. No new model call or approval.
+
+A current native TPL-07 v9 two-review manifest is prepared but disabled. Its
+worst-case reservation is **$0.7411008** inside the proposed **$30 additional**
+finite allocation. Historical unknowns remain explicit, not a fictional balance.
+See [current evidence, exact manifest and remaining decision](docs/valo/inference-hardening-checkpoint.md).
+Full R1/R2 and formal 80/60/60 acceptance remain incomplete.
+
+## Previous application checkpoint — restartable private workspace exports
 
 The saved application now supports durable private scoped workspace exports,
 mid-preparation cancellation, current access rechecks and crash recovery without
