@@ -1,0 +1,59 @@
+{
+  "kind": "development-engineering-verification",
+  "baseCommit": "6081f10851da7af08129932cdc4cd8e29c3c4d88",
+  "runId": "72532877-ce8e-400a-8cde-129619556b59",
+  "startedAt": "2026-11-15T09:18:41.992Z",
+  "finishedAt": "2026-11-15T09:19:43.500Z",
+  "databaseIdentity": "postgres|valo_finite_proof|127.0.0.1|39273",
+  "databaseScope": "new disposable local PostgreSQL; stopped and removed",
+  "sourceSha256": {
+    "artifacts/api-server/src/lib/inference-batch-dispatch.ts": "fca08d582bc732c76e8b6c24525db157fadfa2b8dc81a57c61406b3befa50493",
+    "artifacts/api-server/src/lib/managed-sdk-transport.ts": "0b88b5e02d23d8c87f53b5a30198428bbfe39c12e1ba3ec1269e55135a5f6175",
+    "artifacts/api-server/src/lib/managed-inference-entry.test.ts": "9fbad35fa39479ab4d3dc85b60861ed832c2d1c9f39a5b8002e658e190163fa8",
+    "artifacts/api-server/src/scripts/finite-inference-run.ts": "b11cc7daeb7ff5fd3474430330eab8fa2733536146c3f80352498f635528c8c2",
+    "scripts/src/valo/verify-finite-budget-integration.mjs": "9b0fc4f95358c94ca2bce608ff0598f02d1eb6bcff0669af9eb7c780980564e4"
+  },
+  "checks": [
+    {"name": "credential-free-finite-controls", "passed": 67, "failed": 0, "skipped": 0},
+    {"name": "no-database-and-native-detector", "passed": 3, "failed": 0, "skipped": 0},
+    {"name": "controlled-runtime-boundary", "passed": 1, "failed": 0, "skipped": 0},
+    {"name": "postgres-dispatch-and-history", "passed": 29, "failed": 0, "skipped": 0},
+    {"name": "actual-managed-callers", "passed": 19, "failed": 0, "skipped": 0},
+    {"name": "portable-native-forbidden-ci", "passed": 18, "failed": 0, "skipped": 1}
+  ],
+  "total": {"passed": 137, "failed": 0, "skipped": 1, "includesTestParents": true},
+  "skipBoundary": "Explicit genuine-native-storage-only test; portable adapter does not prove native provider behavior",
+  "resultSha256": "c2c24b6723a084d9938302cbbea56d3b6183e587ee1473efcfbeae7ed348ddd8",
+  "finalFollowUp": {
+    "reason": "CLI help metadata renamed to authorizesDispatch; no financial runtime changes",
+    "finiteControls": {"passed": 67, "failed": 0, "skipped": 0},
+    "offlineLogSha256": "d10d4c1867fec2a6f9fced90352805fc1bd681b1b5e37e55d023a3549b4435ee",
+    "apiTypecheck": "passed",
+    "apiTypecheckLogSha256": "70983efac19498940e7c2622920e265ac7e326f30c91299dff80af688b58728e",
+    "workspaceTypecheck": "passed before final help-only metadata rename"
+  },
+  "privatePreparedReport": {
+    "id": "ba21d36d-ec3b-4325-93d3-03bc164fd5ee",
+    "extension": "json",
+    "hash": "1720e66998968abbe198c33ee86085f673e0224e6c659358d067ce3f1b4ca3f1",
+    "packageId": "finite-package:35bf0560c1393012cd74b4610329cfacc5a39113dd7f237ac7616e768a819817",
+    "packetHash": "0fe67583b983837e59fe578bed9e48f3a785d8ae5d3ebf6a3e1b8446310df864",
+    "attempts": 24,
+    "manifests": 12,
+    "earliestExpiry": "2026-11-15T10:18:45.671Z",
+    "worstCaseReservationNanoUsd": "8893209600",
+    "ownerApproved": false,
+    "reviewStatus": "independent-review-pending",
+    "authorizesDispatch": false
+  },
+  "boundaries": {
+    "providerCredentialsInheritedByIsolatedTests": false,
+    "workspaceDatabaseUsedByIsolatedTests": false,
+    "realInferenceCalls": 0,
+    "ownerApprovalCreated": false,
+    "quotasIncreased": false,
+    "formalAcceptanceExecuted": false,
+    "r1Accepted": false,
+    "r2Accepted": false
+  }
+}

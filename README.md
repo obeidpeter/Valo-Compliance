@@ -1,29 +1,33 @@
 # Valo Compliance — Valo Platform
 
-## Current checkpoint — shared disabled inference roster
+## Current checkpoint — final SDK admission and disabled review packet
 
-Publication reviews and supported customer attempts can now be prepared and
-verified under **one frozen package**, rather than separate package identities.
-The saved selection contains **11 review pairs + one invoice case with a
-separately bounded schema retry: 24 attempts, at most $8.8932096**, within the
-proposed additional $30 pre-tax ceiling. All 24 exact work items were verified
-against the private report and their source/candidate bindings.
+Approval, exact bindings and financial holds are now rechecked **after lazy SDK
+loading, immediately before SDK create**. Approved input is snapshotted so
+caller mutation cannot alter the sent request. Operator help/invalid modes need
+no database or SDK configuration.
 
-**Executed:** 60 offline budget controls and API typechecking passed. Concurrent
-actual CLI admissions without owner approval were refused; batch/approval rows
-and both ledger fingerprints remained unchanged. These 60 checks are not either
-formal 60-case AI/editorial acceptance suite.
+**Executed:** 137 engineering checks passed, one explicitly native-only check
+skipped; all workspace typechecks passed. The checks include 67 offline controls,
+48 PostgreSQL budget/real-caller checks, no-database/runtime guards and portable
+storage with native I/O forbidden. They are not formal 80/60/60 acceptance.
 
-**Spending is disabled.** Independent review and actual owner authorization
-remain pending; quotas were not raised. Historical exposure remains separate:
-57 records, including three unresolved potential-charge records, with no invented
-global balance or verified-bill claim. Prepared requests are not model results or
-published content. Expired preparations must be refreshed and rechecked.
+The fresh private packet binds **11 review pairs + one invoice case with a
+separate conditional schema retry: 24 attempts, at most $8.8932096 pre-tax** under
+the proposed additional $30 ceiling. All 24 requests/12 manifests were read back
+and verified. Earliest expiry: **2026-11-15 10:18:45.671 UTC**.
 
-See [current exact roster and evidence](docs/valo/finite-shared-roster-checkpoint.md).
-The rich checker journey is assigned to a separate isolated branch; this unit
-does not change its questionnaire, review, results, history or release adapter.
-R1/R2, privacy erasure, durable exports and dispute acceptance remain incomplete.
+**Spending remains disabled; independent review and actual owner approval are
+pending.** No new inference calls, approvals or quota increases occurred.
+Historical exposure remains separate: 57 records including three unresolved
+potential charges; the new allocation has zero records. Neither is a verified
+bill or an approved global project budget.
+
+See [exact implementation, tests and packet](docs/valo/finite-sdk-admission-checkpoint.md).
+Hosted CI's prior saved-head jobs were refused before startup by GitHub's
+account restriction; local passes do not claim hosted success. Checker, receipt,
+erasure and key/recovery source were untouched. R1/R2 remain incomplete and
+unaccepted; prepared drafts are not published content. Launch/live payments stay off.
 
 Prior implementation evidence is retained separately:
 [execution/reconciliation](docs/valo/finite-customer-execution-review.md),

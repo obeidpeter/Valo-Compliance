@@ -1045,7 +1045,9 @@
       "risk": "Real model integration and evaluations are required; no fabricated business or legal facts.",
       "implementation_status": "unverified",
       "test_status": "not_run_in_this_review",
-      "evidence": []
+      "evidence": [
+        "../valo/finite-sdk-admission-checkpoint.md (partial engineering controls only; formal acceptance remains unverified)"
+      ]
     },
     {
       "id": "AI-008",

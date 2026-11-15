@@ -17,6 +17,16 @@ import {prepareFiniteAllocationPackage,allocationPackageId,registerPreparedInfer
  * approval independently verified by the production dispatcher. */
 async function main(){
   assertDevelopmentRuntime();
+  const[mode,batchId,...extra]=process.argv.slice(2);
+  const commands=["--inspect","--prepare","--prepare-selection","--prepare-customer",
+    "--prepare-template-candidate","--verify-prepared","--admit","--execute"];
+  if(mode==="--help"&&!batchId&&!extra.length){
+    console.log(JSON.stringify({commands,inferenceCalls:0,ownerApprovalCreated:false,authorizesDispatch:false,
+      note:"Preparation is disabled work only. Execution requires existing exact durable owner authorization."}));
+    return;
+  }
+  if(!mode||!commands.includes(mode))throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+  if(mode.startsWith("--prepare"))console.error(JSON.stringify({event:"finite-preparation-loading",inferenceCalls:0}));
   const [{db,pool,valoContentVersions},{readOperationalInferenceReadiness},{assertFiniteWorkBindings},
     {withApprovedInferencePair},{saveOperationalReviewPlan,executeOperationalReviewPlan},
     {getPublicationArtifact,putPublicationArtifact},{publicationWorkspaceRoot},{InferenceBudgetStore}]=await Promise.all([
@@ -24,7 +34,6 @@ async function main(){
     import("../lib/managed-inference"),import("../editorial/operational-review"),import("../editorial/publication-artifacts"),
     import("../editorial/operational-policy"),import("../lib/inference-budget-store")]);
   try{
-  const[mode,batchId,...extra]=process.argv.slice(2);
   if(mode==="--inspect"){
     if(batchId||extra.length)throw Error("FINITE_RUN_ARGUMENTS_INVALID");
     // Sequential scopes are explicitly separate observations, not a fictitious
@@ -143,6 +152,7 @@ async function main(){
         holds.push({candidateVersionId:row.id,templateId:row.templateId,reason:"CANDIDATE_REQUEST_PREPARER_UNAVAILABLE"});continue;
       }
       try{
+        console.error(JSON.stringify({event:"finite-preparation-template",templateId:row.templateId,inferenceCalls:0}));
         const current=await readOperationalInferenceReadiness(row.id);
         const plan=await saveOperationalReviewPlan(current.candidate,current.rightsInput,current.provenanceInput,
           current.exportReport,current.serverEvidence);

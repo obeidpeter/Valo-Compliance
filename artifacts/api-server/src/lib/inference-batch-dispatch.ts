@@ -14,7 +14,8 @@ export type FiniteWork={key:string;lane:BudgetLane;role:"factual"|"challenge"|"c
     operationalPlan?:{id:string;hash:string;extension:"json"}}};
 export type FiniteManifest={version:2;policyVersion:string;preparedAt:string;
   allocation:typeof additionalInferenceAllocation;packageId?:string;works:FiniteWork[]};
-export type CompletionTransport=(request:ManagedRequest,options:{timeout:number;maxRetries:0;onOutbound?:()=>void})=>Promise<ManagedCompletionResult>;
+export type CompletionTransport=(request:ManagedRequest,options:{timeout:number;maxRetries:0;
+  beforeOutbound?:()=>Promise<void>;onOutbound?:()=>void})=>Promise<ManagedCompletionResult>;
 type Context={batchId:string;key:string|null;lane:BudgetLane;pair?:string;rootKey?:string};
 /** Approval is a durable, expiring authorization of this exact immutable
  * roster. Every batch shares the same additional allocation; legacy charges
@@ -140,6 +141,9 @@ export class FiniteInferenceDispatcher{
     const ctx=this.current();if(!ctx?.key)throw Error("INFERENCE_BUDGET_DISABLED");
     if(ctx.lane!==lane||options.maxRetries!==0||!Number.isSafeInteger(options.timeout)||options.timeout<1||options.timeout>45000)
       throw Error("INFERENCE_CONTEXT_MISMATCH");
+    // The caller must not be able to alter the approved payload while source
+    // verification or lazy SDK loading is awaiting another task.
+    request=structuredClone(request);
     const admission=await this.store.mutate<{key:string;reused:ManagedCompletionResult|null;manifestHash:string;expiresAt:number}>("batch-reserve-dispatch",async(s,c)=>{
       const {row,manifest}=await this.batch(c,ctx.batchId),work=manifest.works.find(w=>w.key===ctx.key);
       if(!work||work.lane!==lane||requestDigest(work.request)!==requestDigest(request))throw Error("WORK_REQUEST_MISMATCH");
@@ -171,7 +175,23 @@ export class FiniteInferenceDispatcher{
     });
     if(admission.reused)return admission.reused;
     try{
-      const result=await this.transport(request,{timeout:options.timeout,maxRetries:0,onOutbound:options.onOutbound});
+      const beforeOutbound=()=>this.store.mutate("batch-outbound-revalidated",async(s,c)=>{
+        const {row,manifest}=await this.batch(c,ctx.batchId);
+        if(row.manifest_hash!==admission.manifestHash)throw Error("INFERENCE_MANIFEST_CHANGED");
+        const work=manifest.works.find(w=>w.key===ctx.key);
+        if(!work||work.lane!==lane||requestDigest(work.request)!==requestDigest(request))
+          throw Error("WORK_REQUEST_MISMATCH");
+        if(s.entries.find(e=>e.runKey===admission.key)?.status!=="dispatched")
+          throw Error("ATTEMPT_ALREADY_DISPATCHED_OR_UNKNOWN");
+        await this.recheckBindings(work);
+        assertFinancialDispatchAllowed(s);
+        return{state:s,value:undefined};
+      });
+      // All transports get a last check at invocation. The real SDK adapter
+      // repeats it after its asynchronous load, immediately before SDK create.
+      await beforeOutbound();
+      const result=await this.transport(request,{timeout:options.timeout,maxRetries:0,
+        beforeOutbound,onOutbound:options.onOutbound});
       const accepted=await this.store.mutate("batch-result-settled",async(s,c)=>{
         // Expiry/revocation stops new dispatch, but never discards a verified
         // receipt from an attempt admitted before that change.

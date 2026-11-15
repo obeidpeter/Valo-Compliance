@@ -1,10 +1,14 @@
 # Current development state — still not accepted
 
-Current budget preparation: [eleven exact private review pairs, disabled
-allocation and row-level historical reconciliation](finite-review-decision.md).
-The ordinary CI command includes 54 finite controls and explicitly runs the
-actual HTTP privacy-role regression. Content is still held for independent
-reviews; prepared requests and rendered drafts are not eligible publications.
+Current budget checkpoint: [final SDK admission, immutable inputs and the
+fresh disabled 24-attempt packet](finite-sdk-admission-checkpoint.md).
+137 engineering checks passed, one native-only test was explicitly skipped,
+and all workspace typechecks passed. Ordinary CI includes 67 finite controls,
+actual managed-caller tests, portable storage and HTTP privacy regression.
+Hosted CI's account startup refusal remains separate from those local results.
+Independent review/owner approval remain pending; spending and quotas were not
+enabled or increased. These are not formal 80/60/60 acceptance results.
+Content remains held; prepared requests are not eligible publications.
 
 Current partial results: [independent privacy HTTP and deletion-history
 boundaries](privacy-role-and-tombstone-checkpoint.md), [connected but disabled

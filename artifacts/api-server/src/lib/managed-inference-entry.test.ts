@@ -14,6 +14,23 @@ type Batch={id:string;enabled:boolean;approved_by:string;approval_reference:stri
 type SQLClient={query:(sql:string,values?:unknown[])=>Promise<{rows:unknown[]}>};
 
 test("default managed entry and customer organizer use actual finite dispatch and real corpus bindings",async t=>{
+  await t.test("finite CLI help and invalid modes need neither database nor SDK configuration",()=>{
+    for(const args of [["--help"],["--enable"],[]]){
+      const result=spawnSync(process.execPath,["--import",import.meta.resolve("tsx"),
+        fileURLToPath(new URL("../scripts/finite-inference-run.ts",import.meta.url)),...args],{
+        encoding:"utf8",timeout:15000,env:{PATH:process.env.PATH,HOME:process.env.HOME,
+          NODE_ENV:"development",DATABASE_URL:"",AI_INTEGRATIONS_OPENAI_API_KEY:"",AI_INTEGRATIONS_OPENAI_BASE_URL:""}});
+      if(args[0]==="--help"){
+        assert.equal(result.status,0,result.stderr);
+        const help=JSON.parse(result.stdout);
+        assert.equal(help.inferenceCalls,0);assert.equal(help.ownerApprovalCreated,false);
+        assert.equal(help.authorizesDispatch,false);assert.ok(help.commands.includes("--execute"));
+      }else{
+        assert.equal(result.status,1,result.stderr);
+        assert.match(result.stderr,/FINITE_RUN_ARGUMENTS_INVALID/);assert.equal(result.stdout,"");
+      }
+    }
+  });
   await t.test("disabled default entry imports neither database configuration nor SDK",()=>{
     const url=new URL("./managed-inference.ts",import.meta.url).href;
     const code=`import assert from 'node:assert/strict';
@@ -106,7 +123,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
         usage:{prompt_tokens:100,completion_tokens:10,total_tokens:110}} satisfies ManagedCompletionResult;
     },
   }}}}});
-  const {managedCompletion,withApprovedInferenceWork}=await import("./managed-inference");
+  const {managedCompletion,withApprovedInferenceWork,withBoundInferenceDispatcher}=await import("./managed-inference");
   const {organizeCustomerDraft,customerCompletionRequest}=await import("./valo-customer-ai-model");
   const {customerAIInput,customerProviderPayload}=await import("./valo-customer-ai-domain");
   const path="docs/evaluation-candidates/customer-ai.json";
@@ -175,6 +192,66 @@ test("default managed entry and customer organizer use actual finite dispatch an
     assert.deepEqual(result.runs.map(r=>r.outcome),["invalid_structured_plan","budget_held"]);
     assert.deepEqual(result.runs.map(r=>r.outboundAttempted),[true,false]);
     assert.equal(state.entries.filter(e=>e.runKey.startsWith(`${batch.id}:`)).length,1);
+  });
+  const {FiniteInferenceDispatcher}=await import("./inference-batch-dispatch");
+  const {createManagedSDKTransport}=await import("./managed-sdk-transport");
+  const {assertFiniteWorkBindings}=await import("./inference-work-bindings");
+  for(const boundary of ["suspension","unreconciled","revocation","expiry","manifest-change"] as const){
+    await t.test(`actual entry rechecks ${boundary} after lazy SDK load, before outbound`,async()=>{
+      state={...emptyBudget(),priorUseReconciled:true};
+      const batch=prepare();
+      let release!:()=>void,entered!:()=>void,creates=0,outbound=0;
+      const gate=new Promise<void>(resolve=>{release=resolve;});
+      const loading=new Promise<void>(resolve=>{entered=resolve;});
+      const transport=createManagedSDKTransport(async()=>{
+        entered();await gate;
+        return{chat:{completions:{create:async()=>{creates++;throw Error("SDK_MUST_NOT_EXECUTE");}}}};
+      });
+      const composed=new FiniteInferenceDispatcher(
+        new MemoryBudgetStore() as unknown as import("./inference-budget-store").InferenceBudgetStore,
+        transport,assertFiniteWorkBindings);
+      const pending=withBoundInferenceDispatcher(composed,()=>withApprovedInferenceWork(batch.id,batch.key,
+        ()=>managedCompletion("customer",request,{timeout:18000,maxRetries:0,onOutbound:()=>{outbound++;}})));
+      const rejection=assert.rejects(pending,/PRIOR_CHARGES_UNRECONCILED|INFERENCE_BATCH_NOT_AUTHORIZED|INFERENCE_BATCH_EXPIRED|INFERENCE_MANIFEST_CHANGED/);
+      await loading;
+      const row=batches.get(batch.id)!;
+      if(boundary==="suspension")state.suspended=true;
+      if(boundary==="unreconciled")state.unboundedPrior.push("controlled-unreconciled-liability");
+      if(boundary==="revocation")row.enabled=false;
+      if(boundary==="expiry")row.expires_at=new Date(Date.now()-1).toISOString();
+      if(boundary==="manifest-change"){
+        row.manifest.works[0]!.caseHash="f".repeat(64);
+        row.manifest_hash=requestDigest(row.manifest);
+      }
+      release();await rejection;
+      assert.equal(creates,0);assert.equal(outbound,0);
+      const entry=state.entries.find(e=>e.runKey===`${batch.id}:${batch.key}`);
+      assert.ok(entry);assert.notEqual(entry.status,"settled");
+    });
+  }
+  await t.test("actual SDK receives the approved snapshot despite caller mutation during load",async()=>{
+    state={...emptyBudget(),priorUseReconciled:true};
+    const batch=prepare(),callerRequest=structuredClone(request);
+    let release!:()=>void,entered!:()=>void,creates=0;
+    const gate=new Promise<void>(resolve=>{release=resolve;});
+    const loading=new Promise<void>(resolve=>{entered=resolve;});
+    const transport=createManagedSDKTransport(async()=>{
+      entered();await gate;
+      return{chat:{completions:{create:async(sent)=>{
+        creates++;assert.deepEqual(sent,request);
+        return{id:"controlled-frozen-input",model:"gpt-5.4-mini-2026-03-17",created:0,
+          choices:[{finish_reason:"stop",message:{content:"{}"}}],
+          usage:{prompt_tokens:100,completion_tokens:10,total_tokens:110}};
+      }}}};
+    });
+    const composed=new FiniteInferenceDispatcher(
+      new MemoryBudgetStore() as unknown as import("./inference-budget-store").InferenceBudgetStore,
+      transport,assertFiniteWorkBindings);
+    const pending=withBoundInferenceDispatcher(composed,()=>withApprovedInferenceWork(batch.id,batch.key,
+      ()=>managedCompletion("customer",callerRequest,{timeout:18000,maxRetries:0})));
+    await loading;callerRequest.model="unapproved-model";release();
+    await pending;assert.equal(creates,1);
+    assert.equal(state.entries.find(e=>e.runKey===`${batch.id}:${batch.key}`)?.status,"settled");
   });
   assert.equal(unexpectedNetwork,0);assert.equal(responses.length,0);
 });
