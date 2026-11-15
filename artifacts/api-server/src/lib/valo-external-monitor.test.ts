@@ -42,6 +42,8 @@ test("worker and operation signals fail for stale health, active alerts and a re
   const sample=(healthy=true)=>monitor.observeOperations({healthy,checkedAt:new Date(now).toISOString()});
   await monitor.tick();assert.deepEqual(calls.splice(0),[worker+"/fail",operations+"/fail"]);
   ready();sample();await monitor.tick();assert.deepEqual(calls.splice(0),[worker,operations]);
+  health.fail();monitor.observeWorker(health.snapshot());ready();
+  await monitor.tick();assert.deepEqual(calls.splice(0),[worker,operations+"/fail"]);
   sample(false);await monitor.tick();assert.deepEqual(calls.splice(0),[worker,operations+"/fail"]);
   sample();now+=90_001;await monitor.tick();assert.deepEqual(calls.splice(0),[worker+"/fail",operations+"/fail"]);
   now+=30_000;ready();await monitor.tick();assert.deepEqual(calls.splice(0),[worker,operations+"/fail"]);

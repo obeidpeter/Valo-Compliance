@@ -44,7 +44,12 @@ export class ExternalMonitor{
   private abort=new AbortController();
   constructor(private config:MonitorConfiguration|null,private report:(event:{event:string;check:MonitorCheck})=>void,
     private transport:Transport=fetch,private now=Date.now){}
-  observeWorker(value:WorkerHeartbeat|null){this.health=value;if(!value)this.operations=null;}
+  observeWorker(value:WorkerHeartbeat|null){
+    this.health=value;
+    // A failed operational probe also fails worker health. Do not reuse an older
+    // green sample when the next ordinary dispatch recovers before the next probe.
+    if(workerReadiness(value,this.now())!=="healthy")this.operations=null;
+  }
   observeOperations(value:{healthy:boolean;checkedAt:string}){
     const at=Date.parse(value.checkedAt),age=this.now()-at;
     if(typeof value.healthy!=="boolean"||!Number.isFinite(age)||age<0||age>120_000){this.operations=null;return;}

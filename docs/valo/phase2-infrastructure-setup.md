@@ -41,7 +41,7 @@ Sources: [Replit machines](https://docs.replit.com/features/publishing/machine-c
 Create two UUID-based checks named `Valo development worker` and `Valo development
 operations` first. Use separate checks for production when its runtime is approved.
 For both, select a one-minute period and two-minute grace, enable down/recovery email
-notifications, verify the recipient, and disable stored request bodies. Start the
+notifications and verify the recipient. The integration sends no request body. Start the
 checks only when the intended supervisor is running. Healthchecks must remain in a
 separate failure domain from Replit.
 
