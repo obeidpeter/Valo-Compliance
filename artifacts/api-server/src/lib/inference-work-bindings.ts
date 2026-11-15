@@ -28,6 +28,12 @@ export async function assertFiniteWorkBindings(work:FiniteWork){
     if(!row||requestDigest(row)!==work.caseHash)throw Error("CASE_BINDING_CHANGED");
     if(work.lane==="customer"&&work.candidateHash!==work.caseHash)throw Error("CUSTOMER_CASE_BINDING_CHANGED");
   }else if(work.lane!=="publication")throw Error("EVALUATION_CASE_REQUIRED");
+  if(work.lane==="customer"){
+    const [{getPublicationArtifact},{validateCustomerEvaluationWork},{assertCustomerEvaluationActor}]=await Promise.all([
+      import("../editorial/publication-artifacts"),import("./inference-customer-evaluation"),import("./inference-customer-runtime")]);
+    const {plan,entry}=await validateCustomerEvaluationWork(work,getPublicationArtifact);
+    await assertCustomerEvaluationActor(plan,entry);
+  }
   if(b.candidateVersionId){
     const {db,valoContentVersions}=await import("@workspace/db");
     const[row]=await db.select().from(valoContentVersions).where(eq(valoContentVersions.id,b.candidateVersionId));

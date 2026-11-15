@@ -194,6 +194,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-erasure-db
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db
+      - name: Prove original customer fault, quota and tenant service controls without a provider
+        run: pnpm --filter @workspace/api-server test:valo-customer-controls-db
       - name: Prove durable dispute intents against synthetic orders and controlled transport
         run: pnpm --filter @workspace/api-server test:valo-disputes-db
       - name: Prove durable write limits and membership revocation races
