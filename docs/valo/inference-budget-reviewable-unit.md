@@ -100,3 +100,20 @@ by elapsed time.
 No new paid inference, quota changes, external messages, merchant actions,
 production migrations or publication occurred. Formal 80/60/60 acceptance,
 eligible content, full R1/R2 and production readiness remain unaccepted.
+
+## Wider CI is not accepted
+
+The two GitHub CI runs at application commit `7c77da7` failed outside the
+passing foundation/type job. Recorded run:
+https://github.com/obeidpeter/Valo-Compliance/actions/runs/43678281720
+
+- The dispute PDF test could not find `/repl/tools/bin/chromium` on the GitHub
+  runner. This is an executable/configuration gap, not merchant credentials.
+- Dependency audit reported zero vulnerabilities, but secret scanning blocked
+  on one historical finding in `erasure-review-repair.json`. This note does not
+  classify it as a real exposed credential or waive it as a false positive.
+- The static-security job failed; it has not been claimed accepted.
+
+Redacted failed-step evidence is retained alongside local test outputs.
+Passing the budget's local controls is not passing whole-project CI or the
+separate security/operational assessment.

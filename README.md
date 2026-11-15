@@ -20,6 +20,12 @@ is prepared; zero new inference calls, owner approvals or quota changes.
 
 See [current capability, evidence and precise proposed decision](docs/valo/inference-budget-reviewable-unit.md).
 
+**Whole-project GitHub CI is not green at this checkpoint.** Foundation/types
+passed; the dispute test failed on the GitHub runner's missing hard-coded
+Chromium executable, secret scanning retained one historical finding, and the
+static-security job failed. These are unresolved engineering checks, not owner
+credential requirements. See retained redacted CI evidence and follow-through.
+
 ## Prior repair unit — bounded authenticated erasure replay
 
 Full inventory proofs can be reused only under the exact reviewed immutable
