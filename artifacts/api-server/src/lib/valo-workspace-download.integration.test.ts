@@ -31,7 +31,8 @@ test("real paged workspace download, final authorization and disconnect cleanup"
     }
     throw Error("FIXTURE_SCRATCH_MISSING");
   };
-  const handler=makeWorkspaceDataDownloadHandler(async(_req,actor)=>{
+  const handler=makeWorkspaceDataDownloadHandler(async(_req,actor,phase)=>{
+    if(phase==="preparation")return;
     scratch=await findScratch();
     if(mode==="hold"){prepared.resolve();await release.promise;}
     if(mode==="membership_revoked")await db.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,a.workspaceId));

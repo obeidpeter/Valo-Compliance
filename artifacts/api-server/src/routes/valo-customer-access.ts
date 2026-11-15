@@ -8,6 +8,7 @@ import { RequestAccessSupportResponse as AccessSupportAck,GetCustomerAccountResp
 import { sameOriginMutation } from "../middlewares/valo-identity";
 import { saveAccessSupport,customerAccount,requestPrivacy,staffOperations } from "../lib/valo-customer-access";
 import {makeWorkspaceDataDownloadHandler} from "../lib/valo-data-download-http";
+import {makeWorkspaceExportRouter} from "../lib/valo-workspace-export-http";
 import {financeRefunds,decideRefund,reconcileFinanceRefund,assertFinanceActor} from "../lib/valo-refunds";
 import {ValoProblem} from "../lib/valo-problem";
 import {GetFinanceRefundsResponse,DecideFinanceRefundResponse,ReconcileFinanceRefundResponse,ReconcileFinanceRefundBody} from "@workspace/api-zod";
@@ -39,6 +40,7 @@ customerAccessRouter.post("/workspace/privacy-requests",async(req,res)=>{
   res.status(201).json(AccessSupportAck.parse(await requestPrivacy(res.locals.valoActor,res.locals.valoContactEmail,req.body)));
 });
 customerAccessRouter.get("/workspace/data-export",makeWorkspaceDataDownloadHandler());
+customerAccessRouter.use(makeWorkspaceExportRouter());
 customerAccessRouter.use("/workspace/privacy-cases",(_req,res,next)=>{res.set("Cache-Control","private, no-store");next();});
 customerAccessRouter.get("/workspace/privacy-cases",async(_req,res)=>{
   res.json(ListPrivacyCasesResponse.parse(await listPrivacyCases(res.locals.valoActor)));

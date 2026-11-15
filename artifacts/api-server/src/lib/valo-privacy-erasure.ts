@@ -14,6 +14,7 @@ import {assertErasureObjectScope,inventoryHasher,signErasureSeal,verifyErasureSe
   assertSealedInventory,startReplay,signReplayState,verifyReplayState,type ErasureSeal,type ReplayState} from "./valo-erasure-seal";
 import {ValoProblem} from "./valo-problem";
 import {cancelUnsentDisputeWork} from "./valo-dispute-actions";
+import {retireWorkspaceExports} from "./valo-workspace-export-jobs";
 import {assertPrivacyVersion} from "./valo-privacy-state";
 import {readPrivacyCase,requirePrivacyStaff,privacyChange,privacyDetail,type PrivacyStaffActor,type PrivacyRow} from "./valo-privacy";
 
@@ -194,6 +195,7 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
     const journal=await readTombstone(tx,id);await privacySigner(tx);
     let next=start.phase,detail="Private-object deletion remains pending; failed keys are retryable.";
     if(start.phase==="quarantined"){
+      await retireWorkspaceExports(tx,row.workspaceId);
       await tx.update(valoExportJobs).set({status:"failed",queueId:randomUUID(),errorCode:"PRIVACY_ERASURE",
         updatedAt:new Date()}).where(eq(valoExportJobs.workspaceId,row.workspaceId));
       await tx.update(valoExportObjects).set({state:"cleanup"}).where(eq(valoExportObjects.workspaceId,row.workspaceId));
@@ -201,6 +203,7 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
       await tx.execute(sql`INSERT INTO valo_privacy_erasure_objects(workspace_id,case_id,object_key)
         SELECT workspace_id,${row.id}::uuid,object_key FROM valo_export_objects WHERE workspace_id=${row.workspaceId}::uuid
         UNION SELECT workspace_id,${row.id}::uuid,object_key FROM valo_file_assets WHERE workspace_id=${row.workspaceId}::uuid
+        UNION SELECT workspace_id,${row.id}::uuid,object_key FROM valo_workspace_export_attempts WHERE workspace_id=${row.workspaceId}::uuid
         ON CONFLICT DO NOTHING`);
       const exact=await inventory(tx,journal.t);
       await tx.update(valoPrivacyTombstones).set({erasureSeal:await signSeal(tx,{...journal.seal,

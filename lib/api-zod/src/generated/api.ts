@@ -120,6 +120,70 @@ export const DownloadWorkspaceDataResponse = zod.object({
 })
 
 
+export const ListWorkspaceDataExportsResponseItem = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "attempts": zod.int(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "snapshotAt": zod.string().nullable(),
+  "size": zod.number().nullable(),
+  "counts": zod.record(zod.string(), zod.int()).nullable(),
+  "errorCode": zod.string().nullable(),
+  "notice": zod.string()
+})
+export const ListWorkspaceDataExportsResponse = zod.array(ListWorkspaceDataExportsResponseItem)
+
+
+export const CreateWorkspaceDataExportBody = zod.object({
+  "requestKey": zod.uuid()
+})
+
+export const CreateWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "attempts": zod.int(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "snapshotAt": zod.string().nullable(),
+  "size": zod.number().nullable(),
+  "counts": zod.record(zod.string(), zod.int()).nullable(),
+  "errorCode": zod.string().nullable(),
+  "notice": zod.string()
+})
+
+
+export const CancelWorkspaceDataExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const CancelWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "attempts": zod.int(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "snapshotAt": zod.string().nullable(),
+  "size": zod.number().nullable(),
+  "counts": zod.record(zod.string(), zod.int()).nullable(),
+  "errorCode": zod.string().nullable(),
+  "notice": zod.string()
+})
+
+
+export const DownloadWorkspaceDataArtifactParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const DownloadWorkspaceDataArtifactResponse = zod.object({
+  "schemaVersion": zod.int(),
+  "exportedAt": zod.string(),
+  "workspaceId": zod.string(),
+  "scope": zod.string(),
+  "data": zod.record(zod.string(), zod.unknown())
+})
+
+
 export const GetCustomerPurchasesResponse = zod.object({
   "available": zod.boolean(),
   "message": zod.string(),

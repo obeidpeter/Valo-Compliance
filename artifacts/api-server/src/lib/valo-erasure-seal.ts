@@ -18,7 +18,7 @@ function sealPayload(s:ErasureSeal){return[s.version,s.caseId,s.workspaceId,s.id
 function replayPayload(s:ReplayState){return[s.version,s.cycleId,s.mode,s.phase,s.cursor,s.sealHash,s.keyVersion];}
 export function assertErasureObjectScope(workspaceId:string,key:string){
   if(!uuid.test(workspaceId)||!key.startsWith(`valo/development/${workspaceId}/`)||
-    !/^valo\/development\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.(docx|pdf)$/.test(key))throw Error("ERASURE_OBJECT_SCOPE_INVALID");
+    !/^valo\/development\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.(docx|pdf|json)$/.test(key))throw Error("ERASURE_OBJECT_SCOPE_INVALID");
 }
 export function inventoryHasher(workspaceId:string){
   const h=createHash("sha256").update("valo/privacy/inventory/v2\0"+workspaceId+"\0");let last="",count=0;
