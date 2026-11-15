@@ -150,21 +150,21 @@ export function StaffSupportCases({onDirtyChange}: {onDirtyChange?: (dirty: bool
           {detail.data.eventsTruncated && <p className="mt-3 text-xs text-muted-foreground">Only the most recent operation entries are shown. Earlier evidence remains in the audit records.</p>}
         </details>}
         <form className="grid min-w-0 gap-4 border-t border-border pt-5" onSubmit={e => {e.preventDefault(); submit();}}>
-          <label className="grid gap-2 text-sm" htmlFor="support-operation">Operation
+          <div className="grid gap-2 text-sm"><label htmlFor="support-operation">Operation</label>
             <select id="support-operation" className="field" value={action} disabled={fieldsLocked} onChange={e => {setAction(e.target.value as SupportAction); setSaved('');}}>
               {(Object.keys(actionLabels) as SupportAction[]).map(value => <option key={value} value={value}
                 disabled={value === 'reopen' ? !resolved : value === 'escalate_content' ? !mayEscalate || resolved : resolved}>{actionLabels[value]}</option>)}
             </select>
-          </label>
+          </div>
           {resolved && action !== 'reopen' && <p className="text-sm">This case is resolved. Choose “Reopen with a reason” before further operations.</p>}
           {action === 'assign' ? <div className="grid gap-3">
-            <label className="grid gap-2 text-sm" htmlFor="support-assignee">Active support staff identity
+            <div className="grid gap-2 text-sm"><label htmlFor="support-assignee">Active support staff identity</label>
               <select id="support-assignee" className="field" value={assignee} disabled={fieldsLocked || assignees.isFetching || assignees.isError}
                 onChange={e => setAssignee(e.target.value)} required>
                 <option value="">Choose an authorised support identity</option>
                 {assignees.data?.assignees.map(item => <option key={item.identityId} value={item.identityId}>{item.identityId}</option>)}
               </select>
-            </label>
+            </div>
             {assignees.isLoading && <p role="status" className="text-sm">Loading active support staff…</p>}
             {assignees.isError && <ErrorState error={assignees.error} onRetry={() => void assignees.refetch()}/>}
             {!assignees.isLoading && !assignees.isError && !assignees.data?.assignees.length && <p className="text-sm">No active support identities were returned. Assignment is unavailable.</p>}
@@ -178,11 +178,11 @@ export function StaffSupportCases({onDirtyChange}: {onDirtyChange?: (dirty: bool
               {action === 'reply' && (row.sourceKind === 'access' ? ' This anonymous case has no customer portal. The reply is stored internally and is not sent to the email address.' : ' This reply appears in the signed-in customer portal. It is not emailed.')}</p>
           </>}
           {action === 'escalate_content' && <>
-            <label className="grid gap-2 text-sm" htmlFor="support-target-kind">Review target
+            <div className="grid gap-2 text-sm"><label htmlFor="support-target-kind">Review target</label>
               <select id="support-target-kind" className="field" value={targetKind} disabled={fieldsLocked} onChange={e => setTargetKind(e.target.value as 'content' | 'rule')}>
                 <option value="content">Content record</option><option value="rule">Rule record</option>
               </select>
-            </label>
+            </div>
             <label className="grid gap-2 text-sm" htmlFor="support-target-id">Existing target record UUID
               <input id="support-target-id" className="field font-mono text-sm" value={targetId} onChange={e => setTargetId(e.target.value)} disabled={fieldsLocked} required
                 autoComplete="off" maxLength={36} pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"/>

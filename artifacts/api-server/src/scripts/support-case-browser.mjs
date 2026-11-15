@@ -97,5 +97,8 @@ const server=http.createServer(async(req,res)=>{
     assert.equal(errors.length,0);assert.equal(blocked,0);
     const evidence={at:new Date().toISOString(),scope:'Local component harness with mocked server responses; not live managed-identity or backend integration evidence.',passed:checks,requests:requests.length,browserErrors:errors,externalRequests:blocked};
     if(process.env.VALO_SUPPORT_BROWSER_EVIDENCE_PATH)await fs.writeFile(process.env.VALO_SUPPORT_BROWSER_EVIDENCE_PATH,JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence,null,2));
+  }catch(error){
+    console.error(JSON.stringify({scope:'Controlled local component failure; synthetic fixture text only.',passed:checks,
+      browserErrors:errors,pageText:(await page.locator('body').innerText()).slice(0,6000)},null,2));throw error;
   }finally{await ctx.close();await browser.close();await new Promise(resolve=>server.close(resolve));}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;}).finally(()=>fs.rm(dir,{recursive:true,force:true}));
