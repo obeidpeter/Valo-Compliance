@@ -5,6 +5,269 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type DisputeHistoryActorType = typeof DisputeHistoryActorType[keyof typeof DisputeHistoryActorType];
+
+
+export const DisputeHistoryActorType = {
+  customer: 'customer',
+  finance: 'finance',
+  worker: 'worker',
+} as const;
+
+export interface DisputeHistory {
+  id: string;
+  action: string;
+  reason: string;
+  actorType: DisputeHistoryActorType;
+  createdAt: string;
+}
+
+export type PaymentConcernStatus = typeof PaymentConcernStatus[keyof typeof PaymentConcernStatus];
+
+
+export const PaymentConcernStatus = {
+  open: 'open',
+  needs_information: 'needs_information',
+  responded: 'responded',
+  closed: 'closed',
+} as const;
+
+export interface PaymentConcern {
+  id: string;
+  orderId: string;
+  orderReference: string;
+  message: string;
+  status: PaymentConcernStatus;
+  /** @nullable */
+  latestReply: string | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  history: DisputeHistory[];
+}
+
+export interface DisputeWorkflow {
+  id: string;
+  orderId: string;
+  orderReference: string;
+  orderTitle: string;
+  orderAmountKobo: number;
+  providerId: string;
+  canonicalStatus: string;
+  /** @nullable */
+  providerResolution: string | null;
+  /** @nullable */
+  providerAmountKobo: number | null;
+  /** @nullable */
+  category: string | null;
+  /** @nullable */
+  entitlementStatus: string | null;
+  held: boolean;
+  version: number;
+  checkedAt: string;
+  createdAt: string;
+}
+
+export type DisputeIntentOperation = typeof DisputeIntentOperation[keyof typeof DisputeIntentOperation];
+
+
+export const DisputeIntentOperation = {
+  receipt_upload: 'receipt_upload',
+  evidence: 'evidence',
+  resolve: 'resolve',
+} as const;
+
+export type DisputeIntentState = typeof DisputeIntentState[keyof typeof DisputeIntentState];
+
+
+export const DisputeIntentState = {
+  prepared: 'prepared',
+  dispatching: 'dispatching',
+  acknowledged: 'acknowledged',
+  unknown: 'unknown',
+  needs_review: 'needs_review',
+  cancelled: 'cancelled',
+  reconciled: 'reconciled',
+} as const;
+
+export type DisputeIntentFactsItem = {
+  label: string;
+  value: string;
+};
+
+export interface DisputeIntent {
+  id: string;
+  operation: DisputeIntentOperation;
+  state: DisputeIntentState;
+  inputHash: string;
+  sourceReference: string;
+  summary: string;
+  facts: DisputeIntentFactsItem[];
+  createdAt: string;
+  /** @nullable */
+  attemptedAt: string | null;
+  /** @nullable */
+  acknowledgedAt: string | null;
+  /** @nullable */
+  providerFilename: string | null;
+  /** @nullable */
+  providerEvidenceId: string | null;
+  /** @nullable */
+  failure: string | null;
+  /** @nullable */
+  receiptUrl: string | null;
+}
+
+export interface FinanceDisputeDetail {
+  workflow: DisputeWorkflow;
+  intents: DisputeIntent[];
+  history: DisputeHistory[];
+  executionEnabled: boolean;
+  notice: string;
+}
+
+export interface WorkspaceDisputes {
+  concerns: PaymentConcern[];
+  workflows: DisputeWorkflow[];
+  notice: string;
+}
+
+export type FinanceDisputesObservationsItem = {
+  orderId: string;
+  providerId: string;
+  status: string;
+  checkedAt: string;
+};
+
+export interface FinanceDisputes {
+  concerns: PaymentConcern[];
+  workflows: DisputeWorkflow[];
+  observations: FinanceDisputesObservationsItem[];
+  executionEnabled: boolean;
+  notice: string;
+}
+
+export interface PaymentConcernInput {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 2000
+     */
+  message: string;
+  acknowledgement: true;
+}
+
+export interface PaymentConcernResponse {
+  /** @minimum 1 */
+  expectedVersion: number;
+  /**
+     * @minLength 10
+     * @maxLength 2000
+     */
+  message: string;
+}
+
+export type PaymentConcernActionAction = typeof PaymentConcernActionAction[keyof typeof PaymentConcernActionAction];
+
+
+export const PaymentConcernActionAction = {
+  reply: 'reply',
+  request_information: 'request_information',
+  close: 'close',
+} as const;
+
+export interface PaymentConcernAction {
+  /** @minimum 1 */
+  expectedVersion: number;
+  action: PaymentConcernActionAction;
+  /**
+     * @minLength 10
+     * @maxLength 2000
+     */
+  message: string;
+}
+
+export interface FinanceDisputeLink {
+  orderId: string;
+  /** @pattern ^\d{1,40}$ */
+  providerId: string;
+}
+
+export interface DisputeInformation {
+  /** @maxLength 254 */
+  customer_email: string;
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  customer_name: string;
+  /**
+     * @minLength 5
+     * @maxLength 40
+     */
+  customer_phone: string;
+  /**
+     * @minLength 10
+     * @maxLength 2000
+     */
+  service_details: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  delivery_address?: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  delivery_date?: string;
+}
+
+export type FinanceDisputeActionAction = typeof FinanceDisputeActionAction[keyof typeof FinanceDisputeActionAction];
+
+
+export const FinanceDisputeActionAction = {
+  hold: 'hold',
+  release_hold: 'release_hold',
+  reconcile: 'reconcile',
+  prepare_receipt: 'prepare_receipt',
+  prepare_evidence: 'prepare_evidence',
+  prepare_decision: 'prepare_decision',
+  cancel_intent: 'cancel_intent',
+  dispatch_intent: 'dispatch_intent',
+} as const;
+
+export type FinanceDisputeActionResolution = typeof FinanceDisputeActionResolution[keyof typeof FinanceDisputeActionResolution];
+
+
+export const FinanceDisputeActionResolution = {
+  'merchant-accepted': 'merchant-accepted',
+  declined: 'declined',
+} as const;
+
+export interface FinanceDisputeAction {
+  /** @minimum 1 */
+  expectedVersion: number;
+  action: FinanceDisputeActionAction;
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  reason: string;
+  intentId?: string;
+  requestKey?: string;
+  acknowledgement?: boolean;
+  information?: DisputeInformation;
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  sourceNote?: string;
+  resolution?: FinanceDisputeActionResolution;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  amountKobo?: number;
+}
+
 export type AccessSupportInputTopic = typeof AccessSupportInputTopic[keyof typeof AccessSupportInputTopic];
 
 

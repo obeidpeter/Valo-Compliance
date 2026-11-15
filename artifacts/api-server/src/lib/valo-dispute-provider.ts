@@ -21,9 +21,9 @@ export type MerchantDecision={resolution:"merchant-accepted"|"declined";amountKo
 export type DisputeTransport={
   configured():boolean;
   fetch(context:DisputeContext):Promise<z.infer<typeof verifiedDispute>>;
-  upload(context:DisputeContext,name:string,bytes:Buffer):Promise<{filename:string;checksum:string}>;
-  evidence(context:DisputeContext,information:unknown):Promise<{evidenceId:string}>;
-  resolve(context:DisputeContext,input:MerchantDecision):Promise<void>;
+  upload(context:DisputeContext,name:string,bytes:Buffer,beforeSend?:()=>Promise<void>):Promise<{filename:string;checksum:string}>;
+  evidence(context:DisputeContext,information:unknown,beforeSend?:()=>Promise<void>):Promise<{evidenceId:string}>;
+  resolve(context:DisputeContext,input:MerchantDecision,beforeSend?:()=>Promise<void>):Promise<void>;
 };
 export function matchDispute(context:DisputeContext,raw:unknown){
   providerId.parse(context.providerId);providerId.parse(context.transactionId);
@@ -76,7 +76,7 @@ export function makeDisputeTransport(api:Api,upload:typeof fetch=fetch,enabled=(
   };
   return{
     configured:enabled,fetch:read,
-    async upload(c,name,bytes){
+    async upload(c,name,bytes,beforeSend){
       check();filename.parse(name);
       if(!name.endsWith(".pdf")||bytes.length<20||bytes.length>2*1024*1024||bytes.subarray(0,5).toString()!=="%PDF-")
         throw new ValoProblem(422,"Only a bounded server-generated purchase receipt PDF is supported.");
@@ -84,26 +84,29 @@ export function makeDisputeTransport(api:Api,upload:typeof fetch=fetch,enabled=(
       const data=z.object({signedUrl:z.string().url(),fileName:filename}).parse(
         await api("/dispute/"+c.providerId+"/upload_url?upload_filename="+encodeURIComponent(name)));
       const target=validateDisputeUpload(data.signedUrl,clock());
+      await beforeSend?.();check();
       const response=await upload(target,{method:"PUT",headers:{"Content-Type":"application/pdf"},
         body:new Uint8Array(bytes),redirect:"error",signal:AbortSignal.timeout(12000)});
       if(!response.ok)throw new ValoProblem(503,"The receipt upload was not acknowledged. Its outcome needs reconciliation.");
       // Successful S3 PUT may have an empty body. Do not parse it as JSON.
       return{filename:data.fileName,checksum:createHash("sha256").update(bytes).digest("hex")};
     },
-    async evidence(c,raw){
+    async evidence(c,raw,beforeSend){
       check();const data=disputeInformation.parse(raw);await actionable(c);
+      await beforeSend?.();check();
       const result=z.object({id:z.union([providerId,z.number().int().nonnegative().safe()]).transform(String),
         dispute:z.union([providerId,z.number().int().nonnegative().safe()]).transform(String)}).parse(
         await api("/dispute/"+c.providerId+"/evidence",data,"POST"));
       if(result.dispute!==c.providerId)throw new ValoProblem(409,"The evidence receipt belongs to a different dispute.");
       return{evidenceId:result.id};
     },
-    async resolve(c,input){
+    async resolve(c,input,beforeSend){
       check();const payload=resolutionPayload(input,c.amountKobo),current=await actionable(c);
       if(current.category==="fraud"&&payload.resolution==="declined"&&payload.evidence===undefined)
         throw new ValoProblem(422,"This fraud claim also requires acknowledged structured evidence.");
       // No automatic mutation retry, even on timeout. The durable caller records
       // intent first and reconciles a subsequent canonical GET.
+      await beforeSend?.();check();
       await api("/dispute/"+c.providerId+"/resolve",payload,"PUT");
     },
   };

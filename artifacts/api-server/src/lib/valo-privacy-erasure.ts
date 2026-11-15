@@ -100,10 +100,20 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
   if(section==="privacy_messages")return tx.execute(sql`DELETE FROM valo_privacy_messages WHERE ctid IN
     (SELECT ctid FROM valo_privacy_messages WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
   if(section==="purchase_notifications")return holdUnsentPrivacyNotifications(tx,workspaceId);
-  if(section==="support_content")return tx.execute(sql`UPDATE valo_support_tickets SET
-    scope=${removedMessage},contact_email='erased@invalid'
-    WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
-      AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);
+  if(section==="support_content"){
+    // Keep the signed phase count/order unchanged. Each call still affects at
+    // most 100 rows; replay next handles concern text and removable messages.
+    const support=await tx.execute(sql`UPDATE valo_support_tickets SET scope=${removedMessage},contact_email='erased@invalid'
+      WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
+        AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);
+    if(support.rowCount)return support;
+    const concerns=await tx.execute(sql`UPDATE valo_payment_concerns SET message=${removedMessage},latest_reply=NULL
+      WHERE ctid IN (SELECT ctid FROM valo_payment_concerns WHERE workspace_id=${workspaceId}::uuid
+        AND (message<>${removedMessage} OR latest_reply IS NOT NULL) LIMIT 100)`);
+    if(concerns.rowCount)return concerns;
+    return tx.execute(sql`DELETE FROM valo_concern_messages WHERE ctid IN
+      (SELECT ctid FROM valo_concern_messages WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
+  }
   if(section==="privacy_content"){
     const rows=await tx.select().from(valoPrivacyCases).where(and(eq(valoPrivacyCases.workspaceId,workspaceId),
       ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100).for("update");
@@ -218,7 +228,7 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
     row=await privacyChange(tx,row,{identityId:actor.identityId,type:"staff"},"erasure_batch_recorded",input.reason,{
       ...(start.phase==="privacy_content"?{message:removedMessage,resultJson:null}:{}),
       erasurePhase:next,status:done?"partially_fulfilled":"in_progress",
-      resultScope:done?"Scoped synthetic application rows erased; captured object deletes acknowledged with durable repeated late-write cleanup. V2 removes support/contact and privacy prepared-result copies. Financial records, minimal case references, signed audit text, managed identity, backups and external-provider/write uncertainty remain retained or held; this is not complete account deletion.":row.resultScope,
+      resultScope:done?"Scoped synthetic application rows erased; captured object deletes acknowledged with durable repeated late-write cleanup. V2 removes support/contact and privacy prepared-result copies. Financial records (including prepared dispute evidence, receipt bytes, source notes and finance audit), minimal case references, signed audit text, managed identity, backups and external-provider/write uncertainty remain retained or held; this is not complete account deletion.":row.resultScope,
       steps:row.steps.map(s=>s.system==="application"?{...s,status:done?"confirmed":"running",detail}:
         s.system==="private_files"?{...s,status:next==="objects"||next==="quarantined"?"running":"held",
           detail:"Captured deletions are recorded; signed object keys outlive job rows for repeated cleanup. Future completion of an interrupted upload is not claimed impossible."}:
@@ -338,3 +348,4 @@ export async function reconcileErasedObjects(remove:DeleteObject=deletePrivateFi
   }
   return{cleaned,failed,held};
 }
+

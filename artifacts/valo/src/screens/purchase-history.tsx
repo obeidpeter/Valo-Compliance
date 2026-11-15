@@ -7,6 +7,7 @@ import { useGetCustomerPurchases,getGetCustomerPurchasesQueryKey,createCommerceO
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { EmptyState,ErrorState,Notice,Skel } from "@/components/states";
 import { describeError,formatDate } from "@/lib/api";
+import { PaymentConcerns } from "@/components/payment-concerns";
 const money=(n:number)=>new Intl.NumberFormat("en-NG",{style:"currency",currency:"NGN"}).format(n/100);
 const labels:Record<string,string>={created:"Order saved — not paid",pending:"Awaiting verified payment",abandoned:"Payment not completed",
   failed:"Payment failed",verified_success:"Test purchase verified",needs_review:"Staff reconciliation required",reversed:"Payment reversed — access suspended"};
@@ -28,7 +29,7 @@ function OrderCard({order,changed}:{order:CommerceOrder;changed:()=>Promise<unkn
       <div><dt className="text-muted-foreground">Tax treatment</dt><dd>{order.taxTreatment}</dd></div></dl>
     <details className="my-4 text-sm"><summary className="cursor-pointer py-2 font-medium">Licence at purchase · {order.licenceVersion}</summary>
       <p className="whitespace-pre-wrap py-2">{order.licenceText}</p><p className="text-muted-foreground">Content version: <span className="break-all">{order.contentVersionId}</span></p></details>
-    {order.disputeStatus&&<p className="my-3 text-sm" role="status">Provider dispute: {order.disputeStatus}. New template reuse is suspended for finance review. Saved drafts and downloads have not been deleted; this is not a Valo determination of a bank outcome.</p>}
+    {order.disputeStatus&&<p className="my-3 text-sm" role="status">Provider dispute observation: {order.disputeStatus}. See the payment concern section for recorded access and review status. Saved drafts and past downloads remain your work; this is not a Valo determination of a bank outcome.</p>}
     <div className="flex flex-wrap gap-3">
       {!["verified_success","needs_review","reversed"].includes(order.status)&&<button className="btn btn-primary" disabled={busy}
         onClick={()=>void run(async()=>{const result=await startCommerceCheckout(order.id,{});window.location.assign(result.url);})}>Continue hosted test checkout</button>}
@@ -73,6 +74,7 @@ function OrderCard({order,changed}:{order:CommerceOrder;changed:()=>Promise<unkn
     {busy&&<p className="mt-3 text-sm" role="status">Checking your request…</p>}
     {error&&<p className="mt-3 text-sm text-destructive" role="alert">{error}</p>}
     {notice&&<p className="mt-3 text-sm" role="status">{notice}</p>}
+    <PaymentConcerns orderId={order.id} orderReference={order.reference}/>
   </article>;
 }
 export function PurchaseHistoryPage(){

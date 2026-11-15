@@ -144,6 +144,14 @@ jobs:
         run: pnpm --filter @workspace/valo run build
       - name: Prove controlled profile and checker state does not cross accounts
         run: NODE_ENV=development VALO_RUN_ACCOUNT_SCOPE_BROWSER=synthetic-development-only pnpm --filter @workspace/api-server exec tsx src/scripts/account-switch-browser.ts
+      - name: Prove customer concern and staff dispute controls in a native browser
+        run: pnpm --filter @workspace/api-server test:valo-dispute-browser
+      - name: Retain controlled dispute browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: controlled-dispute-workflow-browser
+          path: generated-artifacts/valo-completion/dispute-*
       - name: Print factual readiness
         run: pnpm --filter @workspace/scripts valo:readiness
   postgres:
@@ -194,6 +202,12 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-db
       - name: Prove durable write limits and membership revocation races
         run: pnpm --filter @workspace/api-server test:valo-write-security
+      - name: Install locked Chromium for actual financial receipt rendering
+        run: |
+          pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
+          echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
+      - name: Prove durable disputes, live authority, crash recovery and HTTP boundaries
+        run: pnpm --filter @workspace/api-server test:valo-dispute-workflow
       - name: Prove controlled payment settlement and refund lifecycle
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce

@@ -9,6 +9,7 @@ import { reconcileDueReminders } from "../lib/valo-reminder-worker";
 import { recoverAbandonedExports,reconcileExportOrphans } from "../lib/valo-export-recovery";
 import { processPaymentEvents,reconcilePayments } from "../lib/valo-commerce";
 import {processRefundQueue} from "../lib/valo-refunds";
+import {reconcileDisputeWorkflows} from "../lib/valo-dispute-workflow";
 import {reconcileKnownDisputes} from "../lib/valo-payment-disputes";
 import {dispatchOperationalJobs} from "../lib/valo-operational-dispatch";
 import {assertRecoveryEffectsAllowed} from "../lib/valo-recovery-effects";
@@ -58,7 +59,7 @@ async function dispatch() {
       reminderCheckedAt=Date.now();
       const failures=await dispatchOperationalJobs({reminders:()=>reconcileDueReminders(),
         paymentEvents:()=>processPaymentEvents(),refunds:()=>processRefundQueue(),
-        disputes:()=>reconcileKnownDisputes(),paymentReconciliation:()=>reconcilePayments()});
+        disputes:()=>reconcileKnownDisputes(),disputeWorkflows:()=>reconcileDisputeWorkflows(),paymentReconciliation:()=>reconcilePayments()});
       for(const domain of failures)logger.error({event:"operational.dispatch_failed",domain});
     }
   } catch { logger.error({event:"export.dispatch_failed"}); }

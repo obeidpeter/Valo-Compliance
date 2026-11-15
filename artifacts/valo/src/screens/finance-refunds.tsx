@@ -2,6 +2,7 @@ import {useState} from "react";
 import {useGetFinanceRefunds,decideFinanceRefund,reconcileFinanceRefund,type RefundRecord} from "@workspace/api-client-react";
 import {ErrorState,Skel} from "@/components/states";
 import {describeError,formatDate} from "@/lib/api";
+import {FinanceDisputes} from "./finance-disputes";
 function RefundCard({row,refresh}:{row:RefundRecord;refresh:()=>Promise<unknown>}){
   const[reason,setReason]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState<string|null>(null);
   async function run(action:()=>Promise<unknown>){
@@ -38,8 +39,6 @@ export function FinanceRefunds(){
     <p className="mb-4 text-sm text-muted-foreground">Every decision requires an active finance role and fresh managed MFA. Authorization is not completion. No customer draft bodies are shown.</p>
     <p className="mb-4 text-sm text-muted-foreground">This development queue can include controlled scenario fixtures. Those records are not evidence of Paystack execution or real bank credits.</p>
     {!q.data?.refunds.length?<p className="my-4 text-sm">No refund requests.</p>:<div className="space-y-4">{q.data.refunds.map(row=><RefundCard key={row.id} row={row} refresh={()=>q.refetch()}/>)}</div>}
-    <h3 className="my-4 font-semibold">Provider dispute observations</h3>
-    {!q.data?.disputes.length?<p className="text-sm">No verified dispute observations. This is not a guarantee that no bank dispute exists.</p>:
-      <ul className="space-y-2">{q.data.disputes.map((d,i)=><li key={i} className="break-all rounded-xl border p-3 text-sm">{JSON.stringify(d)}</li>)}</ul>}
+    <FinanceDisputes/>
   </section>;
 }

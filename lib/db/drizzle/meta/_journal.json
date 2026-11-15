@@ -169,6 +169,13 @@
       "when": 1794701000000,
       "tag": "0023_privacy_information",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794701000002,
+      "tag": "0025_dispute_workflow",
+      "breakpoints": true
     }
   ]
 }
