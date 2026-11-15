@@ -43,6 +43,10 @@ test("resumable physical development erasure with retained exclusions and replay
       await db.insert(valoExportJobs).values({id:jobId,workspaceId:a.workspaceId,documentId:revision.documentId,
         revisionId:revision.id,revision:revision.revision,format:"pdf",renderVersion:`erasure-${state}`,
         sourceHash:revision.contentHash,requestedBy:a.identityId,queueId,status:state==="retained"?"ready":"running"});
+      await db.execute(sql`INSERT INTO valo_jobs.job(id,name,data,start_after)
+        VALUES(${queueId}::uuid,'valo-manual-export-v1',
+          ${JSON.stringify({workspaceId:a.workspaceId,jobId,privateMarker:"SYNTHETIC-QUEUED-COPY"})}::jsonb,
+          now()+interval '1 hour')`);
       await db.insert(valoExportObjects).values({objectKey:key,workspaceId:a.workspaceId,jobId,queueId,state});
       if(state==="retained")await db.insert(valoFileAssets).values({id:randomUUID(),workspaceId:a.workspaceId,
         jobId,objectKey:key,checksum:stored.checksum,size:bytes.length,mime:"application/pdf"});
@@ -91,6 +95,9 @@ test("resumable physical development erasure with retained exclusions and replay
       assert.equal((await db.select().from(valoDocuments).where(eq(valoDocuments.workspaceId,a.workspaceId))).length,1);
     });
     await t.test("object failure is retained and blocks content purge; repeated deletion is retryable",async()=>{
+      const queued=await db.execute(sql`SELECT count(*)::int AS count FROM valo_jobs.job
+        WHERE data->>'workspaceId'=${a.workspaceId}`);
+      assert.equal(queued.rows[0]!.count,0,"scoped queued private payloads survived the access fence");
       let calls=0;
       await assert.rejects(()=>replayErasureObjects(id,async()=>{calls++;}),{status:409});
       assert.equal(calls,0,"unfinished cases never dispatch recovery deletes");
@@ -119,7 +126,7 @@ test("resumable physical development erasure with retained exclusions and replay
       }
     });
     await t.test("resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant",async()=>{
-      for(let n=0;n<20&&detail.request.status!=="partially_fulfilled";n++){
+      for(let n=0;n<60&&detail.request.status!=="partially_fulfilled";n++){
         detail=await act("resume_erasure");version=detail.request.version;
       }
       assert.equal(detail.request.status,"partially_fulfilled");

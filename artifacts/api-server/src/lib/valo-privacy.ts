@@ -7,6 +7,7 @@ import {quotaSubjectHash} from "./valo-quota";
 import {ValoProblem} from "./valo-problem";
 import {privacyKey,privacySigner} from "./valo-privacy-keys";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {removedPrivateText,verifiedPrivacyRedaction} from "./valo-privacy-redactions";
 import {assertPrivacyVersion,assertPrivacyTransition,assertPrivacyCompletion,privacyInitialSteps,privacyAuditHash,privacyAuditEqual,privacySnapshotHash,
   type PrivacyAuditInput,type PrivacyStatus} from "./valo-privacy-state";
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -41,8 +42,9 @@ export async function checkPrivacyAudit(tx:Tx,row:PrivacyRow){
   let previous=GENESIS;
   for(let n=0;n<events.length;n++){
     const e=events[n]!;
+    const redacted=e.reason===removedPrivateText&&await verifiedPrivacyRedaction(tx,e.id,e.workspaceId,e.eventHash);
     if(e.sequence!==n+1||e.previousHash!==previous||
-      !privacyAuditEqual(e.eventHash,privacyAuditHash(e,await privacyKey(tx,e.keyVersion))))
+      !redacted&&!privacyAuditEqual(e.eventHash,privacyAuditHash(e,await privacyKey(tx,e.keyVersion))))
       throw new ValoProblem(409,"Privacy audit integrity could not be verified. Processing is held for investigation.");
     previous=e.eventHash;
   }

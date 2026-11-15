@@ -10,7 +10,10 @@ import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfil
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { authorizeWorkspaceWrite,authorizeWorkspaceRead,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
-import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations,valoPrivacyMessages,valoDisputeInformation,valoDisputeActions } from "@workspace/db";
+import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations,valoPrivacyMessages,
+  valoPrivacyCases,valoRefundTransitions,valoPaymentDisputes,valoDisputeTransitions,valoPaymentEvents } from "@workspace/db";
+import {valoDisputeInformation,valoDisputeActions} from "@workspace/db";
+import {ownedPaymentEvent} from "./valo-private-copy-inventory";
 export const accessMessage="Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack=(id:string)=>({reference:`VALO-ACCESS-${id}`,message:accessMessage,delivery:"not_dispatched" as const});
 export async function saveAccessSupport(raw:unknown,remoteAddress:string){
@@ -66,14 +69,15 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
     await tx.execute(sql`select pg_current_snapshot()`);
     signal?.throwIfAborted();
     const header={schemaVersion:2,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,
-      scope:"Only the named application sections under data are included; this is not complete privacy fulfilment. Includes export/file metadata and your own workspace activity, but not private file bytes or storage links. Does not include membership records, other people's activity, full system/staff audits, managed identity records, external provider data or unlinked public contact requests. Request coordinated access for those systems."};
+      scope:"Only the named application sections under data are included; this is not complete privacy fulfilment. Includes all historical application rows, linked financial event metadata, privacy case/result metadata and your own activity, but not private file bytes/storage locators. Previously prepared full workspace snapshots are deliberately not nested in new exports; their source records are exported directly. Memberships, other people's activity, shared safety/usage/staff audits, managed identity, external processor copies and unlinked public contact intake are excluded. No ownership is inferred from a matching email."};
     if(sink)await sink(JSON.stringify(header).slice(0,-1)+',"data":{');
     const tables={profileVersions:valoProfileVersions,documents:valoDocuments,documentRevisions:valoDocumentRevisions,
       assessments:valoAssessments,tasks:valoTasks,reminderPreferences:valoReminderPreferences,
       reminderDeliveries:valoReminderOutbox,supportRequests:valoSupportTickets,aiDrafts:valoAIDrafts,
       orders:valoOrders,entitlements:valoEntitlements,purchaseMessages:valoPurchaseOutbox,
       refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations,privacyInformation:valoPrivacyMessages,
-      disputeInformation:valoDisputeInformation,disputeIntents:valoDisputeActions};
+      disputeInformation:valoDisputeInformation,disputeIntents:valoDisputeActions,
+      refundHistory:valoRefundTransitions,disputes:valoPaymentDisputes,disputeHistory:valoDisputeTransitions};
     const data:Record<string,unknown>={};
     let bytes=0;
     let sections=0;
@@ -111,6 +115,18 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
       await collect(name,offset=>tx.select().from(table).where(eq(table.workspaceId,actor.workspaceId))
         .orderBy("id" in table?table.id:table.workspaceId).limit(sink?500:5001).offset(offset));
     }
+    await collect("paymentEvents",offset=>tx.select().from(valoPaymentEvents)
+      .where(ownedPaymentEvent(actor.workspaceId)).orderBy(valoPaymentEvents.id).limit(sink?500:5001).offset(offset));
+    await collect("privacyRequests",offset=>tx.select({id:valoPrivacyCases.id,workspaceId:valoPrivacyCases.workspaceId,
+      kind:valoPrivacyCases.kind,message:valoPrivacyCases.message,status:valoPrivacyCases.status,
+      steps:valoPrivacyCases.steps,resultScope:valoPrivacyCases.resultScope,
+      preparedResultAvailable:sql<boolean>`${valoPrivacyCases.resultJson} IS NOT NULL`,
+      preparedResultKind:sql<string|null>`${valoPrivacyCases.resultJson}->>'kind'`,
+      correctedProfileVersionId:sql<string|null>`CASE WHEN ${valoPrivacyCases.resultJson}->>'kind'='business_profile_correction'
+        THEN ${valoPrivacyCases.resultJson}->>'profileVersionId' ELSE NULL END`,
+      createdAt:valoPrivacyCases.createdAt,updatedAt:valoPrivacyCases.updatedAt})
+      .from(valoPrivacyCases).where(eq(valoPrivacyCases.workspaceId,actor.workspaceId))
+      .orderBy(valoPrivacyCases.id).limit(sink?500:5001).offset(offset));
     // Explicit projections: never include storage locators, queue identifiers or leases.
     await collect("exportJobs",offset=>tx.select({id:valoExportJobs.id,workspaceId:valoExportJobs.workspaceId,
       documentId:valoExportJobs.documentId,revisionId:valoExportJobs.revisionId,revision:valoExportJobs.revision,

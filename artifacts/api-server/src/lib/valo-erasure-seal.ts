@@ -7,7 +7,7 @@ function privacyMac(value:unknown,key:string){
 function equalPrivacyMac(a:string,b:string){return /^[a-f0-9]{64}$/.test(a)&&/^[a-f0-9]{64}$/.test(b)&&
   timingSafeEqual(Buffer.from(a,"hex"),Buffer.from(b,"hex"));}
 export type ErasureSeal={version:2;caseId:string;workspaceId:string;identityHash:string;identityKeyVersion:string;
-  scope:"development-application-content-erasure-v2";synthetic:true;inventoryHash:string|null;inventoryCount:number;
+  scope:"development-application-content-erasure-v2"|"development-application-content-erasure-v3";synthetic:true;inventoryHash:string|null;inventoryCount:number;
   completedEventHash:string|null;keyVersion:string;mac:string};
 export type ReplayState={version:1;cycleId:string;mode:"objects"|"application";phase:"objects"|"done"|number;
   cursor:string;sealHash:string;keyVersion:string;mac:string};
@@ -22,8 +22,13 @@ export function assertErasureObjectScope(workspaceId:string,key:string){
 }
 export function inventoryHasher(workspaceId:string){
   const h=createHash("sha256").update("valo/privacy/inventory/v2\0"+workspaceId+"\0");let last="",count=0;
-  return{add(key:string){assertErasureObjectScope(workspaceId,key);if(key<=last)throw Error("ERASURE_INVENTORY_ORDER_INVALID");
+  return{add(key:string){assertErasureLocatorScope(workspaceId,key);if(key<=last)throw Error("ERASURE_INVENTORY_ORDER_INVALID");
     h.update(JSON.stringify(key)+"\n");last=key;count++;},finish(){return{hash:h.digest("hex"),count};}};
+}
+export function assertErasureLocatorScope(workspaceId:string,key:string){
+  const prefix=`workspace-export-scratch/${workspaceId}/`;
+  if(uuid.test(workspaceId)&&key.startsWith(prefix)&&uuid.test(key.slice(prefix.length)))return;
+  assertErasureObjectScope(workspaceId,key);
 }
 export function signErasureSeal(input:Omit<ErasureSeal,"keyVersion"|"mac">,signer:ErasureSigner):ErasureSeal{
   const s={...input,keyVersion:signer.version,mac:""};s.mac=privacyMac(sealPayload(s),signer.key);return s;
@@ -32,7 +37,8 @@ export function verifyErasureSeal(raw:unknown,binding:{caseId:string;workspaceId
   const s=raw as ErasureSeal;
   if(!s||s.version!==2||!uuid.test(s.caseId)||!uuid.test(s.workspaceId)||!digest.test(s.identityHash)||
     s.caseId!==binding.caseId||s.workspaceId!==binding.workspaceId||s.identityHash!==binding.identityHash||
-    s.identityKeyVersion!==binding.identityKeyVersion||s.scope!=="development-application-content-erasure-v2"||s.synthetic!==true||
+    s.identityKeyVersion!==binding.identityKeyVersion||
+    !["development-application-content-erasure-v2","development-application-content-erasure-v3"].includes(s.scope)||s.synthetic!==true||
     !Number.isSafeInteger(s.inventoryCount)||s.inventoryCount<0||s.inventoryHash!==null&&!digest.test(s.inventoryHash)||
     s.inventoryHash===null&&(s.inventoryCount!==0||s.completedEventHash!==null)||
     s.completedEventHash!==null&&!digest.test(s.completedEventHash)||typeof s.keyVersion!=="string"||typeof s.mac!=="string"||

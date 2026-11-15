@@ -17,6 +17,18 @@ erased would mislead the requester.
 metering and immutable records. Require a reviewed retention policy and
 external processor outcomes before complete-fulfilment claims.
 
+Apply retention exceptions field by field. Financial or audit retention does
+not automatically justify keeping copied private statements, checkout URLs,
+free-text reasons or earlier full workspace snapshots.
+
+**Why:** The user explicitly required private-copy minimisation without deleting
+genuine usage history, shared records or minimum accountable financial facts.
+
+**How to apply:** Establish ownership through workspace and payment references
+before removing links. Do not infer ownership of public intake from an email.
+Keep signed cleanup locators until acknowledged; treat unlinked legacy records
+and external processor copies as unresolved rather than falsely erased.
+
 A database restored to a point before deletion cannot contain a later
 tombstone by itself. Recovery needs a separately preserved, authenticated
 post-cutoff deletion journal, imported and replayed before restored access is
