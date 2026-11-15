@@ -159,3 +159,20 @@ outcomes retain reservations; they never automatically retry or gain budget.
 Commercial licence acceptance, actual provider-quality checks, the remaining
 erasure/export/dispute work, R1/R2 acceptance and production approvals remain
 separate. Live payments, messages, public launch and R3 remain disabled.
+
+## Saved application checkpoint and exact CI
+
+Application commit: `5ce0225dcbd10b9197cf1b8c65d138261aa773ad`.
+Both complete GitHub runs on those exact application bytes succeeded:
+[43684221864](https://github.com/obeidpeter/Valo-Compliance/actions/runs/43684221864)
+and
+[43684218105](https://github.com/obeidpeter/Valo-Compliance/actions/runs/43684218105).
+Each passed foundation, PostgreSQL, secret/dependency and static-security jobs.
+This evidence follow-up changes documentation/memory only, not application code.
+Passing CI does not approve the pending independent budget review or spending.
+
+The API and development export worker restarted successfully. The public
+homepage rendered with the Valo brand and required hero; no signed-in UI claim
+is made by that screenshot. Its development console retained an HMR proxy
+WebSocket 502 and Clerk development/structural-CSS warnings; these are not
+described as a clean production-browser certification.

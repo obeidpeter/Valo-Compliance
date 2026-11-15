@@ -22,6 +22,15 @@ substituting it for an inclusive allowance.
 were being mistaken for missing owner decisions. Historical failed requests
 without retained bounds must not inherit a later model's limits or zero cost.
 
+Historical editorial reservations did not always retain a usable provider
+response ID. Missing that field is not proof that usage evidence is unavailable:
+use uniquely matched candidate/drafting-prompt, role, request where retained,
+hash-verified source reports and actual receipt metadata. Keep ambiguous joins
+held and deduplicate repeated receipts.
+
+**Why:** The user repeatedly identified recoverable historical evidence that
+was being incorrectly treated as an owner-controlled missing-budget decision.
+
 **How to apply:** Clean only owned negative fixtures with no outbound attempt,
 or preserve the necessary aggregate usage/audit evidence first. Check the
 current quota implementation before cleanup. Do not use this rule to retain
