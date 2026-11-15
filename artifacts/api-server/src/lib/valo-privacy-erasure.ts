@@ -111,9 +111,10 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
     // metadata added after the original erasure engine was introduced.
     const saved=await tx.execute(sql`DELETE FROM valo_saved_templates WHERE ctid IN
       (SELECT ctid FROM valo_saved_templates WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
-    if(saved.rowCount)return saved;
+    const remaining=100-(saved.rowCount??0);
+    if(!remaining)return saved;
     const rows=await tx.select().from(valoPrivacyCases).where(and(eq(valoPrivacyCases.workspaceId,workspaceId),
-      ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100).for("update");
+      ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(remaining).for("update");
     for(const target of rows){
       const checked=await readPrivacyCase(tx,target.id);
       await privacyChange(tx,checked,{identityId:"service:privacy-erasure",type:"worker"},"private_content_removed",
@@ -121,7 +122,7 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
           message:removedMessage,resultJson:null,resultScope:"Private prepared content removed by verified workspace erasure.",
         });
     }
-    return{rowCount:rows.length};
+    return{rowCount:(saved.rowCount??0)+rows.length};
   }
   if(section==="valo_ai_drafts")return tx.execute(sql`UPDATE valo_ai_drafts SET preview='{}'::jsonb,plan=NULL,
     accepted_document_id=NULL,status='privacy_erased',updated_at=now()

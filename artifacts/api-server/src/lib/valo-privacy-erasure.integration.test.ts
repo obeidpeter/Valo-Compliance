@@ -34,7 +34,7 @@ test("resumable physical development erasure with retained exclusions and replay
     await saveProfile(a,{expectedRevision:0,profile:syntheticProfile});
     await createDocument(a,syntheticDocument);
     await createDocument(b,syntheticDocument);
-    await db.insert(valoSavedTemplates).values({id:randomUUID(),workspaceId:a.workspaceId,templateId:'CONTROLLED-SAVED',savedTitle:'Controlled metadata only',savedVersion:1});
+    await db.insert(valoSavedTemplates).values(Array.from({length:101},(_,i)=>({id:randomUUID(),workspaceId:a.workspaceId,templateId:'CONTROLLED-SAVED-'+i,savedTitle:'Controlled metadata only',savedVersion:1})));
     const[revision]=await db.select().from(valoDocumentRevisions).where(eq(valoDocumentRevisions.workspaceId,a.workspaceId));
     for(const state of["retained","pending","cleanup"] as const){
       const key=`valo/development/${a.workspaceId}/${randomUUID()}.pdf`,jobId=randomUUID(),queueId=randomUUID();
