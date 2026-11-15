@@ -6,8 +6,13 @@
 locked financial holds, including previously reserved work. Actual operational
 reviews use blind, distinct role contexts with sequential admission; whole-review
 single-work wrappers fail before attempt creation. The standard database suite
-now also runs **11 real-caller/binding checks**, without paid inference.
-See [review correction evidence](docs/valo/finite-dispatch-review-fixes.md).
+now also runs **19 real-caller/binding checks**, without paid inference.
+The exact customer-case runner persists private previews through the real service,
+uses separately approved schema retries, and preserves receipt accounting after
+in-flight revocation or expiry. Invalid model/usage metadata holds the result.
+Current local checks: **118 database + 19 real-caller + 55 offline controls**,
+with workspace-wide type checks passing.
+See [current execution and reconciliation evidence](docs/valo/finite-customer-execution-review.md).
 The batch remains disabled and pending independent re-review, not approval-ready.
 
 **Current application unit:** eleven actual operational candidates now have
@@ -17,6 +22,9 @@ The fallback reservation ceiling for this roster is **$8.1521088**, within a
 disabled additional $30 allocation. No calls or approvals were made. See
 [exact decision packet and current limits](docs/valo/finite-review-decision.md).
 Independent budget review and owner spending authorization remain pending.
+One separately prepared, source-bound invoice case has two explicitly bounded
+attempts, costing at most **$0.7411008** under the same disabled ceiling.
+These are prepared requests, not executed model evaluations or published content.
 
 The read-only `inference:inspect` command reports
 scoped ledger commitments and unknown exposure without changing accounting or
@@ -25,10 +33,10 @@ privacy-role regression. See
 [budget inspection and privacy CI evidence](docs/valo/finite-budget-inspection-and-privacy-ci.md).
 Spending remains disabled; full physical erasure and R1/R2 acceptance remain open.
 
-**Current test/CI repair:** runtime harness capability canary and separate
+**Earlier test/CI repair evidence:** runtime harness capability canary and separate
 portable/native erasure lanes are documented in
 [CI boundary and storage repair](docs/valo/ci-boundary-erasure-repair.md).
-Current local results: 54 finite-budget controls, 46 boundary checks, standard
+Earlier local results: 54 finite-budget controls, 46 boundary checks, standard
 database core 117 plus actual HTTP privacy-role 7, operations 2, and scanner
 controls 9, all passing with no skips. Real secret/dependency scanning and
 Semgrep passed locally with detector canaries. Exact-head CI is recorded on the

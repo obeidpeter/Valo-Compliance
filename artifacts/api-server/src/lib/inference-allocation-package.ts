@@ -89,6 +89,7 @@ export function assertWorkPackageMembership(work:FiniteWork,pkg:FiniteAllocation
     if(!row||row.hash!==work.caseHash)throw Error("WORK_OUTSIDE_PACKAGE");
   }
   if(work.lane==="publication"&&(!contentId||!pkg.contentIds.includes(contentId)))throw Error("WORK_OUTSIDE_PACKAGE");
+  if(work.lane==="customer"&&work.bindings.corpus==="customer-ai"&&!contentId)return;
   // Scope may authorize these lanes, but scope alone cannot manufacture an
   // implemented safe request preparer or weaken the actual readiness checks.
   if(work.lane!=="publication"||!contentId||!supportsOperationalInferenceTemplate(contentId)||!work.bindings.operationalPlan)

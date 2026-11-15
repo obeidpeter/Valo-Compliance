@@ -5,6 +5,32 @@ import {emptyBudget,importPilotUsage,requestDigest} from "./inference-budget";
 import {classifyHistoricalInference,applyHistoricalClassifications,verifiedPilotImports,
   type HistoryEvidence,type HistoryRow} from "./inference-history-classification";
 const h=(s:string)=>createHash("sha256").update(s).digest("hex");
+test("corrected retained metadata needs an audited reconciliation, not idempotent reimport",async()=>{
+  const {emptyBudget,importPilotUsage,requestDigest,validateBudgetState}=await import("./inference-budget");
+  const source:HistoryRow={sourceKey:"customer:controlled-correction:0",lane:"customer",id:"controlled-correction",
+    role:"customer",model:null,responseId:null,input:null,output:null,status:"provider_failure",failureCode:null,
+    candidateHash:null,inputHash:null,pipelineId:null};
+  const evidence:HistoryEvidence={rows:[source],publicationAttempts:[],publicationArtifacts:[],editorialReceipts:[],
+    sourceReferences:[{path:"controlled-retained-provider-metadata",sha256:h("controlled-old-row")}],
+    excludedNoOutboundCustomerRuns:0};
+  const imported=importPilotUsage(emptyBudget(),[{...source}]).state;
+  const first=applyHistoricalClassifications(imported,classifyHistoricalInference(imported,evidence));
+  const corrected={...source,model:"gpt-5.4-mini-2026-03-17",responseId:"controlled-real-shape-receipt",input:21,output:9};
+  const repeatedImport=importPilotUsage(first,[corrected]);
+  assert.equal(repeatedImport.duplicates,1);assert.equal(repeatedImport.state.entries[0]!.status,"unknown");
+  const nextEvidence={...evidence,rows:[corrected],
+    sourceReferences:[{path:"controlled-retained-provider-metadata",sha256:h("controlled-corrected-row")}]};
+  const second=applyHistoricalClassifications(first,classifyHistoricalInference(first,nextEvidence));
+  assert.equal(second.entries[0]!.status,"settled");assert.equal(second.historyResolutions!.length,2);
+  assert.deepEqual(second.historyResolutions![0],first.historyResolutions![0]);
+  assert.equal(second.historyResolutions![1]!.supersedes,requestDigest(first.historyResolutions![0]));
+  assert.equal(second.unboundedPrior.length,0);assert.equal(first.unboundedPrior.length,1);
+  assert.deepEqual(applyHistoricalClassifications(second,classifyHistoricalInference(second,nextEvidence)),second);
+  const tampered=structuredClone(second);tampered.historyResolutions![1]!.supersedes=h("wrong-link");
+  assert.throws(()=>validateBudgetState(tampered),/HISTORY_RESOLUTION_BINDING/);
+  assert.throws(()=>classifyHistoricalInference(second,{...nextEvidence,rows:[{...corrected,responseId:"different"}]}),
+    /HISTORY_SETTLED_SOURCE_CONFLICT/);
+});
 export function controlledHistory(){
   const row=(sourceKey:string,change:Partial<HistoryRow>={}):HistoryRow=>({sourceKey,lane:"editorial_evaluation",id:sourceKey.split(":")[1]!,
     role:"draft",model:"gpt-5-mini",responseId:null,input:null,output:null,status:"failed",failureCode:"PROVIDER_FAILURE",

@@ -16,7 +16,8 @@ export type HistoryEvidence={rows:HistoryRow[];publicationAttempts:HistoricalPub
 export type HistoryClassification={sourceKey:string;runKey:string;kind:"reported_usage"|"no_outbound"|"unresolved_charge";
   sourceRowHash:string;provenance:unknown;model:string|null;responseId:string|null;input:number|null;output:number|null;
   reason:string};
-export type HistoryResolution={before:BudgetEntry;classification:HistoryClassification;classificationHash:string;afterHash:string};
+export type HistoryResolution={before:BudgetEntry;classification:HistoryClassification;classificationHash:string;afterHash:string;
+  supersedes?:string};
 const count=(n:unknown):n is number=>typeof n==="number"&&Number.isSafeInteger(n)&&n>=0;
 const hex=(s:unknown):s is string=>typeof s==="string"&&/^[a-f0-9]{64}$/.test(s);
 function dependencyPreventedDispatch(row:HistoryRow,rows:HistoryRow[]){
@@ -63,8 +64,8 @@ export function classifyHistoricalInference(state:BudgetState,e:HistoryEvidence)
       c={...base,kind:"reported_usage",provenance:{publicationReceipt:p.receipt,joinKeys:p.joinKeys},
         model:p.receipt.model,responseId:p.receipt.responseId,input:p.receipt.inputTokens,output:p.receipt.outputTokens,
         reason:"Hash-verified retained provider artifact, joined to exact candidate/prompt and role"};
-    }else if(entry.status==="settled"&&row.responseId&&acceptedInferenceModels.has(row.model??"")&&count(row.input)&&count(row.output)){
-      if(entry.responseId!==row.responseId||entry.charged!==tokenCost(row.input,row.output).toString())
+    }else if(row.lane!=="publication"&&row.responseId&&acceptedInferenceModels.has(row.model??"")&&count(row.input)&&count(row.output)){
+      if(entry.status==="settled"&&(entry.responseId!==row.responseId||entry.charged!==tokenCost(row.input,row.output).toString()))
         throw Error("HISTORY_SETTLED_SOURCE_CONFLICT");
       const receipt=e.editorialReceipts.filter(r=>r.sourceKey===row.sourceKey);
       if(row.lane==="editorial_evaluation"&&(receipt.length!==1||!hex(receipt[0]!.sourceReportSha256)||
@@ -105,10 +106,16 @@ export function applyHistoricalClassifications(state:BudgetState,report:ReturnTy
   const next=structuredClone(state);next.historyResolutions??=[];
   for(const c of report.classifications){
     const entry=next.entries.find(x=>x.runKey===c.runKey)!;
-    const old=next.historyResolutions.find(x=>x.before.runKey===c.runKey);
+    const old=[...next.historyResolutions].reverse().find(x=>x.before.runKey===c.runKey);
     if(old){
-      if(old.classificationHash!==requestDigest(c)||old.afterHash!==requestDigest(entry))throw Error("HISTORY_RESOLUTION_CHANGED");
-      continue;
+      if(old.afterHash!==requestDigest(entry))throw Error("HISTORY_RESOLUTION_CHANGED");
+      if(old.classificationHash===requestDigest(c))continue;
+      // A newly recovered exact receipt may resolve earlier uncertainty, but
+      // cannot erase a charge or rewrite an already established payment fact.
+      if(old.classification.kind!=="unresolved_charge"&&
+        (old.classification.kind!==c.kind||old.classification.responseId!==c.responseId||
+          old.classification.input!==c.input||old.classification.output!==c.output||
+          old.classification.model!==c.model))throw Error("HISTORY_CONTRARY_EVIDENCE_REQUIRES_REVIEW");
     }
     const before=structuredClone(entry);
     if(c.kind==="reported_usage"){
@@ -123,7 +130,8 @@ export function applyHistoricalClassifications(state:BudgetState,report:ReturnTy
       if(entry.status!=="unknown"||entry.responseId||BigInt(entry.charged)!==0n)throw Error("HISTORY_NO_OUTBOUND_CONFLICT");
       entry.status="cancelled";next.unboundedPrior=next.unboundedPrior.filter(k=>k!==c.runKey);
     }
-    next.historyResolutions.push({before,classification:c,classificationHash:requestDigest(c),afterHash:requestDigest(entry)});
+    next.historyResolutions.push({before,classification:c,classificationHash:requestDigest(c),afterHash:requestDigest(entry),
+      ...(old?{supersedes:requestDigest(old)}:{})});
   }
   next.priorUseReconciled=next.unboundedPrior.length===0;
   validateBudgetState(next);return next;

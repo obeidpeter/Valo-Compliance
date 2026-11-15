@@ -49,6 +49,7 @@ test("actual managed callers with real PostgreSQL, source/candidate/case checks 
     })));
   let sharedBefore:Record<string,unknown>|undefined;
   t.mock.timers.enable({apis:["Date"],now:Date.parse(snapshot.retrievedAt)+1000});
+  const fixtureClock=Date.now();
   const sha=(b:Uint8Array)=>createHash("sha256").update(b).digest("hex");
   const get=async(ref:ArtifactRef)=>{
     assert.match(ref.id,/^[a-f0-9-]{36}$/);assert.ok(["json","pdf","docx"].includes(ref.extension));
@@ -69,8 +70,19 @@ test("actual managed callers with real PostgreSQL, source/candidate/case checks 
         await database.pool.query(`CREATE ROLE "${role}" NOLOGIN`);createdRoles.push(role);
       }
     }
-    for(const table of["valo_content_versions","valo_publication_policies","valo_publication_ai_attempts","valo_publication_audit"])
-      await scoped.query(`CREATE TABLE "${schema}"."${table}" (LIKE public."${table}" INCLUDING ALL)`);
+    const tables=await database.pool.query(`SELECT tablename FROM pg_tables
+      WHERE schemaname='public' AND left(tablename,5)='valo_'
+      AND tablename NOT IN ('valo_inference_budgets','valo_inference_budget_events','valo_inference_batches')`);
+    for(const {tablename:table}of tables.rows){
+      assert.match(table,/^valo_[a-z0-9_]+$/);
+      await scoped.query(`CREATE TABLE IF NOT EXISTS "${schema}"."${table}" (LIKE public."${table}" INCLUDING ALL)`);
+    }
+    const serials=await scoped.query("SELECT table_name,column_name FROM information_schema.columns WHERE table_schema=$1 AND column_default LIKE 'nextval(%'",[schema]);
+    for(const [i,column]of serials.rows.entries()){
+      assert.match(column.table_name,/^valo_[a-z0-9_]+$/);assert.match(column.column_name,/^[a-z0-9_]+$/);
+      await scoped.query(`CREATE SEQUENCE "${schema}".fixture_serial_${i}`);
+      await scoped.query(`ALTER TABLE "${schema}"."${column.table_name}" ALTER COLUMN "${column.column_name}" SET DEFAULT nextval('"${schema}".fixture_serial_${i}')`);
+    }
     // The real preparer switches to its real least-privilege role. Without
     // fixture-schema usage PostgreSQL silently resolves an unqualified table
     // through public instead. Grants are confined to disposable fixture data.
@@ -195,20 +207,12 @@ test("actual managed callers with real PostgreSQL, source/candidate/case checks 
     const path="docs/evaluation-candidates/customer-ai.json",bytes=await readFile(new URL("../../../../"+path,import.meta.url));
     const original=JSON.parse(bytes.toString()).cases.find((r:{caseID:string})=>r.caseID==="CAI-CAND-INV-01");
     const facts=original.suppliedFacts,caseHash=requestDigest(original),sourceHash=sha(bytes);
-    const input=customerAIInput.parse({task:"invoice",tone:"polite",issuerName:facts.parties.business,
-      recipientName:facts.parties.customer,documentNumber:facts.reference,issueDate:facts.issueDate,dueDate:facts.dueDate,
-      contextLines:[],financialInput:{kind:"invoice",lines:facts.lines.map((l:{description:string;quantity:string;unitPrice:string})=>({
-        description:l.description,quantity:l.quantity,unitPriceKobo:l.unitPrice.replace(".","")})),
-        taxAmountKobo:null,taxLabel:"",discountKobo:null,amountDueKobo:null},processingConsent:true,idempotencyKey:randomUUID()});
+    const {prepareCustomerFiniteManifest,executeApprovedCustomerManifest}=await import("./inference-customer-manifest");
+    const {input}=await prepareCustomerFiniteManifest("CAI-CAND-INV-01");
     const customer=async(retry:boolean,wrongCase=false)=>{
-      const key=`customer-${randomUUID()}`,w:FiniteWork={key,lane:"customer",role:"customer",pair:null,
-        candidateHash:wrongCase?"e".repeat(64):caseHash,caseHash:wrongCase?"e".repeat(64):caseHash,sourceHashes:[sourceHash],
-        request:customerCompletionRequest(customerProviderPayload(input)),bindings:{candidateVersionId:null,
-          corpus:"customer-ai",caseId:original.caseID,sourceFiles:[{path,sha256:sourceHash}]}};
-      const manifest:FiniteManifest={version:2,policyVersion:inferenceProposal.priceVersion,
-        allocation:{...additionalInferenceAllocation},preparedAt:new Date().toISOString(),
-        works:retry?[w,{...structuredClone(w),key:`${key}:retry`,retryOf:key}]:[w]};
-      return{id:await seed(manifest),key};
+      const {manifest}=await prepareCustomerFiniteManifest("CAI-CAND-INV-01",{retry,now:new Date()});
+      if(wrongCase){manifest.works[0]!.caseHash="e".repeat(64);manifest.works[0]!.candidateHash="e".repeat(64);}
+      return{id:await seed(manifest),key:manifest.works[0]!.key,manifest};
     };
     for(const retry of[false,true])await t.test(`actual customer caller ${retry?"uses explicit reserved retry":"refuses an unreserved retry"}`,async()=>{
       await reset();const fixture=await customer(retry),before=calls;let attempt=0;
@@ -222,6 +226,74 @@ test("actual managed callers with real PostgreSQL, source/candidate/case checks 
       await reset();const fixture=await customer(false,true),before=calls;
       await assert.rejects(()=>run(()=>withApprovedInferenceWork(fixture.id,fixture.key,()=>organizeCustomerDraft(input))),/CASE_BINDING_CHANGED/);
       assert.equal(calls,before);assert.equal((await state()).entries.length,0);
+    });
+    const {resolveWorkspace}=await import("./valo-store");
+    await t.test("the default runner cannot create or substitute a missing evaluation identity",async()=>{
+      await reset();const fixture=await customer(false),before=calls;
+      await assert.rejects(()=>run(()=>executeApprovedCustomerManifest(fixture.id,fixture.manifest)),
+        /EXISTING_AUTHORIZED_CUSTOMER_EVALUATION_WORKSPACE_REQUIRED/);
+      assert.equal(calls,before);assert.equal((await state()).entries.length,0);
+    });
+    const runnerActor=await resolveWorkspace(`valo-ai-eval-invoice-controlled-${randomUUID()}`);
+    const {createCustomerAIDraft}=await import("./valo-customer-ai");
+    await createCustomerAIDraft(runnerActor,{...input,idempotencyKey:randomUUID()});
+    await t.test("actual approved customer runner selects its distinct retry and rejects a revoked batch",async()=>{
+      await reset();const fixture=await customer(true),before=calls;let attempt=0;
+      answer=async()=>response(++attempt===1?"{}":JSON.stringify({opening:"none",sections:[]}));
+      const result=await run(()=>executeApprovedCustomerManifest(fixture.id,fixture.manifest));
+      assert.equal(result.result.status,"ready");assert.equal(calls-before,2);
+      assert.equal(result.providerQualityAccepted,false);
+      await scoped.query("UPDATE valo_inference_batches SET enabled=false WHERE id=$1",[fixture.id]);
+      await assert.rejects(()=>run(()=>executeApprovedCustomerManifest(fixture.id,fixture.manifest)),/NOT_AUTHORIZED/);
+      assert.equal(calls-before,2);
+    });
+    for(const mode of["wrong-model","bad-usage","expired","revoked"] as const)await t.test(`actual customer runner ${mode} retains exposure without another dispatch`,async()=>{
+      await reset();const fixture=await customer(true),before=calls;
+      answer=async()=>{
+        const value=response(mode==="expired"||mode==="revoked"?"{}":JSON.stringify({opening:"none",sections:[]}));
+        if(mode==="wrong-model")value.model="gpt-5.4-mini-unknown-snapshot";
+        if(mode==="bad-usage")value.usage={prompt_tokens:1,completion_tokens:1,total_tokens:99};
+        if(mode==="expired")t.mock.timers.setTime(fixtureClock+2*3600000);
+        if(mode==="revoked")await scoped.query("UPDATE valo_inference_batches SET enabled=false WHERE id=$1",[fixture.id]);
+        return value;
+      };
+      try{
+        const result=await run(()=>executeApprovedCustomerManifest(fixture.id,fixture.manifest));
+        assert.equal(calls-before,1);
+        const ledger=await state();
+        if(mode==="wrong-model"||mode==="bad-usage"){
+          assert.equal(result.result.status,"manual_fallback");
+          assert.equal(ledger.entries[0]!.status,"unknown");assert.equal(ledger.suspended,true);
+          assert.ok(BigInt(ledger.entries[0]!.reserved)>0n);
+        }else{
+          assert.equal(ledger.entries[0]!.status,"settled");assert.ok(ledger.entries[0]!.responseId);
+          assert.equal(result.result.status,"manual_fallback");assert.equal(result.result.providerCalls,1);
+          await assert.rejects(()=>run(()=>executeApprovedCustomerManifest(fixture.id,fixture.manifest)),/EXPIRED|NOT_AUTHORIZED/);
+          assert.equal(calls-before,1);
+        }
+      }finally{t.mock.timers.setTime(fixtureClock);}
+    });
+    await t.test("real persisted customer service keeps default hold but admits an approved finite context",async()=>{
+      const {resolveWorkspace}=await import("./valo-store");
+      const {createCustomerAIDraft}=await import("./valo-customer-ai");
+      const actor=await resolveWorkspace(`controlled-finite-customer-${randomUUID()}`);
+      await reset();const before=calls;
+      const held=await createCustomerAIDraft(actor,{...input,idempotencyKey:randomUUID()});
+      assert.equal(held.status,"manual_fallback");assert.equal(calls,before);
+      const fixture=await customer(false);
+      answer=async()=>response(JSON.stringify({opening:"none",sections:[]}));
+      const ready=await run(()=>withApprovedInferenceWork(fixture.id,fixture.key,
+        ()=>createCustomerAIDraft(actor,{...input,idempotencyKey:randomUUID()})));
+      assert.equal(ready.status,"ready");assert.equal(calls-before,1);
+      assert.equal(inferenceProposal.enabled,false);
+      const after=await createCustomerAIDraft(actor,{...input,idempotencyKey:randomUUID()});
+      assert.equal(after.status,"manual_fallback");assert.equal(calls-before,1);
+    });
+    await t.test("finite customer runner does not bypass the existing per-identity minute limit",async()=>{
+      await reset();const fixture=await customer(false),before=calls;
+      const held=await run(()=>executeApprovedCustomerManifest(fixture.id,fixture.manifest));
+      assert.equal(held.result.status,"manual_fallback");assert.equal(calls,before);
+      assert.equal((await state()).entries.length,0);
     });
     assert.equal(forbiddenNetwork,0);assert.equal(inferenceProposal.enabled,false);
   }finally{

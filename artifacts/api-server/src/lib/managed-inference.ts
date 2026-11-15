@@ -8,6 +8,12 @@ export type ManagedRequest={model:string;max_completion_tokens?:number;messages:
 export class InferenceHeld extends Error{
   constructor(public readonly code="INFERENCE_BUDGET_DISABLED"){super(code);this.name="InferenceHeld";}
 }
+const finiteHolds=new Set(["RETRY_NOT_ALLOWLISTED","RETRY_REQUIRES_SETTLED_PRIOR_ATTEMPT","APPROVED_CUSTOMER_WORK_REQUIRED",
+  "INFERENCE_BATCH_NOT_AUTHORIZED","INFERENCE_BATCH_EXPIRED","ALLOCATION_PACKAGE_NOT_AUTHORIZED",
+  "ALLOCATION_PACKAGE_EXPIRED_OR_CHANGED","PRIOR_CHARGES_UNRECONCILED","INFERENCE_ALLOCATION_EXHAUSTED",
+  "LANE_SLOTS_EXHAUSTED","INFERENCE_CONCURRENCY_EXHAUSTED","BUDGET_POLICY_CHANGED_REVIEW_REQUIRED",
+  "PROVIDER_RECEIPT_INVALID_OR_BOUND_EXCEEDED","ATTEMPT_ALREADY_DISPATCHED_OR_UNKNOWN","BOUND_ATTEMPT_COMPLETION_UNKNOWN"]);
+function held(error:unknown){return error instanceof Error&&finiteHolds.has(error.message)?new InferenceHeld(error.message):error;}
 // A disabled/no-context request does not load a database, provider SDK or network
 // configuration. Only server-owned finite-work entry points can create context.
 const active=new AsyncLocalStorage<FiniteInferenceDispatcher>();
@@ -45,11 +51,7 @@ export async function withApprovedInferenceRole<T>(role:"factual"|"challenge",fn
 export async function withApprovedInferenceAttempt<T>(attempt:number,fn:()=>Promise<T>){
   const d=active.getStore();if(!d)throw new InferenceHeld();
   try{return await d.withAttempt(attempt,fn);}
-  catch(error){
-    if(error instanceof Error&&["RETRY_NOT_ALLOWLISTED","RETRY_REQUIRES_SETTLED_PRIOR_ATTEMPT",
-      "APPROVED_CUSTOMER_WORK_REQUIRED"].includes(error.message))throw new InferenceHeld(error.message);
-    throw error;
-  }
+  catch(error){throw held(error);}
 }
 export const managedInferenceLane=(fallback:BudgetLane)=>active.getStore()?.current()?.lane??fallback;
 export const hasApprovedInferenceContext=(lane?:BudgetLane)=>{
@@ -65,7 +67,7 @@ export async function managedCompletion(lane:BudgetLane,request:ManagedRequest,
     (request.n!==undefined&&request.n!==1)||options.maxRetries!==0)throw new InferenceHeld("UNAPPROVED_INFERENCE_REQUEST");
   const d=active.getStore();if(!d?.current())throw new InferenceHeld();
   requireDevelopment();
-  return d.complete(lane,request,options);
+  try{return await d.complete(lane,request,options);}catch(error){throw held(error);}
 }
 export type ManagedCompletionResult={id:string;model:string;created:number;_request_id?:string|null;
   choices:{finish_reason:string|null;message:{content:string|null}}[];

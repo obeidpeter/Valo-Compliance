@@ -54,5 +54,25 @@ test("locked historical classification is resumable and concurrent without delet
       const after=(await pool.query(`SELECT state,policy_hash FROM "${schema}".valo_inference_budgets`)).rows[0];
       assert.equal(after.policy_hash,requestDigest(inferenceProposal));assert.deepEqual(after.state,before);
     });
+    await t.test("new exact retained usage reconciles once under concurrent audited correction",async()=>{
+      const before=(await pool.query(`SELECT state FROM "${schema}".valo_inference_budgets`)).rows[0].state;
+      const recovered={...rows[0]!,model:"gpt-5.4-mini-2026-03-17",responseId:"controlled-recovered-response",
+        input:42,output:7,inputHash:requestDigest("controlled-exact-request")};
+      const nextEvidence:HistoryEvidence={...evidence,rows:[recovered,...rows.slice(1)],editorialReceipts:[{
+        sourceKey:recovered.sourceKey,sourceReportSha256:requestDigest("controlled-retained-report"),
+        role:recovered.role,model:recovered.model,responseId:recovered.responseId,
+        input:42,output:7,inputHash:recovered.inputHash,
+      }]};
+      const correct=()=>store.mutate("controlled-verified-receipt-reconciliation",s=>({
+        state:applyHistoricalClassifications(s,classifyHistoricalInference(s,nextEvidence)),value:null}));
+      await Promise.all(Array.from({length:8},correct));await correct();
+      const after=(await pool.query(`SELECT state FROM "${schema}".valo_inference_budgets`)).rows[0].state;
+      assert.equal(after.entries.length,3);assert.equal(after.historyResolutions.length,4);
+      assert.deepEqual(after.historyResolutions.slice(0,3),before.historyResolutions);
+      assert.equal(after.historyResolutions[3].supersedes,requestDigest(before.historyResolutions[0]));
+      assert.equal(after.entries[0].responseId,recovered.responseId);
+      assert.equal(after.entries[0].status,"settled");assert.equal(after.unboundedPrior.length,0);
+      assert.equal(after.entries.filter((e:{status:string})=>e.status==="cancelled").length,2);
+    });
   }finally{await pool.query(`DROP SCHEMA "${schema}" CASCADE`);}
 });

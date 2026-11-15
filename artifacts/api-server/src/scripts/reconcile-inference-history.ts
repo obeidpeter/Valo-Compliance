@@ -32,7 +32,7 @@ async function main(){
       ledgerClassifications:next.historyResolutions?.length??0}};
   };
   let result;
-  if(apply)result=await store.mutate("verified-historical-metadata-classification",compute);
+  if(apply)result=await store.mutate("verified-historical-receipt-reconciliation",compute);
   else{const c=await pool.connect();try{await c.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
     const r=(await c.query("SELECT state FROM valo_inference_budgets WHERE id=$1",[inferenceProposal.id])).rows[0];
     result=(await compute(r.state,c)).value;await c.query("COMMIT");

@@ -140,7 +140,7 @@ export class FiniteInferenceDispatcher{
     const ctx=this.current();if(!ctx?.key)throw Error("INFERENCE_BUDGET_DISABLED");
     if(ctx.lane!==lane||options.maxRetries!==0||!Number.isSafeInteger(options.timeout)||options.timeout<1||options.timeout>45000)
       throw Error("INFERENCE_CONTEXT_MISMATCH");
-    const admission=await this.store.mutate<{key:string;reused:ManagedCompletionResult|null}>("batch-reserve-dispatch",async(s,c)=>{
+    const admission=await this.store.mutate<{key:string;reused:ManagedCompletionResult|null;manifestHash:string;expiresAt:number}>("batch-reserve-dispatch",async(s,c)=>{
       const {row,manifest}=await this.batch(c,ctx.batchId),work=manifest.works.find(w=>w.key===ctx.key);
       if(!work||work.lane!==lane||requestDigest(work.request)!==requestDigest(request))throw Error("WORK_REQUEST_MISMATCH");
       await this.recheckBindings(work);
@@ -153,7 +153,8 @@ export class FiniteInferenceDispatcher{
         if((existing.freshUntil??0)<=Date.now())throw Error("EVIDENCE_EXPIRED_NEW_ATTEMPT_REQUIRED");
         const result=row.results[work.key] as ManagedCompletionResult|undefined;
         if(!result||requestDigest(result)!==existing.resultRef)throw Error("BOUND_RESULT_UNAVAILABLE");
-        return{state:s,value:{key,reused:result}};
+        if(!validReceipt(result,request.model))throw Error("RETAINED_PROVIDER_RECEIPT_INVALID");
+        return{state:s,value:{key,reused:result,manifestHash:row.manifest_hash,expiresAt:inferenceTimestamp(row.expires_at)}};
       }
       if(!existing){
         if(work.pair){
@@ -166,7 +167,7 @@ export class FiniteInferenceDispatcher{
       // holds established since reservation, including by its sibling role.
       assertFinancialDispatchAllowed(s);
       s=transitionBudget(s,key,"dispatch");
-      return{state:s,value:{key,reused:null}};
+      return{state:s,value:{key,reused:null,manifestHash:row.manifest_hash,expiresAt:inferenceTimestamp(row.expires_at)}};
     });
     if(admission.reused)return admission.reused;
     try{
@@ -174,18 +175,22 @@ export class FiniteInferenceDispatcher{
       const accepted=await this.store.mutate("batch-result-settled",async(s,c)=>{
         // Expiry/revocation stops new dispatch, but never discards a verified
         // receipt from an attempt admitted before that change.
-        const {row}=await this.batch(c,ctx.batchId,false),u=result.usage;
-        if(!result.id||!acceptedInferenceModels.has(result.model)||!u||
-          ![u.prompt_tokens,u.completion_tokens,u.total_tokens].every(x=>Number.isSafeInteger(x)&&x>=0)||
-          u.total_tokens!==u.prompt_tokens+u.completion_tokens)
+        const u=result?.usage;
+        if(!validReceipt(result,request.model))
           return{state:{...transitionBudget(s,admission.key,"unknown"),
-            ...(!acceptedInferenceModels.has(result.model)?{suspended:true,
-              unboundedPrior:[...new Set([...s.unboundedPrior,`unknown-priced-response:${admission.key}:${requestDigest({id:result.id,model:result.model})}`])]}:{})},value:false};
-        const resultHash=requestDigest(result),state=settleBudget(s,admission.key,{input:u.prompt_tokens,output:u.completion_tokens,
-          responseId:result.id,resultRef:resultHash,freshUntil:inferenceTimestamp(row.expires_at)});
+            suspended:true,unboundedPrior:[...new Set([...s.unboundedPrior,
+              `${!acceptedInferenceModels.has(result?.model)?"unknown-priced-response":"unverified-provider-usage"}:${admission.key}:${
+                requestDigest({id:result?.id??null,model:result?.model??null,usage:result?.usage??null})}`])]},value:false};
+        const resultHash=requestDigest(result),state=settleBudget(s,admission.key,{input:u!.prompt_tokens,output:u!.completion_tokens,
+          responseId:result.id,resultRef:resultHash,freshUntil:admission.expiresAt});
         if(state.entries.find(e=>e.runKey===admission.key)?.status!=="settled")return{state,value:false};
-        await c.query(`UPDATE "${this.store.schemaName()}".valo_inference_batches
-          SET results=jsonb_set(results,ARRAY[$2],$3::jsonb) WHERE id=$1`,[ctx.batchId,ctx.key,JSON.stringify(result)]);
+        // Settlement accounts for already admitted exposure, not fresh spending.
+        // Revocation/expiry (including parent-package revocation) cannot erase it.
+        // The immutable admitted manifest identity fences the retained result.
+        const saved=await c.query(`UPDATE "${this.store.schemaName()}".valo_inference_batches
+          SET results=jsonb_set(results,ARRAY[$2],$3::jsonb) WHERE id=$1 AND manifest_hash=$4`,
+          [ctx.batchId,ctx.key,JSON.stringify(result),admission.manifestHash]);
+        if(saved.rowCount!==1)return{state,value:false};
         return{state,value:true};
       });
       if(!accepted)throw Error("PROVIDER_RECEIPT_INVALID_OR_BOUND_EXCEEDED");
@@ -198,4 +203,11 @@ export class FiniteInferenceDispatcher{
       throw error;
     }
   }
+}
+function validReceipt(result:ManagedCompletionResult,requestedModel:string){
+  const u=result?.usage;
+  return requestedModel===inferenceProposal.model&&typeof result?.model==="string"&&acceptedInferenceModels.has(result.model)&&
+    typeof result.id==="string"&&result.id.trim().length>0&&
+    !!u&&[u.prompt_tokens,u.completion_tokens,u.total_tokens].every(x=>Number.isSafeInteger(x)&&x>=0)&&
+    Number.isSafeInteger(u.prompt_tokens+u.completion_tokens)&&u.total_tokens===u.prompt_tokens+u.completion_tokens;
 }

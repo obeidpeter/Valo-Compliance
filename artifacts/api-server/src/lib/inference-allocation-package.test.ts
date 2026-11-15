@@ -27,7 +27,7 @@ test("delegated membership cannot broaden the content inventory or enable unsupp
   const customer={...w,lane:"customer" as const,role:"customer" as const,pair:null,
     caseHash:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.hash,
     bindings:{...w.bindings,corpus:"customer-ai" as const,caseId:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.id}};
-  assert.throws(()=>assertWorkPackageMembership(customer,pkg,null),/PREPARER_UNAVAILABLE/);
+  assert.doesNotThrow(()=>assertWorkPackageMembership(customer,pkg,null));
   customer.caseHash="f".repeat(64);assert.throws(()=>assertWorkPackageMembership(customer,pkg,null),/OUTSIDE_PACKAGE/);
 });
 test("package allocation, lane ceilings and allowed roles are immutable policy decisions",async()=>{

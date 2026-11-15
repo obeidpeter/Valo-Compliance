@@ -72,7 +72,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
         }
         if(sql.startsWith('UPDATE "public".valo_inference_batches')&&sql.includes("jsonb_set")){
           const row=copies.get(String(values[0]));assert.ok(row);row.results[String(values[1])]=JSON.parse(String(values[2]));
-          return{rows:[]};
+          return{rows:[],rowCount:1};
         }
         throw Error("UNEXPECTED_TEST_SQL");
       }};
@@ -115,14 +115,8 @@ test("default managed entry and customer organizer use actual finite dispatch an
     parties:{business:string;customer:string};reference:string;issueDate:string;dueDate:string;
     lines:{description:string;quantity:string;unitPrice:string}[]}}[]};
   const source=corpus.cases.find(c=>c.caseID==="CAI-CAND-INV-01");assert.ok(source);
-  const input=customerAIInput.parse({task:"invoice",tone:"polite",issuerName:source.suppliedFacts.parties.business,
-    recipientName:source.suppliedFacts.parties.customer,documentNumber:source.suppliedFacts.reference,
-    issueDate:source.suppliedFacts.issueDate,dueDate:source.suppliedFacts.dueDate,contextLines:[],
-    financialInput:{kind:"invoice",lines:source.suppliedFacts.lines.map(line=>{
-      assert.match(line.unitPrice,/^\d+\.\d{2}$/);
-      return{description:line.description,quantity:line.quantity,unitPriceKobo:line.unitPrice.replace(".","")};
-    }),taxAmountKobo:null,taxLabel:"",discountKobo:null,amountDueKobo:null},processingConsent:true,
-    idempotencyKey:"33333333-3333-4333-8333-333333333333"});
+  const {prepareCustomerFiniteManifest}=await import("./inference-customer-manifest");
+  const {input}=await prepareCustomerFiniteManifest(source.caseID);
   const request=customerCompletionRequest(customerProviderPayload(input));
   const caseId=source.caseID,caseHash=requestDigest(source),sourceHash=createHash("sha256").update(bytes).digest("hex");
   let batchNumber=0;

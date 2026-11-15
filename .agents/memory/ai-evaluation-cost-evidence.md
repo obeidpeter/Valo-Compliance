@@ -3,6 +3,20 @@ name: AI evaluation cost evidence
 description: Why genuine provider usage must survive cleanup of synthetic evaluation fixtures.
 ---
 
+Revocation or expiry must stop further inference dispatch, not discard trustworthy
+usage for a request already admitted. Untrusted model/usage metadata must retain
+the liability and hold downstream success.
+
+**Why:** Provider costs can be incurred while approval changes; authorization to
+start another request and accounting for an existing one are different decisions.
+
+The proposed additional review/test allocation does not fund new editorial
+authoring. Historical receipt corrections require evidence-supported, append-only
+reconciliation; idempotent imports must not silently rewrite earlier uncertainty.
+
+**Why:** The owner limited the spending scope and required preservation of original
+usage evidence, including records that never stored provider response identifiers.
+
 Synthetic inputs do not make a real provider request free or simulated. Preserve
 its usage evidence and quota consumption when cleaning evaluation fixtures.
 Keep real-provider cases distinct from preflight refusals and injected faults.

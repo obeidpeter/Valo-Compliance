@@ -35,6 +35,20 @@ async function main(){
       approvalRowsWritten:0,providerCalls:0,quotaChanges:0,authorizesDispatch:false}));
     return;
   }
+  if(mode==="--prepare-customer"){
+    if(!batchId||extra.some(a=>a!=="--with-schema-retry")||extra.length>1)throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+    const {prepareCustomerFiniteManifest}=await import("../lib/inference-customer-manifest");
+    const pkg=await prepareFiniteAllocationPackage();
+    const prepared=await prepareCustomerFiniteManifest(batchId,{retry:extra.length===1,packageId:allocationPackageId(pkg)});
+    for(const work of prepared.manifest.works)await assertFiniteWorkBindings(work);
+    const proposal=finiteManifestProposal(prepared.manifest,new Date(Date.now()+3600000).toISOString());
+    const artifact=await putPublicationArtifact(Buffer.from(JSON.stringify({kind:"customer-finite-preparation-v1",proposals:[proposal],package:pkg,
+      ownerApproved:false,providerCalls:0,approvalRowsWritten:0})),"json");
+    console.log(JSON.stringify({proposal:artifact,manifestHash:proposal.manifestHash,caseId:prepared.caseId,
+      caseHash:prepared.caseHash,attemptCount:proposal.attemptCount,
+      worstCaseReservationNanoUsd:proposal.worstCaseReservationNanoUsd,
+      enabled:false,ownerApproved:false,providerCalls:0,approvalRowsWritten:0}));return;
+  }
   if(mode==="--prepare-candidate"){
     if(!batchId||!supportsOperationalInferenceTemplate(batchId)||extra.length!==1||!extra[0])
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");
@@ -47,6 +61,26 @@ async function main(){
     if(extra.length!==1||!batchId||!/^[a-f0-9-]{36}$/.test(batchId)||!/^[a-f0-9]{64}$/.test(artifactHash??""))
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");
     const report=JSON.parse((await getPublicationArtifact({id:batchId,hash:artifactHash!,extension:"json"})).toString());
+    if(report.kind==="customer-finite-preparation-v1"){
+      if(report.proposals?.length!==1)throw Error("PREPARED_PACKET_CHANGED");
+      const proposal=report.proposals[0],manifest=proposal.manifest,work=manifest?.works?.[0];
+      if(!work?.bindings?.caseId||Date.parse(proposal.expiresAt)<=Date.now())throw Error("PREPARED_MANIFEST_EXPIRED");
+      const pkg=await prepareFiniteAllocationPackage(new Date(report.package.preparedAt));
+      if(requestDigest(pkg)!==requestDigest(report.package))throw Error("PREPARED_PACKAGE_CHANGED");
+      const {prepareCustomerFiniteManifest}=await import("../lib/inference-customer-manifest");
+      const exact=await prepareCustomerFiniteManifest(work.bindings.caseId,{retry:manifest.works.length===2,
+        now:new Date(manifest.preparedAt),packageId:allocationPackageId(pkg)});
+      const rebuilt=finiteManifestProposal(exact.manifest,proposal.expiresAt);
+      if(requestDigest(rebuilt)!==requestDigest(proposal))throw Error("PREPARED_PACKET_CHANGED");
+      for(const item of manifest.works)await assertFiniteWorkBindings(item);
+      const live=await new InferenceBudgetStore(pool,"public","additional-new").inspect();
+      console.log(JSON.stringify({verifiedWorkItems:manifest.works.length,manifests:1,caseId:work.bindings.caseId,
+        manifestHash:proposal.manifestHash,expiresAt:proposal.expiresAt,
+        worstCaseReservationNanoUsd:proposal.worstCaseReservationNanoUsd,
+        currentCapacitySufficient:live.uncommittedCapacityNanoUsd!==null&&
+          BigInt(live.uncommittedCapacityNanoUsd)>=BigInt(proposal.worstCaseReservationNanoUsd),
+        enabled:false,ownerApproved:false,approvalRowsWritten:0,providerCalls:0,authorizesDispatch:false}));return;
+    }
     const packet=report.decisionPacket;
     if(!packet||Date.parse(packet.expiresAt)<=Date.now())throw Error("PREPARED_MANIFEST_EXPIRED");
     const rebuilt=buildFiniteDecisionPacket(report.proposals,packet.manifests.map((m:{artifact:unknown})=>m.artifact),
@@ -135,6 +169,13 @@ async function main(){
   const row=(await pool.query("SELECT manifest,manifest_hash FROM valo_inference_batches WHERE id=$1",[batchId])).rows[0];
   if(!row||requestDigest(row.manifest)!==row.manifest_hash)throw Error("INFERENCE_MANIFEST_INVALID");
   const manifest=row.manifest as FiniteManifest;
+  if(manifest.version===2&&manifest.works.length>0&&manifest.works.every(w=>w.lane==="customer")){
+    const {executeApprovedCustomerManifest}=await import("../lib/inference-customer-manifest");
+    const result=await executeApprovedCustomerManifest(batchId!,manifest);
+    const artifact=await putPublicationArtifact(Buffer.from(JSON.stringify(result)),"json");
+    console.log(JSON.stringify({caseId:result.caseId,caseHash:result.caseHash,resultArtifact:artifact,
+      status:result.result.status==="ready"?"structured-result-retained":"held",providerQualityAccepted:false}));return;
+  }
   if(manifest.version!==2||manifest.works.length!==2)throw Error("RUNNER_SCOPE_UNSUPPORTED");
   const[first,second]=manifest.works;
   if(!first||!second||first.lane!=="publication"||second.lane!=="publication"||!first.pair||first.pair!==second.pair||

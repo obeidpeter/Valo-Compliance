@@ -81,15 +81,19 @@ export function validateBudgetState(s:BudgetState){
     }
   }
   if(s.historyResolutions!==undefined){
-    if(!Array.isArray(s.historyResolutions)||s.historyResolutions.length>s.entries.length)throw Error("INVALID_HISTORY_RESOLUTIONS");
-    const resolved=new Set<string>();
+    if(!Array.isArray(s.historyResolutions)||s.historyResolutions.length>s.entries.length*8)throw Error("INVALID_HISTORY_RESOLUTIONS");
+    const resolved=new Map<string,HistoryResolution>();
     for(const r of s.historyResolutions){
       const current=s.entries.find(e=>e.runKey===r.before?.runKey);
-      if(!r.before?.legacy||!current?.legacy||resolved.has(current.runKey)||
+      const previous=resolved.get(current?.runKey??"");
+      if(!r.before?.legacy||!current?.legacy||
         r.classification.runKey!==current.runKey||r.classificationHash!==requestDigest(r.classification)||
-        r.afterHash!==requestDigest(current))throw Error("INVALID_HISTORY_RESOLUTION_BINDING");
-      resolved.add(current.runKey);
+        (previous?(r.supersedes!==requestDigest(previous)||requestDigest(r.before)!==previous.afterHash):r.supersedes!==undefined))
+        throw Error("INVALID_HISTORY_RESOLUTION_BINDING");
+      resolved.set(current.runKey,r);
     }
+    for(const[key,last]of resolved)if(last.afterHash!==requestDigest(s.entries.find(e=>e.runKey===key)))
+      throw Error("INVALID_HISTORY_RESOLUTION_BINDING");
   }
 }
 /** Pure admission logic. Authority/proof are server-owned, never browser input.
