@@ -5,7 +5,7 @@ import {desc} from "drizzle-orm";
 import {publicationSchema} from "@workspace/valo-core";
 import {assertDevelopmentRuntime} from "../lib/valo-development-runtime";
 import {operationalInferenceTemplateIds,supportsOperationalInferenceTemplate} from "../lib/inference-operational-coverage";
-import {selectPreparedProposal} from "../lib/inference-prepared-report";
+import {selectPreparedProposal,parseFinitePreparationOptions} from "../lib/inference-prepared-report";
 import {requestDigest} from "../lib/inference-budget";
 import {prepareOperationalFiniteManifest,finiteManifestProposal} from "../lib/inference-manifest";
 import type {FiniteManifest} from "../lib/inference-batch-dispatch";
@@ -36,12 +36,15 @@ async function main(){
     return;
   }
   if(mode==="--prepare-customer"){
-    if(!batchId||extra.some(a=>a!=="--with-schema-retry")||extra.length>1)throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+    if(!batchId)throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+    const options=parseFinitePreparationOptions(extra);
     const {prepareCustomerFiniteManifest}=await import("../lib/inference-customer-manifest");
-    const pkg=await prepareFiniteAllocationPackage();
-    const prepared=await prepareCustomerFiniteManifest(batchId,{retry:extra.length===1,packageId:allocationPackageId(pkg)});
+    const existing=options.packageId?await readApprovedFiniteAllocationPackage(pool,options.packageId):null;
+    const pkg=existing?.pkg??await prepareFiniteAllocationPackage();
+    const prepared=await prepareCustomerFiniteManifest(batchId,{retry:options.retry,packageId:allocationPackageId(pkg)});
     for(const work of prepared.manifest.works)await assertFiniteWorkBindings(work);
-    const proposal=finiteManifestProposal(prepared.manifest,new Date(Date.now()+3600000).toISOString());
+    const proposal=finiteManifestProposal(prepared.manifest,new Date(Math.min(Date.now()+3600000,
+      existing?Date.parse(existing.expiresAt):Infinity)).toISOString());
     const artifact=await putPublicationArtifact(Buffer.from(JSON.stringify({kind:"customer-finite-preparation-v1",proposals:[proposal],package:pkg,
       ownerApproved:false,providerCalls:0,approvalRowsWritten:0})),"json");
     console.log(JSON.stringify({proposal:artifact,manifestHash:proposal.manifestHash,caseId:prepared.caseId,
@@ -83,6 +86,8 @@ async function main(){
     }
     const packet=report.decisionPacket;
     if(!packet||Date.parse(packet.expiresAt)<=Date.now())throw Error("PREPARED_MANIFEST_EXPIRED");
+    const currentPackage=await prepareFiniteAllocationPackage(new Date(report.package.preparedAt));
+    if(requestDigest(currentPackage)!==requestDigest(report.package))throw Error("PREPARED_PACKAGE_CHANGED");
     const rebuilt=buildFiniteDecisionPacket(report.proposals,packet.manifests.map((m:{artifact:unknown})=>m.artifact),
       packet.capacityObservation,new Date(packet.preparedAt));
     if(requestDigest(rebuilt)!==requestDigest(packet))throw Error("PREPARED_PACKET_CHANGED");
@@ -91,7 +96,13 @@ async function main(){
       const saved=JSON.parse((await getPublicationArtifact(packet.manifests[index].artifact)).toString());
       if(requestDigest(saved)!==proposal.manifestHash)throw Error("PRIVATE_MANIFEST_CHANGED");
       for(const work of proposal.manifest.works){await assertFiniteWorkBindings(work);verifiedWorkItems++;}
-      await readOperationalInferenceReadiness(proposal.manifest.works[0].bindings.candidateVersionId);
+      const manifest=proposal.manifest as FiniteManifest,first=manifest.works[0]!;
+      if(manifest.works.every(w=>w.lane==="customer")){
+        const {prepareCustomerFiniteManifest}=await import("../lib/inference-customer-manifest");
+        const actual=await prepareCustomerFiniteManifest(first.bindings.caseId!,{
+          retry:manifest.works.length===2,now:new Date(manifest.preparedAt),packageId:manifest.packageId});
+        if(requestDigest(actual.manifest)!==proposal.manifestHash)throw Error("PREPARED_CUSTOMER_CHANGED");
+      }else await readOperationalInferenceReadiness(first.bindings.candidateVersionId!);
     }
     const live=await new InferenceBudgetStore(pool,"public","additional-new").inspect();
     console.log(JSON.stringify({verifiedWorkItems,manifests:report.proposals.length,
@@ -103,7 +114,7 @@ async function main(){
   }
   if(mode==="--admit"){
     const[artifactHash,candidateVersionId]=extra;
-    if(extra.length<1||extra.length>2||candidateVersionId&&!/^[a-f0-9-]{36}$/.test(candidateVersionId)||!batchId||!/^[a-f0-9-]{36}$/.test(batchId)||!artifactHash||!/^[a-f0-9]{64}$/.test(artifactHash))
+    if(extra.length<1||extra.length>2||candidateVersionId&&!/^(?:[a-f0-9-]{36}|customer:CAI-CAND-[A-Z]{3}-[0-9]{2})$/.test(candidateVersionId)||!batchId||!/^[a-f0-9-]{36}$/.test(batchId)||!artifactHash||!/^[a-f0-9]{64}$/.test(artifactHash))
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");
     const report=JSON.parse((await getPublicationArtifact({id:batchId,hash:artifactHash,extension:"json"})).toString());
     const proposal=selectPreparedProposal(report,candidateVersionId);
@@ -111,17 +122,22 @@ async function main(){
       proposal.manifest,proposal.expiresAt,assertFiniteWorkBindings);
     console.log(JSON.stringify(admitted));return;
   }
-  if(extra.length||!["--prepare","--execute"].includes(mode??"")||
+  const selection=mode==="--prepare-selection";
+  const selectionOptions=selection?parseFinitePreparationOptions(extra):null;
+  if((extra.length&&!selection)||!["--prepare","--prepare-selection","--execute"].includes(mode??"")||
+    selection&&(!batchId||!/^CAI-CAND-[A-Z]{3}-[0-9]{2}$/.test(batchId))||
     mode==="--prepare"&&batchId&&!/^finite-package:[a-f0-9]{64}$/.test(batchId)||
     mode==="--execute"&&(!batchId||!/^[-a-zA-Z0-9_:]{1,160}$/.test(batchId)))throw Error("FINITE_RUN_ARGUMENTS_INVALID");
-  if(mode==="--prepare"){
-    const existingPackage=batchId?await readApprovedFiniteAllocationPackage(pool,batchId):null;
+  if(mode==="--prepare"||selection){
+    const parentId=selection?selectionOptions?.packageId:batchId;
+    const existingPackage=parentId?await readApprovedFiniteAllocationPackage(pool,parentId):null;
     const allocationPackage=existingPackage?.pkg??await prepareFiniteAllocationPackage(),packageId=allocationPackageId(allocationPackage);
     const latest=new Map<string,typeof valoContentVersions.$inferSelect>();
     for(const row of await db.select().from(valoContentVersions).orderBy(desc(valoContentVersions.version)))
       if(!latest.has(row.templateId))latest.set(row.templateId,row);
     const holds:{candidateVersionId:string;templateId:string;reason:string}[]=[];
     const prepared:ReturnType<typeof finiteManifestProposal>[]=[];
+    const customerHolds:{caseId:string;reason:string}[]=[];
     for(const row of latest.values()){
       if(!supportsOperationalInferenceTemplate(row.templateId)){
         holds.push({candidateVersionId:row.id,templateId:row.templateId,reason:"CANDIDATE_REQUEST_PREPARER_UNAVAILABLE"});continue;
@@ -140,6 +156,17 @@ async function main(){
       }catch(error){holds.push({candidateVersionId:row.id,templateId:row.templateId,
         reason:error instanceof Error&&/^[A-Z_]{3,100}$/.test(error.message)?error.message:"FINITE_PREPARATION_FAILED"});}
     }
+    if(selection){
+      try{
+        const {prepareCustomerFiniteManifest}=await import("../lib/inference-customer-manifest");
+        const customer=await prepareCustomerFiniteManifest(batchId!,{retry:selectionOptions!.retry,
+          now:new Date(allocationPackage.preparedAt),packageId});
+        for(const work of customer.manifest.works)await assertFiniteWorkBindings(work);
+        prepared.push(finiteManifestProposal(customer.manifest,new Date(Math.min(Date.now()+3600000,
+          existingPackage?Date.parse(existingPackage.expiresAt):Infinity)).toISOString()));
+      }catch(error){customerHolds.push({caseId:batchId!,reason:error instanceof Error&&/^[A-Z_]{3,100}$/.test(error.message)?
+        error.message:"CUSTOMER_PREPARATION_FAILED"});}
+    }
     const manifestArtifacts=await Promise.all(prepared.map(p=>
       putPublicationArtifact(Buffer.from(JSON.stringify(p.manifest)),"json")));
     const capacity=await new InferenceBudgetStore(pool,"public","additional-new").inspect();
@@ -148,11 +175,12 @@ async function main(){
       observedAt:capacity.observedAt}):null;
     const report={preparedAt:new Date().toISOString(),scope:"one finite additional allocation with automatic exact submanifest admission",
       packageId,package:allocationPackage,ownerApprovalScope:"finite-allocation-package",ownerApproved:!!existingPackage,
-      executableScope:"one exact operational review pair per verified saved candidate",
+      executableScope:selection?"Exact operational pairs and explicitly listed supported customer attempts under one package":
+        "one exact operational review pair per verified saved candidate",
       supportedTemplateIds:operationalInferenceTemplateIds,
       latestCandidatesInspected:latest.size,proposals:prepared,proposal:prepared.length===1?prepared[0]:null,
-      decisionPacket,holds,providerCalls:0,approvalRowsWritten:0,
-      nonpublicationCorpora:"Original 80/60/60 case rosters are frozen in the proposed package; executable preparers remain held.",
+      decisionPacket,holds,customerHolds,providerCalls:0,approvalRowsWritten:0,
+      nonpublicationCorpora:"Original 80/60/60 rosters remain frozen; only listed supported customer attempts are prepared. Editorial/checker preparers remain held.",
       excluded:["authoring","real customer confidential data","production","payments","emails"],
       readiness:prepared.length?"disabled exact proposals ready; no inference approval created":"no eligible prepared work"};
     const artifact=await putPublicationArtifact(Buffer.from(JSON.stringify(report)),"json");
@@ -161,7 +189,9 @@ async function main(){
     const path=resolve(dir,`finite-inference-proposal-${randomUUID()}.json`);
     await writeFile(path,JSON.stringify({...report,privateReportArtifact:artifact},null,2)+"\n",{flag:"wx",mode:0o600});
     console.log(JSON.stringify({ready:prepared.length>0,manifestHashes:prepared.map(p=>p.manifestHash),
-      preparedPairs:prepared.length,attemptCount:prepared.reduce((sum,p)=>sum+p.attemptCount,0),holds:holds.length,providerCalls:0,ownerApproved:false,
+      preparedPairs:prepared.filter(p=>p.manifest.works.every(w=>w.lane==="publication")).length,
+      customerCases:prepared.filter(p=>p.manifest.works.every(w=>w.lane==="customer")).length,
+      attemptCount:prepared.reduce((sum,p)=>sum+p.attemptCount,0),holds:holds.length+customerHolds.length,providerCalls:0,ownerApproved:false,
       decisionPacketHash:decisionPacket?requestDigest(decisionPacket):null,
       worstCaseReservationNanoUsd:decisionPacket?.worstCaseReservationNanoUsd??null,
       privateReportArtifact:artifact,report:path}));return;

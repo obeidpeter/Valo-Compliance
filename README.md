@@ -1,56 +1,34 @@
 # Valo Compliance — Valo Platform
 
-## Latest application unit — usable disabled inference budget and reconciliation
+## Current checkpoint — shared disabled inference roster
 
-**Customer checker/privacy follow-up:** the actual development browser journey
-passed at 360px and 1280px: rich unknown/skipped/not-applicable answers survived
-review and the HTTP request, forged browser source evidence was rejected with
-422, and zero released results showed an honest coverage gap. Fixed the long
-ruleset hash causing mobile result overflow. The seven actual HTTP privacy
-checks now include an active/current-version hostile-origin negative and the
-identical trusted-origin positive control.
-See [scoped browser/privacy evidence](docs/valo/checker-origin-browser-checkpoint.md).
-This does **not** establish signed-in history/comparison browser acceptance or
-source-backed publication.
+Publication reviews and supported customer attempts can now be prepared and
+verified under **one frozen package**, rather than separate package identities.
+The saved selection contains **11 review pairs + one invoice case with a
+separately bounded schema retry: 24 attempts, at most $8.8932096**, within the
+proposed additional $30 pre-tax ceiling. All 24 exact work items were verified
+against the private report and their source/candidate bindings.
 
-**CI boundary follow-up:** credential-free foundation execution passed **201
-tests with one existing skip**. Three explicit no-database/zero-dispatch/storage
-canary checks and all 55 finite controls passed. Portable erasure passed **18
-checks with one explicitly native-only skip**, with every native storage operation
-forbidden by a detector; a separate Replit-native run passed **11 checks**.
-See [CI import and storage boundary evidence](docs/valo/finite-ci-import-storage-repair.md).
-Spending remains disabled; none of these are formal 80/60/60 acceptance.
+**Executed:** 60 offline budget controls and API typechecking passed. Concurrent
+actual CLI admissions without owner approval were refused; batch/approval rows
+and both ledger fingerprints remained unchanged. These 60 checks are not either
+formal 60-case AI/editorial acceptance suite.
 
-**Independent-review correction:** every new transport admission rechecks the
-locked financial holds, including previously reserved work. Actual operational
-reviews use blind, distinct role contexts with sequential admission; whole-review
-single-work wrappers fail before attempt creation. The standard database suite
-now also runs **19 real-caller/binding checks**, without paid inference.
-The exact customer-case runner persists private previews through the real service,
-uses separately approved schema retries, and preserves receipt accounting after
-in-flight revocation or expiry. Invalid model/usage metadata holds the result.
-Current local checks: **118 database + 19 real-caller + 55 offline controls**,
-with workspace-wide type checks passing.
-See [current execution and reconciliation evidence](docs/valo/finite-customer-execution-review.md).
-The batch remains disabled and pending independent re-review, not approval-ready.
+**Spending is disabled.** Independent review and actual owner authorization
+remain pending; quotas were not raised. Historical exposure remains separate:
+57 records, including three unresolved potential-charge records, with no invented
+global balance or verified-bill claim. Prepared requests are not model results or
+published content. Expired preparations must be refreshed and rechecked.
 
-**Current application unit:** eleven actual operational candidates now have
-22 exact factual/challenge requests, separately stored private manifests,
-source/version bindings, real export checks and a read-only verification command.
-The fallback reservation ceiling for this roster is **$8.1521088**, within a
-disabled additional $30 allocation. No calls or approvals were made. See
-[exact decision packet and current limits](docs/valo/finite-review-decision.md).
-Independent budget review and owner spending authorization remain pending.
-One separately prepared, source-bound invoice case has two explicitly bounded
-attempts, costing at most **$0.7411008** under the same disabled ceiling.
-These are prepared requests, not executed model evaluations or published content.
+See [current exact roster and evidence](docs/valo/finite-shared-roster-checkpoint.md).
+The rich checker journey is assigned to a separate isolated branch; this unit
+does not change its questionnaire, review, results, history or release adapter.
+R1/R2, privacy erasure, durable exports and dispute acceptance remain incomplete.
 
-The read-only `inference:inspect` command reports
-scoped ledger commitments and unknown exposure without changing accounting or
-authorizing calls. Standard database CI explicitly chains the actual HTTP
-privacy-role regression. See
-[budget inspection and privacy CI evidence](docs/valo/finite-budget-inspection-and-privacy-ci.md).
-Spending remains disabled; full physical erasure and R1/R2 acceptance remain open.
+Prior implementation evidence is retained separately:
+[execution/reconciliation](docs/valo/finite-customer-execution-review.md),
+[credential-free and storage CI](docs/valo/finite-ci-import-storage-repair.md),
+[privacy/browser checks](docs/valo/checker-origin-browser-checkpoint.md).
 
 **Earlier test/CI repair evidence:** runtime harness capability canary and separate
 portable/native erasure lanes are documented in
