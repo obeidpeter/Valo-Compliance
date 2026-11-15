@@ -19,5 +19,8 @@ test("shipped worker still refuses production before starting work and probe req
   const worker=invoke("export-worker",{...candidate,DATABASE_URL:"postgresql://synthetic@127.0.0.1:1/must_not_connect",SESSION_SECRET:"synthetic-only-no-external-calls"});
   assert.equal(worker.status,1);assert.match(worker.stderr,/Exports remain disabled pending production storage, worker, recovery and privacy approval/);
   assert.doesNotMatch(worker.stdout,/worker_started|worker_ready/);
+  const supervisor=invoke("export-supervisor",candidate);
+  assert.equal(supervisor.status,1);assert.match(supervisor.stderr,/Explicit non-deployed development is required/);
+  assert.doesNotMatch(supervisor.stdout,/worker_supervisor.started/);
   const probe=invoke("production-storage-probe",candidate,["--start"]);assert.equal(probe.status,1);assert.match(probe.stderr,/EXPLICIT_STORAGE_PROBE_REQUIRED/);assert.equal(probe.stdout,"");
 });
