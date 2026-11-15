@@ -78,16 +78,21 @@ test("real worker loses readiness on queue drift, recovers, drains and restarts"
     await waitFor(async()=>await status("/readyz")===200&&(await heartbeat()).instanceId!==first.instanceId,"restart");
     assert.notEqual((await heartbeat()).instanceId,first.instanceId);await stop();
     const controller=new AbortController();let ready=0,launches=0;
+    const observedOperations:Array<{healthy:boolean;checkedAt:string}>=[];
     const supervised=superviseWorker({signal:controller.signal,
       timing:{...supervisorTiming,pollMs:50,startupMs:15000,drainMs:10000,restartBaseMs:50},
       launch:()=>{assert.ok(!child||child.exitCode!==null||child.signalCode);start(true);launches++;return child!;},
       report:event=>{if(event.event==="worker_supervisor.ready"){
-        ready++;if(ready===1)child!.kill("SIGKILL");else controller.abort();
+        ready++;if(ready===1)child!.kill("SIGKILL");
       }},
+      observeOperations:value=>{if(ready>=2){observedOperations.push(value);controller.abort();}},
     });
     const supervisionDeadline=setTimeout(()=>controller.abort(),30000);
     try{
       assert.equal(await supervised,process.platform==="win32"?1:0);assert.equal(ready,2);assert.equal(launches,2);
+      assert.equal(observedOperations.length,1);assert.equal(typeof observedOperations[0].healthy,"boolean");
+      assert.ok(Number.isFinite(Date.parse(observedOperations[0].checkedAt)));
+      assert.deepEqual(Object.keys(observedOperations[0]).sort(),["checkedAt","healthy"]);
       if(process.platform!=="win32"){
         assert.equal(child!.exitCode,0);assert.equal(child!.signalCode,null);
         assert.equal((await heartbeat()).phase,"draining");

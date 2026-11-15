@@ -14,11 +14,13 @@ type Event = {event: "worker_supervisor.started" | "worker_supervisor.ready" | "
   "worker_supervisor.restart" | "worker_supervisor.exhausted" | "worker_supervisor.stopped";
   reason?: Reason; attempt?: number};
 type Options = {signal: AbortSignal; launch: () => ChildProcess; report: (event: Event) => void;
+  observeWorker?: (health: WorkerHeartbeat | null) => void;
+  observeOperations?: (value: {healthy: boolean; checkedAt: string}) => void;
   timing?: Timing};
 
 /** Child-bound IPC avoids trusting another process that happens to own a health port.
  * Never starts a replacement until the previous process has actually exited. */
-export async function superviseWorker({signal, launch, report, timing: t = supervisorTiming}: Options): Promise<number> {
+export async function superviseWorker({signal, launch, report, observeWorker, observeOperations, timing: t = supervisorTiming}: Options): Promise<number> {
   const restarts: number[] = [];
   let attempt = 0;
   while (!signal.aborted) {
@@ -33,26 +35,31 @@ export async function superviseWorker({signal, launch, report, timing: t = super
         const finish = (why: Reason) => {
           if (settled) return;
           settled = true; clearInterval(timer); signal.removeEventListener("abort", stop);
-          child.off("message", message); resolve(why);
+          child.off("message", message); observeWorker?.(null); resolve(why);
         };
         const terminate = (why: Reason) => {
           if (stopAt !== null) return;
           stopReason = why; stopAt = performance.now();
+          observeWorker?.(null);
           report({event: "worker_supervisor.stopping", reason: why});
           child.kill("SIGTERM");
         };
         const stop = () => terminate("shutdown");
         const message = (raw: unknown) => {
-          const value = raw as {type?: string; heartbeat?: WorkerHeartbeat} | null;
+          const value = raw as {type?: string; heartbeat?: WorkerHeartbeat;healthy?:boolean;checkedAt?:string} | null;
+          if(value?.type==="valo.worker.operations"&&stopAt===null&&typeof value.healthy==="boolean"&&typeof value.checkedAt==="string"){
+            observeOperations?.({healthy:value.healthy,checkedAt:value.checkedAt});return;
+          }
           if (value?.type !== "valo.worker.health" || !value.heartbeat || stopAt !== null) return;
           const next = value.heartbeat;
           if (instance !== undefined && next.instanceId !== instance) return;
+          heartbeat = next;
+          observeWorker?.(next);
           // Invalid messages cannot refresh readiness or establish process identity.
           if (workerReadiness(next) === "healthy") {
             instance = next.instanceId; lastHealthy = performance.now();
             if (!announcedReady) {announcedReady = true; report({event: "worker_supervisor.ready"});}
           }
-          heartbeat = next;
         };
         const timer = setInterval(() => {
           const now = performance.now();
@@ -70,6 +77,7 @@ export async function superviseWorker({signal, launch, report, timing: t = super
           ? "shutdown_failed" : stopReason ?? "exited"));
         signal.addEventListener("abort", stop, {once: true});
         report({event: "worker_supervisor.started"});
+        observeWorker?.(null);
         if (signal.aborted) stop();
       });
     if (reason === "kill_timeout") {

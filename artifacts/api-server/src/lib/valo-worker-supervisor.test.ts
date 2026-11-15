@@ -5,7 +5,8 @@ import {superviseWorker, supervisorTiming} from "./valo-worker-supervisor";
 
 const timing = {...supervisorTiming, pollMs: 10, startupMs: 2000, unhealthyMs: 50,
   drainMs: 150, killMs: 1000, restartBaseMs: 30, restartMaxMs: 60, maxRestarts: 1};
-const healthy = `const heartbeat={version:2,instanceId:'11111111-1111-4111-8111-111111111111',phase:'running',lastSuccessAt:new Date().toISOString(),dispatchStartedAt:null,dispatches:1};
+// Allow for sub-millisecond differences between Windows child/parent wall clocks.
+const healthy = `const heartbeat={version:2,instanceId:'11111111-1111-4111-8111-111111111111',phase:'running',lastSuccessAt:new Date(Date.now()-1000).toISOString(),dispatchStartedAt:null,dispatches:1};
 process.send({type:'valo.worker.health',heartbeat});`;
 function child(code: string) {
   return spawn(process.execPath, ["-e", code], {env: {}, stdio: ["ignore", "ignore", "ignore", "ipc"]});
@@ -89,5 +90,19 @@ test("failed or forced shutdown is never reported as a clean drain", {timeout: 1
       launch:()=>{const c=child("process.on('SIGTERM',()=>process.exit(2));"+healthy+"setInterval(()=>{},1000)");h.children.push(c);return c;},
       report:e=>{h.events.push(e);if(e.event==="worker_supervisor.ready")h.controller.abort();}}),1);
     assert.ok(h.events.some(e=>e.reason==="shutdown_failed"));assert.equal(h.children.length,1);
+  }finally{h.cleanup();}
+});
+
+test("only the supervised child supplies monitoring state; shutdown clears it before completion",{timeout:10_000},async()=>{
+  const h=harness(),observed:Array<string|null>=[],operations:unknown[]=[];
+  try{
+    await superviseWorker({signal:h.controller.signal,timing,
+      launch:()=>{const c=child("process.send({type:'valo.worker.operations',healthy:true,checkedAt:new Date().toISOString()});"+
+        healthy+"setInterval(()=>{},1000)");h.children.push(c);return c;},
+      observeWorker:value=>observed.push(value?.instanceId??null),observeOperations:value=>operations.push(value),
+      report:e=>{if(e.event==="worker_supervisor.ready")h.controller.abort();}});
+    assert.equal(operations.length,1);assert.equal(observed[0],null);
+    const readyIndex=observed.indexOf("11111111-1111-4111-8111-111111111111");assert.ok(readyIndex>=0);
+    assert.ok(observed.slice(readyIndex+1).length>0);assert.ok(observed.slice(readyIndex+1).every(v=>v===null));
   }finally{h.cleanup();}
 });
