@@ -117,7 +117,7 @@ try{
   await page.getByText("Replies and history",{exact:true}).click();await page.getByLabel("Add information to this concern").fill("CONTROLLED_ADDITIONAL_INFORMATION");
   await page.getByRole("button",{name:"Save reply",exact:true}).click();await expect(page.getByText("CONTROLLED_ADDITIONAL_INFORMATION",{exact:true})).toBeVisible();
   checks.push("Separate versioned customer reply persists in concern history");
-  await concern.fill("UNSAVED_PRIVATE_CONCERN_A");await page.evaluate(()=>history.pushState({},"","/leave-concern"));
+  await concern.fill("UNSAVED_PRIVATE_CONCERN_A");await page.evaluate(()=>(globalThis as any).history.pushState({},"","/leave-concern"));
   await expect(page.getByRole("dialog")).toBeVisible();await page.getByRole("button",{name:"Keep editing",exact:true}).click();await expect(concern).toHaveValue("UNSAVED_PRIVATE_CONCERN_A");
   checks.push("Existing native unsaved-navigation boundary protects the added standalone concern form");
   await transitions("B","customer");await expect(concern).toHaveValue("");await expect(page.locator("body")).not.toContainText("CONTROLLED_CUSTOMER_A");await expect(page.getByRole("checkbox")).not.toBeChecked();
