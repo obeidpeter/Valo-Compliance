@@ -8,7 +8,7 @@ import {randomBytes} from "node:crypto";
 import {Pool} from "pg";
 import assert from "node:assert/strict";
 import {rehearsalConfiguration,verifyRehearsalDatabase} from "../lib/valo-runtime-activation";
-import {assignEmptyRehearsalDatabase} from "../lib/valo-production-bootstrap";
+import {assignEmptyRehearsalDatabase,prepareEmptyRehearsalQueue} from "../lib/valo-production-bootstrap";
 const exec=promisify(execFile),root=resolve(import.meta.dirname,"../../../..");
 assert.equal(process.platform,"linux");
 const directory=await mkdtemp(join(tmpdir(),"valo-production-drill-")),data=join(directory,"data"),user=userInfo().username;
@@ -44,7 +44,7 @@ try{
   const admin=new Pool({host:directory,port:58464,user,database:"postgres"});
   try{await admin.query("CREATE DATABASE valo_rehearsal");}finally{await admin.end();}
   await exec("pnpm",["--filter","@workspace/db","exec","drizzle-kit","migrate","--config","./drizzle.config.ts"],options);
-  await exec("pnpm",["--filter","@workspace/api-server","exec","tsx","src/scripts/queue-migration.ts","apply-development"],{...options,env:{...env,VALO_DEV_QUEUE_MIGRATION:"reviewed-synthetic-development"}});
+  const construction=await readFile(join(root,"lib/db/drizzle/pg-boss-development.sql"),"utf8");
   pool=new Pool({host:directory,port:58464,user,database:"valo_rehearsal"});
   const marker=(await pool.query("SELECT * FROM valo_runtime_identity")).rows[0];assert.equal(marker.environment,"development");
   const prod={...env,NODE_ENV:"production",PORT:"8095",VALO_WORKER_HEALTH_PORT:"8096",SESSION_SECRET:randomBytes(32).toString("hex"),
@@ -57,9 +57,10 @@ try{
   report.phase="database-binding";
   await assert.rejects(verifyRehearsalDatabase(s=>pool!.query(s),prod),/IDENTITY_MISMATCH/);
   const c=await pool.connect();try{
-    await c.query("BEGIN");await assignEmptyRehearsalDatabase((s,v)=>c.query(s,v),prod);await c.query("ROLLBACK");
+    await c.query("BEGIN");await prepareEmptyRehearsalQueue((s,v)=>c.query(s,v),prod,construction);await assignEmptyRehearsalDatabase((s,v)=>c.query(s,v),prod);await c.query("ROLLBACK");
     assert.equal((await c.query("SELECT environment FROM valo_runtime_identity")).rows[0].environment,"development");
-    await c.query("BEGIN");await assignEmptyRehearsalDatabase((s,v)=>c.query(s,v),prod);await c.query("COMMIT");
+    assert.equal((await c.query("SELECT to_regnamespace('valo_jobs') AS schema")).rows[0].schema,null);
+    await c.query("BEGIN");await prepareEmptyRehearsalQueue((s,v)=>c.query(s,v),prod,construction);await assignEmptyRehearsalDatabase((s,v)=>c.query(s,v),prod);await c.query("COMMIT");
     await c.query("BEGIN");await assert.rejects(assignEmptyRehearsalDatabase((s,v)=>c.query(s,v),prod),/NEW_DATABASE_IDENTITY/);await c.query("ROLLBACK");
   }finally{c.release();}
   await verifyRehearsalDatabase(s=>pool!.query(s),prod);report.bootstrapRollbackVerified=true;report.developmentCopyRejected=true;

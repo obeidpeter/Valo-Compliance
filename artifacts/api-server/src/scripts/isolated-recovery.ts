@@ -208,7 +208,7 @@ async function drill(){
     await exec("initdb",["-D",data,"--auth=trust","--no-locale"],options);
     await exec("pg_ctl",["-D",data,"-l",join(directory,"postgres.log"),"-o",`-k ${directory} -h '' -p 58463`,"-w","start"],options);running=true;
     const admin=new Pool({host:directory,port:58463,user,database:"postgres"});
-    try{await admin.query("CREATE DATABASE valo_restore_source");await admin.query("CREATE DATABASE valo_restore_target");}finally{await admin.end();}
+    try{await admin.query("CREATE DATABASE valo_restore_source");await admin.query("CREATE DATABASE valo_restore_target");await admin.query("ALTER DATABASE valo_restore_target SET timezone='Pacific/Honolulu'");}finally{await admin.end();}
     env.DATABASE_URL=url("valo_restore_source");
     report.phase="apply_journalled_migrations";
     await exec("pnpm",["--filter","@workspace/db","exec","drizzle-kit","migrate","--config","./drizzle.config.ts"],options);

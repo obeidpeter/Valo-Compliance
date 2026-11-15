@@ -16,7 +16,7 @@ export async function assertWindowsRecoveryTarget(client:PoolClient){
     resolve(root)!==root||await realpath(root)!==root||(await lstat(root)).isSymbolicLink())
     throw Error("LOCAL_DISPOSABLE_RECOVERY_TARGET_REQUIRED");
   const state=(await client.query(`SELECT current_database() AS name,current_user AS "user",
-    current_setting('data_directory') AS directory,current_setting('port') AS port,inet_server_addr()::text AS address`)).rows[0];
+    current_setting('data_directory') AS directory,current_setting('port') AS port,host(inet_server_addr()) AS address`)).rows[0];
   windowsRecoveryBinding(state,new URL(process.env.DATABASE_URL??""),root);
   const {rows}=await client.query("SELECT EXISTS(SELECT 1 FROM valo_workspaces WHERE owner_identity_id NOT LIKE 'synthetic-recovery-%') AS unsafe");
   if(rows.length!==1||rows[0].unsafe!==false)throw Error("OWNED_SYNTHETIC_RECOVERY_DATABASE_REQUIRED");

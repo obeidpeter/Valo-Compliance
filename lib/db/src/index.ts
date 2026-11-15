@@ -10,7 +10,9 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Signed privacy projections include PostgreSQL JSON timestamps. Pin every app
+// session to UTC so restores on hosts with another timezone verify identically.
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL, options: "-c timezone=UTC" });
 export const db = drizzle(pool, { schema });
 export { schema };
 
