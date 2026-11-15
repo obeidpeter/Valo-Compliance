@@ -6,6 +6,8 @@ import { EmptyState, ErrorState, Skel } from '@/components/states';
 import { cn } from '@/lib/utils';
 import {FinanceRefunds} from './finance-refunds';
 import {SupportRecords} from '@/components/support-records';
+import {StaffSupportCases} from '@/components/staff-support-cases';
+import {ContentEscalations} from '@/components/content-escalations';
 
 const AREAS: { v: Area; l: string }[] = [
   { v: GetStaffOperationsArea.content, l: 'Content' },
@@ -23,6 +25,8 @@ function cell(v: unknown): string {
 
 export default function StaffPage() {
   const [area, setArea] = useState<Area>('content');
+  const [supportDirty, setSupportDirty] = useState(false);
+  const [contentDirty, setContentDirty] = useState(false);
   const params = { area };
   const q = useGetStaffOperations(params, { query: { queryKey: getGetStaffOperationsQueryKey(params), refetchInterval: 15000, retry: false } });
   const status = (q.error as { status?: number } | null)?.status;
@@ -39,7 +43,7 @@ export default function StaffPage() {
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Support shows the full saved request. Finance actions are available only to authorised finance staff. Customer document bodies are not shown here.</p>
       <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Staff area filters">
         {AREAS.map((a) => (
-          <button key={a.v} type="button" aria-pressed={area === a.v} onClick={() => setArea(a.v)} className={cn('rounded-full border px-4 py-1.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2', area === a.v ? 'border-foreground bg-foreground text-background' : 'border-border hover:bg-secondary')} data-testid={'tab-staff-' + a.v}>{a.l}</button>
+          <button key={a.v} type="button" aria-pressed={area === a.v} disabled={(supportDirty || contentDirty) && area !== a.v} onClick={() => setArea(a.v)} className={cn('rounded-full border px-4 py-1.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50', area === a.v ? 'border-foreground bg-foreground text-background' : 'border-border hover:bg-secondary')} data-testid={'tab-staff-' + a.v}>{a.l}</button>
         ))}
       </div>
       <div className="mt-8">
@@ -49,11 +53,19 @@ export default function StaffPage() {
           <EmptyState mark={<KeyRound className="h-5 w-5 text-muted-foreground" />} title="Recent verification needed" action={<Link href="/workspace/account" className="btn btn-primary">Manage sign-in security</Link>}>This area requires multi-factor authentication completed recently. Set up or re-verify a second factor, then sign in again.</EmptyState>
         ) : status === 403 ? (
           <EmptyState mark={<ShieldAlert className="h-5 w-5 text-muted-foreground" />} title="Not a staff account" action={<Link href="/workspace" className="btn btn-ghost">Back to workspace</Link>}>Your account does not have a staff role for this area. Roles are assigned on the server; there is no way to request one here.</EmptyState>
-        ) : q.isError ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : q.data ? (
+        ) : q.isError && !q.data ? <ErrorState error={q.error} onRetry={() => q.refetch()} /> : q.data ? (
           <>
+            {q.isError && <ErrorState error={q.error} onRetry={() => q.refetch()} title="Staff overview refresh failed"/>}
             <p className="rounded-2xl border border-border bg-sidebar p-4 text-sm" data-testid="text-staff-notice">{q.data.notice}</p>
             {area==='finance'&&<FinanceRefunds/>}
-            {records.length === 0 ? <p className="mt-6 text-sm text-muted-foreground">No records in this area.</p> : area==='support' ? <SupportRecords records={records}/> : (
+            {area==='content'&&<ContentEscalations onDirtyChange={setContentDirty}/>}
+            {area==='support' ? <>
+              <StaffSupportCases onDirtyChange={setSupportDirty}/>
+              <details className="mt-8 border-t border-border pt-5">
+                <summary className="cursor-pointer text-sm font-medium">Original saved requests</summary>
+                {records.length ? <SupportRecords records={records}/> : <p className="mt-4 text-sm text-muted-foreground">No original request records in this area.</p>}
+              </details>
+            </> : records.length === 0 ? <p className="mt-6 text-sm text-muted-foreground">No records in this area.</p> : (
               <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-secondary"><tr>{cols.map((c) => <th key={c} scope="col" className="px-4 py-2.5 font-mono text-xs font-medium">{c}</th>)}</tr></thead>

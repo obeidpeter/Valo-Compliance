@@ -51,7 +51,10 @@
     "test:valo-workspace-download": "node --import tsx --test src/lib/valo-download-session.test.ts",
     "test:valo-workspace-download-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-download.integration.test.ts",
     "test:valo-workspace-artifact-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-export-jobs.integration.test.ts src/lib/valo-workspace-export-controls.integration.test.ts",
-    "test:valo-workspace-download-browser": "NODE_ENV=development VALO_RUN_WORKSPACE_DOWNLOAD_BROWSER=synthetic-development-only tsx src/scripts/workspace-data-download-browser.ts"
+    "test:valo-workspace-download-browser": "NODE_ENV=development VALO_RUN_WORKSPACE_DOWNLOAD_BROWSER=synthetic-development-only tsx src/scripts/workspace-data-download-browser.ts",
+    "test:valo-support-ui": "node --import tsx --test src/lib/valo-support-ui.test.ts",
+    "test:valo-support-browser": "node src/scripts/support-case-browser.mjs",
+    "test:valo-support-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-support-lifecycle.integration.test.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",

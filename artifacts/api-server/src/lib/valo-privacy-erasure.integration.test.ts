@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
 import {db,pool,valoPrivacyErasureObjects,valoPrivacyCases,valoPrivacyEvents,valoPrivacyTombstones,
   valoWorkspaces,valoMemberships,valoStaffAssignments,valoStaffAccessAudit,valoProfileVersions,
-  valoDocuments,valoDocumentRevisions,valoSupportTickets,valoEvents,valoAIDrafts,
+  valoDocuments,valoDocumentRevisions,valoSupportTickets,valoSupportCases,valoSupportMessages,valoSupportEscalations,valoEvents,valoAIDrafts,
   valoExportJobs,valoFileAssets,valoExportObjects,valoPrivacyMessages} from "@workspace/db";
 import {eq,inArray,sql} from "drizzle-orm";
 import {resolveWorkspace,saveProfile,createDocument,authorizeWorkspaceWrite} from "./valo-store";
@@ -54,6 +54,12 @@ test("resumable physical development erasure with retained exclusions and replay
     const prepared=await createPrivacyCase(a,"synthetic-private-contact@example.invalid",{kind:"export",
       idempotencyKey:randomUUID(),message:"SYNTHETIC-PRIVATE-REQUEST-TEXT",acknowledgement:true});
     preparedCaseId=prepared.reference.slice(5);
+    const[supportCase]=await db.select().from(valoSupportCases).where(eq(valoSupportCases.workspaceId,a.workspaceId));
+    assert.ok(supportCase);
+    await db.insert(valoSupportMessages).values(Array.from({length:203},(_,n)=>({id:randomUUID(),caseId:supportCase.id,workspaceId:a.workspaceId,
+      authorId:a.identityId,authorKind:"customer" as const,visibility:"customer" as const,body:`SYNTHETIC-ERASE-SUPPORT-REPLY-${n}`})));
+    await db.insert(valoSupportEscalations).values({id:randomUUID(),caseId:supportCase.id,targetKind:"content",targetId:randomUUID(),
+      targetHash:"synthetic-erasure-fixture-not-a-publication",targetVersion:1,reason:"SYNTHETIC-PRIVATE-CONTENT-COMPLAINT"});
     await db.insert(valoPrivacyMessages).values({id:randomUUID(),workspaceId:a.workspaceId,caseId:preparedCaseId,
       replyToVersion:1,body:"SYNTHETIC-ERASE-PRIVATE-CASE-REPLY"});
     await db.transaction(async tx=>{
@@ -119,9 +125,27 @@ test("resumable physical development erasure with retained exclusions and replay
       }
     });
     await t.test("resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant",async()=>{
-      for(let n=0;n<20&&detail.request.status!=="partially_fulfilled";n++){
+      const remainingSupport=async()=>Number((await db.execute(sql`SELECT
+        (SELECT count(*) FROM valo_support_messages WHERE workspace_id=${a.workspaceId}::uuid
+          AND (body<>'[Private content removed by verified workspace erasure]' OR (author_kind='customer' AND author_id<>'erased')))+
+        (SELECT count(*) FROM valo_support_escalations e JOIN valo_support_cases c ON c.id=e.case_id
+          WHERE c.workspace_id=${a.workspaceId}::uuid AND e.reason<>'[Private content removed by verified workspace erasure]')+
+        (SELECT count(*) FROM valo_support_tickets WHERE workspace_id=${a.workspaceId}::uuid
+          AND (scope<>'[Private content removed by verified workspace erasure]' OR contact_email<>'erased@invalid')) AS remaining`)).rows[0]!.remaining);
+      let supportBatches=0;
+      const currentPhase=async()=>(await db.select({phase:valoPrivacyCases.erasurePhase}).from(valoPrivacyCases).where(eq(valoPrivacyCases.id,id)))[0]!.phase;
+      for(let n=0;n<40&&detail.request.status!=="partially_fulfilled";n++){
+        const beforePhase=await currentPhase(),before=await remainingSupport();
         detail=await act("resume_erasure");version=detail.request.version;
+        if(beforePhase==="support_content"){
+          supportBatches++;const after=await remainingSupport();
+          assert.ok(before-after<=100,"one support phase call may redact at most 100 rows across all copies");
+          assert.ok(before-after>0,"the seeded support phase must make bounded progress");
+          if(after>0)assert.equal(await currentPhase(),"support_content","never advance while ticket or conversation private text remains");
+        }
       }
+      assert.equal(supportBatches,3,"203 replies, one complaint and retained ticket copies require three bounded batches");
+      assert.equal(await remainingSupport(),0);
       assert.equal(detail.request.status,"partially_fulfilled");
       for(const table of[valoDocuments,valoDocumentRevisions,valoProfileVersions])
         assert.equal((await db.select().from(table).where(eq(table.workspaceId,a.workspaceId))).length,0);
@@ -133,6 +157,9 @@ test("resumable physical development erasure with retained exclusions and replay
       assert.equal(usage.providerCalls,1);assert.equal(usage.budgetReserved,true);
       assert.deepEqual(usage.preview,{});assert.equal(usage.plan,null);
       const support=await db.select().from(valoSupportTickets).where(eq(valoSupportTickets.workspaceId,a.workspaceId));
+      assert.ok((await db.select().from(valoSupportCases).where(eq(valoSupportCases.workspaceId,a.workspaceId))).length>0,"minimal case references remain");
+      const replies=await db.select().from(valoSupportMessages).where(eq(valoSupportMessages.workspaceId,a.workspaceId));
+      assert.equal(replies.length,203);assert.ok(replies.every(r=>r.body==="[Private content removed by verified workspace erasure]"&&r.authorId==="erased"));
       assert.ok(support.every(row=>row.scope==="[Private content removed by verified workspace erasure]"&&row.contactEmail==="erased@invalid"));
       await db.transaction(async tx=>{
         for(const caseId of[id,preparedCaseId]){

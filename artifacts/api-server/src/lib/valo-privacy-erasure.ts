@@ -103,10 +103,30 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
   if(section==="privacy_messages")return tx.execute(sql`DELETE FROM valo_privacy_messages WHERE ctid IN
     (SELECT ctid FROM valo_privacy_messages WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
   if(section==="purchase_notifications")return holdUnsentPrivacyNotifications(tx,workspaceId);
-  if(section==="support_content")return tx.execute(sql`UPDATE valo_support_tickets SET
-    scope=${removedMessage},contact_email='erased@invalid'
-    WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
-      AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);
+  if(section==="support_content"){
+    // One shared row budget across private copies. Retain minimal case/audit
+    // references instead of cascading an unbounded conversation in one batch.
+    // Returning 100 holds this phase; only exhausting every copy may advance.
+    let removed=0;
+    const messages=await tx.execute(sql`UPDATE valo_support_messages SET body=${removedMessage},
+      author_id=CASE WHEN author_kind='customer' THEN 'erased' ELSE author_id END
+      WHERE id IN (SELECT id FROM valo_support_messages WHERE workspace_id=${workspaceId}::uuid
+        AND (body<>${removedMessage} OR (author_kind='customer' AND author_id<>'erased')) LIMIT ${100-removed})`);
+    removed+=messages.rowCount??0;
+    if(removed<100){
+      const referrals=await tx.execute(sql`UPDATE valo_support_escalations SET reason=${removedMessage}
+        WHERE id IN (SELECT e.id FROM valo_support_escalations e JOIN valo_support_cases c ON c.id=e.case_id
+          WHERE c.workspace_id=${workspaceId}::uuid AND e.reason<>${removedMessage} LIMIT ${100-removed})`);
+      removed+=referrals.rowCount??0;
+    }
+    if(removed<100){
+      const tickets=await tx.execute(sql`UPDATE valo_support_tickets SET scope=${removedMessage},contact_email='erased@invalid'
+        WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
+          AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT ${100-removed})`);
+      removed+=tickets.rowCount??0;
+    }
+    return{rowCount:removed};
+  }
   if(section==="privacy_content"){
     const rows=await tx.select().from(valoPrivacyCases).where(and(eq(valoPrivacyCases.workspaceId,workspaceId),
       ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100).for("update");

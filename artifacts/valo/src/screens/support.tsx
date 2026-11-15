@@ -1,6 +1,8 @@
 import { Link } from 'wouter';
 import { PageHeader } from '@/components/states';
 import { TicketForm } from '@/components/ticket-form';
+import { Show } from '@clerk/react';
+import { CustomerSupportCases } from '@/components/support-cases';
 
 export default function Support() {
   return (
@@ -9,6 +11,7 @@ export default function Support() {
         Requests are saved to our queue and wait for a staff member. You get a reference immediately; we do not promise a response time.{' '}Cannot sign in? Use <Link href="/account-access" className="text-primary underline underline-offset-4">account access help</Link>.
       </PageHeader>
       <TicketForm defaultCategory="support" />
+      <Show when="signed-in"><CustomerSupportCases /></Show>
     </div>
   );
 }

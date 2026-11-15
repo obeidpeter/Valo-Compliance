@@ -6,7 +6,7 @@ import {abortable} from "./valo-abort";
 import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoAssessments,valoTasks,valoReminderPreferences,
   valoReminderOutbox,valoAIDrafts,valoContentVersions,valoSafetySwitches,valoStaffAccessAudit,
-  valoExportJobs,valoFileAssets,valoEvents } from "@workspace/db";
+  valoExportJobs,valoFileAssets,valoEvents,valoSupportCases,valoSupportMessages } from "@workspace/db";
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { authorizeWorkspaceWrite,authorizeWorkspaceRead,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
@@ -38,6 +38,8 @@ export async function saveAccessSupport(raw:unknown,remoteAddress:string){
         if(!q.allowed)throw new ValoProblem(429,`Please retry in ${q.retryAfter} seconds. No new request was saved.`,undefined,q.retryAfter);
       }
     }
+    const {openSupportCase}=await import("./valo-support-lifecycle");
+    await openSupportCase(tx,"access",id,null);
     return ack(id);
   });
 }
@@ -112,6 +114,15 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
         .orderBy("id" in table?table.id:table.workspaceId).limit(sink?500:5001).offset(offset));
     }
     // Explicit projections: never include storage locators, queue identifiers or leases.
+    await collect("supportCases",offset=>tx.select({id:valoSupportCases.id,workspaceId:valoSupportCases.workspaceId,
+      ticketId:valoSupportCases.ticketId,status:valoSupportCases.status,version:valoSupportCases.version,
+      createdAt:valoSupportCases.createdAt,updatedAt:valoSupportCases.updatedAt}).from(valoSupportCases)
+      .where(eq(valoSupportCases.workspaceId,actor.workspaceId)).orderBy(valoSupportCases.id).limit(sink?500:5001).offset(offset));
+    await collect("supportReplies",offset=>tx.select({id:valoSupportMessages.id,workspaceId:valoSupportMessages.workspaceId,
+      caseId:valoSupportMessages.caseId,authorKind:valoSupportMessages.authorKind,body:valoSupportMessages.body,
+      createdAt:valoSupportMessages.createdAt}).from(valoSupportMessages)
+      .where(and(eq(valoSupportMessages.workspaceId,actor.workspaceId),eq(valoSupportMessages.visibility,"customer")))
+      .orderBy(valoSupportMessages.id).limit(sink?500:5001).offset(offset));
     await collect("exportJobs",offset=>tx.select({id:valoExportJobs.id,workspaceId:valoExportJobs.workspaceId,
       documentId:valoExportJobs.documentId,revisionId:valoExportJobs.revisionId,revision:valoExportJobs.revision,
       format:valoExportJobs.format,renderVersion:valoExportJobs.renderVersion,sourceHash:valoExportJobs.sourceHash,

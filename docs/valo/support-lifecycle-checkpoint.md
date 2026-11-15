@@ -1,0 +1,22 @@
+# Durable support lifecycle
+
+This change connects the existing saved support intake to private customer and staff workflows. It implements the support lifecycle portions of SRV002, ADM008 and WRK006; it does not establish full R1 acceptance or send an external message.
+
+## Recorded behaviour
+
+- Workspace and account-access intake create a case in the same transaction, preserving the original reference, scope and consent. Migration `0033_support_lifecycle.sql` backfills existing intake as open cases without inventing assignment, replies or resolution.
+- Customers can read and reply only within their current, non-erased workspace. Replies reopen resolved conversations. Staff with a current, unexpired support role and recent server-verified MFA can assign an active support colleague, reply, resolve or reopen a case. Anonymous account-access responses stay internal because the original intake does not establish account ownership.
+- Every mutation binds a request UUID, actor, payload and expected case version. Exact retries reuse the durable action; changed intent or a stale version conflicts. Replies, assignment and state transitions commit with append-only case events. A customer sees portal replies; internal content-triage notes and staff assignment identities are excluded.
+- Support can refer an exact content or rule record, version and hash to content staff. Internal triage does not depend on consent to share information with an outside adviser. It grants no content-hold or publication authority. Content staff may acknowledge, close triage, or explicitly invoke the existing source-control authority to hold that exact version and queue reassessment. Closing triage never approves publication or releases a hold.
+- The source hold and its review queue are independently durable. If final support persistence fails, retrying the original key recovers the existing source audit and links its impact, including after an intervening customer reply or triage closure. It does not issue a second hold with a replacement key. Source audit contains a reference and payload digest, not the private complaint text.
+- Lists and conversations are paged. Customer export includes only the customer's case summaries and visible replies. The existing support-content erasure phase redacts private reply and complaint text, anonymizes customer reply authors, and clears original intake scope/contact copies using one shared 100-row budget. Minimal case and audit references remain. Existing privacy phase indices remain unchanged.
+
+The UI preserves drafts on errors, keeps the same request key while an outcome is unknown, blocks accidental navigation with unsaved work, and requires a refreshed version after a conflict. A successful response must identify the submitted case or escalation and a version newer than the submitted expectation. A confirmed hold additionally requires a durable source-impact UUID. Malformed successful responses remain uncertain rather than clearing the draft.
+
+## Validation and limits
+
+The focused UI contract suite passes locally (7 tests). Full repository typechecking remains part of the pending integrated CI run; this sparse local checkout lacks some UI dependency aliases. The PostgreSQL suite is registered for disposable local CI PostgreSQL, with actual intake, role/MFA checks, assignment and reply state transitions, append-only events, account isolation, actual HTTP routing, content-authorized source hold, deliberately failed support completion and exact-key recovery, paging and export coverage. The privacy integration test seeds 203 replies in one conversation plus a complaint and original intake copies, then checks that three bounded batches clear private text without advancing the phase early; minimal case references remain. These database results remain pending until the branch's actual CI run succeeds.
+
+The controlled browser harness exercises the real React components with synthetic API transport; it is registered in CI. Local browser execution was unavailable because this execution environment disallows Chromium sockets, so no local browser pass is claimed.
+
+This code depends on the staff-authority unit (`0034`) and the source-controls unit (`0031`). Migration `0033` is new and has not been applied to native Replit. Private branch review and CI do not authorize native application, deployment, provider spending, external referral, email delivery or publication. All finite-inference approval and shared-budget restrictions remain unchanged.
