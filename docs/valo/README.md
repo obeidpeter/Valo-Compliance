@@ -1,14 +1,16 @@
 # Current development state — still not accepted
 
-Current budget checkpoint: [final SDK admission, immutable inputs and the
-fresh disabled 24-attempt packet](finite-sdk-admission-checkpoint.md).
-137 engineering checks passed, one native-only test was explicitly skipped,
-and all workspace typechecks passed. Ordinary CI includes 67 finite controls,
-actual managed-caller tests, portable storage and HTTP privacy regression.
-Hosted CI's account startup refusal remains separate from those local results.
-Independent review/owner approval remain pending; spending and quotas were not
-enabled or increased. These are not formal 80/60/60 acceptance results.
-Content remains held; prepared requests are not eligible publications.
+Current checkpoint: [editorial evidence corrections, verified PR11 integration
+and CI portability](editorial-ci-integration-checkpoint.md).
+Fresh engineering results: API 201 passed/1 skipped, receipt/commerce 26 passed,
+CI boundaries 29 passed/1 native-only skip, editorial provenance 6 passed.
+Typechecks passed. C054 produced three new action-specific denial records.
+These overlapping groups are not formal 80/60/60 acceptance or eligible content.
+PR12 and PR13 were not merged. Hosted CI startup restrictions remain separate.
+
+The [disabled budget work](finite-sdk-admission-checkpoint.md) is preserved.
+No budget/privacy feature changes, inference calls, spending approvals, quota
+increases, customer deletion, messages or publication were made in this unit.
 
 Current partial results: [independent privacy HTTP and deletion-history
 boundaries](privacy-role-and-tombstone-checkpoint.md), [connected but disabled

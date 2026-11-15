@@ -1,33 +1,31 @@
 # Valo Compliance — Valo Platform
 
-## Current checkpoint — final SDK admission and disabled review packet
+## Current checkpoint — editorial evidence and CI portability
 
-Approval, exact bindings and financial holds are now rechecked **after lazy SDK
-loading, immediately before SDK create**. Approved input is snapshotted so
-caller mutation cannot alter the sent request. Operator help/invalid modes need
-no database or SDK configuration.
+C038/C039 now pin the actual retained v5 baseline. C054 requires three newly
+committed, action-specific denial records and rejects pre-existing audit IDs.
+Selected runs preserve immutable reports and do not count unselected cases as
+passes. These corrections do not make held content eligible.
 
-**Executed:** 137 engineering checks passed, one explicitly native-only check
-skipped; all workspace typechecks passed. The checks include 67 offline controls,
-48 PostgreSQL budget/real-caller checks, no-database/runtime guards and portable
-storage with native I/O forbidden. They are not formal 80/60/60 acceptance.
+**Fresh local checks:** ordinary API suite **201 passed / 1 explicit skip**,
+PR11 reporting/receipt/commerce **26 passed**, CI-boundary group **29 passed /
+1 explicit native-only skip**, editorial provenance controls **6 passed**.
+Full workspace and subsequent API typechecks passed. Groups overlap; these are
+engineering checks, not formal 80/60/60 acceptance. C054 also ran against the
+development database with three new denial records and zero external actions.
 
-The fresh private packet binds **11 review pairs + one invoice case with a
-separate conditional schema retry: 24 attempts, at most $8.8932096 pre-tax** under
-the proposed additional $30 ceiling. All 24 requests/12 manifests were read back
-and verified. Earliest expiry: **2026-11-15 10:18:45.671 UTC**.
+PR11 is already merged, with its reporting tests in ordinary CI. PR12 awaits its
+final reviewed head; PR13 is not ready and was not merged. No maintenance recovery,
+customer deletion, messages or provider execution was performed.
 
-**Spending remains disabled; independent review and actual owner approval are
-pending.** No new inference calls, approvals or quota increases occurred.
-Historical exposure remains separate: 57 records including three unresolved
-potential charges; the new allocation has zero records. Neither is a verified
-bill or an approved global project budget.
+See [exact tests, evidence and limits](docs/valo/editorial-ci-integration-checkpoint.md).
+Hosted CI's prior saved-head jobs were refused before startup by GitHub's account
+restriction; local passes do not claim hosted success. No account limits changed.
 
-See [exact implementation, tests and packet](docs/valo/finite-sdk-admission-checkpoint.md).
-Hosted CI's prior saved-head jobs were refused before startup by GitHub's
-account restriction; local passes do not claim hosted success. Checker, receipt,
-erasure and key/recovery source were untouched. R1/R2 remain incomplete and
-unaccepted; prepared drafts are not published content. Launch/live payments stay off.
+The [prior disabled budget checkpoint](docs/valo/finite-sdk-admission-checkpoint.md)
+is preserved. New budget/privacy features remain with their separate branches.
+Spending and quota increases remain off. **R1/R2 remain incomplete and
+unaccepted**; prepared drafts are not published content. Launch/live payments stay off.
 
 Prior implementation evidence is retained separately:
 [execution/reconciliation](docs/valo/finite-customer-execution-review.md),

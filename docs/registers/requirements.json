@@ -2755,7 +2755,9 @@
       "risk": "Model confidence, agreement, elapsed time and owner override cannot waive mandatory publication evidence.",
       "implementation_status": "unverified",
       "test_status": "not_run_in_this_review",
-      "evidence": []
+      "evidence": [
+        "docs/valo/editorial-ci-integration-checkpoint.md (partial engineering controls only; formal EDP-010 remains unverified)"
+      ]
     },
     {
       "id": "EDP-011",

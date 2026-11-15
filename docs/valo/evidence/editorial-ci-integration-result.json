@@ -1,0 +1,52 @@
+{
+  "kind": "partial-engineering-checkpoint",
+  "parentCommit": "ef8e47513add00c3bb58fa14ecbc9fffe71cc171",
+  "dateUTC": "2026-11-15",
+  "sourceBinding": "containing Git commit; tests ran against its code before commit",
+  "checks": [
+    {"name":"api-unit-without-database-provider-credentials","passed":201,"failed":0,"skipped":1,"logSha256":"2f7b4fb9c507fe71b26af386337f1085cbf7bbd100fd4bc93f31ab8026607bda"},
+    {"name":"editorial-provenance","passed":6,"failed":0,"skipped":0,"logSha256":"76898791383a45f0be9917aeda9b06c401c6f96fe95a303365c5a055c4b22a4a"},
+    {"name":"receipt-reporting-integration-commerce","passed":26,"failed":0,"skipped":0,"runId":"0ff4c745-7ae3-4456-b173-83ca20f858d7","reportSha256":"572a89a6767fffe6f38d64e28eb6a9bcac137081daa97ee1cf46fd215864f4bf"},
+    {"name":"ci-portability","passed":29,"failed":0,"skipped":1,"runId":"e0462619-6150-4c41-91b7-6a577b574ed2","reportSha256":"31c0331bc133dd3740ade4bf5864957736daba035f8d64162ee810fde50bd247"},
+    {"name":"full-workspace-typecheck","outcome":"passed"},
+    {"name":"final-api-typecheck","outcome":"passed"}
+  ],
+  "editorialControl": {
+    "caseId": "EVAL-EDP-C054",
+    "firstRun": "ba4bdf18-bbb6-4626-ac42-6f9c3d95e2ee",
+    "firstRunReportSha256": "498b920d3844b049a7eef4c49fef707adb5d189ab2949f84153d202a2e763768",
+    "firstPreexistingCount": 0,
+    "repeatRun": "bd56a290-5aa5-4a92-869e-adcb5d5a397f",
+    "repeatReportSha256": "5ba34be45a7bf175a711e7c292a1466453a53e284d9cbfdeb1a922c5a734d96b",
+    "repeatPreexistingCount": 3,
+    "newActionSpecificRowsPerExecution": 3,
+    "outcome": "control_pass",
+    "notSelectedPerExecution": 59,
+    "formalCaseAccepted": false
+  },
+  "reviewBaseline": {
+    "cases": ["EVAL-EDP-C038","EVAL-EDP-C039"],
+    "requiredVersion": 5,
+    "summarySha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef",
+    "newNativeArtifactExecution": false,
+    "historicalFactualVerdict": "hold",
+    "historicalChallengeVerdict": "pass"
+  },
+  "priorCompositeHarness": {
+    "runId": "6bd8aba6-b66d-498b-8a8f-f8ea71162694",
+    "outcome": "shell-timeout-partial-only",
+    "countedAsComplete": false
+  },
+  "receiptSourceCommit": "52d81a2459e763df5616ff35bc794461fa35e163",
+  "receiptAlreadyMerged": true,
+  "pr12MergedHere": false,
+  "pr13MergedHere": false,
+  "newProviderCalls": 0,
+  "newPublications": 0,
+  "maintenanceRecoveryExecuted": false,
+  "customerDeletionExecuted": false,
+  "nativeStorageProved": false,
+  "formal80_60_60Accepted": false,
+  "R1_R2Accepted": false,
+  "ownerSpendingApproval": false
+}
