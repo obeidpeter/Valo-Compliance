@@ -1,6 +1,17 @@
 # Valo Compliance — Valo Platform
 
-## Latest application checkpoint — durable dispute workflows, R1/R2 still unaccepted
+## Latest application checkpoint — restartable private workspace exports
+
+The saved application now supports durable private scoped workspace exports,
+mid-preparation cancellation, current access rechecks and crash recovery without
+mixing snapshots. New integration **10/10**, related regressions **43/43**,
+controlled browser **9 checks**, typecheck and build passed. The complete
+native-storage fixture contained **5,001 rows / 11,797,601 bytes**.
+See [current evidence, saved application revision and limitations](docs/valo/workspace-export-checkpoint.md).
+These are development engineering checks, not the formal 80/60/60 acceptance
+suites. Full R1/R2, production recovery and launch remain unaccepted/disabled.
+
+## Previous application checkpoint — durable dispute workflows
 
 Customers now have consented dispute-information forms; finance has immutable
 prepared intents, generated receipt evidence, structured evidence, single-attempt
