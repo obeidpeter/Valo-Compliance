@@ -11,6 +11,53 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /admin/staff-roles:
+    get:
+      operationId: getStaffRoleAdministration
+      responses:
+        "200":
+          description: Permanent system operators only; current assignments and immutable change alerts.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StaffRoleAdministration" }
+    post:
+      operationId: changeStaffRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StaffRoleChangeInput" }
+      responses:
+        "200":
+          description: Durable idempotent role-change receipt; no privilege is granted to automation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StaffRoleChangeReceipt" }
+  /admin/staff-role-target:
+    post:
+      operationId: verifyStaffRoleTarget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [identityId]
+              properties:
+                identityId: { type: string, pattern: '^user_[A-Za-z0-9_-]+$', maxLength: 128 }
+      responses:
+        "200":
+          description: Provider-verified target shown for review; every grant verifies again.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [identityId, label, verifiedAt]
+                properties:
+                  identityId: { type: string }
+                  label: { type: string }
+                  verifiedAt: { type: string, format: date-time }
   /workspace/data-exports:
     get:
       operationId: listWorkspaceDataExports
@@ -1151,6 +1198,62 @@ components:
           schema:
             $ref: "#/components/schemas/ApiProblem"
   schemas:
+    StaffRoleAssignment:
+      type: object
+      required: [id, identityId, role, active, grantMode, expiresAt, version, grantedBy, grantedAt, reason]
+      properties:
+        id: { type: string, format: uuid }
+        identityId: { type: string }
+        role: { type: string, enum: [content, support, finance, system, privacy] }
+        active: { type: boolean }
+        grantMode: { type: string, enum: [permanent, break_glass] }
+        expiresAt: { type: [string, "null"], format: date-time }
+        version: { type: integer, minimum: 1 }
+        grantedBy: { type: string }
+        grantedAt: { type: string, format: date-time }
+        reason: { type: string }
+    StaffRoleChangeReceipt:
+      type: object
+      required: [id, requestKey, actorId, assignmentId, targetIdentityId, action, role, reason, incidentReference, before, after, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        requestKey: { type: string, format: uuid }
+        actorId: { type: string }
+        assignmentId: { type: string, format: uuid }
+        targetIdentityId: { type: string }
+        action: { type: string, enum: [grant, revoke] }
+        role: { type: string }
+        reason: { type: string }
+        incidentReference: { type: [string, "null"] }
+        before: { type: [object, "null"], additionalProperties: true }
+        after: { type: object, additionalProperties: true }
+        createdAt: { type: string, format: date-time }
+    StaffRoleChangeInput:
+      type: object
+      additionalProperties: false
+      required: [requestKey, identityId, role, action, expectedVersion, reason, acknowledgement]
+      properties:
+        requestKey: { type: string, format: uuid }
+        identityId: { type: string, pattern: '^user_[A-Za-z0-9_-]+$', maxLength: 128 }
+        role: { type: string, enum: [content, support, finance, system, privacy] }
+        action: { type: string, enum: [grant, revoke] }
+        expectedVersion: { type: integer, minimum: 0 }
+        reason: { type: string, minLength: 20, maxLength: 1000 }
+        acknowledgement: { type: boolean, enum: [true] }
+        grantMode: { type: string, enum: [permanent, break_glass] }
+        durationMinutes: { type: integer, minimum: 5, maximum: 60 }
+        incidentReference: { type: string, minLength: 5, maxLength: 200 }
+    StaffRoleAdministration:
+      type: object
+      required: [assignments, changes, notice]
+      properties:
+        assignments:
+          type: array
+          items: { $ref: "#/components/schemas/StaffRoleAssignment" }
+        changes:
+          type: array
+          items: { $ref: "#/components/schemas/StaffRoleChangeReceipt" }
+        notice: { type: string }
     DisputeHistory: {"type":"object","additionalProperties":false,"required":["id","action","reason","actorType","createdAt"],"properties":{"id":{"type":"string"},"action":{"type":"string"},"reason":{"type":"string"},"actorType":{"type":"string","enum":["customer","finance","worker"]},"createdAt":{"type":"string"}}}
     PaymentConcern: {"type":"object","additionalProperties":false,"required":["id","orderId","orderReference","message","status","latestReply","version","createdAt","updatedAt","history"],"properties":{"id":{"type":"string"},"orderId":{"type":"string"},"orderReference":{"type":"string"},"message":{"type":"string"},"status":{"type":"string","enum":["open","needs_information","responded","closed"]},"latestReply":{"type":["string","null"]},"version":{"type":"integer"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"history":{"type":"array","items":{"$ref":"#/components/schemas/DisputeHistory"}}}}
     PaymentConcernInput: {"type":"object","additionalProperties":false,"required":["requestKey","message","acknowledgement"],"properties":{"requestKey":{"type":"string","format":"uuid"},"message":{"type":"string","minLength":20,"maxLength":2000},"acknowledgement":{"type":"boolean","enum":[true]}}}
@@ -3736,4 +3839,5 @@ components:
           type: string
       required:
         - status
+
 

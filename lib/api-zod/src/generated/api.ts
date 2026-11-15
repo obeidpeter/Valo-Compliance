@@ -8,6 +8,103 @@
 import * as zod from 'zod';
 
 
+
+
+
+export const GetStaffRoleAdministrationResponse = zod.object({
+  "assignments": zod.array(zod.object({
+  "id": zod.uuid(),
+  "identityId": zod.string(),
+  "role": zod.enum(['content', 'support', 'finance', 'system', 'privacy']),
+  "active": zod.boolean(),
+  "grantMode": zod.enum(['permanent', 'break_glass']),
+  "expiresAt": zod.coerce.date().nullable(),
+  "version": zod.int().min(1),
+  "grantedBy": zod.string(),
+  "grantedAt": zod.coerce.date(),
+  "reason": zod.string()
+})),
+  "changes": zod.array(zod.object({
+  "id": zod.uuid(),
+  "requestKey": zod.uuid(),
+  "actorId": zod.string(),
+  "assignmentId": zod.uuid(),
+  "targetIdentityId": zod.string(),
+  "action": zod.enum(['grant', 'revoke']),
+  "role": zod.string(),
+  "reason": zod.string(),
+  "incidentReference": zod.string().nullable(),
+  "before": zod.record(zod.string(), zod.unknown()).nullable(),
+  "after": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date()
+})),
+  "notice": zod.string()
+})
+
+
+export const changeStaffRoleBodyIdentityIdMax = 128;
+
+
+export const changeStaffRoleBodyIdentityIdRegExp = new RegExp('^user_[A-Za-z0-9_-]+$');
+export const changeStaffRoleBodyExpectedVersionMin = 0;
+
+export const changeStaffRoleBodyReasonMin = 20;
+export const changeStaffRoleBodyReasonMax = 1000;
+
+export const changeStaffRoleBodyDurationMinutesMin = 5;
+export const changeStaffRoleBodyDurationMinutesMax = 60;
+
+export const changeStaffRoleBodyIncidentReferenceMin = 5;
+export const changeStaffRoleBodyIncidentReferenceMax = 200;
+
+
+
+export const ChangeStaffRoleBody = zod.object({
+  "requestKey": zod.uuid(),
+  "identityId": zod.string().max(changeStaffRoleBodyIdentityIdMax).regex(changeStaffRoleBodyIdentityIdRegExp),
+  "role": zod.enum(['content', 'support', 'finance', 'system', 'privacy']),
+  "action": zod.enum(['grant', 'revoke']),
+  "expectedVersion": zod.int().min(changeStaffRoleBodyExpectedVersionMin),
+  "reason": zod.string().min(changeStaffRoleBodyReasonMin).max(changeStaffRoleBodyReasonMax),
+  "acknowledgement": zod.literal(true),
+  "grantMode": zod.enum(['permanent', 'break_glass']).optional(),
+  "durationMinutes": zod.int().min(changeStaffRoleBodyDurationMinutesMin).max(changeStaffRoleBodyDurationMinutesMax).optional(),
+  "incidentReference": zod.string().min(changeStaffRoleBodyIncidentReferenceMin).max(changeStaffRoleBodyIncidentReferenceMax).optional()
+})
+
+export const ChangeStaffRoleResponse = zod.object({
+  "id": zod.uuid(),
+  "requestKey": zod.uuid(),
+  "actorId": zod.string(),
+  "assignmentId": zod.uuid(),
+  "targetIdentityId": zod.string(),
+  "action": zod.enum(['grant', 'revoke']),
+  "role": zod.string(),
+  "reason": zod.string(),
+  "incidentReference": zod.string().nullable(),
+  "before": zod.record(zod.string(), zod.unknown()).nullable(),
+  "after": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date()
+})
+
+
+export const verifyStaffRoleTargetBodyIdentityIdMax = 128;
+
+
+export const verifyStaffRoleTargetBodyIdentityIdRegExp = new RegExp('^user_[A-Za-z0-9_-]+$');
+
+
+export const VerifyStaffRoleTargetBody = zod.object({
+  "identityId": zod.string().max(verifyStaffRoleTargetBodyIdentityIdMax).regex(verifyStaffRoleTargetBodyIdentityIdRegExp)
+})
+
+export const VerifyStaffRoleTargetResponse = zod.object({
+  "identityId": zod.string(),
+  "label": zod.string(),
+  "verifiedAt": zod.coerce.date()
+})
+
+
 export const ListWorkspaceDataExportsQueryParams = zod.object({
   "cursor": zod.uuid().optional()
 })

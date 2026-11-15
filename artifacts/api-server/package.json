@@ -54,7 +54,9 @@
     "test:valo-dispute-browser": "VALO_RUN_DISPUTE_BROWSER=synthetic-development-only NODE_ENV=development node --import tsx src/scripts/dispute-workflow-browser.ts",
     "test:valo-workspace-export-controls": "node --experimental-test-module-mocks --import tsx --test src/lib/valo-private-data-storage.test.ts ../valo/src/lib/workspace-export-jobs.test.ts",
     "test:valo-workspace-export-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-exports.integration.test.ts",
-    "test:valo-workspace-export-browser": "NODE_ENV=development VALO_RUN_WORKSPACE_EXPORT_JOBS_BROWSER=synthetic-development-only tsx src/scripts/workspace-export-jobs-browser.ts"
+    "test:valo-workspace-export-browser": "NODE_ENV=development VALO_RUN_WORKSPACE_EXPORT_JOBS_BROWSER=synthetic-development-only tsx src/scripts/workspace-export-jobs-browser.ts",
+    "test:valo-staff-roles": "NODE_ENV=development VALO_RUN_STAFF_ROLE_TESTS=synthetic-development-only tsx --test src/lib/valo-staff-roles.integration.test.ts",
+    "test:valo-staff-role-browser": "NODE_ENV=development VALO_RUN_STAFF_ROLE_BROWSER=synthetic-development-only tsx src/scripts/staff-role-browser.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",

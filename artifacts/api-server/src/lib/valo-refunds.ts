@@ -1,3 +1,4 @@
+import {activeStaffAssignment,assertStaffAssignmentCurrent} from "./valo-staff-authority";
 import {randomUUID} from "node:crypto";
 import {and,desc,eq,inArray,sql} from "drizzle-orm";
 import {z} from "zod";
@@ -19,7 +20,7 @@ function freshMfa(actor:FinanceActor){
 export async function assertFinanceActor(actor:FinanceActor){
   freshMfa(actor);
   const[row]=await db.select({id:valoStaffAssignments.id}).from(valoStaffAssignments).where(and(
-    eq(valoStaffAssignments.identityId,actor.identityId),eq(valoStaffAssignments.role,"finance"),eq(valoStaffAssignments.active,true)));
+    eq(valoStaffAssignments.identityId,actor.identityId),eq(valoStaffAssignments.role,"finance"),activeStaffAssignment()));
   if(!row)throw new ValoProblem(403,"Active finance permission is required.");
 }
 export function refundView(row:Refund){
@@ -30,8 +31,9 @@ export function refundView(row:Refund){
 }
 export async function requireFinance(tx:Tx,actor:FinanceActor,reason:string){
   const[row]=await tx.select().from(valoStaffAssignments).where(and(eq(valoStaffAssignments.identityId,actor.identityId),
-    eq(valoStaffAssignments.role,"finance"),eq(valoStaffAssignments.active,true))).for("share");
+    eq(valoStaffAssignments.role,"finance"),activeStaffAssignment())).for("share");
   if(!row)throw new ValoProblem(403,"Active finance permission is required.");
+  await assertStaffAssignmentCurrent(tx,row.id);
   freshMfa(actor);
   await tx.insert(valoStaffAccessAudit).values({id:randomUUID(),assignmentId:row.id,actorId:actor.identityId,area:"finance",reason});
 }
@@ -233,3 +235,4 @@ export async function reconcileFinanceRefund(actor:FinanceActor,id:string){
     const{row}=await refundLock(tx,id);await requireFinance(tx,actor,`Read reconciliation result ${id}.`);return refundView(row);
   });
 }
+

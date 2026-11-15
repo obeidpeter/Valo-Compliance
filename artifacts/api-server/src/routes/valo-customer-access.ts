@@ -1,3 +1,4 @@
+import {createStaffRoleRouter} from "./valo-staff-roles";
 import { Router,type Request } from "express";
 import { getAuth,clerkClient } from "@clerk/express";
 import { z } from "zod";
@@ -77,13 +78,14 @@ return async(req:Request):Promise<PrivacyStaffActor>=>{
   if(!auth.userId||!auth.sessionId)throw new ValoProblem(401,"Sign in to a staff account.");
   const[session,user]=await Promise.all([deps.session(auth.sessionId),deps.user(auth.userId)]);
   const primary=user.emailAddresses.find(e=>e.id===user.primaryEmailAddressId);
-  if(session.status!=="active"||session.userId!==user.id||user.banned||user.locked||primary?.verification?.status!=="verified")
+  if(session.status!=="active"||session.userId!==auth.userId||user.id!==auth.userId||user.banned||user.locked||primary?.verification?.status!=="verified")
     throw new ValoProblem(403,"An active verified staff session is required.");
   const actor={identityId:user.id,recentMfa:auth.has({reverification:"strict_mfa"}),verifiedAt:Date.now()};
   return actor;
 };
 }
-const verifiedStaffSession=makeVerifiedStaffSession();
+export const verifiedStaffSession=makeVerifiedStaffSession();
+staffOperationsRouter.use(createStaffRoleRouter(verifiedStaffSession));
 async function financeIdentity(req:Request){
   const actor=await verifiedStaffSession(req);
   await assertFinanceActor(actor);return actor;
@@ -145,9 +147,10 @@ staffOperationsRouter.get("/admin/operations",async(req,res)=>{
   if(!auth.userId||!auth.sessionId){res.status(401).json({error:"Sign in to a staff account to continue."});return;}
   const [session,user]=await Promise.all([clerkClient.sessions.getSession(auth.sessionId),clerkClient.users.getUser(auth.userId)]);
   const primary=user.emailAddresses.find(e=>e.id===user.primaryEmailAddressId);
-  if(session.status!=="active"||session.userId!==user.id||user.banned||user.locked||primary?.verification?.status!=="verified"){
+  if(session.status!=="active"||session.userId!==auth.userId||user.id!==auth.userId||user.banned||user.locked||primary?.verification?.status!=="verified"){
     res.status(403).json({error:"An active verified staff session is required."});return;
   }
   const {area}=GetStaffOperationsQueryParams.parse(req.query);
   res.json(StaffOperations.parse(await staffOperations(user.id,auth.has({reverification:"strict_mfa"}),area)));
 });
+

@@ -156,6 +156,14 @@ jobs:
         run: pnpm --filter @workspace/valo run build
       - name: Prove controlled profile and checker state does not cross accounts
         run: NODE_ENV=development VALO_RUN_ACCOUNT_SCOPE_BROWSER=synthetic-development-only pnpm --filter @workspace/api-server exec tsx src/scripts/account-switch-browser.ts
+      - name: Prove staff role confirmation, stable retry and private account boundary
+        run: pnpm --filter @workspace/api-server test:valo-staff-role-browser
+      - name: Retain controlled staff role browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: controlled-staff-role-browser
+          path: generated-artifacts/valo-completion/staff-role-browser.*
       - name: Prove native dispute workflow and payment concerns in a controlled browser
         run: pnpm --filter @workspace/api-server test:valo-dispute-browser
       - name: Retain controlled dispute browser evidence
@@ -204,6 +212,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Apply tracked migrations to empty synthetic database
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
+      - name: Prove audited staff changes, last-admin concurrency and post-lock emergency expiry
+        run: pnpm --filter @workspace/api-server test:valo-staff-roles
       - name: Prove durable workspace jobs, real process death, cancellation and mixed privacy inventory
         run: pnpm --filter @workspace/api-server test:valo-workspace-export-db
       - name: Prove paged workspace attachment, final authorization and disconnect cleanup
@@ -228,4 +238,5 @@ jobs:
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce
           pnpm --filter @workspace/api-server test:valo-refunds
+
 

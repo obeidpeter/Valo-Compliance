@@ -197,6 +197,13 @@
       "when": 1794703000001,
       "tag": "0028_dispute_convergence",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794703000005,
+      "tag": "0034_staff_role_governance",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,4 @@
+import {StaffRoleAdministration} from "@/components/staff-role-administration";
 import { useState } from 'react';
 import { Link } from 'wouter';
 import { KeyRound, Lock, ShieldAlert } from 'lucide-react';
@@ -53,6 +54,7 @@ export default function StaffPage() {
           <>
             <p className="rounded-2xl border border-border bg-sidebar p-4 text-sm" data-testid="text-staff-notice">{q.data.notice}</p>
             {area==='finance'&&<FinanceRefunds/>}
+            {area==='system'&&<StaffRoleAdministration/>}
             {records.length === 0 ? <p className="mt-6 text-sm text-muted-foreground">No records in this area.</p> : area==='support' ? <SupportRecords records={records}/> : (
               <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
                 <table className="w-full text-left text-sm">
@@ -69,3 +71,4 @@ export default function StaffPage() {
     </div>
   );
 }
+

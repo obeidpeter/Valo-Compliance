@@ -46,3 +46,6 @@ export * from "./valo-commerce";
 export * from "./valo-payment-concerns";
 export * from "./valo-workspace-exports";
 
+
+
+export * from "./valo-staff-role-audit";
