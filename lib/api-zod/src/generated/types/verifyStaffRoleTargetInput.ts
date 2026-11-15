@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type VerifyStaffRoleTargetBody = {
+export interface VerifyStaffRoleTargetInput {
   /**
      * @maxLength 128
      * @pattern ^user_[A-Za-z0-9_-]+$
      */
   identityId: string;
-};
+}

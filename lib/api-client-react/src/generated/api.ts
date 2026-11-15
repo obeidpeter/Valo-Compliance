@@ -107,7 +107,7 @@ import type {
   TicketInput,
   TicketReceipt,
   VerifyStaffRoleTarget200,
-  VerifyStaffRoleTargetBody,
+  VerifyStaffRoleTargetInput,
   Workspace,
   WorkspaceDataExport,
   WorkspaceDataExportAction,
@@ -330,7 +330,7 @@ export const getVerifyStaffRoleTargetUrl = () => {
   return `/api/admin/staff-role-target`
 }
 
-export const verifyStaffRoleTarget = async (verifyStaffRoleTargetBody: VerifyStaffRoleTargetBody, options?: Parameters<typeof customFetch>[1]): Promise<VerifyStaffRoleTarget200> => {
+export const verifyStaffRoleTarget = async (verifyStaffRoleTargetInput: VerifyStaffRoleTargetInput, options?: Parameters<typeof customFetch>[1]): Promise<VerifyStaffRoleTarget200> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -351,7 +351,7 @@ return customFetch<VerifyStaffRoleTarget200>(getVerifyStaffRoleTargetUrl(),
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(verifyStaffRoleTargetBody)
+    body: JSON.stringify(verifyStaffRoleTargetInput)
   }
 );}
 
@@ -389,9 +389,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type VerifyStaffRoleTargetMutationResult = NonNullable<Awaited<ReturnType<typeof verifyStaffRoleTarget>>>
-    export type VerifyStaffRoleTargetMutationBody = BodyType<VerifyStaffRoleTargetBody>
+    export type VerifyStaffRoleTargetMutationBody = BodyType<VerifyStaffRoleTargetInput>
     export type VerifyStaffRoleTargetMutationError = ErrorType<unknown>
-    export type VerifyStaffRoleTargetMutationVariables = {data: BodyType<VerifyStaffRoleTargetBody>}
+    export type VerifyStaffRoleTargetMutationVariables = {data: BodyType<VerifyStaffRoleTargetInput>}
 
     export const useVerifyStaffRoleTarget = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyStaffRoleTarget>>, TError,VerifyStaffRoleTargetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

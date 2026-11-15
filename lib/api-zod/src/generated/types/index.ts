@@ -274,7 +274,7 @@ export * from './ticketReceiptDispatchStatus';
 export * from './uatPack';
 export * from './unknownAnswer';
 export * from './verifyStaffRoleTarget200';
-export * from './verifyStaffRoleTargetBody';
+export * from './verifyStaffRoleTargetInput';
 export * from './workspace';
 export * from './workspaceDataExport';
 export * from './workspaceDataExportAction';

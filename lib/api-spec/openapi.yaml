@@ -40,12 +40,7 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              type: object
-              additionalProperties: false
-              required: [identityId]
-              properties:
-                identityId: { type: string, pattern: '^user_[A-Za-z0-9_-]+$', maxLength: 128 }
+            schema: { $ref: "#/components/schemas/VerifyStaffRoleTargetInput" }
       responses:
         "200":
           description: Provider-verified target shown for review; every grant verifies again.
@@ -1198,6 +1193,12 @@ components:
           schema:
             $ref: "#/components/schemas/ApiProblem"
   schemas:
+    VerifyStaffRoleTargetInput:
+      type: object
+      additionalProperties: false
+      required: [identityId]
+      properties:
+        identityId: { type: string, pattern: '^user_[A-Za-z0-9_-]+$', maxLength: 128 }
     StaffRoleAssignment:
       type: object
       required: [id, identityId, role, active, grantMode, expiresAt, version, grantedBy, grantedAt, reason]

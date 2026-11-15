@@ -5,6 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface VerifyStaffRoleTargetInput {
+  /**
+     * @maxLength 128
+     * @pattern ^user_[A-Za-z0-9_-]+$
+     */
+  identityId: string;
+}
+
 export type StaffRoleAssignmentRole = typeof StaffRoleAssignmentRole[keyof typeof StaffRoleAssignmentRole];
 
 
@@ -2691,14 +2699,6 @@ export type ConflictErrorResponse = {
  * Validation, access or concurrency error
  */
 export type AuthErrorResponse = ApiProblem;
-
-export type VerifyStaffRoleTargetBody = {
-  /**
-     * @maxLength 128
-     * @pattern ^user_[A-Za-z0-9_-]+$
-     */
-  identityId: string;
-};
 
 export type VerifyStaffRoleTarget200 = {
   identityId: string;
