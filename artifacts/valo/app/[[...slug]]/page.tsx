@@ -1,5 +1,6 @@
 import ClientApp from '@/client-app';
 import type { Metadata } from 'next';
+import {headers} from 'next/headers';
 
 export async function generateMetadata({params}:{params:Promise<{slug?:string[]}>}):Promise<Metadata>{
   const {slug=[]}=await params;
@@ -12,6 +13,7 @@ export async function generateMetadata({params}:{params:Promise<{slug?:string[]}
     robots:privateRoute?{index:false,follow:false}:undefined};
 }
 
-export default function Page() {
-  return <ClientApp />;
+export default async function Page() {
+  const nonce=(await headers()).get('x-valo-nonce')??undefined;
+  return <ClientApp nonce={nonce}/>;
 }

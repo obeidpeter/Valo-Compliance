@@ -12,6 +12,6 @@ const App = dynamic(() => import('./App'), {
   ),
 });
 
-export default function ClientApp() {
-  return <App />;
+export default function ClientApp({nonce}:{nonce?:string}) {
+  return <App nonce={nonce}/>;
 }

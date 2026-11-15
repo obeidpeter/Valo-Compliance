@@ -7,11 +7,12 @@ import * as assessments from "../lib/valo-assessments";
 import * as tasks from "../lib/valo-tasks";
 import { consumeQuota } from "../lib/valo-quota";
 import { quotaSubjectHash } from "../lib/valo-quota-policy";
+import {clientAddress} from "../lib/valo-proxy-boundary";
 const router=Router();
 const id=(v:unknown)=>z.string().uuid().parse(v);
 router.post("/checker/preview",async(req,res):Promise<void>=>{
   res.set("Cache-Control","no-store");
-  const quota=await consumeQuota("anonymous-read",quotaSubjectHash(process.env.SESSION_SECRET,"ip",req.socket.remoteAddress??"unknown"));
+  const quota=await consumeQuota("anonymous-read",quotaSubjectHash(process.env.SESSION_SECRET,"ip",clientAddress(req)));
   if(!quota.allowed){res.set("Retry-After",String(quota.retryAfter));res.status(429).json({
     code:"CHECKER_RATE_LIMIT",error:"Too many checker requests. Your unsaved answers remain in this tab; retry after the indicated delay."});return;}
   res.json(PreviewAssessmentResponse.parse(await assessments.previewAssessment(req.body)));

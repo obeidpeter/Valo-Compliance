@@ -91,6 +91,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
+      - name: Reject first-factor-only staff sessions and untrusted proxy chains
+        run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-managed-session.test.ts src/lib/valo-proxy-boundary.test.ts ../valo/src/lib/content-security-policy.test.ts
       - name: Prove bounded native workspace storage and versioned UI helpers
         run: pnpm --filter @workspace/api-server test:valo-workspace-export-controls
       - name: Prove unit imports and disabled inference need no database or native storage
@@ -158,6 +160,14 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-refund-provider
       - name: Build the Next.js application
         run: pnpm --filter @workspace/valo run build
+      - name: Prove compiled frontend enforces unique nonces and blocks injected scripts
+        run: pnpm --filter @workspace/api-server exec tsx src/scripts/frontend-security-browser.ts
+      - name: Retain compiled frontend security evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: compiled-frontend-security
+          path: generated-artifacts/valo-completion/frontend-security-browser.json
       - name: Prove controlled profile and checker state does not cross accounts
         run: NODE_ENV=development VALO_RUN_ACCOUNT_SCOPE_BROWSER=synthetic-development-only pnpm --filter @workspace/api-server exec tsx src/scripts/account-switch-browser.ts
       - name: Prove staff role confirmation, stable retry and private account boundary

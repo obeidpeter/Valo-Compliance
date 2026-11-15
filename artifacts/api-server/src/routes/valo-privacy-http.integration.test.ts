@@ -41,10 +41,10 @@ test("actual HTTP privacy routes apply an independent privacy role and fresh MFA
   app.use("/admin/privacy-cases",createPrivacyOperationsRouter(makeVerifiedStaffSession({
     auth:req=>{
       const raw=req.header("x-test-identity"),id=raw&&roles.includes(raw)?raw:null;
-      return{userId:id,sessionId:id?`controlled-session:${id}`:null,has:()=>Boolean(id&&!id.includes("stale"))};
+      return{userId:id,sessionId:id?`controlled-session:${id}`:null,sessionClaims:{fva:id&&!id.includes("stale")?[0,0]:[0,-1]},has:()=>Boolean(id&&!id.includes("stale"))};
     },
     session:async id=>({status:sessionRevoked?"revoked":"active",userId:sessionMismatch?"different-user":id.slice("controlled-session:".length)}),
-    user:async id=>({id,banned:false,locked:false,primaryEmailAddressId:"controlled-primary",
+    user:async id=>({id,banned:false,locked:false,twoFactorEnabled:true,primaryEmailAddressId:"controlled-primary",
       emailAddresses:[{id:"controlled-primary",verification:{status:emailVerified?"verified":"unverified"}}]}),
   })));
   app.use((err:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{

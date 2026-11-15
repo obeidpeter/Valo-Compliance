@@ -222,11 +222,12 @@ function ShellRoutes() {
   );
 }
 
-function ClerkProviderWithRoutes() {
+function ClerkProviderWithRoutes({nonce}:{nonce?:string}) {
   const [, setLocation] = useLocation();
 
   return (
     <ClerkProvider
+      nonce={nonce}
       publishableKey={clerkPubKey}
       proxyUrl={clerkProxyUrl}
       appearance={clerkAppearance}
@@ -253,10 +254,10 @@ function ClerkProviderWithRoutes() {
   );
 }
 
-function App() {
+function App({nonce}:{nonce?:string}={}) {
   return (
     <WouterRouter base={basePath}>
-      <ClerkProviderWithRoutes />
+      <ClerkProviderWithRoutes nonce={nonce}/>
     </WouterRouter>
   );
 }
