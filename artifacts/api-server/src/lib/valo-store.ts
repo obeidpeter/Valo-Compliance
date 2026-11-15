@@ -209,7 +209,7 @@ export async function createTicketInTransaction(tx:Tx,actor:WorkspaceActor,raw:u
     await tx.insert(valoSupportTickets).values({
       id, workspaceId: actor.workspaceId, ...input, consentVersion: "service-sharing-v1", dispatchStatus: "awaiting_staff",
     });
-    const {openSupportCase}=await import("./valo-support-lifecycle");
+    const {openSupportCase}=await import("./valo-support-intake");
     await openSupportCase(tx,"workspace",id,actor.workspaceId);
     await event(tx, actor, "support.ticket_saved", id);
   return {

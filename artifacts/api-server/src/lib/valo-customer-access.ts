@@ -38,7 +38,7 @@ export async function saveAccessSupport(raw:unknown,remoteAddress:string){
         if(!q.allowed)throw new ValoProblem(429,`Please retry in ${q.retryAfter} seconds. No new request was saved.`,undefined,q.retryAfter);
       }
     }
-    const {openSupportCase}=await import("./valo-support-lifecycle");
+    const {openSupportCase}=await import("./valo-support-intake");
     await openSupportCase(tx,"access",id,null);
     return ack(id);
   });

@@ -22,13 +22,6 @@ export const supportActionSchema=z.discriminatedUnion("action",[
 const pageValue=(v:unknown)=>z.coerce.number().int().min(1).max(10000).default(1).parse(v);
 const statuses=z.enum(["all","open","in_progress","awaiting_customer","resolved"]);
 const hash=(v:unknown)=>createHash("sha256").update(canonical(v)).digest("hex");
-/** Atomic with its source intake. No delivery, assignment or resolution is
- * implied by opening a case. Source foreign keys prevent orphan workflows. */
-export async function openSupportCase(tx:Tx,kind:"workspace"|"access",sourceId:string,workspaceId:string|null){
-  const values={id:randomUUID(),sourceKind:kind,ticketId:kind==="workspace"?sourceId:null,
-    accessId:kind==="access"?sourceId:null,workspaceId};
-  await tx.insert(valoSupportCases).values(values).onConflictDoNothing();
-}
 async function currentSupportStaff(tx:Tx,actor:SupportStaffActor,role:"support"|"content"){
   requireFreshStaffSession(actor);
   const[row]=await tx.select({id:valoStaffAssignments.id}).from(valoStaffAssignments).where(and(
