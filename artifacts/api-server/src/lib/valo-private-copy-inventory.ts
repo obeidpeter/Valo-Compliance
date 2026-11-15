@@ -1,6 +1,6 @@
 import {sql} from "drizzle-orm";
 import {db} from "@workspace/db";
-import {removedPrivateText,erasureProgressReason,redactAuditReason} from "./valo-privacy-redactions";
+import {removedPrivateText,erasureProgressReason,redactAuditReason,redactDisputeAction} from "./valo-privacy-redactions";
 import {cancelUnsentDisputeWork} from "./valo-dispute-actions";
 import {ValoProblem} from "./valo-store";
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -74,15 +74,14 @@ export async function erasePrivateCopyPhase(tx:Tx,workspaceId:string,phase:CopyP
   const information=await tx.execute(sql`UPDATE valo_dispute_information SET information='{}'::jsonb
     WHERE id IN(SELECT id FROM valo_dispute_information WHERE workspace_id=${workspaceId}::uuid
       AND information<>'{}'::jsonb LIMIT 100)`);
-  const actions=await tx.execute(sql`UPDATE valo_dispute_actions SET payload=COALESCE((SELECT jsonb_object_agg(key,value)
-    FROM jsonb_each(payload) WHERE key IN('amount','amountKobo','refund_amount','refundAmountKobo')
-      AND jsonb_typeof(value)='number' AND value::text ~ '^[0-9]+$'),'{}'::jsonb),result=NULL,failure='PRIVACY_ERASURE'
-    WHERE id IN(SELECT id FROM valo_dispute_actions WHERE workspace_id=${workspaceId}::uuid
+  const actions=await tx.execute<{record:{id:string;workspace_id:string;[key:string]:unknown}}>(sql`
+    SELECT to_jsonb(a) AS record FROM valo_dispute_actions a WHERE workspace_id=${workspaceId}::uuid
       AND(result IS NOT NULL OR failure IS DISTINCT FROM 'PRIVACY_ERASURE' OR EXISTS(
         SELECT 1 FROM jsonb_each(payload) WHERE NOT(key IN('amount','amountKobo','refund_amount','refundAmountKobo')
-          AND jsonb_typeof(value)='number' AND value::text ~ '^[0-9]+$'))) LIMIT 100)`);
+          AND jsonb_typeof(value)='number' AND value::text ~ '^[0-9]+$'))) ORDER BY id LIMIT 100 FOR UPDATE`);
+  for(const{record}of actions.rows)await redactDisputeAction(tx,record);
   const reconciliation=await tx.execute(sql`UPDATE valo_payment_reconciliations SET finding='PRIVACY_ERASURE_FINANCE_REVIEW'
     WHERE id IN(SELECT id FROM valo_payment_reconciliations WHERE workspace_id=${workspaceId}::uuid
       AND finding IS NOT NULL AND finding<>'PRIVACY_ERASURE_FINANCE_REVIEW' LIMIT 100)`);
-  return{rowCount:Math.max(information.rowCount??0,actions.rowCount??0,reconciliation.rowCount??0)};
+  return{rowCount:Math.max(information.rowCount??0,actions.rows.length,reconciliation.rowCount??0)};
 }

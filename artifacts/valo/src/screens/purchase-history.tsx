@@ -1,4 +1,5 @@
 import { useState,useRef } from "react";
+import {PaymentConcerns} from "@/components/payment-concerns";
 import {CustomerDisputeInformation,DisputeFormsBoundary} from "@/components/dispute-workflows";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -74,6 +75,7 @@ function OrderCard({order,changed}:{order:CommerceOrder;changed:()=>Promise<unkn
     {busy&&<p className="mt-3 text-sm" role="status">Checking your request…</p>}
     {error&&<p className="mt-3 text-sm text-destructive" role="alert">{error}</p>}
     {notice&&<p className="mt-3 text-sm" role="status">{notice}</p>}
+    <PaymentConcerns orderId={order.id} orderReference={order.reference}/>
   </article>;
 }
 export function PurchaseHistoryPage(){
@@ -111,3 +113,4 @@ function PurchaseHistoryContent(){
       </section></>}
   </div>;
 }
+

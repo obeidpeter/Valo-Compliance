@@ -2,6 +2,7 @@ import { getConstructionPlans } from "pg-boss";
 import { readFile, writeFile } from "node:fs/promises";
 import { pool } from "@workspace/db";
 import { exportQueue, EXPORT_QUEUE } from "../lib/valo-export-queue";
+import {WORKSPACE_EXPORT_QUEUE} from "../lib/valo-workspace-export-jobs";
 import {assertDevelopmentRuntime} from "../lib/valo-development-runtime";
 const sqlPath = new URL("../../../../lib/db/drizzle/pg-boss-development.sql", import.meta.url);
 try {
@@ -19,6 +20,7 @@ try {
     boss.on("error", () => console.error("QUEUE_DATABASE_ERROR"));
     await boss.start();
     await boss.createQueue(EXPORT_QUEUE, { retryLimit:2, retryDelay:5, expireInSeconds:120 });
+    await boss.createQueue(WORKSPACE_EXPORT_QUEUE,{retryLimit:0,expireInSeconds:360});
     await boss.stop();
     console.log("Development queue schema and bounded export queue installed; no production migration performed.");
   }

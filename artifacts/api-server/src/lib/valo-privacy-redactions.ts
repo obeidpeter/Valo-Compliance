@@ -5,8 +5,8 @@ import {privacyKey,privacySigner} from "./valo-privacy-keys";
 export const removedPrivateText="[Private content removed by verified workspace erasure]";
 export const erasureProgressReason="Verified synthetic workspace erasure; per-system exclusions remain recorded.";
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
-type SourceRow={id:string;workspace_id:string;reason:string;[key:string]:unknown};
-type Table="valo_privacy_events"|"valo_refund_transitions";
+type SourceRow={id:string;workspace_id:string;[key:string]:unknown};
+type Table="valo_privacy_events"|"valo_refund_transitions"|"valo_dispute_actions";
 function canonical(value:unknown):unknown{
   if(Array.isArray(value))return value.map(canonical);
   if(value&&typeof value==="object")return Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b))
@@ -20,9 +20,8 @@ function mac(proof:unknown,key:string){
 /** Called only after the current case and, for privacy history, each source
  * case's entire original chain have been verified. Source and witness commit
  * in the same transaction; no old plaintext is kept in the witness. */
-export async function redactAuditReason(tx:Tx,table:Table,row:SourceRow){
-  if(row.reason===removedPrivateText)return;
-  const projection={...row,reason:removedPrivateText},signer=await privacySigner(tx);
+async function recordRedaction(tx:Tx,table:Table,row:SourceRow,projection:SourceRow){
+  const signer=await privacySigner(tx);
   const proof={version:1,table,rowId:row.id,workspaceId:row.workspace_id,
     originalHash:digest(row),originalEventHash:row.event_hash??null,
     projectionHash:digest(projection),keyVersion:signer.version};
@@ -39,8 +38,27 @@ export async function redactAuditReason(tx:Tx,table:Table,row:SourceRow){
   }else await tx.execute(sql`INSERT INTO valo_privacy_redactions(table_name,row_id,workspace_id,projection,proof,key_version,mac)
       VALUES(${table},${row.id}::uuid,${row.workspace_id}::uuid,${JSON.stringify(projection)}::jsonb,
         ${JSON.stringify(proof)}::jsonb,${signer.version},${mac(proof,signer.key)})`);
+}
+export async function redactAuditReason(tx:Tx,table:Exclude<Table,"valo_dispute_actions">,row:SourceRow){
+  if(row.reason===removedPrivateText)return;
+  await recordRedaction(tx,table,row,{...row,reason:removedPrivateText});
   await tx.execute(sql`UPDATE ${sql.identifier(table)} SET reason=${removedPrivateText}
     WHERE id=${row.id}::uuid AND workspace_id=${row.workspace_id}::uuid`);
+}
+/** Preserve the original immutable intent digest and monetary facts while
+ * removing copied text under the already verified v3 erasure transaction. */
+export async function redactDisputeAction(tx:Tx,row:SourceRow){
+  const amounts=new Set(["amount","amountKobo","refund_amount","refundAmountKobo"]);
+  const payload:Record<string,number>={};
+  for(const[key,value]of Object.entries(row.payload as Record<string,unknown>)){
+    if(!amounts.has(key)||typeof value!=="number"||!Number.isInteger(value)||value<0)continue;
+    if(!Number.isSafeInteger(value))throw Error("PRIVACY_DISPUTE_AMOUNT_UNSAFE");
+    payload[key]=value;
+  }
+  const projection={...row,payload,result:null,failure:"PRIVACY_ERASURE"};
+  await recordRedaction(tx,"valo_dispute_actions",row,projection);
+  await tx.execute(sql`UPDATE valo_dispute_actions SET payload=${JSON.stringify(payload)}::jsonb,
+    result=NULL,failure='PRIVACY_ERASURE' WHERE id=${row.id}::uuid AND workspace_id=${row.workspace_id}::uuid`);
 }
 export async function verifiedPrivacyRedaction(tx:Tx,eventId:string,workspaceId:string,eventHash:string){
   const result=await tx.execute<{proof:Record<string,unknown>;projection:unknown;actual:unknown;key_version:string;mac:string}>(sql`

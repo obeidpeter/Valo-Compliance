@@ -13,11 +13,25 @@ test("isolated real HTTP signature/durability controls — synthetic signing key
   assert.equal(Boolean(process.env.REPLIT_DEPLOYMENT),false);
   assert.equal(Boolean(process.env.PAYSTACK_SECRET_KEY),false,"must not replace a configured merchant secret");
   assert.equal(Boolean(process.env.PAYSTACK_WEBHOOK_SECRET),false,"must not replace a configured webhook secret");
+  assert.equal(Boolean(process.env.CLERK_SECRET_KEY),false,"must not replace configured identity credentials");
+  assert.equal(Boolean(process.env.CLERK_PUBLISHABLE_KEY),false,"must not replace configured identity instance");
+  const priorTelemetry=process.env.CLERK_TELEMETRY_DISABLED;
+  // The real Clerk middleware's signed-out path needs syntactically valid configuration,
+  // but no identity session or provider request. These values cannot authenticate anyone.
+  process.env.CLERK_SECRET_KEY="sk_test_"+"synthetic_configuration_not_a_real_key";
+  process.env.CLERK_PUBLISHABLE_KEY="pk_test_"+Buffer.from("synthetic.clerk.accounts.dev$").toString("base64");
+  process.env.CLERK_TELEMETRY_DISABLED="true";
   const key="whsec_synthetic_http_regression_not_a_merchant_secret";
   process.env.PAYSTACK_WEBHOOK_SECRET=key;process.env.PAYSTACK_WEBHOOK_MODE="timestamped";
   process.env.VALO_SANDBOX_CHECKOUT_ENABLED="true";
   const server=app.listen(0,"127.0.0.1");await new Promise<void>(resolve=>server.once("listening",resolve));
   const base=`http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const originalFetch=globalThis.fetch;let externalRequests=0;
+  globalThis.fetch=((input,init)=>{
+    const target=new URL(typeof input==="string"||input instanceof URL?input:input.url);
+    if(target.origin!==base){externalRequests++;throw Error("EXTERNAL_REQUEST_FORBIDDEN_IN_SYNTHETIC_HTTP_TEST");}
+    return originalFetch(input,init);
+  }) as typeof fetch;
   const transaction=`synthetic-http-${randomUUID()}`,eventKey=`test:charge.success:${transaction}`;
   const body=JSON.stringify({event:"charge.success",data:{id:transaction,reference:`unmatched-${transaction}`,customer:{notStored:"no-card-data"}}});
   function header(text=body,t=Math.floor(Date.now()/1000)){
@@ -54,22 +68,22 @@ test("isolated real HTTP signature/durability controls — synthetic signing key
       const alive=await post(body,header());assert.equal(alive.status,200);
       z.object({received:z.literal(true),duplicate:z.literal(true)}).parse(await alive.json());
     });
-    const identityConfigured=Boolean(process.env.CLERK_PUBLISHABLE_KEY&&process.env.CLERK_SECRET_KEY&&
-      (process.env.VALO_TRUSTED_ORIGIN||process.env.REPLIT_DEV_DOMAIN));
-    await t.test("raw webhook route does not bypass configured private authentication",{
-      skip:!identityConfigured?"Managed identity/site setup absent; not a configured-session authentication proof":false,
-    },async()=>{
-      assert.equal((await fetch(base+"/api/workspace/purchases")).status,401);
+    await t.test("raw webhook route does not bypass normal private authentication",async()=>{
+      const response=await fetch(base+"/api/workspace/purchases");
+      assert.equal(response.status,401);assert.match(response.headers.get("Cache-Control")!,/no-store/);
+      assert.equal(externalRequests,0,"signed-out authentication and webhook handling use no real identity or payment provider");
     });
-    await t.test("absent identity/site configuration keeps private data unavailable, not authenticated",{
-      skip:identityConfigured?"Configured identity path is exercised separately":false,
-    },async()=>{
+    await t.test("absent identity configuration keeps private data unavailable, not authenticated",async()=>{
+      delete process.env.CLERK_SECRET_KEY;delete process.env.CLERK_PUBLISHABLE_KEY;
       const response=await fetch(base+"/api/workspace/purchases");
       assert.equal(response.status,503);
       const value=z.object({error:z.string()}).passthrough().parse(await response.json());
       assert.equal("purchases" in value,false);
     });
   }finally{
+    globalThis.fetch=originalFetch;
+    delete process.env.CLERK_SECRET_KEY;delete process.env.CLERK_PUBLISHABLE_KEY;
+    if(priorTelemetry===undefined)delete process.env.CLERK_TELEMETRY_DISABLED;else process.env.CLERK_TELEMETRY_DISABLED=priorTelemetry;
     await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
     await db.delete(valoPaymentEvents).where(eq(valoPaymentEvents.eventKey,eventKey));
     await pool.end();

@@ -52,9 +52,9 @@
     "test:valo-sources": "tsx --test src/editorial/source-controls.test.ts src/editorial/business-name-evidence.test.ts",
     "test:valo-source-db": "tsx --test src/editorial/source-store.integration.test.ts",
     "queue:apply-development": "tsx src/scripts/queue-migration.ts apply-development",
-    "test:valo-erasure-controls": "node --import tsx --test src/lib/valo-erasure-seal.test.ts src/lib/valo-erasure-lock.test.ts src/lib/valo-erasure-inventory-cache.test.ts src/lib/valo-erasure-replay-cursor.test.ts",
-    "test:valo-disputes": "NODE_ENV=development node --import tsx --test src/lib/valo-dispute-provider.test.ts src/lib/valo-paystack-http.integration.test.ts",
-    "test:valo-disputes-db": "NODE_ENV=development VALO_RUN_DISPUTE_TESTS=synthetic-development-only node --import tsx --test src/lib/valo-dispute-actions.integration.test.ts",
+    "test:valo-erasure-controls": "node --import tsx --test src/lib/valo-erasure-seal.test.ts src/lib/valo-erasure-lock.test.ts src/lib/valo-erasure-inventory-cache.test.ts src/lib/valo-erasure-replay-cursor.test.ts src/lib/valo-dispute-replay-compatibility.test.ts",
+    "test:valo-disputes": "NODE_ENV=development node --import tsx --test src/lib/valo-dispute-provider.test.ts",
+    "test:valo-disputes-db": "NODE_ENV=development VALO_RUN_DISPUTE_TESTS=synthetic-development-only node --import tsx --test --test-concurrency=1 src/lib/valo-dispute-actions.integration.test.ts src/routes/valo-disputes-http.integration.test.ts src/lib/valo-paystack-http.integration.test.ts",
     "test:valo-erasure-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts",
     "test:valo-erasure-portable-db": "VALO_RUN_DB_TESTS=synthetic-development-only VALO_ERASURE_STORAGE_PROOF=portable NODE_ENV=development node --experimental-test-module-mocks --import tsx --import ./src/test-support/portable-storage-guard.ts --test src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts",
     "test:valo-erasure-native-db": "VALO_RUN_DB_TESTS=synthetic-development-only VALO_ERASURE_STORAGE_PROOF=native-replit NODE_ENV=development node --import tsx --test src/lib/valo-privacy-erasure.integration.test.ts",
@@ -63,8 +63,11 @@
     "test:valo-finite-entry": "node --experimental-test-module-mocks --import tsx --test src/lib/inference-decision-packet.test.ts src/lib/inference-history-legacy-links.test.ts src/lib/inference-manifest.test.ts src/lib/inference-allocation-package.test.ts src/lib/inference-history-reconciliation.test.ts src/lib/inference-history-classification.test.ts src/lib/inference-history-exposure.test.ts src/lib/inference-price-evidence.test.ts src/lib/inference-work-shape.test.ts src/lib/managed-inference-entry.test.ts src/lib/managed-operational-recovery.test.ts src/lib/inference-operational-preparation.test.ts",
     "test:valo-workspace-download": "node --import tsx --test src/lib/valo-download-session.test.ts",
     "test:valo-workspace-download-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-download.integration.test.ts",
-    "test:valo-workspace-artifact-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-export-jobs.integration.test.ts src/lib/valo-workspace-export-controls.integration.test.ts",
-    "test:valo-workspace-download-browser": "NODE_ENV=development VALO_RUN_WORKSPACE_DOWNLOAD_BROWSER=synthetic-development-only tsx src/scripts/workspace-data-download-browser.ts"
+    "test:valo-workspace-artifact-db": "VALO_RUN_DB_TESTS=synthetic-development-only VALO_RUN_NATIVE_WORKSPACE_EXPORTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-export-jobs.integration.test.ts src/lib/valo-workspace-export-controls.integration.test.ts",
+    "test:valo-workspace-download-browser": "NODE_ENV=development VALO_RUN_WORKSPACE_DOWNLOAD_BROWSER=synthetic-development-only tsx src/scripts/workspace-data-download-browser.ts",
+    "test:valo-workspace-export-controls": "node --experimental-test-module-mocks --import tsx --test src/lib/valo-workspace-export-storage.test.ts ../valo/src/lib/workspace-export-jobs.test.ts",
+    "test:valo-workspace-export-convergence-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-export-convergence.integration.test.ts src/lib/valo-workspace-export-controls.integration.test.ts",
+    "test:valo-dispute-browser": "VALO_RUN_DISPUTE_BROWSER=synthetic-development-only NODE_ENV=development node --import tsx src/scripts/dispute-workflow-browser.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",

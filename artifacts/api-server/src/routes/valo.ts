@@ -16,9 +16,11 @@ import { publicAccessRouter,customerAccessRouter,staffOperationsRouter,createPri
 import { releasedResources } from "../lib/valo-released-content";
 import { commerceRouter } from "./valo-commerce";
 
+import {customerPaymentConcernsRouter,financePaymentConcernsRouter} from "./valo-payment-concerns";
 const router = Router();
 router.use(publicAccessRouter);
 router.use(staffOperationsRouter);
+router.use(financePaymentConcernsRouter);
 // Register these case-only routes before the broad workspace-membership gate.
 // Unhandled operations (verification/cancellation/full exports) still fall
 // through to their existing workspace authority checks.
@@ -86,6 +88,7 @@ router.get("/development/content", async (_req, res) => {
 router.use("/workspace", sameOriginMutation, verifiedWorkspace);
 router.use(customerAccessRouter);
 router.use(commerceRouter);
+router.use(customerPaymentConcernsRouter);
 router.get("/workspace", async (_req, res) => { res.json(await store.getWorkspace(res.locals.valoActor)); });
 router.put("/workspace/profile", async (req, res) => { res.json(await store.saveProfile(res.locals.valoActor, req.body)); });
 router.get("/workspace/documents", async (_req, res) => { res.json(await store.listDocuments(res.locals.valoActor)); });
@@ -115,3 +118,4 @@ router.get("/workspace/templates/:id/files/:format",async(req,res)=>{
   res.send(asset.bytes);
 });
 export default router;
+

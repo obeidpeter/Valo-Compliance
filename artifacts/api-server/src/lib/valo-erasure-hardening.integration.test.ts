@@ -112,15 +112,17 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       };
       await step(f,async()=>{});await blocked("incomplete");
       await finish(f,async()=>{});
-      // Restore document tracking. Workspace-export copies are retained by
-      // the current partial erasure scope, not falsely called deleted/restored.
+      // Converged erasure removes both tracking families. Restore their exact
+      // older-checkpoint rows to prove ordinary cleanup still defers to the
+      // retained signed privacy authority after a database restore.
       await db.insert(valoDocuments).values(originalDocument);
       await db.insert(valoDocumentRevisions).values(originalRevisions);
       await db.insert(valoExportJobs).values(job);
       await db.insert(valoExportObjects).values(tracked);
-      assert.equal((await db.select().from(valoWorkspaceExports).where(eq(valoWorkspaceExports.id,workspaceJob.id))).length,1,
-        "Tracking metadata is retained; this does not establish that private bytes survived");
-      assert.equal((await db.select().from(valoWorkspaceExportAttempts).where(eq(valoWorkspaceExportAttempts.id,attempt.id))).length,1);
+      assert.equal((await db.select().from(valoWorkspaceExports).where(eq(valoWorkspaceExports.id,workspaceJob.id))).length,0);
+      assert.equal((await db.select().from(valoWorkspaceExportAttempts).where(eq(valoWorkspaceExportAttempts.id,attempt.id))).length,0);
+      await db.insert(valoWorkspaceExports).values(workspaceJob);
+      await db.insert(valoWorkspaceExportAttempts).values(attempt);
       // The authorized erasure correctly removed scratch. Recreate this
       // synthetic local copy as part of the older-checkpoint restore fixture.
       await mkdir(scratch,{recursive:true});await writeFile(join(scratch,"owned-synthetic.txt"),"OWNED_SYNTHETIC_SCRATCH");
@@ -142,7 +144,7 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       }finally{if(original===undefined)delete process.env.VALO_PRIVACY_KEYRING;else process.env.VALO_PRIVACY_KEYRING=original;}
       t.diagnostic("Both ordinary cleanup paths deferred all six privacy-owned states with zero storage or scratch deletions.");
       const ordinary=await setup(),ordinaryJob=randomUUID(),ordinaryAttempt=randomUUID(),
-        ordinaryKey=`valo/development/${ordinary.owner.workspaceId}/${randomUUID()}.json`;
+        ordinaryKey=`valo/development/${ordinary.owner.workspaceId}/${ordinaryAttempt}.json`;
       await db.insert(valoWorkspaceExports).values({id:ordinaryJob,workspaceId:ordinary.owner.workspaceId,
         requesterId:ordinary.owner.identityId,requestKey:randomUUID(),status:"expired",expiresAt:new Date(0)});
       await db.insert(valoWorkspaceExportAttempts).values({id:ordinaryAttempt,workspaceId:ordinary.owner.workspaceId,
@@ -166,7 +168,7 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       type Batch={type:string;message?:string;keys:string[];result:{deleted:number;applicationRowsRemoved:number;remaining:boolean};
         verification:{fullScans:number;cacheHits:number}};
       const start=async()=>{
-        const child=spawn(process.execPath,["--import","tsx",new URL("../scripts/erasure-replay-batch-child.ts",import.meta.url).pathname],
+        const child=spawn(process.execPath,["--import","tsx",fileURLToPath(new URL("../scripts/erasure-replay-batch-child.ts",import.meta.url))],
           {env:{...process.env,VALO_ERASURE_BATCH_CHILD:"new-synthetic-fixture-only"},stdio:["ignore","ignore","pipe","ipc"]});
         children.push(child);const [ready]=await once(child,"message",{signal:AbortSignal.timeout(20000)});
         assert.equal(ready.type,"ready");return child;

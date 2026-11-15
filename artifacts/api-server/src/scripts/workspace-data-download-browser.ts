@@ -1,217 +1,202 @@
-/** Controlled browser transport test. Uses the real download component and a
- * local HTTP fixture with synthetic cookies/data; no identity provider or DB.
- * Run with tsx. Requires React, esbuild, Playwright and a Chromium executable. */
-import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
+/** Real React/account-boundary/native-download journey with controlled HTTP
+ * jobs and synthetic cookies. No real identity, database, worker or provider. */
+import { createServer, type ServerResponse } from 'node:http';
 import { once } from 'node:events';
-import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve, delimiter } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { createRequire } from 'node:module';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import { build } from 'esbuild';
+import { chromium, expect } from '@playwright/test';
+import { developmentPublicationOnly, publicationWorkspaceRoot } from '../editorial/operational-policy';
+import type { WorkspaceExportJob as WorkspaceExportModel } from '@workspace/api-zod';
+// JSON transport dates are ISO strings; the generated server model uses Date.
+type WorkspaceDataExportJob=Omit<WorkspaceExportModel,'createdAt'|'expiresAt'> & {createdAt:string;expiresAt:string};
 
-const require = createRequire(import.meta.url);
-assert.equal(process.env.NODE_ENV, 'development', 'Run only in the development test environment.');
-assert.equal(process.env.VALO_RUN_WORKSPACE_DOWNLOAD_BROWSER, 'synthetic-development-only', 'Explicit synthetic-only browser test opt-in is required.');
-const { build } = require('esbuild') as typeof import('esbuild');
-const { chromium } = require('playwright') as typeof import('playwright');
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
-const evidence = process.env.WORKSPACE_DOWNLOAD_EVIDENCE_DIR ?? join(root, 'generated-artifacts/valo-completion');
-const downloadScratch = await mkdtemp(join(tmpdir(), 'valo-download-browser-'));
-await mkdir(evidence, { recursive: true });
-const bundle = await build({
-  stdin: { contents: `import React,{useState} from 'react';
-    import {createRoot} from 'react-dom/client';
-    import {WorkspaceDataDownload} from ${JSON.stringify(join(root, 'artifacts/valo/src/components/workspace-data-download.tsx'))};
-    function Fixture(){const[show,setShow]=useState(true),[account,setAccount]=useState(0);
-      return <main><h1>Controlled workspace download</h1>
-        {show&&<WorkspaceDataDownload key={account} timeoutMs={Number(new URLSearchParams(location.search).get('timeout'))||120000}/>}
-        <hr/><button onClick={()=>setShow(false)}>Unmount download</button>
-        <button onClick={()=>setAccount(value=>value+1)}>Change account</button></main>}
-    createRoot(document.getElementById('root')).render(<Fixture/>);`, loader: 'tsx', resolveDir: join(root, 'artifacts/valo') },
-  bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
-  nodePaths: [join(root, 'artifacts/valo/node_modules'), ...(process.env.NODE_PATH ?? '').split(delimiter).filter(Boolean)],
-});
-type Mode = 'complete' | 'pending' | 'unauthorized' | 'forbidden' | 'oversized-error';
-let mode: Mode = 'complete';
-const metrics = { started: 0, completed: 0, cancelledBeforeHeaders: 0, cookieAuthorized: 0 };
-let fixtureJob:Record<string,unknown>|null=null;
-const server = createServer(async (req, res) => {
-  const path = new URL(req.url ?? '/', 'http://fixture').pathname;
-  if(path==='/api/workspace/data-exports'){
-    res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','private, no-store');
-    if(req.method==='POST'){
-      fixtureJob={id:'b04b9cc1-e594-4c87-8093-6a5791c9fd01',status:'queued',attempts:0,
-        createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+86400000).toISOString(),
-        snapshotAt:null,size:null,counts:null,errorCode:null,notice:'Controlled private export; named application sections only.'};
-      res.statusCode=201;res.end(JSON.stringify(fixtureJob));return;
-    }
-    res.end(JSON.stringify(fixtureJob?[fixtureJob]:[]));return;
-  }
-  if (path === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(bundle.outputFiles[0].contents); return; }
-  if (!/^\/api\/workspace\/data-exports\/[a-f0-9-]+\/download$/.test(path)) {
-    res.setHeader('Content-Type', 'text/html');
-    res.end('<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Controlled download test</title><style>body{font:16px system-ui;margin:16px;overflow-wrap:anywhere}main{max-width:600px}button{min-height:44px;margin:4px;padding:8px 12px}p{line-height:1.5}button:focus-visible{outline:3px solid #18583d}</style><div id="root"></div><script src="/fixture.js"></script></html>');
-    return;
-  }
-  metrics.started++;
-  const selectedMode = mode;
-  const owner = /(?:^|;\s*)fixture-owner=owner-a(?:;|$)/.test(req.headers.cookie ?? '');
-  if (owner) metrics.cookieAuthorized++;
-  res.setHeader('Cache-Control', 'private, no-store');
-  if (!owner || selectedMode === 'unauthorized' || selectedMode === 'forbidden' || selectedMode === 'oversized-error') {
-    res.statusCode = selectedMode === 'forbidden' ? 403 : selectedMode === 'oversized-error' ? 500 : 401;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: selectedMode === 'forbidden' ? 'Workspace access is no longer available.' : selectedMode === 'oversized-error' ? 'SYNTHETIC_PRIVATE_ERROR'.repeat(500) : 'Sign in again to download your workspace.' }));
-    return;
-  }
-  let headersSent = false;
-  const timer = setTimeout(() => { void send(); }, selectedMode === 'pending' ? 2000 : 20);
-  if(fixtureJob)fixtureJob.status='preparing';
-  res.once('close', () => { clearTimeout(timer); if (!headersSent) {metrics.cancelledBeforeHeaders++;if(fixtureJob)fixtureJob.status='interrupted';} });
-  async function send() {
-    if (res.destroyed) return;
-    headersSent = true;
-    if(fixtureJob){fixtureJob.status='ready';fixtureJob.attempts=1;}
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="valo-workspace-data.json"');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    const write = async (chunk: string) => { if (!res.destroyed && !res.write(chunk)) await once(res, 'drain'); };
-    try {
-      await write('{"schemaVersion":2,"workspaceId":"synthetic-owner-a","data":{"records":[');
-      for (let index = 0; index < 6001 && !res.destroyed; index++) await write((index ? ',' : '') + JSON.stringify({ id: index, workspaceId: 'synthetic-owner-a', note: 'x'.repeat(1536) }));
-      if (!res.destroyed) { res.end(']}}'); metrics.completed++; }
-    } catch { if (!res.destroyed) res.destroy(); }
-  }
-});
-await new Promise<void>(done => server.listen(0, '127.0.0.1', done));
-const address = server.address();
-assert.ok(address && typeof address !== 'string');
-const origin = `http://127.0.0.1:${address.port}`;
-let browser: Awaited<ReturnType<typeof chromium.launch>>;
-try {
-  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? '/repl/tools/bin/chromium', headless: true, args: ['--no-sandbox'] });
-} catch (error) {
-  await writeFile(join(evidence, 'workspace-data-download-browser.json'), JSON.stringify({ passed: false, stage: 'browser startup', error: String(error), checks: [] }, null, 2));
-  server.closeAllConnections(); await new Promise<void>(done => server.close(() => done()));
-  await rm(downloadScratch, { recursive: true, force: true });
-  throw error;
+developmentPublicationOnly();
+if (process.env.VALO_RUN_WORKSPACE_DOWNLOAD_BROWSER !== 'synthetic-development-only') throw Error('EXPLICIT_SYNTHETIC_BROWSER_FLAG_REQUIRED');
+const root = publicationWorkspaceRoot(), front = resolve(root, 'artifacts/valo');
+const out = resolve(root, 'generated-artifacts/valo-completion'); await mkdir(out, { recursive: true });
+const bundle = await build({ stdin: { contents: `import React from 'react';
+  import {flushSync} from 'react-dom';import {createRoot} from 'react-dom/client';
+  import {AccountStateBoundary} from './src/components/account-state-boundary';
+  import {WorkspaceExportJobs} from './src/components/workspace-export-jobs';
+  window.actor=sessionStorage.getItem('fixtureActor')||'A';
+  document.cookie='fixture_actor='+window.actor+'; Path=/; SameSite=Lax';
+  const app=createRoot(document.getElementById('root'));
+  const render=()=>app.render(<AccountStateBoundary identityKey={window.actor}><main><h1>Controlled workspace exports</h1><WorkspaceExportJobs pollMs={100}/></main></AccountStateBoundary>);
+  window.switchActor=actor=>{if(!['A','B'].includes(actor))throw Error('INVALID_FIXTURE_ACTOR');
+    sessionStorage.setItem('fixtureActor',actor);document.cookie='fixture_actor='+actor+'; Path=/; SameSite=Lax';window.actor=actor;flushSync(render)};render();`,
+  loader: 'tsx', resolveDir: front }, bundle: true, write: false, platform: 'browser', jsx: 'automatic',
+  alias: { '@': resolve(front, 'src') }, define: { 'process.env': '{}' } });
+
+type FixtureJob = WorkspaceDataExportJob & { owner: string; key: string };
+const jobs = new Map<string, FixtureJob>();
+const pendingDetails = new Map<string, ServerResponse>();
+let sequence = 0, loseFirstCreate = true, conflictNextCancel = false, holdDetail: string | null = null, denyFile: string | null = null;
+let lostCreateResponse: ServerResponse | null = null;
+const metrics = { createCalls: 0, created: 0, createKeys: [] as string[], cancelled: 0, retried: 0, conflicts: 0, detailReads: 0, abortedDetails: 0, fileOwners: [] as string[] };
+const publicJob = ({ owner, key, ...job }: FixtureJob): WorkspaceDataExportJob => job;
+function change(job: FixtureJob, status: WorkspaceDataExportJob['status'], expiresInMs = 86_400_000) {
+  job.status = status; job.version++;
+  job.retryAvailable = status === 'interrupted';
+  job.errorCode = status === 'interrupted' ? 'PREPARATION_FAILED' : null;
+  job.expiresAt = new Date(Date.now() + expiresInMs).toISOString();
+  if (status === 'preparing' || status === 'ready') { job.progress.rows = status === 'ready' ? 6001 : 5000; job.progress.bytes = status === 'ready' ? 9_500_000 : 8_000_000; }
 }
-const context = await browser.newContext({ acceptDownloads: true, viewport: { width: 375, height: 812 }, isMobile: true });
-await context.addCookies([{ name: 'fixture-owner', value: 'owner-a', url: origin, httpOnly: true, sameSite: 'Lax' }]);
-await context.addInitScript({content: `
-  const guard = (name) => { throw new Error('App attempted forbidden export transport: ' + name); };
-  const fetchMetadata=window.fetch.bind(window);
-  window.fetch = (input, options) => {
-    const path=new URL(typeof input==='string'?input:input.url,location.href).pathname;
-    if(path==='/api/workspace/data-exports'||path.endsWith('/cancel'))return fetchMetadata(input,options);
-    return guard('export body fetch');
-  };
-  window.Blob = new Proxy(window.Blob, { construct: () => guard('Blob') });
-  URL.createObjectURL = () => guard('createObjectURL');
+const server = createServer(async (req, res) => {
+  const url = new URL(req.url ?? '/', 'http://fixture');
+  res.setHeader('Cache-Control', 'private, no-store');
+  const json = (value: unknown, status = 200) => { res.statusCode = status; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(value)); };
+  if (url.pathname === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(bundle.outputFiles[0].text); return; }
+  if (url.pathname === '/__fixture/status') { json({ ...metrics, pendingDetails: pendingDetails.size }); return; }
+  if (url.pathname === '/__fixture/control') {
+    let body = ''; for await (const chunk of req) body += chunk;
+    const command = JSON.parse(body) as { id?: string; status?: WorkspaceDataExportJob['status']; expiresInMs?: number; conflictNextCancel?: boolean; holdDetail?: string; denyFile?: string | null; releaseLostCreate?: boolean };
+    if (command.releaseLostCreate) { if(lostCreateResponse){lostCreateResponse.writeHead(503,{'Content-Type':'application/json'});lostCreateResponse.end(JSON.stringify({error:'Saved request; controlled response unavailable.'}));} lostCreateResponse = null; }
+    if (command.id && command.status) change(jobs.get(command.id)!, command.status, command.expiresInMs);
+    if (command.conflictNextCancel !== undefined) conflictNextCancel = command.conflictNextCancel;
+    if (command.holdDetail !== undefined) holdDetail = command.holdDetail;
+    if ('denyFile' in command) denyFile = command.denyFile ?? null;
+    json({ changed: true }); return;
+  }
+  if (!url.pathname.startsWith('/api/workspace/data-exports')) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.end('<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Controlled export jobs</title><style>body{font:16px system-ui;margin:16px;overflow-wrap:anywhere}main{max-width:700px}button{min-height:44px;margin:4px;padding:8px}li{list-style:none;border:1px solid #ddd;padding:12px;margin:12px 0}ul{padding:0}p{line-height:1.5}button:focus-visible{outline:3px solid #18583d}</style><div id="root"></div><script src="/fixture.js"></script></html>'); return;
+  }
+  const owner = /(?:^|;\s*)fixture_actor=([AB])(?:;|$)/.exec(req.headers.cookie ?? '')?.[1];
+  if (!owner) { json({ error: 'Sign in to view exports.' }, 401); return; }
+  const match = /^\/api\/workspace\/data-exports(?:\/([^/]+)(?:\/(download|cancel|retry))?)?$/.exec(url.pathname);
+  if (!match) { json({ error: 'Not found.' }, 404); return; }
+  const [, id, action] = match;
+  if (!id && req.method === 'GET') {
+    const rows = [...jobs.values()].filter(job => job.owner === owner).reverse();
+    const cursor = url.searchParams.get('cursor'); const offset = cursor ? rows.findIndex(job => job.id === cursor) + 1 : 0;
+    const page = rows.slice(offset, offset + 2);
+    json({ items: page.map(publicJob), nextCursor: offset + page.length < rows.length ? page.at(-1)!.id : null }); return;
+  }
+  if (!id && req.method === 'POST') {
+    let body = ''; for await (const chunk of req) body += chunk; const input = JSON.parse(body);
+    metrics.createCalls++; metrics.createKeys.push(input.requestKey);
+    let job = [...jobs.values()].find(row => row.owner === owner && row.key === input.requestKey);
+    if (!job) {
+      sequence++; const jobId = `00000000-0000-4000-8000-${String(sequence).padStart(12, '0')}`;
+      job = { id: jobId, owner, key: input.requestKey, status: 'queued', version: 1, attempts: 0, progress:{section:null,rows:0,bytes:0}, createdAt: new Date(Date.now() + sequence).toISOString(),
+        expiresAt: new Date(Date.now()+86400000).toISOString(), snapshotAt:null,size:null,counts:null,errorCode:null,notice:'Synthetic application sections only; not complete privacy fulfilment.',retryAvailable:false };
+      jobs.set(jobId, job); metrics.created++;
+    }
+    if (loseFirstCreate) { loseFirstCreate = false; lostCreateResponse = res; return; }
+    json(publicJob(job)); return;
+  }
+  const job = jobs.get(id);
+  if (!job || job.owner !== owner) { json({ error: 'Export not found.' }, 404); return; }
+  if (action === 'download') {
+    if (denyFile === id) { json({ error: 'Your access to this prepared file is no longer available.' }, 403); return; }
+    if (job.status !== 'ready' || !job.expiresAt || Date.parse(job.expiresAt) <= Date.now()) { json({ error: 'This file has expired.' }, 409); return; }
+    metrics.fileOwners.push(owner);
+    res.setHeader('Content-Type', 'application/json'); res.setHeader('Content-Disposition', 'attachment; filename="valo-workspace-data.json"');
+    res.end(JSON.stringify({ schemaVersion: 2, workspaceId: owner, data: { records: Array.from({ length: 6001 }, (_, index) => ({ id: index, workspaceId: owner, text: 'x'.repeat(1536) })) } })); return;
+  }
+  if (action === 'cancel' || action === 'retry') {
+    let body = ''; for await (const chunk of req) body += chunk; const input = JSON.parse(body);
+    if (action === 'cancel' && conflictNextCancel) { conflictNextCancel = false; change(job, 'cancelled'); metrics.conflicts++; json({ error: 'The export changed.' }, 409); return; }
+    if (input.expectedVersion !== job.version) { json({ error: 'The export changed.' }, 409); return; }
+    if (action === 'cancel' && ['cancelled','expired'].includes(job.status) || action === 'retry' && !job.retryAvailable) { json({ error: 'This action is no longer available.' }, 409); return; }
+    if (action === 'cancel') { change(job, 'cancelled'); metrics.cancelled++; }
+    else { change(job, 'queued'); metrics.retried++; }
+    json(publicJob(job)); return;
+  }
+  metrics.detailReads++;
+  if (holdDetail === id) {
+    pendingDetails.set(id, res);
+    res.once('close', () => { if (pendingDetails.delete(id)) metrics.abortedDetails++; }); return;
+  }
+  json(publicJob(job));
+});
+server.listen(0, '127.0.0.1'); await once(server, 'listening');
+const address = server.address(); if (!address || typeof address === 'string') throw Error('NO_FIXTURE_PORT');
+const origin = `http://127.0.0.1:${address.port}`;
+const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium' });
+const context = await browser.newContext({ viewport: { width: 360, height: 800 }, acceptDownloads: true });
+await context.addInitScript(() => {
+  const fetch = globalThis.fetch;
+  globalThis.fetch = (...args: Parameters<typeof globalThis.fetch>) => { if (/\/data-exports\/[^/]+\/download/.test(String(args[0]))) throw Error('FILE_MUST_USE_NATIVE_ATTACHMENT'); return fetch(...args); };
+  globalThis.Blob = new Proxy(globalThis.Blob, { construct() { throw Error('NO_EXPORT_BLOB'); } });
+  URL.createObjectURL = () => { throw Error('NO_EXPORT_OBJECT_URL'); };
   const parse = JSON.parse;
-  JSON.parse = (text, reviver) => {
-    if (text.includes('"schemaVersion":2') && text.includes('"data"')) return guard('full export JSON parsing');
-    return parse(text, reviver);
-  };
-  const stringify = JSON.stringify;
-  JSON.stringify = (value, ...options) => {
-    if (value && typeof value === 'object' && 'workspaceId' in value && 'data' in value) return guard('full export JSON stringification');
-    return Reflect.apply(stringify, JSON, [value, ...options]);
-  };
-`});
-const page = await context.newPage();
-const errors: string[] = [];
-let downloads = 0;
-page.on('pageerror', error => errors.push(error.message));
-page.on('download', () => downloads++);
-const waitFor = async (check: () => boolean, label: string) => {
-  const until = Date.now() + 5000;
-  while (!check() && Date.now() < until) await new Promise(done => setTimeout(done, 25));
-  assert.ok(check(), label);
-};
-const open = async (query = '') => { await page.goto(origin + '/' + query); await page.getByTestId('button-download-workspace').waitFor(); };
-const checks: string[] = [];
-let heapEvidence:{baseline:number;peak:number;increase:number;bound:number}|undefined;
+  JSON.parse = (text: string, reviver?: Parameters<typeof JSON.parse>[1]) => { if (text.includes('"schemaVersion":2') && text.includes('"data":')) throw Error('NO_EXPORT_BODY_PARSE'); return parse(text, reviver); };
+});
+const page = await context.newPage(), checks: string[] = [], runtimeErrors: string[] = [];
+page.on('pageerror', error => runtimeErrors.push(error.message));
+const control = async (data: Record<string, unknown>) => { expect((await page.request.post(origin + '/__fixture/control', { data })).ok()).toBe(true); };
+const fixtureStatus = async () => (await page.request.get(origin + '/__fixture/status')).json();
+const row = (id: string) => page.getByTestId(`workspace-export-${id}`);
+const status = (id: string) => page.getByTestId(`export-status-${id}`);
+const latestId = () => [...jobs.keys()].at(-1)!;
+async function create() { const before = metrics.created; await page.getByTestId('button-request-workspace-export').click(); await expect.poll(() => metrics.created).toBe(before + 1); const id = latestId(); await expect(row(id)).toBeVisible(); return id; }
+let passed = false;let heapEvidence:{baseline:number;peak:number;increase:number;bound:number}|undefined;let heapSampler:ReturnType<typeof setInterval>|undefined;
 try {
-  await open();
-  const metricsSession=await context.newCDPSession(page);await metricsSession.send('Performance.enable');
-  await metricsSession.send('HeapProfiler.collectGarbage');
+  await page.goto(origin); const request = page.getByTestId('button-request-workspace-export'); await expect(request).toBeEnabled();
+  await request.focus(); await page.keyboard.press('Enter'); await expect(request).toBeDisabled();
+  await expect.poll(() => metrics.createCalls).toBe(1); await control({ releaseLostCreate: true });
+  await expect(page.getByRole('button', { name: 'Retry export request' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Retry export request' }).click();
+  const first = latestId(); await expect(status(first)).toHaveText('Queued');
+  expect(metrics.created).toBe(1); expect(metrics.createCalls).toBe(2); expect(metrics.createKeys[0]).toBe(metrics.createKeys[1]);
+  await page.reload(); await expect(status(first)).toHaveText('Queued'); expect(metrics.created).toBe(1);
+  await control({ id: first, status: 'preparing' }); await expect(status(first)).toHaveText('Preparing'); await expect(row(first)).toContainText('5,000 rows read');
+  await control({ id: first, status: 'ready' }); await expect(status(first)).toHaveText('Ready to download');
+  const metricsSession=await context.newCDPSession(page);await metricsSession.send('Performance.enable');await metricsSession.send('HeapProfiler.collectGarbage');
   const heap=async()=>((await metricsSession.send('Performance.getMetrics')).metrics.find(m=>m.name==='JSHeapUsedSize')?.value??NaN);
-  const baseline=await heap();let peak=baseline;
-  const sampler=setInterval(()=>{void heap().then(value=>{peak=Math.max(peak,value);}).catch(()=>{});},10);
-  await page.keyboard.press('Tab');
-  assert.equal(await page.evaluate("document.activeElement?.getAttribute('data-testid')"), 'button-download-workspace');
-  const received = page.waitForEvent('download');
-  await page.keyboard.press('Enter');
-  const download = await received;
-  assert.equal(download.suggestedFilename(), 'valo-workspace-data.json');
-  const downloadedPath = join(downloadScratch, 'synthetic-workspace-data.json');
-  await download.saveAs(downloadedPath);
-  peak=Math.max(peak,await heap());clearInterval(sampler);
-  heapEvidence={baseline,peak,increase:peak-baseline,bound:8*1024*1024};
-  assert.ok(Number.isFinite(peak)&&peak-baseline<heapEvidence.bound,'fixture page JS heap increase stayed below 8 MiB');
-  const raw = await readFile(downloadedPath, 'utf8');
-  assert.ok(Buffer.byteLength(raw) > 8_000_000);
-  const data = JSON.parse(raw);
-  assert.equal(data.data.records.length, 6001);
-  assert.equal(new Set(data.data.records.map((row: { id: number }) => row.id)).size, 6001);
-  assert.deepEqual(data.data.records.map((row:{id:number})=>row.id).sort((a:number,b:number)=>a-b),
-    Array.from({length:6001},(_,index)=>index));
-  assert.ok(data.data.records.every((row: { workspaceId: string }) => row.workspaceId === 'synthetic-owner-a'));
-  assert.doesNotMatch(raw, /storageLocator|another-tenant/);
-  assert.match(await page.getByRole('status').first().innerText(), /Download requested; check browser downloads/);
-  assert.doesNotMatch(await page.locator('body').innerText(), /Downloaded\.|Download complete/);
-  assert.equal(await page.evaluate("document.documentElement.scrollWidth <= innerWidth"), true);
-  await page.screenshot({ path: join(evidence, 'workspace-data-download-mobile.png'), fullPage: true });
-  checks.push('6001-row >8MB native attachment; small metadata only; keyboard/mobile; no export fetch/Blob/object URL/JSON parsing');
+  const baseline=await heap();let peak=baseline;heapSampler=setInterval(()=>{void heap().then(value=>{peak=Math.max(peak,value);}).catch(()=>{});},10);
+  const event = page.waitForEvent('download'); await page.getByTestId(`export-${first}-file`).focus(); await page.keyboard.press('Enter');
+  const path = await (await event).path(); if (!path) throw Error('DOWNLOAD_MISSING'); const bytes = await readFile(path, 'utf8');
+  peak=Math.max(peak,await heap());clearInterval(heapSampler);heapSampler=undefined;heapEvidence={baseline,peak,increase:peak-baseline,bound:8*1024*1024};expect(Number.isFinite(peak)&&peak-baseline<heapEvidence.bound).toBe(true);
+  const file = JSON.parse(bytes); expect(file.workspaceId).toBe('A'); expect(file.data.records).toHaveLength(6001);expect(file.data.records.map((r:{id:number})=>r.id).sort((a:number,b:number)=>a-b)).toEqual(Array.from({length:6001},(_,i)=>i)); expect(Buffer.byteLength(bytes)).toBeGreaterThan(8_000_000);
+  await expect(row(first)).toContainText('Download requested; check browser downloads.'); await expect(row(first)).not.toContainText('Downloaded.');
+  checks.push('Ambiguous create reused one idempotency key; actual reload recovered the queued job; polling reached ready and keyboard downloaded >8MB/6001 rows natively.');
 
-  for (const action of ['cancel', 'unmount', 'account', 'reload'] as const) {
-    mode = 'pending'; await open();
-    const started = metrics.started, cancelled = metrics.cancelledBeforeHeaders;
-    await page.getByTestId('button-download-workspace').click();
-    await waitFor(() => metrics.started > started, `${action}: request started`);
-    if (action === 'cancel') await page.getByTestId('button-cancel-workspace-download').click();
-    if (action === 'unmount') await page.getByRole('button', { name: 'Unmount download' }).click();
-    if (action === 'account') await page.getByRole('button', { name: 'Change account' }).click();
-    if (action === 'reload') await page.reload();
-    await waitFor(() => metrics.cancelledBeforeHeaders > cancelled, `${action}: HTTP request aborted before headers`);
-    assert.equal(await page.locator('iframe[title="Workspace data download"]').count(), 0);
-    checks.push(`${action}: cancelled preparation before attachment headers`);
-  }
-  mode = 'pending'; await open('?timeout=750');
-  const cancelled = metrics.cancelledBeforeHeaders;
-  await page.getByTestId('button-download-workspace').click();
-  await page.getByRole('status').filter({ hasText: 'Stopped waiting' }).waitFor();
-  await waitFor(() => metrics.cancelledBeforeHeaders > cancelled, 'timeout aborts pending preparation');
-  checks.push('bounded timeout has no completion claim and aborts preparation');
+  const cancelled = await create(); await page.getByTestId(`cancel-export-${cancelled}`).click(); await expect(status(cancelled)).toHaveText('Cancelled'); expect(metrics.cancelled).toBe(1);
+  const retried = await create(); await control({ id: retried, status: 'interrupted' }); await expect(status(retried)).toHaveText('Preparation interrupted');
+  await page.getByTestId(`retry-export-${retried}`).click(); await expect(status(retried)).toHaveText('Queued'); expect(metrics.retried).toBe(1);
+  await control({ id: retried, status: 'ready', expiresInMs: 2500 }); await expect(page.getByTestId(`export-${retried}-file`)).toBeVisible();
+  await expect(status(retried)).toHaveText('Expired', { timeout: 6000 }); await expect(page.getByTestId(`export-${retried}-file`)).toHaveCount(0);
+  const conflicted = await create(); await control({ conflictNextCancel: true }); await page.getByTestId(`cancel-export-${conflicted}`).click();
+  await expect(status(conflicted)).toHaveText('Cancelled'); await expect(page.getByRole('alert')).toContainText('current status has been refreshed');
+  expect(metrics.cancelled).toBe(1); expect(metrics.conflicts).toBe(1);
+  checks.push('Explicit cancellation and manual retry used versions; ready expiry removed download;409 refreshed current status without replaying the mutation.');
 
-  for (const denied of ['unauthorized', 'forbidden', 'oversized-error'] as const) {
-    mode = denied; await open();
-    if (denied === 'unauthorized') await context.clearCookies();
-    else await context.addCookies([{ name: 'fixture-owner', value: 'owner-a', url: origin, httpOnly: true, sameSite: 'Lax' }]);
-    await page.getByTestId('button-download-workspace').click();
-    const alert = page.getByRole('alert'); await alert.waitFor();
-    assert.match(await alert.innerText(), denied === 'unauthorized' ? /Sign in again/ : denied === 'forbidden' ? /Workspace access is no longer available/ : /could not be started/);
-    assert.doesNotMatch(await page.locator('body').innerText(), /SYNTHETIC_PRIVATE_ERROR/);
-    assert.equal(await page.locator('iframe[title="Workspace data download"]').count(), 0);
-    assert.equal(await page.getByTestId('button-download-workspace').isEnabled(), true);
-    checks.push(`${denied}: bounded readable error, no raw response or download-success claim`);
-  }
-  await new Promise(done => setTimeout(done, 2100));
-  assert.equal(downloads, 1, 'cancelled or denied requests must not produce late downloads');
-  assert.deepEqual(errors, []);
-  assert.ok(metrics.cookieAuthorized > 0);
-  const report = { passed: true, scope: 'Actual component with controlled HTTP/cookie fixture; no production identity, database or full-app layout test.',
-    exactExpectedIds:true,resourceScope:'Page JavaScript heap sampled every 10ms, not OS/download-manager or backend memory. Test Node process validates the saved file separately.',
-    heapEvidence,checks, metrics, downloads, errors };
-  await writeFile(join(evidence, 'workspace-data-download-browser.json'), JSON.stringify(report, null, 2));
-  console.log(JSON.stringify({ ...report, evidence }, null, 2));
-} catch (error) {
-  await writeFile(join(evidence, 'workspace-data-download-browser.json'), JSON.stringify({ passed: false, checks, metrics, downloads, errors, error: String(error) }, null, 2));
-  throw error;
+  await page.reload(); await expect(page.getByTestId('button-older-workspace-exports')).toBeVisible();
+  await page.getByTestId('button-older-workspace-exports').click(); await expect(page.locator('li[data-testid^="workspace-export-"]')).toHaveCount(4);
+  await control({ denyFile: first }); await page.getByTestId(`export-${first}-file`).click();
+  await expect(page.getByTestId(`export-${first}-download-error`)).toContainText('access to this prepared file is no longer available');
+  await control({ denyFile: null });
+  checks.push('Paged history recovered older jobs; native file authorization denial appeared as a bounded readable error, not download success.');
+
+  await expect(status(first)).toHaveText('Ready to download');
+  await expect(row(first)).toContainText('Cleanup follows recorded holds; downloaded copies are not removed.');
+  const removePrepared = row(first).getByRole('button', { name: 'Remove prepared export', exact: true });
+  await removePrepared.focus(); await page.keyboard.press('Enter');
+  await expect(status(first)).toHaveText('Cancelled'); await expect(page.getByTestId(`export-${first}-file`)).toHaveCount(0);
+  await expect(removePrepared).toHaveCount(0); expect(metrics.cancelled).toBe(2);
+  await expect(page.getByRole('status')).toContainText('Prepared export availability withdrawn.');
+  const withdrawn = await page.request.get(origin + `/api/workspace/data-exports/${first}/download`);
+  expect(withdrawn.status()).toBe(409); expect(withdrawn.headers()['content-disposition']).toBeUndefined();
+  checks.push('Keyboard removal changed an actual ready job to cancelled, removed its file control and denied the copied file URL; copy explains recorded cleanup holds and retained downloaded copies.');
+
+  const held = await create(); await control({ holdDetail: held }); await expect.poll(async () => (await fixtureStatus()).pendingDetails).toBe(1);
+  await page.evaluate("window.switchActor('B')"); await expect.poll(async () => (await fixtureStatus()).abortedDetails).toBe(1);
+  await expect(page.locator('li[data-testid^="workspace-export-"]')).toHaveCount(0); await expect(page.getByText('No export requests yet.')).toBeVisible();
+  expect((await page.request.get(origin + `/api/workspace/data-exports/${first}/download`)).status()).toBe(404);
+  const next = await create(); await control({ id: next, status: 'ready' }); await expect(status(next)).toHaveText('Ready to download');
+  const bEvent = page.waitForEvent('download'); await page.getByTestId(`export-${next}-file`).click(); const bPath = await (await bEvent).path(); if (!bPath) throw Error('DOWNLOAD_MISSING');
+  const b = JSON.parse(await readFile(bPath, 'utf8')); expect(b.workspaceId).toBe('B'); expect(b.data.records.every((record: { workspaceId: string }) => record.workspaceId === 'B')).toBe(true);
+  expect(metrics.fileOwners).toEqual(['A', 'B']); expect(await page.evaluate('document.documentElement.scrollWidth<=innerWidth')).toBe(true); expect(runtimeErrors).toEqual([]);
+  checks.push('Real account boundary aborted the old metadata request and cleared A jobs; B could not retrieve A file and downloaded only B rows.360px keyboard/native transport checks passed.');
+  passed = true;
 } finally {
-  await context.close(); await browser.close();
-  server.closeAllConnections(); await new Promise<void>(done => server.close(() => done()));
-  await rm(downloadScratch, { recursive: true, force: true });
+  clearInterval(heapSampler);
+  const sourceHashes = await Promise.all(['src/components/workspace-export-jobs.tsx', 'src/lib/workspace-export-jobs.ts', 'src/components/workspace-data-download.tsx', 'src/components/prepared-workspace-download.tsx', 'src/components/account-state-boundary.tsx'].map(async path => ({ path: `artifacts/valo/${path}`, sha256: createHash('sha256').update(await readFile(resolve(front, path))).digest('hex') })));
+  await writeFile(resolve(out, 'workspace-export-jobs-browser.json'), JSON.stringify({ executedAt: new Date().toISOString(), passed, scope: 'Actual React/account boundary/native attachment with controlled in-memory HTTP jobs and synthetic cookies; not real DB/worker/provider or full-app layout acceptance.', managedIdentityAcceptance: false, exactExpectedIds:passed, resourceScope:'Page JavaScript heap sampled every 10ms; not OS/download-manager or backend memory. Node validates the saved file separately.', heapEvidence, checks, metrics, runtimeErrors, sourceHashes }, null, 2));
+  await page.screenshot({ path: resolve(out, 'workspace-export-jobs-mobile.png'), fullPage: true });
+  await browser.close(); server.closeAllConnections(); await new Promise<void>(done => server.close(() => done()));
 }

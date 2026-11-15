@@ -7,6 +7,7 @@
  */
 
 export interface DisputeControlInput {
+  acknowledgement?: boolean;
   /** @minimum 1 */
   expectedVersion: number;
 }

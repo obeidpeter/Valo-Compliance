@@ -6,7 +6,7 @@ import {eq} from "drizzle-orm";
 import {db,pool,valoWorkspaceExports as jobs,valoWorkspaceExportAttempts as attempts} from "@workspace/db";
 import {resolveWorkspace,ValoProblem} from "./valo-store";
 import {createWorkspaceExport,prepareWorkspaceExport,withPreparedWorkspaceExport,cancelWorkspaceExport,
-  cleanupWorkspaceExports,retireWorkspaceExports,workspaceExportScratch} from "./valo-workspace-export-jobs";
+  cleanupWorkspaceExports,retryWorkspaceExport,retireWorkspaceExports,workspaceExportScratch} from "./valo-workspace-export-jobs";
 import type {WorkspaceExportStorage} from "./valo-workspace-export-storage";
 const deferred=()=>{let resolve!:()=>void;const promise=new Promise<void>(r=>resolve=r);return{resolve,promise};};
 test("controlled workspace artifact failures and privacy fences",{
@@ -26,11 +26,11 @@ test("controlled workspace artifact failures and privacy fences",{
       const job=await createWorkspaceExport(actor,randomUUID()),abort=new AbortController();
       const pending=prepareWorkspaceExport(actor,job.id,abort.signal,async()=>{},storage);void pending.catch(()=>{});
       await uploaded.promise;const oldId=(await row(job.id)).currentAttemptId!;
-      failDelete=true;abort.abort();await assert.rejects(pending);
+      failDelete=true;abort.abort();await pending;
       assert.equal((await row(job.id)).status,"interrupted");
       await assert.rejects(stat(workspaceExportScratch(oldId)),{code:"ENOENT"});
       const oldAttempt=(await db.select().from(attempts).where(eq(attempts.id,oldId)))[0]!;
-      delay=false;await prepareWorkspaceExport(actor,job.id,new AbortController().signal,async()=>{},storage);
+      delay=false;await retryWorkspaceExport(actor,job.id,(await row(job.id)).version);await prepareWorkspaceExport(actor,job.id,new AbortController().signal,async()=>{},storage);
       const ready=await row(job.id);assert.equal(ready.status,"ready");assert.notEqual(ready.currentAttemptId,oldId);
       release.resolve();await new Promise(r=>setTimeout(r,20));assert.ok(objects.has(oldAttempt.objectKey));
       failDelete=false;await cleanupWorkspaceExports(storage,actor.workspaceId);assert.ok(!objects.has(oldAttempt.objectKey));
@@ -51,7 +51,7 @@ test("controlled workspace artifact failures and privacy fences",{
         seen.resolve();await proceed.promise;
       });void pending.catch(()=>{});
       await seen.promise;await db.transaction(tx=>retireWorkspaceExports(tx,actor.workspaceId));proceed.resolve();
-      await assert.rejects(pending);assert.equal((await row(job.id)).status,"cancelled");
+      await pending;assert.equal((await row(job.id)).status,"cancelled");
       const inventory=await db.select().from(attempts).where(eq(attempts.jobId,job.id));
       assert.equal(inventory.length,1);assert.equal(inventory[0]!.status,"cleanup");
       assert.ok(!objects.has(inventory[0]!.objectKey));

@@ -24,6 +24,18 @@ field in `p0-customer-execution-checks.json`. Their values were checked to be
 64-character hexadecimal evidence digests. Arbitrary future hexadecimal keys
 are **not** excluded. Canaries must still fail.
 
+The Phase 1 merge also retains four exact source-file digest dispositions,
+recomputed from their original Git blobs by `merge-security-dispositions.ts`.
+CI identified one additional historical finding at
+`ef8e47513add00c3bb58fa14ecbc9fffe71cc171`, line 32 of
+`docs/valo/evidence/finite-sdk-admission-result.json`. Its
+`apiTypecheckLogSha256` value independently matches SHA-256 of the ordinary
+pnpm API typecheck banner, including its leading/trailing newlines. The verifier
+reconstructs those harmless bytes and compares them with the immutable evidence
+line on every scan. Only that exact commit/file/rule/line fingerprint is excluded;
+new findings in the same file remain subject to scanning. This verifies digest
+identity, not the historical command's success or current application readiness.
+
 ```sh
 pnpm --filter @workspace/scripts exec tsx src/valo/merge-security.ts
 bash scripts/src/valo/merge-static.sh # requires the pinned scanner
