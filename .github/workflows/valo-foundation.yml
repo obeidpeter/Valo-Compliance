@@ -148,8 +148,10 @@ jobs:
       - name: Install local-only recovery tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y postgresql-16
+          sudo apt-get install -y postgresql-16 restic
           echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
+      - name: Encrypt and restore a synthetic recovery archive without off-host credentials
+        run: VALO_REQUIRE_REAL_RESTIC=1 python3 scripts/ops/test_recovery_archive.py
       - name: Restore disposable synthetic database and fixture objects
         run: pnpm --filter @workspace/api-server test:valo-isolated-recovery
       - name: Validate phase 2 migrations, applied phase 1 bytes and existing staff preservation

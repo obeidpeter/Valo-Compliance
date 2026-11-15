@@ -24,3 +24,13 @@ test("shipped worker still refuses production before starting work and probe req
   assert.doesNotMatch(supervisor.stdout,/worker_supervisor.started/);
   const probe=invoke("production-storage-probe",candidate,["--start"]);assert.equal(probe.status,1);assert.match(probe.stderr,/EXPLICIT_STORAGE_PROBE_REQUIRED/);assert.equal(probe.stdout,"");
 });
+
+test("built monitoring probe requires explicit intent and reports only allowlisted failures",()=>{
+  const hidden="https://hc-ping.com/private-capability-must-not-appear";
+  const vars={VALO_EXTERNAL_MONITORING:"healthchecks",VALO_WORKER_MONITOR_URL:hidden};
+  const guarded=invoke("monitoring-probe",vars,["worker","failure"]);
+  assert.equal(guarded.status,1);assert.equal(guarded.stdout,"");assert.equal(guarded.stderr.trim(),"EXPLICIT_MONITORING_PROBE_REQUIRED");
+  const invalid=invoke("monitoring-probe",{...vars,VALO_MONITORING_PROBE:"synthetic-notification-only"},["worker","failure"]);
+  assert.equal(invalid.status,1);assert.equal(invalid.stderr.trim(),"EXTERNAL_MONITOR_CONFIGURATION_INVALID");
+  assert.ok(!invalid.stderr.includes(hidden));
+});

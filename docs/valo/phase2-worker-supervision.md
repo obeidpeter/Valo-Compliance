@@ -39,6 +39,11 @@ An external monitor is still necessary if the supervisor or entire host freezes.
 Structured stdout events contain fixed event/reason codes and attempt counts only.
 They do not constitute delivered alerts.
 
+Opt-in Healthchecks worker/operations pings and an encrypted recovery-archive
+verification command are described in [infrastructure setup](phase2-infrastructure-setup.md).
+The normal development workflow still uses `worker:dev`; external pings require the
+built supervisor, configured check capabilities, and separately verified recipients.
+
 ## Validation
 
 The readiness suite exercises real child processes: crash/replacement, live but

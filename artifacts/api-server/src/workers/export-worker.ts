@@ -130,7 +130,10 @@ async function dispatch() {
       await publishHeartbeat();
       if(!stopping&&Date.now()-operationalCheckedAt>=60000){
         operationalCheckedAt=Date.now();
-        await recordOperationalAlerts(await collectOperationalSample(text=>{const config={text,query_timeout:1500};return pool.query(config);}));
+        const sample=await collectOperationalSample(text=>{const config={text,query_timeout:1500};return pool.query(config);});
+        const alerts=await recordOperationalAlerts(sample);
+        if(process.env.VALO_SUPERVISED_WORKER==="ipc-v1"&&process.connected&&process.send)
+          process.send({type:"valo.worker.operations",healthy:alerts.active.length===0,checkedAt:sample.checkedAt},()=>{});
       }
     }catch{health.fail();logger.error({event:"operations.internal_probe_failed"});await publishHeartbeat().catch(()=>{});}
     dispatching=false;finishDispatch();
