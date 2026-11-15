@@ -2,7 +2,7 @@
  * Native storage is forbidden; this is not a native-provider proof. */
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
-import {mkdtemp,mkdir,writeFile,rm} from "node:fs/promises";
+import {mkdtemp,mkdir,readFile,writeFile,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
@@ -21,7 +21,8 @@ const env={NODE_ENV:"development",TZ:"UTC",CI:"true",
 for(const key of ["PATH","HOME","LANG","PNPM_HOME"])if(process.env[key])env[key]=process.env[key];
 const report={id,startedAt:new Date().toISOString(),sourceCommit:null,checks:[],outcome:"running",
   workspaceDatabaseUsed:false,providerCredentialsInherited:false,nativeStorageProof:false,maintenanceExecuted:false};
-const privacyIntegration=process.argv.includes("--privacy-hardening"),failedGroups=[];
+const privacyIntegration=process.argv.includes("--privacy-hardening"),
+  receiptIntegration=process.argv.includes("--receipt-integration"),failedGroups=[];
 let started=false;
 async function command(name,file,args){
   try{
@@ -40,7 +41,7 @@ async function check(name,args,allowedSkips=0){
 }
 async function independentCheck(name,args,allowedSkips=0){
   try{await check(name,args,allowedSkips);}catch(error){
-    if(!privacyIntegration)throw error;
+    if(!privacyIntegration&&!receiptIntegration)throw error;
     failedGroups.push({name,error:error.message});
   }
 }
@@ -49,6 +50,16 @@ try{
   await check("no-database-native-detector",["exec","tsx","--test","src/lib/inference-no-database.test.ts"]);
   await check("controlled-export-zero-effects",["exec","node","--experimental-test-module-mocks",
     "--import","tsx","--test","src/lib/valo-contract-runtime.test.ts"]);
+  if(receiptIntegration){
+    const {scripts}=JSON.parse(await readFile(join(root,"artifacts/api-server/package.json"),"utf8"));
+    const workflow=await readFile(join(root,".github/workflows/valo-foundation.yml"),"utf8");
+    assert.ok(scripts["test:valo"].includes("src/lib/valo-receipt-recovery-report.test.ts"));
+    assert.ok(scripts["test:valo-db-core"].includes("src/lib/valo-receipt-recovery.integration.test.ts"));
+    assert.ok(workflow.includes("pnpm --filter @workspace/api-server test:valo\n"));
+    assert.ok(workflow.includes("pnpm --filter @workspace/api-server test:valo-db-core\n"));
+    report.receiptReportingRegisteredInNormalSuite=true;
+    await check("receipt-reporting-no-database",["exec","tsx","--test","src/lib/valo-receipt-recovery-report.test.ts"]);
+  }
   const server=createServer();await new Promise(r=>server.listen(0,"127.0.0.1",r));
   const port=server.address().port;await new Promise(r=>server.close(r));
   await command("initdb","initdb",["-D",data,"--username=valo_ci_proof","--auth=trust","--no-locale","--encoding=UTF8"]);
@@ -61,6 +72,12 @@ try{
   env.VALO_DEV_QUEUE_MIGRATION="reviewed-synthetic-development";
   await command("queue-migration","pnpm",["--filter","@workspace/api-server","exec","tsx","src/scripts/queue-migration.ts","apply-development"]);
   delete env.VALO_DEV_QUEUE_MIGRATION;
+  if(receiptIntegration){
+    await independentCheck("receipt-recovery-database",["exec","tsx","--test","src/lib/valo-receipt-recovery.integration.test.ts"]);
+    await independentCheck("controlled-commerce",["test:valo-commerce"]);
+    await independentCheck("controlled-refunds",["test:valo-refunds"]);
+    await independentCheck("editorial-exact-evidence-controls",["test:valo-editorial-provenance"]);
+  }else{
   await check("rich-checker-contracts",["test:valo-rich-checker"]);
   await check("checker-current-source-task-guard",["test:valo-task-source-guard"]);
   await check("checker-http-journey",["test:valo-checker-http-db"]);
@@ -72,6 +89,7 @@ try{
     await independentCheck("privacy-historical-keys",["exec","tsx","--test","src/lib/valo-privacy-keys.integration.test.ts"]);
     await independentCheck("portable-export-worker",["test:valo-export-worker-portable-db"]);
     await independentCheck("workspace-download-http",["test:valo-workspace-download-db"]);
+  }
   }
   if(failedGroups.length){report.failedGroups=failedGroups;throw Error("Independent regression groups failed; see retained per-group logs");}
   report.outcome="passed";

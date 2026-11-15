@@ -1,6 +1,11 @@
 # Current development state — still not accepted
 
-Current checkpoint: [synthetic privacy runtime verification](pr13-runtime-verification.md):
+Current checkpoint: [receipt integration and routine-CI registration verification](receipt-integration-current.md):
+55 engineering passes, no failures/skips; full typecheck passed. Existing
+reporting/core registrations verified, with only disposable fixture recovery.
+No new feature, provider call or PR13 merge.
+
+Retained [synthetic privacy runtime verification](pr13-runtime-verification.md):
 121 engineering passes, zero failures, one explicit native-only skip; full
 workspace typecheck passed. Actual worker/replay proof is portable, not native
 or production recovery. No existing owner data or real provider record was erased.

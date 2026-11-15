@@ -1,21 +1,21 @@
 # Valo Compliance — Valo Platform
 
-## Current checkpoint — synthetic privacy runtime verification
+## Current checkpoint — receipt integration and CI verification
 
-The exact reviewed PR13 source was already in development history and its
-SQL already registered at index 22. A separate integration worktree verified
-the combined source and corrected ordinary temporary-upload cleanup so it
-cannot bypass privacy-owned holds or invalid/missing proof.
+Fetched development already contains coordinator receipt merge `ea73a87`,
+reviewed receipt source `52d81a2` and reviewed checker source `0bdb8db7`.
+No duplicate merge or older-head replacement was needed.
 
-**121 engineering checks passed, zero failed, one genuine-native-only skip.**
-Full workspace typecheck passed. This includes real PostgreSQL erasure/key/HTTP
-tests, 13-object/205-row interrupted replay and 12 real-process export/worker
-checks using an explicitly portable private filesystem.
+**55 engineering checks passed, zero failures/skips; full workspace typecheck passed.**
+Reporting is already registered in normal unit CI and receipt recovery in core
+database CI. A new focused reproducer asserts those registrations and executes
+reporting, disposable receipt recovery, controlled commerce/refunds and exact
+editorial-evidence controls. No product runtime source changed in this follow-up.
 
-Only disposable data was migrated or erased. No existing owner data, native
-bucket, paid inference, email/PSP flow, production setting or live cleanup
-default changed. These checks do not accept full account erasure or R1/R2.
-See [executed proof, retained failures and limits](docs/valo/pr13-runtime-verification.md).
+No existing-record recovery command, provider call, message, new PR13 merge,
+deployment or main merge occurred. These results do not accept R1/R2.
+See [current receipt evidence](docs/valo/receipt-integration-current.md) and the
+retained [121-check synthetic privacy proof](docs/valo/pr13-runtime-verification.md).
 
 ## Retained checker runtime checkpoint
 
