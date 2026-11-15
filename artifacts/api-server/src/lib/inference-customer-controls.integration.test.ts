@@ -49,7 +49,8 @@ test("original customer quota, pause, tenant and outage boundaries use actual Po
     content.content.fields.notes+=`\nSynthetic ${label} edit.`;
     manual=await saveDocument(a,own.id,{...content,expectedRevision:before.revision});
     assert.equal(hashAI(manual.content.financialInput),hashAI(before.content.financialInput));
-    assert.ok(manual.content.fields.notes.includes(`Synthetic ${label} edit.`));
+    const saved=documentInput.parse({title:manual.title,content:manual.content});
+    assert.ok(saved.content.fields.notes.includes(`Synthetic ${label} edit.`));
     await withWorkspaceDataFile(a,async path=>{
       const body=JSON.parse(await readFile(path,"utf8"));
       assert.ok(JSON.stringify(body).includes(own.id));assert.ok(!JSON.stringify(body).includes("OTHER-TENANT-PRO-011"));

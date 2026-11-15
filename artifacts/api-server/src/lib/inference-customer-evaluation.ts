@@ -88,7 +88,7 @@ export function prepareCustomerFiniteManifest(plan:CustomerEvaluationPlan,artifa
   const key=`customer:${caseId}:${requestDigest({plan:artifact,caseHash:entry.caseHash})}`;
   const primary:FiniteWork={key:`${key}:attempt-1`,lane:"customer",role:"customer",pair:null,
     candidateHash:entry.caseHash,caseHash:entry.caseHash,sourceHashes:[plan.corpus.sha256],request:structuredClone(entry.request),
-    bindings:{candidateVersionId:null,corpus:"customer-ai",caseId,sourceFiles:[{...plan.corpus}],customerPlan:{...artifact}}};
+    bindings:{candidateVersionId:null,corpus:"customer-ai",caseId,sourceFiles:[{...plan.corpus}],customerPlan:{...artifact,extension:"json"}}};
   return{version:2,policyVersion:inferenceProposal.priceVersion,allocation:{...additionalInferenceAllocation},
     packageId,preparedAt:plan.preparedAt,works:[primary,{...structuredClone(primary),key:`${key}:attempt-2`,retryOf:primary.key}]};
 }

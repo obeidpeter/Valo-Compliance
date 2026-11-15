@@ -110,7 +110,8 @@ export function explicitBoundaryFollowup(c:AuthoredCustomerCase){
   return{documentNumber:`SYNTHETIC-EVAL-${c.caseID}`,issueDate:"2026-11-13",
     ...(c.task==="payment-reminder"?{dueDate:"2026-11-01"}:{})};
 }
-export function expectedSourceNumbers(c:AuthoredCustomerCase,b:ReturnType<typeof bindCustomerCase>){
+export function expectedSourceNumbers(c:AuthoredCustomerCase,b:ReturnType<typeof bindCustomerCase>):
+  {key:string;expected:string;actualKobo:string|null;pass:boolean}[]{
   if(b.subtotalKobo===null)return Object.entries(c.expectedNumeric??{}).map(([key,expected])=>({key,expected,actualKobo:null,pass:false}));
   const actual:Record<string,string>={},f=c.suppliedFacts,fi=b.financial;
   const assign=(keys:string[],value:string)=>{for(const k of keys)actual[k]=value;};
