@@ -8,7 +8,7 @@ import {inspectOperationalExports} from "./operational-export-inspection";
 
 test("additional operational forms render their complete final canonical bytes in DOCX and PDF",async()=>{
   // Actual local readers/renderers, not native private-storage or publication proof.
-  for(const id of["TPL-01","TPL-06","TPL-09","TPL-11"]){
+  for(const id of["TPL-01","TPL-06","TPL-09","TPL-11","TPL-12","TPL-22","TPL-24","TPL-34","TPL-35","TPL-38"]){
     const now=new Date(),intake=await readOperationalIntake(id,42);
     const source=await templateCandidate(id,42,now,{original:intake.section.body,provenance:intake.provenance});
     const raw:Omit<PublicationBundle["candidate"],"hash">={id,version:42,body:JSON.stringify(source.document),

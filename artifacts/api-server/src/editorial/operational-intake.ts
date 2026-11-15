@@ -3,10 +3,11 @@ import {resolve} from "node:path";
 import {sha256} from "@workspace/valo-core";
 import {publicationWorkspaceRoot} from "./operational-policy";
 import {operationalDocument,type OriginalSection} from "./original-content-adapter";
+import {supportsOperationalInferenceTemplate} from "../lib/inference-operational-coverage";
 /** Extract ID boundaries, not arbitrary ## headings: customer forms contain
  * legitimate ## subsections. Field specifications/examples are never masters. */
 export function extractOperationalBody(id:string,title:string,source:string,expectedHash:string):OriginalSection{
-  if(!/^TPL-(0[1-9]|1[0-2])$/.test(id))throw Error("OPERATIONAL_INTAKE_ID_NOT_SUPPORTED");
+  if(!supportsOperationalInferenceTemplate(id))throw Error("OPERATIONAL_INTAKE_ID_NOT_SUPPORTED");
   return extractTemplateBody(id,title,source,expectedHash);
 }
 /** No risk classification, rights clearance, clause selection or publication
@@ -35,7 +36,7 @@ export function extractTemplateBody(id:string,title:string,source:string,expecte
   return{id,title,body,sourceHash:expectedHash,relatedTemplateIds:[]};
 }
 export async function readOperationalIntake(id:string,version=1){
-  if(!/^TPL-(0[1-9]|1[0-2])$/.test(id))throw Error("OPERATIONAL_INTAKE_ID_NOT_SUPPORTED");
+  if(!supportsOperationalInferenceTemplate(id))throw Error("OPERATIONAL_INTAKE_ID_NOT_SUPPORTED");
   return readTemplateIntake(id,version);
 }
 export async function readTemplateIntake(id:string,version=1){

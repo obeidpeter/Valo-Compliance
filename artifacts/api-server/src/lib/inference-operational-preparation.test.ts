@@ -57,16 +57,16 @@ test("actual preparation and saved-readiness callers bind another form without a
     {url:"https://openai.com/policies/sharing-publication-policy/",text:"Content co-authored with the OpenAI API",truncated:false}]};
   const path=join(dir,"controlled-terms.json");await writeFile(path,JSON.stringify(snapshot));
   await assert.rejects(()=>prepareOperationalCandidateRelease("TPL-13",path),/PREPARER_UNAVAILABLE/);assert.equal(saved.length,0);
-  const prepared=await prepareOperationalCandidateRelease("TPL-01",path);
+  const prepared=await prepareOperationalCandidateRelease("TPL-12",path);
   assert.equal(prepared.providerFailure,"FINITE_REVIEW_NOT_RUN");assert.equal(prepared.release.decision,"held");
   assert.equal(prepared.reviews.length,0);assert.equal(holdCalls,1);assert.equal(saved.length,1);
-  assert.equal(saved[0].templateId,"TPL-01");assert.equal(saved[0].slug,"tpl-01");
+  assert.equal(saved[0].templateId,"TPL-12");assert.equal(saved[0].slug,"tpl-12");
   const ready=await readOperationalInferenceReadiness(prepared.id);
-  assert.equal(ready.candidate.id,"TPL-01");assert.equal(ready.candidate.hash,prepared.candidateHash);
+  assert.equal(ready.candidate.id,"TPL-12");assert.equal(ready.candidate.hash,prepared.candidateHash);
   assert.ok(ready.checks.every(c=>c.result==="pass"));
   const row=saved[0],original=structuredClone(row);
   row.templateId="TPL-02";await assert.rejects(()=>readOperationalInferenceReadiness(prepared.id),/BINDING_CHANGED/);
-  Object.assign(row,structuredClone(original));row.bundle.candidate.body=row.bundle.candidate.body.replace("Invoice","Altered form");
+  Object.assign(row,structuredClone(original));row.bundle.candidate.body=row.bundle.candidate.body.replace("Payment reminder letter","Altered form");
   row.bundle.candidate.hash=candidateDigest(row.bundle.candidate);row.candidateHash=row.bundle.candidate.hash;
   await assert.rejects(()=>readOperationalInferenceReadiness(prepared.id),/BODY_NOT_EXACT/);
   Object.assign(row,structuredClone(original));row.reviewBy=new Date(0);
@@ -80,6 +80,13 @@ test("actual preparation and saved-readiness callers bind another form without a
   process.env.REPLIT_DEPLOYMENT_ID="0";
   try{await assert.rejects(()=>prepareOperationalCandidateRelease("TPL-01",path),/development/);}finally{delete process.env.REPLIT_DEPLOYMENT_ID;}
   assert.equal(saved.length,1);assert.equal(reviewCalls,0);assert.equal(authoringCalls,0);assert.equal(publishCalls,0);assert.equal(networkCalls,0);
+  for(const id of ["TPL-22","TPL-24","TPL-34","TPL-35","TPL-38"]){
+    saved.length=0;savedPolicies.length=0;
+    const prepared=await prepareOperationalCandidateRelease(id,path),current=await readOperationalInferenceReadiness(prepared.id);
+    assert.equal(prepared.release.decision,"held");assert.equal(prepared.providerFailure,"FINITE_REVIEW_NOT_RUN");
+    assert.equal(prepared.reviews.length,0);assert.equal(current.candidate.id,id);assert.ok(current.checks.every(c=>c.result==="pass"));
+  }
+  assert.equal(holdCalls,6);assert.equal(reviewCalls,0);assert.equal(authoringCalls,0);assert.equal(publishCalls,0);assert.equal(networkCalls,0);
 });
 test("multi-candidate reports require exact selection and retain old single-pair compatibility",async()=>{
   const pkg=await prepareFiniteAllocationPackage(),id=allocationPackageId(pkg);
