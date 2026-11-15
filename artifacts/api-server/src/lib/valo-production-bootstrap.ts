@@ -20,8 +20,8 @@ export async function prepareEmptyRehearsalQueue(query:Query,env:Record<string,s
   const body=sql.trim();
   if(!body.startsWith("BEGIN;")||!body.endsWith("COMMIT;"))throw Error("QUEUE_TRANSACTION_SHAPE_INVALID");
   await query(body.slice("BEGIN;".length,-"COMMIT;".length));
-  await query("SELECT valo_jobs.create_queue($1,$2::jsonb)",["valo-manual-export-v1",JSON.stringify({retryLimit:2,retryDelay:5,expireInSeconds:120})]);
-  await query("SELECT valo_jobs.create_queue($1,$2::jsonb)",["valo-workspace-data-v1",JSON.stringify({retryLimit:0,expireInSeconds:360})]);
+  await query("SELECT valo_jobs.create_queue($1,$2::jsonb)",["valo-manual-export-v1",JSON.stringify({policy:"standard",retryLimit:2,retryDelay:5,expireInSeconds:120})]);
+  await query("SELECT valo_jobs.create_queue($1,$2::jsonb)",["valo-workspace-data-v1",JSON.stringify({policy:"standard",retryLimit:0,expireInSeconds:360})]);
 }
 /** Caller owns a transaction. Never run automatically at process startup. */
 export async function assignEmptyRehearsalDatabase(query:Query,env:Record<string,string|undefined>){

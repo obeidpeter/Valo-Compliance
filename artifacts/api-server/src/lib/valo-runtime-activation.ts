@@ -17,6 +17,7 @@ function binding(env:Environment){
  * Development flags, an arbitrary NODE_ENV or storage canary cannot activate it. */
 export function rehearsalConfiguration(env:Environment){
   if(!productionPreflight(env).configurationValid||env.VALO_RUNTIME_ACTIVATION!==profile||
+    !/^[1-9][0-9]{0,4}$/.test(env.PORT??"")||Number(env.PORT)>65535||
     !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(env.VALO_PRODUCTION_DATABASE_ID??"")||
     env.VALO_EXTERNAL_MONITORING!=="healthchecks"||!env.VALO_WORKER_MONITOR_URL||!env.VALO_OPERATIONS_MONITOR_URL)
     fail("PRODUCTION_REHEARSAL_CONFIGURATION_REQUIRED");
@@ -39,9 +40,11 @@ export async function verifyRehearsalDatabase(query:Query,env:Environment){
     OR EXISTS(SELECT 1 FROM valo_orders) OR EXISTS(SELECT 1 FROM valo_privacy_tombstones)
     OR EXISTS(SELECT 1 FROM valo_privacy_cases WHERE kind='deletion') AS unsafe`);
   if(unsafe.rows.length!==1||unsafe.rows[0].unsafe!==false)fail("PRODUCTION_REHEARSAL_REQUIRES_FIXTURE_ONLY_DATABASE");
-  const queues=await query("SELECT name,retry_limit,expire_seconds FROM valo_jobs.queue WHERE name IN ('valo-manual-export-v1','valo-workspace-data-v1')");
-  if(queues.rows.length!==2||!queues.rows.some(q=>q.name==="valo-manual-export-v1"&&q.retry_limit===2&&q.expire_seconds===120)||
-    !queues.rows.some(q=>q.name==="valo-workspace-data-v1"&&q.retry_limit===0&&q.expire_seconds===360))
+  const version=await query("SELECT version FROM valo_jobs.version");
+  if(version.rows.length!==1||version.rows[0].version!==46)fail("PRODUCTION_QUEUE_VERSION_MISMATCH");
+  const queues=await query("SELECT name,policy,retry_limit,expire_seconds FROM valo_jobs.queue WHERE name IN ('valo-manual-export-v1','valo-workspace-data-v1')");
+  if(queues.rows.length!==2||!queues.rows.some(q=>q.name==="valo-manual-export-v1"&&q.policy==="standard"&&q.retry_limit===2&&q.expire_seconds===120)||
+    !queues.rows.some(q=>q.name==="valo-workspace-data-v1"&&q.policy==="standard"&&q.retry_limit===0&&q.expire_seconds===360))
     fail("PRODUCTION_QUEUE_PREFLIGHT_FAILED");
   return {databaseBound:true,fixtureOnly:true,queuesVerified:true,launchReady:false,customerTrafficEnabled:false};
 }

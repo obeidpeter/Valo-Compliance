@@ -65,9 +65,9 @@ development workspace: it contains native preview overrides, private recovery
 artifacts and development credentials. Replit publishes a workspace snapshot;
 Git ignore rules are not a proven deployment exclusion mechanism.
 
-The observed hosting draft is Reserved VM, dedicated 1 vCPU / 4 GiB, $35/month
+The reviewed hosting proposal is Reserved VM, dedicated 1 vCPU / 4 GiB, $35/month
 compute ($0.0486/hour), invite-only, North America, with development data copying
-disabled. It remains unpublished. Provider provisioning, recurring charges and
+disabled. No production app or resources have been provisioned. Provider provisioning, recurring charges and
 new production credentials require owner approval. Database/storage usage must
 stay within separately approved limits; this compute quote is not a total bill.
 

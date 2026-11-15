@@ -13,7 +13,8 @@ export function windowsRecoveryBinding(state:{name:string;directory:string;port:
 export async function assertWindowsRecoveryTarget(client:PoolClient){
   const root=process.env.VALO_RECOVERY_WINDOWS_ROOT??"";
   if(process.platform!=="win32"||!/^valo-recovery-[a-f0-9-]{36}$/.test(basename(root))||
-    resolve(root)!==root||await realpath(root)!==root||(await lstat(root)).isSymbolicLink())
+    resolve(root)!==root||await realpath(root)!==root||(await lstat(root)).isSymbolicLink()||
+    await realpath(join(root,"data"))!==join(root,"data")||(await lstat(join(root,"data"))).isSymbolicLink())
     throw Error("LOCAL_DISPOSABLE_RECOVERY_TARGET_REQUIRED");
   const state=(await client.query(`SELECT current_database() AS name,current_user AS "user",
     current_setting('data_directory') AS directory,current_setting('port') AS port,host(inet_server_addr()) AS address`)).rows[0];

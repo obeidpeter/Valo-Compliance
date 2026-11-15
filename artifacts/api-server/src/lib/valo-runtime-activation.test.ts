@@ -10,15 +10,17 @@ const env={NODE_ENV:"production",PRIVATE_OBJECT_DIR:"/synthetic-bucket/developme
 test("production activation cannot be granted by configuration inspection or a development copy",async()=>{
   const config=rehearsalConfiguration(env);
   const marker={instance_id:config.databaseId,environment:"production-rehearsal",storage_fingerprint:config.storageFingerprint};
-  let actual=marker,unsafe=false,queueMissing=false;
-  const query=async(sql:string)=>({rows:sql.includes("valo_runtime_identity")?[actual]:sql.includes(" AS unsafe")?[{unsafe}]:queueMissing?[]:[
-    {name:"valo-manual-export-v1",retry_limit:2,expire_seconds:120},{name:"valo-workspace-data-v1",retry_limit:0,expire_seconds:360}]});
+  let actual=marker,unsafe=false,queueMissing=false,version=46;
+  const query=async(sql:string)=>({rows:sql.includes("valo_runtime_identity")?[actual]:sql.includes(" AS unsafe")?[{unsafe}]:sql.includes("valo_jobs.version")?[{version}]:queueMissing?[]:[
+    {name:"valo-manual-export-v1",policy:"standard",retry_limit:2,expire_seconds:120},{name:"valo-workspace-data-v1",policy:"standard",retry_limit:0,expire_seconds:360}]});
   assert.equal((await verifyRehearsalDatabase(query,env)).customerTrafficEnabled,false);
   for(const changed of [{environment:"development"},{instance_id:"other"},{storage_fingerprint:"0".repeat(64)}]){
     actual={...marker,...changed};await assert.rejects(verifyRehearsalDatabase(query,env),/IDENTITY_MISMATCH/);
   }
   actual=marker;unsafe=true;await assert.rejects(verifyRehearsalDatabase(query,env),/FIXTURE_ONLY/);
   unsafe=false;queueMissing=true;await assert.rejects(verifyRehearsalDatabase(query,env),/QUEUE_PREFLIGHT/);
+  queueMissing=false;version=45;await assert.rejects(verifyRehearsalDatabase(query,env),/QUEUE_VERSION/);
+  for(const port of [undefined,"0","65536","8080\n"])assert.throws(()=>rehearsalConfiguration({...env,PORT:port}));
   for(const name of ["VALO_CUSTOMER_AI_ENABLED","VALO_SANDBOX_CHECKOUT_ENABLED","VALO_SANDBOX_REFUNDS_ENABLED","VALO_SANDBOX_DISPUTES_ENABLED"])
     for(const value of [undefined,"true"])assert.throws(()=>rehearsalConfiguration({...env,[name]:value}),/EFFECTS_MUST_BE_DISABLED/);
   assert.throws(()=>rehearsalConfiguration({...env,VALO_ISOLATED_RECOVERY:"synthetic-local-only"}),/RECOVERY_CANNOT/);
