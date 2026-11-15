@@ -166,9 +166,19 @@ export async function cleanupWorkspaceExports(storage:WorkspaceExportStorage=wor
     .where(and(sql`(${attempts.status}='cleanup' OR ${jobs.status} IN ('interrupted','cancelled','expired'))`,
       workspaceId?eq(attempts.workspaceId,workspaceId):undefined))
     .orderBy(sql`${attempts.cleanupCheckedAt} ASC NULLS FIRST`,attempts.id).limit(5);
-  let failed=0;
-  for(const{a}of rows){try{await abortable(AbortSignal.timeout(1500),()=>storage.remove(a.objectKey));
+  let failed=0,privacyHeld=0;
+  for(const{a}of rows){
+    const[erasure]=await db.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
+      .where(eq(valoPrivacyTombstones.workspaceId,a.workspaceId)).limit(1);
+    // Privacy-owned bytes and scratch copies may only pass the authenticated
+    // erasure replay. Ordinary expiry cannot bypass a hold or missing keys.
+    if(erasure){
+      privacyHeld++;
+      await db.update(attempts).set({cleanupCheckedAt:new Date()}).where(eq(attempts.id,a.id));
+      continue;
+    }
+    try{await abortable(AbortSignal.timeout(1500),()=>storage.remove(a.objectKey));
       await rm(workspaceExportScratch(a.id),{force:true,recursive:true});}
     catch{failed++;}finally{await db.update(attempts).set({cleanupCheckedAt:new Date()}).where(eq(attempts.id,a.id));}}
-  return{checked:rows.length,failed};
+  return{checked:rows.length,failed,privacyHeld};
 }

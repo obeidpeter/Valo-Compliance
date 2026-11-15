@@ -21,6 +21,7 @@ const env={NODE_ENV:"development",TZ:"UTC",CI:"true",
 for(const key of ["PATH","HOME","LANG","PNPM_HOME"])if(process.env[key])env[key]=process.env[key];
 const report={id,startedAt:new Date().toISOString(),sourceCommit:null,checks:[],outcome:"running",
   workspaceDatabaseUsed:false,providerCredentialsInherited:false,nativeStorageProof:false,maintenanceExecuted:false};
+const privacyIntegration=process.argv.includes("--privacy-hardening"),failedGroups=[];
 let started=false;
 async function command(name,file,args){
   try{
@@ -36,6 +37,12 @@ async function check(name,args,allowedSkips=0){
   const tests=n("tests"),passed=n("pass"),failed=n("fail"),skipped=n("skipped");
   assert.ok(tests>0&&passed+skipped===tests&&failed===0&&skipped===allowedSkips,`${name}: invalid counts`);
   report.checks.push({name,tests,passed,failed,skipped});
+}
+async function independentCheck(name,args,allowedSkips=0){
+  try{await check(name,args,allowedSkips);}catch(error){
+    if(!privacyIntegration)throw error;
+    failedGroups.push({name,error:error.message});
+  }
 }
 try{
   report.sourceCommit=(await command("source","git",["rev-parse","HEAD"])).trim();
@@ -57,8 +64,16 @@ try{
   await check("rich-checker-contracts",["test:valo-rich-checker"]);
   await check("checker-current-source-task-guard",["test:valo-task-source-guard"]);
   await check("checker-http-journey",["test:valo-checker-http-db"]);
-  await check("portable-erasure-storage",["test:valo-erasure-portable-db"],1);
-  await check("privacy-http-role-session-origin",["test:valo-privacy-http-db"]);
+  await independentCheck("portable-erasure-storage",["test:valo-erasure-portable-db"],1);
+  await independentCheck("privacy-http-role-session-origin",["test:valo-privacy-http-db"]);
+  if(privacyIntegration){
+    await independentCheck("ordered-migration-journal",["exec","tsx","--test","../../scripts/src/valo/migration-journal.test.ts"]);
+    await independentCheck("erasure-lock-seal-cache",["test:valo-erasure-controls"]);
+    await independentCheck("privacy-historical-keys",["exec","tsx","--test","src/lib/valo-privacy-keys.integration.test.ts"]);
+    await independentCheck("portable-export-worker",["test:valo-export-worker-portable-db"]);
+    await independentCheck("workspace-download-http",["test:valo-workspace-download-db"]);
+  }
+  if(failedGroups.length){report.failedGroups=failedGroups;throw Error("Independent regression groups failed; see retained per-group logs");}
   report.outcome="passed";
 }catch(error){
   report.outcome="failed";report.failure=error.message;process.exitCode=1;

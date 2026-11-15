@@ -12,10 +12,13 @@ import {deletePrivateFile,readPrivateFile,writePrivateFile} from "./valo-private
 import {syntheticDocument} from "./valo-test-fixtures";
 
 const enabled=process.env.VALO_RUN_EXPORT_CRASH_TESTS==="synthetic-development-only";
-test("real process death, PostgreSQL lease fencing and native private storage recovery",
+test(`real process death, PostgreSQL lease fencing and ${process.env.VALO_PORTABLE_WORKER_PRELOADED==="true"
+  ?"portable filesystem (not native storage)":"native private storage"} recovery`,
   {skip:!enabled,timeout:240000},async t=>{
   assert.equal(process.env.NODE_ENV,"development");assert.ok(!process.env.REPLIT_DEPLOYMENT);
   const a=await resolveWorkspace("synthetic-export-crash-"+randomUUID());
+  const imports=["--import","tsx",...(process.env.VALO_PORTABLE_WORKER_PRELOADED==="true"
+    ?["--experimental-test-module-mocks","--import",new URL("../test-support/private-file-process.mts",import.meta.url).href]:[])];
   let child:ChildProcess|undefined;
   async function kill(){if(!child||child.exitCode!==null||child.signalCode)return;
     const ended=new Promise<void>(r=>child!.once("exit",()=>r()));
@@ -27,15 +30,17 @@ test("real process death, PostgreSQL lease fencing and native private storage re
   }
   async function pause(id:string,stage:ExportStage,realWorker=false){
     const {job}=await getExport(a,id);
-    child=spawn(process.execPath,["--import","tsx",...(realWorker?["src/workers/export-worker.ts"]:
+    child=spawn(process.execPath,[...imports,...(realWorker?["src/workers/export-worker.ts"]:
       ["src/scripts/export-crash-child.ts",id,a.workspaceId,job.queueId,stage])],
       {cwd:process.cwd(),env:{...process.env,NODE_ENV:"development",
         ...(realWorker?{VALO_EXPORT_CRASH_JOB:id,VALO_EXPORT_CRASH_STAGE:stage}:{})},
-        detached:true,stdio:["ignore","ignore","ignore","ipc"]});
+        detached:true,stdio:["ignore","ignore","pipe","ipc"]});
+    let diagnostic="";
+    child.stderr?.on("data",bytes=>{diagnostic=(diagnostic+String(bytes)).slice(-2000);});
     await new Promise<void>((resolve,reject)=>{
       const timer=setTimeout(()=>reject(Error("Child did not reach "+stage)),35000);
       child!.once("message",m=>{clearTimeout(timer);assert.equal((m as {stage:string}).stage,stage);resolve();});
-      child!.once("exit",()=>{clearTimeout(timer);reject(Error("Child exited before "+stage));});
+      child!.once("exit",()=>{clearTimeout(timer);reject(Error("Child exited before "+stage+": "+diagnostic));});
     });
     await kill();
     if(realWorker){
@@ -115,7 +120,7 @@ test("real process death, PostgreSQL lease fencing and native private storage re
       const {job}=await create();
       await db.update(valoExportJobs).set({attempts:2}).where(eq(valoExportJobs.id,job.id));
       await pause(job.id,"claimed",true);await expire(job.id);
-      child=spawn(process.execPath,["--import","tsx","src/workers/export-worker.ts"],
+      child=spawn(process.execPath,[...imports,"src/workers/export-worker.ts"],
         {cwd:process.cwd(),env:{...process.env,NODE_ENV:"development"},detached:true,stdio:"ignore"});
       const end=Date.now()+30000;
       // Raw database read proves the daemon, not getExport's fallback, performed recovery.
