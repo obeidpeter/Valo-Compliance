@@ -81,6 +81,16 @@ test("durable workspace exports use real PostgreSQL, leases and private fixture 
         if(mode==="membership")await db.update(valoMemberships).set({active:"yes"}).where(eq(valoMemberships.workspaceId,a.workspaceId));
       }
     });
+    await t.test("a corrupted cross-workspace storage binding is rejected before reading private storage",async()=>{
+      const actor=await owner(),row=await prepare(actor);
+      const[asset]=await db.select().from(valoFileAssets).where(eq(valoFileAssets.workspaceExportJobId,row.id));assert.ok(asset);
+      await db.update(valoFileAssets).set({objectKey:`valo/development/${b.workspaceId}/${asset.id}.json`}).where(eq(valoFileAssets.id,asset.id));
+      let reads=0;
+      await assert.rejects(()=>withPreparedWorkspaceExport(actor,row.id,async()=>assert.fail("corrupt binding release"),{
+        storage:{...storage,withFile:async()=>{reads++;throw Error("UNEXPECTED_PRIVATE_READ");}},beforeRelease:async()=>{},
+      }),{status:409});assert.equal(reads,0);
+      await db.update(valoFileAssets).set({objectKey:asset.objectKey}).where(eq(valoFileAssets.id,asset.id));
+    });
     await t.test("cancellation wins against an already accepted upload and stale completion",async()=>{
       const actor=await owner(),view=await requestWorkspaceExport(actor,{idempotencyKey:randomUUID()}),row=await raw(view.id);
       const reached=deferred(),release=deferred();const work=executeWorkspaceExport(row.id,actor.workspaceId,row.queueId,{storage,onStage:async stage=>{
