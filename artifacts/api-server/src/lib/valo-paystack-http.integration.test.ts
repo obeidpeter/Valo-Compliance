@@ -52,7 +52,7 @@ test("isolated real HTTP signature/durability controls — synthetic signing key
       // survived. Public/API readiness may independently be 503 when the CI
       // identity/site configuration is deliberately absent.
       const alive=await post(body,header());assert.equal(alive.status,200);
-      assert.equal((await alive.json()).duplicate,true);
+      z.object({received:z.literal(true),duplicate:z.literal(true)}).parse(await alive.json());
     });
     const identityConfigured=Boolean(process.env.CLERK_PUBLISHABLE_KEY&&process.env.CLERK_SECRET_KEY&&
       (process.env.VALO_TRUSTED_ORIGIN||process.env.REPLIT_DEV_DOMAIN));
@@ -66,8 +66,7 @@ test("isolated real HTTP signature/durability controls — synthetic signing key
     },async()=>{
       const response=await fetch(base+"/api/workspace/purchases");
       assert.equal(response.status,503);
-      const value=await response.json();
-      assert.equal(typeof value.error,"string");
+      const value=z.object({error:z.string()}).passthrough().parse(await response.json());
       assert.equal("purchases" in value,false);
     });
   }finally{
