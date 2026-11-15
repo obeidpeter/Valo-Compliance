@@ -8,6 +8,215 @@
 import * as zod from 'zod';
 
 
+export const ListWorkspaceDataExportsQueryParams = zod.object({
+  "cursor": zod.uuid().optional()
+})
+
+
+export const listWorkspaceDataExportsResponseItemsItemAttemptsMin = 0;
+export const listWorkspaceDataExportsResponseItemsItemAttemptsMax = 3;
+
+export const listWorkspaceDataExportsResponseItemsItemRetryCyclesMin = 0;
+export const listWorkspaceDataExportsResponseItemsItemRetryCyclesMax = 2;
+
+export const listWorkspaceDataExportsResponseItemsItemRowsProcessedMin = 0;
+
+export const listWorkspaceDataExportsResponseItemsItemBytesPreparedMin = 0;
+
+
+
+export const ListWorkspaceDataExportsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "schemaVersion": zod.literal(2),
+  "attempts": zod.int().min(listWorkspaceDataExportsResponseItemsItemAttemptsMin).max(listWorkspaceDataExportsResponseItemsItemAttemptsMax),
+  "retryCycles": zod.int().min(listWorkspaceDataExportsResponseItemsItemRetryCyclesMin).max(listWorkspaceDataExportsResponseItemsItemRetryCyclesMax),
+  "rowsProcessed": zod.int().min(listWorkspaceDataExportsResponseItemsItemRowsProcessedMin),
+  "bytesPrepared": zod.int().min(listWorkspaceDataExportsResponseItemsItemBytesPreparedMin),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "errorCode": zod.string().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "scope": zod.string(),
+  "mayCancel": zod.boolean(),
+  "mayRetry": zod.boolean()
+})),
+  "nextCursor": zod.uuid().nullable()
+})
+
+
+export const RequestWorkspaceDataExportBody = zod.object({
+  "idempotencyKey": zod.uuid()
+})
+
+
+export const requestWorkspaceDataExportResponseAttemptsMin = 0;
+export const requestWorkspaceDataExportResponseAttemptsMax = 3;
+
+export const requestWorkspaceDataExportResponseRetryCyclesMin = 0;
+export const requestWorkspaceDataExportResponseRetryCyclesMax = 2;
+
+export const requestWorkspaceDataExportResponseRowsProcessedMin = 0;
+
+export const requestWorkspaceDataExportResponseBytesPreparedMin = 0;
+
+
+
+export const RequestWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "schemaVersion": zod.literal(2),
+  "attempts": zod.int().min(requestWorkspaceDataExportResponseAttemptsMin).max(requestWorkspaceDataExportResponseAttemptsMax),
+  "retryCycles": zod.int().min(requestWorkspaceDataExportResponseRetryCyclesMin).max(requestWorkspaceDataExportResponseRetryCyclesMax),
+  "rowsProcessed": zod.int().min(requestWorkspaceDataExportResponseRowsProcessedMin),
+  "bytesPrepared": zod.int().min(requestWorkspaceDataExportResponseBytesPreparedMin),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "errorCode": zod.string().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "scope": zod.string(),
+  "mayCancel": zod.boolean(),
+  "mayRetry": zod.boolean()
+})
+
+
+export const GetWorkspaceDataExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const getWorkspaceDataExportResponseAttemptsMin = 0;
+export const getWorkspaceDataExportResponseAttemptsMax = 3;
+
+export const getWorkspaceDataExportResponseRetryCyclesMin = 0;
+export const getWorkspaceDataExportResponseRetryCyclesMax = 2;
+
+export const getWorkspaceDataExportResponseRowsProcessedMin = 0;
+
+export const getWorkspaceDataExportResponseBytesPreparedMin = 0;
+
+
+
+export const GetWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "schemaVersion": zod.literal(2),
+  "attempts": zod.int().min(getWorkspaceDataExportResponseAttemptsMin).max(getWorkspaceDataExportResponseAttemptsMax),
+  "retryCycles": zod.int().min(getWorkspaceDataExportResponseRetryCyclesMin).max(getWorkspaceDataExportResponseRetryCyclesMax),
+  "rowsProcessed": zod.int().min(getWorkspaceDataExportResponseRowsProcessedMin),
+  "bytesPrepared": zod.int().min(getWorkspaceDataExportResponseBytesPreparedMin),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "errorCode": zod.string().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "scope": zod.string(),
+  "mayCancel": zod.boolean(),
+  "mayRetry": zod.boolean()
+})
+
+
+export const CancelWorkspaceDataExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const CancelWorkspaceDataExportBody = zod.object({
+  "expectedVersion": zod.int().min(1)
+})
+
+
+export const cancelWorkspaceDataExportResponseAttemptsMin = 0;
+export const cancelWorkspaceDataExportResponseAttemptsMax = 3;
+
+export const cancelWorkspaceDataExportResponseRetryCyclesMin = 0;
+export const cancelWorkspaceDataExportResponseRetryCyclesMax = 2;
+
+export const cancelWorkspaceDataExportResponseRowsProcessedMin = 0;
+
+export const cancelWorkspaceDataExportResponseBytesPreparedMin = 0;
+
+
+
+export const CancelWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "schemaVersion": zod.literal(2),
+  "attempts": zod.int().min(cancelWorkspaceDataExportResponseAttemptsMin).max(cancelWorkspaceDataExportResponseAttemptsMax),
+  "retryCycles": zod.int().min(cancelWorkspaceDataExportResponseRetryCyclesMin).max(cancelWorkspaceDataExportResponseRetryCyclesMax),
+  "rowsProcessed": zod.int().min(cancelWorkspaceDataExportResponseRowsProcessedMin),
+  "bytesPrepared": zod.int().min(cancelWorkspaceDataExportResponseBytesPreparedMin),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "errorCode": zod.string().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "scope": zod.string(),
+  "mayCancel": zod.boolean(),
+  "mayRetry": zod.boolean()
+})
+
+
+export const RetryWorkspaceDataExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const RetryWorkspaceDataExportBody = zod.object({
+  "expectedVersion": zod.int().min(1)
+})
+
+
+export const retryWorkspaceDataExportResponseAttemptsMin = 0;
+export const retryWorkspaceDataExportResponseAttemptsMax = 3;
+
+export const retryWorkspaceDataExportResponseRetryCyclesMin = 0;
+export const retryWorkspaceDataExportResponseRetryCyclesMax = 2;
+
+export const retryWorkspaceDataExportResponseRowsProcessedMin = 0;
+
+export const retryWorkspaceDataExportResponseBytesPreparedMin = 0;
+
+
+
+export const RetryWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "schemaVersion": zod.literal(2),
+  "attempts": zod.int().min(retryWorkspaceDataExportResponseAttemptsMin).max(retryWorkspaceDataExportResponseAttemptsMax),
+  "retryCycles": zod.int().min(retryWorkspaceDataExportResponseRetryCyclesMin).max(retryWorkspaceDataExportResponseRetryCyclesMax),
+  "rowsProcessed": zod.int().min(retryWorkspaceDataExportResponseRowsProcessedMin),
+  "bytesPrepared": zod.int().min(retryWorkspaceDataExportResponseBytesPreparedMin),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "errorCode": zod.string().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "scope": zod.string(),
+  "mayCancel": zod.boolean(),
+  "mayRetry": zod.boolean()
+})
+
+
+export const DownloadPreparedWorkspaceDataParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const DownloadPreparedWorkspaceDataResponse = zod.unknown()
+
+
 export const requestAccessSupportBodyEmailMax = 254;
 
 export const requestAccessSupportBodyMessageMin = 20;
@@ -356,6 +565,157 @@ export const GetStaffOperationsResponse = zod.object({
   "area": zod.enum(['content', 'support', 'finance', 'system']),
   "notice": zod.string(),
   "records": zod.array(zod.record(zod.string(), zod.unknown()))
+})
+
+
+export const GetOrderDisputeInformationParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetOrderDisputeInformationResponse = zod.object({
+  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "notice": zod.string()
+})
+
+
+export const SaveOrderDisputeInformationParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const saveOrderDisputeInformationBodyCustomerNameMax = 150;
+
+export const saveOrderDisputeInformationBodyCustomerPhoneMin = 5;
+export const saveOrderDisputeInformationBodyCustomerPhoneMax = 40;
+
+export const saveOrderDisputeInformationBodyServiceDetailsMin = 10;
+export const saveOrderDisputeInformationBodyServiceDetailsMax = 2000;
+
+export const saveOrderDisputeInformationBodyDeliveryAddressMax = 500;
+
+
+
+export const SaveOrderDisputeInformationBody = zod.object({
+  "disputeId": zod.uuid(),
+  "requestKey": zod.uuid(),
+  "customerName": zod.string().min(1).max(saveOrderDisputeInformationBodyCustomerNameMax),
+  "customerPhone": zod.string().min(saveOrderDisputeInformationBodyCustomerPhoneMin).max(saveOrderDisputeInformationBodyCustomerPhoneMax),
+  "serviceDetails": zod.string().min(saveOrderDisputeInformationBodyServiceDetailsMin).max(saveOrderDisputeInformationBodyServiceDetailsMax),
+  "deliveryAddress": zod.string().max(saveOrderDisputeInformationBodyDeliveryAddressMax).optional(),
+  "deliveryDate": zod.coerce.date().optional(),
+  "consentVersion": zod.enum(['test-dispute-information-v1'])
+})
+
+export const SaveOrderDisputeInformationResponse = zod.object({
+  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "notice": zod.string()
+})
+
+
+export const GetFinanceDisputeParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetFinanceDisputeResponse = zod.object({
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const PrepareFinanceDisputeParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const prepareFinanceDisputeBodyMessageMin = 10;
+export const prepareFinanceDisputeBodyMessageMax = 1500;
+
+export const prepareFinanceDisputeBodyAmountKoboMin = 0;
+export const prepareFinanceDisputeBodyAmountKoboMax = 2147483647;
+
+
+
+export const PrepareFinanceDisputeBody = zod.object({
+  "kind": zod.enum(['upload_receipt', 'submit_evidence', 'merchant_decision']),
+  "requestKey": zod.uuid(),
+  "message": zod.string().min(prepareFinanceDisputeBodyMessageMin).max(prepareFinanceDisputeBodyMessageMax),
+  "informationId": zod.uuid().optional(),
+  "resolution": zod.enum(['merchant-accepted', 'declined']).optional(),
+  "amountKobo": zod.int().min(prepareFinanceDisputeBodyAmountKoboMin).max(prepareFinanceDisputeBodyAmountKoboMax).optional()
+})
+
+export const PrepareFinanceDisputeResponse = zod.object({
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const ControlFinanceDisputeParams = zod.object({
+  "id": zod.uuid(),
+  "operation": zod.enum(['execute', 'reconcile', 'cancel'])
+})
+
+
+
+
+export const ControlFinanceDisputeBody = zod.object({
+  "expectedVersion": zod.int().min(1)
+})
+
+export const ControlFinanceDisputeResponse = zod.object({
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
 })
 
 

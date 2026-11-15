@@ -14,6 +14,8 @@ import {dispatchOperationalJobs} from "../lib/valo-operational-dispatch";
 import {assertRecoveryEffectsAllowed} from "../lib/valo-recovery-effects";
 import {recordWorkerHeartbeat,collectOperationalSample,recordOperationalAlerts} from "../lib/valo-operations";
 
+import {WORKSPACE_EXPORT_QUEUE,executeWorkspaceExport,recoverWorkspaceExports,expireWorkspaceExports,pendingWorkspaceExports} from "../lib/valo-workspace-exports";
+
 developmentExportsOnly();
 assertRecoveryEffectsAllowed();
 const payload = z.object({ jobId:z.string().uuid(),workspaceId:z.string().uuid() }).strict();
@@ -34,6 +36,9 @@ await boss.work(EXPORT_QUEUE, {batchSize:1,pollingIntervalSeconds:1}, async jobs
     }:undefined);
   }
 });
+await boss.work(WORKSPACE_EXPORT_QUEUE,{batchSize:1,pollingIntervalSeconds:1},async entries=>{
+  for(const entry of entries){const input=payload.parse(entry.data);await executeWorkspaceExport(input.jobId,input.workspaceId,entry.id);}
+});
 let dispatching = false;
 let dispatchIdle:Promise<void>=Promise.resolve();
 let reminderCheckedAt=0;
@@ -45,6 +50,9 @@ async function dispatch() {
   let finishDispatch!:()=>void;dispatchIdle=new Promise(resolve=>{finishDispatch=resolve;});
   try {
     try{
+    await recoverWorkspaceExports();await expireWorkspaceExports();
+    for(const job of await pendingWorkspaceExports())
+      await boss.send(WORKSPACE_EXPORT_QUEUE,{jobId:job.id,workspaceId:job.workspaceId},{id:job.queueId});
     await recoverAbandonedExports();
     const cleanup=await reconcileExportOrphans();
     if(cleanup.failed)logger.error({event:"export.orphan_cleanup_failed",count:cleanup.failed});

@@ -6,6 +6,8 @@ import {GUIDED_PREFIX,guidedRenderableBlocks} from "@workspace/valo-core/guided-
 export const RENDER_VERSION = "manual-draft-1";
 export const DRAFT_NOTICE = "INCOMPLETE BUSINESS DRAFT — user-provided information. Not verified payment proof, official approval or legal advice.";
 export const TEMPLATE_NOTICE = "BLANK DEVELOPMENT TEMPLATE — complete with your own business information. Not regulatory guidance or verified business facts.";
+export const PURCHASE_NOTICE = "VALO DEVELOPMENT PURCHASE RECEIPT — server-verified test transaction record only. Not proof of delivery, bank outcome, a government tax invoice or official approval.";
+type RenderMode="business_draft"|"template_sample"|"purchase_receipt";
 export const exportMime = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pdf: "application/pdf",
@@ -13,8 +15,8 @@ export const exportMime = {
 export function escapeHtml(text: string) {
   return text.replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[char]!);
 }
-export function controlledHtml(raw: unknown, revision: number,mode:"business_draft"|"template_sample"="business_draft") {
-  const notice=mode==="template_sample"?TEMPLATE_NOTICE:DRAFT_NOTICE;
+export function controlledHtml(raw: unknown, revision: number,mode:RenderMode="business_draft") {
+  const notice=mode==="purchase_receipt"?PURCHASE_NOTICE:mode==="template_sample"?TEMPLATE_NOTICE:DRAFT_NOTICE;
   const { title, content } = documentInput.parse(raw);
   const e = escapeHtml;
   const font = content.formatting.font === "serif" ? "Georgia, serif" : "Arial, sans-serif";
@@ -30,8 +32,8 @@ export function controlledHtml(raw: unknown, revision: number,mode:"business_dra
   ${fields.map(([key,value])=>`<div class="field"><strong>${e(key)}:</strong> ${e(value || "[Not supplied]")}</div>`).join("")}
   ${blocks}</body></html>`;
 }
-export async function renderDocument(raw: unknown, format: "docx" | "pdf", revision: number,mode:"business_draft"|"template_sample"="business_draft"): Promise<Buffer> {
-  const notice=mode==="template_sample"?TEMPLATE_NOTICE:DRAFT_NOTICE;
+export async function renderDocument(raw: unknown, format: "docx" | "pdf", revision: number,mode:RenderMode="business_draft"): Promise<Buffer> {
+  const notice=mode==="purchase_receipt"?PURCHASE_NOTICE:mode==="template_sample"?TEMPLATE_NOTICE:DRAFT_NOTICE;
   const { title, content } = documentInput.parse(raw);
   const fields=content.blocks.some(b=>b.id.startsWith(GUIDED_PREFIX))?[["Notes",content.fields.notes]]:Object.entries(content.fields);
   if (format === "docx") {

@@ -42,3 +42,4 @@ export * from "./valo-rule-releases";
 export * from "./valo-ai-drafts";
 export * from "./valo-publication";
 export * from "./valo-commerce";
+export * from "./valo-workspace-exports";

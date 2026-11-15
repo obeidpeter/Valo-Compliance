@@ -89,6 +89,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
+      - name: Prove bounded private workspace storage and job UI helpers
+        run: pnpm --filter @workspace/api-server test:valo-workspace-export-controls
       - name: Prove workspace download release requires the current session
         run: pnpm --filter @workspace/api-server test:valo-workspace-download
       - name: Prove finite inference scope, actual callers and disabled entry without network
@@ -99,6 +101,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-rich-checker
       - name: Prove signed erasure inventory and isolated lock controls
         run: pnpm --filter @workspace/api-server test:valo-erasure-controls
+      - name: Prove dispute HTTP and transport controls without merchant calls
+        run: pnpm --filter @workspace/api-server test:valo-disputes
       - name: Run foundation unit tests
         run: pnpm --filter @workspace/scripts test:valo
       - name: Install standard PDF readers
@@ -111,6 +115,14 @@ jobs:
           echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Run API input-safety tests
         run: pnpm --filter @workspace/api-server test:valo
+      - name: Prove durable export browser status, cancellation, retry and account boundaries
+        run: pnpm --filter @workspace/api-server test:valo-workspace-export-browser
+      - name: Retain durable export controlled browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: controlled-workspace-export-jobs-browser
+          path: generated-artifacts/valo-completion/workspace-export-jobs-*
       - name: Prove native workspace download, cancellation and account boundaries
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-browser
       - name: Retain controlled workspace download browser evidence
@@ -184,6 +196,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Apply tracked migrations to empty synthetic database
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
+      - name: Prove durable workspace jobs, real process death, cancellation and mixed privacy inventory
+        run: pnpm --filter @workspace/api-server test:valo-workspace-export-db
       - name: Prove paged workspace attachment, final authorization and disconnect cleanup
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-db
       - name: Prove current-rule task guards against synthetic PostgreSQL
@@ -192,6 +206,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-erasure-db
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db
+      - name: Prove durable dispute intents against synthetic orders and controlled transport
+        run: pnpm --filter @workspace/api-server test:valo-disputes-db
       - name: Prove durable write limits and membership revocation races
         run: pnpm --filter @workspace/api-server test:valo-write-security
       - name: Prove controlled payment settlement and refund lifecycle

@@ -4,11 +4,11 @@ import { and,eq,desc,like } from "drizzle-orm";
 import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoAssessments,valoTasks,valoReminderPreferences,
   valoReminderOutbox,valoAIDrafts,valoContentVersions,valoSafetySwitches,valoStaffAccessAudit,
-  valoExportJobs,valoFileAssets,valoEvents } from "@workspace/db";
+  valoExportJobs,valoWorkspaceExports,valoFileAssets,valoEvents } from "@workspace/db";
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { authorizeWorkspaceWrite,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
-import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations,valoPrivacyMessages } from "@workspace/db";
+import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations,valoPrivacyMessages,valoDisputeInformation,valoDisputeActions } from "@workspace/db";
 export const accessMessage="Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack=(id:string)=>({reference:`VALO-ACCESS-${id}`,message:accessMessage,delivery:"not_dispatched" as const});
 export async function saveAccessSupport(raw:unknown,remoteAddress:string){
@@ -51,7 +51,7 @@ export async function customerAccount(actor:WorkspaceActor){
 export async function requestPrivacy(actor:WorkspaceActor,email:string,raw:unknown){
   return createPrivacyCase(actor,email,raw);
 }
-export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:string)=>Promise<void>,signal?:AbortSignal){
+export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:string)=>Promise<void>,signal?:AbortSignal,onProgress?:(rows:number)=>Promise<void>){
   signal?.throwIfAborted();
   return db.transaction(async tx=>{
     await authorizeWorkspaceWrite(tx,actor);
@@ -63,10 +63,11 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
       assessments:valoAssessments,tasks:valoTasks,reminderPreferences:valoReminderPreferences,
       reminderDeliveries:valoReminderOutbox,supportRequests:valoSupportTickets,aiDrafts:valoAIDrafts,
       orders:valoOrders,entitlements:valoEntitlements,purchaseMessages:valoPurchaseOutbox,
-      refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations,privacyInformation:valoPrivacyMessages};
+      refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations,privacyInformation:valoPrivacyMessages,
+      disputeInformation:valoDisputeInformation,disputeIntents:valoDisputeActions};
     const data:Record<string,unknown>={};
     let bytes=0;
-    let sections=0;
+    let sections=0,totalRows=0;
     const collect=async<T>(name:string,query:(offset:number)=>PromiseLike<T[]>)=>{
       signal?.throwIfAborted();
       if(!sink){append(name,await query(0));return;}
@@ -80,6 +81,7 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
           signal?.throwIfAborted();
           await sink((first?"":",")+JSON.stringify(row));first=false;
         }
+        totalRows+=rows.length;await onProgress?.(totalRows);
         if(rows.length<500)break;
         offset+=rows.length;
       }
@@ -103,8 +105,13 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
       createdAt:valoExportJobs.createdAt,updatedAt:valoExportJobs.updatedAt})
       .from(valoExportJobs).where(eq(valoExportJobs.workspaceId,actor.workspaceId))
       .orderBy(valoExportJobs.id).limit(sink?500:5001).offset(offset));
+    await collect("workspaceDataExports",offset=>tx.select({id:valoWorkspaceExports.id,status:valoWorkspaceExports.status,
+      schemaVersion:valoWorkspaceExports.schemaVersion,createdAt:valoWorkspaceExports.createdAt,
+      updatedAt:valoWorkspaceExports.updatedAt,expiresAt:valoWorkspaceExports.expiresAt})
+      .from(valoWorkspaceExports).where(and(eq(valoWorkspaceExports.workspaceId,actor.workspaceId),
+        eq(valoWorkspaceExports.requestedBy,actor.identityId))).orderBy(valoWorkspaceExports.id).limit(sink?500:5001).offset(offset));
     await collect("fileMetadata",offset=>tx.select({id:valoFileAssets.id,workspaceId:valoFileAssets.workspaceId,
-      jobId:valoFileAssets.jobId,checksum:valoFileAssets.checksum,mime:valoFileAssets.mime,
+      jobId:valoFileAssets.jobId,workspaceExportJobId:valoFileAssets.workspaceExportJobId,withdrawnAt:valoFileAssets.withdrawnAt,checksum:valoFileAssets.checksum,mime:valoFileAssets.mime,
       size:valoFileAssets.size,retentionAt:valoFileAssets.retentionAt,createdAt:valoFileAssets.createdAt})
       .from(valoFileAssets).where(eq(valoFileAssets.workspaceId,actor.workspaceId))
       .orderBy(valoFileAssets.id).limit(sink?500:5001).offset(offset));

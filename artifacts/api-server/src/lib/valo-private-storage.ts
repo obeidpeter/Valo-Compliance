@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { Client } from "@replit/object-storage";
 export const fileChecksum = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
-function object(key: string) {
-  if (!/^valo\/development\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.(docx|pdf)$/.test(key))
+export function privateStorageObject(key: string) {
+  if (!/^valo\/development\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.(docx|pdf|json)$/.test(key))
     throw new Error("INVALID_PRIVATE_KEY");
   const root = process.env.PRIVATE_OBJECT_DIR;
   if (!root) throw new Error("PRIVATE_STORAGE_UNCONFIGURED");
@@ -10,6 +10,7 @@ function object(key: string) {
   if (!bucket || !parts.length) throw new Error("PRIVATE_STORAGE_UNCONFIGURED");
   return { client:new Client({bucketId:bucket}),bucket,name:`${parts.join("/")}/${key}` };
 }
+const object=privateStorageObject;
 /** Callers mint a fresh cryptographic object ID for every attempt, including crash retries.
  * The native SDK has no conditional-create primitive. Never reuse or overwrite a key.
  * Source/render hashes live in the immutable-revision/job/file relational chain.
