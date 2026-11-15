@@ -2,6 +2,7 @@ import {sql} from "drizzle-orm";
 import {db} from "@workspace/db";
 import {removedPrivateText,erasureProgressReason,redactAuditReason} from "./valo-privacy-redactions";
 import {cancelUnsentDisputeWork} from "./valo-dispute-actions";
+import {ValoProblem} from "./valo-store";
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
 export const copyPhases=["financial_contact","refund_text","refund_history","dispute_text","payment_event_text","activity_text","privacy_audit_text"] as const;
 export type CopyPhase=typeof copyPhases[number];
@@ -16,10 +17,23 @@ export function ownedPaymentEvent(workspaceId:string){
     UNION SELECT provider_id FROM valo_payment_disputes WHERE workspace_id=${workspaceId}::uuid)`;
 }
 export async function fencePrivateCopies(tx:Tx,workspaceId:string){
+  const installed=await tx.execute<{installed:string|null}>(sql`SELECT to_regclass('valo_jobs.job')::text AS installed`);
+  if(!installed.rows[0]?.installed)throw new ValoProblem(409,
+    "Durable queue inventory is unavailable. Apply the reviewed development queue setup before erasure; no cleanup has completed.");
   await cancelUnsentDisputeWork(tx,workspaceId);
-  await tx.execute(sql`DELETE FROM valo_jobs.job q WHERE q.name='valo-manual-export-v1'
-    AND q.data->>'workspaceId'=${workspaceId}
-    AND EXISTS(SELECT 1 FROM valo_export_jobs j WHERE j.workspace_id=${workspaceId}::uuid AND j.queue_id=q.id)`);
+  const linked=sql`EXISTS(SELECT 1 FROM valo_export_jobs j
+    WHERE j.workspace_id=${workspaceId}::uuid AND j.queue_id=q.id)`;
+  const candidate=sql`(q.data->>'workspaceId'=${workspaceId} OR ${linked})`;
+  const conflict=await tx.execute(sql`SELECT q.id FROM valo_jobs.job q WHERE q.name='valo-manual-export-v1'
+    AND ${candidate} AND(EXISTS(SELECT 1 FROM valo_export_jobs j
+      WHERE j.workspace_id<>${workspaceId}::uuid AND j.queue_id=q.id)
+      OR(${linked} AND q.data->>'workspaceId' IS NOT NULL AND q.data->>'workspaceId'<>${workspaceId})) LIMIT 1`);
+  if(conflict.rows.length)throw new ValoProblem(409,
+    "Queue ownership is inconsistent. Erasure is held for scoped review; no queued payload was deleted.");
+  // Both older payloads lacking a tenant field and orphaned payloads whose
+  // tracking row is already absent need cleanup. Either trustworthy link is
+  // sufficient only after conflicting ownership has been excluded.
+  await tx.execute(sql`DELETE FROM valo_jobs.job q WHERE q.name='valo-manual-export-v1' AND ${candidate}`);
   await tx.execute(sql`UPDATE valo_refund_requests SET status='needs_review',failure='PRIVACY_ERASURE_FINANCE_REVIEW',
     lease_token=NULL,lease_until=NULL,next_attempt_at=NULL
     WHERE workspace_id=${workspaceId}::uuid AND status IN('approved','submitting','sending','dispatching','pending','unknown')`);

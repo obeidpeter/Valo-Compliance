@@ -45,7 +45,7 @@ test("resumable physical development erasure with retained exclusions and replay
         sourceHash:revision.contentHash,requestedBy:a.identityId,queueId,status:state==="retained"?"ready":"running"});
       await db.execute(sql`INSERT INTO valo_jobs.job(id,name,data,start_after)
         VALUES(${queueId}::uuid,'valo-manual-export-v1',
-          ${JSON.stringify({workspaceId:a.workspaceId,jobId,privateMarker:"SYNTHETIC-QUEUED-COPY"})}::jsonb,
+          ${JSON.stringify({...(state==="pending"?{}:{workspaceId:a.workspaceId}),jobId,privateMarker:"SYNTHETIC-QUEUED-COPY"})}::jsonb,
           now()+interval '1 hour')`);
       await db.insert(valoExportObjects).values({objectKey:key,workspaceId:a.workspaceId,jobId,queueId,state});
       if(state==="retained")await db.insert(valoFileAssets).values({id:randomUUID(),workspaceId:a.workspaceId,
@@ -55,6 +55,9 @@ test("resumable physical development erasure with retained exclusions and replay
       idempotencyKey:randomUUID(),inputHash:"a".repeat(64),task:"invoice",status:"preview",promptVersion:"controlled",
       preview:{privateMarker:"ERASE-ME"},plan:{privateMarker:"ERASE-ME"},providerCalls:1,budgetReserved:true,
       providerRuns:[{responseId:"synthetic-no-real-provider-call",usage:{inputTokens:10,outputTokens:10}}]});
+    await db.execute(sql`INSERT INTO valo_jobs.job(id,name,data,start_after) VALUES(${randomUUID()}::uuid,
+      'valo-manual-export-v1',${JSON.stringify({workspaceId:a.workspaceId,jobId:randomUUID(),
+        privateMarker:"SYNTHETIC-ORPHAN-PAYLOAD"})}::jsonb,now()+interval '1 hour')`);
     const prepared=await createPrivacyCase(a,"synthetic-private-contact@example.invalid",{kind:"export",
       idempotencyKey:randomUUID(),message:"SYNTHETIC-PRIVATE-REQUEST-TEXT",acknowledgement:true});
     preparedCaseId=prepared.reference.slice(5);
@@ -83,6 +86,12 @@ test("resumable physical development erasure with retained exclusions and replay
       await assert.rejects(()=>processPrivacyErasure(staff,id,
         {expectedVersion:0,action:"start_erasure",reason,acknowledgement:true}),{status:409});
       assert.equal((await db.select().from(valoDocuments).where(eq(valoDocuments.workspaceId,a.workspaceId))).length,1);
+      const qid=privateObjects[0]!.queueId;
+      await db.execute(sql`UPDATE valo_jobs.job SET data=jsonb_set(data,'{workspaceId}',${JSON.stringify(b.workspaceId)}::jsonb)
+        WHERE id=${qid}::uuid AND name='valo-manual-export-v1'`);
+      await assert.rejects(()=>act("start_erasure"),{status:409,message:/Queue ownership is inconsistent/});
+      await db.execute(sql`UPDATE valo_jobs.job SET data=jsonb_set(data,'{workspaceId}',${JSON.stringify(a.workspaceId)}::jsonb)
+        WHERE id=${qid}::uuid AND name='valo-manual-export-v1'`);
     });
     await t.test("quarantine persists before physical deletion and denies workspace resurrection",async()=>{
       const raced=await Promise.allSettled([act("start_erasure"),act("start_erasure")]);
@@ -96,7 +105,8 @@ test("resumable physical development erasure with retained exclusions and replay
     });
     await t.test("object failure is retained and blocks content purge; repeated deletion is retryable",async()=>{
       const queued=await db.execute(sql`SELECT count(*)::int AS count FROM valo_jobs.job
-        WHERE data->>'workspaceId'=${a.workspaceId}`);
+        WHERE data->>'workspaceId'=${a.workspaceId}
+          OR id=ANY(${`{${privateObjects.map(object=>object.queueId).join(",")}}`}::uuid[])`);
       assert.equal(queued.rows[0]!.count,0,"scoped queued private payloads survived the access fence");
       let calls=0;
       await assert.rejects(()=>replayErasureObjects(id,async()=>{calls++;}),{status:409});
