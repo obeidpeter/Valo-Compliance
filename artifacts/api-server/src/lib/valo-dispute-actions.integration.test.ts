@@ -238,7 +238,7 @@ test("durable dispute intents: development PostgreSQL, controlled PSP and actual
       const wrong=await fixture();await assert.rejects(linkFinanceDispute(actor,{orderId:wrong.order,providerId:f.d.providerId},p),{status:409});
     });
     await t.test("role, hold, reversal and canonical changes during actual adapter GET deny every mutation",async()=>{
-      for(const change of["role","hold","reversed","canonical"]){
+      for(const change of["role","hold","reversed","canonical","completed_refund"]){
         const f=await fixture(),a=await action(f,"merchant_decision",{resolution:"merchant-accepted",amountKobo:1000});let ready!:()=>void,release!:()=>void,mutations=0;
         const reached=new Promise<void>(r=>{ready=r;}),barrier=new Promise<void>(r=>{release=r;});
         const provider=makeDisputeTransport(async(_path,_body,method)=>{if(!method||method==="GET"){const current=structuredClone(f.raw);ready();await barrier;return current;}mutations++;return{};},async()=>{throw Error("UNEXPECTED_UPLOAD");},()=>true);
@@ -247,6 +247,9 @@ test("durable dispute intents: development PostgreSQL, controlled PSP and actual
         if(change==="hold")await holdFinanceDispute(actor,f.d.id,{expectedVersion:1,held:true,reason:"Hold committed while canonical lookup was waiting."});
         if(change==="reversed")await db.update(valoOrders).set({status:"reversed"}).where(eq(valoOrders.id,f.order));
         if(change==="canonical")await db.update(valoPaymentDisputes).set({status:"resolved"}).where(eq(valoPaymentDisputes.id,f.d.id));
+        if(change==="completed_refund")await db.insert(valoRefundRequests).values({id:randomUUID(),workspaceId:owner.workspaceId,orderId:f.order,
+          reason:"Controlled historical completed refund with later failed observation",status:"failed",completedAt:new Date(),
+          amountKobo:10000,requestKey:randomUUID(),reference:"vr-test-"+randomUUID(),policyVersion:"test-refund-v1"});
         release();await settled;assert.equal(mutations,0);assert.equal((await row(a.id)).status,"cancelled");
         await db.update(valoStaffAssignments).set({active:true}).where(eq(valoStaffAssignments.id,role));
       }

@@ -1,4 +1,3 @@
-/// <reference lib="dom" />
 /** Actual dispute React components and guarded generated client; controlled HTTP/identity.
  * This does not exercise Clerk, a merchant account, database authority or Paystack. */
 import {createServer} from "node:http";
@@ -103,8 +102,8 @@ const externalRequests:string[]=[];
 await context.route("**/*",route=>{const url=new URL(route.request().url());if(url.origin===`http://127.0.0.1:${address.port}`)return route.continue();externalRequests.push(url.origin);return route.abort();});
 const report:Record<string,unknown>={startedAt:new Date().toISOString(),controlledIdentity:true,controlledApi:true,realClerkSessions:0,merchantCalls:0,
   compiledProductCssSha256:createHash("sha256").update(css).digest("hex"),actualComponents:["components/payment-concerns.tsx","components/dispute-workflows.tsx","components/account-state-boundary.tsx"],checks};
-const transitions=async(actor:string,view:string)=>page.evaluate(({actor,view})=>(window as any).transition(actor,view),{actor,view});
-const countRequests=async(suffix:string)=>page.evaluate(suffix=>(window as any).requests.filter((row:any)=>row.method==="POST"&&row.url.endsWith(suffix)).length,suffix);
+const transitions=async(actor:string,view:string)=>page.evaluate(({actor,view})=>(globalThis as any).transition(actor,view),{actor,view});
+const countRequests=async(suffix:string)=>page.evaluate(suffix=>(globalThis as any).requests.filter((row:any)=>row.method==="POST"&&row.url.endsWith(suffix)).length,suffix);
 try{
   await page.goto(`http://127.0.0.1:${address.port}`);
   await expect(page.getByText("No concerns saved for this order.")).toBeVisible();
@@ -112,7 +111,7 @@ try{
   await expect(page.getByRole("button",{name:"Save payment concern",exact:true})).toBeDisabled();
   await page.getByRole("checkbox").check();await page.getByRole("button",{name:"Save payment concern",exact:true}).click();
   await expect(page.getByText("Concern saved. Your reference is",{exact:false})).toContainText("33333333-3333-4333-8333-333333333333");
-  const firstBody=await page.evaluate(()=>(window as any).requests.find((row:any)=>row.url.endsWith("/concerns")&&row.method==="POST").body);
+  const firstBody=await page.evaluate(()=>(globalThis as any).requests.find((row:any)=>row.url.endsWith("/concerns")&&row.method==="POST").body);
   expect(firstBody).toMatchObject({message:"CONTROLLED_CUSTOMER_A payment concern",acknowledgement:true});expect(firstBody.providerId).toBeUndefined();
   checks.push("Standalone customer concern requires acknowledgement, saves its reference, and sends no provider dispute identifier");
   await page.getByText("Replies and history",{exact:true}).click();await page.getByLabel("Add information to this concern").fill("CONTROLLED_ADDITIONAL_INFORMATION");
@@ -123,9 +122,9 @@ try{
   checks.push("Existing native unsaved-navigation boundary protects the added standalone concern form");
   await transitions("B","customer");await expect(concern).toHaveValue("");await expect(page.locator("body")).not.toContainText("CONTROLLED_CUSTOMER_A");await expect(page.getByRole("checkbox")).not.toBeChecked();
   checks.push("Account boundary clears concern history, unsaved text and acknowledgement on identity switch");
-  await transitions("A","customer");await concern.fill("LATE_PRIVATE_CONCERN_A");await page.getByRole("checkbox").check();await page.evaluate(()=>(window as any).delayMutation=true);
-  await page.getByRole("button",{name:"Save payment concern",exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).delayed.length)).toBe(1);
-  await transitions("B","customer");await page.evaluate(()=>{(window as any).delayMutation=false;for(const resolve of (window as any).delayed)resolve();});
+  await transitions("A","customer");await concern.fill("LATE_PRIVATE_CONCERN_A");await page.getByRole("checkbox").check();await page.evaluate(()=>(globalThis as any).delayMutation=true);
+  await page.getByRole("button",{name:"Save payment concern",exact:true}).click();await expect.poll(()=>page.evaluate(()=>(globalThis as any).delayed.length)).toBe(1);
+  await transitions("B","customer");await page.evaluate(()=>{(globalThis as any).delayMutation=false;for(const resolve of (globalThis as any).delayed)resolve();});
   await expect(concern).toHaveValue("");await expect(page.locator("body")).not.toContainText("Concern saved. Your reference is");
   checks.push("Late old-account concern response cannot populate the new account or show its saved reference");
   await transitions("A","information");await page.getByLabel("Selected existing bank dispute").selectOption("22222222-2222-4222-8222-222222222222");
@@ -134,7 +133,7 @@ try{
   await page.getByRole("checkbox",{name:/I consent to finance sharing/}).check();await page.getByRole("button",{name:"Save statement — not a bank decision"}).click();
   await expect(page.getByText("Statement saved for this existing dispute.",{exact:false})).toBeVisible();await page.getByText("Saved statements",{exact:true}).click();
   await expect(page.getByText("CONTROLLED_SUPPLIED_FACTS",{exact:true})).toBeVisible();await expect(page.locator("pre")).toHaveCount(0);
-  const statement=await page.evaluate(()=>(window as any).requests.find((r:any)=>r.method==="POST"&&r.url.endsWith("/dispute-information")).body);
+  const statement=await page.evaluate(()=>(globalThis as any).requests.find((r:any)=>r.method==="POST"&&r.url.endsWith("/dispute-information")).body);
   expect(statement.consentVersion).toBe("test-dispute-information-v1");expect(statement.deliveryDate).toBeUndefined();expect(statement.deliveryAddress).toBeUndefined();expect(statement.customerEmail).toBeUndefined();
   checks.push("Native selected-bank-dispute consent flow remains separate, saves actual supplied facts, and invents no optional delivery data or email");
   await transitions("finance","finance");await page.getByLabel("Message visible to the customer").fill("CONTROLLED_FINANCE_RESPONSE saved in concern history");
@@ -145,7 +144,7 @@ try{
   await page.getByRole("button",{name:"Prepare immutable intent only",exact:true}).click();await expect(page.getByText("Immutable intent saved. No provider operation has been sent.",{exact:true})).toBeVisible();
   await expect(page.getByRole("button",{name:"Send authorised test action once",exact:true})).toBeDisabled();expect(await countRequests("/execute")).toBe(0);
   checks.push("Native immutable preparation remains usable while merchant execution is disabled, with no execute call");
-  await page.evaluate(()=>(window as any).fixture.executionEnabled=true);await page.getByRole("button",{name:"Reload saved dispute record",exact:true}).click();
+  await page.evaluate(()=>(globalThis as any).fixture.executionEnabled=true);await page.getByRole("button",{name:"Reload saved dispute record",exact:true}).click();
   const executeAck=page.getByRole("checkbox",{name:/I have reviewed this exact saved intent/});await expect(executeAck).toBeEnabled();await expect(executeAck).not.toBeChecked();
   await page.getByLabel("Reason for changing the finance hold").fill("Pause this controlled dispute for finance review");await page.getByRole("button",{name:"Place finance hold",exact:true}).click();
   await expect(page.getByText("Finance hold is active",{exact:false})).toBeVisible();await expect(executeAck).toBeDisabled();expect(await countRequests("/execute")).toBe(0);
@@ -153,23 +152,23 @@ try{
   await expect(executeAck).toBeEnabled();await expect(executeAck).not.toBeChecked();await expect(page.getByRole("button",{name:"Send authorised test action once",exact:true})).toBeDisabled();
   checks.push("Versioned finance hold prevents dispatch; release does not send and leaves per-intent acknowledgement unchecked");
   await executeAck.check();await page.getByRole("button",{name:"Send authorised test action once",exact:true}).click();await expect(page.getByText("The provider outcome is unknown.",{exact:false})).toBeVisible();
-  expect(await countRequests("/execute")).toBe(1);expect(await page.evaluate(()=>(window as any).requests.find((r:any)=>r.url.endsWith("/execute")).body.acknowledgement)).toBe(true);
+  expect(await countRequests("/execute")).toBe(1);expect(await page.evaluate(()=>(globalThis as any).requests.find((r:any)=>r.url.endsWith("/execute")).body.acknowledgement)).toBe(true);
   await expect(page.getByRole("button",{name:"Send authorised test action once",exact:true})).toHaveCount(0);
   await page.getByRole("button",{name:"Fetch canonical state only",exact:true}).click();await expect.poll(()=>countRequests("/reconcile")).toBe(1);expect(await countRequests("/execute")).toBe(1);
   checks.push("Separate execute acknowledgement yields one native control call; unknown result has no resend and canonical reconciliation does not execute again");
-  await page.evaluate(()=>{(window as any).fixture.actions=[];});await page.getByRole("button",{name:"Reload saved dispute record",exact:true}).click();await expect(page.getByText("No merchant operations prepared for this dispute.")).toBeVisible();
+  await page.evaluate(()=>{(globalThis as any).fixture.actions=[];});await page.getByRole("button",{name:"Reload saved dispute record",exact:true}).click();await expect(page.getByText("No merchant operations prepared for this dispute.")).toBeVisible();
   await page.getByLabel("Operation",{exact:true}).selectOption("submit_evidence");await page.getByLabel("Exact saved customer statement").selectOption("55555555-5555-4555-8555-555555555555");
   await expect(page.locator("form").getByText("CONTROLLED_SUPPLIED_FACTS",{exact:true})).toBeVisible();await expect(page.locator("pre")).toHaveCount(0);await expect(page.locator('input[type="file"]')).toHaveCount(0);
   await page.getByLabel("Operation",{exact:true}).selectOption("merchant_decision");await page.getByLabel("Merchant response",{exact:true}).selectOption("merchant-accepted");
   await page.getByLabel("Accurate reason / provider message").fill("Controlled partial acceptance amount review");await page.getByLabel("Amount to accept in NGN").fill("100.01");
   await page.getByRole("button",{name:"Prepare immutable intent only",exact:true}).click();await expect(page.getByRole("alert")).toContainText("cannot exceed the original payment");
   await page.getByLabel("Amount to accept in NGN").fill("12.34");await page.getByRole("button",{name:"Prepare immutable intent only",exact:true}).click();
-  await expect.poll(()=>countRequests("/actions")).toBe(2);expect(await page.evaluate(()=>(window as any).requests.filter((r:any)=>r.url.endsWith("/actions")).at(-1).body.amountKobo)).toBe(1234);
+  await expect.poll(()=>countRequests("/actions")).toBe(2);expect(await page.evaluate(()=>(globalThis as any).requests.filter((r:any)=>r.url.endsWith("/actions")).at(-1).body.amountKobo)).toBe(1234);
   checks.push("Consented evidence is readable without raw JSON/private uploads; merchant NGN input blocks overpayment and sends exact integer kobo");
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-  await page.getByLabel("Reason for changing the finance hold").focus();await page.keyboard.press("Tab");expect(await page.evaluate(()=>document.activeElement?.tagName)).toBe("BUTTON");
+  expect(await page.evaluate(()=>(globalThis as any).document.documentElement.scrollWidth<=(globalThis as any).innerWidth)).toBe(true);
+  await page.getByLabel("Reason for changing the finance hold").focus();await page.keyboard.press("Tab");expect(await page.evaluate(()=>(globalThis as any).document.activeElement?.tagName)).toBe("BUTTON");
   checks.push("360px compiled-product reflow and native keyboard focus pass on the converged finance UI");
-  await page.evaluate(()=>(window as any).forbidden=true);await transitions("non-finance","finance");
+  await page.evaluate(()=>(globalThis as any).forbidden=true);await transitions("non-finance","finance");
   await expect(page.getByText("Active finance permission and recent MFA required.",{exact:true}).first()).toBeVisible();await expect(page.getByRole("button",{name:"Prepare immutable intent only"})).toHaveCount(0);
   checks.push("Controlled finance permission denial hides native preparation data and controls");
   expect(externalRequests).toEqual([]);report.status="passed_converged_controlled_browser_not_merchant_or_authority_acceptance";
