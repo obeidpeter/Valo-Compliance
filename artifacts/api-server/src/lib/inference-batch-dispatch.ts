@@ -4,6 +4,7 @@ import {inferenceProposal,additionalInferenceAllocation,acceptedInferenceModels,
   transitionBudget,settleBudget,type BudgetLane,type BudgetState,type ReserveInput} from "./inference-budget";
 import type {ManagedCompletionResult,ManagedRequest} from "./managed-inference";
 import {assertDelegatedBatchAuthority} from "./inference-allocation-package";
+import {assertFiniteWorkShape} from "./inference-work-shape";
 export type FiniteWork={key:string;lane:BudgetLane;role:"factual"|"challenge"|"customer";
   pair:string|null;retryOf?:string;candidateHash:string;sourceHashes:string[];caseHash:string;request:ManagedRequest;
   bindings:{candidateVersionId:string|null;corpus:"editorial"|"checker"|"customer-ai"|null;caseId:string|null;
@@ -39,6 +40,7 @@ export class FiniteInferenceDispatcher{
       throw Error("INFERENCE_MANIFEST_INVALID");
     const keys=new Set<string>();
     for(const work of manifest.works){
+      assertFiniteWorkShape(work);
       if(!work.key||keys.has(work.key)||!inferenceProposal.lanes[work.lane]||
         ![work.candidateHash,work.caseHash,...work.sourceHashes].every(h=>/^[a-f0-9]{64}$/.test(h))||
         !["factual","challenge","customer"].includes(work.role)||
@@ -68,6 +70,10 @@ export class FiniteInferenceDispatcher{
     if(pair.length!==2||new Set(pair.map(w=>w.role)).size!==2||
       !pair.some(w=>w.role==="factual")||!pair.some(w=>w.role==="challenge")||pair[0]!.lane!==pair[1]!.lane)
       throw Error("INVALID_REVIEW_PAIR");
+    const binding=(w:FiniteWork)=>requestDigest({candidate:w.candidateHash,case:w.caseHash,
+      sources:[...w.sourceHashes].sort(),bindings:{...w.bindings,sourceFiles:[...w.bindings.sourceFiles].sort((a,b)=>a.path.localeCompare(b.path))}});
+    if(binding(pair[0]!)!==binding(pair[1]!)||requestDigest(pair[0]!.request)===requestDigest(pair[1]!.request))
+      throw Error("REVIEW_PAIR_BINDING_MISMATCH");
     return pair;
   }
   private input(work:FiniteWork,batchId:string,manifestHash:string):ReserveInput{

@@ -5,7 +5,7 @@ import {pool} from "@workspace/db";
 import {assertDevelopmentRuntime} from "../lib/valo-development-runtime";
 import {inferenceProposal,additionalInferenceAllocation,requestDigest,budgetUsed,type BudgetState} from "../lib/inference-budget";
 import {getPublicationArtifact,type ArtifactRef} from "../editorial/publication-artifacts";
-import {proposeHistoricalReceiptResolutions,type HistoricalArtifactInput,type HistoricalPublicationAttempt}
+import {proposeHistoricalReceiptResolutions,projectHistoricalExposure,type HistoricalArtifactInput,type HistoricalPublicationAttempt}
   from "../lib/inference-history-reconciliation";
 const sha256=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
 
@@ -62,6 +62,7 @@ async function main(){
     potentialChargeRecords:state.entries.length,reportedUsageRecords:state.entries.filter(e=>e.status==="settled").length,
     unknownRecords:state.entries.filter(e=>e.status==="unknown").length,unboundedLiabilities:state.unboundedPrior.length,
     provisionalReportedCostNanoUsd:budgetUsed(state).toString(),sourceNotes,reconciliation,
+    projectedExposure:projectHistoricalExposure(state,reconciliation),
     historyModified:false,databaseWrites:0,providerCalls:0,ownerApproval:false,approvedEnabledBatches:approved!,
     additionalAllocation:additionalInferenceAllocation,newAllocationEnabledByThisReport:false,
     separation:"Historical unknowns remain recorded and undisclosed billing is not treated as free. An explicitly approved additional allocation covers only newly authorized work; it does not cap total account charges.",
