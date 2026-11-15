@@ -133,7 +133,7 @@ const row = (id: string) => page.getByTestId(`workspace-export-${id}`);
 const status = (id: string) => page.getByTestId(`export-status-${id}`);
 const latestId = () => [...jobs.keys()].at(-1)!;
 async function create() { const before = metrics.created; await page.getByTestId('button-request-workspace-export').click(); await expect.poll(() => metrics.created).toBe(before + 1); const id = latestId(); await expect(row(id)).toBeVisible(); return id; }
-let passed = false;
+let passed = false;let heapEvidence:{baseline:number;peak:number;increase:number;bound:number}|undefined;let heapSampler:ReturnType<typeof setInterval>|undefined;
 try {
   await page.goto(origin); const request = page.getByTestId('button-request-workspace-export'); await expect(request).toBeEnabled();
   await request.focus(); await page.keyboard.press('Enter'); await expect(request).toBeDisabled();
@@ -145,9 +145,13 @@ try {
   await page.reload(); await expect(status(first)).toHaveText('Queued'); expect(metrics.created).toBe(1);
   await control({ id: first, status: 'preparing' }); await expect(status(first)).toHaveText('Preparing'); await expect(row(first)).toContainText('5,000 rows read');
   await control({ id: first, status: 'ready' }); await expect(status(first)).toHaveText('Ready to download');
+  const metricsSession=await context.newCDPSession(page);await metricsSession.send('Performance.enable');await metricsSession.send('HeapProfiler.collectGarbage');
+  const heap=async()=>((await metricsSession.send('Performance.getMetrics')).metrics.find(m=>m.name==='JSHeapUsedSize')?.value??NaN);
+  const baseline=await heap();let peak=baseline;heapSampler=setInterval(()=>{void heap().then(value=>{peak=Math.max(peak,value);}).catch(()=>{});},10);
   const event = page.waitForEvent('download'); await page.getByTestId(`export-${first}-file`).focus(); await page.keyboard.press('Enter');
   const path = await (await event).path(); if (!path) throw Error('DOWNLOAD_MISSING'); const bytes = await readFile(path, 'utf8');
-  const file = JSON.parse(bytes); expect(file.workspaceId).toBe('A'); expect(file.data.records).toHaveLength(6001); expect(Buffer.byteLength(bytes)).toBeGreaterThan(8_000_000);
+  peak=Math.max(peak,await heap());clearInterval(heapSampler);heapSampler=undefined;heapEvidence={baseline,peak,increase:peak-baseline,bound:8*1024*1024};expect(Number.isFinite(peak)&&peak-baseline<heapEvidence.bound).toBe(true);
+  const file = JSON.parse(bytes); expect(file.workspaceId).toBe('A'); expect(file.data.records).toHaveLength(6001);expect(file.data.records.map((r:{id:number})=>r.id).sort((a:number,b:number)=>a-b)).toEqual(Array.from({length:6001},(_,i)=>i)); expect(Buffer.byteLength(bytes)).toBeGreaterThan(8_000_000);
   await expect(row(first)).toContainText('Download requested; check browser downloads.'); await expect(row(first)).not.toContainText('Downloaded.');
   checks.push('Ambiguous create reused one idempotency key; actual reload recovered the queued job; polling reached ready and keyboard downloaded >8MB/6001 rows natively.');
 
@@ -190,8 +194,9 @@ try {
   checks.push('Real account boundary aborted the old metadata request and cleared A jobs; B could not retrieve A file and downloaded only B rows.360px keyboard/native transport checks passed.');
   passed = true;
 } finally {
+  clearInterval(heapSampler);
   const sourceHashes = await Promise.all(['src/components/workspace-export-jobs.tsx', 'src/lib/workspace-export-jobs.ts', 'src/components/workspace-data-download.tsx', 'src/components/prepared-workspace-download.tsx', 'src/components/account-state-boundary.tsx'].map(async path => ({ path: `artifacts/valo/${path}`, sha256: createHash('sha256').update(await readFile(resolve(front, path))).digest('hex') })));
-  await writeFile(resolve(out, 'workspace-export-jobs-browser.json'), JSON.stringify({ executedAt: new Date().toISOString(), passed, scope: 'Actual React/account boundary/native attachment with controlled in-memory HTTP jobs and synthetic cookies; not real DB/worker/provider or full-app layout acceptance.', managedIdentityAcceptance: false, checks, metrics, runtimeErrors, sourceHashes }, null, 2));
+  await writeFile(resolve(out, 'workspace-export-jobs-browser.json'), JSON.stringify({ executedAt: new Date().toISOString(), passed, scope: 'Actual React/account boundary/native attachment with controlled in-memory HTTP jobs and synthetic cookies; not real DB/worker/provider or full-app layout acceptance.', managedIdentityAcceptance: false, exactExpectedIds:passed, resourceScope:'Page JavaScript heap sampled every 10ms; not OS/download-manager or backend memory. Node validates the saved file separately.', heapEvidence, checks, metrics, runtimeErrors, sourceHashes }, null, 2));
   await page.screenshot({ path: resolve(out, 'workspace-export-jobs-mobile.png'), fullPage: true });
   await browser.close(); server.closeAllConnections(); await new Promise<void>(done => server.close(() => done()));
 }

@@ -1,6 +1,8 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
+import {spawn} from "node:child_process";
+import {once} from "node:events";
 import {readFile} from "node:fs/promises";
 import {pool} from "@workspace/db";
 import {InferenceBudgetStore} from "./inference-budget-store";
@@ -8,6 +10,7 @@ import {FiniteInferenceDispatcher,type FiniteWork,type FiniteManifest} from "./i
 import {inferenceProposal,additionalInferenceAllocation,requestDigest,budgetUsed,tokenCost,emptyBudget} from "./inference-budget";
 import {prepareFiniteAllocationPackage,allocationPackageId,registerPreparedInferenceSubmanifest,readApprovedFiniteAllocationPackage} from "./inference-allocation-package";
 import type {ManagedCompletionResult} from "./managed-inference";
+import {createManagedSDKTransport} from "./managed-sdk-transport";
 
 test("durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls",{
   skip:process.env.VALO_RUN_DB_TESTS!=="synthetic-development-only",timeout:60000,
@@ -21,10 +24,13 @@ test("durable finite batch dispatch — isolated PostgreSQL and controlled trans
     }
   }finally{await c.query("RESET search_path");c.release();}
   const store=new InferenceBudgetStore(pool,schema,"additional-new");
+  const candidateVersionId=randomUUID(),planId=randomUUID();
   const work=(key:string,lane:FiniteWork["lane"]="customer",pair:string|null=null,role:FiniteWork["role"]="customer"):FiniteWork=>({
     key,lane,pair,role,candidateHash:requestDigest("unchanged-candidate"),sourceHashes:[requestDigest("source")],
-    caseHash:requestDigest("case"),bindings:{candidateVersionId:null,corpus:"customer-ai",caseId:"synthetic",
-      sourceFiles:[]},
+    caseHash:requestDigest("case"),bindings:{candidateVersionId:lane==="customer"?null:candidateVersionId,
+      corpus:lane==="publication"?null:lane==="customer"?"customer-ai":lane==="checker_challenge"?"checker":"editorial",
+      caseId:lane==="publication"?null:"synthetic",sourceFiles:[],
+      ...(lane==="publication"?{operationalPlan:{id:planId,hash:requestDigest("controlled-plan"),extension:"json" as const}}:{})},
     request:{model:"gpt-5.4-mini",max_completion_tokens:8192,messages:[{role:"user",content:`synthetic:${key}`}]},
   });
   let sends=0,bindingValid=true;
@@ -198,7 +204,7 @@ test("durable finite batch dispatch — isolated PostgreSQL and controlled trans
         const pair=(suffix:string)=>[work(`package-f-${suffix}`,"publication",`package-pair-${suffix}`,"factual"),
           work(`package-c-${suffix}`,"publication",`package-pair-${suffix}`,"challenge")].map(w=>({...w,
             bindings:{...w.bindings,candidateVersionId:candidateId,corpus:null,caseId:null,
-              operationalPlan:{id:randomUUID(),hash:requestDigest("controlled-plan"),extension:"json" as const}}}));
+              operationalPlan:{id:planId,hash:requestDigest("controlled-plan"),extension:"json" as const}}}));
         const first=pair("first"),manifest:FiniteManifest={version:2,preparedAt:new Date().toISOString(),
           policyVersion:inferenceProposal.priceVersion,allocation:{...additionalInferenceAllocation},packageId,works:first};
         const admitted=await registerPreparedInferenceSubmanifest(store,manifest,expires,async()=>{});
@@ -221,6 +227,49 @@ test("durable finite batch dispatch — isolated PostgreSQL and controlled trans
       const id=await seed([a,b]),before=sends;
       await assert.rejects(()=>dispatcher.withPair(id,"preflight-pair",async()=>{throw Error("controlled-caller-preflight");}),/preflight/);
       assert.equal((await state()).entries.length,0);assert.equal(sends,before);
+    });
+    await t.test("SDK adapter observes dispatch after reservation for each correct lane and settles all under the same cap",async()=>{
+      await reset();let observed=0,calls=0;const lanes=new Set<string>();
+      const d=new FiniteInferenceDispatcher(store,createManagedSDKTransport(async()=>({chat:{completions:{
+        create:async(request,options)=>{
+          calls++;assert.equal(options.maxRetries,0);
+          const s=await state(),admitted=s.entries.filter(e=>e.status==="dispatched");
+          assert.equal(admitted.length,1);assert.equal(observed,calls);
+          assert.equal(admitted[0]!.requestHash,requestDigest(request));lanes.add(admitted[0]!.lane);
+          assert.ok(budgetUsed(s)<=30000000000n);return response();
+        },
+      }}})),async()=>{});
+      const works=[work("sdk-customer"),work("sdk-checker","checker_challenge",null,"challenge"),
+        ...(["publication","editorial_evaluation"] as const).flatMap(l=>[
+          work("sdk-"+l+"-f",l,"sdk-"+l,"factual"),work("sdk-"+l+"-c",l,"sdk-"+l,"challenge")])];
+      const id=await seed(works);
+      for(const w of works)await d.withWork(id,w.key,()=>d.complete(w.lane,w.request,{
+        timeout:100,maxRetries:0,onOutbound:()=>{observed++;}}));
+      assert.equal(calls,6);assert.equal(observed,6);assert.equal(lanes.size,4);
+      assert.ok((await state()).entries.every(e=>e.status==="settled"));
+    });
+    await t.test("cross-corpus role relabeling and independent-review candidate substitution cannot reserve or dispatch",async()=>{
+      await reset();let calls=0;
+      const d=new FiniteInferenceDispatcher(store,async()=>{calls++;return response();},async()=>{});
+      const wrong=work("wrong-corpus","checker_challenge",null,"challenge");wrong.bindings.corpus="customer-ai";
+      await assert.rejects(()=>run(d,awaitableId,wrong),/NOT_AUTHORIZED/);
+      const wrongId=await seed([wrong]);await assert.rejects(()=>run(d,wrongId,wrong),/LANE_CORPUS_MISMATCH/);
+      const a=work("same-pair-f","publication","same-pair","factual"),b=work("same-pair-c","publication","same-pair","challenge");
+      b.candidateHash=requestDigest("different-candidate");
+      const pairId=await seed([a,b]);await assert.rejects(()=>run(d,pairId,a),/PAIR_BINDING_MISMATCH/);
+      assert.equal(calls,0);assert.equal((await state()).entries.length,0);
+    });
+    await t.test("real SIGKILL after durable dispatch cannot redispatch on a new dispatcher and retains its full reservation",async()=>{
+      await reset();const w=work("interrupted-before-sdk"),id=await seed([w]);
+      const child=spawn(process.execPath,["--import","tsx","src/scripts/inference-dispatch-crash-child.ts",schema,id,w.key],{
+        cwd:process.cwd(),env:{...process.env,NODE_ENV:"development"},stdio:["ignore","ignore","pipe","ipc"]});
+      const started=await Promise.race([once(child,"message"),once(child,"exit").then(()=>{throw Error("CHILD_EXITED_BEFORE_ADMISSION");})]);
+      assert.equal((started[0] as {stage:string}).stage,"admitted-before-sdk");
+      const exit=once(child,"exit");child.kill("SIGKILL");const[,signal]=await exit;assert.equal(signal,"SIGKILL");
+      assert.equal((await state()).entries[0]!.status,"dispatched");
+      let calls=0;const restarted=new FiniteInferenceDispatcher(store,async()=>{calls++;return response();},async()=>{});
+      await assert.rejects(()=>run(restarted,id,w),/ALREADY_DISPATCHED_OR_UNKNOWN/);
+      assert.equal(calls,0);assert.equal(budgetUsed(await state()),tokenCost(400000,8192));
     });
     await t.test("unapproved priced model suspends the allocation before another work item",async()=>{
       await reset();let calls=0;const a=work("wrong-model"),b=work("after-wrong-model"),id=await seed([a,b]);

@@ -5,12 +5,14 @@ import {eq,sql} from "drizzle-orm";
 import {candidateDigest,publicationSchema} from "@workspace/valo-core";
 import {requestDigest} from "./inference-budget";
 import type {FiniteWork} from "./inference-batch-dispatch";
+import {assertFiniteWorkShape} from "./inference-work-shape";
 const root=resolve(import.meta.dirname,"../../../..");
 const hash=(bytes:Buffer)=>createHash("sha256").update(bytes).digest("hex");
 /** Bindings are read from the approved durable allowlist, not from request
  * headers. Held source candidates may be challenged in isolation: this is NOT
  * a released-content manifest or customer-rule eligibility check. */
 export async function assertFiniteWorkBindings(work:FiniteWork){
+  assertFiniteWorkShape(work);
   const b=work.bindings;if(!b)throw Error("FINITE_WORK_BINDINGS_MISSING");
   const actualSources:string[]=[];
   for(const f of b.sourceFiles){

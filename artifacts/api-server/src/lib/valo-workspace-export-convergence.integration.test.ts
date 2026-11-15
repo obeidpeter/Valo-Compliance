@@ -54,12 +54,18 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
       assert.equal(new Set([...first.items,...second.items].map(j=>j.id)).size,31);await assert.rejects(listWorkspaceExports(b,newest.id),{status:409});
     });
     await t.test('background preparation above 8 MB and 5000 rows releases complete tenant-scoped snapshot after reload',async()=>{
-      await db.insert(valoEvents).values(Array.from({length:6001},(_,i)=>({id:randomUUID(),workspaceId:a.workspaceId,actorId:a.identityId,entityId:a.workspaceId,action:`row-${i}-${'x'.repeat(1400)}`})));
+      const expectedEvents=Array.from({length:6001},(_,i)=>({id:randomUUID(),workspaceId:a.workspaceId,actorId:a.identityId,entityId:a.workspaceId,action:`row-${i}-${'x'.repeat(1400)}`}));
+      await db.insert(valoEvents).values(expectedEvents);
       await db.insert(valoEvents).values({id:randomUUID(),workspaceId:b.workspaceId,actorId:b.identityId,entityId:b.workspaceId,action:'OTHER_TENANT_PRIVATE'});
-      const row=await prepare(a);assert.ok(row.bytesPrepared>8000000);assert.ok(row.rowsProcessed>=6001);
-      const body=await release(a,row.id,async path=>JSON.parse(await readFile(path,'utf8'))) as {complete:boolean;data:{yourActivity:unknown[]}};
-      assert.equal(body.complete,true);assert.equal(body.data.yourActivity.length,6001);assert.ok(!JSON.stringify(body).includes('OTHER_TENANT_PRIVATE'));
+      const late={id:randomUUID(),workspaceId:a.workspaceId,actorId:a.identityId,entityId:a.workspaceId,action:'NEW_SNAPSHOT_ONLY'};
+      const requested=await createWorkspaceExport(a,randomUUID());let inserted=false;
+      await run(a,requested.id,{onPage:async(section,count)=>{if(section==='yourActivity'&&count===500&&!inserted){inserted=true;await db.insert(valoEvents).values(late);}}});
+      const row=await raw(requested.id);assert.equal(row.status,'ready');assert.ok(row.bytesPrepared>8000000);assert.ok(row.rowsProcessed>=6001);
+      const body=await release(a,row.id,async path=>JSON.parse(await readFile(path,'utf8'))) as {complete:boolean;data:{yourActivity:{id:string}[]}};
+      assert.equal(body.complete,true);assert.equal(body.data.yourActivity.length,6001);assert.deepEqual(body.data.yourActivity.map(r=>r.id).sort(),expectedEvents.map(r=>r.id).sort(),'fixed snapshot excludes exactly identified concurrent insertion');assert.ok(!JSON.stringify(body).includes('OTHER_TENANT_PRIVATE'));
       assert.equal((await getWorkspaceExport(a,row.id)).status,'ready');
+      const next=await prepare(a),nextBody=await release(a,next.id,async path=>JSON.parse(await readFile(path,'utf8'))) as {data:{yourActivity:{id:string}[]}};
+      assert.deepEqual(nextBody.data.yourActivity.map(r=>r.id).sort(),[...expectedEvents.map(r=>r.id),late.id].sort(),'new dated whole snapshot includes the later row once');
     });
     await t.test('current session, membership, cancellation and abort after private retrieval release zero bytes',async()=>{
       for(const mode of ['session','membership','cancel','abort']){
