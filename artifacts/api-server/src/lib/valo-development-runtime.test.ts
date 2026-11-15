@@ -27,7 +27,7 @@ test("actual export entries and worker startup reject before database, queue or 
       export const valoMemberships={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
       valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={},
       valoWorkspaceExports={},valoWorkspaces={},valoPrivacyCases={};`],
-    ["drizzle-orm","export const and=()=>{},eq=()=>{},ne=()=>{},desc=()=>{},inArray=()=>{},lte=()=>{},lt=()=>{},asc=()=>{},sql=()=>{};"],
+    ["drizzle-orm","export const and=()=>{},or=()=>{},eq=()=>{},ne=()=>{},desc=()=>{},inArray=()=>{},lte=()=>{},lt=()=>{},asc=()=>{},sql=()=>{};"],
     ["pg-boss",`export class PgBoss{constructor(){globalThis.guardEffects.queue++;}
       on(){} async start(){globalThis.guardEffects.queue++;}async work(){globalThis.guardEffects.queue++;}}`],
     ["@workspace/api-zod","export const CreateDocumentExportBody={strict(){return this},parse(x){return x}},CreateDocumentExportResponse={parse:x=>x},RequestWorkspaceDataExportBody=CreateDocumentExportBody,CancelWorkspaceDataExportBody=CreateDocumentExportBody;"],

@@ -1,4 +1,3 @@
-/// <reference lib="dom" />
 /** Real React/account-boundary/native-download journey with controlled HTTP
  * jobs and synthetic cookies. No real identity, database, worker or provider. */
 import { createServer, type ServerResponse } from 'node:http';
@@ -9,7 +8,7 @@ import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 import { chromium, expect } from '@playwright/test';
 import { developmentPublicationOnly, publicationWorkspaceRoot } from '../editorial/operational-policy';
-import type { WorkspaceDataExportJob } from '../../../../lib/api-client-react/src/generated/api.schemas';
+import type { WorkspaceDataExportJob } from '@workspace/api-zod';
 
 developmentPublicationOnly();
 if (process.env.VALO_RUN_WORKSPACE_EXPORT_JOBS_BROWSER !== 'synthetic-development-only') throw Error('EXPLICIT_SYNTHETIC_BROWSER_FLAG_REQUIRED');
@@ -119,9 +118,9 @@ const origin = `http://127.0.0.1:${address.port}`;
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium' });
 const context = await browser.newContext({ viewport: { width: 360, height: 800 }, acceptDownloads: true });
 await context.addInitScript(() => {
-  const fetch = window.fetch;
-  window.fetch = (...args: Parameters<typeof window.fetch>) => { if (/\/data-exports\/[^/]+\/file/.test(String(args[0]))) throw Error('FILE_MUST_USE_NATIVE_ATTACHMENT'); return fetch(...args); };
-  window.Blob = new Proxy(window.Blob, { construct() { throw Error('NO_EXPORT_BLOB'); } });
+  const fetch = globalThis.fetch;
+  globalThis.fetch = (...args: Parameters<typeof globalThis.fetch>) => { if (/\/data-exports\/[^/]+\/file/.test(String(args[0]))) throw Error('FILE_MUST_USE_NATIVE_ATTACHMENT'); return fetch(...args); };
+  globalThis.Blob = new Proxy(globalThis.Blob, { construct() { throw Error('NO_EXPORT_BLOB'); } });
   URL.createObjectURL = () => { throw Error('NO_EXPORT_OBJECT_URL'); };
   const parse = JSON.parse;
   JSON.parse = (text: string, reviver?: Parameters<typeof JSON.parse>[1]) => { if (text.includes('"schemaVersion":2') && text.includes('"data":')) throw Error('NO_EXPORT_BODY_PARSE'); return parse(text, reviver); };

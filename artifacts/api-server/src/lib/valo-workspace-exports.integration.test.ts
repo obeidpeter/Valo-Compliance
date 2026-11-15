@@ -46,6 +46,17 @@ test("durable workspace exports use real PostgreSQL, leases and private fixture 
       await actOnWorkspaceExport(a,views[0]!.id,{expectedVersion:views[0]!.version},"cancel");
       assert.equal((await requestWorkspaceExport(a,{idempotencyKey:key})).status,"cancelled");
     });
+    await t.test("history is newest-first with an immutable tenant-bound cursor",async()=>{
+      const actor=await owner();
+      await db.insert(jobs).values(Array.from({length:30},(_,i)=>({id:randomUUID(),workspaceId:actor.workspaceId,requestedBy:actor.identityId,
+        idempotencyKey:randomUUID(),queueId:randomUUID(),status:"cancelled" as const,createdAt:new Date(Date.now()-2*86_400_000-i*1000)})));
+      const newest=await requestWorkspaceExport(actor,{idempotencyKey:randomUUID()});
+      const first=await listWorkspaceExports(actor);assert.equal(first.items.length,25);assert.equal(first.items[0]!.id,newest.id);assert.ok(first.nextCursor);
+      const second=await listWorkspaceExports(actor,first.nextCursor!);assert.equal(second.items.length,6);assert.equal(second.nextCursor,null);
+      assert.equal(new Set([...first.items,...second.items].map(row=>row.id)).size,31);
+      await assert.rejects(()=>listWorkspaceExports(b,newest.id),{status:409});
+      await actOnWorkspaceExport(actor,newest.id,{expectedVersion:newest.version},"cancel");
+    });
     await t.test("paged collection above 8 MB persists, survives reload and releases a verified complete snapshot",async()=>{
       await db.insert(valoEvents).values(Array.from({length:6001},(_,i)=>({id:randomUUID(),workspaceId:a.workspaceId,actorId:a.identityId,
         action:`synthetic-page-${i}-${"x".repeat(1400)}`,entityId:a.workspaceId})));
@@ -58,13 +69,14 @@ test("durable workspace exports use real PostgreSQL, leases and private fixture 
       await assert.rejects(()=>withPreparedWorkspaceExport(b,row.id,async()=>assert.fail("cross-tenant release"),{storage,beforeRelease:async()=>{}}),{status:404});
     });
     await t.test("session failure, membership revocation and cancellation after storage wait release zero bytes",async()=>{
-      for(const mode of["session","membership","cancel"]){
-        const row=await prepare(a);assert.equal(row.status,"ready");let releases=0,checks=0;
-        await assert.rejects(()=>withPreparedWorkspaceExport(a,row.id,async()=>{releases++;},{storage,beforeRelease:async()=>{
+      for(const mode of["session","membership","cancel","abort"]){
+        const row=await prepare(a);assert.equal(row.status,"ready");let releases=0,checks=0;const controller=new AbortController();
+        await assert.rejects(()=>withPreparedWorkspaceExport(a,row.id,async()=>{releases++;},{storage,signal:controller.signal,beforeRelease:async()=>{
           checks++;if(mode==="session")throw Error("CONTROLLED_REVOKED_SESSION");
+          if(mode==="abort")controller.abort();
           if(mode==="membership")await db.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,a.workspaceId));
           if(mode==="cancel")await actOnWorkspaceExport(a,row.id,{expectedVersion:row.version},"cancel");
-        }}),mode==="session"?/CONTROLLED_REVOKED_SESSION/:{status:mode==="membership"?403:409});assert.equal(releases,0);assert.equal(checks,1);
+        }}),mode==="session"?/CONTROLLED_REVOKED_SESSION/:mode==="abort"?{name:"AbortError"}:{status:mode==="membership"?403:409});assert.equal(releases,0);assert.equal(checks,1);
         if(mode==="cancel")assert.equal((await raw(row.id)).status,"cancelled");
         if(mode==="membership")await db.update(valoMemberships).set({active:"yes"}).where(eq(valoMemberships.workspaceId,a.workspaceId));
       }

@@ -2,7 +2,7 @@ import {randomUUID} from "node:crypto";
 import {mkdtemp,open,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {and,eq,desc,lt,lte,inArray,sql} from "drizzle-orm";
+import {and,or,eq,desc,lt,lte,inArray,sql} from "drizzle-orm";
 import {db,valoWorkspaceExports as jobs,valoWorkspaces,valoFileAssets,valoExportObjects,valoPrivacyTombstones} from "@workspace/db";
 import {RequestWorkspaceDataExportBody,CancelWorkspaceDataExportBody} from "@workspace/api-zod";
 import {authorizeWorkspaceWrite,type WorkspaceActor,ValoProblem} from "./valo-store";
@@ -50,8 +50,12 @@ export async function requestWorkspaceExport(actor:WorkspaceActor,raw:unknown){
 export async function listWorkspaceExports(actor:WorkspaceActor,cursor?:string){
   assertDevelopmentRuntime();return db.transaction(async tx=>{
     await authorizeWorkspaceWrite(tx,actor);
-    // UUID order provides an immutable, bounded cursor; the UI shows creation dates.
-    const rows=await tx.select().from(jobs).where(and(owned(actor),cursor?lt(jobs.id,cursor):undefined)).orderBy(desc(jobs.id)).limit(26);
+    const[anchor]=cursor?await tx.select({createdAt:jobs.createdAt,id:jobs.id}).from(jobs).where(owned(actor,cursor)).limit(1):[];
+    if(cursor&&!anchor)throw new ValoProblem(409,"The export list changed. Reload the newest requests.");
+    // Newest requests remain visible after reload. The immutable date/id pair
+    // avoids both offset drift and a random UUID hiding the active request.
+    const rows=await tx.select().from(jobs).where(and(owned(actor),anchor?or(lt(jobs.createdAt,anchor.createdAt),
+      and(eq(jobs.createdAt,anchor.createdAt),lt(jobs.id,anchor.id))):undefined)).orderBy(desc(jobs.createdAt),desc(jobs.id)).limit(26);
     return{items:rows.slice(0,25).map(workspaceExportView),nextCursor:rows.length>25?rows[24]!.id:null};
   });
 }

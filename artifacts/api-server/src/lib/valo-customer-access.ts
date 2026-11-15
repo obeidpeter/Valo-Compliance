@@ -1,6 +1,6 @@
 import { randomUUID,createHash } from "node:crypto";
 import {createPrivacyCase} from "./valo-privacy";
-import { and,eq,desc,like } from "drizzle-orm";
+import { and,eq,desc,like,sql } from "drizzle-orm";
 import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoAssessments,valoTasks,valoReminderPreferences,
   valoReminderOutbox,valoAIDrafts,valoContentVersions,valoSafetySwitches,valoStaffAccessAudit,
@@ -54,6 +54,8 @@ export async function requestPrivacy(actor:WorkspaceActor,email:string,raw:unkno
 export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:string)=>Promise<void>,signal?:AbortSignal,onProgress?:(rows:number)=>Promise<void>){
   signal?.throwIfAborted();
   return db.transaction(async tx=>{
+    await tx.execute(sql`SET LOCAL statement_timeout = '30s'`);
+    await tx.execute(sql`SET LOCAL lock_timeout = '5s'`);
     await authorizeWorkspaceWrite(tx,actor);
     signal?.throwIfAborted();
     const header={schemaVersion:2,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,

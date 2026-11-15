@@ -8,6 +8,7 @@ import {ListWorkspaceDataExportsResponse,GetWorkspaceDataExportResponse,RequestW
   CancelWorkspaceDataExportResponse,RetryWorkspaceDataExportResponse} from "@workspace/api-zod";
 import {sameOriginMutation} from "../middlewares/valo-identity";
 import {assertWorkspaceDownloadSession} from "../lib/valo-download-session";
+import {WORKSPACE_EXPORT_ATTEMPT_MS} from "../lib/valo-private-data-storage";
 import {requestWorkspaceExport,listWorkspaceExports,getWorkspaceExport,actOnWorkspaceExport,withPreparedWorkspaceExport} from "../lib/valo-workspace-exports";
 import type {WorkspaceActor} from "../lib/valo-store";
 const liveSession=async(req:Request,actor:WorkspaceActor)=>assertWorkspaceDownloadSession(actor,getAuth(req),{
@@ -25,13 +26,14 @@ export function createWorkspaceExportRouter(revalidate:typeof liveSession=liveSe
   router.post("/:id/retry",sameOriginMutation,async(req,res)=>res.status(202).json(RetryWorkspaceDataExportResponse.parse(await actOnWorkspaceExport(res.locals.valoActor,id.parse(req.params.id),req.body,"retry"))));
   router.get("/:id/file",async(req,res)=>{
     const actor={...res.locals.valoActor},jobId=id.parse(req.params.id),controller=new AbortController();
+    const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(WORKSPACE_EXPORT_ATTEMPT_MS)]);
     const disconnected=()=>controller.abort();req.once("aborted",disconnected);res.once("close",disconnected);
     if(req.aborted||res.destroyed)controller.abort();
     try{await withPreparedWorkspaceExport(actor,jobId,async path=>{
-      const file=await stat(path);controller.signal.throwIfAborted();
+      const file=await stat(path);signal.throwIfAborted();
       res.set({"Content-Disposition":'attachment; filename="valo-workspace-data.json"',"Content-Type":"application/json; charset=utf-8","Content-Length":String(file.size)});
-      await pipeline(createReadStream(path),res,{signal:controller.signal});
-    },{signal:controller.signal,beforeRelease:()=>revalidate(req,actor)});
+      await pipeline(createReadStream(path),res,{signal});
+    },{signal,beforeRelease:()=>revalidate(req,actor)});
     }catch(error){if(!controller.signal.aborted)throw error;}
     finally{req.off("aborted",disconnected);res.off("close",disconnected);}
   });
