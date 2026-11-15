@@ -1,21 +1,17 @@
 import { createHash } from "node:crypto";
 import { Client } from "@replit/object-storage";
+import {privateStorageScope,privateObjectName,type StorageScope} from "./valo-storage-scope";
 export const fileChecksum = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
-function object(key: string) {
-  if (!/^valo\/development\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.(docx|pdf|json)$/.test(key))
-    throw new Error("INVALID_PRIVATE_KEY");
-  const root = process.env.PRIVATE_OBJECT_DIR;
-  if (!root) throw new Error("PRIVATE_STORAGE_UNCONFIGURED");
-  const [bucket,...parts] = root.replace(/^\/+|\/+$/g,"").split("/");
-  if (!bucket || !parts.length) throw new Error("PRIVATE_STORAGE_UNCONFIGURED");
-  return { client:new Client({bucketId:bucket}),bucket,name:`${parts.join("/")}/${key}` };
+function object(key:string,scope=privateStorageScope("development")) {
+  const name=privateObjectName(scope,key);
+  return{client:new Client({bucketId:scope.bucket}),bucket:scope.bucket,name};
 }
 /** Callers mint a fresh cryptographic object ID for every attempt, including crash retries.
  * The native SDK has no conditional-create primitive. Never reuse or overwrite a key.
  * Source/render hashes live in the immutable-revision/job/file relational chain.
  */
-export async function writePrivateFile(key: string,bytes: Buffer,onUploading?:()=>Promise<void>) {
-  const {client,name} = object(key);
+async function write(scope:StorageScope,key:string,bytes:Buffer,onUploading?:()=>Promise<void>) {
+  const {client,name} = object(key,scope);
   const exists = await client.exists(name);
   if (!exists.ok) throw new Error("PRIVATE_STORAGE_CHECK_FAILED");
   if (exists.value) throw new Error("PRIVATE_FILE_KEY_ALREADY_WRITTEN");
@@ -30,8 +26,8 @@ export async function writePrivateFile(key: string,bytes: Buffer,onUploading?:()
   if (fileChecksum(stored) !== checksum) throw new Error("PRIVATE_FILE_CHECKSUM_MISMATCH");
   return {checksum,size:stored.length};
 }
-export async function readPrivateFile(key: string,checksum: string) {
-  const {client,name} = object(key);
+async function read(scope:StorageScope,key:string,checksum:string) {
+  const {client,name} = object(key,scope);
   const read = await client.downloadAsBytes(name);
   if (!read.ok) throw new Error("PRIVATE_STORAGE_READ_FAILED");
   const bytes = read.value[0];
@@ -39,11 +35,23 @@ export async function readPrivateFile(key: string,checksum: string) {
     throw new Error("PRIVATE_FILE_CHECKSUM_MISMATCH");
   return bytes;
 }
-export async function deletePrivateFile(key: string) {
-  const {client,name} = object(key);
+async function remove(scope:StorageScope,key:string) {
+  const {client,name} = object(key,scope);
   const result = await client.delete(name,{ignoreNotFound:true});
   if (!result.ok) throw new Error("PRIVATE_STORAGE_DELETE_FAILED");
 }
+/** Server-owned candidate adapter. Existing customer exports remain development-only. */
+export function productionPrivateStorage(env:Record<string,string|undefined>=process.env){
+  const scope=privateStorageScope("production",env);
+  return Object.freeze({scopeFingerprint:scope.fingerprint,
+    write:(key:string,bytes:Buffer)=>write(scope,key,bytes),
+    read:(key:string,checksum:string)=>read(scope,key,checksum),
+    remove:(key:string)=>remove(scope,key),
+  });
+}
+export const writePrivateFile=(key:string,bytes:Buffer,onUploading?:()=>Promise<void>)=>write(privateStorageScope("development"),key,bytes,onUploading);
+export const readPrivateFile=(key:string,checksum:string)=>read(privateStorageScope("development"),key,checksum);
+export const deletePrivateFile=(key:string)=>remove(privateStorageScope("development"),key);
 /** Compatibility probe only: never returns the bucket/object locator. */
 export async function anonymousPrivateFileStatus(key: string) {
   const {bucket,name} = object(key);
