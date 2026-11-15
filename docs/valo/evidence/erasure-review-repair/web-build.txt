@@ -1,0 +1,27 @@
+
+> @workspace/valo@0.0.0 build /home/runner/workspace/artifacts/valo
+> next build
+
+   ▲ Next.js 15.5.29
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 11.2s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/3) ...
+ ✓ Generating static pages (3/3)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /_not-found                            993 B         104 kB
+└ ƒ /[[...slug]]                         1.34 kB         104 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/805-cbc65ae80f6aabc0.js       46.3 kB
+  ├ chunks/b0c90343-8a5a58478448fc76.js  54.2 kB
+  └ other shared chunks (total)          2.02 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

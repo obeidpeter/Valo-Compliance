@@ -7,7 +7,8 @@ ALTER TABLE valo_staff_assignments
 --> statement-breakpoint
 ALTER TABLE valo_staff_assignments ADD CONSTRAINT valo_staff_expiry_shape CHECK(
  (grant_mode='permanent' AND expires_at IS NULL) OR
- (grant_mode='break_glass' AND expires_at>granted_at AND expires_at<=granted_at+interval '60 minutes')
+ (grant_mode='break_glass' AND expires_at IS NOT NULL
+  AND expires_at>=granted_at+interval '5 minutes' AND expires_at<=granted_at+interval '60 minutes')
 );
 --> statement-breakpoint
 CREATE TABLE valo_staff_role_changes (

@@ -1,0 +1,16 @@
+✔ v3 recovery resumes after a signed scratch-locator cursor rather than becoming permanently held (3.190171ms)
+✔ old v2 recovery does not acquire new scratch-locator authority (0.868348ms)
+▶ new synthetic private-copy inventory: scoped export, physical redaction, signed proof and crash scratch replay
+  ✔ export includes owned charge/refund/dispute events, not another tenant or unlinked email intake or nested snapshots (133.275155ms)
+  ✔ all recorded copied private text is erased while finance facts and signed history remain (38.426405ms)
+{"scope":"new synthetic fixtures only","financialFactsRetained":true,"externalProviderActions":0,"completeAccountDeletionClaimed":false,"sharedUsageUnchanged":true,"fixtureWorkspace":"7c56e059-a3e1-4959-a919-34442fa3872d"}
+  ✔ every object alias and abandoned scratch path remains signed and retryable after process leftovers (209.271723ms)
+✔ new synthetic private-copy inventory: scoped export, physical redaction, signed proof and crash scratch replay (2363.434479ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5856.829343

@@ -77,3 +77,13 @@ test("changing a plan artifact creates distinct work identity without implicit r
   assert.notEqual(requestDigest(first),requestDigest(changed));
   assert.equal(changed.works.length,2);
 });
+test("authorship file digests join the source set and changing those bytes changes work identity",()=>{
+  const value=input();value.sourceHashes=["d".repeat(64)];
+  value.sourceFiles=[{path:"docs/original.md",sha256:"e".repeat(64)}];
+  const first=prepareOperationalFiniteManifest(value,now);
+  assert.deepEqual(first.works[0]!.sourceHashes,["d".repeat(64),"e".repeat(64)]);
+  value.sourceFiles[0]!.sha256="f".repeat(64);
+  const changed=prepareOperationalFiniteManifest(value,now);
+  assert.notEqual(changed.works[0]!.key,first.works[0]!.key);
+  assert.deepEqual(changed.works[0]!.sourceHashes,["d".repeat(64),"f".repeat(64)]);
+});

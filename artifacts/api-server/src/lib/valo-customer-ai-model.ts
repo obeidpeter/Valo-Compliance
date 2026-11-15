@@ -46,7 +46,7 @@ export async function organizeCustomerDraft(input:CustomerAIInput,invoke:Custome
       }catch{run.outcome="invalid_structured_plan";if(attempt===2)return{plan:null,runs,providerInputHash,failureCode:"AI_SCHEMA_INVALID"};}
     }catch(error){
       if(error instanceof InferenceHeld){
-        runs.push({attempt,outboundAttempted:false,outcome:"budget_held",model:null,responseId:null,
+        runs.push({attempt,outboundAttempted,outcome:outboundAttempted?"receipt_held":"budget_held",model:null,responseId:null,
           latencyMs:Date.now()-start,usage:null,cost:null});
         return{plan:null,runs,providerInputHash,failureCode:"AI_MANAGED_BUDGET_HELD"};
       }

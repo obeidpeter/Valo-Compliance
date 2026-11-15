@@ -115,6 +115,7 @@ test("durable dispute intents: development PostgreSQL, controlled PSP and actual
       const f=await fixture(),a=await action(f,"upload_receipt");
       const order=(await db.select().from(valoOrders).where(eq(valoOrders.id,f.order)))[0],bytes=await renderPurchaseReceipt(order);
       const extracted=spawnSync("pdftotext",["-","-"],{input:bytes,encoding:"utf8",maxBuffer:100000});
+      assert.equal(extracted.error,undefined,"The independent pdftotext reader must be installed; no PDF-read pass is inferred without it.");
       assert.equal(extracted.status,0);assert.match(extracted.stdout,/Original amount NGN 100.00/);
       assert.ok(extracted.stdout.includes(order.reference));assert.match(extracted.stdout,/Not proof of delivery/);
       const before=uploadCalls;

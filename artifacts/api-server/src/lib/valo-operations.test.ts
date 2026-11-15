@@ -25,7 +25,7 @@ test("internal probes measure failures independently and persist/deduplicate/rec
     },dir);
     assert.equal(failures.database.status,"unavailable");assert.equal(failures.worker.status,"healthy");
     assert.equal(failures.payments.value,2);
-    const parallel=await Promise.all(Array.from({length:8},()=>recordOperationalAlerts(failures,dir)));
+    const parallel=await Promise.all(Array.from({length:32},()=>recordOperationalAlerts(failures,dir)));
     assert.equal(parallel.reduce((n,r)=>n+r.emitted,0),4);
     let history=JSON.parse(await readFile(join(dir,"alerts.json"),"utf8"));
     assert.equal(history.events.length,4);assert.ok(!JSON.stringify(history).includes("SYNTHETIC_PRIVATE"));
@@ -38,6 +38,10 @@ test("internal probes measure failures independently and persist/deduplicate/rec
     assert.deepEqual((await recordOperationalAlerts(healthy,dir)).active,[]);
     history=JSON.parse(await readFile(join(dir,"alerts.json"),"utf8"));
     assert.equal(history.events.filter((r:{state:string})=>r.state==="resolved").length,5);
+    await writeFile(join(dir,"alerts.json"),"{bad");
+    await assert.rejects(()=>recordOperationalAlerts(healthy,dir),/INTERNAL_ALERT_HISTORY_UNREADABLE/);
+    await writeFile(join(dir,"alerts.json"),JSON.stringify(history));
+    assert.equal((await recordOperationalAlerts(healthy,dir)).emitted,0,"a failed local write must not poison later queued work");
     await writeFile(join(dir,"worker.json"),"{bad");
     assert.equal((await collectOperationalSample(async()=>({rows:[{value:0}]}),dir)).worker.status,"unavailable");
     assert.equal(externalCalls,0);

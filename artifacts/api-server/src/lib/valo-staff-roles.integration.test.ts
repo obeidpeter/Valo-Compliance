@@ -80,15 +80,33 @@ test("staff role governance: disposable PostgreSQL, managed-session boundary and
    await assert.rejects(assertFinanceActor(actor(b)),{status:403});
    await assert.rejects(db.transaction(tx=>requireFinance(tx,actor(b),"Owned expired role test")),{status:403});
    await assert.rejects(db.transaction(tx=>requirePrivacyStaff(tx,actor(b))),{status:403});
-   for(const area of ["content","support","finance","system"] as const)await assert.rejects(staffOperations(b,true,area),{status:403});
+   for(const area of ["content","support","finance","system"] as const)await assert.rejects(staffOperations(actor(b),area),{status:403});
    await assert.rejects(service.change(actor(),input(c,{grantMode:"break_glass",durationMinutes:61,incidentReference:"SYNTHETIC"})));
   });
   await t.test("expiry while a role read waits on FOR SHARE is rechecked after acquiring the lock",async()=>{
-   const f=await assignment(b,"finance");await db.execute(sql`UPDATE valo_staff_assignments SET granted_at=clock_timestamp()-interval '1 minute',expires_at=clock_timestamp()+interval '250 milliseconds' WHERE id=${f.id}`);
+   const f=await assignment(b,"finance");await db.execute(sql`UPDATE valo_staff_assignments SET granted_at=clock_timestamp()-interval '5 minutes',expires_at=clock_timestamp()+interval '250 milliseconds' WHERE id=${f.id}`);
    let entered!:()=>void,release!:()=>void;const locked=new Promise<void>(r=>entered=r),hold=new Promise<void>(r=>release=r);
    const blocker=db.transaction(async tx=>{await tx.execute(sql`SELECT id FROM valo_staff_assignments WHERE id=${f.id} FOR UPDATE`);entered();await hold;});await locked;
    const waiting=db.transaction(tx=>requireFinance(tx,actor(b),"Expiry after role lock wait"));const result=waiting.then(()=>null,e=>e);
    await new Promise(r=>setTimeout(r,400));release();await blocker;assert.equal((await result)?.status,403);
+  });
+  await t.test("privacy and operational reads reject sessions that become stale during an observed assignment lock wait",async()=>{
+   for(const permission of ["privacy","support"] as const){
+    const saved=await assignment(b,permission);
+    await db.execute(sql`UPDATE valo_staff_assignments SET granted_at=clock_timestamp()-interval '5 minutes',expires_at=clock_timestamp()+interval '1 minute' WHERE id=${saved.id}`);
+    let entered!:(pid:number)=>void,release!:()=>void;const locked=new Promise<number>(r=>entered=r),hold=new Promise<void>(r=>release=r);
+    const blocker=db.transaction(async tx=>{const pid=await tx.execute(sql`SELECT pg_backend_pid() AS pid`);await tx.execute(sql`SELECT id FROM valo_staff_assignments WHERE id=${saved.id} FOR UPDATE`);entered(Number(pid.rows[0].pid));await hold;});
+    const blockerPid=await locked,verifiedAt=Date.now()-29000,currentActor={...actor(b),verifiedAt};
+    const pending=permission==="privacy"?db.transaction(tx=>requirePrivacyStaff(tx,currentActor)):staffOperations(currentActor,permission);
+    const result=pending.then(()=>null,e=>e);let observed=false;
+    try{
+     const deadline=Date.now()+3000;
+     while(Date.now()<deadline){const waiting=await db.execute(sql`SELECT pid FROM pg_stat_activity WHERE ${blockerPid}::integer=ANY(pg_blocking_pids(pid))`);if(waiting.rowCount){observed=true;break;}await new Promise(r=>setTimeout(r,10));}
+     assert.equal(observed,true,"the protected read must actually wait for the held role row");
+     await new Promise(r=>setTimeout(r,Math.max(0,30010-(Date.now()-verifiedAt))));
+    }finally{release();await blocker;}
+    assert.equal((await result)?.status,403,"freshness must be checked after the lock wait");
+   }
   });
   await t.test("real HTTP uses managed session, exact account binding, fresh MFA and same-origin JSON",async()=>{
    let session={status:"active",userId:a},userId:string|null=a,sessionId:string|null="controlled-session",mfa=true;

@@ -29,6 +29,12 @@ export async function assertFiniteWorkBindings(work:FiniteWork){
     const row=corpus.cases.find(c=>[c.id,c.caseID,c.scenarioId,c.scenarioID].includes(b.caseId));
     if(!row||requestDigest(row)!==work.caseHash)throw Error("CASE_BINDING_CHANGED");
     if(work.lane==="customer"&&work.candidateHash!==work.caseHash)throw Error("CUSTOMER_CASE_BINDING_CHANGED");
+    if(work.lane==="customer"){
+      const {prepareCustomerFiniteManifest}=await import("./inference-customer-manifest");
+      const expected=await prepareCustomerFiniteManifest(b.caseId);
+      if(requestDigest(work.request)!==requestDigest(expected.manifest.works[0]!.request))
+        throw Error("CUSTOMER_CASE_REQUEST_CHANGED");
+    }
   }else if(work.lane!=="publication")throw Error("EVALUATION_CASE_REQUIRED");
   if(b.candidateVersionId){
     const {db,valoContentVersions}=await import("@workspace/db");

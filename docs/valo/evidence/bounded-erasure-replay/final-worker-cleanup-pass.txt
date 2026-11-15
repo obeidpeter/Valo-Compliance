@@ -1,0 +1,19 @@
+▶ erasure holds, bounded recovery and accepted-upload process death
+  ✔ 13 objects and 205 restored profile rows resume across killed workers without repeated object traversal (15075.000615ms)
+  ✔ application replay authenticates the entire inventory and case before revocation or profile deletion (2461.311123ms)
+  ✔ distinct advisory locks cannot exhaust a one-connection shared data pool (44.067926ms)
+  ✔ holds and revoked roles stop the next object, while an in-flight result remains recorded (6955.635872ms)
+  ✔ actual export worker cleans an upload finishing after its tracking/job rows were erased (1659.402971ms)
+  ✔ native private upload spans complete erasure and is removed by automatic maintenance (2927.841557ms)
+  ✔ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (5938.556716ms)
+✔ erasure holds, bounded recovery and accepted-upload process death (35109.605743ms)
+ℹ {"boundedReplay":{"objects":13,"deleteCalls":13,"duplicateDeletes":0,"restoredProfiles":205,"removedProfiles":205,"killedWorkers":2,"maxObjectsPerBatch":10,"maxRowsPerBatch":100,"finalWorkerFullInventoryChecks":1,"finalWorkerCachedChecks":29}}
+ℹ Killed-upload completion used native private App Storage.
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 43547.493487

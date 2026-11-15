@@ -24,4 +24,3 @@ export const valoStaffAccessAudit=pgTable("valo_staff_access_audit",{
   actorId:text("actor_id").notNull(),area:text("area").notNull(),reason:text("reason").notNull(),
   createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
 });
-

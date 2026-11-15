@@ -31,6 +31,15 @@ test("preserves order IDs and safe database reason codes for failed repairs",asy
   assert.equal(outcome.orderId,"order-d");assert.equal(outcome.failures.length,2);
   assert.equal(outcome.failures[0].databaseCode,"23503");assert.ok(!JSON.stringify(outcome).includes("PRIVATE ROW"));
 });
+test("retains precise provenance boundaries without arbitrary exception payloads",async()=>{
+  const outcome=await recoverReceiptWithEvidence("order-boundary",async()=>{throw Object.assign(
+    Error("PRIVATE DETAILS"),{status:409,code:"SYNTHETIC_RECEIPT_INELIGIBLE",
+      blockers:["matching_grant_absent","order_not_verified_success","PRIVATE VALUE"]});});
+  assert.equal(outcome.failures[0].boundaryCode,"SYNTHETIC_RECEIPT_INELIGIBLE");
+  assert.deepEqual(outcome.failures[0].provenanceBlockers,["matching_grant_absent","order_not_verified_success"]);
+  assert.equal(outcome.failures[0].errorClass,"Error");
+  assert.ok(!JSON.stringify(outcome).includes("PRIVATE"));
+});
 test("does not claim success for conflicting receipt IDs or unheld new receipts",async()=>{
   let calls=0;
   const different=await recoverReceiptWithEvidence("order-e",async()=>({...result(++calls===1),receiptId:String(calls)}));

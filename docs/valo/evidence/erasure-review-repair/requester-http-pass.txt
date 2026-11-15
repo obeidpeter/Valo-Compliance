@@ -1,0 +1,16 @@
+▶ actual HTTP privacy routes apply an independent privacy role and fresh MFA
+  ✔ information replies do not substitute for owner verification (98.739572ms)
+  ✔ privacy-only identity can read and claim; finance-only cannot (157.55307ms)
+  ✔ read-only inspection and customer replies preserve verification and deduplicate actual HTTP writes (155.140471ms)
+  ✔ quarantined verified requester can answer without restored workspace membership (216.901478ms)
+  ✔ revoked and stale-MFA privacy identities fail on the HTTP route (14.094866ms)
+  ✔ hostile origin never reaches the privacy mutation (1.597298ms)
+✔ actual HTTP privacy routes apply an independent privacy role and fresh MFA (891.202936ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2973.943451

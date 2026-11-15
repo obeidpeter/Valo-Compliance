@@ -1,0 +1,36 @@
+
+> @workspace/api-server@0.0.0 test:valo-workspace-download-browser /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development VALO_RUN_WORKSPACE_DOWNLOAD_BROWSER=synthetic-development-only tsx src/scripts/workspace-data-download-browser.ts
+
+{
+  "passed": true,
+  "scope": "Actual component with controlled HTTP/cookie fixture; no production identity, database or full-app layout test.",
+  "exactExpectedIds": true,
+  "resourceScope": "Page JavaScript heap sampled every 10ms, not OS/download-manager or backend memory. Test Node process validates the saved file separately.",
+  "heapEvidence": {
+    "baseline": 2443452,
+    "peak": 3444440,
+    "increase": 1000988,
+    "bound": 8388608
+  },
+  "checks": [
+    "6001-row >8MB native attachment; small metadata only; keyboard/mobile; no export fetch/Blob/object URL/JSON parsing",
+    "cancel: cancelled preparation before attachment headers",
+    "unmount: cancelled preparation before attachment headers",
+    "account: cancelled preparation before attachment headers",
+    "reload: cancelled preparation before attachment headers",
+    "bounded timeout has no completion claim and aborts preparation",
+    "unauthorized: bounded readable error, no raw response or download-success claim",
+    "forbidden: bounded readable error, no raw response or download-success claim",
+    "oversized-error: bounded readable error, no raw response or download-success claim"
+  ],
+  "metrics": {
+    "started": 9,
+    "completed": 1,
+    "cancelledBeforeHeaders": 5,
+    "cookieAuthorized": 8
+  },
+  "downloads": 1,
+  "errors": [],
+  "evidence": "/home/runner/workspace/generated-artifacts/valo-completion"
+}

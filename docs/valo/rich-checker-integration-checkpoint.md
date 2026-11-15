@@ -1,6 +1,13 @@
 # Rich-answer checker integration checkpoint
 
-Status: implemented on a private feature branch; no content or rule publication. Base: `7e663dee8ff914f66e4d4ac7a5fe7b083fe28e51`. This checkpoint is not full R1/R2 acceptance.
+Current integration follow-up: [actual runtime verification](pr12-runtime-verification.md).
+The reviewed source is already in development history. Fresh focused,
+task-database and HTTP checks passed; signed-in browser verification remains
+limited as documented there. No content/rule publication or R1/R2 acceptance.
+
+The original branch report below is retained historical evidence. Its base was
+`7e663dee8ff914f66e4d4ac7a5fe7b083fe28e51`; its then-unrun checks are superseded
+only by the specific executed results in the follow-up.
 
 ## Customer behavior
 

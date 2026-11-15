@@ -1,0 +1,60 @@
+{
+  "startedAt": "2026-11-15T02:43:49.967Z",
+  "scope": "disposable local synthetic PostgreSQL and local fixture objects",
+  "managedDatabaseRead": false,
+  "productionRestoreProved": false,
+  "appStorageRestoreProved": false,
+  "externalCredentialsInherited": false,
+  "externalMessagesSent": 0,
+  "charges": 0,
+  "refunds": 0,
+  "deletionScope": "Completed independently retained synthetic erasure receipt, physical application replay and local object cleanup; external providers excluded",
+  "retention35Days": "unresolved",
+  "checks": {
+    "exactSnapshotCutoff": true,
+    "sourceDatabaseRejectedAsReplayTarget": true,
+    "alteredJournalRejected": true,
+    "alteredJournalRejectedWithoutEffects": true,
+    "changedReceiptRejection": {
+      "code": "ERASURE_SEAL_INVALID",
+      "locations": [
+        {
+          "file": "valo-erasure-seal.ts",
+          "line": 45
+        },
+        {
+          "file": "valo-privacy-erasure.ts",
+          "line": 58
+        },
+        {
+          "file": "valo-privacy-erasure.ts",
+          "line": 72
+        },
+        {
+          "file": "valo-privacy-erasure.ts",
+          "line": 261
+        },
+        {
+          "file": "valo-privacy-erasure.ts",
+          "line": 277
+        }
+      ]
+    },
+    "changedReceiptRejectedWithWholeImportRolledBack": true,
+    "originalPreCutoffAuditRedactedWithAuthenticWitness": true,
+    "idempotentDeletionTombstoneAndRevocationReplay": true,
+    "publisherCannotReadPrivateRevisions": true,
+    "tenantObjectChecksums": 3,
+    "tamperedObjectDetected": true
+  },
+  "phase": "replay_and_validate",
+  "cutoffAt": "2026-11-15T02:44:19.519Z",
+  "localWalCutoff": "0/1F66720",
+  "dumpElapsedMs": 658,
+  "snapshotHash": "dadea1495b815381e38b2e26d13e8877c7a74468698fd7bddc7125412a023466",
+  "restoreStartedAt": "2026-11-15T02:44:28.595Z",
+  "passed": false,
+  "failureType": "ASSERTION_FAILED",
+  "elapsedMs": 61304,
+  "completedAt": "2026-11-15T02:44:51.265Z"
+}

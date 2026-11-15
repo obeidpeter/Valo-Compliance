@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "recordedAt": "2026-11-15T01:47:46.470Z",
+  "status": "partial_development_implementation_evidence_not_requirement_acceptance",
+  "requirements": [
+    "PRO-002",
+    "PRV-003",
+    "SEC-001",
+    "IAM-003",
+    "EDT-008",
+    "NFR-005",
+    "NFR-009",
+    "OPS-003"
+  ],
+  "sourceBindings": [
+    {
+      "path": "artifacts/api-server/src/lib/valo-private-copy-inventory.ts",
+      "sha256": "23a2ed706df8d752d60db08024154bd77cf4eb9da9d6073d578628322177ba5f"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-privacy-redactions.ts",
+      "sha256": "cd749e34513eb489a90e9735a8e46f978dbc3c895ea1211b940d481dabd1d86e"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-privacy-erasure.ts",
+      "sha256": "60888ec7fa213244794c631e430fa77d56d30d72b037b4ba763548066cc49536"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-erasure-seal.ts",
+      "sha256": "20d898a302df410831c421cd62e0efead366a10af5be8a75517dcc770b9b704d"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-customer-access.ts",
+      "sha256": "ea83f11c181d0899029695a5620e0d33f5607cb71d4dd040332fe128b4715061"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-dispute-actions.ts",
+      "sha256": "9fb2de153be2d0aa3d03a01ee21b540d9d1330ca5d3dd7c9d997720f6cf583e0"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-private-copy-inventory.integration.test.ts",
+      "sha256": "588518f9a275bc9b25da8c4b5d292c427ccf28c05437dbbd1b5ae5435e4a43f7"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-privacy-erasure.integration.test.ts",
+      "sha256": "60281e069ed26ede7545418fe0b0ba38675aa5f08382611be39a9ce3a0cd3e01"
+    },
+    {
+      "path": "lib/db/drizzle/0029_privacy_copy_redaction.sql",
+      "sha256": "920c678e7a55eb884a46f000e1aee9e22d9fc26a799058352ed4a949a7c52e87"
+    }
+  ],
+  "executed": {
+    "copyInventory": {
+      "passed": 4,
+      "failed": 0
+    },
+    "physicalErasureWithQueuePayloads": {
+      "passed": 11,
+      "failed": 0
+    },
+    "privacyKeyRotation": {
+      "passed": 6,
+      "failed": 0
+    },
+    "controlledMerchantDisputes": {
+      "passed": 12,
+      "failed": 0,
+      "merchantCalls": 0,
+      "externalMessages": 0
+    },
+    "workspaceExport": {
+      "passed": 10,
+      "failed": 0,
+      "sourceRows": 5001,
+      "nativePrivateStorage": true,
+      "actualHttpDisconnect": true,
+      "actualSigkill": true,
+      "managedSessionReader": "controlled_not_real_Clerk"
+    },
+    "sealAndPrivacyState": {
+      "passed": 9,
+      "failed": 0
+    },
+    "migrationJournal": {
+      "passed": 1,
+      "failed": 0
+    },
+    "workspaceTypecheck": "pass",
+    "apiBuild": "pass",
+    "isolatedMigrationDDL": "pass_rolled_back"
+  },
+  "earlierRuns": {
+    "fixtureConstraints": "invalid dispute kind and public-intake topic corrected; original failures retained outside the passing evidence",
+    "phaseBound": "legacy 20-step test loop extended for the new versioned phase plan",
+    "missingImport": "caught by typecheck and corrected before final passing runs"
+  },
+  "scope": {
+    "newSyntheticFixturesOnly": true,
+    "privateFinancialTextRemoved": true,
+    "financialFactsAndAuthenticatedAuditProofRetained": true,
+    "sharedUsageAggregateFingerprintsUnchanged": true,
+    "unlinkedPublicSupportNotMatchedByEmail": true,
+    "priorPreparedSnapshotsNotRecursivelyExported": true,
+    "queuedPrivateExportPayloadsRemoved": true,
+    "objectAndScratchLocatorsSealedBeforeRowRemoval": true,
+    "legacyV2PhaseOrderUnchanged": true
+  },
+  "operations": {
+    "developmentDDL29Applied": true,
+    "existingRowsChangedByDDL": 0,
+    "legacyDrizzleJournalRows": 0,
+    "legacySchemaHistoryAdopted": false,
+    "newInferenceCalls": 0,
+    "emailsSent": 0,
+    "realMerchantActions": 0,
+    "spendingApproval": false,
+    "livePayments": false,
+    "publicLaunch": false
+  },
+  "remaining": [
+    "Complete physical erasure replay of a separately preserved deletion journal into an older isolated snapshot, including audit-redaction witnesses; current recovery-control replay reports purge pending.",
+    "Reconcile the existing development schema with journalled migration history; no old migration executions were invented.",
+    "Approve field-level retention and processor outcomes before any complete-account-deletion claim. Unlinked shared staff/audit intake needs provenance review, not email-based deletion.",
+    "35-day backup design and production recovery/geography remain unproved; local tests are not production RPO/RTO.",
+    "Full R1/R2 and source-backed 80/customer-AI 60/editorial 60 acceptance remain incomplete."
+  ]
+}

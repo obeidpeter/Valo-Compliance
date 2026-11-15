@@ -1,0 +1,48 @@
+▶ erasure holds, bounded recovery and accepted-upload process death
+  ✔ application replay authenticates the entire inventory and case before revocation or profile deletion (3998.913044ms)
+  ✔ distinct advisory locks cannot exhaust a one-connection shared data pool (38.966527ms)
+  ✔ holds and revoked roles stop the next object, while an in-flight result remains recorded (6980.792203ms)
+  ✔ actual export worker cleans an upload finishing after its tracking/job rows were erased (2132.368233ms)
+  ✔ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (5414.777928ms)
+✔ erasure holds, bounded recovery and accepted-upload process death (18640.431134ms)
+▶ actual HTTP privacy routes apply an independent privacy role and fresh MFA
+  ✔ information replies do not substitute for owner verification (194.381442ms)
+  ✔ privacy-only identity can read and claim; finance-only cannot (96.474391ms)
+  ✔ read-only inspection and customer replies preserve verification and deduplicate actual HTTP writes (418.404136ms)
+  ✖ quarantined verified requester can answer without restored workspace membership (413.877721ms)
+  ✔ revoked and stale-MFA privacy identities fail on the HTTP route (30.894358ms)
+  ✔ hostile origin never reaches the privacy mutation (4.551341ms)
+✖ actual HTTP privacy routes apply an independent privacy role and fresh MFA (1468.893035ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 11
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 25039.45494
+
+✖ failing tests:
+
+test at src/routes/valo-privacy-http.integration.test.ts:1:8897
+✖ quarantined verified requester can answer without restored workspace membership (413.877721ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  429 !== 200
+  
+      at TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts:148:42)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts:129:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 429,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+undefined
+/home/runner/workspace/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: node --import tsx --test src/routes/valo-privacy-http.integration.test.ts src/lib/valo-erasure-hardening.integration.test.ts

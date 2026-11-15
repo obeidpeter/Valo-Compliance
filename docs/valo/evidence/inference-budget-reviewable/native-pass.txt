@@ -1,0 +1,39 @@
+▶ durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls
+  ✔ actual managed entry dispatches all four approved lanes through shared durable reservation, SDK observation and settlement (294.173892ms)
+  ✔ disabled durable authority and missing allowlist cannot dispatch (9.972819ms)
+  ✔ authorized controlled work really dispatches and settles; unchanged result reuses without a call (47.909156ms)
+  ✔ PostgreSQL Date timestamps preserve millisecond approval order (52.161936ms)
+  ✔ review pair reserves atomically and charges its actual editorial lane (120.254007ms)
+  ✔ changed request, source bindings, expiry and forged manifest stop before transport (49.172152ms)
+  ✔ timeout keeps the whole reservation, duplicates cannot redispatch and new retry consumes another slot (71.120434ms)
+  ✔ concurrency two and duplicate runs cover every lane under one locked ledger (111.723433ms)
+  ✔ reserved sibling cannot dispatch after first role breaches its bound (68.194851ms)
+  ✔ pair role contexts dispatch their own requests without leaking the other key (72.47517ms)
+  ✔ invalid model or usage retains maximum liability and returns no usable response (126.393656ms)
+  ✔ revocation during transport stops new work but still accounts the admitted receipt (45.740351ms)
+  ✔ expiry during transport still accounts its receipt, then denies new dispatch (390.876263ms)
+  ✔ schema retry requires a distinct approved key and unknown work cannot cycle batch identity (131.641088ms)
+  ✔ new allowance preserves unrelated historical liabilities without adopting them as its budget (58.077345ms)
+  ✔ delegated children share one cap and recheck parent revocation before reserved dispatch (428.983401ms)
+  ✔ a preflight failure before the first role reserves no paid capacity (24.631021ms)
+  ✔ SDK adapter observes dispatch after reservation for each correct lane and settles all under the same cap (207.305782ms)
+  ✔ cross-corpus role relabeling and independent-review candidate substitution cannot reserve or dispatch (40.151916ms)
+  ✔ real SIGKILL after durable dispatch cannot redispatch on a new dispatcher and retains its full reservation (1609.744148ms)
+  ✔ unapproved priced model suspends the allocation before another work item (49.426634ms)
+  ✔ policy adoption keeps old usage and all unresolved liability instead of resetting history (16.063402ms)
+  ✔ holds inside the new allocation and a depleted ceiling stop all further calls (34.78406ms)
+✔ durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls (4189.534611ms)
+✔ isolated PostgreSQL global ledger serializes races and preserves unknown/retry liability (1478.92567ms)
+▶ locked historical classification is resumable and concurrent without deleting any usage or approving spending
+  ✔ crashed transaction leaves original state and prior events intact (10.524822ms)
+  ✔ eight concurrent calls and a repeated call classify exactly once and retain all original entries (110.793088ms)
+  ✔ policy adoption preserves unresolved failed-call history rather than minting authority (18.413198ms)
+✔ locked historical classification is resumable and concurrent without deleting any usage or approving spending (217.541772ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 20773.683281

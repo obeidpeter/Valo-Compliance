@@ -56,14 +56,15 @@ async function transition(tx:Tx,a:Action,actorId:string,status:string){
  * mutations keep their liabilities and history. Follow order->action locking. */
 export async function cancelUnsentDisputeWork(tx:Tx,workspaceId:string){
   const rows=await tx.select().from(valoDisputeActions).where(and(eq(valoDisputeActions.workspaceId,workspaceId),
-    eq(valoDisputeActions.status,"prepared"),eq(valoDisputeActions.attempts,0))).limit(100);
+    sql`status IN ('prepared','submitting','dispatching','sending')`)).limit(100);
   let count=0;
   for(const a of rows){
     await locked(tx,a.disputeId);
-    const changed=await tx.update(valoDisputeActions).set({status:"cancelled",version:a.version+1,
+    const status=a.status==="prepared"&&a.attempts===0?"cancelled":"unknown";
+    const changed=await tx.update(valoDisputeActions).set({status,version:a.version+1,claimToken:null,
       failure:"PRIVACY_WORKSPACE_FENCED",updatedAt:new Date()}).where(and(eq(valoDisputeActions.id,a.id),
-        eq(valoDisputeActions.status,"prepared"),eq(valoDisputeActions.attempts,0))).returning();
-    if(changed[0]){await transition(tx,changed[0],"service:privacy-erasure","cancelled");count++;}
+        eq(valoDisputeActions.status,a.status),eq(valoDisputeActions.version,a.version))).returning();
+    if(changed[0]){await transition(tx,changed[0],"service:privacy-erasure",status);count++;}
   }
   return{rowCount:count};
 }

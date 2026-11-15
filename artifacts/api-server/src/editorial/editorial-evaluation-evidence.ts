@@ -67,8 +67,10 @@ export class EditorialExternalActionDenied extends Error{
 export type EditorialDenialAuditRow={id:string;version_id:string;action:string;actor:string;reason:string};
 /** Read back the precise committed rows returned by these three invocations.
  * Old aggregate counts, another run, or a different action cannot satisfy this. */
-export function verifyCurrentEditorialDenials(versionId:string,runId:string,receipts:EditorialDenialReceipt[],rows:EditorialDenialAuditRow[]){
+export function verifyCurrentEditorialDenials(versionId:string,runId:string,receipts:EditorialDenialReceipt[],rows:EditorialDenialAuditRow[],
+  previousIds:readonly string[]=[]){
   assert.equal(receipts.length,3,"CURRENT_DENIAL_RECEIPTS_INCOMPLETE");
+  assert.ok(receipts.every(r=>!previousIds.includes(r.auditId)),"CURRENT_DENIAL_NOT_NEW");
   assert.equal(new Set(receipts.map(r=>r.auditId)).size,3,"CURRENT_DENIAL_IDS_NOT_DISTINCT");
   assert.equal(rows.length,3,"CURRENT_DENIAL_ROWS_INCOMPLETE");
   assert.equal(new Set(rows.map(r=>r.id)).size,3,"CURRENT_DENIAL_ROWS_NOT_DISTINCT");

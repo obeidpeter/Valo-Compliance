@@ -62,12 +62,23 @@ test("isolated real HTTP signature/durability controls — synthetic signing key
     await t.test("hostile compressed webhook input is rejected and the same server remains alive",async()=>{
       const result=await post(Buffer.concat([gzipSync(body),Buffer.from("trailing")]),header(),{"Content-Encoding":"gzip"});
       assert.equal(result.status,415);
-      assert.equal((await fetch(base+"/api/healthz")).status,200);
+      // Another authenticated raw-body request proves this exact listener
+      // survived. Public/API readiness may independently be 503 when the CI
+      // identity/site configuration is deliberately absent.
+      const alive=await post(body,header());assert.equal(alive.status,200);
+      z.object({received:z.literal(true),duplicate:z.literal(true)}).parse(await alive.json());
     });
     await t.test("raw webhook route does not bypass normal private authentication",async()=>{
       const response=await fetch(base+"/api/workspace/purchases");
       assert.equal(response.status,401);assert.match(response.headers.get("Cache-Control")!,/no-store/);
       assert.equal(externalRequests,0,"signed-out authentication and webhook handling use no real identity or payment provider");
+    });
+    await t.test("absent identity configuration keeps private data unavailable, not authenticated",async()=>{
+      delete process.env.CLERK_SECRET_KEY;delete process.env.CLERK_PUBLISHABLE_KEY;
+      const response=await fetch(base+"/api/workspace/purchases");
+      assert.equal(response.status,503);
+      const value=z.object({error:z.string()}).passthrough().parse(await response.json());
+      assert.equal("purchases" in value,false);
     });
   }finally{
     globalThis.fetch=originalFetch;

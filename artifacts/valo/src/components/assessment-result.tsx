@@ -11,10 +11,10 @@ export function AssessmentResultView({ result, itemAction, questionAction }: { r
   const labels = [...RESULT_LABELS, ...new Set(result.items.map(i => i.label).filter(label => !(RESULT_LABELS as readonly string[]).includes(label)))];
   const groups = labels.map((label) => ({ label, items: result.items.filter((i) => i.label === label) })).filter((g) => g.items.length);
   return (
-    <div className="grid gap-6" data-testid="assessment-result">
+    <div className="grid min-w-0 gap-6" data-testid="assessment-result">
       <div className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted-foreground">
         <span>As of {result.asOfDate}</span>
-        <span>Ruleset {result.rulesetVersion}</span>
+        <span className="min-w-0 break-all">Ruleset {result.rulesetVersion}</span>
         <span>{result.sourceBackedRecommendations} source-backed</span>
         <span className="truncate" title={result.resultHash}>hash {result.resultHash.slice(0, 12)}</span>
       </div>

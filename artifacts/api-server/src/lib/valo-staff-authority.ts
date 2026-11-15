@@ -10,7 +10,7 @@ export function activeStaffAssignment(){
 }
 export function requireFreshStaffSession(actor:StaffActor){
  if(!actor.recentMfa||!Number.isFinite(actor.verifiedAt)||actor.verifiedAt>Date.now()+1000||Date.now()-actor.verifiedAt>30_000)
-  throw new ValoProblem(403,"A recently server-verified staff session with fresh MFA is required.");
+  throw new ValoProblem(403,"A recently server-verified staff session with fresh multi-factor verification (MFA) is required.");
 }
 
 /** A row may have expired while FOR SHARE waited behind a writer. Re-evaluate

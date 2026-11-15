@@ -1,0 +1,24 @@
+
+> @workspace/api-server@0.0.0 test:valo-workspace-download-db /home/runner/workspace/artifacts/api-server
+> VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-download.integration.test.ts
+
+▶ real paged workspace download, final authorization and disconnect cleanup
+  ✔ same-origin cookie download spans pages and returns a complete private attachment (3264.488494ms)
+  ✔ an unauthenticated browser receives no attachment (7.039122ms)
+  ✔ session_revoked after preparation releases no private bytes and removes scratch (2991.806142ms)
+  ✔ locked after preparation releases no private bytes and removes scratch (2969.100221ms)
+  ✔ email_unverified after preparation releases no private bytes and removes scratch (2943.980579ms)
+  ✔ membership_revoked after preparation releases no private bytes and removes scratch (2957.152558ms)
+  ✔ cooperative cancellation stops the actual row collector before another row is written (91.288635ms)
+  ✔ browser disconnect while awaiting final session read prevents release and cleans scratch (2917.480101ms)
+  ✔ disconnect during native transfer removes the completed private scratch file (2910.288495ms)
+  ✔ a fresh request after an interrupted download regenerates the complete snapshot (2979.801625ms)
+✔ real paged workspace download, final authorization and disconnect cleanup (24521.709998ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 27910.101489

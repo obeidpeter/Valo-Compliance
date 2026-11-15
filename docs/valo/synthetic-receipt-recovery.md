@@ -2,11 +2,34 @@
 
 ## Current correction and execution
 
-The later investigation found that all 18 remaining rows met the retained
-fixture checks. The actual bug was a lookup that treated **any** notification
-for an order as its purchase receipt. Existing refund notifications therefore
-prevented repair. Calling these 18 rows strict fixture refusals was not an
-accurate diagnosis. The first run and its failures remain retained below.
+Latest scoped evidence:
+`evidence/synthetic-receipt-recovery-runs/7be3b306-a033-48af-84bc-0468518f7ca8.json`
+and its append-only `.jsonl` attempt journal. All **94** corroborated cohort
+orders were already present; **0** were newly repaired, **0** failed, **0**
+remained missing. Order history, grants and refund notices were unchanged.
+Each order has before/after state and three recorded idempotent observations.
+The earlier new run `9ee804a5-3dde-4fd3-a433-40168a2ac8f0` also observed 94
+already present. Neither run is represented as repairing those earlier rows.
+
+The shared helper now specifies `kind=purchase_receipt` explicitly and inserts
+the maintenance receipt directly as `held_synthetic_recovery` in its transaction.
+**26/26** targeted commerce/receipt/report tests passed, including eight
+concurrent repairs with a suspended matching grant and a pre-existing refund
+notice; every refund/grant/order field was preserved. No message or PSP dispatch.
+The first new scoped preparation failed on SQL array binding before maintenance;
+its cohort-bound journal is retained rather than called a successful run.
+
+The shared lookup defect treated **any** notification as the purchase receipt.
+It is a plausible cause of failures, but the first run did not retain per-order
+attempt/error records: neither that cause nor intentional provenance refusal
+is proved for each of the original 18. The first failed report is preserved.
+
+Current recovery is scoped to 94 retained order IDs established from matching
+synthetic ownership, creation before the original cutoff and recovery audits by
+the later cutoff. The 76/18 audit windows corroborate the reports but do not
+reconstruct lost exception reasons. Each current run records all 94 IDs,
+before/after provenance, receipt/refund/grant/audit state and timed per-attempt
+outcomes, including safe boundary/error codes. Later fixtures are excluded.
 
 The ordinary fulfilment repair, reconciliation and customer receipt lookups
 now explicitly select `purchase_receipt`. A concurrent regression creates a
@@ -37,7 +60,7 @@ Existing receipt state is preserved on retries. No order, amount, licence,
 refund, dispute or grant state is rewritten. A later reversal still exposes
 the original synthetic amount/licence and the actual later status.
 
-## Remaining listing and reporting correction
+## Listing and reporting correction
 
 Purchase listings and individual receipt reads now recognize the same original
 receipt audit actions, including `payment.synthetic_receipt_recovered`. A later
@@ -60,9 +83,15 @@ evidence of their observed aggregate outcomes.
 Validation for this correction: six standalone reporting tests passed; the
 report helper and tests passed isolated strict TypeScript checking. TypeScript
 syntax parsing passed for all changed code. The extended PostgreSQL listing
-regression is authored but **not run in the isolated review workspace**. Full
-workspace typecheck and integrated database/runtime checks remain for Replit/CI.
+regression was authored but **not run in the isolated review workspace**.
 No recovery command, provider request or email was executed for this correction.
+
+Subsequent actual Replit verification on the integrated application passed
+**7 reporting + 4 receipt PostgreSQL + 15 commerce checks**, with zero failures
+or skips, and full workspace typechecking. PR11 was already normally merged;
+its exact source ancestry was verified rather than merged again. All database
+execution used a new disposable local cluster; no existing cohort maintenance
+was run. See [exact runtime scope and retained evidence](receipt-pr11-replit-verification.md).
 
 ## Actual execution, not an all-pass claim
 
@@ -70,7 +99,7 @@ The retained recovery run observed 94 missing synthetic outbox rows, restored
 76, reported 18 failures, and recorded 18 remaining at that run's cutoff. Original order
 history hashed identically before and after. A later read found zero missing
 rows and 76 specifically held recovery receipts. That later observation does
-not prove this operation repaired all 94, nor explain away its 18 refusals.
+not prove this operation repaired all 94, nor explain away its 18 failures.
 The initial refusal diagnosis is corrected above; its failed run is preserved.
 No provider verification, charge/refund,
 email delivery, commercial approval or genuine settlement was performed.

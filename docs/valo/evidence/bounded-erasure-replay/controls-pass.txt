@@ -1,0 +1,26 @@
+
+> @workspace/api-server@0.0.0 test:valo-erasure-controls /home/runner/workspace/artifacts/api-server
+> node --import tsx --test src/lib/valo-erasure-seal.test.ts src/lib/valo-erasure-lock.test.ts src/lib/valo-erasure-inventory-cache.test.ts
+
+✔ cached inventory authority matches the reviewed SQL, not mutable caller policy (23.745944ms)
+✔ same guard reuses full proof; restart, altered guard/seal, missing guard and explicit imports recheck (3.208053ms)
+✔ failed checks never seed cache and bounded eviction requires a new check (2.771661ms)
+✔ dedicated lock capacity two and shared data capacity one drain distinct-case work (32.612029ms)
+✔ same-case conflict releases its slot without unlocking the active owner (7.715929ms)
+✔ callback rejection still unlocks and preserves the original error (0.746803ms)
+✔ uncertain acquisition destroys the session without dispatching work (0.992583ms)
+✔ failed or unconfirmed unlock destroys the session and retains callback outcome (5.016756ms)
+▶ exact erasure inventory and recovery signing
+  ✔ ordered inventory rejects same-workspace replacement, omission, addition and duplicates (2.882703ms)
+  ✔ scope, identity and completion binding changes and unsigned legacy records hold closed (2.740732ms)
+  ✔ old proofs verify with retained material while new progress uses the new pinned signer (2.646013ms)
+  ✔ persisted progress cannot skip a phase, change cursor or cross an inventory version (1.410481ms)
+✔ exact erasure inventory and recovery signing (13.33204ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 789.306722

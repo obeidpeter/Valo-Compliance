@@ -5,7 +5,7 @@ export type HistoricalPublicationAttempt={id:string;candidateHash:string;role:st
   responseId:string|null;inputTokens:number|null;outputTokens:number|null};
 export type HistoricalArtifactInput={ref:{id:string;hash:string;extension:"json"};bytes:Uint8Array;
   reportCandidateHash:string;sourceReportSha256:string};
-type Receipt={artifactId:string;artifactHash:string;sourceReportSha256:string;candidateHash:string;role:"factual"|"challenge";
+type Receipt={artifactId:string;artifactHash:string;sourceReportSha256:string;candidateHash:string;role:"draft"|"factual"|"challenge";
   requestHash:string|null;responseId:string;model:string;inputTokens:number;outputTokens:number};
 const hex=(v:unknown):v is string=>typeof v==="string"&&/^[a-f0-9]{64}$/.test(v);
 const count=(v:unknown):v is number=>typeof v==="number"&&Number.isSafeInteger(v)&&v>=0;
@@ -21,15 +21,18 @@ export function verifyHistoricalPublicationReceipt(input:HistoricalArtifactInput
     throw Error("HISTORY_ARTIFACT_HASH_INVALID");
   let value:Record<string,unknown>;
   try{value=JSON.parse(Buffer.from(input.bytes).toString("utf8"));}catch{throw Error("HISTORY_ARTIFACT_JSON_INVALID");}
-  if(!value||typeof value!=="object"||Array.isArray(value)||!hex(value.candidateHash)||
-    value.candidateHash!==input.reportCandidateHash||!["factual","challenge"].includes(value.role as string)||
+  // A legacy drafting reservation is keyed to its actual drafting prompt,
+  // not the subsequently edited final publication candidate.
+  const binding=value?.role==="draft"?value.promptHash:value?.candidateHash;
+  if(!value||typeof value!=="object"||Array.isArray(value)||!hex(binding)||
+    binding!==input.reportCandidateHash||!["draft","factual","challenge"].includes(value.role as string)||
     typeof value.providerResponseId!=="string"||!value.providerResponseId.trim()||value.providerResponseId.length>200||
     typeof value.model!=="string"||!acceptedInferenceModels.has(value.model)||
     !count(value.inputTokens)||!count(value.outputTokens)||
     value.requestHash!==undefined&&value.requestHash!==null&&!hex(value.requestHash))
     throw Error("HISTORY_RECEIPT_FIELDS_INVALID");
   return{artifactId:input.ref.id,artifactHash:input.ref.hash,sourceReportSha256:input.sourceReportSha256,
-    candidateHash:value.candidateHash,role:value.role as Receipt["role"],requestHash:(value.requestHash as string|null)??null,
+    candidateHash:binding,role:value.role as Receipt["role"],requestHash:(value.requestHash as string|null)??null,
     responseId:value.providerResponseId,model:value.model,inputTokens:value.inputTokens,outputTokens:value.outputTokens};
 }
 
@@ -43,7 +46,14 @@ export function proposeHistoricalReceiptResolutions(state:BudgetState,attempts:H
   for(const input of artifacts){
     try{
       const receipt=verifyHistoricalPublicationReceipt(input),key=`${receipt.artifactId}:${receipt.artifactHash}`;
-      if(!seen.has(key)){verified.push(receipt);seen.add(key);}
+      // Repeated byte-identical references are one receipt. Different artifact
+      // IDs containing the same provider receipt are also one charge.
+      const same=verified.find(r=>r.responseId===receipt.responseId&&
+        requestDigest({candidateHash:r.candidateHash,role:r.role,requestHash:r.requestHash,model:r.model,
+          inputTokens:r.inputTokens,outputTokens:r.outputTokens})===
+        requestDigest({candidateHash:receipt.candidateHash,role:receipt.role,requestHash:receipt.requestHash,model:receipt.model,
+          inputTokens:receipt.inputTokens,outputTokens:receipt.outputTokens}));
+      if(!seen.has(key)&&!same){verified.push(receipt);seen.add(key);}
     }catch(error){invalidArtifacts.push({artifactId:input.ref?.id??"unknown",
       reason:error instanceof Error?error.message:"HISTORY_ARTIFACT_INVALID"});}
   }
@@ -55,7 +65,7 @@ export function proposeHistoricalReceiptResolutions(state:BudgetState,attempts:H
     else uniqueSources.set(source.id,source);
   }
   const validSource=(s:HistoricalPublicationAttempt)=>/^\d+$/.test(s.id)&&hex(s.candidateHash)&&
-    ["factual","challenge"].includes(s.role)&&(s.requestHash===null||hex(s.requestHash))&&
+    ["draft","factual","challenge"].includes(s.role)&&(s.requestHash===null||hex(s.requestHash))&&
     (s.responseId===null||typeof s.responseId==="string"&&Boolean(s.responseId.trim()))&&
     (s.inputTokens===null||count(s.inputTokens))&&(s.outputTokens===null||count(s.outputTokens));
   const identityMatches=(s:HistoricalPublicationAttempt,r:Receipt)=>s.candidateHash===r.candidateHash&&s.role===r.role&&

@@ -235,4 +235,3 @@ export async function reconcileFinanceRefund(actor:FinanceActor,id:string){
     const{row}=await refundLock(tx,id);await requireFinance(tx,actor,`Read reconciliation result ${id}.`);return refundView(row);
   });
 }
-

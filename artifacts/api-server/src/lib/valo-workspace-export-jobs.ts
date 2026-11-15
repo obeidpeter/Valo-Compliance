@@ -217,7 +217,12 @@ export async function withPreparedWorkspaceExport<T>(actor:WorkspaceActor,id:str
       throw new ValoProblem(409,"Private artifact verification is unavailable.");
     return{row,key:attempt.objectKey};
   });
-  const directory=await mkdtemp(join(tmpdir(),"valo-data-result-")),path=join(directory,"workspace.json");
+  // Downloads are private copies too. Keep their temporary bytes beneath the
+  // attempt's existing signed scratch locator so erasure/replay can remove a
+  // process-death leftover without guessing ownership from a random directory.
+  const scratch=workspaceExportScratch(result.row.currentAttemptId!);
+  await mkdir(scratch,{recursive:true,mode:0o700});
+  const directory=await mkdtemp(join(scratch,"download-")),path=join(directory,"workspace.json");
   try{
     bounded.throwIfAborted();await storage.get(result.key,path,bounded);const proof=await workspaceFileDigest(path,bounded);
     if(proof.checksum!==result.row.checksum||proof.size!==result.row.size)throw new ValoProblem(409,"Private result integrity check failed. No bytes were released.");
@@ -261,11 +266,11 @@ export async function cleanupWorkspaceExports(storage:WorkspaceExportStorage=wor
     .where(and(sql`(${attempts.status}='cleanup' OR ${jobs.status} IN ('cancelled','expired'))`,
       sql`(${attempts.cleanupCheckedAt} IS NULL OR ${attempts.cleanupCheckedAt}<now()-interval '1 hour')`,workspaceId?eq(attempts.workspaceId,workspaceId):undefined))
     .orderBy(sql`${attempts.cleanupCheckedAt} ASC NULLS FIRST`,attempts.id).limit(5);
-  let failed=0,held=0,cleaned=0;
+  let failed=0,held=0,privacyHeld=0,cleaned=0;
   for(const{a}of rows){await db.transaction(async tx=>{
     // Case authority precedes attempt locks; quarantine/sealing owns all keys.
     const authority=await privateCleanupAuthority(tx,a.workspaceId);
-    if(!authority.allowed){held++;return;}
+    if(!authority.allowed){held++;if(authority.privacyOwned)privacyHeld++;return;}
     const[currentAttempt]=await tx.select().from(attempts).where(eq(attempts.id,a.id)).for("update",{skipLocked:true});
     if(!currentAttempt)return;
     const[job]=await tx.select().from(jobs).where(eq(jobs.id,a.jobId));
@@ -275,5 +280,5 @@ export async function cleanupWorkspaceExports(storage:WorkspaceExportStorage=wor
     catch{failed++;}
     await tx.update(attempts).set({cleanupCheckedAt:new Date()}).where(eq(attempts.id,a.id));
   });}
-  return{checked:rows.length,failed,held,cleaned};
+  return{checked:rows.length,failed,held,privacyHeld,cleaned};
 }

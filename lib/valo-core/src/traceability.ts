@@ -4,6 +4,7 @@ import { sourceRequirements, sourceGates, sourceUatPackages, sourceReleaseContro
 import { partialExportEvidence } from "./export-evidence.generated";
 import { partialCustomerJourneyEvidence } from "./customer-journey-evidence";
 import { partialWorkflowEvidence } from "./workflow-evidence";
+import {partialPrivacyCopyEvidence} from "./privacy-copy-evidence";
 
 export type Evidence = {
   kind: "implementation" | "test" | "source" | "approval";
@@ -105,11 +106,13 @@ export const requirements: Requirement[] = sourceRequirements.map(r => ({
   ...r, implementationPaths: [...new Set([
     ...(partialImplementations[r.id] ?? (r.id.startsWith("EDP-") ? ["lib/valo-core/src/publication.ts"] : [])),
     ...partialWorkflowEvidence(r.id).paths,
+    ...partialPrivacyCopyEvidence(r.id).paths,
   ])],
   evidence: [
     ...(partialExportEvidence.ids.includes(r.id) ? [partialExportEvidence.record] : []),
     ...(partialCustomerJourneyEvidence.ids.includes(r.id) ? [partialCustomerJourneyEvidence.record] : []),
     ...partialWorkflowEvidence(r.id).records,
+    ...partialPrivacyCopyEvidence(r.id).records,
   ],
   blockers: ["Complete acceptance evidence and required operational approvals are not established"],
 }));

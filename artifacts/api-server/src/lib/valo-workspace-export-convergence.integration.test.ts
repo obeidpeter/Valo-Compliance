@@ -4,9 +4,9 @@ import {randomUUID} from 'node:crypto';
 import {fork,type ChildProcess} from 'node:child_process';
 import {once} from 'node:events';
 import {fileURLToPath} from 'node:url';
-import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,readFile,writeFile,stat,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {basename,join} from 'node:path';
+import {basename,dirname,join,relative} from 'node:path';
 import {eq,inArray,sql} from 'drizzle-orm';
 import express from 'express';
 import {db,pool,valoWorkspaceExports as jobs,valoWorkspaceExportAttempts as attempts,valoFileAssets,valoExportObjects,valoEvents,valoWorkspaces,
@@ -14,7 +14,7 @@ import {db,pool,valoWorkspaceExports as jobs,valoWorkspaceExportAttempts as atte
   valoPrivacyEvents,valoPrivacyTombstones,valoPrivacyErasureObjects,valoStaffAssignments,valoStaffAccessAudit,valoSupportTickets} from '@workspace/db';
 import {resolveWorkspace,createDocument,ValoProblem} from './valo-store';
 import {createWorkspaceExport,getWorkspaceExport,listWorkspaceExports,cancelWorkspaceExport,retryWorkspaceExport,executeWorkspaceExport,
-  recoverWorkspaceExports,cleanupWorkspaceExports,withPreparedWorkspaceExport,pendingWorkspaceExports,WORKSPACE_EXPORT_QUEUE} from './valo-workspace-export-jobs';
+  recoverWorkspaceExports,cleanupWorkspaceExports,withPreparedWorkspaceExport,workspaceExportScratch,pendingWorkspaceExports,WORKSPACE_EXPORT_QUEUE} from './valo-workspace-export-jobs';
 import {fixtureWorkspaceStorage} from './test-support/workspace-export-storage';
 import {exportQueue} from './valo-export-queue';
 import {makeWorkspaceExportRouter} from './valo-workspace-export-http';
@@ -184,6 +184,14 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
     });
     await t.test('mixed document/JSON cleanup honors pre-quarantine hold; both pending key families seal and metadata erases in bounded phase',async()=>{
       const actor=await owner(),wj=await prepare(actor),json=await attempt(wj.id),document=await createDocument(actor,syntheticDocument);
+      let downloadPath='';
+      await release(actor,wj.id,async path=>{downloadPath=path;
+        assert.match(relative(workspaceExportScratch(json.id),path),/^download-[^\\/]+[\\/]workspace\.json$/);
+        assert.ok((await stat(path)).size>0);
+      });
+      await assert.rejects(stat(downloadPath),{code:'ENOENT'});
+      // Recreate a process-death leftover at the actual release staging path.
+      await mkdir(dirname(downloadPath),{recursive:true});await writeFile(downloadPath,'SYNTHETIC_PRIVATE_DOWNLOAD_LEFTOVER');
       const doc=await requestExport(actor,document.id,randomUUID(),{revisionId:document.revisionId,format:'docx',acknowledgeDraft:true});
       const[dj]=await db.select().from(valoExportJobs).where(eq(valoExportJobs.id,doc.id));const docKey=`valo/development/${actor.workspaceId}/${randomUUID()}.docx`;
       await db.insert(valoExportObjects).values({objectKey:docKey,workspaceId:actor.workspaceId,jobId:doc.id,queueId:dj!.queueId,state:'cleanup'});
@@ -216,6 +224,8 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
         assert.ok(before-after<=100,'workspace metadata shares the bounded phase budget');
       }
       assert.equal(await phase(),'application_erased');assert.equal((await db.select().from(jobs).where(eq(jobs.workspaceId,actor.workspaceId))).length,0);assert.equal((await db.select().from(attempts).where(eq(attempts.workspaceId,actor.workspaceId))).length,0);
+      await assert.rejects(stat(downloadPath),{code:'ENOENT'});
+      await assert.rejects(release(actor,wj.id,async()=>assert.fail('quarantined bytes')));
     });
   }finally{
     for(const child of children)if(child.exitCode===null&&!child.signalCode)child.kill('SIGKILL');

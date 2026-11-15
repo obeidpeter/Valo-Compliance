@@ -1,0 +1,46 @@
+{
+  "startedAt": "2026-11-15T02:41:53.166Z",
+  "scope": "disposable local synthetic PostgreSQL and local fixture objects",
+  "managedDatabaseRead": false,
+  "productionRestoreProved": false,
+  "appStorageRestoreProved": false,
+  "externalCredentialsInherited": false,
+  "externalMessagesSent": 0,
+  "charges": 0,
+  "refunds": 0,
+  "deletionScope": "Completed independently retained synthetic erasure receipt, physical application replay and local object cleanup; external providers excluded",
+  "retention35Days": "unresolved",
+  "checks": {
+    "exactSnapshotCutoff": true,
+    "sourceDatabaseRejectedAsReplayTarget": true,
+    "alteredJournalRejected": true,
+    "alteredJournalRejectedWithoutEffects": true,
+    "changedReceiptRejection": {
+      "code": "23514",
+      "locations": [
+        {
+          "file": "valo-recovery-erasure.ts",
+          "line": 90
+        },
+        {
+          "file": "valo-recovery-erasure.ts",
+          "line": 117
+        },
+        {
+          "file": "valo-recovery-controls.ts",
+          "line": 51
+        }
+      ]
+    }
+  },
+  "phase": "reject_changed_completed_receipt",
+  "cutoffAt": "2026-11-15T02:42:13.870Z",
+  "localWalCutoff": "0/1F666E8",
+  "dumpElapsedMs": 525,
+  "snapshotHash": "c0e1d73ab3ceef173bcc682095d7334a233ecc8e9d0cb3640bba5d62c95f505e",
+  "restoreStartedAt": "2026-11-15T02:42:21.554Z",
+  "passed": false,
+  "failureType": "ASSERTION_FAILED",
+  "elapsedMs": 35896,
+  "completedAt": "2026-11-15T02:42:29.057Z"
+}

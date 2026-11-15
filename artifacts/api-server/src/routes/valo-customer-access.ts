@@ -20,6 +20,7 @@ import {processPrivacyAction,privacyPreparedResult} from "../lib/valo-privacy-pr
 import {db} from "@workspace/db";
 import {requirePrivacyStaff,type PrivacyStaffActor} from "../lib/valo-privacy";
 import {financeDispute,prepareDisputeAction,controlDisputeAction,orderDisputeInformation,saveDisputeInformation} from "../lib/valo-dispute-actions";
+import {requesterPrivacyList,requesterPrivacyDetail,requesterPrivacyReply} from "../lib/valo-privacy-requester";
 export const publicAccessRouter=Router();
 publicAccessRouter.post("/public/access-support",sameOriginMutation,async(req,res)=>{
   res.set("Cache-Control","private, no-store");
@@ -86,6 +87,22 @@ return async(req:Request):Promise<PrivacyStaffActor>=>{
 }
 export const verifiedStaffSession=makeVerifiedStaffSession();
 staffOperationsRouter.use(createStaffRoleRouter(verifiedStaffSession));
+/** Uses the same live session/user checks but grants only original-requester
+ * case access. Staff roles/MFA are not required of ordinary customers. */
+export function createPrivacyRequesterRouter(authenticate:(req:Request)=>Promise<{identityId:string}>=verifiedStaffSession){
+  const router=Router();
+  router.use((_req,res,next)=>{res.set("Cache-Control","private, no-store");res.vary("Cookie");next();});
+  router.get("/",async(req,res)=>{
+    res.json(ListPrivacyCasesResponse.parse(await requesterPrivacyList((await authenticate(req)).identityId)));
+  });
+  router.get("/:id",async(req,res)=>{
+    res.json(GetPrivacyCaseResponse.parse(await requesterPrivacyDetail((await authenticate(req)).identityId,z.string().uuid().parse(req.params.id))));
+  });
+  router.post("/:id/respond",sameOriginMutation,async(req,res)=>{
+    res.json(GetPrivacyCaseResponse.parse(await requesterPrivacyReply((await authenticate(req)).identityId,z.string().uuid().parse(req.params.id),req.body)));
+  });
+  return router;
+}
 async function financeIdentity(req:Request){
   const actor=await verifiedStaffSession(req);
   await assertFinanceActor(actor);return actor;
@@ -143,14 +160,7 @@ return router;
 staffOperationsRouter.use("/admin/privacy-cases",createPrivacyOperationsRouter());
 staffOperationsRouter.get("/admin/operations",async(req,res)=>{
   res.set("Cache-Control","private, no-store");
-  const auth=getAuth(req);
-  if(!auth.userId||!auth.sessionId){res.status(401).json({error:"Sign in to a staff account to continue."});return;}
-  const [session,user]=await Promise.all([clerkClient.sessions.getSession(auth.sessionId),clerkClient.users.getUser(auth.userId)]);
-  const primary=user.emailAddresses.find(e=>e.id===user.primaryEmailAddressId);
-  if(session.status!=="active"||session.userId!==auth.userId||user.id!==auth.userId||user.banned||user.locked||primary?.verification?.status!=="verified"){
-    res.status(403).json({error:"An active verified staff session is required."});return;
-  }
+  const actor=await verifiedStaffSession(req);
   const {area}=GetStaffOperationsQueryParams.parse(req.query);
-  res.json(StaffOperations.parse(await staffOperations(user.id,auth.has({reverification:"strict_mfa"}),area)));
+  res.json(StaffOperations.parse(await staffOperations(actor,area)));
 });
-

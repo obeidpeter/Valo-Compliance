@@ -74,3 +74,15 @@ of 28 days as 35 days, or treating development restore timing as production proo
 
 **How to apply:** State the actual target, cutoff, elapsed time, permissions and
 object-store scope. Access quarantine/tombstone replay is not physical erasure.
+
+Isolated PostgreSQL tests that execute `SET ROLE` must grant each switched role
+usage of the disposable schema and exclude `public` fallback. Retarget copied
+serial defaults to disposable sequences.
+
+**Why:** PostgreSQL skips schemas a role cannot use; a fixture can otherwise
+resolve an unqualified write into `public`. `LIKE INCLUDING ALL` can also retain
+the original sequence default. These are isolation failures, not domain passes.
+
+**How to apply:** Grant only fixture-object permissions, establish and verify
+the connection search path, and fingerprint shared content/usage/approval rows
+before and after real-caller tests. Never expand production-role privileges.

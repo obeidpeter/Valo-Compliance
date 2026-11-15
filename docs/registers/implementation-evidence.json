@@ -11166,8 +11166,18 @@
   ],
   "specification_baseline_status": "implementation unverified",
   "execution_register": {
-    "generatedAt": "2026-11-15T00:42:18.777Z",
-    "codeRevision": "f72171180a8e25a7c428fc095dc044637edaa44e",
+    "generatedAt": "2026-11-15T01:03:00.000Z",
+    "codeRevision": "c6bca11d340ca9b34ca69a7160ba4146fd8357a2",
+    "currentPartialEvidence": {
+      "requirements": ["AI-007", "AI-009", "EDP-004", "EDP-009", "SEC-005", "PRV-003", "NFR-009"],
+      "report": "docs/valo/evidence/inference-hardening-development.json",
+      "entryTests": "39/39",
+      "postgresTests": "23/23 controlled transport",
+      "nativeExportTests": "10/10",
+      "browserChecks": 9,
+      "newProviderCalls": 0,
+      "formalAcceptance": false
+    },
     "formalRequirements": 127,
     "sourceRegister": "docs/registers/requirements.json",
     "rowsWithPartialExecutionEvidence": 99,

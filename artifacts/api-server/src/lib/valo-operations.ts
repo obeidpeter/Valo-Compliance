@@ -49,7 +49,18 @@ export async function collectOperationalSample(query:(sql:string)=>Promise<{rows
 type Alert={id:string;at:string;code:string;state:"active"|"resolved"};
 type AlertState={sequence:number;active:string[];events:Alert[];sample?:OperationalSample};
 /** Internal only. Atomic bounded project-local journal, not a production monitor/audit archive. */
+const pendingAlertWrites=new Map<string,Promise<void>>();
 export async function recordOperationalAlerts(sample:OperationalSample,directory=operationsDirectory){
+  assertDevelopmentRuntime();
+  const key=join(directory,"."),previous=pendingAlertWrites.get(key)??Promise.resolve();
+  // Local contention waits in FIFO order instead of consuming the interprocess
+  // lock's bounded retry window. The file lock still protects separate workers.
+  const result=previous.then(()=>recordOperationalAlertsLocked(sample,directory));
+  const tail=result.then(()=>undefined,()=>undefined);
+  pendingAlertWrites.set(key,tail);
+  try{return await result;}finally{if(pendingAlertWrites.get(key)===tail)pendingAlertWrites.delete(key);}
+}
+async function recordOperationalAlertsLocked(sample:OperationalSample,directory:string){
   assertDevelopmentRuntime();await mkdir(directory,{recursive:true,mode:0o700});
   const lock=join(directory,"alerts.lock"),file=join(directory,"alerts.json");
   let acquired=false;
