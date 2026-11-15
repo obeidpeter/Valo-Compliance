@@ -1,6 +1,20 @@
 # Valo Compliance — Valo Platform
 
-## Latest repair checkpoint — replay authentication and case access
+## Latest saved unit — scoped purchase receipt recovery
+
+The shared repair explicitly creates a `purchase_receipt`; a refund notification
+cannot substitute. Maintenance inserts a held receipt atomically. **26 targeted
+tests passed**, including concurrent repairs preserving the complete refund,
+grant and order records. The documented 94-order cohort now has per-order
+provenance and append-only attempt journals: all 94 were already present, no
+new repair or dispatch occurred, and history/grants/refund notices were unchanged.
+The original 18 failure reasons remain unknown; later audit windows are not
+invented original exception records.
+
+See [scoped evidence and limitations](docs/valo/synthetic-receipt-recovery.md).
+Full R1/R2 acceptance and the disabled spending/launch decisions are unchanged.
+
+## Prior repair checkpoint — replay authentication and case access
 
 Application repair: `404b1a102e4d7fbfb26ec3888374b72357528b89`, pushed normally
 to the existing private development branch and draft PR2.

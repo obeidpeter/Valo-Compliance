@@ -1,4 +1,5 @@
 import { randomUUID,createHash } from "node:crypto";
+import {syntheticReceiptBlockers} from "./valo-receipt-provenance";
 import { and,desc,eq,sql,inArray } from "drizzle-orm";
 import { db,valoPrices,valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentEvents,valoEvents,valoPaymentReconciliations,valoPaymentDisputes,valoWorkspaces } from "@workspace/db";
 import { z } from "zod";
@@ -173,7 +174,8 @@ export async function purchaseReceipt(actor:WorkspaceActor,id:string){
 }
 /** Called only after canonical transaction verification under the order lock.
  * Never unsuspend an existing grant or bypass refund/dispute decisions. */
-async function repairVerifiedFulfilment(tx:Tx,order:typeof valoOrders.$inferSelect,actorId:string){
+async function repairVerifiedFulfilment(tx:Tx,order:typeof valoOrders.$inferSelect,actorId:string,
+  receiptStatus:"pending"|"held_synthetic_recovery"="pending"){
   const[grant]=await tx.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,order.id));
   const[receipt]=await tx.select().from(valoPurchaseOutbox).where(and(eq(valoPurchaseOutbox.orderId,order.id),
     eq(valoPurchaseOutbox.kind,"purchase_receipt")));
@@ -187,7 +189,8 @@ async function repairVerifiedFulfilment(tx:Tx,order:typeof valoOrders.$inferSele
     }
   }
   if(!receipt){
-    await tx.insert(valoPurchaseOutbox).values({id:randomUUID(),workspaceId:order.workspaceId,orderId:order.id}).onConflictDoNothing();
+    await tx.insert(valoPurchaseOutbox).values({id:randomUUID(),workspaceId:order.workspaceId,orderId:order.id,
+      kind:"purchase_receipt",status:receiptStatus}).onConflictDoNothing();
     repaired=true;
   }
   if(repaired)await audit(tx,order.workspaceId,actorId,"payment.fulfilment_repaired",order.id);
@@ -206,18 +209,18 @@ export async function recoverSyntheticPurchaseReceipt(id:string){
     const[workspace]=await tx.select().from(valoWorkspaces).where(eq(valoWorkspaces.id,order.workspaceId));
     const[grant]=await tx.select().from(valoEntitlements).where(and(eq(valoEntitlements.orderId,id),
       eq(valoEntitlements.workspaceId,order.workspaceId),eq(valoEntitlements.contentVersionId,order.line.contentVersionId)));
-    if(!workspace?.ownerIdentityId.startsWith("synthetic-refund-")||order.requestedBy!==workspace.ownerIdentityId||
-      !order.reference.startsWith("valo-test-")||order.line.title!=="Controlled order"||
-      order.line.licenceVersion!=="synthetic-only"||order.currency!=="NGN"||
-      !Number.isSafeInteger(order.amountKobo)||order.amountKobo<=0||
-      order.status!=="verified_success"||!order.providerTransactionId||!grant)
-      throw new ValoProblem(409,"This row is not an eligible retained synthetic fixture. No receipt, entitlement or payment state was changed.");
+    const blockers=syntheticReceiptBlockers({owner:workspace?.ownerIdentityId??null,requester:order.requestedBy,
+      reference:order.reference,title:order.line.title,licence:order.line.licenceVersion,currency:order.currency,
+      amount:order.amountKobo,status:order.status,providerReference:!!order.providerTransactionId,matchingGrant:!!grant});
+    if(blockers.length)throw Object.assign(new ValoProblem(409,"This row is not an eligible retained synthetic fixture. No receipt, entitlement or payment state was changed."),
+      {code:"SYNTHETIC_RECEIPT_INELIGIBLE",blockers});
     const[prior]=await tx.select().from(valoPurchaseOutbox).where(and(eq(valoPurchaseOutbox.orderId,id),
       eq(valoPurchaseOutbox.kind,"purchase_receipt")));
     if(prior)return {repaired:false,receiptId:prior.id,deliveryStatus:prior.status,realProviderVerification:false};
-    await repairVerifiedFulfilment(tx,order,"service:synthetic-receipt-recovery");
-    const[receipt]=await tx.update(valoPurchaseOutbox).set({status:"held_synthetic_recovery"}).where(and(
-      eq(valoPurchaseOutbox.orderId,id),eq(valoPurchaseOutbox.kind,"purchase_receipt"))).returning();
+    await repairVerifiedFulfilment(tx,order,"service:synthetic-receipt-recovery","held_synthetic_recovery");
+    const[receipt]=await tx.select().from(valoPurchaseOutbox).where(and(
+      eq(valoPurchaseOutbox.orderId,id),eq(valoPurchaseOutbox.kind,"purchase_receipt")));
+    if(!receipt)throw Error("PURCHASE_RECEIPT_MISSING_AFTER_SHARED_REPAIR");
     await audit(tx,order.workspaceId,"service:synthetic-receipt-recovery","payment.synthetic_receipt_recovered",id);
     return {repaired:true,receiptId:receipt.id,deliveryStatus:receipt.status,realProviderVerification:false};
   });
