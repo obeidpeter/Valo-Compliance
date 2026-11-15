@@ -1,21 +1,26 @@
 # Valo Compliance — Valo Platform
 
-## Current checkpoint — receipt integration and CI verification
+## Current checkpoint — native storage and worker runtime
 
-Fetched development already contains coordinator receipt merge `ea73a87`,
-reviewed receipt source `52d81a2` and reviewed checker source `0bdb8db7`.
-No duplicate merge or older-head replacement was needed.
+Supplied combined merge `a274cb0` already exists in the preserved development
+history. Privacy migration 0022/index 22 and the full tracked journal applied
+only to disposable PostgreSQL; no duplicate integration or primary DB migration.
 
-**55 engineering checks passed, zero failures/skips; full workspace typecheck passed.**
-Reporting is already registered in normal unit CI and receipt recovery in core
-database CI. A new focused reproducer asserts those registrations and executes
-reporting, disposable receipt recovery, controlled commerce/refunds and exact
-editorial-evidence controls. No product runtime source changed in this follow-up.
+**62 engineering checks passed without skips**, including 20 erasure checks
+with native storage selected and 12 real-process/native export-worker checks.
+The fresh private test prefix was verified empty afterward. Four additional
+namespace safety tests and full workspace typecheck passed.
 
-No existing-record recovery command, provider call, message, new PR13 merge,
-deployment or main merge occurred. These results do not accept R1/R2.
-See [current receipt evidence](docs/valo/receipt-integration-current.md) and the
-retained [121-check synthetic privacy proof](docs/valo/pr13-runtime-verification.md).
+Seven actual anonymous browser checks passed, including a 200 preview and
+360px/1280px overflow checks. **Real managed sign-in/save/history remains
+unverified:** the supported testing service rejected its documented agent kind.
+Controlled HTTP checks do not replace it.
+
+Only test composition/evidence changed. No paid inference, PSP/email, existing
+cohort maintenance, production erasure, publication, PR15 or main merge.
+R1/R2 remain incomplete and unaccepted. See
+[current evidence and failures](docs/valo/native-runtime-checkpoint.md) and
+[retained receipt integration](docs/valo/receipt-integration-current.md).
 
 ## Retained checker runtime checkpoint
 

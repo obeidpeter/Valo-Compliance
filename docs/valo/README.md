@@ -1,6 +1,12 @@
 # Current development state — still not accepted
 
-Current checkpoint: [receipt integration and routine-CI registration verification](receipt-integration-current.md):
+Current checkpoint: [native storage, worker and browser runtime](native-runtime-checkpoint.md):
+62 engineering passes/no skips, four namespace controls and seven public-browser
+checks; full typecheck passed. Native prefix cleaned, only disposable DB migrated.
+Real managed sign-in/save/history remains blocked by unavailable test tooling.
+No PR15 integration, production change, publication or release acceptance.
+
+Retained [receipt integration and routine-CI registration verification](receipt-integration-current.md):
 55 engineering passes, no failures/skips; full typecheck passed. Existing
 reporting/core registrations verified, with only disposable fixture recovery.
 No new feature, provider call or PR13 merge.

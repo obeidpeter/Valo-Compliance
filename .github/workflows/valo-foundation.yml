@@ -107,6 +107,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-erasure-controls
       - name: Prove portable storage bytes and fail-closed native proof selection
         run: pnpm --filter @workspace/api-server test:valo-erasure-storage
+      - name: Prove native test namespace guards without native credentials
+        run: pnpm --filter @workspace/api-server exec node --experimental-test-module-mocks --test src/test-support/native-proof-namespace.test.mjs
       - name: Run foundation unit tests
         run: pnpm --filter @workspace/scripts test:valo
       - name: Install standard PDF readers

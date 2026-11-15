@@ -10,7 +10,7 @@
 - [Customer experience](customer-experience.md) — public access help must not depend on sign-in; product pages describe actual behavior, not proof milestones.
 - [Export interruption](export-interruption.md) — transport retries do not repair application state; fenced leases and pre-upload reservations preserve recovery.
 - [PDF reader validation](pdf-geometry.md) — allow small A4 rounding; running headers/footers can interrupt extracted paragraphs.
-- [Browser evaluation boundaries](browser-evaluation-boundaries.md) — an arrow-function string is not equivalent to a Playwright locator callback; separate harness failures from product failures.
+- [Browser evaluation boundaries](browser-evaluation-boundaries.md) — distinguish callback semantics, unavailable test tooling and controlled identity from actual product/browser evidence.
 - [Supply-chain controls](supply-chain-controls.md) — npm cooldown uses days, pnpm minutes; a frozen install is not proof of every negative policy boundary.
 - [Privacy erasure and recovery](privacy-erasure.md) — preserve metering and immutable records while deleting private content; old backups need a post-cutoff deletion journal.
 - [Paystack outcome boundaries](payment-status-evidence.md) — merchant responses and terminal-looking dispute statuses do not establish final bank outcomes.
