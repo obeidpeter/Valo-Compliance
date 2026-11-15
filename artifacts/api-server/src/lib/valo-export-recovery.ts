@@ -2,6 +2,7 @@ import {randomUUID} from "node:crypto";
 import {and,eq,inArray,lte,sql} from "drizzle-orm";
 import {db,valoExportJobs,valoExportObjects,valoFileAssets,valoEvents,valoPrivacyTombstones} from "@workspace/db";
 import {assertErasureObjectScope} from "./valo-erasure-seal";
+import {privateCleanupAuthority} from "./valo-private-cleanup-authority";
 import {deletePrivateFile} from "./valo-private-storage";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 
@@ -43,6 +44,8 @@ export async function reconcileExportOrphans(jobId?:string,remove:(key:string)=>
   let cleaned=0,failed=0,privacyHeld=0;
   for(const object of due){
     await db.transaction(async tx=>{
+      const authority=await privateCleanupAuthority(tx,object.workspaceId);
+      if(!authority.allowed){privacyHeld++;return;}
       const [locked]=await tx.select().from(valoExportObjects).where(and(eq(valoExportObjects.objectKey,object.objectKey),
         eq(valoExportObjects.state,"cleanup"),lte(valoExportObjects.nextCleanupAt,new Date()))).for("update",{skipLocked:true});
       if(!locked)return;
@@ -61,9 +64,11 @@ export async function reconcileExportOrphans(jobId?:string,remove:(key:string)=>
         return;
       }
       const [asset]=await tx.select().from(valoFileAssets).where(eq(valoFileAssets.objectKey,object.objectKey)).limit(1);
-      if(asset){await tx.update(valoExportObjects).set({state:"retained"}).where(eq(valoExportObjects.objectKey,object.objectKey));return;}
+      if(asset&&!asset.withdrawnAt){await tx.update(valoExportObjects).set({state:"retained"}).where(eq(valoExportObjects.objectKey,object.objectKey));return;}
       let delay=3_600_000;
-      try{await remove(object.objectKey);cleaned++;}
+      try{await remove(object.objectKey);cleaned++;
+        if(asset?.workspaceExportJobId&&asset.withdrawnAt)await tx.delete(valoFileAssets).where(eq(valoFileAssets.id,asset.id));
+      }
       catch{failed++;delay=Math.min(3_600_000,30_000*2**Math.min(7,object.cleanupAttempts));}
       await tx.update(valoExportObjects).set({cleanupAttempts:sql`${valoExportObjects.cleanupAttempts}+1`,
         nextCleanupAt:new Date(Date.now()+delay)}).where(eq(valoExportObjects.objectKey,object.objectKey));

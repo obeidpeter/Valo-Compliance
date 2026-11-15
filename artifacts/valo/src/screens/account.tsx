@@ -15,6 +15,7 @@ import { PurchaseHistoryPage } from './purchase-history';
 import {PrivacyCases} from "@/components/privacy-cases";
 import {getListPrivacyCasesQueryKey} from "@workspace/api-client-react";
 import { WorkspaceDataDownload } from '@/components/workspace-data-download';
+import { WorkspaceExportJobs } from '@/components/workspace-export-jobs';
 
 export function AccountPage() {
   return (
@@ -77,7 +78,12 @@ export function PrivacyPage() {
         <section className="surface p-6 sm:p-8">
           <h2 className="font-display text-2xl">Download workspace data</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground" data-testid="workspace-export-scope">A JSON copy of the sections listed in the file: profile versions, drafts and revisions, assessments, tasks, reminder records, support requests, AI drafts, purchases, export/file metadata and your own workspace activity. This is not complete privacy fulfilment. It does not include Word/PDF file bytes, storage links, membership records, other people's activity, full system/staff audits, sign-in-provider data, external-provider data or unlinked public contact requests. Use the privacy request form for coordinated access to those systems.</p>
-          <WorkspaceDataDownload />
+          <WorkspaceExportJobs />
+          <details className="mt-6 rounded-xl border border-border p-4" data-testid="workspace-export-fallback">
+            <summary className="cursor-pointer text-sm font-medium">One-off download instead</summary>
+            <p className="mt-3 text-sm text-muted-foreground">This includes the same named application sections. Keep this page open while it prepares; leaving stops the request. It cannot be resumed after a reload and does not create a saved export job.</p>
+            <WorkspaceDataDownload />
+          </details>
         </section>
 
         <section>
@@ -143,3 +149,4 @@ export function PrivacyPage() {
 export function PurchasesPage() {
   return <PurchaseHistoryPage/>;
 }
+

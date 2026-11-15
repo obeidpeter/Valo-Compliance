@@ -2,7 +2,7 @@ import {randomUUID} from "node:crypto";
 import {and,desc,eq,inArray,sql} from "drizzle-orm";
 import {z} from "zod";
 import {db,valoOrders,valoRefundRequests,valoRefundTransitions,valoEntitlements,valoPurchaseOutbox,
-  valoStaffAssignments,valoStaffAccessAudit,valoPaymentDisputes,valoDisputeIntents} from "@workspace/db";
+  valoStaffAssignments,valoStaffAccessAudit,valoPaymentDisputes} from "@workspace/db";
 import {RequestCommerceRefundBody,DecideFinanceRefundBody} from "@workspace/api-zod";
 import {authorizeWorkspaceWrite,ValoProblem,type WorkspaceActor} from "./valo-store";
 import {consumeQuota,quotaSubjectHash} from "./valo-quota";
@@ -57,9 +57,10 @@ async function transition(tx:Tx,r:Refund,actorId:string,action:string,reason:str
 }
 async function openDispute(tx:Tx,orderId:string){
   const rows=await tx.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.orderId,orderId));
-  const intents=await tx.select().from(valoDisputeIntents).where(and(eq(valoDisputeIntents.orderId,orderId),eq(valoDisputeIntents.operation,"resolve")));
-  return rows.some(r=>!["resolved","archived"].includes(r.status)||r.resolution==="merchant-accepted")||
-    intents.some(i=>i.state!=="cancelled"&&(i.payload.resolution==="merchant-accepted"||["dispatching","unknown","needs_review"].includes(i.state)));
+  // Archived/declined is not documented proof of final bank disposition. Hold
+  // competing refunds until a separate supported financial reconciliation can
+  // establish the balance; never treat terminal labels as a merchant victory.
+  return rows.length>0;
 }
 export async function requestOrderRefund(actor:WorkspaceActor,id:string,raw:unknown){
   const input=RequestCommerceRefundBody.strict().parse(raw);

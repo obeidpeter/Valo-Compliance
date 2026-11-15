@@ -5,11 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { DisputeWorkflow } from './disputeWorkflow';
 import type { PaymentConcern } from './paymentConcern';
 
 export interface WorkspaceDisputes {
   concerns: PaymentConcern[];
-  workflows: DisputeWorkflow[];
   notice: string;
 }

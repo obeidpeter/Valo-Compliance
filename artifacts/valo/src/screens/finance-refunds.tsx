@@ -1,8 +1,9 @@
 import {useState} from "react";
+import {FinancePaymentConcerns} from "@/components/payment-concerns";
+import {FinanceDisputeCard,FinanceDisputeLink,DisputeFormsBoundary} from "@/components/dispute-workflows";
 import {useGetFinanceRefunds,decideFinanceRefund,reconcileFinanceRefund,type RefundRecord} from "@workspace/api-client-react";
 import {ErrorState,Skel} from "@/components/states";
 import {describeError,formatDate} from "@/lib/api";
-import {FinanceDisputes} from "./finance-disputes";
 function RefundCard({row,refresh}:{row:RefundRecord;refresh:()=>Promise<unknown>}){
   const[reason,setReason]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState<string|null>(null);
   async function run(action:()=>Promise<unknown>){
@@ -30,15 +31,25 @@ function RefundCard({row,refresh}:{row:RefundRecord;refresh:()=>Promise<unknown>
   </article>;
 }
 export function FinanceRefunds(){
+  return <DisputeFormsBoundary><FinanceRefundsContent/></DisputeFormsBoundary>;
+}
+function FinanceRefundsContent(){
   const q=useGetFinanceRefunds({query:{refetchInterval:30000,refetchOnWindowFocus:true}});
+  const[linkedId,setLinkedId]=useState<string|null>(null);
   if(q.isLoading)return <Skel className="mt-6 h-40"/>;
-  if(q.isError)return <ErrorState error={q.error} onRetry={()=>q.refetch()}/>;
+  if(q.isError&&(!q.data||[401,403].includes(describeError(q.error).status??0)))return <ErrorState error={q.error} onRetry={()=>q.refetch()}/>;
   return <section className="mt-6" aria-labelledby="finance-refunds-heading">
     <h2 id="finance-refunds-heading" className="font-display text-2xl">Refund decisions and reconciliation</h2>
     <p className="my-3 text-sm">{q.data?.policy}</p>
     <p className="mb-4 text-sm text-muted-foreground">Every decision requires an active finance role and fresh managed MFA. Authorization is not completion. No customer draft bodies are shown.</p>
     <p className="mb-4 text-sm text-muted-foreground">This development queue can include controlled scenario fixtures. Those records are not evidence of Paystack execution or real bank credits.</p>
     {!q.data?.refunds.length?<p className="my-4 text-sm">No refund requests.</p>:<div className="space-y-4">{q.data.refunds.map(row=><RefundCard key={row.id} row={row} refresh={()=>q.refetch()}/>)}</div>}
-    <FinanceDisputes/>
+    <FinancePaymentConcerns/>
+    <h3 className="my-4 font-semibold">Provider dispute observations</h3>
+    <FinanceDisputeLink onLinked={async id=>{setLinkedId(id);await q.refetch();}}/>
+    {!q.data?.disputes.length?<p className="text-sm">No verified dispute observations. This is not a guarantee that no bank dispute exists.</p>:
+      <div className="space-y-3">{q.data.disputes.map(d=>typeof d.id==="string"?<FinanceDisputeCard key={d.id} id={d.id}/>:null)}</div>}
+    {linkedId&&!q.data?.disputes.some(d=>d.id===linkedId)&&<FinanceDisputeCard id={linkedId}/>}
   </section>;
 }
+

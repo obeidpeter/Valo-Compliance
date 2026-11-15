@@ -1,4 +1,6 @@
 import { useState,useRef } from "react";
+import {PaymentConcerns} from "@/components/payment-concerns";
+import {CustomerDisputeInformation,DisputeFormsBoundary} from "@/components/dispute-workflows";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ShoppingBag } from "lucide-react";
@@ -7,7 +9,6 @@ import { useGetCustomerPurchases,getGetCustomerPurchasesQueryKey,createCommerceO
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { EmptyState,ErrorState,Notice,Skel } from "@/components/states";
 import { describeError,formatDate } from "@/lib/api";
-import { PaymentConcerns } from "@/components/payment-concerns";
 const money=(n:number)=>new Intl.NumberFormat("en-NG",{style:"currency",currency:"NGN"}).format(n/100);
 const labels:Record<string,string>={created:"Order saved — not paid",pending:"Awaiting verified payment",abandoned:"Payment not completed",
   failed:"Payment failed",verified_success:"Test purchase verified",needs_review:"Staff reconciliation required",reversed:"Payment reversed — access suspended"};
@@ -29,7 +30,7 @@ function OrderCard({order,changed}:{order:CommerceOrder;changed:()=>Promise<unkn
       <div><dt className="text-muted-foreground">Tax treatment</dt><dd>{order.taxTreatment}</dd></div></dl>
     <details className="my-4 text-sm"><summary className="cursor-pointer py-2 font-medium">Licence at purchase · {order.licenceVersion}</summary>
       <p className="whitespace-pre-wrap py-2">{order.licenceText}</p><p className="text-muted-foreground">Content version: <span className="break-all">{order.contentVersionId}</span></p></details>
-    {order.disputeStatus&&<p className="my-3 text-sm" role="status">Provider dispute observation: {order.disputeStatus}. See the payment concern section for recorded access and review status. Saved drafts and past downloads remain your work; this is not a Valo determination of a bank outcome.</p>}
+    {order.disputeStatus&&<><p className="my-3 text-sm" role="status">Provider dispute observation: {order.disputeStatus}. This label does not establish a final bank outcome or automatically restore held access. Saved drafts and previously downloaded files are not deleted.</p><CustomerDisputeInformation orderId={order.id}/></>}
     <div className="flex flex-wrap gap-3">
       {!["verified_success","needs_review","reversed"].includes(order.status)&&<button className="btn btn-primary" disabled={busy}
         onClick={()=>void run(async()=>{const result=await startCommerceCheckout(order.id,{});window.location.assign(result.url);})}>Continue hosted test checkout</button>}
@@ -78,6 +79,9 @@ function OrderCard({order,changed}:{order:CommerceOrder;changed:()=>Promise<unkn
   </article>;
 }
 export function PurchaseHistoryPage(){
+  return <DisputeFormsBoundary><PurchaseHistoryContent/></DisputeFormsBoundary>;
+}
+function PurchaseHistoryContent(){
   const qc=useQueryClient(),q=useGetCustomerPurchases({query:{queryKey:getGetCustomerPurchasesQueryKey(),refetchOnWindowFocus:true,refetchInterval:30000}});
   const [licences,setLicences]=useState<Record<string,boolean>>({}),[busy,setBusy]=useState(false),[error,setError]=useState<string|null>(null);
   const [keys]=useState(()=>new Map<string,string>());
@@ -109,3 +113,4 @@ export function PurchaseHistoryPage(){
       </section></>}
   </div>;
 }
+

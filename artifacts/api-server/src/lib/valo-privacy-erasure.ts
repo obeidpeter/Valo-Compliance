@@ -4,7 +4,7 @@ import {logger} from "./logger";
 import {withPrivacyCaseLock,ErasureLockBusyError} from "./valo-erasure-lock";
 import {and,eq,ne,sql,lte,asc} from "drizzle-orm";
 import {db,valoPrivacyCases,valoPrivacyTombstones,valoPrivacyEvents,valoWorkspaces,valoMemberships,valoExportJobs,
-  valoExportObjects} from "@workspace/db";
+  valoExportObjects,valoWorkspaceExports} from "@workspace/db";
 import {ActOnStaffPrivacyCaseBody} from "@workspace/api-zod";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import {deletePrivateFile} from "./valo-private-storage";
@@ -13,6 +13,7 @@ import {quotaSubjectHash} from "./valo-quota";
 import {assertErasureObjectScope,inventoryHasher,signErasureSeal,verifyErasureSeal,erasureSealHash,
   assertSealedInventory,startReplay,signReplayState,verifyReplayState,type ErasureSeal,type ReplayState} from "./valo-erasure-seal";
 import {ValoProblem} from "./valo-problem";
+import {cancelUnsentDisputeWork} from "./valo-dispute-actions";
 import {assertPrivacyVersion} from "./valo-privacy-state";
 import {readPrivacyCase,requirePrivacyStaff,privacyChange,privacyDetail,type PrivacyStaffActor,type PrivacyRow} from "./valo-privacy";
 
@@ -20,7 +21,7 @@ const phases=[
   "valo_reminder_outbox","valo_tasks","valo_assessments","valo_ai_drafts",
   "valo_export_requests","valo_file_assets","valo_export_objects","valo_export_jobs",
   "valo_document_revisions","valo_documents","valo_profile_versions","valo_reminder_preferences",
-  "purchase_notifications","support_content","privacy_messages","privacy_content",
+  "purchase_notifications","support_content","privacy_messages","privacy_content","dispute_work",
 ] as const;
 const removedMessage="[Private content removed by verified workspace erasure]";
 const scope="development-application-content-erasure-v2";
@@ -97,6 +98,7 @@ export async function holdUnsentPrivacyNotifications(tx:Tx,workspaceId:string){
       AND status IN ('awaiting_email_configuration','pending','retry') LIMIT 100)`);
 }
 async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[number],currentCaseId:string){
+  if(section==="dispute_work")return cancelUnsentDisputeWork(tx,workspaceId);
   if(section==="privacy_messages")return tx.execute(sql`DELETE FROM valo_privacy_messages WHERE ctid IN
     (SELECT ctid FROM valo_privacy_messages WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
   if(section==="purchase_notifications")return holdUnsentPrivacyNotifications(tx,workspaceId);
@@ -130,6 +132,14 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
     accepted_document_id=NULL,status='privacy_erased',updated_at=now()
     WHERE ctid IN (SELECT ctid FROM valo_ai_drafts WHERE workspace_id=${workspaceId}::uuid
     AND status<>'privacy_erased' LIMIT 100)`);
+  if(section==="valo_export_jobs"){
+    const workspaceJobs=await tx.execute(sql`DELETE FROM valo_workspace_exports WHERE ctid IN
+      (SELECT ctid FROM valo_workspace_exports WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
+    const removed=workspaceJobs.rowCount??0;
+    const documentJobs=removed<100?await tx.execute(sql`DELETE FROM valo_export_jobs WHERE ctid IN
+      (SELECT ctid FROM valo_export_jobs WHERE workspace_id=${workspaceId}::uuid LIMIT ${100-removed})`):{rowCount:0};
+    return{rowCount:removed+(documentJobs.rowCount??0)};
+  }
   const table=sql.identifier(section);
   return tx.execute(sql`DELETE FROM ${table} WHERE ctid IN
     (SELECT ctid FROM ${table} WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
@@ -202,6 +212,9 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
     const journal=await readTombstone(tx,id);await privacySigner(tx);
     let next=start.phase,detail="Private-object deletion remains pending; failed keys are retryable.";
     if(start.phase==="quarantined"){
+      await tx.update(valoWorkspaceExports).set({status:"cancelled",queueId:randomUUID(),errorCode:"PRIVACY_ERASURE",
+        version:sql`${valoWorkspaceExports.version}+1`,leaseExpiresAt:null,updatedAt:new Date()})
+        .where(eq(valoWorkspaceExports.workspaceId,row.workspaceId));
       await tx.update(valoExportJobs).set({status:"failed",queueId:randomUUID(),errorCode:"PRIVACY_ERASURE",
         updatedAt:new Date()}).where(eq(valoExportJobs.workspaceId,row.workspaceId));
       await tx.update(valoExportObjects).set({state:"cleanup"}).where(eq(valoExportObjects.workspaceId,row.workspaceId));
@@ -228,7 +241,7 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
     row=await privacyChange(tx,row,{identityId:actor.identityId,type:"staff"},"erasure_batch_recorded",input.reason,{
       ...(start.phase==="privacy_content"?{message:removedMessage,resultJson:null}:{}),
       erasurePhase:next,status:done?"partially_fulfilled":"in_progress",
-      resultScope:done?"Scoped synthetic application rows erased; captured object deletes acknowledged with durable repeated late-write cleanup. V2 removes support/contact and privacy prepared-result copies. Financial records (including prepared dispute evidence, receipt bytes, source notes and finance audit), minimal case references, signed audit text, managed identity, backups and external-provider/write uncertainty remain retained or held; this is not complete account deletion.":row.resultScope,
+      resultScope:done?"Scoped synthetic application rows erased; captured object deletes acknowledged with durable repeated late-write cleanup. V2 removes support/contact and privacy prepared-result copies. Financial records (including consented dispute information and prepared evidence/action history), minimal case references, signed audit text, managed identity, backups and external-provider/write uncertainty remain retained or held; this is not complete account deletion.":row.resultScope,
       steps:row.steps.map(s=>s.system==="application"?{...s,status:done?"confirmed":"running",detail}:
         s.system==="private_files"?{...s,status:next==="objects"||next==="quarantined"?"running":"held",
           detail:"Captured deletions are recorded; signed object keys outlive job rows for repeated cleanup. Future completion of an interrupted upload is not claimed impossible."}:

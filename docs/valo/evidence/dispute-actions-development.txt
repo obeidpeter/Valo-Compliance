@@ -1,0 +1,26 @@
+
+> @workspace/api-server@0.0.0 test:valo-disputes-db /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development VALO_RUN_DISPUTE_TESTS=synthetic-development-only node --import tsx --test src/lib/valo-dispute-actions.integration.test.ts
+
+▶ durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF
+  ✔ terminal/archived observations alone do not suspend or restore access (43.187298ms)
+  ✔ actual HTTP read/prepare checks finance permission, fresh MFA and hostile origins (169.83185ms)
+  ✔ customer statements are selected-order scoped, consented, exact and retry-safe (166.487286ms)
+  ✔ real generated purchase PDF is readable and uploaded once under racing clicks (4617.867277ms)
+  ✔ timeout after acceptance remains unknown, is never re-sent and reconciles exact merchant state (205.268173ms)
+  ✔ fraud decline binds the acknowledged receipt and exact customer evidence before preparation (302.147921ms)
+  ✔ unknown terminal/null resolution, mismatched and stale state cannot establish success (143.971898ms)
+  ✔ revocation before dispatch cancels safely, preserving the immutable financial trail (90.362187ms)
+  ✔ a pre-existing uncertain refund cannot be spent again by a merchant acceptance (77.057792ms)
+  ✔ altered source records and stale finance MFA cannot dispatch a prepared decision (214.755358ms)
+{"realMerchantCalls":0,"externalMessages":0,"actualPdfReader":"pdftotext","syntheticFinancialHistoryRetained":true}
+  ✔ unsent cancellation and privacy fencing preserve unknown liabilities (201.953093ms)
+✔ durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF (6625.273628ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10761.854155

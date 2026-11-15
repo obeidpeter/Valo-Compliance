@@ -8,6 +8,215 @@
 import * as zod from 'zod';
 
 
+export const ListWorkspaceDataExportsQueryParams = zod.object({
+  "cursor": zod.uuid().optional()
+})
+
+
+export const listWorkspaceDataExportsResponseItemsItemAttemptsMin = 0;
+export const listWorkspaceDataExportsResponseItemsItemAttemptsMax = 3;
+
+export const listWorkspaceDataExportsResponseItemsItemRetryCyclesMin = 0;
+export const listWorkspaceDataExportsResponseItemsItemRetryCyclesMax = 2;
+
+export const listWorkspaceDataExportsResponseItemsItemRowsProcessedMin = 0;
+
+export const listWorkspaceDataExportsResponseItemsItemBytesPreparedMin = 0;
+
+
+
+export const ListWorkspaceDataExportsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "schemaVersion": zod.literal(2),
+  "attempts": zod.int().min(listWorkspaceDataExportsResponseItemsItemAttemptsMin).max(listWorkspaceDataExportsResponseItemsItemAttemptsMax),
+  "retryCycles": zod.int().min(listWorkspaceDataExportsResponseItemsItemRetryCyclesMin).max(listWorkspaceDataExportsResponseItemsItemRetryCyclesMax),
+  "rowsProcessed": zod.int().min(listWorkspaceDataExportsResponseItemsItemRowsProcessedMin),
+  "bytesPrepared": zod.int().min(listWorkspaceDataExportsResponseItemsItemBytesPreparedMin),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "errorCode": zod.string().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "scope": zod.string(),
+  "mayCancel": zod.boolean(),
+  "mayRetry": zod.boolean()
+})),
+  "nextCursor": zod.uuid().nullable()
+})
+
+
+export const RequestWorkspaceDataExportBody = zod.object({
+  "idempotencyKey": zod.uuid()
+})
+
+
+export const requestWorkspaceDataExportResponseAttemptsMin = 0;
+export const requestWorkspaceDataExportResponseAttemptsMax = 3;
+
+export const requestWorkspaceDataExportResponseRetryCyclesMin = 0;
+export const requestWorkspaceDataExportResponseRetryCyclesMax = 2;
+
+export const requestWorkspaceDataExportResponseRowsProcessedMin = 0;
+
+export const requestWorkspaceDataExportResponseBytesPreparedMin = 0;
+
+
+
+export const RequestWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "schemaVersion": zod.literal(2),
+  "attempts": zod.int().min(requestWorkspaceDataExportResponseAttemptsMin).max(requestWorkspaceDataExportResponseAttemptsMax),
+  "retryCycles": zod.int().min(requestWorkspaceDataExportResponseRetryCyclesMin).max(requestWorkspaceDataExportResponseRetryCyclesMax),
+  "rowsProcessed": zod.int().min(requestWorkspaceDataExportResponseRowsProcessedMin),
+  "bytesPrepared": zod.int().min(requestWorkspaceDataExportResponseBytesPreparedMin),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "errorCode": zod.string().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "scope": zod.string(),
+  "mayCancel": zod.boolean(),
+  "mayRetry": zod.boolean()
+})
+
+
+export const GetWorkspaceDataExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const getWorkspaceDataExportResponseAttemptsMin = 0;
+export const getWorkspaceDataExportResponseAttemptsMax = 3;
+
+export const getWorkspaceDataExportResponseRetryCyclesMin = 0;
+export const getWorkspaceDataExportResponseRetryCyclesMax = 2;
+
+export const getWorkspaceDataExportResponseRowsProcessedMin = 0;
+
+export const getWorkspaceDataExportResponseBytesPreparedMin = 0;
+
+
+
+export const GetWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "schemaVersion": zod.literal(2),
+  "attempts": zod.int().min(getWorkspaceDataExportResponseAttemptsMin).max(getWorkspaceDataExportResponseAttemptsMax),
+  "retryCycles": zod.int().min(getWorkspaceDataExportResponseRetryCyclesMin).max(getWorkspaceDataExportResponseRetryCyclesMax),
+  "rowsProcessed": zod.int().min(getWorkspaceDataExportResponseRowsProcessedMin),
+  "bytesPrepared": zod.int().min(getWorkspaceDataExportResponseBytesPreparedMin),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "errorCode": zod.string().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "scope": zod.string(),
+  "mayCancel": zod.boolean(),
+  "mayRetry": zod.boolean()
+})
+
+
+export const CancelWorkspaceDataExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const CancelWorkspaceDataExportBody = zod.object({
+  "expectedVersion": zod.int().min(1)
+})
+
+
+export const cancelWorkspaceDataExportResponseAttemptsMin = 0;
+export const cancelWorkspaceDataExportResponseAttemptsMax = 3;
+
+export const cancelWorkspaceDataExportResponseRetryCyclesMin = 0;
+export const cancelWorkspaceDataExportResponseRetryCyclesMax = 2;
+
+export const cancelWorkspaceDataExportResponseRowsProcessedMin = 0;
+
+export const cancelWorkspaceDataExportResponseBytesPreparedMin = 0;
+
+
+
+export const CancelWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "schemaVersion": zod.literal(2),
+  "attempts": zod.int().min(cancelWorkspaceDataExportResponseAttemptsMin).max(cancelWorkspaceDataExportResponseAttemptsMax),
+  "retryCycles": zod.int().min(cancelWorkspaceDataExportResponseRetryCyclesMin).max(cancelWorkspaceDataExportResponseRetryCyclesMax),
+  "rowsProcessed": zod.int().min(cancelWorkspaceDataExportResponseRowsProcessedMin),
+  "bytesPrepared": zod.int().min(cancelWorkspaceDataExportResponseBytesPreparedMin),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "errorCode": zod.string().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "scope": zod.string(),
+  "mayCancel": zod.boolean(),
+  "mayRetry": zod.boolean()
+})
+
+
+export const RetryWorkspaceDataExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const RetryWorkspaceDataExportBody = zod.object({
+  "expectedVersion": zod.int().min(1)
+})
+
+
+export const retryWorkspaceDataExportResponseAttemptsMin = 0;
+export const retryWorkspaceDataExportResponseAttemptsMax = 3;
+
+export const retryWorkspaceDataExportResponseRetryCyclesMin = 0;
+export const retryWorkspaceDataExportResponseRetryCyclesMax = 2;
+
+export const retryWorkspaceDataExportResponseRowsProcessedMin = 0;
+
+export const retryWorkspaceDataExportResponseBytesPreparedMin = 0;
+
+
+
+export const RetryWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "schemaVersion": zod.literal(2),
+  "attempts": zod.int().min(retryWorkspaceDataExportResponseAttemptsMin).max(retryWorkspaceDataExportResponseAttemptsMax),
+  "retryCycles": zod.int().min(retryWorkspaceDataExportResponseRetryCyclesMin).max(retryWorkspaceDataExportResponseRetryCyclesMax),
+  "rowsProcessed": zod.int().min(retryWorkspaceDataExportResponseRowsProcessedMin),
+  "bytesPrepared": zod.int().min(retryWorkspaceDataExportResponseBytesPreparedMin),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "errorCode": zod.string().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "scope": zod.string(),
+  "mayCancel": zod.boolean(),
+  "mayRetry": zod.boolean()
+})
+
+
+export const DownloadPreparedWorkspaceDataParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const DownloadPreparedWorkspaceDataResponse = zod.unknown()
+
+
 export const requestAccessSupportBodyEmailMax = 254;
 
 export const requestAccessSupportBodyMessageMin = 20;
@@ -356,6 +565,173 @@ export const GetStaffOperationsResponse = zod.object({
   "area": zod.enum(['content', 'support', 'finance', 'system']),
   "notice": zod.string(),
   "records": zod.array(zod.record(zod.string(), zod.unknown()))
+})
+
+
+export const GetOrderDisputeInformationParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetOrderDisputeInformationResponse = zod.object({
+  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "notice": zod.string()
+})
+
+
+export const SaveOrderDisputeInformationParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const saveOrderDisputeInformationBodyCustomerNameMax = 150;
+
+export const saveOrderDisputeInformationBodyCustomerPhoneMin = 5;
+export const saveOrderDisputeInformationBodyCustomerPhoneMax = 40;
+
+export const saveOrderDisputeInformationBodyServiceDetailsMin = 10;
+export const saveOrderDisputeInformationBodyServiceDetailsMax = 2000;
+
+export const saveOrderDisputeInformationBodyDeliveryAddressMax = 500;
+
+
+
+export const SaveOrderDisputeInformationBody = zod.object({
+  "disputeId": zod.uuid(),
+  "requestKey": zod.uuid(),
+  "customerName": zod.string().min(1).max(saveOrderDisputeInformationBodyCustomerNameMax),
+  "customerPhone": zod.string().min(saveOrderDisputeInformationBodyCustomerPhoneMin).max(saveOrderDisputeInformationBodyCustomerPhoneMax),
+  "serviceDetails": zod.string().min(saveOrderDisputeInformationBodyServiceDetailsMin).max(saveOrderDisputeInformationBodyServiceDetailsMax),
+  "deliveryAddress": zod.string().max(saveOrderDisputeInformationBodyDeliveryAddressMax).optional(),
+  "deliveryDate": zod.coerce.date().optional(),
+  "consentVersion": zod.enum(['test-dispute-information-v1'])
+})
+
+export const SaveOrderDisputeInformationResponse = zod.object({
+  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "notice": zod.string()
+})
+
+
+export const GetFinanceDisputeParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetFinanceDisputeResponse = zod.object({
+  "providerId": zod.string(),
+  "held": zod.boolean(),
+  "controlVersion": zod.int(),
+  "category": zod.string().nullable(),
+  "entitlementStatus": zod.string().nullable(),
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const PrepareFinanceDisputeParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const prepareFinanceDisputeBodyMessageMin = 10;
+export const prepareFinanceDisputeBodyMessageMax = 1500;
+
+export const prepareFinanceDisputeBodyAmountKoboMin = 0;
+export const prepareFinanceDisputeBodyAmountKoboMax = 2147483647;
+
+
+
+export const PrepareFinanceDisputeBody = zod.object({
+  "kind": zod.enum(['upload_receipt', 'submit_evidence', 'merchant_decision']),
+  "requestKey": zod.uuid(),
+  "message": zod.string().min(prepareFinanceDisputeBodyMessageMin).max(prepareFinanceDisputeBodyMessageMax),
+  "informationId": zod.uuid().optional(),
+  "resolution": zod.enum(['merchant-accepted', 'declined']).optional(),
+  "amountKobo": zod.int().min(prepareFinanceDisputeBodyAmountKoboMin).max(prepareFinanceDisputeBodyAmountKoboMax).optional()
+})
+
+export const PrepareFinanceDisputeResponse = zod.object({
+  "providerId": zod.string(),
+  "held": zod.boolean(),
+  "controlVersion": zod.int(),
+  "category": zod.string().nullable(),
+  "entitlementStatus": zod.string().nullable(),
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const ControlFinanceDisputeParams = zod.object({
+  "id": zod.uuid(),
+  "operation": zod.enum(['execute', 'reconcile', 'cancel'])
+})
+
+
+
+
+export const ControlFinanceDisputeBody = zod.object({
+  "acknowledgement": zod.boolean().optional(),
+  "expectedVersion": zod.int().min(1)
+})
+
+export const ControlFinanceDisputeResponse = zod.object({
+  "providerId": zod.string(),
+  "held": zod.boolean(),
+  "controlVersion": zod.int(),
+  "category": zod.string().nullable(),
+  "entitlementStatus": zod.string().nullable(),
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
 })
 
 
@@ -5904,23 +6280,6 @@ export const GetWorkspaceDisputesResponse = zod.object({
   "createdAt": zod.string()
 }))
 })),
-  "workflows": zod.array(zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "orderTitle": zod.string(),
-  "orderAmountKobo": zod.int(),
-  "providerId": zod.string(),
-  "canonicalStatus": zod.string(),
-  "providerResolution": zod.string().nullable(),
-  "providerAmountKobo": zod.int().nullable(),
-  "category": zod.string().nullable(),
-  "entitlementStatus": zod.string().nullable(),
-  "held": zod.boolean(),
-  "version": zod.int(),
-  "checkedAt": zod.string(),
-  "createdAt": zod.string()
-})),
   "notice": zod.string()
 })
 
@@ -5995,261 +6354,6 @@ export const RespondPaymentConcernResponse = zod.object({
 })
 
 
-export const GetFinanceDisputesResponse = zod.object({
-  "concerns": zod.array(zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "message": zod.string(),
-  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
-  "latestReply": zod.string().nullable(),
-  "version": zod.int(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string(),
-  "history": zod.array(zod.object({
-  "id": zod.string(),
-  "action": zod.string(),
-  "reason": zod.string(),
-  "actorType": zod.enum(['customer', 'finance', 'worker']),
-  "createdAt": zod.string()
-}))
-})),
-  "workflows": zod.array(zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "orderTitle": zod.string(),
-  "orderAmountKobo": zod.int(),
-  "providerId": zod.string(),
-  "canonicalStatus": zod.string(),
-  "providerResolution": zod.string().nullable(),
-  "providerAmountKobo": zod.int().nullable(),
-  "category": zod.string().nullable(),
-  "entitlementStatus": zod.string().nullable(),
-  "held": zod.boolean(),
-  "version": zod.int(),
-  "checkedAt": zod.string(),
-  "createdAt": zod.string()
-})),
-  "observations": zod.array(zod.object({
-  "orderId": zod.string(),
-  "providerId": zod.string(),
-  "status": zod.string(),
-  "checkedAt": zod.string()
-})),
-  "executionEnabled": zod.boolean(),
-  "notice": zod.string()
-})
-
-
-export const linkFinanceDisputeBodyProviderIdRegExp = new RegExp('^\\d{1,40}$');
-
-
-export const LinkFinanceDisputeBody = zod.object({
-  "orderId": zod.uuid(),
-  "providerId": zod.string().regex(linkFinanceDisputeBodyProviderIdRegExp)
-})
-
-export const LinkFinanceDisputeResponse = zod.object({
-  "workflow": zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "orderTitle": zod.string(),
-  "orderAmountKobo": zod.int(),
-  "providerId": zod.string(),
-  "canonicalStatus": zod.string(),
-  "providerResolution": zod.string().nullable(),
-  "providerAmountKobo": zod.int().nullable(),
-  "category": zod.string().nullable(),
-  "entitlementStatus": zod.string().nullable(),
-  "held": zod.boolean(),
-  "version": zod.int(),
-  "checkedAt": zod.string(),
-  "createdAt": zod.string()
-}),
-  "intents": zod.array(zod.object({
-  "id": zod.string(),
-  "operation": zod.enum(['receipt_upload', 'evidence', 'resolve']),
-  "state": zod.enum(['prepared', 'dispatching', 'acknowledged', 'unknown', 'needs_review', 'cancelled', 'reconciled']),
-  "inputHash": zod.string(),
-  "sourceReference": zod.string(),
-  "summary": zod.string(),
-  "facts": zod.array(zod.object({
-  "label": zod.string(),
-  "value": zod.string()
-})),
-  "createdAt": zod.string(),
-  "attemptedAt": zod.string().nullable(),
-  "acknowledgedAt": zod.string().nullable(),
-  "providerFilename": zod.string().nullable(),
-  "providerEvidenceId": zod.string().nullable(),
-  "failure": zod.string().nullable(),
-  "receiptUrl": zod.string().nullable()
-})),
-  "history": zod.array(zod.object({
-  "id": zod.string(),
-  "action": zod.string(),
-  "reason": zod.string(),
-  "actorType": zod.enum(['customer', 'finance', 'worker']),
-  "createdAt": zod.string()
-})),
-  "executionEnabled": zod.boolean(),
-  "notice": zod.string()
-})
-
-
-export const GetFinanceDisputeParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const GetFinanceDisputeResponse = zod.object({
-  "workflow": zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "orderTitle": zod.string(),
-  "orderAmountKobo": zod.int(),
-  "providerId": zod.string(),
-  "canonicalStatus": zod.string(),
-  "providerResolution": zod.string().nullable(),
-  "providerAmountKobo": zod.int().nullable(),
-  "category": zod.string().nullable(),
-  "entitlementStatus": zod.string().nullable(),
-  "held": zod.boolean(),
-  "version": zod.int(),
-  "checkedAt": zod.string(),
-  "createdAt": zod.string()
-}),
-  "intents": zod.array(zod.object({
-  "id": zod.string(),
-  "operation": zod.enum(['receipt_upload', 'evidence', 'resolve']),
-  "state": zod.enum(['prepared', 'dispatching', 'acknowledged', 'unknown', 'needs_review', 'cancelled', 'reconciled']),
-  "inputHash": zod.string(),
-  "sourceReference": zod.string(),
-  "summary": zod.string(),
-  "facts": zod.array(zod.object({
-  "label": zod.string(),
-  "value": zod.string()
-})),
-  "createdAt": zod.string(),
-  "attemptedAt": zod.string().nullable(),
-  "acknowledgedAt": zod.string().nullable(),
-  "providerFilename": zod.string().nullable(),
-  "providerEvidenceId": zod.string().nullable(),
-  "failure": zod.string().nullable(),
-  "receiptUrl": zod.string().nullable()
-})),
-  "history": zod.array(zod.object({
-  "id": zod.string(),
-  "action": zod.string(),
-  "reason": zod.string(),
-  "actorType": zod.enum(['customer', 'finance', 'worker']),
-  "createdAt": zod.string()
-})),
-  "executionEnabled": zod.boolean(),
-  "notice": zod.string()
-})
-
-
-export const ActOnFinanceDisputeParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-export const actOnFinanceDisputeBodyReasonMin = 10;
-export const actOnFinanceDisputeBodyReasonMax = 1500;
-
-export const actOnFinanceDisputeBodyInformationCustomerEmailMax = 254;
-
-export const actOnFinanceDisputeBodyInformationCustomerNameMax = 150;
-
-export const actOnFinanceDisputeBodyInformationCustomerPhoneMin = 5;
-export const actOnFinanceDisputeBodyInformationCustomerPhoneMax = 40;
-
-export const actOnFinanceDisputeBodyInformationServiceDetailsMin = 10;
-export const actOnFinanceDisputeBodyInformationServiceDetailsMax = 2000;
-
-export const actOnFinanceDisputeBodyInformationDeliveryAddressMax = 500;
-
-export const actOnFinanceDisputeBodyInformationDeliveryDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const actOnFinanceDisputeBodySourceNoteMin = 10;
-export const actOnFinanceDisputeBodySourceNoteMax = 1500;
-
-export const actOnFinanceDisputeBodyAmountKoboMin = 0;
-export const actOnFinanceDisputeBodyAmountKoboMax = 2147483647;
-
-
-
-export const ActOnFinanceDisputeBody = zod.object({
-  "expectedVersion": zod.int().min(1),
-  "action": zod.enum(['hold', 'release_hold', 'reconcile', 'prepare_receipt', 'prepare_evidence', 'prepare_decision', 'cancel_intent', 'dispatch_intent']),
-  "reason": zod.string().min(actOnFinanceDisputeBodyReasonMin).max(actOnFinanceDisputeBodyReasonMax),
-  "intentId": zod.uuid().optional(),
-  "requestKey": zod.uuid().optional(),
-  "acknowledgement": zod.boolean().optional(),
-  "information": zod.object({
-  "customer_email": zod.email().max(actOnFinanceDisputeBodyInformationCustomerEmailMax),
-  "customer_name": zod.string().min(1).max(actOnFinanceDisputeBodyInformationCustomerNameMax),
-  "customer_phone": zod.string().min(actOnFinanceDisputeBodyInformationCustomerPhoneMin).max(actOnFinanceDisputeBodyInformationCustomerPhoneMax),
-  "service_details": zod.string().min(actOnFinanceDisputeBodyInformationServiceDetailsMin).max(actOnFinanceDisputeBodyInformationServiceDetailsMax),
-  "delivery_address": zod.string().min(1).max(actOnFinanceDisputeBodyInformationDeliveryAddressMax).optional(),
-  "delivery_date": zod.string().regex(actOnFinanceDisputeBodyInformationDeliveryDateRegExp).optional()
-}).optional(),
-  "sourceNote": zod.string().min(actOnFinanceDisputeBodySourceNoteMin).max(actOnFinanceDisputeBodySourceNoteMax).optional(),
-  "resolution": zod.enum(['merchant-accepted', 'declined']).optional(),
-  "amountKobo": zod.int().min(actOnFinanceDisputeBodyAmountKoboMin).max(actOnFinanceDisputeBodyAmountKoboMax).optional()
-})
-
-export const ActOnFinanceDisputeResponse = zod.object({
-  "workflow": zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "orderTitle": zod.string(),
-  "orderAmountKobo": zod.int(),
-  "providerId": zod.string(),
-  "canonicalStatus": zod.string(),
-  "providerResolution": zod.string().nullable(),
-  "providerAmountKobo": zod.int().nullable(),
-  "category": zod.string().nullable(),
-  "entitlementStatus": zod.string().nullable(),
-  "held": zod.boolean(),
-  "version": zod.int(),
-  "checkedAt": zod.string(),
-  "createdAt": zod.string()
-}),
-  "intents": zod.array(zod.object({
-  "id": zod.string(),
-  "operation": zod.enum(['receipt_upload', 'evidence', 'resolve']),
-  "state": zod.enum(['prepared', 'dispatching', 'acknowledged', 'unknown', 'needs_review', 'cancelled', 'reconciled']),
-  "inputHash": zod.string(),
-  "sourceReference": zod.string(),
-  "summary": zod.string(),
-  "facts": zod.array(zod.object({
-  "label": zod.string(),
-  "value": zod.string()
-})),
-  "createdAt": zod.string(),
-  "attemptedAt": zod.string().nullable(),
-  "acknowledgedAt": zod.string().nullable(),
-  "providerFilename": zod.string().nullable(),
-  "providerEvidenceId": zod.string().nullable(),
-  "failure": zod.string().nullable(),
-  "receiptUrl": zod.string().nullable()
-})),
-  "history": zod.array(zod.object({
-  "id": zod.string(),
-  "action": zod.string(),
-  "reason": zod.string(),
-  "actorType": zod.enum(['customer', 'finance', 'worker']),
-  "createdAt": zod.string()
-})),
-  "executionEnabled": zod.boolean(),
-  "notice": zod.string()
-})
-
-
 export const ActOnPaymentConcernParams = zod.object({
   "id": zod.uuid()
 })
@@ -6286,11 +6390,106 @@ export const ActOnPaymentConcernResponse = zod.object({
 })
 
 
-export const GetFinanceDisputeReceiptParams = zod.object({
-  "id": zod.uuid(),
-  "intentId": zod.uuid()
+export const GetFinancePaymentConcernsResponse = zod.object({
+  "concerns": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "orderReference": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
+  "latestReply": zod.string().nullable(),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "history": zod.array(zod.object({
+  "id": zod.string(),
+  "action": zod.string(),
+  "reason": zod.string(),
+  "actorType": zod.enum(['customer', 'finance', 'worker']),
+  "createdAt": zod.string()
+}))
+})),
+  "notice": zod.string()
 })
 
-export const GetFinanceDisputeReceiptResponse = zod.unknown()
+
+export const linkFinanceDisputeBodyProviderIdRegExp = new RegExp('^\\d{1,40}$');
+
+
+export const LinkFinanceDisputeBody = zod.object({
+  "orderId": zod.uuid(),
+  "providerId": zod.string().regex(linkFinanceDisputeBodyProviderIdRegExp)
+})
+
+export const LinkFinanceDisputeResponse = zod.object({
+  "providerId": zod.string(),
+  "held": zod.boolean(),
+  "controlVersion": zod.int(),
+  "category": zod.string().nullable(),
+  "entitlementStatus": zod.string().nullable(),
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const HoldFinanceDisputeParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const holdFinanceDisputeBodyReasonMin = 10;
+export const holdFinanceDisputeBodyReasonMax = 1500;
+
+
+
+export const HoldFinanceDisputeBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "held": zod.boolean(),
+  "reason": zod.string().min(holdFinanceDisputeBodyReasonMin).max(holdFinanceDisputeBodyReasonMax)
+})
+
+export const HoldFinanceDisputeResponse = zod.object({
+  "providerId": zod.string(),
+  "held": zod.boolean(),
+  "controlVersion": zod.int(),
+  "category": zod.string().nullable(),
+  "entitlementStatus": zod.string().nullable(),
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
 
 
