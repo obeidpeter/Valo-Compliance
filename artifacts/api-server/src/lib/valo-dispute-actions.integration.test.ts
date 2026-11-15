@@ -6,13 +6,14 @@ import express from "express";
 import {GetFinanceDisputeResponse} from "@workspace/api-zod";
 import {eq,and} from "drizzle-orm";
 import {db,pool,valoOrders,valoPrices,valoEntitlements,valoPurchaseOutbox,valoStaffAssignments,
-  valoDisputeActions,valoDisputeTransitions,valoPaymentDisputes,valoRefundRequests} from "@workspace/db";
+  valoDisputeActions,valoDisputeTransitions,valoPaymentDisputes,valoRefundRequests,valoPaymentConcerns,valoConcernMessages,valoPaymentConcernEvents,valoSupportTickets} from "@workspace/db";
 import {resolveWorkspace,ValoProblem} from "./valo-store";
 import {financeHeldFixture} from "./valo-finance-test-fixture";
 import {storeVerifiedDispute} from "./valo-payment-disputes";
 import {makeDisputeTransport} from "./valo-dispute-provider";
 import {saveDisputeInformation,orderDisputeInformation,prepareDisputeAction,controlDisputeAction,financeDispute,renderPurchaseReceipt,cancelUnsentDisputeWork,holdFinanceDispute,linkFinanceDispute,reconcileDisputeActions} from "./valo-dispute-actions";
 import {createPaymentConcern,respondPaymentConcern,actOnPaymentConcern,getWorkspaceDisputes} from "./valo-payment-concerns";
+import {eraseSupportContentBatch,closePrivacyErasureLocks} from "./valo-privacy-erasure";
 import {workspaceDataExport} from "./valo-customer-access";
 import {makeDisputeOperationsRouter} from "../routes/valo-customer-access";
 
@@ -250,6 +251,26 @@ test("durable dispute intents: development PostgreSQL, controlled PSP and actual
         await db.update(valoStaffAssignments).set({active:true}).where(eq(valoStaffAssignments.id,role));
       }
     });
+    await t.test("a disabled preflight after receipt rendering is provably unsent, not an unknown liability",async()=>{
+      const f=await fixture(),a=await action(f,"upload_receipt");let enabled=true,requests=0;
+      const provider=makeDisputeTransport(async()=>{requests++;return f.raw;},async()=>{throw Error("UNEXPECTED_UPLOAD");},()=>enabled);
+      await controlDisputeAction(actor,a.id,"execute",{expectedVersion:1,acknowledgement:true},provider,async()=>{enabled=false;return pdf;});
+      assert.equal(requests,0);assert.equal((await row(a.id)).status,"cancelled");assert.equal((await row(a.id)).failure,"NO_MUTATION_DISPATCHED");
+    });
+    await t.test("support, concern and message erasure share 100 rows without skipping a family",async()=>{
+      const fresh=await resolveWorkspace("synthetic-dispute-erasure-"+randomUUID());
+      // This owned workspace needs a financial parent solely for tenant FKs.
+      const order=randomUUID();await db.insert(valoOrders).values({id:order,workspaceId:fresh.workspaceId,requestedBy:fresh.identityId,requestKey:randomUUID(),priceId:price,reference:"valo-test-"+order,amountKobo:10000,line:{title:"Owned erasure test",contentVersionId:held.id,licenceVersion:"synthetic",licenceText:"No sale",taxTreatment:"No tax assertion"}});
+      await db.insert(valoSupportTickets).values({id:randomUUID(),workspaceId:fresh.workspaceId,category:"general",scope:"Sensitive controlled support content",contactEmail:"synthetic@example.invalid",sharingConsent:false,consentVersion:"synthetic"});
+      const cs=Array.from({length:101},()=>({id:randomUUID(),workspaceId:fresh.workspaceId,orderId:order,requestKey:randomUUID(),inputHash:"a".repeat(64),message:"Sensitive controlled concern content",latestReply:"Sensitive controlled response"}));await db.insert(valoPaymentConcerns).values(cs);
+      const events=cs.map(c=>({id:randomUUID(),workspaceId:fresh.workspaceId,orderId:order,concernId:c.id,actorType:"customer",actorId:fresh.identityId,action:"concern_created",reason:"Metadata only",customerVisible:true}));await db.insert(valoPaymentConcernEvents).values(events);
+      await db.insert(valoConcernMessages).values(events.map(e=>({id:e.id,workspaceId:e.workspaceId,orderId:order,concernId:e.concernId,body:"Sensitive controlled thread message"})));
+      const counts=[];for(let n=0;n<4;n++){const result=await db.transaction(tx=>eraseSupportContentBatch(tx,fresh.workspaceId));counts.push(result.rowCount);if(result.rowCount<100)break;}
+      assert.deepEqual(counts,[100,100,3]);assert.equal((await db.select().from(valoConcernMessages).where(eq(valoConcernMessages.workspaceId,fresh.workspaceId))).length,0);
+      const after=await db.select().from(valoPaymentConcerns).where(eq(valoPaymentConcerns.workspaceId,fresh.workspaceId));assert.ok(after.every(c=>c.message.includes("removed by verified workspace erasure")&&c.latestReply===null));
+      assert.ok((await getWorkspaceDisputes(owner)).concerns.some(c=>c.message.includes("separate synthetic")),"other workspace content unchanged");
+      assert.equal((await db.select().from(valoPaymentConcernEvents).where(eq(valoPaymentConcernEvents.workspaceId,fresh.workspaceId))).length,101,"immutable metadata remains");
+    });
     await t.test("awaiting canonical labels cannot establish an observed financial decision",async()=>{
       const f=await fixture(),a=await action(f,"merchant_decision",{resolution:"merchant-accepted",amountKobo:1000});
       await db.update(valoDisputeActions).set({status:"unknown",attempts:1,updatedAt:new Date(0)}).where(eq(valoDisputeActions.id,a.id));
@@ -274,7 +295,7 @@ test("durable dispute intents: development PostgreSQL, controlled PSP and actual
     console.log(JSON.stringify({realMerchantCalls:0,externalMessages:0,actualPdfReader:"pdftotext",syntheticFinancialHistoryRetained:true}));
   }finally{
     await db.update(valoStaffAssignments).set({active:false}).where(eq(valoStaffAssignments.id,role));
-    await pool.end();
+    await closePrivacyErasureLocks();await pool.end();
   }
 });
 

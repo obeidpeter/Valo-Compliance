@@ -84,9 +84,9 @@ export function makeDisputeTransport(api:Api,upload:typeof fetch=fetch,enabled=(
   return{
     configured:enabled,fetch:read,
     async upload(c,name,bytes,beforePut){
-      check();filename.parse(name);
+      await beforeMutation(async()=>{check();filename.parse(name);
       if(!name.endsWith(".pdf")||bytes.length<20||bytes.length>2*1024*1024||bytes.subarray(0,5).toString()!=="%PDF-")
-        throw new ValoProblem(422,"Only a bounded server-generated purchase receipt PDF is supported.");
+        throw new ValoProblem(422,"Only a bounded server-generated purchase receipt PDF is supported.");});
       await beforeMutation(()=>actionable(c));
       const data=await beforeMutation(async()=>z.object({signedUrl:z.string().url(),fileName:filename}).parse(
         await api("/dispute/"+c.providerId+"/upload_url?upload_filename="+encodeURIComponent(name))));
@@ -101,7 +101,7 @@ export function makeDisputeTransport(api:Api,upload:typeof fetch=fetch,enabled=(
       return proof;
     },
     async evidence(c,raw,beforeSend){
-      check();const data=disputeInformation.parse(raw);await beforeMutation(()=>actionable(c));
+      const data=await beforeMutation(async()=>{check();return disputeInformation.parse(raw);});await beforeMutation(()=>actionable(c));
       if(beforeSend)await beforeMutation(beforeSend);await beforeMutation(async()=>check());
       const result=z.object({id:z.union([providerId,z.number().int().nonnegative().safe()]).transform(String),
         dispute:z.union([providerId,z.number().int().nonnegative().safe()]).transform(String)}).parse(
@@ -110,7 +110,7 @@ export function makeDisputeTransport(api:Api,upload:typeof fetch=fetch,enabled=(
       return{evidenceId:result.id};
     },
     async resolve(c,input,beforeSend){
-      check();const payload=resolutionPayload(input,c.amountKobo),current=await beforeMutation(()=>actionable(c));
+      const payload=await beforeMutation(async()=>{check();return resolutionPayload(input,c.amountKobo);}),current=await beforeMutation(()=>actionable(c));
       if(current.category==="fraud"&&payload.resolution==="declined"&&payload.evidence===undefined)
         throw new DisputeMutationNotSent(422,"This fraud claim also requires acknowledged structured evidence.");
       if(!["general","fraud"].includes(current.category??""))

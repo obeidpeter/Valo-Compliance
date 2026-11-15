@@ -8,7 +8,12 @@ import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 import { chromium, expect } from '@playwright/test';
 import { developmentPublicationOnly, publicationWorkspaceRoot } from '../editorial/operational-policy';
-import type { WorkspaceDataExportJob } from '@workspace/api-zod';
+import type { WorkspaceDataExportJob as WorkspaceDataExportModel } from '@workspace/api-zod';
+// Generated server models use Date; this controlled HTTP fixture sends their
+// JSON representation, matching the generated browser contract's ISO strings.
+type WorkspaceDataExportJob = Omit<WorkspaceDataExportModel, 'createdAt' | 'updatedAt' | 'expiresAt'> & {
+  createdAt: string; updatedAt: string; expiresAt: string | null;
+};
 
 developmentPublicationOnly();
 if (process.env.VALO_RUN_WORKSPACE_EXPORT_JOBS_BROWSER !== 'synthetic-development-only') throw Error('EXPLICIT_SYNTHETIC_BROWSER_FLAG_REQUIRED');

@@ -202,7 +202,9 @@ export async function withPreparedWorkspaceExport<T>(actor:WorkspaceActor,id:str
     const row=await readOwned(tx,actor,id);
     if(row.status!=="ready"||!row.expiresAt||row.expiresAt.getTime()<=Date.now())throw new ValoProblem(409,"This export is not available. Reload its status.");
     const[asset]=await tx.select().from(valoFileAssets).where(and(eq(valoFileAssets.workspaceExportJobId,id),eq(valoFileAssets.workspaceId,actor.workspaceId))).limit(1);
-    if(!asset||asset.withdrawnAt||asset.mime!=="application/json")throw new ValoProblem(409,"The private export is not available.");
+    if(!asset||asset.withdrawnAt||asset.mime!=="application/json"||
+      asset.objectKey!==`valo/development/${actor.workspaceId}/${asset.id}.json`)
+      throw new ValoProblem(409,"The private export is not available.");
     return{row,asset};
   });
   return storage.withFile(binding.asset.objectKey,binding.asset.checksum,binding.asset.size,async path=>{

@@ -97,25 +97,26 @@ export async function holdUnsentPrivacyNotifications(tx:Tx,workspaceId:string){
     WHERE ctid IN (SELECT ctid FROM valo_purchase_outbox WHERE workspace_id=${workspaceId}::uuid
       AND status IN ('awaiting_email_configuration','pending','retry') LIMIT 100)`);
 }
+/** One shared row budget. Returning fewer than 100 means every family below
+ * is exhausted, so the signed cursor can safely advance to its next phase. */
+export async function eraseSupportContentBatch(tx:Tx,workspaceId:string){
+ let count=0;
+ const support=await tx.execute(sql`UPDATE valo_support_tickets SET scope=${removedMessage},contact_email='erased@invalid'
+  WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
+    AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);count+=support.rowCount??0;
+ if(count<100){const concerns=await tx.execute(sql`UPDATE valo_payment_concerns SET message=${removedMessage},latest_reply=NULL
+  WHERE ctid IN (SELECT ctid FROM valo_payment_concerns WHERE workspace_id=${workspaceId}::uuid
+    AND (message<>${removedMessage} OR latest_reply IS NOT NULL) LIMIT ${100-count})`);count+=concerns.rowCount??0;}
+ if(count<100){const messages=await tx.execute(sql`DELETE FROM valo_concern_messages WHERE ctid IN
+  (SELECT ctid FROM valo_concern_messages WHERE workspace_id=${workspaceId}::uuid LIMIT ${100-count})`);count+=messages.rowCount??0;}
+ return{rowCount:count};
+}
 async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[number],currentCaseId:string){
   if(section==="dispute_work")return cancelUnsentDisputeWork(tx,workspaceId);
   if(section==="privacy_messages")return tx.execute(sql`DELETE FROM valo_privacy_messages WHERE ctid IN
     (SELECT ctid FROM valo_privacy_messages WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
   if(section==="purchase_notifications")return holdUnsentPrivacyNotifications(tx,workspaceId);
-  if(section==="support_content"){
-    // Keep the signed phase count/order unchanged. Each call still affects at
-    // most 100 rows; replay next handles concern text and removable messages.
-    const support=await tx.execute(sql`UPDATE valo_support_tickets SET scope=${removedMessage},contact_email='erased@invalid'
-      WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
-        AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);
-    if(support.rowCount)return support;
-    const concerns=await tx.execute(sql`UPDATE valo_payment_concerns SET message=${removedMessage},latest_reply=NULL
-      WHERE ctid IN (SELECT ctid FROM valo_payment_concerns WHERE workspace_id=${workspaceId}::uuid
-        AND (message<>${removedMessage} OR latest_reply IS NOT NULL) LIMIT 100)`);
-    if(concerns.rowCount)return concerns;
-    return tx.execute(sql`DELETE FROM valo_concern_messages WHERE ctid IN
-      (SELECT ctid FROM valo_concern_messages WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
-  }
+  if(section==="support_content")return eraseSupportContentBatch(tx,workspaceId);
   if(section==="privacy_content"){
     const rows=await tx.select().from(valoPrivacyCases).where(and(eq(valoPrivacyCases.workspaceId,workspaceId),
       ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100).for("update");

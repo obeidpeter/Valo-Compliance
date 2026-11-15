@@ -31,7 +31,7 @@ async function noErasure(tx:Tx,workspaceId:string){
  if(t)throw new ValoProblem(409,"Workspace erasure is recorded. New dispute evidence cannot be sent.");
 }
 export async function createPaymentConcern(actor:WorkspaceActor,id:string,raw:unknown){
- const input=CreatePaymentConcernBody.strict().parse(raw),inputHash=hash({id,message:input.message});
+ const input=CreatePaymentConcernBody.strict().parse(raw);input.message=input.message.trim();if(input.message.length<20)throw new ValoProblem(422,"Describe the concern in at least 20 characters.");const inputHash=hash({id,message:input.message});
  return db.transaction(async tx=>{
  const o=await orderLock(tx,id,actor.workspaceId);await authorizeWorkspaceWrite(tx,actor);
  const[old]=await tx.select().from(valoPaymentConcerns).where(and(eq(valoPaymentConcerns.workspaceId,actor.workspaceId),eq(valoPaymentConcerns.requestKey,input.requestKey)));
@@ -43,7 +43,7 @@ export async function createPaymentConcern(actor:WorkspaceActor,id:string,raw:un
  });
 }
 export async function respondPaymentConcern(actor:WorkspaceActor,id:string,raw:unknown){
- const input=RespondPaymentConcernBody.strict().parse(raw);
+ const input=RespondPaymentConcernBody.strict().parse(raw);input.message=input.message.trim();if(input.message.length<10)throw new ValoProblem(422,"Provide at least 10 characters of information.");
  return db.transaction(async tx=>{
  const[link]=await tx.select().from(valoPaymentConcerns).where(and(eq(valoPaymentConcerns.id,id),eq(valoPaymentConcerns.workspaceId,actor.workspaceId)));
  if(!link)throw new ValoProblem(404,"Concern not found.");const o=await orderLock(tx,link.orderId,actor.workspaceId);await authorizeWorkspaceWrite(tx,actor);
@@ -55,7 +55,7 @@ export async function respondPaymentConcern(actor:WorkspaceActor,id:string,raw:u
  });
 }
 export async function actOnPaymentConcern(actor:FinanceActor,id:string,raw:unknown){
- await assertFinanceActor(actor);const input=ActOnPaymentConcernBody.strict().parse(raw);
+ await assertFinanceActor(actor);const input=ActOnPaymentConcernBody.strict().parse(raw);input.message=input.message.trim();if(input.message.length<10)throw new ValoProblem(422,"Provide a meaningful customer response.");
  return db.transaction(async tx=>{
  const[link]=await tx.select().from(valoPaymentConcerns).where(eq(valoPaymentConcerns.id,id));if(!link)throw new ValoProblem(404,"Concern not found.");
  const o=await orderLock(tx,link.orderId);await requireFinance(tx,actor,"Respond to customer payment concern.");await noErasure(tx,o.workspaceId);
