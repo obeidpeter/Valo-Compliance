@@ -112,8 +112,10 @@ With `VALO_WORKER_HEALTH_PORT` set, the worker binds **127.0.0.1 only**:
 Replies contain only a status and `Cache-Control: no-store`. Failed dispatches, queue
 errors, and operational-dispatch failures make readiness fail. A hung dispatch ages
 out after 90 seconds. Do not expose this port through the public reverse proxy. A
-future supervisor must check readiness, restart an unresponsive worker, and deliver
-alerts externally; the local heartbeat/alert files are not an external monitor.
+bounded supervisor candidate now checks child-bound health reports and restarts an
+unresponsive worker; see [worker supervision](phase2-worker-supervision.md).
+Deployment still needs an outer process manager and external alert delivery; the
+local heartbeat/alert files are not an external monitor.
 
 Every dispatch verifies the existing `valo_jobs` queues:
 

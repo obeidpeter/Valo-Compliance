@@ -25,7 +25,11 @@ const health=new WorkerHealth();
 let heartbeatWrite=Promise.resolve();
 function publishHeartbeat(){
   const snapshot=health.snapshot(),next=heartbeatWrite.then(()=>recordWorkerHeartbeat(snapshot));
-  heartbeatWrite=next.catch(()=>{});return next;
+  const published=next.then(()=>{
+    if(process.env.VALO_SUPERVISED_WORKER==="ipc-v1"&&process.connected&&process.send)
+      process.send({type:"valo.worker.health",heartbeat:snapshot},()=>{});
+  });
+  heartbeatWrite=published.catch(()=>{});return published;
 }
 boss.on("error", () => {health.fail();logger.error({event:"queue.database_error"});void publishHeartbeat().catch(()=>{});});
 let timer:ReturnType<typeof setInterval>|undefined;
@@ -42,10 +46,16 @@ async function stop(){
     await Promise.all([boss.stop({graceful:true,timeout:60000}),dispatchIdle]);
     await closePrivacyErasureLocks();await pool.end();
     if(healthServer)await new Promise<void>((resolve,reject)=>healthServer!.close(e=>e?reject(e):resolve()));
+    if(process.env.VALO_SUPERVISED_WORKER==="ipc-v1"&&process.connected)process.disconnect?.();
   });
 }
 const shutdown=()=>{void stop().catch(()=>{logger.error({event:"export.shutdown_failed"});process.exit(1);});};
 process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);
+// Loss of the supervisor must not leave an unmanaged worker processing jobs.
+if(process.env.VALO_SUPERVISED_WORKER==="ipc-v1"){
+  if(!process.send)throw Error("WORKER_SUPERVISOR_IPC_REQUIRED");
+  process.once("disconnect",shutdown);
+}
 startup=(async()=>{
 if(process.env.VALO_WORKER_HEALTH_PORT!==undefined){
   if(process.env.VALO_WORKER_HEALTH_PORT.trim()!==process.env.VALO_WORKER_HEALTH_PORT||!/^[1-9][0-9]{0,4}$/.test(process.env.VALO_WORKER_HEALTH_PORT))throw Error("INVALID_WORKER_HEALTH_PORT");
