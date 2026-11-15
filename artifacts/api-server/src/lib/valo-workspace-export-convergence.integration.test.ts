@@ -149,6 +149,8 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
       await db.insert(valoStaffAssignments).values({id:randomUUID(),identityId:staff.identityId,role:'privacy',grantedBy:'synthetic',reason});
       const c=await createPrivacyCase(actor,'synthetic@example.invalid',{kind:'deletion',idempotencyKey:randomUUID(),message:reason,acknowledgement:true}),caseId=c.reference.slice(5);
       let detail=await confirmPrivacyCase(actor,caseId,{expectedVersion:1,acknowledgement:true});detail=await simpleStaffPrivacyAction(staff,caseId,{action:'claim',expectedVersion:detail.request.version,reason});
+      const orphanDoc=`valo/development/${actor.workspaceId}/${randomUUID()}.pdf`;
+      await db.insert(valoExportObjects).values({objectKey:orphanDoc,workspaceId:actor.workspaceId,jobId:doc.id,queueId:dj!.queueId,state:'cleanup'});
       detail=await simpleStaffPrivacyAction(staff,caseId,{action:'hold',expectedVersion:detail.request.version,reason});await cancelWorkspaceExport(actor,wj.id,wj.version);
       let deletes=0;const heldStorage={...storage,remove:async()=>{deletes++;}};await cleanupWorkspaceExports(heldStorage,actor.workspaceId);await reconcileExportOrphans(doc.id,heldStorage.remove);assert.equal(deletes,0);
       detail=await simpleStaffPrivacyAction(staff,caseId,{action:'release_hold',expectedVersion:detail.request.version,reason});
@@ -157,7 +159,7 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
       await db.insert(valoExportObjects).values({objectKey:futureDoc,workspaceId:actor.workspaceId,jobId:doc.id,queueId:dj!.queueId,state:'pending'});
       detail=await processPrivacyErasure(staff,caseId,{action:'start_erasure',expectedVersion:detail.request.version,reason,acknowledgement:true},storage.remove);
       detail=await processPrivacyErasure(staff,caseId,{action:'resume_erasure',expectedVersion:detail.request.version,reason,acknowledgement:true},storage.remove);
-      const captured=await db.select().from(valoPrivacyErasureObjects).where(eq(valoPrivacyErasureObjects.caseId,caseId));for(const key of [docKey,json.objectKey,futureJson,futureDoc])assert.ok(captured.some(o=>o.objectKey===key));
+      const captured=await db.select().from(valoPrivacyErasureObjects).where(eq(valoPrivacyErasureObjects.caseId,caseId));for(const key of [docKey,orphanDoc,json.objectKey,futureJson,futureDoc])assert.ok(captured.some(o=>o.objectKey===key));
       await assert.rejects(createWorkspaceExport(actor,randomUUID()),{status:403});await assert.rejects(db.insert(valoPrivacyErasureObjects).values({caseId,workspaceId:actor.workspaceId,objectKey:`valo/development/${actor.workspaceId}/${randomUUID()}.json`}));
       detail=await simpleStaffPrivacyAction(staff,caseId,{action:'hold',expectedVersion:detail.request.version,reason});await cleanupWorkspaceExports(heldStorage,actor.workspaceId);assert.equal(deletes,0);
       detail=await simpleStaffPrivacyAction(staff,caseId,{action:'release_hold',expectedVersion:detail.request.version,reason});

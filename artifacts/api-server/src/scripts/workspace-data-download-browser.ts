@@ -8,7 +8,9 @@ import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 import { chromium, expect } from '@playwright/test';
 import { developmentPublicationOnly, publicationWorkspaceRoot } from '../editorial/operational-policy';
-import type { WorkspaceExportJob as WorkspaceDataExportJob } from '@workspace/api-client-react';
+import type { WorkspaceExportJob as WorkspaceExportModel } from '@workspace/api-zod';
+// JSON transport dates are ISO strings; the generated server model uses Date.
+type WorkspaceDataExportJob=Omit<WorkspaceExportModel,'createdAt'|'expiresAt'> & {createdAt:string;expiresAt:string};
 
 developmentPublicationOnly();
 if (process.env.VALO_RUN_WORKSPACE_DOWNLOAD_BROWSER !== 'synthetic-development-only') throw Error('EXPLICIT_SYNTHETIC_BROWSER_FLAG_REQUIRED');
@@ -188,7 +190,7 @@ try {
   checks.push('Real account boundary aborted the old metadata request and cleared A jobs; B could not retrieve A file and downloaded only B rows.360px keyboard/native transport checks passed.');
   passed = true;
 } finally {
-  const sourceHashes = await Promise.all(['src/components/workspace-export-jobs.tsx', 'src/lib/workspace-export-jobs.ts', 'src/components/workspace-data-download.tsx', 'src/components/account-state-boundary.tsx'].map(async path => ({ path: `artifacts/valo/${path}`, sha256: createHash('sha256').update(await readFile(resolve(front, path))).digest('hex') })));
+  const sourceHashes = await Promise.all(['src/components/workspace-export-jobs.tsx', 'src/lib/workspace-export-jobs.ts', 'src/components/workspace-data-download.tsx', 'src/components/prepared-workspace-download.tsx', 'src/components/account-state-boundary.tsx'].map(async path => ({ path: `artifacts/valo/${path}`, sha256: createHash('sha256').update(await readFile(resolve(front, path))).digest('hex') })));
   await writeFile(resolve(out, 'workspace-export-jobs-browser.json'), JSON.stringify({ executedAt: new Date().toISOString(), passed, scope: 'Actual React/account boundary/native attachment with controlled in-memory HTTP jobs and synthetic cookies; not real DB/worker/provider or full-app layout acceptance.', managedIdentityAcceptance: false, checks, metrics, runtimeErrors, sourceHashes }, null, 2));
   await page.screenshot({ path: resolve(out, 'workspace-export-jobs-mobile.png'), fullPage: true });
   await browser.close(); server.closeAllConnections(); await new Promise<void>(done => server.close(() => done()));
