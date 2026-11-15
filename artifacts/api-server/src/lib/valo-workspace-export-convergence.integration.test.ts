@@ -104,7 +104,9 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
       const actor=await owner(),row=await prepare(actor),blocker=await pool.connect();
       try{
         await blocker.query('begin');await blocker.query('select id from valo_workspace_exports where id=$1 for update',[row.id]);
-        await assert.rejects(bounded(cancelWorkspaceExport(actor,row.id,row.version)),{code:'55P03'});
+        await assert.rejects(bounded(cancelWorkspaceExport(actor,row.id,row.version)),error=>{
+          const failure=error as {code?:string;cause?:{code?:string}};return failure.code==='55P03'||failure.cause?.code==='55P03';
+        });
         assert.equal((await raw(row.id)).status,'ready');assert.equal((await raw(row.id)).version,row.version);assert.equal((await attempt(row.id)).status,'ready');
       }finally{await blocker.query('rollback');blocker.release();}
     });
