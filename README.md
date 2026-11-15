@@ -1,6 +1,21 @@
 # Valo Compliance — Valo Platform
 
-## Current checkpoint — fresh native runtime, reviews still disabled
+## Current checkpoint — current disabled pair and fresh native controls
+
+Reviewed development was synchronized at `ce6d8a8`. The existing eleven-type
+conditional preparer produced one actual TPL-07 v10 factual/challenge pair from
+genuine retained source/rights and final exports. All ten mechanical checks and
+the real private-packet verifier passed. Candidate remains held; reviews did not run.
+
+Fresh native/full-worker suite: **62 passed, zero failures/skips**, including six
+corrected editorial controls. Separate preparation/package/price controls:
+**16 passed**. No new model calls, approvals or reservations.
+New child expires **15 November 2026 at 12:57:52.078 UTC**; maximum US$0.7411008.
+The runtime proposal was rebuilt under the current approval/start boundary;
+historical frozen proposals are not current admission authority.
+See [current IDs, hashes, source-version distinction and holds](docs/valo/review-pair-runtime-checkpoint.md).
+
+### Retained previous bounded runtime
 
 On synchronized `c47aec2`, a fresh genuine native-storage/full-worker run passed
 **62 checks, zero failures/skips**, including process death across claim/render/

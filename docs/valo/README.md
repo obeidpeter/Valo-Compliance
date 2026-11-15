@@ -1,6 +1,13 @@
 # Current development state — still not accepted
 
-Current checkpoint: [fresh native/runtime verification](bounded-runtime-checkpoint.md):
+Current checkpoint: [current disabled review pair and fresh controls](review-pair-runtime-checkpoint.md):
+one TPL-07 pair prepared from real evidence, two exact role requests verified;
+62 fresh native/worker/editorial controls plus 16 separate preparation controls
+passed without failures/skips. Zero inference/approval/reservations. Current
+runtime proposal rebuilt; historical source-corrected snapshot is not admission
+authority under the clarified start boundary.
+
+Retained runtime: [fresh native/runtime verification](bounded-runtime-checkpoint.md):
 62 newly executed engineering checks passed without failures/skips. Real worker
 death/recovery and private SDK checks used a disposable database/test subtree;
 cleanup completed. Current exact disabled TPL-07 pair was revalidated/reused.
