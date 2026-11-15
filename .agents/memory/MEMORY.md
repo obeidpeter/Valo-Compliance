@@ -17,4 +17,4 @@
 - [Recovery evidence](recovery-evidence.md) — later aggregate success cannot establish original per-record failure causes.
 - [Workspace export consistency](workspace-export-consistency.md) — fixed data snapshots cannot freeze authorization; incomplete attempts restart a new dated snapshot, never splice pages.
 - [Isolated unit processes](isolated-unit-processes.md) — clear inherited Node test context; child exit zero alone does not prove tests ran.
-- [Project review updates](project-review-updates.md) — replace the current PR snapshot and link retained evidence; do not append historical progress logs.
+- [Project review updates](project-review-updates.md) — replace current PR snapshots, link retained evidence and check exact-commit ancestry before reporting integration state.

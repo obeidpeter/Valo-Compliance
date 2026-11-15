@@ -54,6 +54,9 @@ try{
   env.VALO_DEV_QUEUE_MIGRATION="reviewed-synthetic-development";
   await command("queue-migration","pnpm",["--filter","@workspace/api-server","exec","tsx","src/scripts/queue-migration.ts","apply-development"]);
   delete env.VALO_DEV_QUEUE_MIGRATION;
+  await check("rich-checker-contracts",["test:valo-rich-checker"]);
+  await check("checker-current-source-task-guard",["test:valo-task-source-guard"]);
+  await check("checker-http-journey",["test:valo-checker-http-db"]);
   await check("portable-erasure-storage",["test:valo-erasure-portable-db"],1);
   await check("privacy-http-role-session-origin",["test:valo-privacy-http-db"]);
   report.outcome="passed";

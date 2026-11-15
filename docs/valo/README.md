@@ -1,12 +1,16 @@
 # Current development state — still not accepted
 
-Current checkpoint: [editorial evidence corrections, verified PR11 integration
-and CI portability](editorial-ci-integration-checkpoint.md).
-Fresh engineering results: API 201 passed/1 skipped, receipt/commerce 26 passed,
-CI boundaries 29 passed/1 native-only skip, editorial provenance 6 passed.
-Typechecks passed. C054 produced three new action-specific denial records.
-These overlapping groups are not formal 80/60/60 acceptance or eligible content.
-PR12 and PR13 were not merged. Hosted CI startup restrictions remain separate.
+Current checkpoint: [reviewed rich checker runtime verification](pr12-runtime-verification.md).
+PR12's reviewed source was already in development history; GitHub confirms it
+merged. The earlier unmerged status was stale. Fresh isolated verification:
+75 engineering passes, zero failures, one native-only skip; full typecheck passed.
+Real anonymous browser checks passed at 360px/1280px. Signed-in browser history
+and missing-answer focus remain unverified because the supported testing service
+was unavailable. Private HTTP proof is explicitly controlled identity transport.
+No PR13 merge, publication or formal 80/60/60 acceptance occurred.
+
+Retained [editorial and receipt/CI evidence](editorial-ci-integration-checkpoint.md)
+remains historical. Hosted CI must be distinguished from local checks.
 
 The [disabled budget work](finite-sdk-admission-checkpoint.md) is preserved.
 No budget/privacy feature changes, inference calls, spending approvals, quota

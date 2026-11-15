@@ -1,6 +1,29 @@
 # Valo Compliance — Valo Platform
 
-## Current checkpoint — editorial evidence and CI portability
+## Current checkpoint — rich checker runtime verification
+
+The exact reviewed checker source was already integrated through normal
+development history; GitHub confirms PR12 is merged. The earlier unmerged
+status was stale. No duplicate merge or history rewrite was performed.
+
+Fresh disposable PostgreSQL verification: **75 engineering checks passed,
+zero failed, one genuine-native-storage-only skip**. This includes the
+26 focused checker tests, 15 current-source task checks and five new HTTP
+journey checks. Full workspace typecheck passed. The new HTTP group is in
+ordinary CI; existing focused/task CI entries were preserved.
+
+The real anonymous questionnaire/review/preview browser journey passed at
+360px and 1280px. **Signed-in browser save/history and result-driven missing
+answer focus remain unverified:** the supported testing service was unavailable.
+Private HTTP verification uses explicitly controlled identity transport, not
+claimed managed-browser proof. No released rules were fabricated.
+
+See [exact runtime evidence and limits](docs/valo/pr12-runtime-verification.md).
+The original 80-case corpus and eight disagreements remain unchanged and held.
+No PR13 merge, budget/privacy feature changes, paid calls, email/PSP activity,
+publication or deployment occurred. R1/R2 and formal 80/60/60 remain unaccepted.
+
+## Retained editorial and CI checkpoint
 
 C038/C039 now pin the actual retained v5 baseline. C054 requires three newly
 committed, action-specific denial records and rejects pre-existing audit IDs.
@@ -14,8 +37,8 @@ Full workspace and subsequent API typechecks passed. Groups overlap; these are
 engineering checks, not formal 80/60/60 acceptance. C054 also ran against the
 development database with three new denial records and zero external actions.
 
-PR11 is already merged, with its reporting tests in ordinary CI. PR12 awaits its
-final reviewed head; PR13 is not ready and was not merged. No maintenance recovery,
+PR11 is already merged, with its reporting tests in ordinary CI. PR12's earlier
+unmerged status is corrected above; no PR13 merge was performed. No maintenance recovery,
 customer deletion, messages or provider execution was performed.
 
 See [exact tests, evidence and limits](docs/valo/editorial-ci-integration-checkpoint.md).
