@@ -1,0 +1,11 @@
+✔ three exact historical findings recompute to their immutable source file hashes (994.933747ms)
+✔ database HTTP and queue-payload proofs run after their real CI prerequisites (4.162696ms)
+✔ a name, value, length or extra-content mismatch cannot receive the digest disposition (0.564264ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1937.324123

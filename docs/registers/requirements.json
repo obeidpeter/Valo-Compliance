@@ -1045,7 +1045,9 @@
       "risk": "Real model integration and evaluations are required; no fabricated business or legal facts.",
       "implementation_status": "unverified",
       "test_status": "not_run_in_this_review",
-      "evidence": []
+      "evidence": [
+        "../valo/finite-sdk-admission-checkpoint.md (partial engineering controls only; formal acceptance remains unverified)"
+      ]
     },
     {
       "id": "AI-008",
@@ -2753,7 +2755,9 @@
       "risk": "Model confidence, agreement, elapsed time and owner override cannot waive mandatory publication evidence.",
       "implementation_status": "unverified",
       "test_status": "not_run_in_this_review",
-      "evidence": []
+      "evidence": [
+        "docs/valo/editorial-ci-integration-checkpoint.md (partial engineering controls only; formal EDP-010 remains unverified)"
+      ]
     },
     {
       "id": "EDP-011",

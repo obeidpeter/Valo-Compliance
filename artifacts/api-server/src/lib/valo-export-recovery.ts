@@ -37,10 +37,17 @@ export async function recoverAbandonedExports(jobId?:string){
  * after success so an upload accepted before process death cannot resurrect an
  * untracked object after an earlier ignore-not-found deletion.
  */
-export async function reconcileExportOrphans(jobId?:string,remove:(key:string)=>Promise<void>=deletePrivateFile){
+export async function reconcileExportOrphans(jobId?:string,remove:(key:string)=>Promise<void>=deletePrivateFile,
+  scope?:{workspaceId:string;caseId:string}){
   assertDevelopmentRuntime();
+  if(scope){
+    const [bound]=await db.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones).where(and(
+      eq(valoPrivacyTombstones.caseId,scope.caseId),eq(valoPrivacyTombstones.workspaceId,scope.workspaceId))).limit(1);
+    if(!bound)throw Error("ERASURE_RECONCILIATION_SCOPE_MISMATCH");
+  }
   const due=await db.select().from(valoExportObjects).where(and(eq(valoExportObjects.state,"cleanup"),
-    lte(valoExportObjects.nextCleanupAt,new Date()),jobId?eq(valoExportObjects.jobId,jobId):undefined)).limit(25);
+    lte(valoExportObjects.nextCleanupAt,new Date()),jobId?eq(valoExportObjects.jobId,jobId):undefined,
+    scope?eq(valoExportObjects.workspaceId,scope.workspaceId):undefined)).limit(25);
   let cleaned=0,failed=0,privacyHeld=0;
   for(const object of due){
     await db.transaction(async tx=>{
@@ -75,7 +82,7 @@ export async function reconcileExportOrphans(jobId?:string,remove:(key:string)=>
   // revisited by the same running worker, including after a killed uploader.
   if(!jobId){
     const {reconcileErasedObjects}=await import("./valo-privacy-erasure");
-    const erased=await reconcileErasedObjects(remove);
+    const erased=await reconcileErasedObjects(remove,scope?.caseId);
     return{cleaned:cleaned+erased.cleaned,failed:failed+erased.failed,privacyHeld:privacyHeld+erased.held};
   }
   return{cleaned,failed,privacyHeld};

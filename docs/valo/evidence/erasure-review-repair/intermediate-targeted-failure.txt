@@ -1,0 +1,89 @@
+▶ erasure holds, bounded recovery and accepted-upload process death
+  ✔ application replay authenticates the entire inventory and case before revocation or profile deletion (3048.11323ms)
+  ✔ distinct advisory locks cannot exhaust a one-connection shared data pool (39.764877ms)
+  ✔ holds and revoked roles stop the next object, while an in-flight result remains recorded (6902.093172ms)
+  ✔ actual export worker cleans an upload finishing after its tracking/job rows were erased (1794.613844ms)
+  ✔ native private upload spans complete erasure and is removed by automatic maintenance (2815.592811ms)
+  ✖ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (5907.930422ms)
+✖ erasure holds, bounded recovery and accepted-upload process death (20575.405294ms)
+ℹ Killed-upload completion used native private App Storage.
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (70.605833ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (98.415528ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (719.844167ms)
+  ✔ ready, pending and cleanup objects are inventoried once before rows disappear and stale workers stay fenced (352.968118ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (1617.828438ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (2353.083533ms)
+  ✔ native private storage deletion and repeated late-write replay remove actual synthetic bytes (1649.885511ms)
+  ✔ sealed key tampering and corrupted completion proof stop before deletion (149.243342ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (1.645793ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (14.465363ms)
+✔ resumable physical development erasure with retained exclusions and replay (8451.183306ms)
+▶ isolated privacy signing-key rotation — no real secret rotation
+  ✔ legacy version is pinned only after its retained signature verifies (32.565123ms)
+  ✔ new version signs while old and legacy signatures still verify (23.27737ms)
+  ✔ missing historical material holds both history verification and identity matching (10.281077ms)
+  ✔ reusing a pinned version name with another key cannot silently re-sign history (9.293346ms)
+  ✔ unsent notices are held idempotently without rewriting accepted outcomes or another tenant (22.701514ms)
+✔ isolated privacy signing-key rotation — no real secret rotation (337.027761ms)
+▶ actual HTTP privacy routes apply an independent privacy role and fresh MFA
+  ✔ information replies do not substitute for owner verification (201.242223ms)
+  ✔ privacy-only identity can read and claim; finance-only cannot (106.127995ms)
+  ✔ read-only inspection and customer replies preserve verification and deduplicate actual HTTP writes (325.704312ms)
+  ✖ quarantined verified requester can answer without restored workspace membership (403.305059ms)
+  ✔ revoked and stale-MFA privacy identities fail on the HTTP route (34.352234ms)
+  ✔ hostile origin never reaches the privacy mutation (6.777316ms)
+✖ actual HTTP privacy routes apply an independent privacy role and fresh MFA (1590.530666ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 27
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 48298.936669
+
+✖ failing tests:
+
+test at src/lib/valo-erasure-hardening.integration.test.ts:3:8864
+✖ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (5907.930422ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-erasure-hardening.integration.test.ts:280:81)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/valo-erasure-hardening.integration.test.ts:243:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src/routes/valo-privacy-http.integration.test.ts:1:9032
+✖ quarantined verified requester can answer without restored workspace membership (403.305059ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  409 !== 200
+  
+      at TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts:157:42)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts:131:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 409,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+undefined
+/home/runner/workspace/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: node --import tsx --test --test-concurrency=1 src/lib/valo-privacy-keys.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts src/lib/valo-erasure-hardening.integration.test.ts src/routes/valo-privacy-http.integration.test.ts

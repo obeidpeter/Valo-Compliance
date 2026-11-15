@@ -87,7 +87,8 @@ test("real development access intake, privacy isolation and staff boundaries",{
       for(const forbidden of[locator,queueId])assert.equal(JSON.stringify(own).includes(forbidden),false);
       for(const forbidden of[jobId,assetId,locator])assert.equal(JSON.stringify(other).includes(forbidden),false);
       assert.match(own.scope,/not complete privacy fulfilment/);
-      assert.match(own.scope,/not private file bytes or storage links/);
+      assert.match(own.scope,/not private file bytes\/storage locators/);
+      assert.match(own.scope,/Previously prepared full workspace snapshots are deliberately not nested/);
     });
     await t.test("activity export is restricted to this requester and workspace",async()=>{
       const otherActor=`synthetic-other-actor-${run}`,eventId=randomUUID();

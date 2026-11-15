@@ -1,5 +1,57 @@
 # Current development state — still not accepted
 
+Current checkpoint: [current disabled review pair and fresh controls](review-pair-runtime-checkpoint.md):
+one TPL-07 pair prepared from real evidence, two exact role requests verified;
+62 fresh native/worker/editorial controls plus 16 separate preparation controls
+passed without failures/skips. Zero inference/approval/reservations. Current
+runtime proposal rebuilt; historical source-corrected snapshot is not admission
+authority under the clarified start boundary.
+
+Retained runtime: [fresh native/runtime verification](bounded-runtime-checkpoint.md):
+62 newly executed engineering checks passed without failures/skips. Real worker
+death/recovery and private SDK checks used a disposable database/test subtree;
+cleanup completed. Current exact disabled TPL-07 pair was revalidated/reused.
+No model calls, approval, reservation, publication or application behavior change.
+
+Retained preparation: [real disabled TPL-07 pair](tpl07-disabled-runtime-checkpoint.md):
+v10/current evidence passed; exact private plan/child reverified without model
+calls, approval or reservations. 16 focused controls/full typecheck passed.
+US$0.7411008 maximum; child expires 15 November 2026 at 12:28:14.070 UTC.
+Held, not published. Real managed browser save/history still unverified.
+
+Retained [native storage, worker and browser runtime](native-runtime-checkpoint.md):
+62 engineering passes/no skips, four namespace controls and seven public-browser
+checks; full typecheck passed. Native prefix cleaned, only disposable DB migrated.
+Real managed sign-in/save/history remains blocked by unavailable test tooling.
+No PR15 integration, production change, publication or release acceptance.
+
+Retained [receipt integration and routine-CI registration verification](receipt-integration-current.md):
+55 engineering passes, no failures/skips; full typecheck passed. Existing
+reporting/core registrations verified, with only disposable fixture recovery.
+No new feature, provider call or PR13 merge.
+
+Retained [synthetic privacy runtime verification](pr13-runtime-verification.md):
+121 engineering passes, zero failures, one explicit native-only skip; full
+workspace typecheck passed. Actual worker/replay proof is portable, not native
+or production recovery. No existing owner data or real provider record was erased.
+Ordinary temporary-upload cleanup now defers privacy-owned scopes.
+
+Retained [reviewed rich checker runtime verification](pr12-runtime-verification.md):
+PR12's reviewed source was already in development history; GitHub confirms it
+merged. The earlier unmerged status was stale. Fresh isolated verification:
+75 engineering passes, zero failures, one native-only skip; full typecheck passed.
+Real anonymous browser checks passed at 360px/1280px. Signed-in browser history
+and missing-answer focus remain unverified because the supported testing service
+was unavailable. Private HTTP proof is explicitly controlled identity transport.
+No PR13 merge, publication or formal 80/60/60 acceptance occurred.
+
+Retained [editorial and receipt/CI evidence](editorial-ci-integration-checkpoint.md)
+remains historical. Hosted CI must be distinguished from local checks.
+
+The [disabled budget work](finite-sdk-admission-checkpoint.md) is preserved.
+No budget/privacy feature changes, inference calls, spending approvals, quota
+increases, customer deletion, messages or publication were made in this unit.
+
 Current partial results: [independent privacy HTTP and deletion-history
 boundaries](privacy-role-and-tombstone-checkpoint.md), [connected but disabled
 finite inference](finite-inference-dispatch-checkpoint.md) and [corrected
@@ -15,8 +67,10 @@ checks at that checkpoint. [Same-case information exchange and staff
 inspection](privacy-information-checkpoint.md) subsequently passed 103/103
 database checks, 174/174 engineering checks and typecheck. This is partial development
 evidence; independent deletion-journal recovery, full privacy fulfilment,
-unbounded resumable export, disputes, rich live checker and the finite inference
-manifest remain unfinished. No spending, messages or launch were enabled.
+unbounded resumable export, disputes and rich live checker remained unfinished
+at that historical checkpoint. The current finite manifest preparation is linked
+above; it does not complete those other units. No spending, messages or launch
+were enabled.
 
 **Earlier implementation evidence:** [bounded AI instructions, manual-note preservation
 and two supplied customer cases through private exports](customer-ai-source-checkpoint.md).

@@ -1,4 +1,6 @@
 import {createHash} from "node:crypto";
+import {managedPriceEvidenceDigest} from "./inference-price-evidence";
+import type {HistoryResolution} from "./inference-history-classification";
 export type BudgetLane="publication"|"editorial_evaluation"|"checker_challenge"|"customer";
 export const inferenceProposal={
   id:"valo-managed-inference-30-v1",model:"gpt-5.4-mini",enabled:false,ownerApproved:false,
@@ -6,7 +8,9 @@ export const inferenceProposal={
   inputNanoUsdPerToken:750,outputNanoUsdPerToken:4500,upliftBps:1000,
   lanes:{publication:{slots:216,input:32000,output:8192},editorial_evaluation:{slots:68,input:32000,output:8192},
     checker_challenge:{slots:80,input:32000,output:8192},customer:{slots:94,input:4096,output:8192}},
-  tokenizationVerified:false,managedPriceUpperBoundVerified:false,
+  tokenizationVerified:false,managedPriceUpperBoundVerified:true,
+  priceEvidenceVersion:"official-model-and-managed-docs-2026-11-15",
+  priceEvidenceDigest:managedPriceEvidenceDigest,
   fallback:{method:"model-context-capacity",inputTokens:400000,outputTokens:8192,
     capacityEvidence:"owner-transmitted-independent-budget-review",capacityVerified:true},
   batch:{concurrency:2,completions:1,tools:false,automaticRetries:0,dailySchedule:null},
@@ -16,6 +20,8 @@ export const inferenceProposal={
 export const additionalInferenceAllocation={
   id:"valo-additional-inference-30-20261114-v1",scope:"additional-new-attempts-only",
   capNanoUsd:"30000000000",environment:"synthetic-development-only",excludesHistoricalCharges:true,
+  startBoundary:"durable-owner-approval-of-exact-finite-package",
+  historicalTreatment:"separate-exposure-register-no-retrospective-approval",
   replacesLegacyPublicationDailySchedule:true,
 } as const;
 export const acceptedInferenceModels=new Set(["gpt-5.4-mini","gpt-5.4-mini-2026-03-17"]);
@@ -45,8 +51,9 @@ export function proposalTotals(){
 }
 export type BudgetEntry={runKey:string;lane:BudgetLane;requestHash:string;bindingHash:string;scopeHash:string;
   inputBound:number;outputBound:number;reserved:string;charged:string;status:"reserved"|"dispatched"|"unknown"|"settled"|"cancelled";
-  resultRef?:string;freshUntil?:number;responseId?:string;usageHash?:string;legacy?:boolean};
-export type BudgetState={version:1;entries:BudgetEntry[];priorUseReconciled:boolean;unboundedPrior:string[];suspended:boolean};
+  resultRef?:string;freshUntil?:number;responseId?:string;usageHash?:string;legacy?:boolean;model?:string};
+export type BudgetState={version:1;entries:BudgetEntry[];priorUseReconciled:boolean;unboundedPrior:string[];suspended:boolean;
+  historyResolutions?:HistoryResolution[]};
 export const emptyBudget=():BudgetState=>({version:1,entries:[],priorUseReconciled:false,unboundedPrior:[],suspended:false});
 export type BudgetAuthority={enabled:boolean;ownerApproved:boolean;tokenizationVerified:boolean;managedPriceUpperBoundVerified:boolean;
   contextCapacityVerified?:boolean};
@@ -73,10 +80,25 @@ export function validateBudgetState(s:BudgetState){
         BigInt(e.reserved)<tokenCost(e.inputBound,e.outputBound))throw Error("UNDERFUNDED_RESERVATION");
     }
   }
+  if(s.historyResolutions!==undefined){
+    if(!Array.isArray(s.historyResolutions)||s.historyResolutions.length>s.entries.length*8)throw Error("INVALID_HISTORY_RESOLUTIONS");
+    const resolved=new Map<string,HistoryResolution>();
+    for(const r of s.historyResolutions){
+      const current=s.entries.find(e=>e.runKey===r.before?.runKey);
+      const previous=resolved.get(current?.runKey??"");
+      if(!r.before?.legacy||!current?.legacy||
+        r.classification.runKey!==current.runKey||r.classificationHash!==requestDigest(r.classification)||
+        (previous?(r.supersedes!==requestDigest(previous)||requestDigest(r.before)!==previous.afterHash):r.supersedes!==undefined))
+        throw Error("INVALID_HISTORY_RESOLUTION_BINDING");
+      resolved.set(current.runKey,r);
+    }
+    for(const[key,last]of resolved)if(last.afterHash!==requestDigest(s.entries.find(e=>e.runKey===key)))
+      throw Error("INVALID_HISTORY_RESOLUTION_BINDING");
+  }
 }
 /** Pure admission logic. Authority/proof are server-owned, never browser input.
- * The production adapter currently supplies ONLY the disabled authority and no
- * attestation. Enabled authorities in tests are explicitly synthetic controls. */
+ * Runtime admission requires the dispatcher's durable, expiring exact-work
+ * approval. Synthetic test authority is not owner approval. */
 export function reserveBudget(s:BudgetState,a:BudgetAuthority,i:ReserveInput){
   validateBudgetState(s);
   const h=requestDigest(i.request);
@@ -139,14 +161,19 @@ export function transitionBudget(s:BudgetState,key:string,action:"dispatch"|"unk
   const target=action==="dispatch"?"dispatched":action==="unknown"?"unknown":"cancelled";
   // Reservation is not a permanent permission to spend. A sibling's bound
   // breach, reconciliation hold or suspension must stop already-reserved work.
-  if(action==="dispatch"&&(s.suspended||!s.priorUseReconciled||s.unboundedPrior.length))
-    throw Error("PRIOR_CHARGES_UNRECONCILED");
+  if(action==="dispatch")assertFinancialDispatchAllowed(s);
   if(e.status===target)return s;
   if(action==="dispatch"&&s.entries.filter(x=>!x.legacy&&["dispatched","unknown"].includes(x.status)).length>=
     inferenceProposal.batch.concurrency)throw Error("INFERENCE_CONCURRENCY_EXHAUSTED");
   if(action==="dispatch"&&e.status!=="reserved"||action==="unknown"&&!["reserved","dispatched"].includes(e.status)||
     action==="cancel"&&e.status!=="reserved")throw Error("UNSAFE_BUDGET_TRANSITION");
   return{...s,entries:s.entries.map(x=>x===e?{...x,status:target as BudgetEntry["status"]}:x)};
+}
+/** Rechecked on the locked current ledger, never inferred from reservation age. */
+export function assertFinancialDispatchAllowed(s:BudgetState){
+  validateBudgetState(s);
+  if(s.suspended||!s.priorUseReconciled||s.unboundedPrior.length)
+    throw Error("PRIOR_CHARGES_UNRECONCILED");
 }
 export function settleBudget(s:BudgetState,key:string,usage:{input:number;output:number;responseId:string;resultRef:string;freshUntil:number}){
   validateBudgetState(s);

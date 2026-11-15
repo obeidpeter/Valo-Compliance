@@ -1,0 +1,22 @@
+▶ controlled workspace artifact failures and privacy fences
+  ✔ late successful upload cannot replace a resumed result; failed deletes remain retryable (1224.39246ms)
+{"controlledTransport":true,"realProviderCalls":0,"unknownUploadOutcome":true,"lateCompletionFenced":true,"deleteFailureResumable":true,"tamperRejected":true,"privacyReservationRetained":true}
+  ✔ privacy fence cancels preparation before release and retains every reserved object key (86.300068ms)
+✔ controlled workspace artifact failures and privacy fences (1386.468264ms)
+▶ durable workspace export: native HTTP cancellation, live authorization, private App Storage and process restart
+  ✔ non-development modes and every nonempty deployment marker reject HTTP creation without jobs or storage (96.255829ms)
+  ✔ actual HTTP disconnect mid-page stops preparation promptly and same durable job can restart (6450.11078ms)
+  ✔ membership during real HTTP preparation prevents any completed attachment (706.077782ms)
+  ✔ revoked during real HTTP preparation prevents any completed attachment (1021.267399ms)
+  ✔ suspended during real HTTP preparation prevents any completed attachment (1102.422871ms)
+{"startedAt":"2026-11-15T01:40:51.403Z","finishedAt":"2026-11-15T01:41:10.890Z","measurements":[{"boundary":"disconnect","elapsedMs":40,"activityRowsAtStop":500,"scratchRemoved":true},{"boundary":"complete native private result","bytes":11797972,"sourceRows":5001,"checksum":"927655de41c573921d5477c76bc8df11f67b7cde01b582e06f82791066c6d627","snapshotAt":"2026-11-15T01:40:52.659Z"},{"boundary":"membership revocation commit","elapsedMs":3}],"realNativePrivateStorage":true,"sourceRows":5001,"minimumBytes":8000000,"actualHttpDisconnect":true,"realProcessSigkill":true,"leaseExpiry":"owned fixture clock advanced","realManagedProviderSession":false,"controlledIdentityReader":true,"externalMessages":0,"inferenceCalls":0,"productionProof":false}
+  ✔ actual SIGKILL leaves a fenced attempt; a restarted preparer creates one complete new snapshot (9712.22752ms)
+✔ durable workspace export: native HTTP cancellation, live authorization, private App Storage and process restart (20167.096111ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 25805.815898

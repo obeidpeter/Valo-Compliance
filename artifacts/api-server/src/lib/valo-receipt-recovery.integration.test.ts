@@ -34,17 +34,18 @@ test("recorded synthetic receipt recovery, no provider verification or messages"
     await db.insert(valoEntitlements).values({id:randomUUID(),workspaceId:actor.workspaceId,orderId,
       contentVersionId:version.id,status:"suspended"});
     const before=(await db.select().from(valoOrders).where(eq(valoOrders.id,orderId)))[0];
+    const grantBefore=(await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,orderId)))[0];
     await t.test("concurrent repair produces one held receipt and one audit without reactivating the grant",async()=>{
-      await db.insert(valoPurchaseOutbox).values({id:randomUUID(),workspaceId:actor.workspaceId,orderId,
-        kind:"refund_status",status:"held_controlled_fixture"});
+      const[refundNotice]=await db.insert(valoPurchaseOutbox).values({id:randomUUID(),workspaceId:actor.workspaceId,orderId,
+        kind:"refund_status",status:"held_controlled_fixture"}).returning();
       const results=await Promise.all(Array.from({length:8},()=>recoverSyntheticPurchaseReceipt(orderId)));
       const messages=await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId,orderId));
       assert.equal(messages.filter(x=>x.kind==="purchase_receipt").length,1);
-      assert.equal(messages.find(x=>x.kind==="refund_status")?.status,"held_controlled_fixture");
+      assert.deepEqual(messages.find(x=>x.kind==="refund_status"),refundNotice);
       assert.equal(results.filter(r=>r.repaired).length,1);
       assert.equal(new Set(results.map(r=>r.receiptId)).size,1);
       assert.ok(results.every(r=>r.deliveryStatus==="held_synthetic_recovery"));
-      assert.equal((await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,orderId)))[0].status,"suspended");
+      assert.deepEqual((await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId,orderId)))[0],grantBefore);
       assert.deepEqual((await db.select().from(valoOrders).where(eq(valoOrders.id,orderId)))[0],before);
       assert.equal((await db.select().from(valoEvents).where(and(eq(valoEvents.entityId,orderId),
         eq(valoEvents.action,"payment.synthetic_receipt_recovered")))).length,1);

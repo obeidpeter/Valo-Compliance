@@ -1,0 +1,37 @@
+▶ controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication
+  ✔ held content and browser price/currency additions cannot create an order (114.94178ms)
+  ✔ saved controlled order is not a receipt or entitlement; no browser-success grant exists (33.392037ms)
+  ✔ other tenants cannot read a receipt, refresh, checkout, settle or request a refund (40.02784ms)
+  ✔ mismatched amount and workspace never grant; data outside test mode is rejected (8.440099ms)
+  ✔ concurrent controlled callback/webhook results grant one entitlement, one receipt outbox and one settlement event (156.166111ms)
+  ✔ verified retries repair missing grant and receipt atomically once, without unsuspending a grant (67.553229ms)
+  ✔ receipt/licence history is private and independent of a later price edit (16.228637ms)
+  ✔ duplicate refund requests persist once without completing a refund or deleting owned work (28.46809ms)
+  ✔ a failed fulfilment constraint rolls back settlement and outbox atomically (12.646484ms)
+  ✔ pending, abandoned and failed provider controls do not grant; a late success can recover (78.337199ms)
+  ✔ reversal suspends reuse without deleting financial or customer history (59.858686ms)
+  ✔ membership revoked while settlement waits on an order lock prevents the eventual customer write (21.139281ms)
+  ✔ durable event deduplication ignores whitespace and delivery retries without retaining card data (10.096199ms)
+{"scope":"Controlled database payment mechanics, not Paystack execution","realProviderCalls":0,"publishedFixtures":0,"priceApproval":false,"livePayments":false}
+  ✔ no merchant setup means no provider calls, false match, consumed event attempt or claimed delivery (18.222186ms)
+✔ controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication (860.374135ms)
+✔ reports one created held receipt and its stable retry (11.100324ms)
+✔ an existing receipt retains its status and is not counted as repaired (0.247889ms)
+✔ awaits a successful peer and retains its receipt when another call fails (0.406611ms)
+✔ preserves order IDs and safe database reason codes for failed repairs (0.30013ms)
+✔ retains precise provenance boundaries without arbitrary exception payloads (0.331812ms)
+✔ does not claim success for conflicting receipt IDs or unheld new receipts (0.262522ms)
+✔ records a failed repeat check without erasing the committed repair observation (0.344896ms)
+▶ recorded synthetic receipt recovery, no provider verification or messages
+  ✔ missing maintenance opt-in and missing recorded grant both fail closed (10.826244ms)
+  ✔ concurrent repair produces one held receipt and one audit without reactivating the grant (134.706324ms)
+  ✔ retries preserve the original receipt; other tenants cannot read it (102.756569ms)
+✔ recorded synthetic receipt recovery, no provider verification or messages (422.919002ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4958.204543

@@ -1,0 +1,46 @@
+▶ erasure holds, bounded recovery and accepted-upload process death
+  ✔ 13 objects and 205 restored profile rows resume across killed workers without repeated object traversal (16635.774622ms)
+  ✔ application replay authenticates the entire inventory and case before revocation or profile deletion (2417.577337ms)
+  ✔ distinct advisory locks cannot exhaust a one-connection shared data pool (44.660094ms)
+  ✔ holds and revoked roles stop the next object, while an in-flight result remains recorded (6485.376203ms)
+  ✔ actual export worker cleans an upload finishing after its tracking/job rows were erased (1820.711413ms)
+  ✔ native private upload spans complete erasure and is removed by automatic maintenance (2467.6069ms)
+  ✔ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (6478.151306ms)
+✔ erasure holds, bounded recovery and accepted-upload process death (36405.337399ms)
+ℹ {"boundedReplay":{"objects":13,"deleteCalls":13,"duplicateDeletes":0,"restoredProfiles":205,"removedProfiles":205,"killedWorkers":2,"maxObjectsPerBatch":10,"maxRowsPerBatch":100,"finalWorkerFullInventoryChecks":1,"finalWorkerCachedChecks":29}}
+ℹ Killed-upload completion used native private App Storage.
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (88.973214ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (85.588151ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (729.617424ms)
+  ✔ ready, pending and cleanup objects are inventoried once before rows disappear and stale workers stay fenced (387.44329ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (1562.10997ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (2485.863916ms)
+  ✔ native private storage deletion and repeated late-write replay remove actual synthetic bytes (1867.511582ms)
+  ✔ sealed key tampering and corrupted completion proof stop before deletion (179.070575ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (1.755251ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (17.134418ms)
+✔ resumable physical development erasure with retained exclusions and replay (8902.743814ms)
+▶ isolated privacy signing-key rotation — no real secret rotation
+  ✔ legacy version is pinned only after its retained signature verifies (18.715064ms)
+  ✔ new version signs while old and legacy signatures still verify (16.141071ms)
+  ✔ missing historical material holds both history verification and identity matching (8.029637ms)
+  ✔ reusing a pinned version name with another key cannot silently re-sign history (7.508425ms)
+  ✔ unsent notices are held idempotently without rewriting accepted outcomes or another tenant (99.658525ms)
+✔ isolated privacy signing-key rotation — no real secret rotation (341.815022ms)
+▶ actual HTTP privacy routes apply an independent privacy role and fresh MFA
+  ✔ information replies do not substitute for owner verification (161.081408ms)
+  ✔ privacy-only identity can read and claim; finance-only cannot (81.791852ms)
+  ✔ read-only inspection and customer replies preserve verification and deduplicate actual HTTP writes (220.414951ms)
+  ✔ quarantined verified requester can answer without restored workspace membership (262.463524ms)
+  ✔ revoked and stale-MFA privacy identities fail on the HTTP route (21.340768ms)
+  ✔ hostile origin never reaches the privacy mutation (2.731519ms)
+✔ actual HTTP privacy routes apply an independent privacy role and fresh MFA (977.913864ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 62548.134244

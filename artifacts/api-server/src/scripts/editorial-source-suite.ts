@@ -26,6 +26,10 @@ async function main(){
   await mkdir(out,{recursive:true});const bytes=await readFile(resolve(root,"docs/evaluation-candidates/editorial.json"));
   const corpus=JSON.parse(bytes.toString()) as {cases:Case[]};
   assert.equal(corpus.cases.length,60);
+  const args=process.argv.slice(2);
+  assert.ok(args.length<=1&&(!args.length||args[0]!.startsWith("--cases=")),"UNSUPPORTED_EDITORIAL_ARGUMENT");
+  const selected=args.length?args[0]!.slice("--cases=".length).split(","):null;
+  assert.ok(!selected||selected.every(id=>corpus.cases.some(c=>c.id===id)),"UNKNOWN_EDITORIAL_CASE");
   const evaluationRunId=randomUUID();
   const[row]=await db.select().from(valoContentVersions).orderBy(desc(valoContentVersions.createdAt)).limit(1);
   const parsed=row?publicationSchema.safeParse(row.bundle):null;
@@ -33,7 +37,8 @@ async function main(){
   const results:Record<string,unknown>[]=[];
   const need=()=>{if(!original)throw new Blocked("retained_candidate_bundle_unavailable");return structuredClone(original);};
   const needReviewed=async()=>{
-    for(const version of[5,3]){
+    // These independence controls bind the retained v5 receipts, never a newer draft.
+    for(const version of[5]){
       const sourcePath=`docs/valo/evidence/operational-publication-v${version}.json`;
       const bytes=await readFile(resolve(root,sourcePath));
       const saved=JSON.parse(bytes.toString()) as {id:string;candidateHash:string};
@@ -75,8 +80,10 @@ async function main(){
     const record:Record<string,unknown>={caseID:c.id,caseHash:digest(c),scenario:c.scenario,requiresProviderRun:c.requiresProviderRun,
       status:"blocked",actualProviderCalls:0,baselineId:selectsReviewedBaseline?null:row?.id??null,
       baselineBundleHash:selectsReviewedBaseline?null:original?digest(original):null,
+      expectedBaselineVersion:selectsReviewedBaseline?5:null,
       originalCaseMutation:c.inputMutation,formalCaseAccepted:false};
     results.push(record);
+    if(selected&&!selected.includes(c.id)){record.status="not_selected";record.reason="not_executed_in_this_selection";continue;}
     if(c.requiresProviderRun){record.reason="genuine_case_bound_provider_roles_sources_rights_and_exports_required";continue;}
     try{
       let observations:unknown;
@@ -155,6 +162,9 @@ async function main(){
             privateRowsRead:0,financialRowsChanged:0,externalActions:0};
           if(c.id==="EVAL-EDP-C054"){
             if(!row)throw new Blocked("retained_candidate_needed_for_durable_action_denial");
+            const before=await db.execute(sql`SELECT id FROM valo_publication_audit
+              WHERE version_id=${row.id}::uuid AND action='external_action_denied'`);
+            const previousIds=(before.rows as {id:string}[]).map(r=>r.id);
             const receipts:EditorialDenialReceipt[]=[];
             for(const action of editorialDeniedActions){
               try{await dispatchEditorialExternalAction(row.id,action,evaluationRunId);}
@@ -167,8 +177,9 @@ async function main(){
             const logged=await db.execute(sql`SELECT id,version_id,action,actor,reason FROM valo_publication_audit
               WHERE id IN (${sql.join(receipts.map(r=>sql`${r.auditId}::uuid`),sql`, `)})`);
             const denials=verifyCurrentEditorialDenials(row.id,evaluationRunId,receipts,
-              logged.rows as EditorialDenialAuditRow[]);
+              logged.rows as EditorialDenialAuditRow[],previousIds);
             observations={...observations as object,evaluationRunId,denials,
+              preexistingDenialCount:previousIds.length,newDenialIds:denials.map(r=>r.auditId),
               filingDispatch:"denied_and_durably_logged",externalCalls:0};
           }
           break;}
@@ -220,11 +231,14 @@ async function main(){
     candidateCases:60,deterministicCases:results.filter(r=>!r.requiresProviderRun).length,
     providerRequiredCases:results.filter(r=>r.requiresProviderRun).length,
     controlsPassed:results.filter(r=>r.status==="control_pass").length,failed:results.filter(r=>r.status==="fail").length,
+    selectedCases:selected??corpus.cases.map(c=>c.id),notSelected:results.filter(r=>r.status==="not_selected").length,
     blocked:results.filter(r=>r.status==="blocked").length,providerCalls:0,publications:0,formalAcceptance:false,EDP010Accepted:false};
   assert.equal(report.deterministicCases,26);assert.equal(report.providerRequiredCases,34);
-  await writeFile(resolve(out,"results.json"),JSON.stringify(report,null,2)+"\n");
+  const reportPath=resolve(out,`results-${evaluationRunId}.json`);
+  await writeFile(reportPath,JSON.stringify(report,null,2)+"\n",{flag:"wx"});
+  if(!selected)await writeFile(resolve(out,"results.json"),JSON.stringify(report,null,2)+"\n");
   console.log(JSON.stringify({controlsPassed:report.controlsPassed,failed:report.failed,blocked:report.blocked,
-    deterministicCases:26,providerRequiredCases:34,formalAcceptance:false}));
+    notSelected:report.notSelected,reportPath,deterministicCases:26,providerRequiredCases:34,formalAcceptance:false}));
   if(report.failed)process.exitCode=1;
 }
 main().catch(()=>{console.error("Editorial source runner stopped; no success inferred.");process.exitCode=1;}).finally(()=>pool.end());

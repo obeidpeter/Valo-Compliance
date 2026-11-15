@@ -1,0 +1,42 @@
+{
+  "startedAt": "2026-11-15T02:38:22.522Z",
+  "scope": "disposable local synthetic PostgreSQL and local fixture objects",
+  "managedDatabaseRead": false,
+  "productionRestoreProved": false,
+  "appStorageRestoreProved": false,
+  "externalCredentialsInherited": false,
+  "externalMessagesSent": 0,
+  "charges": 0,
+  "refunds": 0,
+  "deletionScope": "Completed independently retained synthetic erasure receipt, physical application replay and local object cleanup; external providers excluded",
+  "retention35Days": "unresolved",
+  "checks": {
+    "exactSnapshotCutoff": true,
+    "sourceDatabaseRejectedAsReplayTarget": true,
+    "alteredJournalRejected": true,
+    "alteredJournalRejectedWithoutEffects": true
+  },
+  "phase": "replay_and_validate",
+  "cutoffAt": "2026-11-15T02:38:43.358Z",
+  "localWalCutoff": "0/1F666E8",
+  "dumpElapsedMs": 501,
+  "snapshotHash": "4e9b6a9ab61dd6531e7d67034662d2afffb4bdc3b23e9e90f51299f94c843615",
+  "restoreStartedAt": "2026-11-15T02:38:50.547Z",
+  "passed": false,
+  "failureType": "DRILL_FAILED",
+  "childFailure": {
+    "code": "42703",
+    "locations": [
+      {
+        "file": "valo-recovery-erasure.ts",
+        "line": 71
+      },
+      {
+        "file": "valo-recovery-controls.ts",
+        "line": 51
+      }
+    ]
+  },
+  "elapsedMs": 34693,
+  "completedAt": "2026-11-15T02:38:57.209Z"
+}

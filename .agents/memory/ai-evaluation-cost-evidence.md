@@ -3,6 +3,20 @@ name: AI evaluation cost evidence
 description: Why genuine provider usage must survive cleanup of synthetic evaluation fixtures.
 ---
 
+Revocation or expiry must stop further inference dispatch, not discard trustworthy
+usage for a request already admitted. Untrusted model/usage metadata must retain
+the liability and hold downstream success.
+
+**Why:** Provider costs can be incurred while approval changes; authorization to
+start another request and accounting for an existing one are different decisions.
+
+The proposed additional review/test allocation does not fund new editorial
+authoring. Historical receipt corrections require evidence-supported, append-only
+reconciliation; idempotent imports must not silently rewrite earlier uncertainty.
+
+**Why:** The owner limited the spending scope and required preservation of original
+usage evidence, including records that never stored provider response identifiers.
+
 Synthetic inputs do not make a real provider request free or simulated. Preserve
 its usage evidence and quota consumption when cleaning evaluation fixtures.
 Keep real-provider cases distinct from preflight refusals and injected faults.
@@ -10,6 +24,26 @@ Keep real-provider cases distinct from preflight refusals and injected faults.
 **Why:** Removing synthetic request records can erase the consumption history
 used by daily limits, increase available allowance incorrectly, and destroy the
 evidence distinguishing actual calls from transport simulations.
+
+An import of historical application usage is an exposure register, not proof
+of an approved global project budget or membership in a new allocation. Define
+new work's actual approval/start boundary; keep unrelated historical unknowns
+visible without requesting retrospective approval or deleting ledger history.
+If proposing additional usage, label it explicitly instead of silently
+substituting it for an inclusive allowance.
+
+**Why:** The user clarified that import defects and unscoped historical rows
+were being mistaken for missing owner decisions. Historical failed requests
+without retained bounds must not inherit a later model's limits or zero cost.
+
+Historical editorial reservations did not always retain a usable provider
+response ID. Missing that field is not proof that usage evidence is unavailable:
+use uniquely matched candidate/drafting-prompt, role, request where retained,
+hash-verified source reports and actual receipt metadata. Keep ambiguous joins
+held and deduplicate repeated receipts.
+
+**Why:** The user repeatedly identified recoverable historical evidence that
+was being incorrectly treated as an owner-controlled missing-budget decision.
 
 **How to apply:** Clean only owned negative fixtures with no outbound attempt,
 or preserve the necessary aggregate usage/audit evidence first. Check the

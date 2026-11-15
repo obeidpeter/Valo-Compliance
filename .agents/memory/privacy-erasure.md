@@ -17,10 +17,24 @@ erased would mislead the requester.
 metering and immutable records. Require a reviewed retention policy and
 external processor outcomes before complete-fulfilment claims.
 
+Apply retention exceptions field by field. Financial or audit retention does
+not automatically justify keeping copied private statements, checkout URLs,
+free-text reasons or earlier full workspace snapshots.
+
+**Why:** The user explicitly required private-copy minimisation without deleting
+genuine usage history, shared records or minimum accountable financial facts.
+
+**How to apply:** Establish ownership through workspace and payment references
+before removing links. Do not infer ownership of public intake from an email.
+Keep signed cleanup locators until acknowledged; treat unlinked legacy records
+and external processor copies as unresolved rather than falsely erased.
+
 A database restored to a point before deletion cannot contain a later
 tombstone by itself. Recovery needs a separately preserved, authenticated
 post-cutoff deletion journal, imported and replayed before restored access is
-opened. Re-delete private objects, including delayed writes, after restoring
+opened. Keep its verification key outside the journal payload; a payload that
+supplies its own verification key cannot establish independent authority.
+Re-delete private objects, including delayed writes, after restoring
 both the database and its object storage.
 
 **Why:** A local restore drill proves neither managed backups nor resurrection
@@ -30,3 +44,36 @@ prevention unless it includes the deletion events absent from the old backup.
 revocation events into the isolated restore, and verify tenant/object scope
 before opening customer traffic. Do not call a local replay production RPO/RTO
 evidence.
+
+Treat missing historical privacy keys as a containment condition, not permission
+to treat an old identity as a new customer. Key rotation must preserve audit
+verification and deletion-identity matching.
+
+**Why:** The user repeatedly required old restored memberships to remain
+quarantined across rotation, with explicit holds when historical keys are absent.
+
+**How to apply:** Sign new records with the current version; verify old records
+with their pinned historical versions before any destructive dispatch or access
+provisioning. Never silently fall back to the current session secret.
+
+Inventory verification reuse must be bounded and invalidated by recovery or
+changes to its immutable database guard; an absent guard is never proof.
+
+**Why:** Repeated journal traversal prevented bounded recovery, but performance
+work must preserve corruption/hold checks. Schema publishing can omit triggers.
+
+**How to apply:** Recovery imports force fresh independent validation. Keep live
+authority checks before dispatch and fail back to full checks when guard
+semantics cannot be established; do not claim protection from a database owner.
+
+Deletion controls must remain effective after physical removal of the workspace
+owner record and the workspace itself; checking a retained record alone does
+not prove that boundary.
+
+**Why:** The user explicitly required protection against identity recreation
+even when later full physical erasure removes the owner record.
+
+**How to apply:** Keep authenticated deletion-identity controls independently
+of deletable workspace records and restored snapshots, and verify them before
+automatic provisioning. Test record removal separately from retained-row
+quarantine; missing historical verification keys must hold access.

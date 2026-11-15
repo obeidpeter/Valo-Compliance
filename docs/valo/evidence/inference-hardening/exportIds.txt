@@ -1,0 +1,26 @@
+
+> @workspace/api-server@0.0.0 test:valo-workspace-artifact-db /home/runner/workspace/artifacts/api-server
+> VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-export-jobs.integration.test.ts src/lib/valo-workspace-export-controls.integration.test.ts
+
+▶ controlled workspace artifact failures and privacy fences
+  ✔ late successful upload cannot replace a resumed result; failed deletes remain retryable (1082.897047ms)
+{"controlledTransport":true,"realProviderCalls":0,"unknownUploadOutcome":true,"lateCompletionFenced":true,"deleteFailureResumable":true,"tamperRejected":true,"privacyReservationRetained":true}
+  ✔ privacy fence cancels preparation before release and retains every reserved object key (324.829206ms)
+✔ controlled workspace artifact failures and privacy fences (1537.263751ms)
+▶ durable workspace export: native HTTP cancellation, live authorization, private App Storage and process restart
+  ✔ non-development modes and every nonempty deployment marker reject HTTP creation without jobs or storage (108.911425ms)
+  ✔ actual HTTP disconnect mid-page stops preparation promptly and same durable job can restart (6435.347994ms)
+  ✔ membership during real HTTP preparation prevents any completed attachment (635.286361ms)
+  ✔ revoked during real HTTP preparation prevents any completed attachment (991.951749ms)
+  ✔ suspended during real HTTP preparation prevents any completed attachment (935.523412ms)
+{"startedAt":"2026-11-15T00:56:38.537Z","finishedAt":"2026-11-15T00:56:56.883Z","measurements":[{"boundary":"disconnect","elapsedMs":39,"activityRowsAtStop":500,"scratchRemoved":true},{"boundary":"complete native private result","bytes":11797601,"sourceRows":5001,"checksum":"fba51ce057652b0f4c430793a58895a0a6da73813c17a24948c5d6c9b64932da","snapshotAt":"2026-11-15T00:56:40.067Z"},{"boundary":"membership revocation commit","elapsedMs":3}],"realNativePrivateStorage":true,"sourceRows":5001,"minimumBytes":8000000,"actualHttpDisconnect":true,"realProcessSigkill":true,"leaseExpiry":"owned fixture clock advanced","realManagedProviderSession":false,"controlledIdentityReader":true,"externalMessages":0,"inferenceCalls":0,"productionProof":false}
+  ✔ actual SIGKILL leaves a fenced attempt; a restarted preparer creates one complete new snapshot (8690.802777ms)
+✔ durable workspace export: native HTTP cancellation, live authorization, private App Storage and process restart (19140.915779ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23288.471633

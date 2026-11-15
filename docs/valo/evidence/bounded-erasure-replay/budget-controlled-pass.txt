@@ -1,0 +1,32 @@
+▶ durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls
+  ✔ disabled durable authority and missing allowlist cannot dispatch (20.741474ms)
+  ✔ authorized controlled work really dispatches and settles; unchanged result reuses without a call (66.109743ms)
+  ✔ PostgreSQL Date timestamps preserve millisecond approval order (42.366796ms)
+  ✔ review pair reserves atomically and charges its actual editorial lane (118.744982ms)
+  ✔ changed request, source bindings, expiry and forged manifest stop before transport (60.279076ms)
+  ✔ timeout keeps the whole reservation, duplicates cannot redispatch and new retry consumes another slot (77.71426ms)
+  ✔ concurrency two and duplicate runs cover every lane under one locked ledger (101.734374ms)
+  ✔ reserved sibling cannot dispatch after first role breaches its bound (88.33964ms)
+  ✔ pair role contexts dispatch their own requests without leaking the other key (63.018899ms)
+  ✔ invalid model or usage retains maximum liability and returns no usable response (144.851063ms)
+  ✔ revocation during transport stops new work but still accounts the admitted receipt (52.820585ms)
+  ✔ expiry during transport still accounts its receipt, then denies new dispatch (406.724246ms)
+  ✔ schema retry requires a distinct approved key and unknown work cannot cycle batch identity (297.761746ms)
+  ✔ new allowance preserves unrelated historical liabilities without adopting them as its budget (62.572263ms)
+  ✔ delegated children share one cap and recheck parent revocation before reserved dispatch (526.013779ms)
+  ✔ a preflight failure before the first role reserves no paid capacity (26.387223ms)
+  ✔ SDK adapter observes dispatch after reservation for each correct lane and settles all under the same cap (194.21111ms)
+  ✔ cross-corpus role relabeling and independent-review candidate substitution cannot reserve or dispatch (38.751393ms)
+  ✔ real SIGKILL after durable dispatch cannot redispatch on a new dispatcher and retains its full reservation (1643.84234ms)
+  ✔ unapproved priced model suspends the allocation before another work item (62.598235ms)
+  ✔ policy adoption keeps old usage and all unresolved liability instead of resetting history (19.123002ms)
+  ✔ holds inside the new allocation and a depleted ceiling stop all further calls (41.274649ms)
+✔ durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls (4392.886351ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6078.083595

@@ -1,6 +1,260 @@
 # Valo Compliance — Valo Platform
 
-## Latest application checkpoint — restartable private workspace exports
+## Current checkpoint — current disabled pair and fresh native controls
+
+Reviewed development was synchronized at `ce6d8a8`. The existing eleven-type
+conditional preparer produced one actual TPL-07 v10 factual/challenge pair from
+genuine retained source/rights and final exports. All ten mechanical checks and
+the real private-packet verifier passed. Candidate remains held; reviews did not run.
+
+Fresh native/full-worker suite: **62 passed, zero failures/skips**, including six
+corrected editorial controls. Separate preparation/package/price controls:
+**16 passed**. No new model calls, approvals or reservations.
+New child expires **15 November 2026 at 12:57:52.078 UTC**; maximum US$0.7411008.
+The runtime proposal was rebuilt under the current approval/start boundary;
+historical frozen proposals are not current admission authority.
+See [current IDs, hashes, source-version distinction and holds](docs/valo/review-pair-runtime-checkpoint.md).
+
+### Retained previous bounded runtime
+
+On synchronized `c47aec2`, a fresh genuine native-storage/full-worker run passed
+**62 checks, zero failures/skips**, including process death across claim/render/
+upload/completion. The unique private test subtree finished empty; PostgreSQL
+was disposable and stopped/removed. No actual customer erasure or provider sends.
+
+The exact current TPL-07 pair below was **revalidated and reused**, not regenerated.
+Current candidate attempts and the separate additional allocation's reservations/
+dispatches remain **zero**. No application behavior changed in this bounded unit.
+See [fresh run and precise boundaries](docs/valo/bounded-runtime-checkpoint.md).
+
+### Retained exact disabled TPL-07 preparation
+
+Reviewed budget merge `2bbd6b4` was already in synchronized development history.
+The real saved TPL-07 v10 passed current source/rights/mechanical and real saved
+DOCX/PDF inspections. Its exact factual/challenge plan and child manifest were
+saved privately and reverified: **zero model calls, approvals or reservations**.
+
+Pair ceiling **US$0.7411008**, within the one proposed shared additional US$30 cap.
+Owner approval remains false. The child expires **15 November 2026 at
+12:28:14.070 UTC**, separately from the proposed parent's 24-hour approval
+lifetime. Candidate remains held; no publication or completed AI review.
+**16 focused controls and full workspace typecheck passed.**
+
+Prior genuine native/worker and public-browser evidence remains valid and
+separately recorded, not rerun or recounted. Real managed save/history remains
+unverified: the supported testing service again refused its agent kind.
+No separate recovery fix, paid inference, PSP/email, production, publication or
+main merge. R1/R2 remain incomplete. See
+[exact IDs, hashes, expiry and holds](docs/valo/tpl07-disabled-runtime-checkpoint.md)
+and [retained native/browser proof](docs/valo/native-runtime-checkpoint.md).
+
+## Retained checker runtime checkpoint
+
+The exact reviewed checker source was already integrated through normal
+development history; GitHub confirms PR12 is merged. The earlier unmerged
+status was stale. No duplicate merge or history rewrite was performed.
+
+Fresh disposable PostgreSQL verification: **75 engineering checks passed,
+zero failed, one genuine-native-storage-only skip**. This includes the
+26 focused checker tests, 15 current-source task checks and five new HTTP
+journey checks. Full workspace typecheck passed. The new HTTP group is in
+ordinary CI; existing focused/task CI entries were preserved.
+
+The real anonymous questionnaire/review/preview browser journey passed at
+360px and 1280px. **Signed-in browser save/history and result-driven missing
+answer focus remain unverified:** the supported testing service was unavailable.
+Private HTTP verification uses explicitly controlled identity transport, not
+claimed managed-browser proof. No released rules were fabricated.
+
+See [exact runtime evidence and limits](docs/valo/pr12-runtime-verification.md).
+The original 80-case corpus and eight disagreements remain unchanged and held.
+No PR13 merge, budget/privacy feature changes, paid calls, email/PSP activity,
+publication or deployment occurred. R1/R2 and formal 80/60/60 remain unaccepted.
+
+## Retained editorial and CI checkpoint
+
+C038/C039 now pin the actual retained v5 baseline. C054 requires three newly
+committed, action-specific denial records and rejects pre-existing audit IDs.
+Selected runs preserve immutable reports and do not count unselected cases as
+passes. These corrections do not make held content eligible.
+
+**Fresh local checks:** ordinary API suite **201 passed / 1 explicit skip**,
+PR11 reporting/receipt/commerce **26 passed**, CI-boundary group **29 passed /
+1 explicit native-only skip**, editorial provenance controls **6 passed**.
+Full workspace and subsequent API typechecks passed. Groups overlap; these are
+engineering checks, not formal 80/60/60 acceptance. C054 also ran against the
+development database with three new denial records and zero external actions.
+
+PR11 is already merged, with its reporting tests in ordinary CI. PR12's earlier
+unmerged status is corrected above; no PR13 merge was performed. No maintenance recovery,
+customer deletion, messages or provider execution was performed.
+
+See [exact tests, evidence and limits](docs/valo/editorial-ci-integration-checkpoint.md).
+Hosted CI's prior saved-head jobs were refused before startup by GitHub's account
+restriction; local passes do not claim hosted success. No account limits changed.
+
+The [prior disabled budget checkpoint](docs/valo/finite-sdk-admission-checkpoint.md)
+is preserved. New budget/privacy features remain with their separate branches.
+Spending and quota increases remain off. **R1/R2 remain incomplete and
+unaccepted**; prepared drafts are not published content. Launch/live payments stay off.
+
+Prior implementation evidence is retained separately:
+[execution/reconciliation](docs/valo/finite-customer-execution-review.md),
+[credential-free and storage CI](docs/valo/finite-ci-import-storage-repair.md),
+[privacy/browser checks](docs/valo/checker-origin-browser-checkpoint.md).
+
+**Earlier test/CI repair evidence:** runtime harness capability canary and separate
+portable/native erasure lanes are documented in
+[CI boundary and storage repair](docs/valo/ci-boundary-erasure-repair.md).
+Earlier local results: 54 finite-budget controls, 46 boundary checks, standard
+database core 117 plus actual HTTP privacy-role 7, operations 2, and scanner
+controls 9, all passing with no skips. Real secret/dependency scanning and
+Semgrep passed locally with detector canaries. Exact-head CI is recorded on the
+draft PR; these are not formal 80/60/60 or R1/R2 acceptance results.
+
+The actual managed entry now has controlled evidence through reservation,
+dispatch, outbound observation and settlement across all four lanes. Source-
+verified price/context evidence supports whole-context reservations. The named
+**additional** $30 proposal remains disabled, starts only after actual owner
+approval and does not claim a global or retrospective project budget.
+
+Historical reconciliation retained all **57** entries: **48 reported-usage,
+6 proven no-dispatch, 3 unresolved failed drafts**. Actual per-ID/artifact
+evidence, original entries and concurrent/repeated outcomes are retained.
+No failed draft was assigned later model bounds or assumed free.
+
+**47 finite-entry controls, 17 budget controls, 29 native checks and 177
+foundation tests passed**; types/build passed. These are not the formal
+80/60/60 provider/content acceptance suites. One disabled exact review pair
+is prepared; zero new inference calls, owner approvals or quota changes.
+
+See [current capability, evidence and precise proposed decision](docs/valo/inference-budget-reviewable-unit.md).
+
+**Whole-project GitHub CI is not green at this checkpoint.** Foundation/types
+passed; the dispute test failed on the GitHub runner's missing hard-coded
+Chromium executable, secret scanning retained one historical finding, and the
+static-security job failed. These are unresolved engineering checks, not owner
+credential requirements. See retained redacted CI evidence and follow-through.
+
+## Prior repair unit — bounded authenticated erasure replay
+
+Full inventory proofs can be reused only under the exact reviewed immutable
+database guard and signed case/seal; new processes, changed guards and recovery
+imports recheck. Missing guards fall back to full verification. Native evidence
+resumed **13 objects / 205 restored revisions** across two killed workers:
+13 deletions, no duplicates, maximum 10 objects / 100 rows per batch.
+
+**32 native tests**, **13 seal/lock/cache controls**, **11 large-download tests**
+and **23 controlled inference-dispatch tests** passed. These are engineering
+checks, not formal 80/60/60 acceptance. Spending and launch remain disabled.
+See [scope, guard assumptions and actual evidence](docs/valo/bounded-erasure-replay.md).
+
+## Prior saved unit — scoped purchase receipt recovery
+
+The shared repair explicitly creates a `purchase_receipt`; a refund notification
+cannot substitute. Maintenance inserts a held receipt atomically. **26 targeted
+tests passed**, including concurrent repairs preserving the complete refund,
+grant and order records. The documented 94-order cohort now has per-order
+provenance and append-only attempt journals: all 94 were already present, no
+new repair or dispatch occurred, and history/grants/refund notices were unchanged.
+The original 18 failure reasons remain unknown; later audit windows are not
+invented original exception records.
+
+See [scoped evidence and limitations](docs/valo/synthetic-receipt-recovery.md).
+Full R1/R2 acceptance and the disabled spending/launch decisions are unchanged.
+
+## Prior repair checkpoint — replay authentication and case access
+
+Application repair: `404b1a102e4d7fbfb26ec3888374b72357528b89`, pushed normally
+to the existing private development branch and draft PR2.
+
+Full signed inventory validation now precedes **every application replay
+phase**, membership fencing and object dispatch. Invalid empty keys cannot be
+silently skipped. Actual restored same-workspace inventory/case corruption
+tests preserved the active fixture membership and profile with zero deletions.
+
+Verified requesters can read and answer their own cases after workspace
+quarantine without regaining business access. Replies return to the assigned
+operator; they do not resume erasure or claim fulfilment. The customer UI hides
+pre-processing cancellation once the authenticated history records quarantine.
+
+**31 targeted tests passed**, including native private-storage late uploads,
+SIGKILL/automatic maintenance, hold/role boundaries, historical keys and actual
+privacy HTTP routes. A further requester list/reply HTTP run passed 7 tests
+(overlapping that suite). The isolated restore rerun passed in 67,369 ms.
+**23 separate controlled inference-dispatch tests passed** with zero paid calls;
+the real allocation remains disabled and owner approval/quotas were not changed.
+
+Unknown uploads remain subject to the retained journal's hourly automatic
+rescan, not an invented immediate provider-settlement guarantee. This is not
+complete account erasure, production restore, formal 80/60/60 acceptance or full
+R1/R2 completion. External processor/retention/production decisions remain open.
+
+See [finding-by-finding repair evidence](docs/valo/erasure-review-repair.md).
+
+## Prior application checkpoint — retained history
+
+Saved application: `96efe764e977cae7299f44b2e4ad26ed62432617`, including the privacy/export implementation in
+`2eb03d0`, CI prerequisite/scan-disposition follow-up `453969b`, and orphaned
+queue payload / conflicting-ownership protection. All were pushed
+normally to the existing private development branch and draft PR2.
+
+Versioned synthetic erasure now minimises copied financial text, preserves
+authenticated audit proof, cancels scoped queued payloads, and retains signed
+object/scratch cleanup inventories. Scoped exports include linked payment,
+refund/dispute and privacy-case metadata without recursively embedding old
+full workspace exports or inferring public-contact ownership from email.
+
+**90 distinct selected engineering tests passed**, plus typecheck, API build,
+isolated migration DDL and the dependency/redacted-secret scan with detector
+canaries. These are **not** formal 80/60/60 acceptance or complete privacy
+fulfilment. The initial CI run failed; prerequisite fixes are committed, but
+no green GitHub result is claimed here.
+
+The isolated development restore now physically re-erases restored application
+rows and local fixture objects using separately retained authenticated receipts.
+It rejects a changed sealed receipt with a complete transaction rollback, holds
+on storage failure, resumes after an observed SIGKILL immediately after object
+deletion, preserves other tenants, and prevents deleted/revoked identity
+recreation. Actual elapsed time: 63,927 ms total; restore/validation 33,528 ms;
+recovery cutoff age 40,874 ms. This is not production or App Storage restore proof.
+
+Additional selected checks: 177 foundation/traceability tests, 45 runtime/account-boundary tests, six private-copy/
+scratch-cursor regressions and 15 customer-access/isolation tests passed. The
+configured and unconfigured HTTP suites each passed 18 tests with one explicitly
+inapplicable case skipped; these results are not additive formal acceptance
+counts. Earlier failed restore attempts remain retained beside the final result.
+GitHub at `96efe76` passed foundation, static and dependency/secret checks but
+failed an obsolete export-disclosure assertion; its correction passed all 15
+local access tests. The subsequent evidence/test update triggers a fresh run;
+its result must be checked before claiming the entire workflow passed.
+
+Remaining gaps include production/managed-object recovery, supported 35-day
+retention, adoption of older unsigned/quarantine-only journals and field-level
+retention/processor outcomes.
+The development schema's legacy migration journal is empty; no old migration
+executions were fabricated. Retention/processor outcomes, production recovery,
+full R1/R2 and launch remain unaccepted. No new inference, external message,
+real merchant action, spending approval or launch occurred.
+
+See [exact scope, test commands and remaining gaps](docs/valo/privacy-copy-checkpoint.md).
+See [physical restore evidence and limitations](docs/valo/physical-recovery-checkpoint.md).
+
+## Previous application checkpoint — finite inference controls and exact export proof
+
+Saved application: `c6bca11`. The real managed dispatch path was exercised offline,
+corpus/role and independent-review bindings were tightened, and default customer
+retry/observation behavior verified. **39/39** entry/preparation and **23/23**
+PostgreSQL checks passed. Export **10/10** integration and **9** browser checks
+now cover exact IDs and bounded page JS heap. No new model call or approval.
+
+A current native TPL-07 v9 two-review manifest is prepared but disabled. Its
+worst-case reservation is **$0.7411008** inside the proposed **$30 additional**
+finite allocation. Historical unknowns remain explicit, not a fictional balance.
+See [current evidence, exact manifest and remaining decision](docs/valo/inference-hardening-checkpoint.md).
+Full R1/R2 and formal 80/60/60 acceptance remain incomplete.
+
+## Previous application checkpoint — restartable private workspace exports
 
 The saved application now supports durable private scoped workspace exports,
 mid-preparation cancellation, current access rechecks and crash recovery without

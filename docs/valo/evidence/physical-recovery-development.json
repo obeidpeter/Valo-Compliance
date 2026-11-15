@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "status": "partial-development-engineering-evidence",
+  "applicationCommit": "96efe764e977cae7299f44b2e4ad26ed62432617",
+  "sourceBindings": {
+    "artifacts/api-server/src/lib/valo-erasure-seal.ts": "7778cdb43a8e6337ff91385f24d474a7e5718ccdf2d589d2967581eff4a9feaa",
+    "artifacts/api-server/src/lib/valo-privacy-erasure.ts": "a1dc6e5bff4ef198d8727f1eeee047ce4f5b6c0b654cf65f37b9d681ee3b5432",
+    "artifacts/api-server/src/lib/valo-recovery-controls.ts": "ffecda7c93e6fa0f4f018377a88e236fe42e158382ab909ee91155f5c5ad634c",
+    "artifacts/api-server/src/lib/valo-recovery-erasure.ts": "b6a38e0b2db50e1eb8e438471363fd6f37664cf91c37e48fd627c043b13ac1de",
+    "artifacts/api-server/src/scripts/isolated-recovery.ts": "958f5c86aaaf8a66733c5e8f1e2daa9b01a873625a922d2487f258c874870241",
+    "lib/db/src/index.ts": "32fcec9545b0cc6854246cc40afbf13ad1960f73c06a7bcb0a9cc36a2587e540"
+  },
+  "execution": {
+    "startedAt": "2026-11-15T02:48:38.129Z",
+    "scope": "disposable local synthetic PostgreSQL and local fixture objects",
+    "managedDatabaseRead": false,
+    "productionRestoreProved": false,
+    "appStorageRestoreProved": false,
+    "externalCredentialsInherited": false,
+    "externalMessagesSent": 0,
+    "charges": 0,
+    "refunds": 0,
+    "deletionScope": "Completed independently retained synthetic erasure receipt, physical application replay and local object cleanup; external providers excluded",
+    "retention35Days": "unresolved",
+    "checks": {
+      "exactSnapshotCutoff": true,
+      "sourceDatabaseRejectedAsReplayTarget": true,
+      "alteredJournalRejected": true,
+      "alteredJournalRejectedWithoutEffects": true,
+      "changedReceiptRejection": {
+        "code": "ERASURE_SEAL_INVALID",
+        "locations": [
+          {
+            "file": "valo-erasure-seal.ts",
+            "line": 45
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 58
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 72
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 261
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 277
+          }
+        ]
+      },
+      "changedReceiptRejectedWithWholeImportRolledBack": true,
+      "originalPreCutoffAuditRedactedWithAuthenticWitness": true,
+      "idempotentDeletionTombstoneAndRevocationReplay": true,
+      "publisherCannotReadPrivateRevisions": true,
+      "tenantObjectChecksums": 3,
+      "tamperedObjectDetected": true,
+      "controlledObjectFailure": {
+        "batches": 1,
+        "remaining": true,
+        "failed": 1,
+        "physicalApplicationReplayComplete": false,
+        "externalSystemsFulfilled": false
+      },
+      "objectDeletionCrash": {
+        "boundaryReached": true,
+        "killReported": true
+      },
+      "physicalApplicationPurgeWithStorageFailureAndProcessRestart": true,
+      "queuePayloadPurgedBeforeTrackingRows": true,
+      "otherTenantsPreserved": true,
+      "preCutoffPrivacyCopiesNotResurrected": true,
+      "customerAccess": {
+        "authorisationChecksCreatedNoRows": true,
+        "versionedIdentityBinding": true,
+        "revokedIdentitiesDenied": 2,
+        "activeDocumentRecovered": 1,
+        "crossTenantDenied": 1
+      }
+    },
+    "phase": "completed",
+    "cutoffAt": "2026-11-15T02:48:59.987Z",
+    "localWalCutoff": "0/1F666E8",
+    "dumpElapsedMs": 512,
+    "snapshotHash": "83f92e5c07658f4ef6ff83c8e090f0296e973e194f071c516bb787fdbdf3ef66",
+    "restoreStartedAt": "2026-11-15T02:49:07.334Z",
+    "physicalApplicationReplayComplete": true,
+    "externalSystemsFulfilled": false,
+    "restoreCompletedAt": "2026-11-15T02:49:40.861Z",
+    "restoreAndValidationElapsedMs": 33528,
+    "recoveryCutoffAgeMs": 40874,
+    "passed": true,
+    "elapsedMs": 63927,
+    "completedAt": "2026-11-15T02:49:42.051Z"
+  },
+  "regressions": {
+    "privateCopyAndScratchCursor": {
+      "tests": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "customerAccessIsolationScope": {
+      "tests": 15,
+      "passed": 15,
+      "failed": 0
+    },
+    "runtimeAndAccountBoundaries": {
+      "tests": 45,
+      "passed": 45,
+      "failed": 0
+    },
+    "configuredHttpProvider": {
+      "tests": 19,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 1
+    },
+    "unconfiguredHttpProvider": {
+      "tests": 19,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 1
+    },
+    "rootTypecheck": "passed",
+    "apiBuild": "passed"
+  },
+  "limitations": [
+    "No production or managed App Storage restore proof",
+    "No 35-day retention proof or external processor erasure",
+    "No whole PRV/OPS/NFR acceptance, release or R1/R2 approval",
+    "Existing unsigned quarantine adoption and legacy database migration-history adoption remain held",
+    "No new source-rule80/customerAI60/editorial60 acceptance execution",
+    "No provider spending, messages or merchant actions"
+  ]
+}

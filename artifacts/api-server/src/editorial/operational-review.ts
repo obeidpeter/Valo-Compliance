@@ -1,4 +1,4 @@
-import {managedCompletion,managedInferenceLane,assertManagedInferenceAvailable,withApprovedInferenceRole,hasApprovedInferenceContext} from "../lib/managed-inference";
+import {managedCompletion,managedInferenceLane,assertManagedInferenceAvailable,withApprovedInferenceRole,hasApprovedInferenceContext,hasApprovedInferencePairContext} from "../lib/managed-inference";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
 import { z } from "zod";
 import {parseBoundedProviderJSON} from "../lib/provider-output-budget";
@@ -77,6 +77,7 @@ export async function executeOperationalReviewPlan(plan:Awaited<ReturnType<typeo
   const hold=(code:string)=>Object.assign(Error(code),{reviewPlan:{manifest:plan.manifest,artifact:plan.artifact}});
   if(plan.manifest.status!=="mechanically_planned_not_reserved")throw hold("OPERATIONAL_REVIEW_INPUT_CEILING_REACHED");
   assertManagedInferenceAvailable();
+  if(!hasApprovedInferencePairContext())throw hold("APPROVED_REVIEW_PAIR_REQUIRED");
   const ids=await db.transaction(async tx=>{
     await tx.execute(sql`select pg_advisory_xact_lock(747105)`);
     // An explicitly approved finite allocation replaces the legacy scheduling
@@ -136,7 +137,9 @@ export async function executeOperationalReviewPlan(plan:Awaited<ReturnType<typeo
         where id=${id}::bigint and request_hash=${entry.meter.requestHash}`);
       return null;
     }
-  },{concurrency:2,retries:0});
+  // Independent means blind inputs, not concurrent spending. Sequential
+  // admission lets a first-role financial failure stop the reserved sibling.
+  },{concurrency:1,retries:0});
   return reviews.filter((review):review is NonNullable<typeof review>=>review!==null);
 }
 

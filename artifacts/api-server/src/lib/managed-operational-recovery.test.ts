@@ -70,7 +70,7 @@ test("actual operational caller recovers an artifact failure from settled receip
       const client={query:async(text:string,values:unknown[]=[])=>{
         if(text.startsWith('SELECT * FROM "public".valo_inference_batches'))return{rows:[nextBatch]};
         if(text.startsWith('UPDATE "public".valo_inference_batches')&&text.includes("jsonb_set")){
-          nextBatch.results[String(values[1])]=JSON.parse(String(values[2]));return{rows:[]};
+          nextBatch.results[String(values[1])]=JSON.parse(String(values[2]));return{rows:[],rowCount:1};
         }
         throw Error("UNEXPECTED_BUDGET_TEST_SQL");
       }};
@@ -99,8 +99,8 @@ test("actual operational caller recovers an artifact failure from settled receip
   }});
   t.mock.module("@workspace/integrations-openai-ai-server/batch",{namedExports:{
     batchProcess:async<T,R>(entries:T[],fn:(entry:T)=>Promise<R>,options:{concurrency:number;retries:number})=>{
-      assert.equal(entries.length,2);assert.equal(options.concurrency,2);assert.equal(options.retries,0);
-      return Promise.all(entries.map(fn));
+      assert.equal(entries.length,2);assert.equal(options.concurrency,1);assert.equal(options.retries,0);
+      const results:R[]=[];for(const entry of entries)results.push(await fn(entry));return results;
     },
   }});
   t.mock.module("@workspace/integrations-openai-ai-server",{namedExports:{openai:{chat:{completions:{

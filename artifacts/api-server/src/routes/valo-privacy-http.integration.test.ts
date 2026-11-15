@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import {sql} from "drizzle-orm";
-import {GetPrivacyCaseResponse} from "@workspace/api-zod";
+import {GetPrivacyCaseResponse,ListPrivacyCasesResponse} from "@workspace/api-zod";
 import assert from "node:assert/strict";
 import express from "express";
 import {randomUUID} from "node:crypto";
@@ -8,7 +8,7 @@ import {eq,inArray} from "drizzle-orm";
 import {db,pool,valoStaffAssignments,valoPrivacyCases,valoPrivacyEvents,valoPrivacyTombstones,
   valoPrivacyErasureObjects,valoStaffAccessAudit,valoWorkspaces,valoMemberships,
   valoSupportTickets,valoEvents} from "@workspace/db";
-import {createPrivacyOperationsRouter,makeVerifiedStaffSession,customerAccessRouter} from "./valo-customer-access";
+import {createPrivacyOperationsRouter,createPrivacyRequesterRouter,makeVerifiedStaffSession,customerAccessRouter} from "./valo-customer-access";
 import {createPrivacyCase,confirmPrivacyCase} from "../lib/valo-privacy";
 import {resolveWorkspace,ValoProblem} from "../lib/valo-store";
 
@@ -18,10 +18,20 @@ test("actual HTTP privacy routes apply an independent privacy role and fresh MFA
   assert.equal(process.env.NODE_ENV,"development");assert.ok(!process.env.REPLIT_DEPLOYMENT);
   const tag=randomUUID(),owner=await resolveWorkspace(`synthetic-http-privacy-${tag}`);
   const other=await resolveWorkspace(`synthetic-http-other-${tag}`);
+  const quarantinedOwner=await resolveWorkspace(`synthetic-http-quarantine-${tag}`);
   const roles=["privacy","finance","revoked","stale"].map(x=>`synthetic-http-${x}-${tag}`);
   let sessionRevoked=false,emailVerified=true,sessionMismatch=false;
   const app=express();
   app.use(express.json());
+  let requesterRevoked=false;
+  app.use("/customer/workspace/privacy-cases",createPrivacyRequesterRouter(makeVerifiedStaffSession({
+    auth:req=>{const selected=req.header("x-test-customer"),id=selected==="owner"?owner.identityId:selected==="other"?other.identityId:
+      selected==="quarantined"?quarantinedOwner.identityId:null;
+      return{userId:id,sessionId:id?`requester:${id}`:null,has:()=>false};},
+    session:async id=>({status:requesterRevoked?"revoked":"active",userId:id.slice("requester:".length)}),
+    user:async id=>({id,banned:false,locked:false,primaryEmailAddressId:"primary",
+      emailAddresses:[{id:"primary",verification:{status:"verified"}}]}),
+  })));
   app.use("/customer",(req,res,next)=>{
     // Explicit controlled fixture identity transport, never production auth.
     const selected=req.header("x-test-customer");
@@ -118,6 +128,43 @@ test("actual HTTP privacy routes apply an independent privacy role and fresh MFA
       const inspected=GetPrivacyCaseResponse.parse(await(await inspect()).json());
       assert.equal(inspected.messages.filter((m:{body:string})=>m.body===message).length,1);
     });
+    await t.test("quarantined verified requester can answer without restored workspace membership",async()=>{
+      const created=await createPrivacyCase(quarantinedOwner,"synthetic@example.invalid",{kind:"deletion",
+        idempotencyKey:randomUUID(),message:"Fresh post-quarantine HTTP fixture, distinct from quota/race fixtures.",acknowledgement:true});
+      const id=created.reference.slice(5);
+      const verified=await confirmPrivacyCase(quarantinedOwner,id,{expectedVersion:1,acknowledgement:true});
+      const action=(data:object)=>fetch(`${base}/admin/privacy-cases/${id}/action`,{method:"POST",
+        headers:{"Origin":base,"Content-Type":"application/json","x-test-identity":roles[0]},body:JSON.stringify(data)});
+      const claimed=await action({action:"claim",expectedVersion:verified.request.version,reason:"Assign the independent synthetic quarantine fixture."});
+      assert.equal(claimed.status,200);
+      const before=GetPrivacyCaseResponse.parse(await claimed.json());
+      const started=await action({action:"start_erasure",expectedVersion:before.request.version,
+        acknowledgement:true,reason:"Quarantine only this fresh synthetic HTTP fixture."});
+      assert.equal(started.status,200);
+      const quarantined=GetPrivacyCaseResponse.parse(await started.json());
+      const asked=await action({action:"request_information",expectedVersion:quarantined.request.version,
+        reason:"Clarify the retained processing scope after workspace quarantine."});
+      assert.equal(asked.status,200);
+      const waiting=GetPrivacyCaseResponse.parse(await asked.json());
+      const read=(customer:string)=>fetch(`${base}/customer/workspace/privacy-cases/${id}`,{headers:{"x-test-customer":customer}});
+      assert.equal((await read("other")).status,404);
+      requesterRevoked=true;assert.equal((await read("quarantined")).status,403);requesterRevoked=false;
+      const visible=GetPrivacyCaseResponse.parse(await(await read("quarantined")).json());
+      assert.equal(visible.mayRespond,true);
+      const listed=await fetch(`${base}/customer/workspace/privacy-cases`,{headers:{"x-test-customer":"quarantined"}});
+      assert.equal(listed.status,200);
+      const cases=ListPrivacyCasesResponse.parse(await listed.json());
+      assert.deepEqual(cases.map(c=>c.id),[id]);
+      const send=()=>fetch(`${base}/customer/workspace/privacy-cases/${id}/respond`,{method:"POST",
+        headers:{"Origin":base,"Content-Type":"application/json","x-test-customer":"quarantined"},
+        body:JSON.stringify({expectedVersion:waiting.request.version,message:"Please retain only the minimum processing evidence."})});
+      const response=await send();assert.equal(response.status,200);
+      const answered=GetPrivacyCaseResponse.parse(await response.json());
+      assert.equal(answered.request.status,"assigned");
+      assert.equal((await send()).status,200);
+      const members=await db.select().from(valoMemberships).where(eq(valoMemberships.workspaceId,quarantinedOwner.workspaceId));
+      assert.equal(members.every(m=>m.active==="no"),true);
+    });
     await t.test("revoked and stale-MFA privacy identities fail on the HTTP route",async()=>{
       assert.equal((await request(roles[2])).status,403);
       assert.equal((await request(roles[3])).status,403);
@@ -128,22 +175,42 @@ test("actual HTTP privacy routes apply an independent privacy role and fresh MFA
       assert.equal((await request(roles[0])).status,403);
     });
     await t.test("hostile origin never reaches the privacy mutation",async()=>{
-      const r=await request(roles[0],"POST",{action:"hold",expectedVersion:2,
-        reason:"Hostile origin cannot submit."},"https://hostile.synthetic.invalid");
+      // Isolate the origin boundary: this same actor/session/body must succeed
+      // from the configured origin, not fail earlier on role or stale revision.
+      await db.update(valoStaffAssignments).set({active:true}).where(eq(valoStaffAssignments.identityId,roles[0]));
+      const inspect=await fetch(`${base}/admin/privacy-cases/${caseId}`,{headers:{"x-test-identity":roles[0]}});
+      assert.equal(inspect.status,200);
+      const current=GetPrivacyCaseResponse.parse(await inspect.json());
+      assert.ok(current.availableActions?.includes("hold"));
+      const snapshot=async()=>({
+        cases:await db.select().from(valoPrivacyCases).where(eq(valoPrivacyCases.id,caseId)),
+        events:await db.select().from(valoPrivacyEvents).where(eq(valoPrivacyEvents.caseId,caseId)).orderBy(valoPrivacyEvents.sequence),
+        access:await db.select().from(valoStaffAccessAudit).where(eq(valoStaffAccessAudit.actorId,roles[0])),
+      });
+      const before=await snapshot(),body={action:"hold",expectedVersion:current.request.version,
+        reason:"Controlled origin-specific privacy transition."};
+      const r=await request(roles[0],"POST",body,"https://hostile.synthetic.invalid");
       assert.equal(r.status,403);
+      assert.deepEqual(await snapshot(),before);
+      const positive=await request(roles[0],"POST",body,base);
+      assert.equal(positive.status,200);
+      const held=GetPrivacyCaseResponse.parse(await positive.json());
+      assert.equal(held.request.status,"held");
+      assert.equal(held.request.version,current.request.version+1);
+      assert.equal((await snapshot()).events.length,before.events.length+1);
     });
   }finally{
-    await db.execute(sql`DELETE FROM valo_privacy_messages WHERE workspace_id=${owner.workspaceId}::uuid`);
+    await db.execute(sql`DELETE FROM valo_privacy_messages WHERE workspace_id IN (${owner.workspaceId}::uuid,${quarantinedOwner.workspaceId}::uuid)`);
     await db.execute(sql`DELETE FROM valo_memberships WHERE workspace_id=${other.workspaceId}::uuid`);
     await db.execute(sql`DELETE FROM valo_workspaces WHERE id=${other.workspaceId}::uuid`);
     if(previousOrigin===undefined)delete process.env.VALO_TRUSTED_ORIGIN;else process.env.VALO_TRUSTED_ORIGIN=previousOrigin;
     await new Promise<void>((resolve,reject)=>server.close(err=>err?reject(err):resolve()));
     for(const table of[valoPrivacyErasureObjects,valoPrivacyEvents,valoPrivacyTombstones,valoPrivacyCases,
       valoSupportTickets,valoEvents,valoMemberships])
-      await db.delete(table).where(eq(table.workspaceId,owner.workspaceId));
+      await db.delete(table).where(inArray(table.workspaceId,[owner.workspaceId,quarantinedOwner.workspaceId]));
     await db.delete(valoStaffAccessAudit).where(inArray(valoStaffAccessAudit.actorId,roles));
     await db.delete(valoStaffAssignments).where(inArray(valoStaffAssignments.identityId,roles));
-    await db.delete(valoWorkspaces).where(eq(valoWorkspaces.id,owner.workspaceId));
+    await db.delete(valoWorkspaces).where(inArray(valoWorkspaces.id,[owner.workspaceId,quarantinedOwner.workspaceId]));
     await pool.end();
   }
 });

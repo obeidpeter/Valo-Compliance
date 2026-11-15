@@ -1,0 +1,34 @@
+﹣ durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF (0.7357ms) # SKIP
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (50.385755ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (100.082169ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (776.160579ms)
+  ✔ ready, pending and cleanup objects are inventoried once before rows disappear and stale workers stay fenced (329.207579ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (1495.684625ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (1964.510048ms)
+  ✔ native private storage deletion and repeated late-write replay remove actual synthetic bytes (1726.398991ms)
+  ✔ sealed key tampering and corrupted completion proof stop before deletion (186.926872ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (2.323763ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (12.816872ms)
+✔ resumable physical development erasure with retained exclusions and replay (8193.148768ms)
+▶ isolated privacy signing-key rotation — no real secret rotation
+  ✔ legacy version is pinned only after its retained signature verifies (24.556438ms)
+  ✔ new version signs while old and legacy signatures still verify (18.467062ms)
+  ✔ missing historical material holds both history verification and identity matching (11.19266ms)
+  ✔ reusing a pinned version name with another key cannot silently re-sign history (10.6741ms)
+  ✔ unsent notices are held idempotently without rewriting accepted outcomes or another tenant (173.233439ms)
+✔ isolated privacy signing-key rotation — no real secret rotation (469.496004ms)
+▶ new synthetic private-copy inventory: scoped export, physical redaction, signed proof and crash scratch replay
+  ✔ export includes owned charge/refund/dispute events, not another tenant or unlinked email intake or nested snapshots (180.365882ms)
+  ✔ all recorded copied private text is erased while finance facts and signed history remain (44.960694ms)
+{"scope":"new synthetic fixtures only","financialFactsRetained":true,"externalProviderActions":0,"completeAccountDeletionClaimed":false,"sharedUsageUnchanged":true,"fixtureWorkspace":"7b1c6626-fcd5-4cda-8328-c63528b45091"}
+  ✔ every object alias and abandoned scratch path remains signed and retryable after process leftovers (269.410528ms)
+✔ new synthetic private-copy inventory: scoped export, physical redaction, signed proof and crash scratch replay (3263.764582ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 15152.566148

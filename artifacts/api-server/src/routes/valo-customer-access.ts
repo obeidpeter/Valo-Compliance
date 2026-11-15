@@ -19,6 +19,7 @@ import {processPrivacyAction,privacyPreparedResult} from "../lib/valo-privacy-pr
 import {db} from "@workspace/db";
 import {requirePrivacyStaff,type PrivacyStaffActor} from "../lib/valo-privacy";
 import {financeDispute,prepareDisputeAction,controlDisputeAction,orderDisputeInformation,saveDisputeInformation} from "../lib/valo-dispute-actions";
+import {requesterPrivacyList,requesterPrivacyDetail,requesterPrivacyReply} from "../lib/valo-privacy-requester";
 export const publicAccessRouter=Router();
 publicAccessRouter.post("/public/access-support",sameOriginMutation,async(req,res)=>{
   res.set("Cache-Control","private, no-store");
@@ -84,6 +85,22 @@ return async(req:Request):Promise<PrivacyStaffActor>=>{
 };
 }
 const verifiedStaffSession=makeVerifiedStaffSession();
+/** Uses the same live session/user checks but grants only original-requester
+ * case access. Staff roles/MFA are not required of ordinary customers. */
+export function createPrivacyRequesterRouter(authenticate:(req:Request)=>Promise<{identityId:string}>=verifiedStaffSession){
+  const router=Router();
+  router.use((_req,res,next)=>{res.set("Cache-Control","private, no-store");res.vary("Cookie");next();});
+  router.get("/",async(req,res)=>{
+    res.json(ListPrivacyCasesResponse.parse(await requesterPrivacyList((await authenticate(req)).identityId)));
+  });
+  router.get("/:id",async(req,res)=>{
+    res.json(GetPrivacyCaseResponse.parse(await requesterPrivacyDetail((await authenticate(req)).identityId,z.string().uuid().parse(req.params.id))));
+  });
+  router.post("/:id/respond",sameOriginMutation,async(req,res)=>{
+    res.json(GetPrivacyCaseResponse.parse(await requesterPrivacyReply((await authenticate(req)).identityId,z.string().uuid().parse(req.params.id),req.body)));
+  });
+  return router;
+}
 async function financeIdentity(req:Request){
   const actor=await verifiedStaffSession(req);
   await assertFinanceActor(actor);return actor;

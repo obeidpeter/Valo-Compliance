@@ -18,6 +18,14 @@ At integrated commit `ab793f2e2495903aefff1271c89a1c30a39b028b`, [all four CI jo
 
 The corrected package freezes 108 actual content units and the original 200 evaluation cases. Subsequent [PR21](https://github.com/obeidpeter/Valo-Compliance/pull/21) adds conditional TPL-01 through TPL-11 preparation and corrects the earlier artifact's seven mismatched source-file hashes. Its frozen-artifact regression checks exact source bytes, all original cases and named sections. The corrected package ID is `finite-package:3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8`.
 
+**Current policy distinction:** that source-corrected snapshot is historical,
+not current admission authority. Its source pins still match, but it predates
+the clarified durable-owner-approval start boundary and the current validator
+returns `ALLOCATION_PACKAGE_INVALID`. The [current native-runtime preparation](review-pair-runtime-checkpoint.md)
+rebuilt and verified an exact disabled runtime package from actual bytes and
+current policy. No historical package, content roster or successful preparation
+is spending approval.
+
 A current exact native Replit plan remains unconfirmed: the artifact records zero prepared runtime pairs. Supported IDs do not establish saved candidate readiness. The package and all new-spending authority remain disabled; unsupported candidates and unready evidence remain held.
 
 Historical reconciliation is read-only and cannot certify the account balance. The last retained import had 57 potential-charge records, including 20 unresolved/unbounded records. These remain preserved separately from the proposed additional allocation. They are not assumed free, and the additional proposal is not represented as a cap on past charges.

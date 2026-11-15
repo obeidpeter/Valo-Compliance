@@ -12,7 +12,7 @@ import { releasedCatalogue,releasedTemplate,createReleasedTemplateDraft,readRele
 import { exportMime } from "../lib/valo-render";
 import { GetReleasedTemplateResponse } from "@workspace/api-zod";
 import { GetReleasedResourceResponse as ReleasedResource } from "@workspace/api-zod";
-import { publicAccessRouter,customerAccessRouter,staffOperationsRouter } from "./valo-customer-access";
+import { publicAccessRouter,customerAccessRouter,staffOperationsRouter,createPrivacyRequesterRouter } from "./valo-customer-access";
 import { releasedResources } from "../lib/valo-released-content";
 import { commerceRouter } from "./valo-commerce";
 
@@ -21,6 +21,10 @@ const router = Router();
 router.use(publicAccessRouter);
 router.use(staffOperationsRouter);
 router.use(financePaymentConcernsRouter);
+// Register these case-only routes before the broad workspace-membership gate.
+// Unhandled operations (verification/cancellation/full exports) still fall
+// through to their existing workspace authority checks.
+router.use("/workspace/privacy-cases",createPrivacyRequesterRouter());
 router.get("/public/resources",async(_req,res)=>{
   res.set("Cache-Control","no-store");res.json((await releasedResources()).map(r=>ReleasedResource.parse(r)));
 });

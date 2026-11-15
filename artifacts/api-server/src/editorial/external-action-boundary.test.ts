@@ -25,6 +25,7 @@ test("actual editorial denial boundary returns only committed current-run action
   const{dispatchEditorialExternalAction}=await import("./external-action-boundary");
   const versionId=randomUUID();
   for(const evaluationRunId of [randomUUID(),randomUUID()]){
+    const previousIds=persisted.map(row=>row.id);
     const receipts:EditorialDenialReceipt[]=[];
     for(const action of editorialDeniedActions){
       await assert.rejects(()=>dispatchEditorialExternalAction(versionId,action,evaluationRunId),(error:unknown)=>{
@@ -35,7 +36,9 @@ test("actual editorial denial boundary returns only committed current-run action
       });
     }
     const rows=persisted.filter(row=>receipts.some(r=>r.auditId===row.id));
-    assert.equal(verifyCurrentEditorialDenials(versionId,evaluationRunId,receipts,rows).length,3);
+    assert.equal(verifyCurrentEditorialDenials(versionId,evaluationRunId,receipts,rows,previousIds).length,3);
+    assert.throws(()=>verifyCurrentEditorialDenials(versionId,evaluationRunId,receipts,rows,
+      [...previousIds,receipts[0]!.auditId]),/CURRENT_DENIAL_NOT_NEW/);
     assert.throws(()=>verifyCurrentEditorialDenials(versionId,evaluationRunId,receipts,
       persisted.filter(row=>!receipts.some(r=>r.auditId===row.id))),/CURRENT_DENIAL_/);
   }

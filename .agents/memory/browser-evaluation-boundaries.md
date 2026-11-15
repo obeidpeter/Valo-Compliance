@@ -26,3 +26,16 @@ partitions instead of two tabs of the same browser session.
 **How to apply:** Establish a shared context before creating peers and prove the
 native cross-tab transport, while labelling controlled identity separately from
 a real managed-provider session test.
+
+Do not treat a returned testing job identifier as proof that a browser started.
+Await its result, and distinguish unsupported test-service configuration from a
+product or identity-provider failure.
+
+**Why:** On 2026-11-15 this workspace's documented testing factory returned a job
+identifier but then rejected the `testing` kind. Real public Playwright checks
+could run locally; that did not establish a managed signed-in save/history flow.
+
+**How to apply:** Recheck the supported capability when a new browser test is
+requested. If it remains unavailable, retain that boundary, do not weaken
+authentication, and label controlled-identity HTTP and anonymous browser proof
+separately from real managed-session evidence.
