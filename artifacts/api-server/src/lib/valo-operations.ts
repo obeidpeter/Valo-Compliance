@@ -2,6 +2,7 @@ import {mkdir,open,readFile,rename,unlink,stat} from "node:fs/promises";
 import {join,resolve} from "node:path";
 import {randomUUID} from "node:crypto";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {workerReadiness,type WorkerHeartbeat} from "./valo-worker-health";
 export const operationsDirectory=resolve("generated-artifacts/valo-operations");
 export const readinessQueries={
   database:"SELECT 1 AS value",
@@ -23,9 +24,9 @@ async function atomicJson(file:string,value:unknown){
   try{await fd.writeFile(JSON.stringify(value));await fd.sync();}finally{await fd.close();}
   try{await rename(temp,file);}finally{await unlink(temp).catch(()=>{});}
 }
-export async function recordWorkerHeartbeat(directory=operationsDirectory){
+export async function recordWorkerHeartbeat(health:WorkerHeartbeat,directory=operationsDirectory){
   assertDevelopmentRuntime();await mkdir(directory,{recursive:true,mode:0o700});
-  await atomicJson(join(directory,"worker.json"),{at:new Date().toISOString(),pid:process.pid});
+  await atomicJson(join(directory,"worker.json"),{...health,at:new Date().toISOString(),pid:process.pid});
 }
 export async function collectOperationalSample(query:(sql:string)=>Promise<{rows:{value:unknown}[]}>,directory=operationsDirectory):Promise<OperationalSample>{
   assertDevelopmentRuntime();
@@ -45,7 +46,8 @@ export async function collectOperationalSample(query:(sql:string)=>Promise<{rows
     if(raw.length>1000)throw Error("INVALID_HEARTBEAT");
     const heartbeat=JSON.parse(raw),at=Date.parse(heartbeat.at),ageMs=Date.now()-at;
     if(!Number.isFinite(at)||ageMs<0||!Number.isSafeInteger(heartbeat.pid))throw Error("INVALID_HEARTBEAT");
-    process.kill(heartbeat.pid,0);worker={status:ageMs<=90000?"healthy":"stale",ageMs};
+    process.kill(heartbeat.pid,0);
+    worker={status:ageMs>90000?"stale":workerReadiness(heartbeat),ageMs};
   }catch{/* Absence, malformed data or a dead worker is not a healthy heartbeat. */}
   return{...Object.fromEntries(metrics),checkedAt:new Date().toISOString(),scope:"development-project-local",
     worker,limits:{exports:100,cleanup:0,workspaceCleanup:0,workerAgeMs:90000}}as OperationalSample;

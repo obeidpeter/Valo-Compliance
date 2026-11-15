@@ -139,6 +139,12 @@ jobs:
         run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-erasure-replay-cursor.test.ts
       - name: Check HTTP log privacy, internal alerts and recovery effects
         run: pnpm --filter @workspace/api-server test:valo-operations
+      - name: Prove production storage isolation and worker readiness failures
+        run: pnpm --filter @workspace/api-server test:valo-production-readiness
+      - name: Build and exercise the shipped worker and operator commands
+        run: |
+          pnpm --filter @workspace/api-server run build
+          pnpm --filter @workspace/api-server test:valo-deployment-artifacts
       - name: Install local-only recovery tools
         run: |
           sudo apt-get update -qq
@@ -232,6 +238,12 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-staff-roles
       - name: Install reviewed durable queue before payload and erasure tests
         run: NODE_ENV=development VALO_DEV_QUEUE_MIGRATION=reviewed-synthetic-development pnpm --filter @workspace/api-server exec tsx src/scripts/queue-migration.ts apply-development
+      - name: Prove real worker readiness, queue drift, graceful drain and restart
+        run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-worker-readiness.integration.test.ts
+        env:
+          PRIVATE_OBJECT_DIR: ""
+          DEFAULT_OBJECT_STORAGE_BUCKET_ID: ""
+          PUBLIC_OBJECT_SEARCH_PATHS: ""
       - name: Prove dispute HTTP and transport controls without merchant calls
         run: pnpm --filter @workspace/api-server test:valo-disputes
       - name: Prove canonical background exports, restart, holds and final byte release

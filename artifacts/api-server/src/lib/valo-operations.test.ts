@@ -5,6 +5,7 @@ import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {collectOperationalSample,recordOperationalAlerts,recordWorkerHeartbeat,readinessQueries} from "./valo-operations";
 import {versionedEvidencePath} from "./versioned-evidence-path";
+import {WorkerHealth} from "./valo-worker-health";
 test("operator report names reject traversal and non-integer versions",()=>{
   for(const version of ["../../private","7","1000000","1.5",NaN,Infinity,0,-1,1.5,1000001,Number.MAX_SAFE_INTEGER,1e21,null,undefined,{},[],true])
     assert.throws(()=>versionedEvidencePath("/synthetic/root",version),/INVALID_EVIDENCE_VERSION/);
@@ -17,8 +18,9 @@ test("internal probes measure failures independently and persist/deduplicate/rec
   const originalFetch=globalThis.fetch;let externalCalls=0;
   globalThis.fetch=async()=>{externalCalls++;throw Error("EXTERNAL_MESSAGES_FORBIDDEN");};
   const dir=await mkdtemp(join(tmpdir(),"valo-ops-"));
+  const worker=new WorkerHealth();worker.finish(worker.begin()!,true);
   try{
-    await recordWorkerHeartbeat(dir);
+    await recordWorkerHeartbeat(worker.snapshot(),dir);
     const failures=await collectOperationalSample(async sql=>{
       if(sql===readinessQueries.database)throw Error("SYNTHETIC_PRIVATE_DB_ERROR");
       return{rows:[{value:sql===readinessQueries.payments?2:101}]};
@@ -33,7 +35,7 @@ test("internal probes measure failures independently and persist/deduplicate/rec
     const stale=await collectOperationalSample(async sql=>({rows:[{value:sql===readinessQueries.database?1:0}]}),dir);
     assert.equal(stale.worker.status,"stale");
     await recordOperationalAlerts(stale,dir);
-    await recordWorkerHeartbeat(dir);
+    worker.finish(worker.begin()!,true);await recordWorkerHeartbeat(worker.snapshot(),dir);
     const healthy=await collectOperationalSample(async sql=>({rows:[{value:sql===readinessQueries.database?1:0}]}),dir);
     assert.deepEqual((await recordOperationalAlerts(healthy,dir)).active,[]);
     history=JSON.parse(await readFile(join(dir,"alerts.json"),"utf8"));
@@ -44,6 +46,8 @@ test("internal probes measure failures independently and persist/deduplicate/rec
     assert.equal((await recordOperationalAlerts(healthy,dir)).emitted,0,"a failed local write must not poison later queued work");
     await writeFile(join(dir,"worker.json"),"{bad");
     assert.equal((await collectOperationalSample(async()=>({rows:[{value:0}]}),dir)).worker.status,"unavailable");
+    worker.finish(worker.begin()!,false);await recordWorkerHeartbeat(worker.snapshot(),dir);
+    assert.equal((await collectOperationalSample(async()=>({rows:[{value:1}]}),dir)).worker.status,"unavailable","a fresh timestamp cannot hide a failed dispatch");
     assert.equal(externalCalls,0);
   }finally{globalThis.fetch=originalFetch;await rm(dir,{recursive:true,force:true});if(old===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=old;}
 });
