@@ -21,6 +21,7 @@ const view=(r:WorkspaceExport)=>({id:r.id,status:r.status!=="cancelled"&&r.expir
   progress:{section:r.progressSection,rows:r.rowsProcessed,bytes:r.bytesPrepared},
   retryAvailable:r.status==="interrupted"&&r.attempts<5&&r.expiresAt.getTime()>Date.now()});
 async function owned(tx:Tx,actor:WorkspaceActor,id:string,lock=false){
+  if(lock)await tx.execute(sql`set local lock_timeout='1000ms'`);
   const q=tx.select().from(jobs).where(and(eq(jobs.id,id),eq(jobs.workspaceId,actor.workspaceId),eq(jobs.requesterId,actor.identityId)));
   const[row]=await(lock?q.for("update"):q);
   if(!row)throw new ValoProblem(404,"Workspace export not found.");
@@ -80,6 +81,7 @@ export async function retryWorkspaceExport(actor:WorkspaceActor,id:string,expect
 }
 async function current(tx:Tx,actor:WorkspaceActor,id:string,attemptId:string,queueId:string,heartbeat=false){
   if(heartbeat){await tx.execute(sql`set local lock_timeout='250ms'`);await tx.execute(sql`set local statement_timeout='1000ms'`);}
+  else await tx.execute(sql`set local lock_timeout='1000ms'`);
   const[row]=await tx.select().from(jobs).where(and(eq(jobs.id,id),eq(jobs.workspaceId,actor.workspaceId)))
     .for("update",heartbeat?{skipLocked:true}:{});
   if(!row||row.currentAttemptId!==attemptId||row.queueId!==queueId||row.status!=="preparing"||
@@ -99,6 +101,7 @@ export async function executeWorkspaceExport(id:string,workspaceId:string,queueI
 }={}){
   assertDevelopmentRuntime();const storage=options.storage??workspaceExportStorage;
   const claim=await db.transaction(async tx=>{
+    await tx.execute(sql`set local lock_timeout='1000ms'`);
     const[old]=await tx.select().from(jobs).where(and(eq(jobs.id,id),eq(jobs.workspaceId,workspaceId))).for("update");
     if(!old||old.queueId!==queueId||old.status!=="queued"||old.attempts>=5||old.expiresAt.getTime()<=Date.now())return null;
     const actor={workspaceId,identityId:old.requesterId};

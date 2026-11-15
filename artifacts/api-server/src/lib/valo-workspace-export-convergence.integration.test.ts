@@ -100,6 +100,14 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
         await db.update(valoMemberships).set({active:'yes'}).where(eq(valoMemberships.workspaceId,a.workspaceId));
       }
     });
+    await t.test('a blocked cancel times out without changing the ready job or its private attempt',async()=>{
+      const actor=await owner(),row=await prepare(actor),blocker=await pool.connect();
+      try{
+        await blocker.query('begin');await blocker.query('select id from valo_workspace_exports where id=$1 for update',[row.id]);
+        await assert.rejects(bounded(cancelWorkspaceExport(actor,row.id,row.version)),{code:'55P03'});
+        assert.equal((await raw(row.id)).status,'ready');assert.equal((await raw(row.id)).version,row.version);assert.equal((await attempt(row.id)).status,'ready');
+      }finally{await blocker.query('rollback');blocker.release();}
+    });
     await t.test('managed session revocation while final job lock is held wins before headers',async()=>{
       const actor=await owner(),row=await prepare(actor),blocker=await pool.connect(),rechecked=deferred();let checks=0,revoked=false,released=0;
       try{
