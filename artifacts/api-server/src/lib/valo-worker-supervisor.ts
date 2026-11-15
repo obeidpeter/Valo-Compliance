@@ -9,7 +9,7 @@ export const supervisorTiming = Object.freeze({
   restartWindowMs: 600_000, maxRestarts: 5,
 });
 type Timing = {[K in keyof typeof supervisorTiming]: number};
-type Reason = "exited" | "spawn_failed" | "startup_timeout" | "unhealthy" | "shutdown" | "kill_timeout";
+type Reason = "exited" | "spawn_failed" | "startup_timeout" | "unhealthy" | "shutdown" | "shutdown_failed" | "kill_timeout";
 type Event = {event: "worker_supervisor.started" | "worker_supervisor.ready" | "worker_supervisor.stopping" |
   "worker_supervisor.restart" | "worker_supervisor.exhausted" | "worker_supervisor.stopped";
   reason?: Reason; attempt?: number};
@@ -66,7 +66,8 @@ export async function superviseWorker({signal, launch, report, timing: t = super
         }, t.pollMs);
         child.on("message", message);
         child.once("error", () => {if (!child.pid) finish("spawn_failed"); else terminate("spawn_failed");});
-        child.once("exit", () => finish(stopReason ?? "exited"));
+        child.once("exit", (code, exitSignal) => finish(signal.aborted && (code !== 0 || exitSignal !== null)
+          ? "shutdown_failed" : stopReason ?? "exited"));
         signal.addEventListener("abort", stop, {once: true});
         report({event: "worker_supervisor.started"});
         if (signal.aborted) stop();
@@ -74,6 +75,7 @@ export async function superviseWorker({signal, launch, report, timing: t = super
     if (reason === "kill_timeout") {
       report({event: "worker_supervisor.exhausted", reason}); return 1;
     }
+    if (reason === "shutdown_failed") {report({event: "worker_supervisor.stopped", reason}); return 1;}
     if (signal.aborted) {report({event: "worker_supervisor.stopped", reason: "shutdown"}); return 0;}
     const now = performance.now();
     while (restarts.length && now - restarts[0] >= t.restartWindowMs) restarts.shift();

@@ -86,7 +86,13 @@ test("real worker loses readiness on queue drift, recovers, drains and restarts"
       }},
     });
     const supervisionDeadline=setTimeout(()=>controller.abort(),30000);
-    try{assert.equal(await supervised,0);assert.equal(ready,2);assert.equal(launches,2);}
+    try{
+      assert.equal(await supervised,process.platform==="win32"?1:0);assert.equal(ready,2);assert.equal(launches,2);
+      if(process.platform!=="win32"){
+        assert.equal(child!.exitCode,0);assert.equal(child!.signalCode,null);
+        assert.equal((await heartbeat()).phase,"draining");
+      }
+    }
     finally{clearTimeout(supervisionDeadline);controller.abort();}
     // Losing the parent IPC channel must drain the actual worker, including on Windows.
     start(true);await waitFor(async()=>await status("/readyz")===200,"supervised parent-loss setup");

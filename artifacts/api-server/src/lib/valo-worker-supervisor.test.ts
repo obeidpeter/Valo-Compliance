@@ -21,10 +21,10 @@ test("crashed child is reaped before replacement; shutdown never launches anothe
     const code = await superviseWorker({signal: h.controller.signal, timing,
       launch: () => {
         for (const old of h.children) assert.ok(old.exitCode !== null || old.signalCode !== null);
-        const c = child(h.children.length ? healthy + "setInterval(()=>{},1000)" : "process.exit(1)");
+        const c = child(h.children.length ? "process.on('SIGTERM',()=>process.exit(0));" + healthy + "setInterval(()=>{},1000)" : "process.exit(1)");
         h.children.push(c); return c;
       }, report: e => {h.events.push(e); if (e.event === "worker_supervisor.ready") h.controller.abort();}});
-    assert.equal(code, 0); assert.equal(h.children.length, 2);
+    assert.equal(code, process.platform === "win32" ? 1 : 0); assert.equal(h.children.length, 2);
     assert.equal(h.events.filter(e => e.event === "worker_supervisor.restart").length, 1);
     assert.ok(h.children.every(c => c.exitCode !== null || c.signalCode !== null));
   } finally {h.cleanup();}
@@ -81,4 +81,13 @@ test("unconfirmed process termination fails closed without launching a replaceme
       launch:()=>{launched++;return c;},report:()=>{}}),1);
     assert.equal(launched,1);
   }finally{kill("SIGKILL");await new Promise<void>(resolve=>c.once("exit",()=>resolve()));}
+});
+test("failed or forced shutdown is never reported as a clean drain", {timeout: 10_000}, async () => {
+  const h=harness();
+  try{
+    assert.equal(await superviseWorker({signal:h.controller.signal,timing,
+      launch:()=>{const c=child("process.on('SIGTERM',()=>process.exit(2));"+healthy+"setInterval(()=>{},1000)");h.children.push(c);return c;},
+      report:e=>{h.events.push(e);if(e.event==="worker_supervisor.ready")h.controller.abort();}}),1);
+    assert.ok(h.events.some(e=>e.reason==="shutdown_failed"));assert.equal(h.children.length,1);
+  }finally{h.cleanup();}
 });

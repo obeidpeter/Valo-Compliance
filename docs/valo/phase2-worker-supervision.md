@@ -29,6 +29,7 @@ supervised worker to drain.
 | SIGTERM/SIGINT | Stop restarting, forward SIGTERM, wait for child exit |
 | Child still running after 75 seconds of drain | Send SIGKILL; wait up to 5 more seconds |
 | Termination remains unconfirmed | Exit 1 without spawning a replacement |
+| Child fails or is force-killed during shutdown | Exit 1; never report a clean drain |
 
 The outer process manager must allow **more than 80 seconds** for shutdown (use at
 least 85 seconds), maintain exactly one supervisor, restart a failed supervisor,
