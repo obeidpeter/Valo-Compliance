@@ -1,4 +1,5 @@
 import {useState} from "react";
+import {FinanceDisputeCard,DisputeFormsBoundary} from "@/components/dispute-workflows";
 import {useGetFinanceRefunds,decideFinanceRefund,reconcileFinanceRefund,type RefundRecord} from "@workspace/api-client-react";
 import {ErrorState,Skel} from "@/components/states";
 import {describeError,formatDate} from "@/lib/api";
@@ -29,9 +30,12 @@ function RefundCard({row,refresh}:{row:RefundRecord;refresh:()=>Promise<unknown>
   </article>;
 }
 export function FinanceRefunds(){
+  return <DisputeFormsBoundary><FinanceRefundsContent/></DisputeFormsBoundary>;
+}
+function FinanceRefundsContent(){
   const q=useGetFinanceRefunds({query:{refetchInterval:30000,refetchOnWindowFocus:true}});
   if(q.isLoading)return <Skel className="mt-6 h-40"/>;
-  if(q.isError)return <ErrorState error={q.error} onRetry={()=>q.refetch()}/>;
+  if(q.isError&&!q.data)return <ErrorState error={q.error} onRetry={()=>q.refetch()}/>;
   return <section className="mt-6" aria-labelledby="finance-refunds-heading">
     <h2 id="finance-refunds-heading" className="font-display text-2xl">Refund decisions and reconciliation</h2>
     <p className="my-3 text-sm">{q.data?.policy}</p>
@@ -40,6 +44,6 @@ export function FinanceRefunds(){
     {!q.data?.refunds.length?<p className="my-4 text-sm">No refund requests.</p>:<div className="space-y-4">{q.data.refunds.map(row=><RefundCard key={row.id} row={row} refresh={()=>q.refetch()}/>)}</div>}
     <h3 className="my-4 font-semibold">Provider dispute observations</h3>
     {!q.data?.disputes.length?<p className="text-sm">No verified dispute observations. This is not a guarantee that no bank dispute exists.</p>:
-      <ul className="space-y-2">{q.data.disputes.map((d,i)=><li key={i} className="break-all rounded-xl border p-3 text-sm">{JSON.stringify(d)}</li>)}</ul>}
+      <div className="space-y-3">{q.data.disputes.map(d=>typeof d.id==="string"?<FinanceDisputeCard key={d.id} id={d.id}/>:null)}</div>}
   </section>;
 }

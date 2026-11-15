@@ -359,6 +359,157 @@ export const GetStaffOperationsResponse = zod.object({
 })
 
 
+export const GetOrderDisputeInformationParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetOrderDisputeInformationResponse = zod.object({
+  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "notice": zod.string()
+})
+
+
+export const SaveOrderDisputeInformationParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const saveOrderDisputeInformationBodyCustomerNameMax = 150;
+
+export const saveOrderDisputeInformationBodyCustomerPhoneMin = 5;
+export const saveOrderDisputeInformationBodyCustomerPhoneMax = 40;
+
+export const saveOrderDisputeInformationBodyServiceDetailsMin = 10;
+export const saveOrderDisputeInformationBodyServiceDetailsMax = 2000;
+
+export const saveOrderDisputeInformationBodyDeliveryAddressMax = 500;
+
+
+
+export const SaveOrderDisputeInformationBody = zod.object({
+  "disputeId": zod.uuid(),
+  "requestKey": zod.uuid(),
+  "customerName": zod.string().min(1).max(saveOrderDisputeInformationBodyCustomerNameMax),
+  "customerPhone": zod.string().min(saveOrderDisputeInformationBodyCustomerPhoneMin).max(saveOrderDisputeInformationBodyCustomerPhoneMax),
+  "serviceDetails": zod.string().min(saveOrderDisputeInformationBodyServiceDetailsMin).max(saveOrderDisputeInformationBodyServiceDetailsMax),
+  "deliveryAddress": zod.string().max(saveOrderDisputeInformationBodyDeliveryAddressMax).optional(),
+  "deliveryDate": zod.coerce.date().optional(),
+  "consentVersion": zod.enum(['test-dispute-information-v1'])
+})
+
+export const SaveOrderDisputeInformationResponse = zod.object({
+  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "notice": zod.string()
+})
+
+
+export const GetFinanceDisputeParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetFinanceDisputeResponse = zod.object({
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const PrepareFinanceDisputeParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const prepareFinanceDisputeBodyMessageMin = 10;
+export const prepareFinanceDisputeBodyMessageMax = 1500;
+
+export const prepareFinanceDisputeBodyAmountKoboMin = 0;
+export const prepareFinanceDisputeBodyAmountKoboMax = 2147483647;
+
+
+
+export const PrepareFinanceDisputeBody = zod.object({
+  "kind": zod.enum(['upload_receipt', 'submit_evidence', 'merchant_decision']),
+  "requestKey": zod.uuid(),
+  "message": zod.string().min(prepareFinanceDisputeBodyMessageMin).max(prepareFinanceDisputeBodyMessageMax),
+  "informationId": zod.uuid().optional(),
+  "resolution": zod.enum(['merchant-accepted', 'declined']).optional(),
+  "amountKobo": zod.int().min(prepareFinanceDisputeBodyAmountKoboMin).max(prepareFinanceDisputeBodyAmountKoboMax).optional()
+})
+
+export const PrepareFinanceDisputeResponse = zod.object({
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const ControlFinanceDisputeParams = zod.object({
+  "id": zod.uuid(),
+  "operation": zod.enum(['execute', 'reconcile', 'cancel'])
+})
+
+
+
+
+export const ControlFinanceDisputeBody = zod.object({
+  "expectedVersion": zod.int().min(1)
+})
+
+export const ControlFinanceDisputeResponse = zod.object({
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
 export const GetFinanceRefundsResponse = zod.object({
   "refunds": zod.array(zod.object({
   "id": zod.string(),

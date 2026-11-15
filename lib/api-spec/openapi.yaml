@@ -203,6 +203,74 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/StaffOperations" }
         "403": { description: Missing staff permission or recent MFA; no self-enrolment route. }
+  /workspace/orders/{id}/dispute-information:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getOrderDisputeInformation
+      responses:
+        "200":
+          description: Own provider dispute references and customer statements, not bank findings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DisputeInformationList" }
+    post:
+      operationId: saveOrderDisputeInformation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DisputeInformationInput" }
+      responses:
+        "201":
+          description: Customer statement and explicit sharing consent saved, not submitted to provider
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DisputeInformationList" }
+  /admin/disputes/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getFinanceDispute
+      responses:
+        "200":
+          description: Finance-only scoped records and immutable prepared intent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinanceDispute" }
+  /admin/disputes/{id}/actions:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: prepareFinanceDispute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DisputeIntentInput" }
+      responses:
+        "201":
+          description: Finance-authorized intent prepared, not a provider mutation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinanceDispute" }
+  /admin/dispute-actions/{id}/{operation}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: operation, in: path, required: true, schema: { type: string, enum: [execute, reconcile, cancel] } }
+    post:
+      operationId: controlFinanceDispute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DisputeControlInput" }
+      responses:
+        "200":
+          description: Actual intent/provider observation state; never a claimed bank victory
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinanceDispute" }
   /admin/refunds:
     get:
       operationId: getFinanceRefunds
@@ -1193,6 +1261,69 @@ components:
         checkedAt: { type: [string, "null"] }
         completedAt: { type: [string, "null"] }
         failure: { type: [string, "null"] }
+    DisputeInformationInput:
+      type: object
+      additionalProperties: false
+      required: [disputeId, requestKey, customerName, customerPhone, serviceDetails, consentVersion]
+      properties:
+        disputeId: { type: string, format: uuid }
+        requestKey: { type: string, format: uuid }
+        customerName: { type: string, minLength: 1, maxLength: 150 }
+        customerPhone: { type: string, minLength: 5, maxLength: 40 }
+        serviceDetails: { type: string, minLength: 10, maxLength: 2000 }
+        deliveryAddress: { type: string, maxLength: 500 }
+        deliveryDate: { type: string, format: date }
+        consentVersion: { type: string, enum: [test-dispute-information-v1] }
+    DisputeInformationList:
+      type: object
+      required: [disputes, information, notice]
+      properties:
+        disputes: { type: array, items: { type: object, additionalProperties: true } }
+        information: { type: array, items: { type: object, additionalProperties: true } }
+        notice: { type: string }
+    DisputeIntentInput:
+      type: object
+      additionalProperties: false
+      required: [kind, requestKey, message]
+      properties:
+        kind: { type: string, enum: [upload_receipt, submit_evidence, merchant_decision] }
+        requestKey: { type: string, format: uuid }
+        message: { type: string, minLength: 10, maxLength: 1500 }
+        informationId: { type: string, format: uuid }
+        resolution: { type: string, enum: [merchant-accepted, declined] }
+        amountKobo: { type: integer, minimum: 0, maximum: 2147483647 }
+    DisputeControlInput:
+      type: object
+      additionalProperties: false
+      required: [expectedVersion]
+      properties:
+        expectedVersion: { type: integer, minimum: 1 }
+    DisputeActionRecord:
+      type: object
+      required: [id, kind, status, version, attempts, payload, result, failure]
+      properties:
+        id: { type: string }
+        kind: { type: string }
+        status: { type: string }
+        version: { type: integer }
+        attempts: { type: integer }
+        payload: { type: object, additionalProperties: true }
+        result: { type: object, nullable: true, additionalProperties: true }
+        failure: { type: string, nullable: true }
+    FinanceDispute:
+      type: object
+      required: [id, orderReference, amountKobo, status, resolution, actions, information, executionEnabled, policy]
+      properties:
+        id: { type: string }
+        orderReference: { type: string }
+        amountKobo: { type: integer }
+        status: { type: string }
+        resolution: { type: string, nullable: true }
+        actions: { type: array, items: { $ref: "#/components/schemas/DisputeActionRecord" } }
+        information: { type: array, items: { type: object, additionalProperties: true } }
+        executionEnabled: { type: boolean }
+        policy: { type: string }
+        history: { type: array, items: { type: object, additionalProperties: true } }
     FinanceRefunds:
       type: object
       required: [refunds, disputes, policy]

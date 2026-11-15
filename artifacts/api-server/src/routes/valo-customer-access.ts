@@ -19,12 +19,21 @@ import {listPrivacyCases,customerPrivacyDetail,confirmPrivacyCase,listStaffPriva
 import {processPrivacyAction,privacyPreparedResult} from "../lib/valo-privacy-processing";
 import {db} from "@workspace/db";
 import {requirePrivacyStaff,type PrivacyStaffActor} from "../lib/valo-privacy";
+import {financeDispute,prepareDisputeAction,controlDisputeAction,orderDisputeInformation,saveDisputeInformation} from "../lib/valo-dispute-actions";
 export const publicAccessRouter=Router();
 publicAccessRouter.post("/public/access-support",sameOriginMutation,async(req,res)=>{
   res.set("Cache-Control","private, no-store");
   res.status(201).json(AccessSupportAck.parse(await saveAccessSupport(req.body,req.socket.remoteAddress??"unknown-socket")));
 });
 export const customerAccessRouter=Router();
+customerAccessRouter.get("/workspace/orders/:id/dispute-information",async(req,res)=>{
+  res.set("Cache-Control","private, no-store");
+  res.json(await orderDisputeInformation(res.locals.valoActor,z.string().uuid().parse(req.params.id)));
+});
+customerAccessRouter.post("/workspace/orders/:id/dispute-information",sameOriginMutation,async(req,res)=>{
+  res.set("Cache-Control","private, no-store");
+  res.status(201).json(await saveDisputeInformation(res.locals.valoActor,res.locals.valoContactEmail,z.string().uuid().parse(req.params.id),req.body));
+});
 customerAccessRouter.get("/workspace/account",async(_req,res)=>{
   res.json(CustomerAccount.parse(await customerAccount(res.locals.valoActor)));
 });
@@ -90,6 +99,22 @@ staffOperationsRouter.use("/admin/refunds",(_req,res,next)=>{res.set("Cache-Cont
 staffOperationsRouter.get("/admin/refunds",async(req,res)=>{
   res.json(GetFinanceRefundsResponse.parse(await financeRefunds(await financeIdentity(req))));
 });
+export function makeDisputeOperationsRouter(resolve:typeof financeIdentity=financeIdentity){
+  const router=Router();
+  router.use(["/admin/disputes","/admin/dispute-actions"],(_req,res,next)=>{res.set("Cache-Control","private, no-store");next();});
+  router.get("/admin/disputes/:id",async(req,res)=>{
+    res.json(await financeDispute(await resolve(req),z.string().uuid().parse(req.params.id)));
+  });
+  router.post("/admin/disputes/:id/actions",sameOriginMutation,async(req,res)=>{
+    res.status(201).json(await prepareDisputeAction(await resolve(req),z.string().uuid().parse(req.params.id),req.body));
+  });
+  router.post("/admin/dispute-actions/:id/:operation",sameOriginMutation,async(req,res)=>{
+    res.json(await controlDisputeAction(await resolve(req),z.string().uuid().parse(req.params.id),
+      z.enum(["execute","reconcile","cancel"]).parse(req.params.operation),req.body));
+  });
+  return router;
+}
+staffOperationsRouter.use(makeDisputeOperationsRouter());
 staffOperationsRouter.post("/admin/refunds/:id/decision",sameOriginMutation,async(req,res)=>{
   res.json(DecideFinanceRefundResponse.parse(await decideRefund(await financeIdentity(req),z.string().uuid().parse(req.params.id),req.body)));
 });

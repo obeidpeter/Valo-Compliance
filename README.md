@@ -1,6 +1,20 @@
 # Valo Compliance — Valo Platform
 
-## Latest privacy/security checkpoint — R1/R2 still unaccepted
+## Latest application checkpoint — durable dispute workflows, R1/R2 still unaccepted
+
+Customers now have consented dispute-information forms; finance has immutable
+prepared intents, generated receipt evidence, structured evidence, single-attempt
+merchant decisions, cancellation and canonical reconciliation. Unknown outcomes
+remain held rather than automatically retried or called final bank resolutions.
+Privacy fencing cancels only provably unsent work. **12 native dispute checks,
+17 HTTP/transport checks, 114 customer/privacy regression checks and 17 refund
+checks passed**, with overlapping counts; these are not formal 80/60/60 acceptance.
+See the [current application evidence and remaining boundaries](docs/valo/dispute-customer-checkpoint.md).
+No actual merchant action, external message, new inference spending, publication
+or production deployment occurred. Full R1/R2 implementation and acceptance
+remain unfinished. The normally merged finite inference allocation stays disabled.
+
+## Previous privacy/security checkpoint — retained evidence
 
 Privacy keys now support current signing and pinned historical verification;
 missing historical material holds processing and identity matching. Scoped v2

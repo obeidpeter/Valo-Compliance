@@ -95,6 +95,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-rich-checker
       - name: Prove signed erasure inventory and isolated lock controls
         run: pnpm --filter @workspace/api-server test:valo-erasure-controls
+      - name: Prove dispute HTTP and transport controls without merchant calls
+        run: pnpm --filter @workspace/api-server test:valo-disputes
       - name: Run foundation unit tests
         run: pnpm --filter @workspace/scripts test:valo
       - name: Install standard PDF readers
@@ -178,6 +180,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-erasure-db
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db
+      - name: Prove durable dispute intents against synthetic orders and controlled transport
+        run: pnpm --filter @workspace/api-server test:valo-disputes-db
       - name: Prove durable write limits and membership revocation races
         run: pnpm --filter @workspace/api-server test:valo-write-security
       - name: Prove controlled payment settlement and refund lifecycle

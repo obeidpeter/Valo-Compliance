@@ -332,6 +332,14 @@ export function partialWorkflowEvidence(id:string){
         hash:"999668399283a3fbed88b971234a5f7264a8d23dd1b9b54741ed47978e55d111",result:"fail" as const}},
   ];
   const matching=[...groups,...currentValidation,...operationalEvidence,{
+    ids:["PAY-007","PAY-008","ADM-001","SEC-001","SEC-006","PRV-003","WRK-006","NFR-009"],
+    paths:["artifacts/api-server/src/lib/valo-dispute-actions.ts","artifacts/api-server/src/lib/valo-dispute-provider.ts",
+      "artifacts/api-server/src/routes/valo-customer-access.ts","artifacts/valo/src/components/dispute-workflows.tsx",
+      "artifacts/api-server/src/lib/valo-privacy-erasure.ts","lib/db/drizzle/0025_dispute_merchant.sql",
+      "lib/db/drizzle/0026_dispute_category.sql"],
+    record:{kind:"test" as const,path:"docs/valo/evidence/dispute-actions-development.json",
+      hash:"cd0927df13094885fe2a8aa93252aea45fbaa7c93215c01c35fb2864913a2783",result:"pass" as const},
+  },{
     ids:["IAM-001","IAM-002","IAM-003","PRO-001","PRO-002","EDT-004","EDT-006","EDT-007","EDT-008",
       "WRK-001","OPS-002","OPS-007","SEC-001","SEC-006","NFR-007","NFR-009"],
     paths:["artifacts/api-server/src/lib/valo-development-runtime.ts","artifacts/api-server/src/lib/valo-export-queue.ts",
