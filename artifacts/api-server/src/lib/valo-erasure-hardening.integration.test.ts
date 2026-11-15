@@ -7,11 +7,14 @@ import assert from "node:assert/strict";
 import {randomUUID,createHash} from "node:crypto";
 import {fork,type ChildProcess} from "node:child_process";
 import {fileURLToPath} from "node:url";
+import {mkdir,writeFile,readFile,rm} from "node:fs/promises";
+import {join} from "node:path";
 import {eq,inArray,sql} from "drizzle-orm";
 import {db,pool,valoPrivacyErasureObjects,valoPrivacyCases,valoPrivacyEvents,valoPrivacyTombstones,
   valoWorkspaces,valoMemberships,valoStaffAssignments,valoStaffAccessAudit,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoSupportTickets,valoEvents,valoExportRequests,valoFileAssets,
-  valoExportObjects,valoExportJobs} from "@workspace/db";
+  valoExportObjects,valoExportJobs,valoWorkspaceExports,valoWorkspaceExportAttempts} from "@workspace/db";
+import {cleanupWorkspaceExports,workspaceExportScratch} from "./valo-workspace-export-jobs";
 import {resolveWorkspace,createDocument,saveProfile} from "./valo-store";
 import {syntheticDocument,syntheticProfile} from "./valo-test-fixtures";
 import {RENDER_VERSION} from "./valo-render";
@@ -77,7 +80,79 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       await db.execute(sql`DELETE FROM valo_privacy_key_versions WHERE id=${current}`);
     }
   };
+  const ownedScratch:string[]=[];
   try{
+    await t.test("ordinary orphan and temporary cleanup never bypass privacy-owned complete or invalid cases",async()=>{
+      const f=await setup(),job=await exportJob(f),objects=new Map<string,Buffer>();
+      await executeExport(job.id,f.owner.workspaceId,job.queueId!,undefined,{
+        write:async(key,bytes)=>{objects.set(key,bytes);return{checksum:createHash("sha256").update(bytes).digest("hex"),size:bytes.length};},
+        remove:async key=>{objects.delete(key);},
+      });
+      const [tracked]=await db.select().from(valoExportObjects).where(eq(valoExportObjects.jobId,job.id));
+      const[originalDocument]=await db.select().from(valoDocuments).where(eq(valoDocuments.id,job.documentId));
+      const originalRevisions=await db.select().from(valoDocumentRevisions).where(eq(valoDocumentRevisions.documentId,job.documentId));
+      const exportId=randomUUID(),attemptId=randomUUID(),tempKey=`valo/development/${f.owner.workspaceId}/${randomUUID()}.json`;
+      const[workspaceJob]=await db.insert(valoWorkspaceExports).values({id:exportId,workspaceId:f.owner.workspaceId,
+        requesterId:f.owner.identityId,requestKey:randomUUID(),status:"expired",expiresAt:new Date(0)}).returning();
+      const[attempt]=await db.insert(valoWorkspaceExportAttempts).values({id:attemptId,workspaceId:f.owner.workspaceId,
+        jobId:exportId,objectKey:tempKey,status:"cleanup"}).returning();
+      const scratch=workspaceExportScratch(attemptId);ownedScratch.push(scratch);
+      await mkdir(scratch,{recursive:true});await writeFile(join(scratch,"owned-synthetic.txt"),"OWNED_SYNTHETIC_SCRATCH");
+      let calls=0;
+      const remove=async(key:string)=>{calls++;objects.delete(key);};
+      const storage={put:async()=>{throw Error("UNEXPECTED_UPLOAD");},get:async()=>{throw Error("UNEXPECTED_READ");},remove};
+      const blocked=async(label:string)=>{
+        await db.update(valoExportObjects).set({state:"cleanup",nextCleanupAt:new Date(0)})
+          .where(eq(valoExportObjects.objectKey,tracked.objectKey));
+        const orphan=await reconcileExportOrphans(job.id,remove);
+        const temporary=await cleanupWorkspaceExports(storage,f.owner.workspaceId);
+        assert.equal(orphan.privacyHeld,1,label);assert.equal(temporary.privacyHeld,1,label);
+        assert.equal(calls,0,label);
+        assert.equal(await readFile(join(scratch,"owned-synthetic.txt"),"utf8"),"OWNED_SYNTHETIC_SCRATCH",label);
+      };
+      await step(f,async()=>{});await blocked("incomplete");
+      await finish(f,async()=>{});
+      // Restore document tracking. Workspace-export copies are retained by
+      // the current partial erasure scope, not falsely called deleted/restored.
+      await db.insert(valoDocuments).values(originalDocument);
+      await db.insert(valoDocumentRevisions).values(originalRevisions);
+      await db.insert(valoExportJobs).values(job);
+      await db.insert(valoExportObjects).values(tracked);
+      assert.equal((await db.select().from(valoWorkspaceExports).where(eq(valoWorkspaceExports.id,workspaceJob.id))).length,1,
+        "Tracking metadata is retained; this does not establish that private bytes survived");
+      assert.equal((await db.select().from(valoWorkspaceExportAttempts).where(eq(valoWorkspaceExportAttempts.id,attempt.id))).length,1);
+      // The authorized erasure correctly removed scratch. Recreate this
+      // synthetic local copy as part of the older-checkpoint restore fixture.
+      await mkdir(scratch,{recursive:true});await writeFile(join(scratch,"owned-synthetic.txt"),"OWNED_SYNTHETIC_SCRATCH");
+      const[c]=await db.select().from(valoPrivacyCases).where(eq(valoPrivacyCases.id,f.id));
+      const[tomb]=await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,f.id));
+      await blocked("completed-owned-scope");
+      await db.update(valoPrivacyCases).set({status:"held"}).where(eq(valoPrivacyCases.id,f.id));
+      try{await blocked("held");}finally{await db.update(valoPrivacyCases).set({status:c.status}).where(eq(valoPrivacyCases.id,f.id));}
+      await db.update(valoPrivacyTombstones).set({erasureSeal:{...tomb.erasureSeal!,mac:"0".repeat(64)}})
+        .where(eq(valoPrivacyTombstones.caseId,f.id));
+      try{await blocked("tampered");}finally{await db.update(valoPrivacyTombstones).set({erasureSeal:tomb.erasureSeal}).where(eq(valoPrivacyTombstones.caseId,f.id));}
+      const original=process.env.VALO_PRIVACY_KEYRING,ring=privacyKeys();
+      try{
+        process.env.VALO_PRIVACY_KEYRING=JSON.stringify({...ring,keys:{...ring.keys,[ring.current]:"wrong-synthetic-key-".repeat(4)}});
+        await blocked("wrong-key");
+        const absent="absent-"+randomUUID();
+        process.env.VALO_PRIVACY_KEYRING=JSON.stringify({current:absent,keys:{[absent]:"new-synthetic-key-".repeat(4)}});
+        await blocked("missing-historical-key");
+      }finally{if(original===undefined)delete process.env.VALO_PRIVACY_KEYRING;else process.env.VALO_PRIVACY_KEYRING=original;}
+      t.diagnostic("Both ordinary cleanup paths deferred all six privacy-owned states with zero storage or scratch deletions.");
+      const ordinary=await setup(),ordinaryJob=randomUUID(),ordinaryAttempt=randomUUID(),
+        ordinaryKey=`valo/development/${ordinary.owner.workspaceId}/${randomUUID()}.json`;
+      await db.insert(valoWorkspaceExports).values({id:ordinaryJob,workspaceId:ordinary.owner.workspaceId,
+        requesterId:ordinary.owner.identityId,requestKey:randomUUID(),status:"expired",expiresAt:new Date(0)});
+      await db.insert(valoWorkspaceExportAttempts).values({id:ordinaryAttempt,workspaceId:ordinary.owner.workspaceId,
+        jobId:ordinaryJob,objectKey:ordinaryKey,status:"cleanup"});
+      objects.set(ordinaryKey,Buffer.from("NEW_SYNTHETIC_TEMPORARY_BYTES"));
+      const positive=await cleanupWorkspaceExports(storage,ordinary.owner.workspaceId);
+      assert.equal(positive.privacyHeld,0);assert.equal(positive.failed,0);
+      assert.equal(calls,1);assert.equal(objects.has(ordinaryKey),false);
+      assert.equal(objects.has(tracked.objectKey),true,"Owned deferred bytes must remain untouched");
+    });
     await t.test("13 objects and 205 restored profile rows resume across killed workers without repeated object traversal",async()=>{
       const f=await setup();
       await saveProfile(f.owner,{expectedRevision:0,profile:syntheticProfile});
@@ -340,11 +415,12 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       assert.equal((await db.select().from(valoExportObjects).where(eq(valoExportObjects.workspaceId,f.owner.workspaceId))).length,0);
     });
   }finally{
+    for(const path of ownedScratch)await rm(path,{recursive:true,force:true});
     for(const child of children)if(child.exitCode===null&&child.signalCode===null)child.kill("SIGKILL");
     if(owners.length){
       // Removing fixture tombstones first is required by the inventory guard.
       for(const table of[valoPrivacyTombstones,valoPrivacyErasureObjects,valoPrivacyEvents,valoPrivacyCases,
-        valoExportRequests,valoFileAssets,valoExportObjects,valoExportJobs,valoSupportTickets,valoEvents,
+        valoExportRequests,valoFileAssets,valoExportObjects,valoExportJobs,valoWorkspaceExportAttempts,valoWorkspaceExports,valoSupportTickets,valoEvents,
         valoDocumentRevisions,valoDocuments,valoProfileVersions,valoMemberships])
         await db.delete(table).where(inArray(table.workspaceId,owners));
       await db.delete(valoWorkspaces).where(inArray(valoWorkspaces.id,owners));

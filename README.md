@@ -1,6 +1,23 @@
 # Valo Compliance — Valo Platform
 
-## Current checkpoint — rich checker runtime verification
+## Current checkpoint — synthetic privacy runtime verification
+
+The exact reviewed PR13 source was already in development history and its
+SQL already registered at index 22. A separate integration worktree verified
+the combined source and corrected ordinary temporary-upload cleanup so it
+cannot bypass privacy-owned holds or invalid/missing proof.
+
+**121 engineering checks passed, zero failed, one genuine-native-only skip.**
+Full workspace typecheck passed. This includes real PostgreSQL erasure/key/HTTP
+tests, 13-object/205-row interrupted replay and 12 real-process export/worker
+checks using an explicitly portable private filesystem.
+
+Only disposable data was migrated or erased. No existing owner data, native
+bucket, paid inference, email/PSP flow, production setting or live cleanup
+default changed. These checks do not accept full account erasure or R1/R2.
+See [executed proof, retained failures and limits](docs/valo/pr13-runtime-verification.md).
+
+## Retained checker runtime checkpoint
 
 The exact reviewed checker source was already integrated through normal
 development history; GitHub confirms PR12 is merged. The earlier unmerged

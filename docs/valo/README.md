@@ -1,6 +1,12 @@
 # Current development state — still not accepted
 
-Current checkpoint: [reviewed rich checker runtime verification](pr12-runtime-verification.md).
+Current checkpoint: [synthetic privacy runtime verification](pr13-runtime-verification.md):
+121 engineering passes, zero failures, one explicit native-only skip; full
+workspace typecheck passed. Actual worker/replay proof is portable, not native
+or production recovery. No existing owner data or real provider record was erased.
+Ordinary temporary-upload cleanup now defers privacy-owned scopes.
+
+Retained [reviewed rich checker runtime verification](pr12-runtime-verification.md):
 PR12's reviewed source was already in development history; GitHub confirms it
 merged. The earlier unmerged status was stale. Fresh isolated verification:
 75 engineering passes, zero failures, one native-only skip; full typecheck passed.
