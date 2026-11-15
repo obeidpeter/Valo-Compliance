@@ -60,7 +60,7 @@ Existing receipt state is preserved on retries. No order, amount, licence,
 refund, dispute or grant state is rewritten. A later reversal still exposes
 the original synthetic amount/licence and the actual later status.
 
-## Remaining listing and reporting correction
+## Listing and reporting correction
 
 Purchase listings and individual receipt reads now recognize the same original
 receipt audit actions, including `payment.synthetic_receipt_recovered`. A later
@@ -83,9 +83,15 @@ evidence of their observed aggregate outcomes.
 Validation for this correction: six standalone reporting tests passed; the
 report helper and tests passed isolated strict TypeScript checking. TypeScript
 syntax parsing passed for all changed code. The extended PostgreSQL listing
-regression is authored but **not run in the isolated review workspace**. Full
-workspace typecheck and integrated database/runtime checks remain for Replit/CI.
+regression was authored but **not run in the isolated review workspace**.
 No recovery command, provider request or email was executed for this correction.
+
+Subsequent actual Replit verification on the integrated application passed
+**7 reporting + 4 receipt PostgreSQL + 15 commerce checks**, with zero failures
+or skips, and full workspace typechecking. PR11 was already normally merged;
+its exact source ancestry was verified rather than merged again. All database
+execution used a new disposable local cluster; no existing cohort maintenance
+was run. See [exact runtime scope and retained evidence](receipt-pr11-replit-verification.md).
 
 ## Actual execution, not an all-pass claim
 
