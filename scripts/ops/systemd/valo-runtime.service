@@ -1,0 +1,27 @@
+[Unit]
+Description=Valo API and supervised worker
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=600
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=valo
+Group=valo
+WorkingDirectory=/opt/valo/current/artifacts/api-server
+EnvironmentFile=/etc/valo/runtime.env
+ExecStart=/usr/bin/python3 /opt/valo/current/scripts/ops/runtime_host.py /etc/valo/runtime.json
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=200
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/valo/runtime
+
+[Install]
+WantedBy=multi-user.target

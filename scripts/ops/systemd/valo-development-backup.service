@@ -1,0 +1,21 @@
+[Unit]
+Description=Valo verified development archive and independent privacy journal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=valo-backup
+Group=valo-backup
+WorkingDirectory=/opt/valo/current
+EnvironmentFile=/etc/valo/development-backup.env
+ExecStart=/usr/bin/python3 /opt/valo/current/scripts/ops/backup_cycle.py /etc/valo/development-backup.json
+TimeoutStartSec=900
+TimeoutStopSec=30
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/valo/development-backups
