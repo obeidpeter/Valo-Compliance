@@ -271,6 +271,12 @@ async function replayReady(tx:Tx,caseId:string,verifyObjects=false){
   if(verifyObjects)await verifyInventory(tx,t,seal);
   return{row,t,seal};
 }
+/** Operator recovery imports must validate the real completion chain and the
+ * entire immutable inventory before any physical replay is authorised. */
+export async function verifyCompletedErasureReceipt(tx:Tx,caseId:string){
+  const {t,seal}=await replayReady(tx,caseId,true);
+  return{workspaceId:t.workspaceId,sealHash:erasureSealHash(seal),inventoryCount:seal.inventoryCount};
+}
 async function persistReplay(t:Tombstone,input:Omit<ReplayState,"keyVersion"|"mac">,done=false){
   return db.transaction(async tx=>{
     const state=signReplayState(input,await privacySigner(tx));
@@ -294,6 +300,7 @@ async function replay(caseId:string,mode:ReplayState["mode"],remove:DeleteObject
     }
     await tx.update(valoPrivacyTombstones).set({replayState:state}).where(eq(valoPrivacyTombstones.id,ready.t.id));
     await tx.update(valoMemberships).set({active:"no"}).where(eq(valoMemberships.workspaceId,ready.t.workspaceId));
+    await fencePrivateCopies(tx,ready.t.workspaceId);
     return{...ready,state,candidates};
   });
   let deleted=0,failed=0,applicationRowsRemoved=0;

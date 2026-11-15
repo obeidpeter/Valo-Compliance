@@ -63,6 +63,9 @@ export function verifyReplayState(raw:unknown,seal:ErasureSeal,phaseCount:number
     s.mode==="objects"&&typeof s.phase==="number"||
     typeof s.cursor!=="string"||s.sealHash!==erasureSealHash(seal)||typeof s.keyVersion!=="string"||typeof s.mac!=="string"||
     !equalPrivacyMac(s.mac,privacyMac(replayPayload(s),key)))throw Error("ERASURE_REPLAY_STATE_INVALID");
-  if(s.cursor)assertErasureObjectScope(seal.workspaceId,s.cursor);
+  if(s.cursor){
+    if(seal.scope==="development-application-content-erasure-v3")assertErasureLocatorScope(seal.workspaceId,s.cursor);
+    else assertErasureObjectScope(seal.workspaceId,s.cursor);
+  }
   return s;
 }

@@ -121,6 +121,8 @@ jobs:
           path: generated-artifacts/valo-completion/workspace-data-download-*
       - name: Reject unsafe export modes and stale account requests
         run: pnpm --filter @workspace/api-server test:valo-runtime-boundaries
+      - name: Prove scratch replay cursors preserve tenant and legacy scope
+        run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-erasure-replay-cursor.test.ts
       - name: Check HTTP log privacy, internal alerts and recovery effects
         run: pnpm --filter @workspace/api-server test:valo-operations
       - name: Install local-only recovery tools
