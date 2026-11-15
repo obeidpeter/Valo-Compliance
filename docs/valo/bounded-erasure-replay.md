@@ -23,6 +23,9 @@ guard; it is not a claim to defeat a malicious database superuser. Recovery
 imports must not bypass the independently authenticated receipt validation.
 
 The native regression restored **13 object locators and 205 profile revisions**.
+That restart case uses a controlled deletion callback, not 13 uploaded cloud
+objects. Separate native tests in the same suite exercise actual App Storage
+late-upload cleanup and worker death.
 It killed a worker after ten objects and a second after the first 100-row
 application batch, then resumed in a fresh process. Results:
 
@@ -59,3 +62,22 @@ Full R1/R2, external privacy fulfilment, eligible content, formal 80/60/60
 acceptance and production/commercial decisions remain unaccepted. No new
 inference spending, external message, merchant action, quota escalation or
 public release occurred.
+
+## Fresh disabled inference preparation
+
+Read-only reconciliation inspected **57 potential-charge records**: 37 reported
+usage entries and 20 unknown entries/unbounded liabilities. Ten retained
+artifacts supplied proposed refinements; the projection still has ten unresolved
+liabilities. Neither the ledger nor billing was rewritten and no guaranteed
+inclusive remaining balance is claimed.
+
+The existing preparer produced **one exact disabled operational review pair /
+two attempts**, with immutable manifest hash
+`95b33128ba47948143affc8e8fbd1f49e8e3cf4cd94b58fd0422bde88b6ee96a`.
+There are **zero enabled batches** and **zero new inference calls**.
+
+This is partial readiness, not an owner spending decision: the proposed
+additional allocation must not be silently substituted for the originally
+inclusive allocation. Other authored-corpus executable preparers remain a
+software gap. See `evidence/inference-readiness-current.json`; no raw prompts or
+responses are included in that committed report.

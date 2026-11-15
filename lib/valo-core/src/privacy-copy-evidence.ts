@@ -23,6 +23,6 @@ export function partialPrivacyCopyEvidence(id:string){
       {kind:"test" as const,path:"docs/valo/evidence/erasure-review-repair.json",
         hash:"2ca98efc965e4b99257783fd25b2d56c4aa979150a7f47d7fa7e472a21257afe",result:"pass" as const},
       {kind:"test" as const,path:"docs/valo/evidence/bounded-erasure-replay.json",
-        hash:"dd7360359b335bfed3ac15f0218248e4409e9cce7727ea8ee89276698009abb4",result:"pass" as const}],
+        hash:"bbfe78b02110de5f6ecf4f6e0212575048a90c08a57d1c9304346c2f7bb55c94",result:"pass" as const}],
   };
 }

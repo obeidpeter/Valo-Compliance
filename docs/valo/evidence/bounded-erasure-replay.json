@@ -18,7 +18,8 @@
     "maxObjectsPerBatch": 10,
     "maxRowsPerBatch": 100,
     "finalWorkerFullInventoryChecks": 1,
-    "finalWorkerCachedChecks": 29
+    "finalWorkerCachedChecks": 29,
+    "transport": "controlled deletion callback; separate native SDK late-write tests are included in native32"
   },
   "tests": {
     "nativeErasureKeysHttp": {
