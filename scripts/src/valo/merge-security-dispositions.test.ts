@@ -3,9 +3,9 @@ import assert from"node:assert/strict";
 import{resolve}from"node:path";
 import{readFile}from"node:fs/promises";
 import{exactDigestField,verifyHistoricalDigestDispositions}from"./merge-security-dispositions";
-test("three exact historical findings recompute to their immutable source file hashes",async()=>{
+test("four exact historical findings recompute to their immutable source file hashes",async()=>{
   assert.deepEqual(await verifyHistoricalDigestDispositions(resolve(import.meta.dirname,"../../../")),{
-    exactHistoricalSourceDigestsVerified:3,generalRuleExemption:false,futureCommitExemption:false});
+    exactHistoricalSourceDigestsVerified:4,generalRuleExemption:false,futureCommitExemption:false});
 });
 test("database HTTP and queue-payload proofs run after their real CI prerequisites",async()=>{
   const workflow=await readFile(resolve(import.meta.dirname,"../../../.github/workflows/valo-foundation.yml"),"utf8");

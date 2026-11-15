@@ -5,6 +5,8 @@ import {join} from "node:path";
 import {createHash} from "node:crypto";
 const exec=promisify(execFile);
 export const historicalDigestFindings=[
+  {commit:"190ee80691dcf0ba491cb0ed33fab815e43b70d2",evidence:"docs/valo/evidence/erasure-review-repair.json",
+    line:10,source:"artifacts/api-server/src/routes/valo-customer-access.ts"},
   {commit:"e29bacedc806e51831d5508225995d6c2fffa0be",evidence:"docs/valo/evidence/workspace-export-development.json",
     line:95,source:"artifacts/api-server/src/lib/valo-customer-access.ts"},
   {commit:"32834e72411fa3bfc8e39cf44aacd0c6685f7064",evidence:"docs/valo/evidence/dispute-actions-development.json",

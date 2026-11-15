@@ -9,6 +9,7 @@ import {selectPreparedProposal} from "../lib/inference-prepared-report";
 import {requestDigest} from "../lib/inference-budget";
 import {prepareOperationalFiniteManifest,finiteManifestProposal} from "../lib/inference-manifest";
 import type {FiniteManifest} from "../lib/inference-batch-dispatch";
+import {buildFiniteDecisionPacket} from "../lib/inference-decision-packet";
 import {prepareFiniteAllocationPackage,allocationPackageId,registerPreparedInferenceSubmanifest,readApprovedFiniteAllocationPackage} from "../lib/inference-allocation-package";
 
 /** No approval/enable operation exists in this command. Preparation creates
@@ -41,6 +42,31 @@ async function main(){
     const prepared=await prepareOperationalCandidateRelease(batchId,extra[0]);
     console.log(JSON.stringify({...prepared,templateId:batchId,providerCalls:0,approvalRowsWritten:0,publicationAccepted:false}));return;
   }
+  if(mode==="--verify-prepared"){
+    const [artifactHash]=extra;
+    if(extra.length!==1||!batchId||!/^[a-f0-9-]{36}$/.test(batchId)||!/^[a-f0-9]{64}$/.test(artifactHash??""))
+      throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+    const report=JSON.parse((await getPublicationArtifact({id:batchId,hash:artifactHash!,extension:"json"})).toString());
+    const packet=report.decisionPacket;
+    if(!packet||Date.parse(packet.expiresAt)<=Date.now())throw Error("PREPARED_MANIFEST_EXPIRED");
+    const rebuilt=buildFiniteDecisionPacket(report.proposals,packet.manifests.map((m:{artifact:unknown})=>m.artifact),
+      packet.capacityObservation,new Date(packet.preparedAt));
+    if(requestDigest(rebuilt)!==requestDigest(packet))throw Error("PREPARED_PACKET_CHANGED");
+    let verifiedWorkItems=0;
+    for(const [index,proposal]of report.proposals.entries()){
+      const saved=JSON.parse((await getPublicationArtifact(packet.manifests[index].artifact)).toString());
+      if(requestDigest(saved)!==proposal.manifestHash)throw Error("PRIVATE_MANIFEST_CHANGED");
+      for(const work of proposal.manifest.works){await assertFiniteWorkBindings(work);verifiedWorkItems++;}
+      await readOperationalInferenceReadiness(proposal.manifest.works[0].bindings.candidateVersionId);
+    }
+    const live=await new InferenceBudgetStore(pool,"public","additional-new").inspect();
+    console.log(JSON.stringify({verifiedWorkItems,manifests:report.proposals.length,
+      decisionPacketHash:requestDigest(packet),expiresAt:packet.expiresAt,
+      currentCapacitySufficient:live.uncommittedCapacityNanoUsd!==null&&
+        BigInt(live.uncommittedCapacityNanoUsd)>=BigInt(packet.worstCaseReservationNanoUsd),
+      reviewStatus:"independent-review-pending",approvalRowsWritten:0,providerCalls:0,authorizesDispatch:false}));
+    return;
+  }
   if(mode==="--admit"){
     const[artifactHash,candidateVersionId]=extra;
     if(extra.length<1||extra.length>2||candidateVersionId&&!/^[a-f0-9-]{36}$/.test(candidateVersionId)||!batchId||!/^[a-f0-9-]{36}$/.test(batchId)||!artifactHash||!/^[a-f0-9]{64}$/.test(artifactHash))
@@ -71,7 +97,8 @@ async function main(){
         const plan=await saveOperationalReviewPlan(current.candidate,current.rightsInput,current.provenanceInput,
           current.exportReport,current.serverEvidence);
         const manifest=prepareOperationalFiniteManifest({candidateVersionId:row.id,candidateHash:row.candidateHash,
-          bundleHash:requestDigest(current.bundle),sourceHashes:current.bundle.sources.map(s=>s.hash),sourceFiles:[],plan});
+          bundleHash:requestDigest(current.bundle),sourceHashes:current.bundle.sources.map(s=>s.hash),
+          sourceFiles:[{path:current.provenanceInput.sourcePath,sha256:current.serverEvidence.sourceHash}],plan});
         manifest.packageId=packageId;
         for(const work of manifest.works)await assertFiniteWorkBindings(work);
         prepared.push(finiteManifestProposal(manifest,existingPackage?
@@ -79,11 +106,18 @@ async function main(){
       }catch(error){holds.push({candidateVersionId:row.id,templateId:row.templateId,
         reason:error instanceof Error&&/^[A-Z_]{3,100}$/.test(error.message)?error.message:"FINITE_PREPARATION_FAILED"});}
     }
+    const manifestArtifacts=await Promise.all(prepared.map(p=>
+      putPublicationArtifact(Buffer.from(JSON.stringify(p.manifest)),"json")));
+    const capacity=await new InferenceBudgetStore(pool,"public","additional-new").inspect();
+    const decisionPacket=prepared.length?buildFiniteDecisionPacket(prepared,manifestArtifacts,{
+      stateFingerprint:capacity.stateFingerprint,uncommittedCapacityNanoUsd:capacity.uncommittedCapacityNanoUsd,
+      observedAt:capacity.observedAt}):null;
     const report={preparedAt:new Date().toISOString(),scope:"one finite additional allocation with automatic exact submanifest admission",
       packageId,package:allocationPackage,ownerApprovalScope:"finite-allocation-package",ownerApproved:!!existingPackage,
       executableScope:"one exact operational review pair per verified saved candidate",
       supportedTemplateIds:operationalInferenceTemplateIds,
-      latestCandidatesInspected:latest.size,proposals:prepared,proposal:prepared.length===1?prepared[0]:null,holds,providerCalls:0,approvalRowsWritten:0,
+      latestCandidatesInspected:latest.size,proposals:prepared,proposal:prepared.length===1?prepared[0]:null,
+      decisionPacket,holds,providerCalls:0,approvalRowsWritten:0,
       nonpublicationCorpora:"Original 80/60/60 case rosters are frozen in the proposed package; executable preparers remain held.",
       excluded:["authoring","real customer confidential data","production","payments","emails"],
       readiness:prepared.length?"disabled exact proposals ready; no inference approval created":"no eligible prepared work"};
@@ -94,6 +128,8 @@ async function main(){
     await writeFile(path,JSON.stringify({...report,privateReportArtifact:artifact},null,2)+"\n",{flag:"wx",mode:0o600});
     console.log(JSON.stringify({ready:prepared.length>0,manifestHashes:prepared.map(p=>p.manifestHash),
       preparedPairs:prepared.length,attemptCount:prepared.reduce((sum,p)=>sum+p.attemptCount,0),holds:holds.length,providerCalls:0,ownerApproved:false,
+      decisionPacketHash:decisionPacket?requestDigest(decisionPacket):null,
+      worstCaseReservationNanoUsd:decisionPacket?.worstCaseReservationNanoUsd??null,
       privateReportArtifact:artifact,report:path}));return;
   }
   const row=(await pool.query("SELECT manifest,manifest_hash FROM valo_inference_batches WHERE id=$1",[batchId])).rows[0];
@@ -113,7 +149,7 @@ async function main(){
   // never for newly generated requests, a refreshed timestamp, or extra retries.
   const expected=prepareOperationalFiniteManifest({candidateVersionId:current.row.id,candidateHash:current.row.candidateHash,
     bundleHash:requestDigest(publicationSchema.parse(current.row.bundle)),sourceHashes:current.bundle.sources.map(s=>s.hash),
-    sourceFiles:[],plan},new Date(manifest.preparedAt));
+    sourceFiles:[{path:current.provenanceInput.sourcePath,sha256:current.serverEvidence.sourceHash}],plan},new Date(manifest.preparedAt));
   expected.packageId=manifest.packageId;
   if(requestDigest(expected)!==row.manifest_hash)throw Error("RUNNER_MANIFEST_CHANGED");
   for(const work of manifest.works)await assertFiniteWorkBindings(work);

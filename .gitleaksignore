@@ -5,6 +5,7 @@
 786d9a1055b98502bbfe53a7757f988bb58bbfbb:docs/valo/evidence/source-acceptance-checkpoint.json:generic-api-key:31
 c649daea538e67b9f816c0af21c0c0a14d629888:docs/valo/evidence/p0-customer-execution-checks.json:generic-api-key:14
 # Exact historical source digests, revalidated by merge-security-dispositions.
+190ee80691dcf0ba491cb0ed33fab815e43b70d2:docs/valo/evidence/erasure-review-repair.json:generic-api-key:10
 e29bacedc806e51831d5508225995d6c2fffa0be:docs/valo/evidence/workspace-export-development.json:generic-api-key:95
 32834e72411fa3bfc8e39cf44aacd0c6685f7064:docs/valo/evidence/dispute-actions-development.json:generic-api-key:60
 6059bb30d085e0ea904599fc7902235ef0da084b:docs/valo/evidence/dispute-actions-development.json:generic-api-key:60

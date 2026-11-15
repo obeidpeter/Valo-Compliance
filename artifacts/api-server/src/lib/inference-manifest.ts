@@ -30,15 +30,16 @@ export function prepareOperationalFiniteManifest(input:OperationalFiniteInput,no
     new Set(p.entries.map(e=>requestDigest(e.request))).size!==2)throw Error("FINITE_PREPARATION_PAIR_INVALID");
   if(input.sourceFiles.some(f=>!hex(f.sha256)||!/^docs\/[a-zA-Z0-9_./ -]+$/.test(f.path)||
     f.path.split("/").some(p=>p===".."||p===".")))throw Error("FINITE_PREPARATION_SOURCE_INVALID");
+  const sourceHashes=[...new Set([...input.sourceHashes,...input.sourceFiles.map(f=>f.sha256)])].sort();
   const planKey=requestDigest({candidateVersionId:input.candidateVersionId,candidateHash:input.candidateHash,
-    bundleHash:input.bundleHash,plan:p.artifact,sourceHashes:[...input.sourceHashes].sort()});
+    bundleHash:input.bundleHash,plan:p.artifact,sourceHashes,sourceFiles:input.sourceFiles});
   const pair=`operational:${input.candidateVersionId}:${planKey}`;
   const works:FiniteWork[]=p.entries.map(entry=>{
     if(entry.request.model!==inferenceProposal.model||entry.request.max_completion_tokens!==8192||
       entry.request.stream||entry.request.tools?.length||entry.request.tool_choice!==undefined||
       entry.request.n!==undefined&&entry.request.n!==1)throw Error("FINITE_PREPARATION_REQUEST_INVALID");
     return{key:`${pair}:${entry.role}:attempt-1`,lane:"publication",role:entry.role,pair,
-      candidateHash:input.candidateHash,sourceHashes:[...input.sourceHashes],caseHash:input.bundleHash,
+      candidateHash:input.candidateHash,sourceHashes:[...sourceHashes],caseHash:input.bundleHash,
       request:structuredClone(entry.request),bindings:{candidateVersionId:input.candidateVersionId,
         corpus:null,caseId:null,sourceFiles:structuredClone(input.sourceFiles),historicalCutoff:now.toISOString(),
         operationalPlan:{...p.artifact}}};

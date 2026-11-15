@@ -1,5 +1,6 @@
 import {createHash} from "node:crypto";
 import {managedPriceEvidenceDigest} from "./inference-price-evidence";
+import type {HistoryResolution} from "./inference-history-classification";
 export type BudgetLane="publication"|"editorial_evaluation"|"checker_challenge"|"customer";
 export const inferenceProposal={
   id:"valo-managed-inference-30-v1",model:"gpt-5.4-mini",enabled:false,ownerApproved:false,
@@ -52,7 +53,7 @@ export type BudgetEntry={runKey:string;lane:BudgetLane;requestHash:string;bindin
   inputBound:number;outputBound:number;reserved:string;charged:string;status:"reserved"|"dispatched"|"unknown"|"settled"|"cancelled";
   resultRef?:string;freshUntil?:number;responseId?:string;usageHash?:string;legacy?:boolean;model?:string};
 export type BudgetState={version:1;entries:BudgetEntry[];priorUseReconciled:boolean;unboundedPrior:string[];suspended:boolean;
-  historyResolutions?:import("./inference-history-classification").HistoryResolution[]};
+  historyResolutions?:HistoryResolution[]};
 export const emptyBudget=():BudgetState=>({version:1,entries:[],priorUseReconciled:false,unboundedPrior:[],suspended:false});
 export type BudgetAuthority={enabled:boolean;ownerApproved:boolean;tokenizationVerified:boolean;managedPriceUpperBoundVerified:boolean;
   contextCapacityVerified?:boolean};

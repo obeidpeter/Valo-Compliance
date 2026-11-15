@@ -2,7 +2,15 @@
 
 ## Latest application unit — usable disabled inference budget and reconciliation
 
-**Latest budget addition:** a read-only `inference:inspect` command now reports
+**Current application unit:** eleven actual operational candidates now have
+22 exact factual/challenge requests, separately stored private manifests,
+source/version bindings, real export checks and a read-only verification command.
+The fallback reservation ceiling for this roster is **$8.1521088**, within a
+disabled additional $30 allocation. No calls or approvals were made. See
+[exact decision packet and current limits](docs/valo/finite-review-decision.md).
+Independent budget review and owner spending authorization remain pending.
+
+The read-only `inference:inspect` command reports
 scoped ledger commitments and unknown exposure without changing accounting or
 authorizing calls. Standard database CI explicitly chains the actual HTTP
 privacy-role regression. See
@@ -12,9 +20,11 @@ Spending remains disabled; full physical erasure and R1/R2 acceptance remain ope
 **Current test/CI repair:** runtime harness capability canary and separate
 portable/native erasure lanes are documented in
 [CI boundary and storage repair](docs/valo/ci-boundary-erasure-repair.md).
-Local results: 46 boundary checks, 2 storage controls, portable erasure 18 pass
-with one explicit native-only skip, native erasure 19 pass/no skips, and 47
-budget controls. This is not a whole-project CI or R1/R2 acceptance claim.
+Current local results: 54 finite-budget controls, 46 boundary checks, standard
+database core 117 plus actual HTTP privacy-role 7, operations 2, and scanner
+controls 9, all passing with no skips. Real secret/dependency scanning and
+Semgrep passed locally with detector canaries. Exact-head CI is recorded on the
+draft PR; these are not formal 80/60/60 or R1/R2 acceptance results.
 
 The actual managed entry now has controlled evidence through reservation,
 dispatch, outbound observation and settlement across all four lanes. Source-

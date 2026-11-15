@@ -1,5 +1,11 @@
 # Current development state — still not accepted
 
+Current budget preparation: [eleven exact private review pairs, disabled
+allocation and row-level historical reconciliation](finite-review-decision.md).
+The ordinary CI command includes 54 finite controls and explicitly runs the
+actual HTTP privacy-role regression. Content is still held for independent
+reviews; prepared requests and rendered drafts are not eligible publications.
+
 Current partial results: [independent privacy HTTP and deletion-history
 boundaries](privacy-role-and-tombstone-checkpoint.md), [connected but disabled
 finite inference](finite-inference-dispatch-checkpoint.md) and [corrected
@@ -15,8 +21,10 @@ checks at that checkpoint. [Same-case information exchange and staff
 inspection](privacy-information-checkpoint.md) subsequently passed 103/103
 database checks, 174/174 engineering checks and typecheck. This is partial development
 evidence; independent deletion-journal recovery, full privacy fulfilment,
-unbounded resumable export, disputes, rich live checker and the finite inference
-manifest remain unfinished. No spending, messages or launch were enabled.
+unbounded resumable export, disputes and rich live checker remained unfinished
+at that historical checkpoint. The current finite manifest preparation is linked
+above; it does not complete those other units. No spending, messages or launch
+were enabled.
 
 **Earlier implementation evidence:** [bounded AI instructions, manual-note preservation
 and two supplied customer cases through private exports](customer-ai-source-checkpoint.md).
