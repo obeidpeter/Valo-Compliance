@@ -44,6 +44,9 @@ test("actual export entries and worker startup reject before database, queue or 
     ["valo-refunds","export const processRefundQueue=async()=>{globalThis.guardEffects.services++};"],
     ["valo-payment-disputes","export const reconcileKnownDisputes=async()=>{globalThis.guardEffects.services++};"],
     ["valo-operational-dispatch","export const dispatchOperationalJobs=async()=>{globalThis.guardEffects.services++};"],
+    ["valo-workspace-export-jobs","export const cleanupWorkspaceExports=async()=>{globalThis.guardEffects.services++};"],
+    ["valo-operations",`const hit=async()=>{globalThis.guardEffects.services++;};
+      export const recordWorkerHeartbeat=hit,collectOperationalSample=hit,recordOperationalAlerts=hit;`],
     ["valo-privacy-erasure",`const hit=async()=>{globalThis.guardEffects.services++;throw Error("PRIVACY_SERVICE_EFFECT")};
       export const reconcileErasedObjects=hit,closePrivacyErasureLocks=hit;`],
   ]);

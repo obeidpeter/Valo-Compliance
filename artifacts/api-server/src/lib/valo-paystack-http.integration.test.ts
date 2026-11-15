@@ -48,10 +48,27 @@ test("isolated real HTTP signature/durability controls — synthetic signing key
     await t.test("hostile compressed webhook input is rejected and the same server remains alive",async()=>{
       const result=await post(Buffer.concat([gzipSync(body),Buffer.from("trailing")]),header(),{"Content-Encoding":"gzip"});
       assert.equal(result.status,415);
-      assert.equal((await fetch(base+"/api/healthz")).status,200);
+      // Another authenticated raw-body request proves this exact listener
+      // survived. Public/API readiness may independently be 503 when the CI
+      // identity/site configuration is deliberately absent.
+      const alive=await post(body,header());assert.equal(alive.status,200);
+      assert.equal((await alive.json()).duplicate,true);
     });
-    await t.test("raw webhook route does not bypass normal private authentication",async()=>{
+    const identityConfigured=Boolean(process.env.CLERK_PUBLISHABLE_KEY&&process.env.CLERK_SECRET_KEY&&
+      (process.env.VALO_TRUSTED_ORIGIN||process.env.REPLIT_DEV_DOMAIN));
+    await t.test("raw webhook route does not bypass configured private authentication",{
+      skip:!identityConfigured?"Managed identity/site setup absent; not a configured-session authentication proof":false,
+    },async()=>{
       assert.equal((await fetch(base+"/api/workspace/purchases")).status,401);
+    });
+    await t.test("absent identity/site configuration keeps private data unavailable, not authenticated",{
+      skip:identityConfigured?"Configured identity path is exercised separately":false,
+    },async()=>{
+      const response=await fetch(base+"/api/workspace/purchases");
+      assert.equal(response.status,503);
+      const value=await response.json();
+      assert.equal(typeof value.error,"string");
+      assert.equal("purchases" in value,false);
     });
   }finally{
     await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
