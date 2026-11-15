@@ -136,6 +136,11 @@ success always reports `offHostTransportVerified: false`.
 
 ## Completing off-host recovery and the production rollout
 
+The next increment implements development scheduling and an independent current
+journal, and records the separate Windows-host restore. See
+[scheduled recovery and outer supervision](phase2-scheduled-recovery.md) for the
+current evidence and remaining production activation gates.
+
 1. Approve provider accounts, region, budget and alert recipient. The owner completes
    account terms, credential creation and independent password custody privately.
 2. Retain the latest authenticated erasure/revocation journal independently of older

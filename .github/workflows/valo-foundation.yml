@@ -150,8 +150,11 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-16 restic
           echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
-      - name: Encrypt and restore a synthetic recovery archive without off-host credentials
-        run: VALO_REQUIRE_REAL_RESTIC=1 python3 scripts/ops/test_recovery_archive.py
+      - name: Reject stale recovery controls, unsafe archives and false backup success
+        run: |
+          node --test scripts/ops/recovery_contract.test.mjs
+          VALO_REQUIRE_REAL_RESTIC=1 python3 -m unittest discover -s scripts/ops -p 'test_*.py'
+          systemd-analyze verify scripts/ops/systemd/*.service scripts/ops/systemd/*.timer
       - name: Restore disposable synthetic database and fixture objects
         run: pnpm --filter @workspace/api-server test:valo-isolated-recovery
       - name: Validate phase 2 migrations, applied phase 1 bytes and existing staff preservation
