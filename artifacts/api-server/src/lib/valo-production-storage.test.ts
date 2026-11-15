@@ -10,18 +10,21 @@ test("production storage is explicit, canonical and separate from every ancestor
   const scope=privateStorageScope("production",env);
   assert.equal(privateObjectName(scope,`valo/production/${id}/${asset}.pdf`),`production/valo/production/${id}/${asset}.pdf`);
   for(const root of [undefined,"",env.PRIVATE_OBJECT_DIR,"/synthetic-bucket/development/child","/synthetic-bucket/development/../production",
-    "/synthetic-bucket/production//private","/synthetic-bucket/%2e%2e","/synthetic-bucket/..","https://synthetic-bucket/production","/synthetic-bucket/back\\slash"])
+    "/synthetic-bucket/production//private","/synthetic-bucket/%2e%2e","/synthetic-bucket/..","https://synthetic-bucket/production","/synthetic-bucket/back\\slash",
+    "/synthetic-bucket\n/production","/synthetic-bucket/production\n/child"])
     assert.throws(()=>privateStorageScope("production",{...env,VALO_PRODUCTION_PRIVATE_OBJECT_DIR:root}));
   assert.throws(()=>privateStorageScope("production",{...env,PRIVATE_OBJECT_DIR:"/synthetic-bucket/production/child"}),/OVERLAP/);
   assert.throws(()=>privateStorageScope("development",env),/development is required/);
   for(const key of [`valo/development/${id}/${asset}.pdf`,`valo/production/${id}/../${asset}.pdf`,`valo/production/${"-".repeat(36)}/${asset}.pdf`,
-    `valo/production/${id}/${asset}.pdf?public=true`,`valo/production/${id}/${asset}.PDF`])assert.throws(()=>privateObjectName(scope,key),/INVALID_PRIVATE_KEY/);
+    `valo/production/${id}/${asset}.pdf?public=true`,`valo/production/${id}/${asset}.PDF`,`valo/production/${id}/${asset}.pdf\n`])assert.throws(()=>privateObjectName(scope,key),/INVALID_PRIVATE_KEY/);
+  assert.throws(()=>storageProbeName(scope,id+"\n"),/INVALID_STORAGE_PROBE_SCOPE/);
   const report=productionPreflight(env);assert.equal(report.configurationValid,true);assert.equal(report.launchReady,false);assert.equal(report.workerActivationEnabled,false);
   assert.ok(!JSON.stringify(report).includes("synthetic-bucket"));assert.ok(!JSON.stringify(report).includes(env.PRIVATE_OBJECT_DIR));
   for(const topology of [undefined,"autoscale","scheduled","separate-replit-app"])
     assert.equal(productionPreflight({...env,VALO_WORKER_TOPOLOGY:topology}).configurationValid,false);
-  for(const port of ["0","65536","8080","-1"," 8082 "])
+  for(const port of ["0","65536","8080","-1"," 8082 ","8082\n"])
     assert.equal(productionPreflight({...env,VALO_WORKER_HEALTH_PORT:port}).configurationValid,false);
+  assert.equal(productionPreflight({...env,VALO_RELEASE_SHA:env.VALO_RELEASE_SHA+"\n"}).configurationValid,false);
 });
 test("candidate adapter rejects development keys before native SDK effects and preserves immutable writes",async t=>{
   const calls:string[]=[],files=new Map<string,Buffer>();

@@ -48,7 +48,7 @@ const shutdown=()=>{void stop().catch(()=>{logger.error({event:"export.shutdown_
 process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);
 startup=(async()=>{
 if(process.env.VALO_WORKER_HEALTH_PORT!==undefined){
-  if(!/^[1-9][0-9]{0,4}$/.test(process.env.VALO_WORKER_HEALTH_PORT))throw Error("INVALID_WORKER_HEALTH_PORT");
+  if(process.env.VALO_WORKER_HEALTH_PORT.trim()!==process.env.VALO_WORKER_HEALTH_PORT||!/^[1-9][0-9]{0,4}$/.test(process.env.VALO_WORKER_HEALTH_PORT))throw Error("INVALID_WORKER_HEALTH_PORT");
   healthServer=await workerHealthServer(health,Number(process.env.VALO_WORKER_HEALTH_PORT));
 }
 await publishHeartbeat();

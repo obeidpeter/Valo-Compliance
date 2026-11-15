@@ -7,9 +7,9 @@ export function productionPreflight(env:Record<string,string|undefined>){
   try{storageFingerprint=privateStorageScope("production",env).fingerprint;}catch(e){failures.push((e as {code?:string}).code??"PRIVATE_STORAGE_CONFIGURATION_INVALID");}
   check(env.VALO_WORKER_TOPOLOGY==="replit-reserved-vm-same-app","ALWAYS_ON_SAME_APP_WORKER_REQUIRED");
   check(env.VALO_WORKER_REPLICAS==="1","SINGLE_WORKER_SUPERVISION_REQUIRED");
-  check(/^[a-f0-9]{40}$/.test(env.VALO_RELEASE_SHA??""),"PINNED_RELEASE_REQUIRED");
+  check(env.VALO_RELEASE_SHA?.length===40&&/^[a-f0-9]{40}$/.test(env.VALO_RELEASE_SHA),"PINNED_RELEASE_REQUIRED");
   const port=env.VALO_WORKER_HEALTH_PORT??"";
-  check(/^[1-9][0-9]{0,4}$/.test(port)&&Number(port)<=65535&&port!==env.PORT&&port!==env.VALO_FRONTEND_PORT,"DEDICATED_WORKER_HEALTH_PORT_REQUIRED");
+  check(port.trim()===port&&/^[1-9][0-9]{0,4}$/.test(port)&&Number(port)<=65535&&port!==env.PORT&&port!==env.VALO_FRONTEND_PORT,"DEDICATED_WORKER_HEALTH_PORT_REQUIRED");
   // NODE_ENV, hosting variables and a passing canary never grant launch approval.
   return{version:1,configurationValid:failures.length===0,configurationFailures:[...new Set(failures)],
     storageFingerprint,launchReady:false,customerExportsEnabled:false,workerActivationEnabled:false,
