@@ -1,6 +1,12 @@
 # Current development state — still not accepted
 
-Current checkpoint: [real disabled TPL-07 pair](tpl07-disabled-runtime-checkpoint.md):
+Current checkpoint: [fresh native/runtime verification](bounded-runtime-checkpoint.md):
+62 newly executed engineering checks passed without failures/skips. Real worker
+death/recovery and private SDK checks used a disposable database/test subtree;
+cleanup completed. Current exact disabled TPL-07 pair was revalidated/reused.
+No model calls, approval, reservation, publication or application behavior change.
+
+Retained preparation: [real disabled TPL-07 pair](tpl07-disabled-runtime-checkpoint.md):
 v10/current evidence passed; exact private plan/child reverified without model
 calls, approval or reservations. 16 focused controls/full typecheck passed.
 US$0.7411008 maximum; child expires 15 November 2026 at 12:28:14.070 UTC.

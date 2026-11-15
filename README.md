@@ -1,6 +1,18 @@
 # Valo Compliance — Valo Platform
 
-## Current checkpoint — one disabled TPL-07 review pair
+## Current checkpoint — fresh native runtime, reviews still disabled
+
+On synchronized `c47aec2`, a fresh genuine native-storage/full-worker run passed
+**62 checks, zero failures/skips**, including process death across claim/render/
+upload/completion. The unique private test subtree finished empty; PostgreSQL
+was disposable and stopped/removed. No actual customer erasure or provider sends.
+
+The exact current TPL-07 pair below was **revalidated and reused**, not regenerated.
+Current candidate attempts and the separate additional allocation's reservations/
+dispatches remain **zero**. No application behavior changed in this bounded unit.
+See [fresh run and precise boundaries](docs/valo/bounded-runtime-checkpoint.md).
+
+### Retained exact disabled TPL-07 preparation
 
 Reviewed budget merge `2bbd6b4` was already in synchronized development history.
 The real saved TPL-07 v10 passed current source/rights/mechanical and real saved
