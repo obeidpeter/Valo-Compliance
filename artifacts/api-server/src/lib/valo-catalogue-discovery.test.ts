@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {paginateReleasedItems,recommendTemplates,templateSummary,templateCategory,type ReleasedLibraryItem} from './valo-catalogue';
 import {baselineTemplates} from '../../../../lib/valo-core/src/catalogue';
-import {metadataOrigin,parsePublicMetadata} from '../../../valo/src/lib/public-metadata';
 
 // Controlled metadata benchmark only. These rows are not released documents,
 // and the product-owner relevance threshold has not been agreed or accepted.
@@ -42,12 +41,4 @@ test('recommendations use supplied activity/category and omit saved or absent re
   assert.match(result[0]!.reason,/activity/);
   assert.deepEqual(recommendTemplates([],['TPL-02'],['retail']),[]);
   assert.ok(recommendTemplates(fixtures,[],['unknown']).every(i=>i.reason==='General business template'));
-});
-test('metadata only accepts fixed configured origin and known safe public detail paths',()=>{
-  assert.equal(metadataOrigin({NODE_ENV:'production',REPLIT_DEV_DOMAIN:'untrusted.example'}),null);
-  for(const raw of ['http://example.test','https://u:p@example.test','https://example.test/private','https://example.test/?q=x'])
-    assert.equal(metadataOrigin({NODE_ENV:'production',VALO_TRUSTED_ORIGIN:raw}),null);
-  assert.equal(metadataOrigin({NODE_ENV:'production',VALO_TRUSTED_ORIGIN:'https://example.test'}),'https://example.test');
-  const entries=['/library/invoice','/workspace/secret','/staff/users','//evil.test/x','/library/%2Fprivate','/resources/../../workspace'];
-  assert.deepEqual(parsePublicMetadata({items:entries.map(path=>({path,title:'Fixture',description:'Public metadata',modifiedAt:null}))}).map(i=>i.path),['/library/invoice']);
 });

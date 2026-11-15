@@ -57,7 +57,7 @@ try{
   assert.equal(await page.getByTestId('select-access').inputValue(),'free');
   assert.equal(await page.getByTestId('select-sort').inputValue(),'name');
   await page.getByTestId('button-next').click();await page.waitForURL(/page=2/);
-  await page.waitForFunction(()=>document.querySelectorAll('li[data-testid^="card-item-"]').length===3);
+  await page.waitForFunction('document.querySelectorAll(\'li[data-testid^="card-item-"]\').length===3');
   assert.equal(await page.locator('li[data-testid^="card-item-"]').count(),3);
   checks.push('combined filters, sort and pagination persist in URL across reload');
   await page.getByTestId('input-search').fill('not-found-fixture');await page.getByTestId('button-search').click();

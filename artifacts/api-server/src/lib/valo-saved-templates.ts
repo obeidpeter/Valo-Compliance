@@ -42,8 +42,9 @@ export async function saveTemplate(actor:WorkspaceActor,releaseId:string){
     if(count.total>=200)throw new ValoProblem(409,"Your workspace has 200 saved templates. Remove one before saving another.");
     await limitWorkspaceWrite(tx,actor,"document");
     const item=projectReleasedCatalogue([row])[0]!;
-    await tx.insert(valoSavedTemplates).values({id:randomUUID(),workspaceId:actor.workspaceId,templateId:row.templateId,savedTitle:item.title,savedVersion:row.version});
-    await tx.insert(valoEvents).values({id:randomUUID(),workspaceId:actor.workspaceId,actorId:actor.identityId,action:"template.saved",entityId:row.templateId,revision:row.version});
+    const savedId=randomUUID();
+    await tx.insert(valoSavedTemplates).values({id:savedId,workspaceId:actor.workspaceId,templateId:row.templateId,savedTitle:item.title,savedVersion:row.version});
+    await tx.insert(valoEvents).values({id:randomUUID(),workspaceId:actor.workspaceId,actorId:actor.identityId,action:"template.saved",entityId:savedId,revision:row.version});
   });
   return savedTemplateList(actor);
 }
@@ -51,7 +52,7 @@ export async function unsaveTemplate(actor:WorkspaceActor,templateId:string){
   await db.transaction(async tx=>{
     await owner(tx,actor);
     const removed=await tx.delete(valoSavedTemplates).where(and(eq(valoSavedTemplates.workspaceId,actor.workspaceId),eq(valoSavedTemplates.templateId,templateId))).returning({id:valoSavedTemplates.id});
-    if(removed.length)await tx.insert(valoEvents).values({id:randomUUID(),workspaceId:actor.workspaceId,actorId:actor.identityId,action:"template.unsaved",entityId:templateId});
+    if(removed.length)await tx.insert(valoEvents).values({id:randomUUID(),workspaceId:actor.workspaceId,actorId:actor.identityId,action:"template.unsaved",entityId:removed[0]!.id});
   });
   return savedTemplateList(actor);
 }
