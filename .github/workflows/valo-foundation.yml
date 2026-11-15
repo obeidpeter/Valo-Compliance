@@ -238,7 +238,7 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-staff-roles
       - name: Install reviewed durable queue before payload and erasure tests
         run: NODE_ENV=development VALO_DEV_QUEUE_MIGRATION=reviewed-synthetic-development pnpm --filter @workspace/api-server exec tsx src/scripts/queue-migration.ts apply-development
-      - name: Prove real worker readiness, queue drift, graceful drain and restart
+      - name: Prove real worker readiness, supervised crash restart, parent loss and drain
         run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-worker-readiness.integration.test.ts
         env:
           PRIVATE_OBJECT_DIR: ""

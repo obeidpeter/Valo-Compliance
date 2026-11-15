@@ -7,6 +7,7 @@ import {tmpdir} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {pool} from "@workspace/db";
+import {superviseWorker,supervisorTiming} from "./valo-worker-supervisor";
 
 const enabled=process.env.VALO_RUN_DB_TESTS==="synthetic-development-only";
 test("real worker loses readiness on queue drift, recovers, drains and restarts",{skip:!enabled,timeout:90000},async()=>{
@@ -40,12 +41,13 @@ test("real worker loses readiness on queue drift, recovers, drains and restarts"
     assert.equal(r.headers.get("cache-control"),"no-store");
     assert.deepEqual(Object.keys(await r.json() as object),["status"]);return r.status;
   }
-  function start(){
+  function start(supervised=false){
     diagnostic="";
     child=spawn(process.execPath,["--experimental-test-module-mocks","--import",import.meta.resolve("tsx"),
       "--import",new URL("../test-support/portable-storage-guard.ts",import.meta.url).href,
       fileURLToPath(new URL("../workers/export-worker.ts",import.meta.url))],{
-      cwd:directory,env:{...process.env,VALO_WORKER_HEALTH_PORT:String(port)},stdio:["ignore","pipe","pipe"],windowsHide:true,
+      cwd:directory,env:{...process.env,VALO_WORKER_HEALTH_PORT:String(port),...(supervised?{VALO_SUPERVISED_WORKER:"ipc-v1"}:{})},
+      stdio:supervised?["ignore","pipe","pipe","ipc"]:["ignore","pipe","pipe"],windowsHide:true,
     });
     child.stdout!.on("data",b=>{diagnostic=(diagnostic+String(b)).slice(-3000);});
     child.stderr!.on("data",b=>{diagnostic=(diagnostic+String(b)).slice(-3000);});
@@ -75,6 +77,23 @@ test("real worker loses readiness on queue drift, recovers, drains and restarts"
     await stop();start();
     await waitFor(async()=>await status("/readyz")===200&&(await heartbeat()).instanceId!==first.instanceId,"restart");
     assert.notEqual((await heartbeat()).instanceId,first.instanceId);await stop();
+    const controller=new AbortController();let ready=0,launches=0;
+    const supervised=superviseWorker({signal:controller.signal,
+      timing:{...supervisorTiming,pollMs:50,startupMs:15000,drainMs:10000,restartBaseMs:50},
+      launch:()=>{assert.ok(!child||child.exitCode!==null||child.signalCode);start(true);launches++;return child!;},
+      report:event=>{if(event.event==="worker_supervisor.ready"){
+        ready++;if(ready===1)child!.kill("SIGKILL");else controller.abort();
+      }},
+    });
+    const supervisionDeadline=setTimeout(()=>controller.abort(),30000);
+    try{assert.equal(await supervised,0);assert.equal(ready,2);assert.equal(launches,2);}
+    finally{clearTimeout(supervisionDeadline);controller.abort();}
+    // Losing the parent IPC channel must drain the actual worker, including on Windows.
+    start(true);await waitFor(async()=>await status("/readyz")===200,"supervised parent-loss setup");
+    child!.disconnect();
+    const disconnectDeadline=setTimeout(()=>child!.kill("SIGKILL"),15000);
+    try{assert.deepEqual(await ended,{code:0,signal:null});assert.equal((await heartbeat()).phase,"draining");}
+    finally{clearTimeout(disconnectDeadline);}
     assert.doesNotMatch(diagnostic,/NATIVE_STORAGE_FORBIDDEN/);
   }finally{
     if(child&&child.exitCode===null&&!child.signalCode){child.kill("SIGKILL");await ended;}
