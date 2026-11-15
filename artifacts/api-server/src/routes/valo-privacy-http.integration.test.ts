@@ -175,9 +175,29 @@ test("actual HTTP privacy routes apply an independent privacy role and fresh MFA
       assert.equal((await request(roles[0])).status,403);
     });
     await t.test("hostile origin never reaches the privacy mutation",async()=>{
-      const r=await request(roles[0],"POST",{action:"hold",expectedVersion:2,
-        reason:"Hostile origin cannot submit."},"https://hostile.synthetic.invalid");
+      // Isolate the origin boundary: this same actor/session/body must succeed
+      // from the configured origin, not fail earlier on role or stale revision.
+      await db.update(valoStaffAssignments).set({active:true}).where(eq(valoStaffAssignments.identityId,roles[0]));
+      const inspect=await fetch(`${base}/admin/privacy-cases/${caseId}`,{headers:{"x-test-identity":roles[0]}});
+      assert.equal(inspect.status,200);
+      const current=GetPrivacyCaseResponse.parse(await inspect.json());
+      assert.ok(current.availableActions?.includes("hold"));
+      const snapshot=async()=>({
+        cases:await db.select().from(valoPrivacyCases).where(eq(valoPrivacyCases.id,caseId)),
+        events:await db.select().from(valoPrivacyEvents).where(eq(valoPrivacyEvents.caseId,caseId)).orderBy(valoPrivacyEvents.sequence),
+        access:await db.select().from(valoStaffAccessAudit).where(eq(valoStaffAccessAudit.actorId,roles[0])),
+      });
+      const before=await snapshot(),body={action:"hold",expectedVersion:current.request.version,
+        reason:"Controlled origin-specific privacy transition."};
+      const r=await request(roles[0],"POST",body,"https://hostile.synthetic.invalid");
       assert.equal(r.status,403);
+      assert.deepEqual(await snapshot(),before);
+      const positive=await request(roles[0],"POST",body,base);
+      assert.equal(positive.status,200);
+      const held=GetPrivacyCaseResponse.parse(await positive.json());
+      assert.equal(held.request.status,"held");
+      assert.equal(held.request.version,current.request.version+1);
+      assert.equal((await snapshot()).events.length,before.events.length+1);
     });
   }finally{
     await db.execute(sql`DELETE FROM valo_privacy_messages WHERE workspace_id IN (${owner.workspaceId}::uuid,${quarantinedOwner.workspaceId}::uuid)`);

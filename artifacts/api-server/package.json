@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test:valo-rich-checker": "node --import tsx --test src/lib/valo-checker-rich.test.ts ../valo/src/lib/rich-checker.test.ts",
+    "test:valo-checker-browser-development": "NODE_ENV=development VALO_RUN_CHECKER_BROWSER=synthetic-development-only tsx src/scripts/checker-live-browser.ts",
     "test:valo-task-source-guard": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/lib/valo-task-source-guard.integration.test.ts",
     "test:valo-operations": "tsx --test src/lib/http-logging.test.ts src/lib/valo-operations.test.ts src/lib/valo-recovery-effects.test.ts src/lib/valo-reminder-resend.test.ts",
     "test:valo-isolated-recovery": "NODE_ENV=development VALO_ISOLATED_RECOVERY=synthetic-local-only tsx src/scripts/isolated-recovery.ts",

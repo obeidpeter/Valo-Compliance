@@ -2,6 +2,17 @@
 
 ## Latest application unit — usable disabled inference budget and reconciliation
 
+**Customer checker/privacy follow-up:** the actual development browser journey
+passed at 360px and 1280px: rich unknown/skipped/not-applicable answers survived
+review and the HTTP request, forged browser source evidence was rejected with
+422, and zero released results showed an honest coverage gap. Fixed the long
+ruleset hash causing mobile result overflow. The seven actual HTTP privacy
+checks now include an active/current-version hostile-origin negative and the
+identical trusted-origin positive control.
+See [scoped browser/privacy evidence](docs/valo/checker-origin-browser-checkpoint.md).
+This does **not** establish signed-in history/comparison browser acceptance or
+source-backed publication.
+
 **CI boundary follow-up:** credential-free foundation execution passed **201
 tests with one existing skip**. Three explicit no-database/zero-dispatch/storage
 canary checks and all 55 finite controls passed. Portable erasure passed **18
