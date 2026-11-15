@@ -15,9 +15,9 @@ test("all 108 original identities construct canonical drafts without inventing r
   assert.equal(new Set(report.outcomes.map(x=>x.identity)).size,108);
   for(const row of report.outcomes){
     assert.equal(row.publicationEligible,false);assert.equal(row.nativeReadiness,"not_queried");
-    assert.ok("canonicalDocumentHash" in row&&/^[a-f0-9]{64}$/.test(row.canonicalDocumentHash));
+    assert.ok(typeof row.canonicalDocumentHash==="string"&&/^[a-f0-9]{64}$/.test(row.canonicalDocumentHash));
     if(row.preparationStatus==="review_preparer_engineering_incomplete"){
-      assert.ok("engineeringGaps" in row&&row.engineeringGaps.length>0);
+      assert.ok(Array.isArray(row.engineeringGaps)&&row.engineeringGaps.length>0);
       assert.equal(row.runtimeReviewPreparer,null);
     }
   }
