@@ -63,7 +63,7 @@ export async function cancelWorkspaceExport(actor:WorkspaceActor,id:string,expec
     if(expectedVersion!==undefined&&job.version!==expectedVersion)throw new ValoProblem(409,"This export changed. Reload its current status before trying again.");
     await authorizeWorkspaceWrite(tx,actor);
     const[row]=await tx.update(jobs).set({status:"cancelled",version:job.version+1,queueId:randomUUID(),leaseUntil:null,updatedAt:new Date()}).where(eq(jobs.id,id)).returning();
-    await tx.update(attempts).set({status:"cleanup",cleanupCheckedAt:null}).where(eq(attempts.jobId,id));
+    await tx.update(attempts).set({status:"cleanup",cleanupCheckedAt:null,nextCleanupAt:new Date(),cleanupErrorCode:null}).where(eq(attempts.jobId,id));
     return view(row!);});
 }
 export async function retryWorkspaceExport(actor:WorkspaceActor,id:string,expectedVersion:number){
@@ -110,7 +110,7 @@ export async function executeWorkspaceExport(id:string,workspaceId:string,queueI
       await tx.update(jobs).set({status:"interrupted",version:old.version+1,queueId:randomUUID(),errorCode:"WORKSPACE_EXPORT_ACCESS_REVOKED",updatedAt:new Date()}).where(eq(jobs.id,id));return null;
     }
     const attemptId=randomUUID(),key=`valo/development/${workspaceId}/${attemptId}.json`;
-    await tx.update(attempts).set({status:"cleanup",cleanupCheckedAt:null}).where(eq(attempts.jobId,id));
+    await tx.update(attempts).set({status:"cleanup",cleanupCheckedAt:null,nextCleanupAt:new Date(),cleanupErrorCode:null}).where(eq(attempts.jobId,id));
     await tx.insert(attempts).values({id:attemptId,jobId:id,workspaceId,objectKey:key});
     await tx.update(jobs).set({status:"preparing",attempts:old.attempts+1,version:old.version+1,currentAttemptId:attemptId,
       leaseUntil:new Date(Date.now()+WORKSPACE_EXPORT_LEASE_MS),errorCode:null,progressSection:null,rowsProcessed:0,bytesPrepared:0,updatedAt:new Date()}).where(eq(jobs.id,id));
@@ -171,7 +171,7 @@ export async function executeWorkspaceExport(id:string,workspaceId:string,queueI
   }finally{clearInterval(timer);controller.abort();await rm(directory,{recursive:true,force:true});}
 }
 async function requestAttemptCleanup(workspaceId:string,id:string,attemptId:string){
-  await db.update(attempts).set({status:"cleanup",cleanupCheckedAt:null})
+  await db.update(attempts).set({status:"cleanup",cleanupCheckedAt:null,nextCleanupAt:new Date(),cleanupErrorCode:null})
     .where(and(eq(attempts.id,attemptId),eq(attempts.jobId,id),sql`${attempts.status}<>'ready'`));
   // Completed erasure may have deleted metadata; the sealed key survives.
   await db.update(valoPrivacyTombstones).set({nextReplayAt:new Date()}).where(eq(valoPrivacyTombstones.workspaceId,workspaceId));
@@ -196,7 +196,7 @@ export async function recoverWorkspaceExports(workspaceId?:string){
     for(const row of rows){
       await tx.update(jobs).set({status:row.expiresAt.getTime()<=Date.now()?"expired":row.attempts<5?"queued":"interrupted",
         version:row.version+1,queueId:randomUUID(),leaseUntil:null,errorCode:"ABANDONED_PREPARATION",updatedAt:new Date()}).where(eq(jobs.id,row.id));
-      await tx.update(attempts).set({status:"cleanup",cleanupCheckedAt:null}).where(eq(attempts.jobId,row.id));
+      await tx.update(attempts).set({status:"cleanup",cleanupCheckedAt:null,nextCleanupAt:new Date(),cleanupErrorCode:null}).where(eq(attempts.jobId,row.id));
     }return rows.length;
   });
 }
@@ -249,7 +249,8 @@ export async function retireWorkspaceExports(tx:Tx,workspaceId:string){
     queue_id=gen_random_uuid(),lease_until=NULL,updated_at=now() WHERE ctid IN
     (SELECT ctid FROM valo_workspace_exports WHERE workspace_id=${workspaceId}::uuid AND status<>'cancelled' LIMIT 100)`);
   const used=changed.rowCount??0;
-  if(used<100)await tx.execute(sql`UPDATE valo_workspace_export_attempts SET status='cleanup',cleanup_checked_at=NULL WHERE ctid IN
+  if(used<100)await tx.execute(sql`UPDATE valo_workspace_export_attempts SET status='cleanup',cleanup_checked_at=NULL,
+    next_cleanup_at=now(),cleanup_error_code=NULL WHERE ctid IN
     (SELECT ctid FROM valo_workspace_export_attempts WHERE workspace_id=${workspaceId}::uuid AND status<>'cleanup' LIMIT ${100-used})`);
   return{rowCount:used};
 }
@@ -262,23 +263,45 @@ export async function cleanupWorkspaceExports(storage:WorkspaceExportStorage=wor
     if(due.length)await tx.update(jobs).set({status:"expired",version:sql`${jobs.version}+1`,queueId:randomUUID(),leaseUntil:null})
       .where(inArray(jobs.id,due.map(row=>row.id)));
   });
-  const rows=await db.select({a:attempts,j:jobs}).from(attempts).innerJoin(jobs,and(eq(attempts.jobId,jobs.id),eq(attempts.workspaceId,jobs.workspaceId)))
-    .where(and(sql`(${attempts.status}='cleanup' OR ${jobs.status} IN ('cancelled','expired'))`,
-      sql`(${attempts.cleanupCheckedAt} IS NULL OR ${attempts.cleanupCheckedAt}<now()-interval '1 hour')`,workspaceId?eq(attempts.workspaceId,workspaceId):undefined))
-    .orderBy(sql`${attempts.cleanupCheckedAt} ASC NULLS FIRST`,attempts.id).limit(5);
+  // Persist a short retry reservation BEFORE case/object work. Invalid keys,
+  // holds, lock waits and process death cannot monopolize the first five rows.
+  // This transaction releases attempt locks before acquiring privacy authority.
+  const rows=await db.transaction(async tx=>{
+    const due=await tx.select({a:attempts}).from(attempts).innerJoin(jobs,and(eq(attempts.jobId,jobs.id),eq(attempts.workspaceId,jobs.workspaceId)))
+      .where(and(sql`(${attempts.status}='cleanup' OR ${jobs.status} IN ('cancelled','expired'))`,
+        sql`${attempts.nextCleanupAt}<=now()`,workspaceId?eq(attempts.workspaceId,workspaceId):undefined))
+      .orderBy(attempts.nextCleanupAt,attempts.id).limit(5).for("update",{of:attempts,skipLocked:true});
+    if(due.length)await tx.update(attempts).set({nextCleanupAt:new Date(Date.now()+60_000),
+      cleanupAttempts:sql`least(${attempts.cleanupAttempts},2147483646)+1`}).where(inArray(attempts.id,due.map(({a})=>a.id)));
+    return due;
+  });
   let failed=0,held=0,privacyHeld=0,cleaned=0;
   for(const{a}of rows){await db.transaction(async tx=>{
+    await tx.execute(sql`set local lock_timeout='1000ms'`);
     // Case authority precedes attempt locks; quarantine/sealing owns all keys.
     const authority=await privateCleanupAuthority(tx,a.workspaceId);
-    if(!authority.allowed){held++;if(authority.privacyOwned)privacyHeld++;return;}
     const[currentAttempt]=await tx.select().from(attempts).where(eq(attempts.id,a.id)).for("update",{skipLocked:true});
     if(!currentAttempt)return;
-    const[job]=await tx.select().from(jobs).where(eq(jobs.id,a.jobId));
+    const[job]=await tx.select().from(jobs).where(and(eq(jobs.id,currentAttempt.jobId),eq(jobs.workspaceId,a.workspaceId)));
     if(!job||!(currentAttempt.status==="cleanup"||["cancelled","expired"].includes(job.status)))return;
-    if(currentAttempt.objectKey!==`valo/development/${a.workspaceId}/${a.id}.json`){failed++;return;}
-    try{await storage.remove(currentAttempt.objectKey);cleaned++;await rm(workspaceExportScratch(a.id),{force:true,recursive:true});}
-    catch{failed++;}
-    await tx.update(attempts).set({cleanupCheckedAt:new Date()}).where(eq(attempts.id,a.id));
+    if(!authority.allowed){
+      held++;if(authority.privacyOwned)privacyHeld++;
+      await tx.update(attempts).set({cleanupErrorCode:authority.privacyOwned?"PRIVACY_REPLAY_OWNED":"PRIVACY_HOLD"})
+        .where(eq(attempts.id,a.id));return;
+    }
+    if(currentAttempt.workspaceId!==a.workspaceId||currentAttempt.objectKey!==`valo/development/${a.workspaceId}/${a.id}.json`){
+      failed++;await tx.update(attempts).set({cleanupErrorCode:"INVALID_PRIVATE_KEY",nextCleanupAt:new Date(Date.now()+3_600_000)})
+        .where(eq(attempts.id,a.id));return;
+    }
+    try{
+      await storage.remove(currentAttempt.objectKey);await rm(workspaceExportScratch(a.id),{force:true,recursive:true});
+      cleaned++;await tx.update(attempts).set({cleanupCheckedAt:new Date(),cleanupErrorCode:null,nextCleanupAt:new Date(Date.now()+3_600_000)})
+        .where(eq(attempts.id,a.id));
+    }catch{
+      failed++;const delay=Math.min(3_600_000,30_000*2**Math.min(7,Math.max(0,currentAttempt.cleanupAttempts-1)));
+      await tx.update(attempts).set({cleanupErrorCode:"STORAGE_DELETE_FAILED",nextCleanupAt:new Date(Date.now()+delay)})
+        .where(eq(attempts.id,a.id));
+    }
   });}
   return{checked:rows.length,failed,held,privacyHeld,cleaned};
 }

@@ -132,7 +132,7 @@ test('canonical native export jobs: actual PostgreSQL, worker leases, private fi
       await bounded(seen.promise);await cancelWorkspaceExport(actor,j.id,(await raw(j.id)).version);go.resolve();await bounded(work);
       assert.equal((await raw(j.id)).status,'cancelled');const obj=await attempt(j.id);assert.equal(obj.status,'cleanup');
       await cleanupWorkspaceExports(storage,actor.workspaceId);await assert.rejects(readFile(join(directory,basename(obj.objectKey))));
-      await writeFile(join(directory,basename(obj.objectKey)),'late accepted upload');await db.update(attempts).set({cleanupCheckedAt:new Date(0)}).where(eq(attempts.id,obj.id));
+      await writeFile(join(directory,basename(obj.objectKey)),'late accepted upload');await db.update(attempts).set({nextCleanupAt:new Date(0)}).where(eq(attempts.id,obj.id));
       await cleanupWorkspaceExports(storage,actor.workspaceId);await assert.rejects(readFile(join(directory,basename(obj.objectKey))));
     });
     await t.test('progress heartbeat never traps snapshot behind job lock and membership revocation',async()=>{

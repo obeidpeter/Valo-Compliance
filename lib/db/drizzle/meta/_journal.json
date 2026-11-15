@@ -225,6 +225,13 @@
       "when": 1794705000003,
       "tag": "0032_staff_role_governance",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794705000004,
+      "tag": "0033_workspace_cleanup_retry",
+      "breakpoints": true
     }
   ]
 }
