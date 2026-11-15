@@ -40,6 +40,7 @@ import type {
   CommerceRefundInput,
   ConflictErrorResponse,
   ContentRegister,
+  CorrectionNotices,
   CustomerAIInput,
   CustomerAIPreview,
   CustomerAISelection,
@@ -54,6 +55,8 @@ import type {
   ExportRetryInput,
   FinanceRefunds,
   GetCommerceReceipt200,
+  GetCorrectionNoticesParams,
+  GetSourceControlsParams,
   GetStaffOperationsParams,
   HealthStatus,
   ListPublicCatalogueParams,
@@ -81,6 +84,9 @@ import type {
   RequirementsRegister,
   SavedAssessment,
   SavedAssessmentInput,
+  SourceControlAction,
+  SourceControlResult,
+  SourceControls,
   SourceEvidenceRegister,
   StaffOperations,
   StartCommerceCheckout200,
@@ -122,6 +128,290 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetSourceControlsUrl = (params: GetSourceControlsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/source-controls?${stringifiedParams}` : `/api/admin/source-controls`
+}
+
+export const getSourceControls = async (params: GetSourceControlsParams, options?: Parameters<typeof customFetch>[1]): Promise<SourceControls> => {
+
+  return customFetch<SourceControls>(getGetSourceControlsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSourceControlsQueryKey = (params?: GetSourceControlsParams,) => {
+    return [
+    `/api/admin/source-controls`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSourceControlsQueryOptions = <TData = Awaited<ReturnType<typeof getSourceControls>>, TError = ErrorType<void>>(params: GetSourceControlsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceControls>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSourceControlsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSourceControls>>> = ({ signal }) => getSourceControls(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSourceControls>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSourceControlsQueryResult = NonNullable<Awaited<ReturnType<typeof getSourceControls>>>
+export type GetSourceControlsQueryError = ErrorType<void>
+
+
+export function useGetSourceControls<TData = Awaited<ReturnType<typeof getSourceControls>>, TError = ErrorType<void>>(
+ params: GetSourceControlsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceControls>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSourceControls>>,
+          TError,
+          Awaited<ReturnType<typeof getSourceControls>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSourceControls<TData = Awaited<ReturnType<typeof getSourceControls>>, TError = ErrorType<void>>(
+ params: GetSourceControlsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceControls>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSourceControls>>,
+          TError,
+          Awaited<ReturnType<typeof getSourceControls>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSourceControls<TData = Awaited<ReturnType<typeof getSourceControls>>, TError = ErrorType<void>>(
+ params: GetSourceControlsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceControls>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSourceControls<TData = Awaited<ReturnType<typeof getSourceControls>>, TError = ErrorType<void>>(
+ params: GetSourceControlsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSourceControls>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSourceControlsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getActOnSourceControlsUrl = () => {
+
+
+
+
+  return `/api/admin/source-controls/action`
+}
+
+export const actOnSourceControls = async (sourceControlAction: SourceControlAction, options?: Parameters<typeof customFetch>[1]): Promise<SourceControlResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SourceControlResult>(getActOnSourceControlsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sourceControlAction)
+  }
+);}
+
+
+
+
+
+export const getActOnSourceControlsMutationKey = () => ['actOnSourceControls'] as const;
+
+export const getActOnSourceControlsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnSourceControls>>, TError,ActOnSourceControlsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actOnSourceControls>>, TError,ActOnSourceControlsMutationVariables, TContext> => {
+
+const mutationKey = getActOnSourceControlsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actOnSourceControls>>, ActOnSourceControlsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  actOnSourceControls(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActOnSourceControlsMutationResult = NonNullable<Awaited<ReturnType<typeof actOnSourceControls>>>
+    export type ActOnSourceControlsMutationBody = BodyType<SourceControlAction>
+    export type ActOnSourceControlsMutationError = ErrorType<void>
+    export type ActOnSourceControlsMutationVariables = {data: BodyType<SourceControlAction>}
+
+    export const useActOnSourceControls = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnSourceControls>>, TError,ActOnSourceControlsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actOnSourceControls>>,
+        TError,
+        ActOnSourceControlsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getActOnSourceControlsMutationOptions(options), queryClient);
+    }
+
+export const getGetCorrectionNoticesUrl = (params?: GetCorrectionNoticesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/workspace/correction-notices?${stringifiedParams}` : `/api/workspace/correction-notices`
+}
+
+export const getCorrectionNotices = async (params?: GetCorrectionNoticesParams, options?: Parameters<typeof customFetch>[1]): Promise<CorrectionNotices> => {
+
+  return customFetch<CorrectionNotices>(getGetCorrectionNoticesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCorrectionNoticesQueryKey = (params?: GetCorrectionNoticesParams,) => {
+    return [
+    `/api/workspace/correction-notices`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetCorrectionNoticesQueryOptions = <TData = Awaited<ReturnType<typeof getCorrectionNotices>>, TError = ErrorType<void>>(params?: GetCorrectionNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCorrectionNotices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCorrectionNoticesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCorrectionNotices>>> = ({ signal }) => getCorrectionNotices(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCorrectionNotices>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCorrectionNoticesQueryResult = NonNullable<Awaited<ReturnType<typeof getCorrectionNotices>>>
+export type GetCorrectionNoticesQueryError = ErrorType<void>
+
+
+export function useGetCorrectionNotices<TData = Awaited<ReturnType<typeof getCorrectionNotices>>, TError = ErrorType<void>>(
+ params: undefined |  GetCorrectionNoticesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCorrectionNotices>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCorrectionNotices>>,
+          TError,
+          Awaited<ReturnType<typeof getCorrectionNotices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCorrectionNotices<TData = Awaited<ReturnType<typeof getCorrectionNotices>>, TError = ErrorType<void>>(
+ params?: GetCorrectionNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCorrectionNotices>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCorrectionNotices>>,
+          TError,
+          Awaited<ReturnType<typeof getCorrectionNotices>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCorrectionNotices<TData = Awaited<ReturnType<typeof getCorrectionNotices>>, TError = ErrorType<void>>(
+ params?: GetCorrectionNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCorrectionNotices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCorrectionNotices<TData = Awaited<ReturnType<typeof getCorrectionNotices>>, TError = ErrorType<void>>(
+ params?: GetCorrectionNoticesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCorrectionNotices>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCorrectionNoticesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getRequestAccessSupportUrl = () => {
 

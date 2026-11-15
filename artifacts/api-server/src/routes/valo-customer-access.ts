@@ -72,7 +72,7 @@ return async(req:Request):Promise<PrivacyStaffActor>=>{
   return actor;
 };
 }
-const verifiedStaffSession=makeVerifiedStaffSession();
+export const verifiedStaffSession=makeVerifiedStaffSession();
 async function financeIdentity(req:Request){
   const actor=await verifiedStaffSession(req);
   await assertFinanceActor(actor);return actor;

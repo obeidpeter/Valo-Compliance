@@ -125,7 +125,7 @@ export async function staffOperations(identityId:string,recentMfa:boolean,area:S
     await tx.insert(valoStaffAccessAudit).values({id:randomUUID(),assignmentId:assignment.id,actorId:identityId,area,
       reason:"Read-only operational access after active role and recent MFA checks"});
     let records:Record<string,unknown>[]=[];
-    let notice="Read-only operational records. No publish, payment, role or customer-document mutation is available here.";
+    let notice="Operational overview. Source/version safety controls are separate, require recent MFA and an active role, and cannot approve publication, spending or customer-document changes.";
     if(area==="content")records=await tx.select({id:valoContentVersions.id,templateId:valoContentVersions.templateId,
       slug:valoContentVersions.slug,version:valoContentVersions.version,status:valoContentVersions.status,
       reviewBy:valoContentVersions.reviewBy}).from(valoContentVersions).limit(200);

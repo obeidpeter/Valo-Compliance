@@ -60,7 +60,8 @@ export async function managedCompletion(lane:BudgetLane,request:ManagedRequest,
     (request.n!==undefined&&request.n!==1)||options.maxRetries!==0)throw new InferenceHeld("UNAPPROVED_INFERENCE_REQUEST");
   const d=active.getStore();if(!d?.current())throw new InferenceHeld();
   requireDevelopment();
-  return d.complete(lane,request,options);
+  const {withSafetyDispatch}=await import("./valo-source-state");
+  return withSafetyDispatch("ai",()=>d.complete(lane,request,options));
 }
 export type ManagedCompletionResult={id:string;model:string;created:number;_request_id?:string|null;
   choices:{finish_reason:string|null;message:{content:string|null}}[];

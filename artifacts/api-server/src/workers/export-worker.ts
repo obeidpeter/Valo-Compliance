@@ -1,3 +1,4 @@
+import {reconcileSourceMonitoring} from "../lib/valo-source-monitor";
 import { z } from "zod";
 import {closePrivacyErasureLocks} from "../lib/valo-privacy-erasure";
 import { db, pool, valoExportJobs } from "@workspace/db";
@@ -56,7 +57,7 @@ async function dispatch() {
     }catch{logger.error({event:"export.dispatch_failed"});}
     if(Date.now()-reminderCheckedAt>=60000){
       reminderCheckedAt=Date.now();
-      const failures=await dispatchOperationalJobs({reminders:()=>reconcileDueReminders(),
+      const failures=await dispatchOperationalJobs({sources:reconcileSourceMonitoring,reminders:()=>reconcileDueReminders(),
         paymentEvents:()=>processPaymentEvents(),refunds:()=>processRefundQueue(),
         disputes:()=>reconcileKnownDisputes(),paymentReconciliation:()=>reconcilePayments()});
       for(const domain of failures)logger.error({event:"operational.dispatch_failed",domain});

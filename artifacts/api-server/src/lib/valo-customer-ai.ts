@@ -18,7 +18,7 @@ async function enabled(tx:WorkspaceTx,workspaceId:string){
   // A workspace may be additionally paused; it can never override a global or
   // production pause. Resolving this key uses the authorised server workspace.
   const flags=await tx.select().from(valoSafetySwitches).where(inArray(valoSafetySwitches.key,
-    ["customer_ai",`customer_ai_workspace:${workspaceId}`]));
+    ["all_ai","customer_ai",`customer_ai_workspace:${workspaceId}`]));
   return flags.every(flag=>flag.enabled);
 }
 async function budget(tx:WorkspaceTx,workspaceId:string,now=new Date()){

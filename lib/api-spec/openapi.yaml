@@ -11,6 +11,88 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /admin/source-controls:
+    get:
+      operationId: getSourceControls
+      tags:
+      - staff
+      parameters:
+      - name: area
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+          - content
+          - system
+      - &id001
+        name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          default: 1
+      responses:
+        '200':
+          description: Current authorized result. No publication or spending approval
+            is granted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceControls'
+        '401':
+          description: Sign-in required
+        '403':
+          description: Active area role and recent MFA required
+        '409':
+          description: Changed version or request-key conflict
+  /admin/source-controls/action:
+    post:
+      operationId: actOnSourceControls
+      tags:
+      - staff
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceControlAction'
+      responses:
+        '200':
+          description: Current authorized result. No publication or spending approval
+            is granted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceControlResult'
+        '401':
+          description: Sign-in required
+        '403':
+          description: Active area role and recent MFA required
+        '409':
+          description: Changed version or request-key conflict
+  /workspace/correction-notices:
+    get:
+      operationId: getCorrectionNotices
+      tags:
+      - workspace
+      parameters:
+      - *id001
+      responses:
+        '200':
+          description: Current authorized result. No publication or spending approval
+            is granted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionNotices'
+        '401':
+          description: Sign-in required
+        '403':
+          description: Active area role and recent MFA required
+        '409':
+          description: Changed version or request-key conflict
   /public/access-support:
     post:
       operationId: requestAccessSupport
@@ -979,6 +1061,287 @@ components:
           schema:
             $ref: "#/components/schemas/ApiProblem"
   schemas:
+    SourceControlAction:
+      oneOf:
+      - type: object
+        required:
+        - requestKey
+        - reason
+        - action
+        - sourceId
+        properties:
+          requestKey: &id001
+            type: string
+            format: uuid
+          reason: &id002
+            type: string
+            minLength: 20
+            maxLength: 1000
+          action:
+            type: string
+            enum:
+            - watch_source
+          sourceId:
+            type: string
+            minLength: 1
+            maxLength: 100
+        additionalProperties: false
+      - type: object
+        required:
+        - requestKey
+        - reason
+        - action
+        - kind
+        - id
+        - version
+        properties:
+          requestKey: *id001
+          reason: *id002
+          action:
+            type: string
+            enum:
+            - hold_version
+          kind:
+            type: string
+            enum:
+            - content
+            - rule
+          id: *id001
+          version:
+            type: integer
+            minimum: 1
+        additionalProperties: false
+      - type: object
+        required:
+        - requestKey
+        - reason
+        - action
+        - kind
+        - id
+        - version
+        properties:
+          requestKey: *id001
+          reason: *id002
+          action:
+            type: string
+            enum:
+            - withdraw_version
+          kind:
+            type: string
+            enum:
+            - content
+            - rule
+          id: *id001
+          version:
+            type: integer
+            minimum: 1
+        additionalProperties: false
+      - type: object
+        required:
+        - requestKey
+        - reason
+        - action
+        - service
+        properties:
+          requestKey: *id001
+          reason: *id002
+          action:
+            type: string
+            enum:
+            - pause_service
+          service:
+            type: string
+            enum:
+            - ai
+            - checkout
+        additionalProperties: false
+      - type: object
+        required:
+        - requestKey
+        - reason
+        - action
+        - service
+        properties:
+          requestKey: *id001
+          reason: *id002
+          action:
+            type: string
+            enum:
+            - resume_service
+          service:
+            type: string
+            enum:
+            - ai
+            - checkout
+        additionalProperties: false
+    SourceControlResult:
+      type: object
+      required:
+      - auditId
+      - replayed
+      - result
+      properties:
+        auditId: *id001
+        replayed:
+          type: boolean
+        result:
+          type: object
+          additionalProperties: true
+    SourceControlVersion:
+      type: object
+      required:
+      - kind
+      - id
+      - key
+      - version
+      - status
+      - reviewBy
+      - safetyHeld
+      properties:
+        kind:
+          type: string
+          enum:
+          - content
+          - rule
+        id: *id001
+        key: &id003
+          type: string
+        version: &id005
+          type: integer
+        status: *id003
+        reviewBy: &id004
+          type:
+          - string
+          - 'null'
+        safetyHeld:
+          type: boolean
+    SourceControlWatch:
+      type: object
+      required:
+      - sourceId
+      - url
+      - risk
+      - checkedAt
+      - failureCode
+      - nextCheckAt
+      properties:
+        sourceId: *id003
+        url: *id003
+        risk: *id003
+        checkedAt: *id004
+        failureCode: *id004
+        nextCheckAt: &id006
+          type: string
+          format: date-time
+    SourceControlReview:
+      type: object
+      required:
+      - id
+      - status
+      - targetKind
+      - targetKey
+      - targetVersion
+      - reason
+      - createdAt
+      properties:
+        id: *id001
+        status: *id003
+        targetKind: *id003
+        targetKey: *id003
+        targetVersion: *id005
+        reason: *id003
+        createdAt: *id006
+    SourceControlService:
+      type: object
+      required:
+      - key
+      - enabled
+      - reason
+      - updatedAt
+      properties:
+        key: *id003
+        enabled:
+          type: boolean
+        reason: *id003
+        updatedAt: *id006
+    SourceControlChoice:
+      type: object
+      required:
+      - id
+      - title
+      properties:
+        id: *id003
+        title: *id003
+    SourceControls:
+      type: object
+      required:
+      - area
+      - page
+      - hasMore
+      - notice
+      - versions
+      - sources
+      - review
+      - services
+      - sourceChoices
+      properties:
+        area:
+          type: string
+          enum:
+          - content
+          - system
+        page: *id005
+        hasMore:
+          type: boolean
+        notice: *id003
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceControlVersion'
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceControlWatch'
+        review:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceControlReview'
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceControlService'
+        sourceChoices:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceControlChoice'
+    CorrectionNotice:
+      type: object
+      required:
+      - id
+      - entityKind
+      - entityId
+      - message
+      - createdAt
+      properties:
+        id: *id001
+        entityKind: *id003
+        entityId: *id001
+        message: *id003
+        createdAt: *id006
+    CorrectionNotices:
+      type: object
+      required:
+      - page
+      - hasMore
+      - notices
+      properties:
+        page: *id005
+        hasMore:
+          type: boolean
+        notices:
+          type: array
+          items:
+            $ref: '#/components/schemas/CorrectionNotice'
     AccessSupportInput:
       type: object
       additionalProperties: false

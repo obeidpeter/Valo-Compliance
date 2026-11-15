@@ -8,6 +8,7 @@ import { documentInput } from "./valo-validation";
 import { loadRightsApplicability } from "../editorial/rights-applicability";
 import { paginateReleasedItems } from "./valo-catalogue";
 import { currentOperationalPermission } from "../editorial/operational-read-permission";
+import {lockSourceState,sourceTargetAllowed} from "./valo-source-state";
 export function releaseVisible(row:typeof valoContentVersions.$inferSelect,policyHash:string,now=new Date()){
   const parsed=publicationSchema.safeParse(row.bundle);
   return row.status==="published"&&+row.reviewBy>+now&&parsed.success&&
@@ -22,7 +23,7 @@ export async function liveReleasedVersions(){
     .where(eq(valoContentVersions.status,"published"));
   const allowed=[];
   for(const r of rows){
-    if(!releaseVisible(r.content,r.policy.hash))continue;
+    if(!releaseVisible(r.content,r.policy.hash)||!await sourceTargetAllowed(db,"content",r.content.id,r.content.bundle))continue;
     if(publicationSchema.parse(r.content.bundle).candidate.evidenceMode==="original_operational"&&
       (r.policy.hash!==currentPolicy.policy.hash||!(await currentOperationalPermission(r.content))))continue;
     allowed.push(r.content);
@@ -93,11 +94,12 @@ export async function releasedTemplate(slug:string){
     preview:operationalPresentation(row.templateId).preview,
     developmentOnly:true,commercialLicenceAccepted:false,formats:["docx","pdf"] as const};
 }
-async function lockedLiveVersion(tx:Parameters<Parameters<typeof db.transaction>[0]>[0],id:string){
+export async function lockedLiveVersion(tx:Parameters<Parameters<typeof db.transaction>[0]>[0],id:string){
+  await lockSourceState(tx);
   const[row]=await tx.select().from(valoContentVersions).where(eq(valoContentVersions.id,id)).for("share");
   if(!row)throw new ValoProblem(404,"Template unavailable");
   const[policy]=await tx.select().from(valoPublicationPolicies).where(eq(valoPublicationPolicies.id,row.policyId));
-  if(!policy||!releaseVisible(row,policy.hash))throw new ValoProblem(404,"Template withdrawn, expired or unavailable");
+  if(!policy||!releaseVisible(row,policy.hash)||!await sourceTargetAllowed(tx,"content",row.id,row.bundle))throw new ValoProblem(404,"Template withdrawn, expired or unavailable");
   const c=publicationSchema.parse(row.bundle).candidate;
   if(c.evidenceMode==="original_operational"){
     const current=await operationalPolicy();

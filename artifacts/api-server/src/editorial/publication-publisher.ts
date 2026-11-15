@@ -12,13 +12,18 @@ import { templateCandidate } from "./operational-content";
 import { originalFormSchema,formMarkdown } from "./operational-authoring-contract";
 import { operationalMechanicalChecks } from "./operational-mechanical";
 import {recheckOperationalExports} from "./operational-export-inspection";
+import {lockSourceState} from "../lib/valo-source-state";
+import {recordSourceImpact} from "../lib/valo-source-corrections";
+import {bindReleasedSources} from "./source-release-bindings";
 export type ReleaseAttestations={
+  sourceSnapshots?:Record<string,string>;
   provenance:ArtifactRef;rights:ArtifactRef;reviews:ArtifactRef[];rightsApplicabilityHash?:string;
   exports:{docx:ArtifactRef;pdf:ArtifactRef};exportReport:ArtifactRef;
 };
 export async function publishOperationalVersion(id:string){
   developmentPublicationOnly();
   return db.transaction(async tx=>{
+    await lockSourceState(tx,true);
     await tx.execute(sql`SET LOCAL ROLE valo_content_publisher_dev`);
     const[row]=await tx.select().from(valoContentVersions).where(eq(valoContentVersions.id,id)).for("update");
     if(!row||!["candidate","published"].includes(row.status))throw Error("VERSION_NOT_RELEASABLE");
@@ -110,17 +115,23 @@ export async function publishOperationalVersion(id:string){
       if(attested?.fileHash!==a.exports[format].hash||exportReport.hashes[format]!==attested.fileHash)
         throw Error("EXPORT_ATTESTATION_INVALID");
     }
+    await bindReleasedSources(tx,"content",id,bundle,a.sourceSnapshots);
     if(row.status==="published")return{id,decision:"published" as const,idempotent:true};
     await tx.update(valoContentVersions).set({status:"published",publishedAt:new Date()})
       .where(and(eq(valoContentVersions.id,id),eq(valoContentVersions.status,"candidate")));
     await tx.insert(valoPublicationAudit).values({id:randomUUID(),versionId:id,
       actor:"bounded_development_publisher",action:"published",reason:`Eligible immutable manifest ${digest(bundle.manifest)}`});
+    await tx.execute(sql`update valo_source_review_work w set status='superseded_by_eligible_version',replacement_kind='content',replacement_id=${id}::uuid,completed_at=now()
+      from valo_source_impacts i where w.impact_id=i.id and w.status='awaiting_authorized_review' and i.target_kind='content'
+      and i.target_key=${row.templateId} and i.target_version<${row.version}`);
     return{id,decision:"published" as const,idempotent:false};
   });
 }
 export async function withdrawOperationalVersion(id:string,reason:string){
   developmentPublicationOnly();if(!reason.trim())throw Error("WITHDRAWAL_REASON_REQUIRED");
   return db.transaction(async tx=>{
+    await lockSourceState(tx,true);
+    await recordSourceImpact(tx,{kind:"content",id,reason,actor:"bounded_development_publisher",action:"withdraw",dedupe:`publisher-withdraw:${id}`});
     await tx.execute(sql`SET LOCAL ROLE valo_content_publisher_dev`);
     const[row]=await tx.select().from(valoContentVersions).where(eq(valoContentVersions.id,id)).for("update");
     if(!row||row.status!=="published")throw Error("PUBLISHED_VERSION_REQUIRED");
@@ -133,6 +144,7 @@ export async function recordActualPublicationHold(id:string,failureCode?:string)
   developmentPublicationOnly();
   if(failureCode&&!/^[A-Z_]{3,80}$/.test(failureCode))throw Error("INVALID_HOLD_REASON_CODE");
   return db.transaction(async tx=>{
+    await lockSourceState(tx,true);
     await tx.execute(sql`SET LOCAL ROLE valo_content_publisher_dev`);
     const[row]=await tx.select().from(valoContentVersions).where(eq(valoContentVersions.id,id)).for("update");
     if(!row||row.status!=="candidate")throw Error("CANDIDATE_REQUIRED");

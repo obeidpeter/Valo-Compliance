@@ -16,9 +16,11 @@ import { publicAccessRouter,customerAccessRouter,staffOperationsRouter } from ".
 import { releasedResources } from "../lib/valo-released-content";
 import { commerceRouter } from "./valo-commerce";
 
+import {sourceControlsRouter,correctionNoticesRouter} from "./valo-source-controls";
 const router = Router();
 router.use(publicAccessRouter);
 router.use(staffOperationsRouter);
+router.use(sourceControlsRouter);
 router.get("/public/resources",async(_req,res)=>{
   res.set("Cache-Control","no-store");res.json((await releasedResources()).map(r=>ReleasedResource.parse(r)));
 });
@@ -81,6 +83,7 @@ router.get("/development/content", async (_req, res) => {
 });
 router.use("/workspace", sameOriginMutation, verifiedWorkspace);
 router.use(customerAccessRouter);
+router.use(correctionNoticesRouter);
 router.use(commerceRouter);
 router.get("/workspace", async (_req, res) => { res.json(await store.getWorkspace(res.locals.valoActor)); });
 router.put("/workspace/profile", async (req, res) => { res.json(await store.saveProfile(res.locals.valoActor, req.body)); });

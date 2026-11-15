@@ -33,6 +33,7 @@ export * from "./valo-export-objects";
 export * from "./valo-export-requests";
 export * from "./valo-file-assets";
 export * from "./valo-source-snapshots";
+export * from "./valo-source-controls";
 export * from "./valo-editorial-runs";
 export * from "./valo-assessments";
 export * from "./valo-tasks";

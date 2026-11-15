@@ -46,9 +46,8 @@
     "test:valo-erasure-controls": "node --import tsx --test src/lib/valo-erasure-seal.test.ts src/lib/valo-erasure-lock.test.ts",
     "test:valo-erasure-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts",
     "test:valo-finite-entry": "node --experimental-test-module-mocks --import tsx --test src/lib/inference-manifest.test.ts src/lib/inference-allocation-package.test.ts src/lib/inference-history-reconciliation.test.ts src/lib/managed-inference-entry.test.ts src/lib/managed-operational-recovery.test.ts src/lib/inference-operational-preparation.test.ts",
-    "test:valo-workspace-download": "node --import tsx --test src/lib/valo-download-session.test.ts",
-    "test:valo-workspace-download-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-download.integration.test.ts",
-    "test:valo-workspace-download-browser": "NODE_ENV=development VALO_RUN_WORKSPACE_DOWNLOAD_BROWSER=synthetic-development-only tsx src/scripts/workspace-data-download-browser.ts"
+    "test:valo-source-controls": "node --import tsx --test src/lib/valo-source-controls.test.ts",
+    "test:valo-source-controls-db": "NODE_ENV=development node --import tsx --test src/lib/valo-source-controls.integration.test.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",

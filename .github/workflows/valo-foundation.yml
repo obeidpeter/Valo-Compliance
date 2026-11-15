@@ -111,6 +111,8 @@ jobs:
           echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Run API input-safety tests
         run: pnpm --filter @workspace/api-server test:valo
+      - name: Prove additional source freshness and strict staff command boundaries
+        run: pnpm --filter @workspace/api-server test:valo-source-controls
       - name: Prove native workspace download, cancellation and account boundaries
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-browser
       - name: Retain controlled workspace download browser evidence
@@ -186,6 +188,8 @@ jobs:
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
       - name: Prove paged workspace attachment, final authorization and disconnect cleanup
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-db
+      - name: Prove durable source corrections, staff authority and dispatch races
+        run: pnpm --filter @workspace/api-server test:valo-source-controls-db
       - name: Prove current-rule task guards against synthetic PostgreSQL
         run: pnpm --filter @workspace/api-server test:valo-task-source-guard
       - name: Prove synthetic erasure holds, late-upload races and bounded recovery

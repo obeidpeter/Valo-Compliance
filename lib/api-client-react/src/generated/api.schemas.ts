@@ -5,6 +5,157 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type SourceControlAction = {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  action: 'watch_source';
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  sourceId: string;
+} | {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  action: 'hold_version';
+  kind: 'content' | 'rule';
+  id: string;
+  /** @minimum 1 */
+  version: number;
+} | {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  action: 'withdraw_version';
+  kind: 'content' | 'rule';
+  id: string;
+  /** @minimum 1 */
+  version: number;
+} | {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  action: 'pause_service';
+  service: 'ai' | 'checkout';
+} | {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  action: 'resume_service';
+  service: 'ai' | 'checkout';
+};
+
+export type SourceControlResultResult = { [key: string]: unknown };
+
+export interface SourceControlResult {
+  auditId: string;
+  replayed: boolean;
+  result: SourceControlResultResult;
+}
+
+export type SourceControlVersionKind = typeof SourceControlVersionKind[keyof typeof SourceControlVersionKind];
+
+
+export const SourceControlVersionKind = {
+  content: 'content',
+  rule: 'rule',
+} as const;
+
+export interface SourceControlVersion {
+  kind: SourceControlVersionKind;
+  id: string;
+  key: string;
+  version: number;
+  status: string;
+  /** @nullable */
+  reviewBy: string | null;
+  safetyHeld: boolean;
+}
+
+export interface SourceControlWatch {
+  sourceId: string;
+  url: string;
+  risk: string;
+  /** @nullable */
+  checkedAt: string | null;
+  /** @nullable */
+  failureCode: string | null;
+  nextCheckAt: string;
+}
+
+export interface SourceControlReview {
+  id: string;
+  status: string;
+  targetKind: string;
+  targetKey: string;
+  targetVersion: number;
+  reason: string;
+  createdAt: string;
+}
+
+export interface SourceControlService {
+  key: string;
+  enabled: boolean;
+  reason: string;
+  updatedAt: string;
+}
+
+export interface SourceControlChoice {
+  id: string;
+  title: string;
+}
+
+export type SourceControlsArea = typeof SourceControlsArea[keyof typeof SourceControlsArea];
+
+
+export const SourceControlsArea = {
+  content: 'content',
+  system: 'system',
+} as const;
+
+export interface SourceControls {
+  area: SourceControlsArea;
+  page: number;
+  hasMore: boolean;
+  notice: string;
+  versions: SourceControlVersion[];
+  sources: SourceControlWatch[];
+  review: SourceControlReview[];
+  services: SourceControlService[];
+  sourceChoices: SourceControlChoice[];
+}
+
+export interface CorrectionNotice {
+  id: string;
+  entityKind: string;
+  entityId: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface CorrectionNotices {
+  page: number;
+  hasMore: boolean;
+  notices: CorrectionNotice[];
+}
+
 export type AccessSupportInputTopic = typeof AccessSupportInputTopic[keyof typeof AccessSupportInputTopic];
 
 
@@ -2260,6 +2411,31 @@ export type ConflictErrorResponse = {
  * Validation, access or concurrency error
  */
 export type AuthErrorResponse = ApiProblem;
+
+export type GetSourceControlsParams = {
+  area: GetSourceControlsArea;
+  /**
+   * @minimum 1
+   * @maximum 10000
+   */
+  page?: number;
+};
+
+export type GetSourceControlsArea = typeof GetSourceControlsArea[keyof typeof GetSourceControlsArea];
+
+
+export const GetSourceControlsArea = {
+  content: 'content',
+  system: 'system',
+} as const;
+
+export type GetCorrectionNoticesParams = {
+  /**
+   * @minimum 1
+   * @maximum 10000
+   */
+  page?: number;
+};
 
 export type StartCommerceCheckout200 = {
   url: string;

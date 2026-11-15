@@ -21,6 +21,7 @@ const phases=[
   "valo_export_requests","valo_file_assets","valo_export_objects","valo_export_jobs",
   "valo_document_revisions","valo_documents","valo_profile_versions","valo_reminder_preferences",
   "purchase_notifications","support_content","privacy_messages","privacy_content",
+  "valo_correction_notices", // append only: preserve all historical phase indexes
 ] as const;
 const removedMessage="[Private content removed by verified workspace erasure]";
 const scope="development-application-content-erasure-v2";

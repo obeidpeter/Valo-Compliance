@@ -5,6 +5,7 @@ import { useGetStaffOperations, getGetStaffOperationsQueryKey, GetStaffOperation
 import { EmptyState, ErrorState, Skel } from '@/components/states';
 import { cn } from '@/lib/utils';
 import {FinanceRefunds} from './finance-refunds';
+import {SourceSafetyControls} from '@/components/source-safety-controls';
 import {SupportRecords} from '@/components/support-records';
 
 const AREAS: { v: Area; l: string }[] = [
@@ -53,6 +54,7 @@ export default function StaffPage() {
           <>
             <p className="rounded-2xl border border-border bg-sidebar p-4 text-sm" data-testid="text-staff-notice">{q.data.notice}</p>
             {area==='finance'&&<FinanceRefunds/>}
+            {(area==='content'||area==='system')&&<SourceSafetyControls key={area} area={area}/>}
             {records.length === 0 ? <p className="mt-6 text-sm text-muted-foreground">No records in this area.</p> : area==='support' ? <SupportRecords records={records}/> : (
               <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
                 <table className="w-full text-left text-sm">
