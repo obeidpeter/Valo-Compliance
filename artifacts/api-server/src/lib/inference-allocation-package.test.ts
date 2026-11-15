@@ -37,13 +37,16 @@ test("package allocation, lane ceilings and allowed roles are immutable policy d
     const pkg=await prepareFiniteAllocationPackage();edit(pkg);assert.throws(()=>validateAllocationPackage(pkg),/INVALID/);
   }
 });
-test("frozen disabled owner-review artifact matches exact repository bytes, cases and named sections",async()=>{
+test("historical disabled artifact retains exact source pins but cannot authorize the clarified allocation boundary",async()=>{
   const frozen=JSON.parse(await readFile(new URL("../../../../docs/valo/evidence/finite-allocation-package-disabled.json",import.meta.url),"utf8"));
   assert.equal(frozen.status,"DISABLED_PROPOSAL_ONLY");assert.equal(frozen.ownerApproved,false);assert.equal(frozen.enabled,false);
   assert.equal(frozen.approvalRowsWritten,0);assert.equal(frozen.providerCalls,0);
-  validateAllocationPackage(frozen.package);
+  assert.throws(()=>validateAllocationPackage(frozen.package),/ALLOCATION_PACKAGE_INVALID/);
   assert.equal(frozen.packageHash,requestDigest(frozen.package));assert.equal(frozen.packageId,allocationPackageId(frozen.package));
   const actual=await prepareFiniteAllocationPackage(new Date(frozen.package.preparedAt));
+  validateAllocationPackage(actual);
+  assert.equal(actual.allocation.startBoundary,"durable-owner-approval-of-exact-finite-package");
+  assert.notEqual(requestDigest(actual),frozen.packageHash);
   // In particular, do not normalize/trim JSON or Markdown before file hashing.
   // Object-equivalent corpus data with a changed newline still changes its pin.
   assert.deepEqual(frozen.package.sourceFiles,actual.sourceFiles);

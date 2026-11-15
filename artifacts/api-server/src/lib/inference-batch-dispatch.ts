@@ -5,6 +5,7 @@ import {inferenceProposal,additionalInferenceAllocation,acceptedInferenceModels,
 import type {ManagedCompletionResult,ManagedRequest} from "./managed-inference";
 import {assertDelegatedBatchAuthority} from "./inference-allocation-package";
 import {assertFiniteWorkShape} from "./inference-work-shape";
+import {assertManagedRatePolicy} from "./inference-price-evidence";
 export type FiniteWork={key:string;lane:BudgetLane;role:"factual"|"challenge"|"customer";
   pair:string|null;retryOf?:string;candidateHash:string;sourceHashes:string[];caseHash:string;request:ManagedRequest;
   bindings:{candidateVersionId:string|null;corpus:"editorial"|"checker"|"customer-ai"|null;caseId:string|null;
@@ -23,6 +24,7 @@ export class FiniteInferenceDispatcher{
     private recheckBindings:(work:FiniteWork)=>Promise<void>){}
   current(){return this.context.getStore();}
   private async batch(c:import("pg").PoolClient,id:string,admitting=true){
+    assertManagedRatePolicy(inferenceProposal);
     const r=await c.query(`SELECT * FROM "${this.store.schemaName()}".valo_inference_batches WHERE id=$1 FOR SHARE`,[id]);
     const row=r.rows[0];
     if(!row||!row.approved_by||!row.approval_reference||!row.approved_at||admitting&&!row.enabled)

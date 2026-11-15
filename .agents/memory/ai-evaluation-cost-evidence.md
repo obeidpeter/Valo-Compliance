@@ -11,6 +11,17 @@ Keep real-provider cases distinct from preflight refusals and injected faults.
 used by daily limits, increase available allowance incorrectly, and destroy the
 evidence distinguishing actual calls from transport simulations.
 
+An import of historical application usage is an exposure register, not proof
+of an approved global project budget or membership in a new allocation. Define
+new work's actual approval/start boundary; keep unrelated historical unknowns
+visible without requesting retrospective approval or deleting ledger history.
+If proposing additional usage, label it explicitly instead of silently
+substituting it for an inclusive allowance.
+
+**Why:** The user clarified that import defects and unscoped historical rows
+were being mistaken for missing owner decisions. Historical failed requests
+without retained bounds must not inherit a later model's limits or zero cost.
+
 **How to apply:** Clean only owned negative fixtures with no outbound attempt,
 or preserve the necessary aggregate usage/audit evidence first. Check the
 current quota implementation before cleanup. Do not use this rule to retain

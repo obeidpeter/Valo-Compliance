@@ -1,0 +1,25 @@
+✔ exact proposal arithmetic and implicit customer 4096-token bound (3.232126ms)
+✔ real dispatch is disabled with no switch or SDK access (1.55514ms)
+✔ all four current application dispatch sites use the shared held transport (25.513566ms)
+✔ byte estimates, changed instructions/schema and insufficient proofs cannot admit (1.367888ms)
+✔ unknown pilot and unreconciled usage hold all lanes, import is idempotent (1.191928ms)
+✔ reservation precedes dispatch, timeout keeps maximum and cannot be cancelled (0.927314ms)
+✔ settlement is exact/idempotent, never releases unknown on elapsed time (1.208666ms)
+✔ duplicate identity binds the entire request and scope (0.347402ms)
+✔ atomic serialized racing reservations stop at lane limits without overspend (32.670205ms)
+✔ depleted global allowance overrides every lane and prior pilot consumes headroom (0.793747ms)
+✔ reported bound breaches suspend admission; malformed/negative balances fail closed (0.436707ms)
+✔ whole-context fallback rounds upward and needs no exact tokenization (0.332864ms)
+✔ finite context batch stops safely without requiring all 458 attempts or a daily delay (10.251485ms)
+✔ independent pair reservation is all-or-nothing and binds exact distinct requests (0.931731ms)
+✔ concurrency two includes unknown outcomes, with no timeout release or automatic retry (0.512031ms)
+✔ fallback does not admit tools, multiple completions or streaming (0.40507ms)
+✔ a hold installed after pair reservation blocks the reserved sibling (0.492253ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 404.947193

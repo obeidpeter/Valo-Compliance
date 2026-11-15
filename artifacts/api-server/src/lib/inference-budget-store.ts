@@ -1,6 +1,6 @@
 import {emptyBudget,inferenceProposal,additionalInferenceAllocation,requestDigest,validateBudgetState,type BudgetState} from "./inference-budget";
-/** One locked global row covers every lane; no sum-then-insert race.
- * No caller-facing endpoint and no enabled authority are provided. */
+/** One locked row covers every lane of this named allocation, not all historic
+ * project spending. No caller-facing approval endpoint is provided. */
 export class InferenceBudgetStore{
   schemaName(){return this.schema;}
   allocationId(){return this.scope==="additional-new"?additionalInferenceAllocation.id:inferenceProposal.id;}

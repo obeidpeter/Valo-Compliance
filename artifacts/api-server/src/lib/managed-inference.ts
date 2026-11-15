@@ -11,6 +11,12 @@ export class InferenceHeld extends Error{
 // A disabled/no-context request does not load a database, provider SDK or network
 // configuration. Only server-owned finite-work entry points can create context.
 const active=new AsyncLocalStorage<FiniteInferenceDispatcher>();
+/** Server composition only. The dispatcher still loads real durable approval,
+ * checks every exact work binding and reserves before invoking its transport.
+ * No HTTP input or boolean can establish this context. */
+export function withBoundInferenceDispatcher<T>(d:FiniteInferenceDispatcher,fn:()=>Promise<T>){
+  return active.run(d,fn);
+}
 let runtime:Promise<FiniteInferenceDispatcher>|undefined;
 function requireDevelopment(){try{assertDevelopmentRuntime();}catch{throw new InferenceHeld("INFERENCE_DEVELOPMENT_ONLY");}}
 async function dispatcher(){
@@ -26,10 +32,10 @@ async function dispatcher(){
   return runtime;
 }
 export async function withApprovedInferenceWork<T>(batchId:string,key:string,fn:()=>Promise<T>){
-  const d=await dispatcher();return active.run(d,()=>d.withWork(batchId,key,fn));
+  const d=await dispatcher();return withBoundInferenceDispatcher(d,()=>d.withWork(batchId,key,fn));
 }
 export async function withApprovedInferencePair<T>(batchId:string,pairKey:string,fn:()=>Promise<T>){
-  const d=await dispatcher();return active.run(d,()=>d.withPair(batchId,pairKey,fn));
+  const d=await dispatcher();return withBoundInferenceDispatcher(d,()=>d.withPair(batchId,pairKey,fn));
 }
 export async function withApprovedInferenceRole<T>(role:"factual"|"challenge",fn:()=>Promise<T>){
   const d=active.getStore();if(!d)throw new InferenceHeld();

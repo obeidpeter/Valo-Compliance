@@ -11,6 +11,7 @@ import {inferenceProposal,additionalInferenceAllocation,requestDigest,budgetUsed
 import {prepareFiniteAllocationPackage,allocationPackageId,registerPreparedInferenceSubmanifest,readApprovedFiniteAllocationPackage} from "./inference-allocation-package";
 import type {ManagedCompletionResult} from "./managed-inference";
 import {createManagedSDKTransport} from "./managed-sdk-transport";
+import {managedCompletion,withBoundInferenceDispatcher,withApprovedInferenceRole} from "./managed-inference";
 
 test("durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls",{
   skip:process.env.VALO_RUN_DB_TESTS!=="synthetic-development-only",timeout:60000,
@@ -52,6 +53,32 @@ test("durable finite batch dispatch — isolated PostgreSQL and controlled trans
   const run=(d:FiniteInferenceDispatcher,id:string,w:FiniteWork)=>d.withWork(id,w.key,()=>d.complete(w.lane,w.request,{timeout:100,maxRetries:0}));
   try{
     await reset();
+    await t.test("actual managed entry dispatches all four approved lanes through shared durable reservation, SDK observation and settlement",async()=>{
+      let calls=0,observations=0;
+      const sdk=createManagedSDKTransport(async()=>({chat:{completions:{create:async()=>{
+        calls++;return response();
+      }}}}));
+      const entry=new FiniteInferenceDispatcher(store,sdk,async()=>{});
+      const complete=(w:FiniteWork)=>managedCompletion(w.lane,w.request,{
+        timeout:100,maxRetries:0,onOutbound:()=>{observations++;},
+      });
+      for(const lane of["customer","checker_challenge","publication","editorial_evaluation"] as const){
+        const pair=["publication","editorial_evaluation"].includes(lane);
+        const works=pair?[work(`${lane}-f`,lane,`${lane}-pair`,"factual"),work(`${lane}-c`,lane,`${lane}-pair`,"challenge")]:
+          [work(`${lane}-one`,lane,null,lane==="customer"?"customer":"challenge")];
+        const id=await seed(works);
+        await withBoundInferenceDispatcher(entry,async()=>{
+          if(pair)await entry.withPair(id,works[0]!.pair!,async()=>{
+            for(const w of works)await withApprovedInferenceRole(w.role as "factual"|"challenge",()=>complete(w));
+          });else await entry.withWork(id,works[0]!.key,()=>complete(works[0]!));
+        });
+      }
+      assert.equal(calls,6);assert.equal(observations,6);
+      const s=await state();assert.equal(s.entries.length,6);assert.ok(s.entries.every(e=>e.status==="settled"));
+      assert.equal(budgetUsed(s),tokenCost(120,40)*6n);
+      await assert.rejects(()=>managedCompletion("customer",work("unapproved").request,{timeout:100,maxRetries:0}),/DISABLED/);
+      assert.equal(calls,6);await reset();
+    });
     await t.test("disabled durable authority and missing allowlist cannot dispatch",async()=>{
       const w=work("disabled"),id=await seed([w],false);
       await assert.rejects(()=>run(dispatcher,id,w),/NOT_AUTHORIZED/);

@@ -1,9 +1,10 @@
 import {readFile,writeFile,mkdir} from "node:fs/promises";
 import {resolve} from "node:path";
-import {db,pool} from "@workspace/db";
-import {sql} from "drizzle-orm";
+import {pool} from "@workspace/db";
 import {inferenceProposal,proposalTotals,importPilotUsage,budgetUsed,requestDigest,type PilotUsage} from "../lib/inference-budget";
 import {InferenceBudgetStore} from "../lib/inference-budget-store";
+import {loadInferenceHistory} from "../lib/inference-history-loader";
+import {verifiedPilotImports} from "../lib/inference-history-classification";
 async function main(){
   if(process.env.NODE_ENV!=="development"||process.env.REPLIT_DEPLOYMENT)throw Error("DEVELOPMENT_ONLY");
   const root=resolve(import.meta.dirname,"../../../..");
@@ -18,32 +19,16 @@ async function main(){
     await pool.query(ddl.replaceAll("--> statement-breakpoint",""));
     developmentDeltaApplied=true;
   }
-  const rows:PilotUsage[]=[],sourceCounts:Record<string,number>={};
-  const publications=await db.execute(sql`select id,role,provider_response_id,input_tokens,output_tokens,outcome
-    from valo_publication_ai_attempts`);
-  sourceCounts.publicationAttempts=publications.rows.length;
-  for(const r of publications.rows)rows.push({sourceKey:`publication:${r.id}`,lane:"publication",
-    responseId:r.provider_response_id as string|null,input:r.input_tokens as number|null,
-    output:r.output_tokens as number|null,model:null}); // legacy table did not persist actual returned model
-  const editorial=await db.execute(sql`select id,model,provider_response_id,input_tokens,output_tokens,status
-    from valo_editorial_runs`);
-  sourceCounts.editorialRuns=editorial.rows.length;
-  for(const r of editorial.rows)rows.push({sourceKey:`editorial:${r.id}`,lane:"editorial_evaluation",
-    responseId:r.provider_response_id as string|null,input:r.input_tokens as number|null,
-    output:r.output_tokens as number|null,model:r.model as string|null});
-  const customer=await db.execute(sql`select id,provider_runs,provider_calls,budget_reserved from valo_ai_drafts`);
-  sourceCounts.customerDraftRows=customer.rows.length;
-  for(const r of customer.rows){
-    const runs=r.provider_runs as Record<string,unknown>[];
-    if(!runs.length&&r.budget_reserved)rows.push({sourceKey:`customer-unresolved:${r.id}`,lane:"customer",
-      responseId:null,input:null,output:null,model:null});
-    for(const[at,run]of runs.entries()){
-      if(run.outboundAttempted===false)continue; // explicitly recorded zero-outbound; never delete its source
-      const usage=run.usage as {inputTokens?:number;outputTokens?:number}|null;
-      rows.push({sourceKey:`customer:${r.id}:${at}`,lane:"customer",responseId:typeof run.responseId==="string"?run.responseId:null,
-        input:usage?.inputTokens??null,output:usage?.outputTokens??null,model:typeof run.model==="string"?run.model:null});
-    }
-  }
+  const c=await pool.connect();
+  const evidence=await(async()=>{try{await c.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
+    const e=await loadInferenceHistory(c);await c.query("COMMIT");return e;
+  }catch(error){await c.query("ROLLBACK");throw error;}finally{c.release();}})();
+  const rows:PilotUsage[]=verifiedPilotImports(evidence);
+  const sourceCounts={publicationAttempts:evidence.publicationAttempts.length,
+    editorialRuns:evidence.rows.filter(r=>r.lane==="editorial_evaluation").length,
+    customerAttempts:evidence.rows.filter(r=>r.lane==="customer").length,
+    excludedNoOutboundCustomerRuns:evidence.excludedNoOutboundCustomerRuns,
+    verifiedImportRows:rows.length};
   const store=new InferenceBudgetStore(pool);
   const imported=await store.mutate("import_pilot_metadata_disabled",s=>{
     const r=importPilotUsage(s,rows);return{state:r.state,value:{imported:r.imported,duplicates:r.duplicates,
@@ -58,9 +43,9 @@ async function main(){
   const report={recordedAt:new Date().toISOString(),proposal:inferenceProposal,totals:proposalTotals(),sourceCounts,imported,
     developmentDeltaApplied,existingDevelopmentHistoryAdopted:false,productionMigrationApplied:false,
     codeHashes,providerCalls:0,quotasChanged:false,identitiesCreated:0,activationAvailable:false,
-    actualBillingVerified:false,tokenCounterIntegrationVerified:false,
-    holds:["OWNER_SPEND_APPROVAL_ABSENT","FULL_CHAT_REQUEST_TOKENIZATION_UNPROVED",
-      "MANAGED_REGION_PRICE_BOUND_UNVERIFIED","PILOT_BILLING_AND_COVERAGE_UNRECONCILED"],
+    actualBillingVerified:false,tokenCounterIntegrationVerified:false,wholeContextFallbackAvailable:true,
+    holds:["OWNER_SPEND_APPROVAL_ABSENT"],
+    historicalLiabilities:"Unresolved historical exposure is separate from any explicitly additional, future owner-approved allocation; no global project budget was approved.",
     notice:"Reported tokens give a provisional uncached-price estimate, not a billing receipt. Unknown/time-out/unmetered prior attempts are held without assuming zero. No finite remaining guarantee until reconciliation. This is application inference only, excluding tax, hosting, Agent usage and other projects."};
   await writeFile(resolve(dir,"proposal.json"),JSON.stringify(report,null,2)+"\n");
   console.log(JSON.stringify({disabled:true,providerCalls:0,sourceCounts,imported,base:report.totals.baseNanoUsd,uplift:report.totals.upliftNanoUsd}));

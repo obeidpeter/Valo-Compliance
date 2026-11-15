@@ -1,6 +1,26 @@
 # Valo Compliance — Valo Platform
 
-## Latest repair unit — bounded authenticated erasure replay
+## Latest application unit — usable disabled inference budget and reconciliation
+
+The actual managed entry now has controlled evidence through reservation,
+dispatch, outbound observation and settlement across all four lanes. Source-
+verified price/context evidence supports whole-context reservations. The named
+**additional** $30 proposal remains disabled, starts only after actual owner
+approval and does not claim a global or retrospective project budget.
+
+Historical reconciliation retained all **57** entries: **48 reported-usage,
+6 proven no-dispatch, 3 unresolved failed drafts**. Actual per-ID/artifact
+evidence, original entries and concurrent/repeated outcomes are retained.
+No failed draft was assigned later model bounds or assumed free.
+
+**47 finite-entry controls, 17 budget controls, 29 native checks and 177
+foundation tests passed**; types/build passed. These are not the formal
+80/60/60 provider/content acceptance suites. One disabled exact review pair
+is prepared; zero new inference calls, owner approvals or quota changes.
+
+See [current capability, evidence and precise proposed decision](docs/valo/inference-budget-reviewable-unit.md).
+
+## Prior repair unit — bounded authenticated erasure replay
 
 Full inventory proofs can be reused only under the exact reviewed immutable
 database guard and signed case/seal; new processes, changed guards and recovery

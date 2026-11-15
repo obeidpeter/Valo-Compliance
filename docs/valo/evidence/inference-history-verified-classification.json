@@ -1,0 +1,1806 @@
+{
+  "executedAt": "2026-11-15T04:43:19.002Z",
+  "applied": true,
+  "policyAdoption": {
+    "policyHash": "b15f6dc24fb7f6defe8323807851bbf73a308f42d3682de387edf6aa74d1815e",
+    "stateHash": "5e6e26cf3e076a356e7b33d0a8e5bafe8ce694e6f569217a7ef0e738c1730e11",
+    "ownerApproved": false,
+    "enabled": false
+  },
+  "report": {
+    "version": 2,
+    "historyHash": "5e6e26cf3e076a356e7b33d0a8e5bafe8ce694e6f569217a7ef0e738c1730e11",
+    "classifications": [
+      {
+        "sourceKey": "publication:1",
+        "runKey": "pilot:13d0e685336a3e2835a9330936fafa2d0112652913d76858f426c9bd9390d6cd",
+        "sourceRowHash": "732ea0548c781e42ee0de58b10c93689281c059e0b24fed7a3a56e242d725514",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "a8932398-723b-4757-962b-6f3137f5b084",
+            "artifactHash": "20cb8ef982f7f9b1884756dcd0a652ddc8a31ac9ea5e2c846f5b311e2d994ec1",
+            "sourceReportSha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e",
+            "candidateHash": "497398a77039fb005acb3e68702a07a6dd900ed0c5cdad466cc4ed47a5468290",
+            "role": "factual",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvM8tAmJmY1mo0fVF5tweyRH5ox4",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 2081,
+            "outputTokens": 327
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjvM8tAmJmY1mo0fVF5tweyRH5ox4",
+        "input": 2081,
+        "output": 327,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "publication:10",
+        "runKey": "pilot:4894341055db6f0ece7ffea1bb07480a3b1f017379ed46aeb750b4b4dbf5469d",
+        "sourceRowHash": "b3ba70a6e95fd2dfdd96c1cf96889eff50033683d5b7ea006b2fda2401c593b6",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "3eafe5aa-2b14-4af6-ac13-d283a0b8aaff",
+            "artifactHash": "fd0f3742193da82ee79bbe67dd75c2c5c57249d48c311e39c378d17f25830902",
+            "sourceReportSha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef",
+            "candidateHash": "467e1813e83912096930e8142352174d03732f024ecb916d3c59bec2513752f2",
+            "role": "factual",
+            "requestHash": null,
+            "responseId": "chatcmpl-Ejzodn8Yzl2IkOAotDqLgOXdJOWwG",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 24339,
+            "outputTokens": 521
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Ejzodn8Yzl2IkOAotDqLgOXdJOWwG",
+        "input": 24339,
+        "output": 521,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "publication:11",
+        "runKey": "pilot:7eaeb698141f0fed89b0c04820ba873b326551c71a9790f21fbfd2aa5de5980e",
+        "sourceRowHash": "e25ac19ae7a8164eb71018661ffb1b0b83b482d0347f1c2ac6f42c85e3dcb21b",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "dce53fdd-da91-41c0-9fc0-9d03bed20855",
+            "artifactHash": "7bb9b501dde7d1321934a236872f3c3f5cacfb4012b52888ef08f9a7fe2f3924",
+            "sourceReportSha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef",
+            "candidateHash": "467e1813e83912096930e8142352174d03732f024ecb916d3c59bec2513752f2",
+            "role": "challenge",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjzodvEb0TA0fMuTtZYjChtiyHCGV",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 24346,
+            "outputTokens": 107
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjzodvEb0TA0fMuTtZYjChtiyHCGV",
+        "input": 24346,
+        "output": 107,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "publication:2",
+        "runKey": "pilot:5bd7d541e9b1bf1c742c41c6d2e9f11b2e3ef28b7b771063bf1574771295c207",
+        "sourceRowHash": "d1f77ee91bb75144aca2af1bd005223ce0c19baa810db984f9d5774d130223a5",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "06d042ab-490b-4d3c-ab41-61d13334ce70",
+            "artifactHash": "f549ccf32b8bcd3fcaa78d91addfde16df59d2000b682da20a9ff51059e70cd2",
+            "sourceReportSha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e",
+            "candidateHash": "497398a77039fb005acb3e68702a07a6dd900ed0c5cdad466cc4ed47a5468290",
+            "role": "challenge",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvM8l8oRHwTLCedH6oAisKudlQVH",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 2088,
+            "outputTokens": 362
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjvM8l8oRHwTLCedH6oAisKudlQVH",
+        "input": 2088,
+        "output": 362,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "publication:3",
+        "runKey": "pilot:7d10dac25013ba89de0fcf02263aca7908859b7006a33c9c0f93a2eca68d99f4",
+        "sourceRowHash": "c325d31f85acb25420b92aefa811d52c3faf19644870851a7e156b16f522e866",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "642574bf-fb21-48e1-bc7c-3853ae4345a2",
+            "artifactHash": "de7589c585c9f0ccdeccf48705d1fac80377db066c81a96dae9d929cfc6ee0b7",
+            "sourceReportSha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884",
+            "candidateHash": "2a9dc86af15df1af30e22743a2d18491cf0636537169e3cfffad112094dffa20",
+            "role": "factual",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvNqyrwgd2M26Mq6gZZePYMYPGxg",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 16419,
+            "outputTokens": 564
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjvNqyrwgd2M26Mq6gZZePYMYPGxg",
+        "input": 16419,
+        "output": 564,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "publication:4",
+        "runKey": "pilot:b6383c82fd1cd2134f58440b2c34ccd2467afe0fc4c6bd09e08b636a44bc09f3",
+        "sourceRowHash": "7ae23f258c3cc2fecab9fee1f71b38482607e685dd785e79dbfc023189dc0ecf",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "78fa264d-61e9-492d-8ed9-fa5b98ceacb0",
+            "artifactHash": "f8c50c3c8d0c32bd79e7537d3f542bed0b47bc206a774ed60fa6d2bde4280853",
+            "sourceReportSha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884",
+            "candidateHash": "2a9dc86af15df1af30e22743a2d18491cf0636537169e3cfffad112094dffa20",
+            "role": "challenge",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvNqtzL6LreS94MPmQ2YLYkP7Q6T",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 16426,
+            "outputTokens": 617
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjvNqtzL6LreS94MPmQ2YLYkP7Q6T",
+        "input": 16426,
+        "output": 617,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "publication:5",
+        "runKey": "pilot:1c8846a38b45dbacec7521f94b1bcc2403499ad0f1ee4c749be045bae12b4152",
+        "sourceRowHash": "6065b4f45aa8a6cd0c0c05b745677852010226739d8269dac57663779220951a",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "bad6b715-6e07-40e0-9f2c-0dc11e1ffbe0",
+            "artifactHash": "3231c20e8d24ccbe2bdc1b52c318883160f14acc6ab05242a01f5a181beb9be3",
+            "sourceReportSha256": "3231c20e8d24ccbe2bdc1b52c318883160f14acc6ab05242a01f5a181beb9be3",
+            "candidateHash": "08fef2cf6f4797bd17466b37f594e38d51f6afb79dd59abb6aea1d0c3979e997",
+            "role": "draft",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvU2OJyiOSWZ4Vs5fkOEvZfzhlSh",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 216,
+            "outputTokens": 239
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjvU2OJyiOSWZ4Vs5fkOEvZfzhlSh",
+        "input": 216,
+        "output": 239,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "publication:6",
+        "runKey": "pilot:b9f9bda094b89ad415a6bf18a2b2cb625cb1c89f9653af509cf9c3035d8646a3",
+        "sourceRowHash": "6ce9191cfc292fd8ea3f0aee6978ce6101df59797afe9186706614f37ddc9774",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "3381855f-acbc-4155-b202-c4a5902268e9",
+            "artifactHash": "8ef24d9aed292979a709f205a8b9c1ddfbd031ba62cc13fd71b39fc6946c6e96",
+            "sourceReportSha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89",
+            "candidateHash": "4492e9af3581d1b2afdcc2617b785844a1df8dfc30db8d89d9742590bcc4793c",
+            "role": "challenge",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvUDQXDRcK0ptoPVqg7LPeTSzbKN",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 24345,
+            "outputTokens": 434
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjvUDQXDRcK0ptoPVqg7LPeTSzbKN",
+        "input": 24345,
+        "output": 434,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "publication:7",
+        "runKey": "pilot:d8b85845cf79d9b4a2d3a3dcea8068c5bab97515498d11a3676d305869c4f158",
+        "sourceRowHash": "32f58ae2d8175d15d520d0cf2398a0ba7f8d62a22f03d2f8e0646470cf29c518",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "3461f1d7-b033-4cee-8263-d7d809be5a76",
+            "artifactHash": "ff8a78dbc2a8d4c83ed6cd7c84422295b6eccb59ce57cdffb281328296a8f123",
+            "sourceReportSha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89",
+            "candidateHash": "4492e9af3581d1b2afdcc2617b785844a1df8dfc30db8d89d9742590bcc4793c",
+            "role": "factual",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvUCJsdBD8xLgevfca9g4gZygp6W",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 24338,
+            "outputTokens": 370
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjvUCJsdBD8xLgevfca9g4gZygp6W",
+        "input": 24338,
+        "output": 370,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "publication:8",
+        "runKey": "pilot:601508505390df1ba41f946843e16d79813821e95326eee30d3b91f8fd3e4d0d",
+        "sourceRowHash": "7a033a8d46c28f05545d4ae6f9a5d55c61a53f2081475251e3c184aeb9232a73",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "c39c2644-f858-44c9-9b11-c3248ba390b0",
+            "artifactHash": "f6517be1912b92e46533eb22db606cdb676fa7d4058de97ffc30e58b606f4cff",
+            "sourceReportSha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2",
+            "candidateHash": "e1d2cf271d675b6d82b92dfc966437273c25238cf83fc73d9f63248b254b2848",
+            "role": "factual",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjzluqixbNpDtYJZHjI23ja5MICcX",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 23935,
+            "outputTokens": 552
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjzluqixbNpDtYJZHjI23ja5MICcX",
+        "input": 23935,
+        "output": 552,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "publication:9",
+        "runKey": "pilot:e176ca506589f39e3c6fed3b47cd263971548cca2a17e60aaf91943b352955e7",
+        "sourceRowHash": "98d1395e08923faa9f7d6366b05d3819326b65e43a7b22bc8c7aa1ca80d3d978",
+        "kind": "reported_usage",
+        "provenance": {
+          "publicationReceipt": {
+            "artifactId": "227d4bd2-4ab3-4551-bae9-0f59c0be8587",
+            "artifactHash": "4dde69e003726dcab349d5b41cd1d15236f93fdcdeaf937a71714378f47cb6b5",
+            "sourceReportSha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2",
+            "candidateHash": "e1d2cf271d675b6d82b92dfc966437273c25238cf83fc73d9f63248b254b2848",
+            "role": "challenge",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjzlufmaqdBEHAI7nPUGHrb9AOS2t",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 23942,
+            "outputTokens": 477
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ]
+        },
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjzlufmaqdBEHAI7nPUGHrb9AOS2t",
+        "input": 23942,
+        "output": 477,
+        "reason": "Hash-verified retained provider artifact, joined to exact candidate/prompt and role"
+      },
+      {
+        "sourceKey": "editorial:33027370-6b6a-4b1e-9726-239b7c92da27",
+        "runKey": "pilot:5ec358f4c1df0fdf51a8cab53dcb4d27b86db7b204ec44add913c47171016207",
+        "sourceRowHash": "dafefcc9bc77bc45f7a3b0bce57acba039cacb5f1fb21845a530ad6c50892ed0",
+        "kind": "unresolved_charge",
+        "provenance": {
+          "sourceReferences": [
+            {
+              "path": "docs/valo/evidence/operational-publication-v1.json",
+              "sha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v2.json",
+              "sha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v3.json",
+              "sha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v4.json",
+              "sha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v5.json",
+              "sha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v6.json",
+              "sha256": "39227cc21c6e52be23618c592847df839a538f6f9c79c2efd787d012adf98086"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v8.json",
+              "sha256": "3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-before-citation-selection.json",
+              "sha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
+              "sha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e"
+            },
+            {
+              "path": "artifacts/api-server/src/editorial/pipeline.ts",
+              "sha256": "c85096e68135d6530b80fcbe64e215c6fd46c37230e09a9bb8948bb8bec0cb82"
+            }
+          ]
+        },
+        "model": "gpt-5-mini",
+        "responseId": null,
+        "input": null,
+        "output": null,
+        "reason": "No retained per-attempt usage/bounds; no zero-cost or later-model assumption"
+      },
+      {
+        "sourceKey": "editorial:36188aaf-dcda-4b10-bc51-f5f7d2c54222",
+        "runKey": "pilot:a6011e05bc0d4564416a4d0fcd91fcd29d5a0ecca89ab435510315eaad279eb7",
+        "sourceRowHash": "545471b7b3c3583b27a845b614d10da58143e2174253a0179e918d361c5f67e5",
+        "kind": "no_outbound",
+        "model": "gpt-5-mini",
+        "responseId": null,
+        "input": null,
+        "output": null,
+        "provenance": {
+          "pipelineId": "12a108a4-5786-43e9-8e93-11112814a31b",
+          "dependencySourceKey": "editorial:6c17b471-6e3c-4a34-bc82-6e64c6d066b6",
+          "sourceRowHash": "545471b7b3c3583b27a845b614d10da58143e2174253a0179e918d361c5f67e5",
+          "sourceReferences": [
+            {
+              "path": "docs/valo/evidence/operational-publication-v1.json",
+              "sha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v2.json",
+              "sha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v3.json",
+              "sha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v4.json",
+              "sha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v5.json",
+              "sha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v6.json",
+              "sha256": "39227cc21c6e52be23618c592847df839a538f6f9c79c2efd787d012adf98086"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v8.json",
+              "sha256": "3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-before-citation-selection.json",
+              "sha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
+              "sha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e"
+            },
+            {
+              "path": "artifacts/api-server/src/editorial/pipeline.ts",
+              "sha256": "c85096e68135d6530b80fcbe64e215c6fd46c37230e09a9bb8948bb8bec0cb82"
+            }
+          ]
+        },
+        "reason": "Exact reserved review row held before executeRun because this pipeline's drafting failed"
+      },
+      {
+        "sourceKey": "editorial:3a9aef7e-7cbc-4570-b73f-f744e1aa94a1",
+        "runKey": "pilot:4fa1c4a43934633697996a5c86d7de143e6ad28112c431a60c9edb2c3ecac148",
+        "sourceRowHash": "42ba08a3d62ffd0cc980f950efceca10e0e05768cf968a9c805cf817a7be21d3",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Ejuu7JIIcQccLRH7JrH8nGwZcTZZk",
+        "input": 3590,
+        "output": 1120,
+        "provenance": {
+          "sourceKey": "editorial:3a9aef7e-7cbc-4570-b73f-f744e1aa94a1",
+          "sourceReportSha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e",
+          "role": "draft",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "responseId": "chatcmpl-Ejuu7JIIcQccLRH7JrH8nGwZcTZZk",
+          "input": 3590,
+          "output": 1120,
+          "inputHash": "8f51f9b3893b2ca1eb5907e3fdaee77cfd35d48c809f21905909ba546e867b49"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "editorial:505b9367-bc74-4235-91f7-6b5e7c620f58",
+        "runKey": "pilot:df7fd861dba98d611875e4cb1efcf25d21d2eea4f5a9ceafa65d984526c81279",
+        "sourceRowHash": "124ad998ee3b4654c1712258831944f85464adfc9f2c6919abdf229fff19874e",
+        "kind": "no_outbound",
+        "model": "gpt-5-mini",
+        "responseId": null,
+        "input": null,
+        "output": null,
+        "provenance": {
+          "pipelineId": "8fa0ae8a-70bf-4b4a-a9ef-c48b9c87cd85",
+          "dependencySourceKey": "editorial:33027370-6b6a-4b1e-9726-239b7c92da27",
+          "sourceRowHash": "124ad998ee3b4654c1712258831944f85464adfc9f2c6919abdf229fff19874e",
+          "sourceReferences": [
+            {
+              "path": "docs/valo/evidence/operational-publication-v1.json",
+              "sha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v2.json",
+              "sha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v3.json",
+              "sha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v4.json",
+              "sha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v5.json",
+              "sha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v6.json",
+              "sha256": "39227cc21c6e52be23618c592847df839a538f6f9c79c2efd787d012adf98086"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v8.json",
+              "sha256": "3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-before-citation-selection.json",
+              "sha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
+              "sha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e"
+            },
+            {
+              "path": "artifacts/api-server/src/editorial/pipeline.ts",
+              "sha256": "c85096e68135d6530b80fcbe64e215c6fd46c37230e09a9bb8948bb8bec0cb82"
+            }
+          ]
+        },
+        "reason": "Exact reserved review row held before executeRun because this pipeline's drafting failed"
+      },
+      {
+        "sourceKey": "editorial:57fd1b89-3bea-4fab-9395-3a4d6942013d",
+        "runKey": "pilot:840781889e9a26f2272ea3bd2ae60ef55aa98dc0a2a49c0cbe5b4738652b4452",
+        "sourceRowHash": "6bb9ab8a7ff27d1f3598fa87453035ea6e6fae8fb2ec08086c2d84319bb4dc95",
+        "kind": "no_outbound",
+        "model": "gpt-5-mini",
+        "responseId": null,
+        "input": null,
+        "output": null,
+        "provenance": {
+          "pipelineId": "12a108a4-5786-43e9-8e93-11112814a31b",
+          "dependencySourceKey": "editorial:6c17b471-6e3c-4a34-bc82-6e64c6d066b6",
+          "sourceRowHash": "6bb9ab8a7ff27d1f3598fa87453035ea6e6fae8fb2ec08086c2d84319bb4dc95",
+          "sourceReferences": [
+            {
+              "path": "docs/valo/evidence/operational-publication-v1.json",
+              "sha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v2.json",
+              "sha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v3.json",
+              "sha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v4.json",
+              "sha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v5.json",
+              "sha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v6.json",
+              "sha256": "39227cc21c6e52be23618c592847df839a538f6f9c79c2efd787d012adf98086"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v8.json",
+              "sha256": "3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-before-citation-selection.json",
+              "sha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
+              "sha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e"
+            },
+            {
+              "path": "artifacts/api-server/src/editorial/pipeline.ts",
+              "sha256": "c85096e68135d6530b80fcbe64e215c6fd46c37230e09a9bb8948bb8bec0cb82"
+            }
+          ]
+        },
+        "reason": "Exact reserved review row held before executeRun because this pipeline's drafting failed"
+      },
+      {
+        "sourceKey": "editorial:6442634a-4369-42e8-9bee-aeaa28e23b40",
+        "runKey": "pilot:4b89193a9effbb5058f5b1262ca7e1a0f4f23f608bfed2e7214b7353761e0471",
+        "sourceRowHash": "8b19b9369e55235f7dc5c3143a519a1d64e4ff0b22076ce2d02710f5b24afbd3",
+        "kind": "no_outbound",
+        "model": "gpt-5-mini",
+        "responseId": null,
+        "input": null,
+        "output": null,
+        "provenance": {
+          "pipelineId": "0f7013d6-c156-46dc-87d7-a2cf7bb1f1b3",
+          "dependencySourceKey": "editorial:6bc4454d-6a5a-4a07-aba9-34447f6dafa0",
+          "sourceRowHash": "8b19b9369e55235f7dc5c3143a519a1d64e4ff0b22076ce2d02710f5b24afbd3",
+          "sourceReferences": [
+            {
+              "path": "docs/valo/evidence/operational-publication-v1.json",
+              "sha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v2.json",
+              "sha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v3.json",
+              "sha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v4.json",
+              "sha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v5.json",
+              "sha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v6.json",
+              "sha256": "39227cc21c6e52be23618c592847df839a538f6f9c79c2efd787d012adf98086"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v8.json",
+              "sha256": "3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-before-citation-selection.json",
+              "sha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
+              "sha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e"
+            },
+            {
+              "path": "artifacts/api-server/src/editorial/pipeline.ts",
+              "sha256": "c85096e68135d6530b80fcbe64e215c6fd46c37230e09a9bb8948bb8bec0cb82"
+            }
+          ]
+        },
+        "reason": "Exact reserved review row held before executeRun because this pipeline's drafting failed"
+      },
+      {
+        "sourceKey": "editorial:6bc4454d-6a5a-4a07-aba9-34447f6dafa0",
+        "runKey": "pilot:4c7f796a3435ff4ffc019e8e225237b6c1961aae00bda20da2961cae79fe6b56",
+        "sourceRowHash": "67eb6dcd506fb0a2e7e6a464d5a083c422ed36b7f6743681237f282f5145caf2",
+        "kind": "unresolved_charge",
+        "provenance": {
+          "sourceReferences": [
+            {
+              "path": "docs/valo/evidence/operational-publication-v1.json",
+              "sha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v2.json",
+              "sha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v3.json",
+              "sha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v4.json",
+              "sha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v5.json",
+              "sha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v6.json",
+              "sha256": "39227cc21c6e52be23618c592847df839a538f6f9c79c2efd787d012adf98086"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v8.json",
+              "sha256": "3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-before-citation-selection.json",
+              "sha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
+              "sha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e"
+            },
+            {
+              "path": "artifacts/api-server/src/editorial/pipeline.ts",
+              "sha256": "c85096e68135d6530b80fcbe64e215c6fd46c37230e09a9bb8948bb8bec0cb82"
+            }
+          ]
+        },
+        "model": "gpt-5-mini",
+        "responseId": null,
+        "input": null,
+        "output": null,
+        "reason": "No retained per-attempt usage/bounds; no zero-cost or later-model assumption"
+      },
+      {
+        "sourceKey": "editorial:6c17b471-6e3c-4a34-bc82-6e64c6d066b6",
+        "runKey": "pilot:2c5a3a5eb777cbc68ba79c44061d8a42a4a9d46a8e7e8055a39ecf3007dab56b",
+        "sourceRowHash": "d853e8a001f06dc07bbb2ad5a44a37631ecca6df047a42ae4ed2af6bf7fc3b93",
+        "kind": "unresolved_charge",
+        "provenance": {
+          "sourceReferences": [
+            {
+              "path": "docs/valo/evidence/operational-publication-v1.json",
+              "sha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v2.json",
+              "sha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v3.json",
+              "sha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v4.json",
+              "sha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v5.json",
+              "sha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v6.json",
+              "sha256": "39227cc21c6e52be23618c592847df839a538f6f9c79c2efd787d012adf98086"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v8.json",
+              "sha256": "3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-before-citation-selection.json",
+              "sha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
+              "sha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e"
+            },
+            {
+              "path": "artifacts/api-server/src/editorial/pipeline.ts",
+              "sha256": "c85096e68135d6530b80fcbe64e215c6fd46c37230e09a9bb8948bb8bec0cb82"
+            }
+          ]
+        },
+        "model": "gpt-5-mini",
+        "responseId": null,
+        "input": null,
+        "output": null,
+        "reason": "No retained per-attempt usage/bounds; no zero-cost or later-model assumption"
+      },
+      {
+        "sourceKey": "editorial:7cb15ef3-5fe0-4cdf-8294-76b519094653",
+        "runKey": "pilot:6027e09641512d754707ec66a66db69e3cbcc6bbc2b55dfe1b4401ea4d1eb24c",
+        "sourceRowHash": "efd9cc824847949e17d95b7fd655eac850119ef36ca45d735bacaa7af8ebadba",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjuuDka3A5YkxHISOcf7ef4q2FU90",
+        "input": 7298,
+        "output": 84,
+        "provenance": {
+          "sourceKey": "editorial:7cb15ef3-5fe0-4cdf-8294-76b519094653",
+          "sourceReportSha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e",
+          "role": "factual",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "responseId": "chatcmpl-EjuuDka3A5YkxHISOcf7ef4q2FU90",
+          "input": 7298,
+          "output": 84,
+          "inputHash": "556b2379801cabba0491fb897c59999fda5d58466f3ee0ff252e02bfae141b48"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "editorial:9800111c-ba31-44d7-9f96-b5b5c3abe948",
+        "runKey": "pilot:13a37d42cdc36ac1260df25cd6789f780096933bacbc72221b2ef74453f5a347",
+        "sourceRowHash": "dd68f4b3c3ea9cbe05c963c46f53776b1ada81dbfafe011d0235997f4fb45195",
+        "kind": "no_outbound",
+        "model": "gpt-5-mini",
+        "responseId": null,
+        "input": null,
+        "output": null,
+        "provenance": {
+          "pipelineId": "8fa0ae8a-70bf-4b4a-a9ef-c48b9c87cd85",
+          "dependencySourceKey": "editorial:33027370-6b6a-4b1e-9726-239b7c92da27",
+          "sourceRowHash": "dd68f4b3c3ea9cbe05c963c46f53776b1ada81dbfafe011d0235997f4fb45195",
+          "sourceReferences": [
+            {
+              "path": "docs/valo/evidence/operational-publication-v1.json",
+              "sha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v2.json",
+              "sha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v3.json",
+              "sha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v4.json",
+              "sha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v5.json",
+              "sha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v6.json",
+              "sha256": "39227cc21c6e52be23618c592847df839a538f6f9c79c2efd787d012adf98086"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v8.json",
+              "sha256": "3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-before-citation-selection.json",
+              "sha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
+              "sha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e"
+            },
+            {
+              "path": "artifacts/api-server/src/editorial/pipeline.ts",
+              "sha256": "c85096e68135d6530b80fcbe64e215c6fd46c37230e09a9bb8948bb8bec0cb82"
+            }
+          ]
+        },
+        "reason": "Exact reserved review row held before executeRun because this pipeline's drafting failed"
+      },
+      {
+        "sourceKey": "editorial:ce2ea51b-1d97-4007-b359-727f2c0074bb",
+        "runKey": "pilot:b31efd0a33d0ad13144988795ac5a8fc7b6b36e7d7fb2105971ace28fcdf2c01",
+        "sourceRowHash": "e58d3a687984dd0fabaa560443c68420374fecc62f867d3ca585b8d19a07c15c",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Ejry2kuqoEQcpjSGk50IDNraG6YQC",
+        "input": 4294,
+        "output": 374,
+        "provenance": {
+          "sourceKey": "editorial:ce2ea51b-1d97-4007-b359-727f2c0074bb",
+          "sourceReportSha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6",
+          "role": "challenge",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "responseId": "chatcmpl-Ejry2kuqoEQcpjSGk50IDNraG6YQC",
+          "input": 4294,
+          "output": 374,
+          "inputHash": "5f4ab42a23b3720c5131d091454f597621a9c9b19c97102a0e7e3f1b6457e4a8"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "editorial:d452c3ef-ffe0-4e9b-998e-d2f62bfb9dea",
+        "runKey": "pilot:c0e9f35a437e388251a1f5f5fa2b8b8b15bf83dc1fd5cb8caf7cac268e6ae692",
+        "sourceRowHash": "9243577c073e511892b9396087930798d539c18f215519d1a6c2c7d7f427da77",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjrxtdRCGRnon6rEcr1o0Srp3JOnK",
+        "input": 1835,
+        "output": 2598,
+        "provenance": {
+          "sourceKey": "editorial:d452c3ef-ffe0-4e9b-998e-d2f62bfb9dea",
+          "sourceReportSha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6",
+          "role": "draft",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "responseId": "chatcmpl-EjrxtdRCGRnon6rEcr1o0Srp3JOnK",
+          "input": 1835,
+          "output": 2598,
+          "inputHash": "4f983b099d4d26d5473c348f1f0845e441bd7df9f2c222d432d78bc10f222383"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "editorial:e510c379-3723-4e89-a348-66156c606e3a",
+        "runKey": "pilot:de30c5693a5237a6c1e0822d3ba48b4bad87f1a9647c0d7f8d5998f16431138a",
+        "sourceRowHash": "16793bc3e7c7ea4d33c39b17635211ad6d9dddeaa56210c5a4a9338f0a1809b5",
+        "kind": "no_outbound",
+        "model": "gpt-5-mini",
+        "responseId": null,
+        "input": null,
+        "output": null,
+        "provenance": {
+          "pipelineId": "0f7013d6-c156-46dc-87d7-a2cf7bb1f1b3",
+          "dependencySourceKey": "editorial:6bc4454d-6a5a-4a07-aba9-34447f6dafa0",
+          "sourceRowHash": "16793bc3e7c7ea4d33c39b17635211ad6d9dddeaa56210c5a4a9338f0a1809b5",
+          "sourceReferences": [
+            {
+              "path": "docs/valo/evidence/operational-publication-v1.json",
+              "sha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v2.json",
+              "sha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v3.json",
+              "sha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v4.json",
+              "sha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v5.json",
+              "sha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v6.json",
+              "sha256": "39227cc21c6e52be23618c592847df839a538f6f9c79c2efd787d012adf98086"
+            },
+            {
+              "path": "docs/valo/evidence/operational-publication-v8.json",
+              "sha256": "3db224131700ae68ee1352e7423cea56ceb96bccba4beccee66d6d5d11890521"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-before-citation-selection.json",
+              "sha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6"
+            },
+            {
+              "path": "docs/valo/evidence/p0-editorial-provider-proof.json",
+              "sha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e"
+            },
+            {
+              "path": "artifacts/api-server/src/editorial/pipeline.ts",
+              "sha256": "c85096e68135d6530b80fcbe64e215c6fd46c37230e09a9bb8948bb8bec0cb82"
+            }
+          ]
+        },
+        "reason": "Exact reserved review row held before executeRun because this pipeline's drafting failed"
+      },
+      {
+        "sourceKey": "editorial:f5fdcbb2-368c-4371-bfb7-d88241e16096",
+        "runKey": "pilot:aa964e6fc14e8a55c821c603cdee4c48bb0a39fb6e5f2fd150db914f0cd9d142",
+        "sourceRowHash": "18c362931b5b4711ee266af1a4049c79de458cafe6c703e49d84402623eca43b",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Ejry226veoDxmAJv4jIQdjpnhBPPY",
+        "input": 4303,
+        "output": 111,
+        "provenance": {
+          "sourceKey": "editorial:f5fdcbb2-368c-4371-bfb7-d88241e16096",
+          "sourceReportSha256": "3ed610de20af4f817d34f0471f864583ad7246f778da4bfa097655cede0bb2d6",
+          "role": "factual",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "responseId": "chatcmpl-Ejry226veoDxmAJv4jIQdjpnhBPPY",
+          "input": 4303,
+          "output": 111,
+          "inputHash": "0ed16cfac5897bb4d9cf733d4e1e79c537ff524cae03375d72934766930e1328"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "editorial:f9a416e4-186c-4e98-857d-9ba7761f81eb",
+        "runKey": "pilot:660e146a36edf788477418c97e0cd1f7bc795c2be32b02d8adcee6f3fa21953e",
+        "sourceRowHash": "2162795c373caa4b3f3ba161aad45fa19601a4f307a99f53c2bb2b441db48aff",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjuuD0AVFrSQcChTbBod5LvEIyelU",
+        "input": 7289,
+        "output": 462,
+        "provenance": {
+          "sourceKey": "editorial:f9a416e4-186c-4e98-857d-9ba7761f81eb",
+          "sourceReportSha256": "50b03d8942a1c7a90ec3bc63c3ecfefbcd6c995a2558cc4fb250d4228475227e",
+          "role": "challenge",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "responseId": "chatcmpl-EjuuD0AVFrSQcChTbBod5LvEIyelU",
+          "input": 7289,
+          "output": 462,
+          "inputHash": "7d42faf52c08f58c13d767cd27589e45133d0403e8aa68a6cc50010fafab9513"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:0c63f870-3505-49e9-8f0f-f5fda67ad0fc:0",
+        "runKey": "pilot:dc80eb5a8ca8a852b6bd79ad57520734e4a62622aed71a3063b61fa0d009cb66",
+        "sourceRowHash": "541f08bbfc068741d4a49d79f8775149493a7170615f1304c74ceb4beb56083d",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Ek6KHAOuT1zbq9LYFzIjRzg6IpqU5",
+        "input": 269,
+        "output": 16,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "541f08bbfc068741d4a49d79f8775149493a7170615f1304c74ceb4beb56083d"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:20f906a8-4421-40bc-b255-62378598597d:0",
+        "runKey": "pilot:12ea5007ccb251f87a85896bdafb5227ccd1bd059fbcba251bce9fb840fd4660",
+        "sourceRowHash": "5a027df08ce469c8f5a7c06a774be989c78226a1b1e9973197300c678390bb87",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju4zwbchKN3pjcnnHQJjdmbCEro1",
+        "input": 277,
+        "output": 51,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "5a027df08ce469c8f5a7c06a774be989c78226a1b1e9973197300c678390bb87"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:23c671ab-6f99-4faa-a0f2-05a4e219a6f4:0",
+        "runKey": "pilot:5899e5fb0420079be478cb29514eb7c8463a5b21060e8086440b986fd0d862ae",
+        "sourceRowHash": "5d3a2b1d8f73fccb44f484dc19f7b74da52e9f473c00e01726872336a2066120",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju54JbRzGgXFgDSEQywv3jF9V92R",
+        "input": 279,
+        "output": 51,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "5d3a2b1d8f73fccb44f484dc19f7b74da52e9f473c00e01726872336a2066120"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:2812eb4d-6b44-46d8-846e-fa97ca88f779:0",
+        "runKey": "pilot:99b415fe594c9f916cf7f84b01ba0f6ec8a56bbbc202af541c9638e3f6e5b834",
+        "sourceRowHash": "89a754d808a388eb6a011f3b435e6c90e68ed180eb6236b03b693f418a0121e9",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju55v8hVa57CZdyjETzSvQ5HSOsf",
+        "input": 280,
+        "output": 51,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "89a754d808a388eb6a011f3b435e6c90e68ed180eb6236b03b693f418a0121e9"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:33731312-367d-4600-adf3-ed3f7cfa6586:0",
+        "runKey": "pilot:b60cf4639e844d51ea159845f78ffed24667765edbf16a253ce39bc3d071678d",
+        "sourceRowHash": "243192cf485157198fa4db1950e44dc9305a2bf0e530396dee090b8cbe9fa272",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju50eCBrcbllXqkLq6quSJvB8w6c",
+        "input": 278,
+        "output": 51,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "243192cf485157198fa4db1950e44dc9305a2bf0e530396dee090b8cbe9fa272"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:3c054acb-dd1c-4049-a514-91e3d4428fda:0",
+        "runKey": "pilot:50990db231c5a2d7bca98449e011c9746743763ec05f38f06804e97f37910d9a",
+        "sourceRowHash": "4422aa373f6328d89bb38ded6b03aa5f46178bb6073037cebf409fa1a6541cfb",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju52RjT0ItYgg6uOk54j6xYwoSvV",
+        "input": 280,
+        "output": 50,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "4422aa373f6328d89bb38ded6b03aa5f46178bb6073037cebf409fa1a6541cfb"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:3ca80fad-f42d-4684-b79b-504595551bca:0",
+        "runKey": "pilot:5472019d7bd285c0e36b358df2b8055a5b6de303a92cf41708ef9ea6e3d70142",
+        "sourceRowHash": "ffc55c5a0724479e5eafb66548d2fb9199d1ed9ec29f867362ca999a64312348",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EkB0gcPBVG6akEfVC4BhdXnY392Zz",
+        "input": 284,
+        "output": 26,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "ffc55c5a0724479e5eafb66548d2fb9199d1ed9ec29f867362ca999a64312348"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:3e745c43-3b7e-43d6-9c74-6b2940da180f:0",
+        "runKey": "pilot:f6be213990fe8bd1cfeb23ecfadfeb754cb4eb6a9dd7123d2ff36ba9610157d4",
+        "sourceRowHash": "a604d99b4268ef4f77cc40ca71e9bf3f38c72be9ef307df762b45ff53ce0c2e6",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjuYGOYT3GSBkxKHaarlx9qfU52rW",
+        "input": 239,
+        "output": 27,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "a604d99b4268ef4f77cc40ca71e9bf3f38c72be9ef307df762b45ff53ce0c2e6"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:3fc595b4-3259-4312-826d-1ebdf9dffea5:0",
+        "runKey": "pilot:31f5a4724a103e0ab83e9d0b223eb3c28b083f93027da41190f1b6192a66455d",
+        "sourceRowHash": "3a469ee130569a210a078e9e475df9d00c2684f33bbd442a652f713d4b2541e1",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjuYkA7xD9bgFEkcP6CFCMJyMY3tU",
+        "input": 241,
+        "output": 27,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "3a469ee130569a210a078e9e475df9d00c2684f33bbd442a652f713d4b2541e1"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:420c17e5-d7af-47f3-86bf-bb85a24bf569:0",
+        "runKey": "pilot:74ba2f0d0c76c0b11c87bc13c229c204d9bac26d330f7911c21def02eb4d2f04",
+        "sourceRowHash": "2cc8a012d1fc1d4b5f4fd70218141a070407163ad5ce5c4dff7fe44678858c44",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjzMaj11boGlEqf0trQojrWXI8KCX",
+        "input": 239,
+        "output": 28,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "2cc8a012d1fc1d4b5f4fd70218141a070407163ad5ce5c4dff7fe44678858c44"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:45c35b95-ee0a-4130-95e9-8c8f8637cd40:0",
+        "runKey": "pilot:50d4e1fef83fb2da8d4adc4c188821a69e28747b365e51fdbd88f834bff70f98",
+        "sourceRowHash": "af3885396fb6a6c4f3a8e58d02fba761b141eb0fc54b1e1598e96a202c91f06c",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjuYWQcXIRIT4DmHulMnneNbzYkhH",
+        "input": 241,
+        "output": 28,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "af3885396fb6a6c4f3a8e58d02fba761b141eb0fc54b1e1598e96a202c91f06c"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:4eb222ab-b301-4cf3-94e3-909dab3051ad:0",
+        "runKey": "pilot:a528afc02af1655836df5b24b4251e220623b83d01d668c527a3d3b2fde07fb8",
+        "sourceRowHash": "5a47cb0b3d232f0af3ae1cf3dfe5ed63aa7a1d1821b232289183b2e15210b291",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EkButGmvHEXUgd3MvOa81yE2fHjPZ",
+        "input": 271,
+        "output": 61,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "5a47cb0b3d232f0af3ae1cf3dfe5ed63aa7a1d1821b232289183b2e15210b291"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:4f123770-63d7-42bd-a4b4-e454819fa696:0",
+        "runKey": "pilot:edd9045a93098eba6066a72a67a4dca8eb58bf2b21001dc1f90f0b82269477ba",
+        "sourceRowHash": "a1c623973168299be95a2e3b0b89504e1159c7bea0bed22d32516b4a590fadf5",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju52Gldp1bMZ923I1gxSq8PFMfnj",
+        "input": 279,
+        "output": 50,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "a1c623973168299be95a2e3b0b89504e1159c7bea0bed22d32516b4a590fadf5"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:505f3e15-f2a2-4af1-bebe-ca7d37ae1b93:0",
+        "runKey": "pilot:bef891729c7153931b81fce5eb961a6f4966ecfdcace7832cfaba88cbff05523",
+        "sourceRowHash": "0ca186bc5fb2766927a4de3e5a67cc9ca6e772604dbb70838e0f9112376a1927",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju51X2kwQBpPokTZsgLNrNA033Go",
+        "input": 279,
+        "output": 50,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "0ca186bc5fb2766927a4de3e5a67cc9ca6e772604dbb70838e0f9112376a1927"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:59da15ed-5be3-49f5-a4ad-ce24fcacef3f:0",
+        "runKey": "pilot:ddf9034e3dbe0084f80f87d67d353e76b3e60d895712228ee2f5b72952ebb20f",
+        "sourceRowHash": "b1e80ada0f47626164254f942c200a93c29032967600c8ecc60a997519aa7899",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju54rcYHHDCnrLk12Sn9UfuNbu8A",
+        "input": 280,
+        "output": 51,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "b1e80ada0f47626164254f942c200a93c29032967600c8ecc60a997519aa7899"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:60068b4e-3c6c-441c-99f0-2d0313963a76:0",
+        "runKey": "pilot:7d11d5e9edfbb9731171ea4faf7f55f16272d0f3a166f2e2199fbd46637956da",
+        "sourceRowHash": "a489be8e8bc07ccc0ce3d3969b4d4bc9070ddef646a1423d2d018dc91de6fea1",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju4x0m0BlrnEmlI7CJ2uHzG0KI30",
+        "input": 277,
+        "output": 48,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "a489be8e8bc07ccc0ce3d3969b4d4bc9070ddef646a1423d2d018dc91de6fea1"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:6ecd6854-852a-4043-ab8b-77c341eb23a5:0",
+        "runKey": "pilot:9ebd31e12e1953379e7c6ccbb06d26bb760847edd25e0731776095c56b4a5d3c",
+        "sourceRowHash": "ad5fe7a4fb379e7eb134e850c239c7de63f3ce93db0b093675c2e9480604a4be",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju51iNPLKNMs5ubvZAYAbd61zohg",
+        "input": 280,
+        "output": 50,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "ad5fe7a4fb379e7eb134e850c239c7de63f3ce93db0b093675c2e9480604a4be"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:724d99db-2804-42e7-a167-51b36243fe7c:0",
+        "runKey": "pilot:713e1cf7f43a387c77fdc00e726ceaa057ae2efa96e2eca5563560c2653abc66",
+        "sourceRowHash": "22eda4bba18fd70dc4915b8cf7d91e37427010682b415f2cbc569e26e7e57d94",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju4zsLu1iga1KtYdxNlyd2KY15ot",
+        "input": 278,
+        "output": 51,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "22eda4bba18fd70dc4915b8cf7d91e37427010682b415f2cbc569e26e7e57d94"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:7a385796-ce4d-41a8-a099-168d2dac21bc:0",
+        "runKey": "pilot:099b4c3c97bd55e5d595f60c4ced783ed5f1363413a10c68ad67f45fe6629249",
+        "sourceRowHash": "4c6f5d4b9d54ba24143fad67b2f331358a6ba43472daf51bdfce626d3dce8b76",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju5375SBsZzVfco6JZO6VZ0voSdR",
+        "input": 280,
+        "output": 51,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "4c6f5d4b9d54ba24143fad67b2f331358a6ba43472daf51bdfce626d3dce8b76"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:7f545968-ae44-4a8a-9c12-0d9501c9f3cb:0",
+        "runKey": "pilot:41eddfc8d06dad5d8dd63537c7f86acce27868b0d9ac06e69dea6378fc9268ac",
+        "sourceRowHash": "128e384f4a5a73dc504df8724e556f9f844e9296db747757bef21375189cac0e",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjzMJGBM6ZWZbGjNkmOFWa6I1mJX8",
+        "input": 241,
+        "output": 28,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "128e384f4a5a73dc504df8724e556f9f844e9296db747757bef21375189cac0e"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:87a91323-d242-405c-921f-1692cdf1e498:0",
+        "runKey": "pilot:1c626a6db5809e72cb14fa06c4d0158a9da598911ecd4314da6f9b2c251602f5",
+        "sourceRowHash": "efe1f4a17d9804d34c480961110318fc33ef78e2de3c282dcda2cc4f1cd9f777",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju5082g7wWJMvT3OV70LHvaOgORc",
+        "input": 277,
+        "output": 51,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "efe1f4a17d9804d34c480961110318fc33ef78e2de3c282dcda2cc4f1cd9f777"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:97f393c6-009d-486f-a763-e5692e74508d:0",
+        "runKey": "pilot:1caa42dd2f1cad6eaa3a0f3be3106e275dc61f1228d54b9a07c3adbe7b7918e1",
+        "sourceRowHash": "a18d54d5f91f459d54443ecb500adfffa370ad59720f05a295b8d66d2958ccfe",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju55K643ZoTxdBEhx9y8M1olw3J6",
+        "input": 279,
+        "output": 51,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "a18d54d5f91f459d54443ecb500adfffa370ad59720f05a295b8d66d2958ccfe"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:9d58f3a3-e22b-4aeb-bb81-b1c76ca020a8:0",
+        "runKey": "pilot:324c2993ea1c5cc01ea699d04c2a58c2c89c6f88928ee6dfc19801bcd25de3f9",
+        "sourceRowHash": "7e53c22f3e24e08fb6e736401dad03e0cb01937cd9fea2e1a440bcce679a580e",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju4wEPuuh8YDqc2RCSuVuzOtYIz6",
+        "input": 277,
+        "output": 48,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "7e53c22f3e24e08fb6e736401dad03e0cb01937cd9fea2e1a440bcce679a580e"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:c3fe0ce7-8056-4ab5-8239-8c745da9d09a:0",
+        "runKey": "pilot:02e417d33ccdbfeb92c141ae9c1bfbd954e909d288850435fd687dc818900f8a",
+        "sourceRowHash": "fcdbd453bbf942afa09d649fd1898d741d1f4d32dbaafb6ee8165779c69d69c7",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju53SaU0KgGoc0y7yU7AZS8OYiRD",
+        "input": 280,
+        "output": 50,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "fcdbd453bbf942afa09d649fd1898d741d1f4d32dbaafb6ee8165779c69d69c7"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:ca6bb73e-9c0b-4624-b3b4-1dc75199b000:0",
+        "runKey": "pilot:e2d8d01acead4984d3b19f56fc119685d833a33760926aa265504e70ff1ad7ba",
+        "sourceRowHash": "8b92233e709105d563e23c1701c8501893189f01b27c2b32aa2df4ca5f7f3416",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju4xAqHb1ePA8tj9zOvGdXA7aGW1",
+        "input": 278,
+        "output": 55,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "8b92233e709105d563e23c1701c8501893189f01b27c2b32aa2df4ca5f7f3416"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:df09bd19-3961-43f0-b45c-2138c072e0e6:0",
+        "runKey": "pilot:b0ca61a5771de19fa396a70f62ee5f7d5a7287be58bb0e643e359d7450096975",
+        "sourceRowHash": "beb6b69d61d0591e8cc28873437e6db0ed34e66de6d2491a565fbb7232f317a1",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju4yCQvaJxkE5ARPBV6TD04xt0lc",
+        "input": 278,
+        "output": 51,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "beb6b69d61d0591e8cc28873437e6db0ed34e66de6d2491a565fbb7232f317a1"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:f2a9a81e-f7f2-4864-add3-a273c3727a49:0",
+        "runKey": "pilot:ee06179f80430465efc97f4ffa15a31e8512c1d321de5ac467a58a2fe13bf3cc",
+        "sourceRowHash": "03157c83ab2db444f2cf241d2aa8bd1104d2dbf7fab6b539efcc4f65778620df",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EkBuuWXuL30POvf1F4VDvgV2o7g8p",
+        "input": 335,
+        "output": 65,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "03157c83ab2db444f2cf241d2aa8bd1104d2dbf7fab6b539efcc4f65778620df"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:f6349cb6-ddf7-411e-a1c8-eb72484ca1d2:0",
+        "runKey": "pilot:15157b9ed3c4fcf5ebac96c29dd83970a9c07c9169118daa3aad7f2d05605d58",
+        "sourceRowHash": "4e858492e3e78ea99d34a97e28193f76d116f7286435c7182f101d7715028e8b",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju4whMKhKkzIyxZsVd8VcqBoXeP4",
+        "input": 278,
+        "output": 55,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "4e858492e3e78ea99d34a97e28193f76d116f7286435c7182f101d7715028e8b"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:f70405e4-7e79-48ac-830c-16f1d4747ce5:0",
+        "runKey": "pilot:e4ea908b20dae247a4c675dba137c6d3ae0d14f52304d269c4e1b3bd428a3fa0",
+        "sourceRowHash": "9fec92df89ad0fe32834f48b97a7277cef7d863aa9d7fc94253723894cbfc9a2",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-Eju4yEkjxIvopHzAB3mQBnQ0YiDkM",
+        "input": 278,
+        "output": 48,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "9fec92df89ad0fe32834f48b97a7277cef7d863aa9d7fc94253723894cbfc9a2"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:f8bc14a8-5d21-4ebf-abeb-3601189e6473:0",
+        "runKey": "pilot:83c3dce7bfde983a75f9f8996d24645b5d5d24dd575df17bdc2210562bf08a5a",
+        "sourceRowHash": "a47231b33569e5fa0c286d88a59ce8d5988440c5cb7084cafbe18d3b4a293849",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EjuY3XAry4MnqbGwj2X6mgJsSBj1w",
+        "input": 239,
+        "output": 26,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "a47231b33569e5fa0c286d88a59ce8d5988440c5cb7084cafbe18d3b4a293849"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      },
+      {
+        "sourceKey": "customer:fe7a52a1-bfd7-411b-a978-3d09dc427490:0",
+        "runKey": "pilot:41d28b2f7f8e7cb7f8220b1b3a2d80c4008f5d4fb4d282fd866d742372dc5f05",
+        "sourceRowHash": "8a927464b02f363330505e7f98eea96d9f9a7d614e5d76962e6b95e8bddf7baf",
+        "kind": "reported_usage",
+        "model": "gpt-5.4-mini-2026-03-17",
+        "responseId": "chatcmpl-EkBusQTbfSTQna8Jr6i0h28jl1gbF",
+        "input": 269,
+        "output": 59,
+        "provenance": {
+          "source": "persisted provider_runs metadata",
+          "sourceRowHash": "8a927464b02f363330505e7f98eea96d9f9a7d614e5d76962e6b95e8bddf7baf"
+        },
+        "reason": "Exact persisted reported usage; not an account invoice"
+      }
+    ],
+    "publication": {
+      "version": 1,
+      "historyHash": "92b5de908c4559647b016b7db356b8f4f2cf4728f4e306dd848cccd7fe80d154",
+      "proposed": [
+        {
+          "sourceKey": "publication:1",
+          "ledgerRunKey": "pilot:13d0e685336a3e2835a9330936fafa2d0112652913d76858f426c9bd9390d6cd",
+          "beforeEntryHash": "1c8c9fa38e41ca4c0b2776f65d13a17b6e52adc6075d992864bcd3e711ffff84",
+          "sourceRowHash": "df5ab3bc93a589c0d68833d5d9a522c9e7901a87d802e365053ff1436dd5f78f",
+          "receipt": {
+            "artifactId": "a8932398-723b-4757-962b-6f3137f5b084",
+            "artifactHash": "20cb8ef982f7f9b1884756dcd0a652ddc8a31ac9ea5e2c846f5b311e2d994ec1",
+            "sourceReportSha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e",
+            "candidateHash": "497398a77039fb005acb3e68702a07a6dd900ed0c5cdad466cc4ed47a5468290",
+            "role": "factual",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvM8tAmJmY1mo0fVF5tweyRH5ox4",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 2081,
+            "outputTokens": 327
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "3335475",
+          "proposalHash": "2ac46e5cba89e45b3ef4f463360c2f7e84cf0fe4df895507a94d7a5a3670ed29"
+        },
+        {
+          "sourceKey": "publication:10",
+          "ledgerRunKey": "pilot:4894341055db6f0ece7ffea1bb07480a3b1f017379ed46aeb750b4b4dbf5469d",
+          "beforeEntryHash": "f2217a69f1aee0041f5a5bf0515ec380de67d19f9e53f1c8dadecca09019734a",
+          "sourceRowHash": "9d57b85264e6ad9198aca6c015055a364c3861061c9413232008ba94c51334f0",
+          "receipt": {
+            "artifactId": "3eafe5aa-2b14-4af6-ac13-d283a0b8aaff",
+            "artifactHash": "fd0f3742193da82ee79bbe67dd75c2c5c57249d48c311e39c378d17f25830902",
+            "sourceReportSha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef",
+            "candidateHash": "467e1813e83912096930e8142352174d03732f024ecb916d3c59bec2513752f2",
+            "role": "factual",
+            "requestHash": null,
+            "responseId": "chatcmpl-Ejzodn8Yzl2IkOAotDqLgOXdJOWwG",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 24339,
+            "outputTokens": 521
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "22658625",
+          "proposalHash": "3d57228b043993963ae41e8d7a0947b00ed064fa7d0548a7fc0f5ea0b0b559df"
+        },
+        {
+          "sourceKey": "publication:11",
+          "ledgerRunKey": "pilot:7eaeb698141f0fed89b0c04820ba873b326551c71a9790f21fbfd2aa5de5980e",
+          "beforeEntryHash": "4aebcc8eeab9ab05e7d55f715e28c1f529a0363ca21f129cda0cf36e1cd3edb4",
+          "sourceRowHash": "6d24e6ecaed30d2dd4855e73c58dbab8742416f9750507dc2c6606c39bed6d3e",
+          "receipt": {
+            "artifactId": "dce53fdd-da91-41c0-9fc0-9d03bed20855",
+            "artifactHash": "7bb9b501dde7d1321934a236872f3c3f5cacfb4012b52888ef08f9a7fe2f3924",
+            "sourceReportSha256": "b30281622c7576f971ff97921dbbdff91bb5ed5b2d480aee2704e0a44092baef",
+            "candidateHash": "467e1813e83912096930e8142352174d03732f024ecb916d3c59bec2513752f2",
+            "role": "challenge",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjzodvEb0TA0fMuTtZYjChtiyHCGV",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 24346,
+            "outputTokens": 107
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "20615100",
+          "proposalHash": "4089daaf6e5af251e0f88c2a0fb0995a4934d7c49a07ea8762623e7ea483e442"
+        },
+        {
+          "sourceKey": "publication:2",
+          "ledgerRunKey": "pilot:5bd7d541e9b1bf1c742c41c6d2e9f11b2e3ef28b7b771063bf1574771295c207",
+          "beforeEntryHash": "f60f3a6d76e077003ce73783ea04cb00a707ec67bdeef7cf1ef58f645e59627e",
+          "sourceRowHash": "4a2310733115aaab7b5cb185952b8fa794d7bb6798ab3948b323438dfc2002a0",
+          "receipt": {
+            "artifactId": "06d042ab-490b-4d3c-ab41-61d13334ce70",
+            "artifactHash": "f549ccf32b8bcd3fcaa78d91addfde16df59d2000b682da20a9ff51059e70cd2",
+            "sourceReportSha256": "d52bae42030e13c2b8a49d474fd63ab4606521a198259e8b973e5f90769bf01e",
+            "candidateHash": "497398a77039fb005acb3e68702a07a6dd900ed0c5cdad466cc4ed47a5468290",
+            "role": "challenge",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvM8l8oRHwTLCedH6oAisKudlQVH",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 2088,
+            "outputTokens": 362
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "3514500",
+          "proposalHash": "26a881421d55ab9f62765669ef70ce3d345dc17bb8487b0b8101888444e07737"
+        },
+        {
+          "sourceKey": "publication:3",
+          "ledgerRunKey": "pilot:7d10dac25013ba89de0fcf02263aca7908859b7006a33c9c0f93a2eca68d99f4",
+          "beforeEntryHash": "4225bc3f59ee8b6e2373dfa569d74e755f2753db79bd949abf95e316f74a7c5d",
+          "sourceRowHash": "76b4e12885f696f8d9992687e5d2c01ac9f20228f9305b7e94f8180d6f87f37e",
+          "receipt": {
+            "artifactId": "642574bf-fb21-48e1-bc7c-3853ae4345a2",
+            "artifactHash": "de7589c585c9f0ccdeccf48705d1fac80377db066c81a96dae9d929cfc6ee0b7",
+            "sourceReportSha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884",
+            "candidateHash": "2a9dc86af15df1af30e22743a2d18491cf0636537169e3cfffad112094dffa20",
+            "role": "factual",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvNqyrwgd2M26Mq6gZZePYMYPGxg",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 16419,
+            "outputTokens": 564
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "16337475",
+          "proposalHash": "592662e288415f3fd41f543bde3a2fc912fc4f7e5657287ae9c06d66af791560"
+        },
+        {
+          "sourceKey": "publication:4",
+          "ledgerRunKey": "pilot:b6383c82fd1cd2134f58440b2c34ccd2467afe0fc4c6bd09e08b636a44bc09f3",
+          "beforeEntryHash": "a596b94546605d265a6557b6c5ff890ff865797e0e110920fdf598d148694acc",
+          "sourceRowHash": "d2bb4936cae6f67f3f98cd44dcd66d941f32752f4661a14653d0314556cafef0",
+          "receipt": {
+            "artifactId": "78fa264d-61e9-492d-8ed9-fa5b98ceacb0",
+            "artifactHash": "f8c50c3c8d0c32bd79e7537d3f542bed0b47bc206a774ed60fa6d2bde4280853",
+            "sourceReportSha256": "faf6db2bbb38fb702f4bc0a9b38b12ed0872ece533c79d1f8941c346e515e884",
+            "candidateHash": "2a9dc86af15df1af30e22743a2d18491cf0636537169e3cfffad112094dffa20",
+            "role": "challenge",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvNqtzL6LreS94MPmQ2YLYkP7Q6T",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 16426,
+            "outputTokens": 617
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "16605600",
+          "proposalHash": "bdeed55146bae71513f070904fa9aa18e6bf4268e6c4b791cd17df7342847346"
+        },
+        {
+          "sourceKey": "publication:5",
+          "ledgerRunKey": "pilot:1c8846a38b45dbacec7521f94b1bcc2403499ad0f1ee4c749be045bae12b4152",
+          "beforeEntryHash": "e9d2ead6071edac10121ff72346dcd1dcf77373bde14ee64cbe98b9026b1ac67",
+          "sourceRowHash": "f25a4625db16244e977cd5cb100700f15b6091257ebbdb9e042a656ee8cac852",
+          "receipt": {
+            "artifactId": "bad6b715-6e07-40e0-9f2c-0dc11e1ffbe0",
+            "artifactHash": "3231c20e8d24ccbe2bdc1b52c318883160f14acc6ab05242a01f5a181beb9be3",
+            "sourceReportSha256": "3231c20e8d24ccbe2bdc1b52c318883160f14acc6ab05242a01f5a181beb9be3",
+            "candidateHash": "08fef2cf6f4797bd17466b37f594e38d51f6afb79dd59abb6aea1d0c3979e997",
+            "role": "draft",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvU2OJyiOSWZ4Vs5fkOEvZfzhlSh",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 216,
+            "outputTokens": 239
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "1361250",
+          "proposalHash": "c7db0f870dff3da64f20003f4e4fd368ed2d1565fa9bb171484072b0a4a58b49"
+        },
+        {
+          "sourceKey": "publication:6",
+          "ledgerRunKey": "pilot:b9f9bda094b89ad415a6bf18a2b2cb625cb1c89f9653af509cf9c3035d8646a3",
+          "beforeEntryHash": "058a9fd8ea5c892dbb921b3f81de23c93e258f4cf6a35f3620e3771064aaf39a",
+          "sourceRowHash": "0fd0af42ca6b191f955fa8b779998bf1f426308473eb8f7a739c6fba6949f717",
+          "receipt": {
+            "artifactId": "3381855f-acbc-4155-b202-c4a5902268e9",
+            "artifactHash": "8ef24d9aed292979a709f205a8b9c1ddfbd031ba62cc13fd71b39fc6946c6e96",
+            "sourceReportSha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89",
+            "candidateHash": "4492e9af3581d1b2afdcc2617b785844a1df8dfc30db8d89d9742590bcc4793c",
+            "role": "challenge",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvUDQXDRcK0ptoPVqg7LPeTSzbKN",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 24345,
+            "outputTokens": 434
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "22232925",
+          "proposalHash": "b6a7b23129da1f4f1b5db272c47e8eb14eb50a502bace4f2e738604770777030"
+        },
+        {
+          "sourceKey": "publication:7",
+          "ledgerRunKey": "pilot:d8b85845cf79d9b4a2d3a3dcea8068c5bab97515498d11a3676d305869c4f158",
+          "beforeEntryHash": "b57c7f9cf675c41dd401708fa36923c306431c3eece02881a5768cf264106841",
+          "sourceRowHash": "a673c0d60ae96b356081aa5d9ab13eafeb267e560a390c34effd23c8f312f7a7",
+          "receipt": {
+            "artifactId": "3461f1d7-b033-4cee-8263-d7d809be5a76",
+            "artifactHash": "ff8a78dbc2a8d4c83ed6cd7c84422295b6eccb59ce57cdffb281328296a8f123",
+            "sourceReportSha256": "03098d581a2f54fa95ed93bf14749486e25588bfdeba6efd7170e2822454cd89",
+            "candidateHash": "4492e9af3581d1b2afdcc2617b785844a1df8dfc30db8d89d9742590bcc4793c",
+            "role": "factual",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjvUCJsdBD8xLgevfca9g4gZygp6W",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 24338,
+            "outputTokens": 370
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "21910350",
+          "proposalHash": "d8d35111648f445800c6793da89a9817139f4015c585a91111c45b6ae7976466"
+        },
+        {
+          "sourceKey": "publication:8",
+          "ledgerRunKey": "pilot:601508505390df1ba41f946843e16d79813821e95326eee30d3b91f8fd3e4d0d",
+          "beforeEntryHash": "f7efd7b63a534b6ff29dce602f870228133dab6961a9e482cf326aba2faad271",
+          "sourceRowHash": "cdf884de4d6373826bf82cace221aa472fbcd2a2a6425866405fa95560e65a8a",
+          "receipt": {
+            "artifactId": "c39c2644-f858-44c9-9b11-c3248ba390b0",
+            "artifactHash": "f6517be1912b92e46533eb22db606cdb676fa7d4058de97ffc30e58b606f4cff",
+            "sourceReportSha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2",
+            "candidateHash": "e1d2cf271d675b6d82b92dfc966437273c25238cf83fc73d9f63248b254b2848",
+            "role": "factual",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjzluqixbNpDtYJZHjI23ja5MICcX",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 23935,
+            "outputTokens": 552
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "22478775",
+          "proposalHash": "821a0767ac2e119b5927e89de547a255a4c8149992de76c09123258e3f60c1c3"
+        },
+        {
+          "sourceKey": "publication:9",
+          "ledgerRunKey": "pilot:e176ca506589f39e3c6fed3b47cd263971548cca2a17e60aaf91943b352955e7",
+          "beforeEntryHash": "c6f369b4ad944dfcf1264daa5070c4899ba89e263299c2182557467983ab10c0",
+          "sourceRowHash": "e4f12f91d0ff49fb99d9c2dbc87617cb654d2abf1c8d828199f43786f1cd88b5",
+          "receipt": {
+            "artifactId": "227d4bd2-4ab3-4551-bae9-0f59c0be8587",
+            "artifactHash": "4dde69e003726dcab349d5b41cd1d15236f93fdcdeaf937a71714378f47cb6b5",
+            "sourceReportSha256": "581f4ae9b86bb3b55fc86423c312db73ab639bd3381313863d636094f8bfdae2",
+            "candidateHash": "e1d2cf271d675b6d82b92dfc966437273c25238cf83fc73d9f63248b254b2848",
+            "role": "challenge",
+            "requestHash": null,
+            "responseId": "chatcmpl-EjzlufmaqdBEHAI7nPUGHrb9AOS2t",
+            "model": "gpt-5.4-mini-2026-03-17",
+            "inputTokens": 23942,
+            "outputTokens": 477
+          },
+          "joinKeys": [
+            "candidateHash",
+            "role"
+          ],
+          "estimatedNanoUsd": "22113300",
+          "proposalHash": "bb88d3663e6b8a47f33d7be49294bc53c766a837efccf3620d22d3bcf4af8682"
+        }
+      ],
+      "unresolved": [],
+      "invalidArtifacts": [],
+      "verifiedRetainedArtifacts": 11,
+      "ledgerWrites": 0,
+      "approvalWrites": 0,
+      "providerCalls": 0,
+      "reconciliationApplied": false,
+      "unboundedLiabilitiesUnchanged": 3,
+      "note": "Reported-token estimates are not account invoices. Proposed joins do not alter or discharge any liability."
+    },
+    "excludedNoOutboundCustomerRuns": 16,
+    "excludedCustomerSources": [
+      {
+        "sourceKey": "customer:0590e00a-0ed9-4487-8206-61ae88b1b762:0",
+        "metadataHash": "003ea6bd5597581d5131fac1365a1b6303cb9a045e4388eb9703beee170775c8"
+      },
+      {
+        "sourceKey": "customer:0590e00a-0ed9-4487-8206-61ae88b1b762:1",
+        "metadataHash": "003ea6bd5597581d5131fac1365a1b6303cb9a045e4388eb9703beee170775c8"
+      },
+      {
+        "sourceKey": "customer:46ac6758-d83f-481a-af4e-6d42ed749c14:0",
+        "metadataHash": "003ea6bd5597581d5131fac1365a1b6303cb9a045e4388eb9703beee170775c8"
+      },
+      {
+        "sourceKey": "customer:46ac6758-d83f-481a-af4e-6d42ed749c14:1",
+        "metadataHash": "003ea6bd5597581d5131fac1365a1b6303cb9a045e4388eb9703beee170775c8"
+      },
+      {
+        "sourceKey": "customer:4bdfb4bf-87d0-4681-a05a-6d0cd5612e3a:0",
+        "metadataHash": "68e615c4aaa84c1f3a45e8584407a3ab9fd157121fcd7556f97fbba5b4faabf4"
+      },
+      {
+        "sourceKey": "customer:83ecb656-5676-490b-8a42-9f35b7121330:0",
+        "metadataHash": "68e615c4aaa84c1f3a45e8584407a3ab9fd157121fcd7556f97fbba5b4faabf4"
+      },
+      {
+        "sourceKey": "customer:8a3d8427-3895-4258-a80b-a8ab92026d50:0",
+        "metadataHash": "68e615c4aaa84c1f3a45e8584407a3ab9fd157121fcd7556f97fbba5b4faabf4"
+      },
+      {
+        "sourceKey": "customer:ab7beb4b-5ff7-4200-8299-563643043ad3:0",
+        "metadataHash": "003ea6bd5597581d5131fac1365a1b6303cb9a045e4388eb9703beee170775c8"
+      },
+      {
+        "sourceKey": "customer:ab7beb4b-5ff7-4200-8299-563643043ad3:1",
+        "metadataHash": "003ea6bd5597581d5131fac1365a1b6303cb9a045e4388eb9703beee170775c8"
+      },
+      {
+        "sourceKey": "customer:bf842889-e21b-4976-a9db-7595cfafc76c:0",
+        "metadataHash": "68e615c4aaa84c1f3a45e8584407a3ab9fd157121fcd7556f97fbba5b4faabf4"
+      },
+      {
+        "sourceKey": "customer:df87dfc7-9e35-4c0b-941c-1ab02a1921f7:0",
+        "metadataHash": "68e615c4aaa84c1f3a45e8584407a3ab9fd157121fcd7556f97fbba5b4faabf4"
+      },
+      {
+        "sourceKey": "customer:e8b38f17-ce19-4447-bbb4-18ee4e0eb965:0",
+        "metadataHash": "68e615c4aaa84c1f3a45e8584407a3ab9fd157121fcd7556f97fbba5b4faabf4"
+      },
+      {
+        "sourceKey": "customer:edc69633-c055-4184-929f-513c1c318303:0",
+        "metadataHash": "68e615c4aaa84c1f3a45e8584407a3ab9fd157121fcd7556f97fbba5b4faabf4"
+      },
+      {
+        "sourceKey": "customer:f1e35420-50e4-4acb-9de8-ce62f182b37d:0",
+        "metadataHash": "68e615c4aaa84c1f3a45e8584407a3ab9fd157121fcd7556f97fbba5b4faabf4"
+      },
+      {
+        "sourceKey": "customer:f900be60-b040-40d1-a8af-02af2912ff65:0",
+        "metadataHash": "003ea6bd5597581d5131fac1365a1b6303cb9a045e4388eb9703beee170775c8"
+      },
+      {
+        "sourceKey": "customer:f900be60-b040-40d1-a8af-02af2912ff65:1",
+        "metadataHash": "003ea6bd5597581d5131fac1365a1b6303cb9a045e4388eb9703beee170775c8"
+      }
+    ],
+    "customerExclusionsSubtractedFromLedger": 0,
+    "assumptions": "No invoice certification, inferred failed-call zero, historical context/retry cap, or new batch authority"
+  },
+  "beforeHash": "5e6e26cf3e076a356e7b33d0a8e5bafe8ce694e6f569217a7ef0e738c1730e11",
+  "afterHash": "5e6e26cf3e076a356e7b33d0a8e5bafe8ce694e6f569217a7ef0e738c1730e11",
+  "entries": 57,
+  "reportedUsageEntries": 48,
+  "noOutboundEntries": 6,
+  "unknownEntries": 3,
+  "unboundedLiabilities": 3,
+  "reportedNanoUsd": "234191100",
+  "originalEntriesPreserved": true,
+  "ledgerClassifications": 57,
+  "ownerApproval": false,
+  "enabledBatches": 0,
+  "newInferenceCalls": 0,
+  "billingCertified": false,
+  "historicalScope": "separate historical exposure register",
+  "newBatchStart": "only after durable owner approval of exact finite work; no retrospective approval requested",
+  "priorGlobalProjectBudgetExists": false,
+  "sourceRowsModified": 0,
+  "existingQuotasChanged": false
+}
