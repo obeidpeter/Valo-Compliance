@@ -250,74 +250,6 @@ export interface FinanceDisputeLink {
   providerId: string;
 }
 
-export interface WorkspaceDataExportRequest {
-  idempotencyKey: string;
-}
-
-export interface WorkspaceDataExportAction {
-  /** @minimum 1 */
-  expectedVersion: number;
-}
-
-export type WorkspaceDataExportJobStatus = typeof WorkspaceDataExportJobStatus[keyof typeof WorkspaceDataExportJobStatus];
-
-
-export const WorkspaceDataExportJobStatus = {
-  queued: 'queued',
-  running: 'running',
-  retrying: 'retrying',
-  ready: 'ready',
-  failed: 'failed',
-  cancelled: 'cancelled',
-  expired: 'expired',
-} as const;
-
-export type WorkspaceDataExportJobSchemaVersion = typeof WorkspaceDataExportJobSchemaVersion[keyof typeof WorkspaceDataExportJobSchemaVersion];
-
-
-export const WorkspaceDataExportJobSchemaVersion = {
-  NUMBER_2: 2,
-} as const;
-
-export interface WorkspaceDataExportJob {
-  id: string;
-  status: WorkspaceDataExportJobStatus;
-  /** @minimum 1 */
-  version: number;
-  schemaVersion: WorkspaceDataExportJobSchemaVersion;
-  /**
-     * @minimum 0
-     * @maximum 3
-     */
-  attempts: number;
-  /**
-     * @minimum 0
-     * @maximum 2
-     */
-  retryCycles: number;
-  /** @minimum 0 */
-  rowsProcessed: number;
-  /** @minimum 0 */
-  bytesPrepared: number;
-  createdAt: string;
-  updatedAt: string;
-  /** @nullable */
-  expiresAt: string | null;
-  /** @nullable */
-  errorCode: string | null;
-  /** @nullable */
-  downloadUrl: string | null;
-  scope: string;
-  mayCancel: boolean;
-  mayRetry: boolean;
-}
-
-export interface WorkspaceDataExportPage {
-  items: WorkspaceDataExportJob[];
-  /** @nullable */
-  nextCursor: string | null;
-}
-
 export type AccessSupportInputTopic = typeof AccessSupportInputTopic[keyof typeof AccessSupportInputTopic];
 
 
@@ -552,6 +484,68 @@ export interface PrivacyRequestRecord {
 export interface CustomerAccount {
   workspaceId: string;
   privacyRequests: PrivacyRequestRecord[];
+}
+
+export interface WorkspaceExportRequest {
+  requestKey: string;
+}
+
+export interface WorkspaceExportAction {
+  /** @minimum 1 */
+  expectedVersion: number;
+}
+
+export type WorkspaceExportJobStatus = typeof WorkspaceExportJobStatus[keyof typeof WorkspaceExportJobStatus];
+
+
+export const WorkspaceExportJobStatus = {
+  queued: 'queued',
+  preparing: 'preparing',
+  interrupted: 'interrupted',
+  ready: 'ready',
+  cancelled: 'cancelled',
+  expired: 'expired',
+} as const;
+
+export type WorkspaceExportJobProgress = {
+  /** @nullable */
+  section: string | null;
+  /** @minimum 0 */
+  rows: number;
+  /** @minimum 0 */
+  bytes: number;
+};
+
+/**
+ * @nullable
+ */
+export type WorkspaceExportJobCounts = {[key: string]: number} | null;
+
+export interface WorkspaceExportJob {
+  id: string;
+  status: WorkspaceExportJobStatus;
+  /** @minimum 1 */
+  version: number;
+  retryAvailable: boolean;
+  progress: WorkspaceExportJobProgress;
+  attempts: number;
+  createdAt: string;
+  expiresAt: string;
+  /** @nullable */
+  snapshotAt: string | null;
+  /** @nullable */
+  size: number | null;
+  /** @nullable */
+  counts: WorkspaceExportJobCounts;
+  /** @nullable */
+  errorCode: string | null;
+  notice: string;
+}
+
+export interface WorkspaceExportPage {
+  items: WorkspaceExportJob[];
+  /** @nullable */
+  nextCursor: string | null;
 }
 
 export type WorkspaceDataExportData = { [key: string]: unknown };
@@ -2699,6 +2693,14 @@ export type ConflictErrorResponse = {
  * Validation, access or concurrency error
  */
 export type AuthErrorResponse = ApiProblem;
+
+export type GetStaffRoleAdministrationParams = {
+  /**
+   * @maxLength 128
+   * @pattern ^user_[A-Za-z0-9_-]+$
+   */
+  identityId?: string;
+};
 
 export type VerifyStaffRoleTarget200 = {
   identityId: string;

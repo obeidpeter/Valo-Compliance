@@ -14,6 +14,11 @@ paths:
   /admin/staff-roles:
     get:
       operationId: getStaffRoleAdministration
+      parameters:
+        - name: identityId
+          in: query
+          required: false
+          schema: { type: string, pattern: '^user_[A-Za-z0-9_-]+$', maxLength: 128 }
       responses:
         "200":
           description: Permanent system operators only; current assignments and immutable change alerts.
@@ -53,103 +58,6 @@ paths:
                   identityId: { type: string }
                   label: { type: string }
                   verifiedAt: { type: string, format: date-time }
-  /workspace/data-exports:
-    get:
-      operationId: listWorkspaceDataExports
-      tags: [workspace]
-      parameters:
-        - { name: cursor, in: query, required: false, schema: { type: string, format: uuid } }
-      responses:
-        "200":
-          description: Current requester's durable scoped export history; no private storage locators.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/WorkspaceDataExportPage" }
-        "403": { $ref: "#/components/responses/AuthError" }
-    post:
-      operationId: requestWorkspaceDataExport
-      tags: [workspace]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/WorkspaceDataExportRequest" }
-      responses:
-        "202":
-          description: Persisted request; preparation and download are not yet complete.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/WorkspaceDataExportJob" }
-        "403": { $ref: "#/components/responses/AuthError" }
-        "409": { $ref: "#/components/responses/ConflictError" }
-        "429": { $ref: "#/components/responses/QuotaError" }
-  /workspace/data-exports/{id}:
-    get:
-      operationId: getWorkspaceDataExport
-      tags: [workspace]
-      parameters:
-        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
-      responses:
-        "200":
-          description: Current request state and authorized attachment availability.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/WorkspaceDataExportJob" }
-        "404": { $ref: "#/components/responses/AuthError" }
-  /workspace/data-exports/{id}/cancel:
-    post:
-      operationId: cancelWorkspaceDataExport
-      tags: [workspace]
-      parameters:
-        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/WorkspaceDataExportAction" }
-      responses:
-        "200":
-          description: Preparation cancelled or prepared copy withdrawn; physical cleanup remains governed by recorded holds.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/WorkspaceDataExportJob" }
-        "404": { $ref: "#/components/responses/AuthError" }
-        "409": { $ref: "#/components/responses/ConflictError" }
-  /workspace/data-exports/{id}/retry:
-    post:
-      operationId: retryWorkspaceDataExport
-      tags: [workspace]
-      parameters:
-        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/WorkspaceDataExportAction" }
-      responses:
-        "202":
-          description: Existing failed request queued for a bounded fresh attempt; original history preserved.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/WorkspaceDataExportJob" }
-        "404": { $ref: "#/components/responses/AuthError" }
-        "409": { $ref: "#/components/responses/ConflictError" }
-  /workspace/data-exports/{id}/file:
-    get:
-      operationId: downloadPreparedWorkspaceData
-      tags: [workspace]
-      parameters:
-        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
-      responses:
-        "200":
-          description: Native private JSON attachment after fresh session, membership, expiry and integrity checks; use browser download transport.
-          content:
-            application/octet-stream:
-              schema: { type: string, format: binary }
-        "401": { $ref: "#/components/responses/AuthError" }
-        "403": { $ref: "#/components/responses/AuthError" }
-        "404": { $ref: "#/components/responses/AuthError" }
-        "409": { $ref: "#/components/responses/ConflictError" }
   /public/access-support:
     post:
       operationId: requestAccessSupport
@@ -225,6 +133,90 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/WorkspaceDataExport" }
+  /workspace/data-exports:
+    get:
+      operationId: listWorkspaceDataExports
+      parameters:
+        - {in: query, name: cursor, required: false, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Current user's durable private exports.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportPage"}
+    post:
+      operationId: createWorkspaceDataExport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceExportRequest"
+      responses:
+        "201":
+          description: Persistent export identity; not proof of completed preparation.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}:
+    get:
+      operationId: getWorkspaceDataExport
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Current recorded status for the owning account.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}/cancel:
+    post:
+      operationId: cancelWorkspaceDataExport
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/WorkspaceExportAction"}
+      responses:
+        "200":
+          description: Recorded action; neither download receipt nor physical deletion proof.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}/retry:
+    post:
+      operationId: retryWorkspaceDataExport
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/WorkspaceExportAction"}
+      responses:
+        "200":
+          description: Recorded action; neither download receipt nor physical deletion proof.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}/download:
+    get:
+      operationId: downloadWorkspaceDataArtifact
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Complete verified private JSON artifact, never a partial preparation.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceDataExport"}
+        "206":
+          description: Authorized byte range of an already complete verified artifact.
+          content:
+            application/octet-stream:
+              schema: {type: string}
   /workspace/purchases:
     get:
       operationId: getCustomerPurchases
@@ -1264,46 +1256,6 @@ components:
     FinancePaymentConcerns: {"type": "object", "additionalProperties": false, "required": ["concerns", "notice"], "properties": {"concerns": {"type": "array", "items": {"$ref": "#/components/schemas/PaymentConcern"}}, "notice": {"type": "string"}}}
     DisputeHoldInput: {"type": "object", "additionalProperties": false, "required": ["expectedVersion", "held", "reason"], "properties": {"expectedVersion": {"type": "integer", "minimum": 1}, "held": {"type": "boolean"}, "reason": {"type": "string", "minLength": 10, "maxLength": 1500}}}
     FinanceDisputeLink: {"type": "object", "additionalProperties": false, "required": ["orderId", "providerId"], "properties": {"orderId": {"type": "string", "format": "uuid"}, "providerId": {"type": "string", "pattern": "^\\d{1,40}$"}}}
-    WorkspaceDataExportRequest:
-      type: object
-      additionalProperties: false
-      required: [idempotencyKey]
-      properties:
-        idempotencyKey: { type: string, format: uuid }
-    WorkspaceDataExportAction:
-      type: object
-      additionalProperties: false
-      required: [expectedVersion]
-      properties:
-        expectedVersion: { type: integer, minimum: 1 }
-    WorkspaceDataExportPage:
-      type: object
-      additionalProperties: false
-      required: [items, nextCursor]
-      properties:
-        items: { type: array, items: { $ref: "#/components/schemas/WorkspaceDataExportJob" } }
-        nextCursor: { type: [string, "null"], format: uuid }
-    WorkspaceDataExportJob:
-      type: object
-      additionalProperties: false
-      required: [id, status, version, schemaVersion, attempts, retryCycles, rowsProcessed, bytesPrepared, createdAt, updatedAt, expiresAt, errorCode, downloadUrl, scope, mayCancel, mayRetry]
-      properties:
-        id: { type: string, format: uuid }
-        status: { type: string, enum: [queued, running, retrying, ready, failed, cancelled, expired] }
-        version: { type: integer, minimum: 1 }
-        schemaVersion: { type: integer, enum: [2] }
-        attempts: { type: integer, minimum: 0, maximum: 3 }
-        retryCycles: { type: integer, minimum: 0, maximum: 2 }
-        rowsProcessed: { type: integer, minimum: 0 }
-        bytesPrepared: { type: integer, minimum: 0 }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
-        expiresAt: { type: [string, "null"], format: date-time }
-        errorCode: { type: [string, "null"] }
-        downloadUrl: { type: [string, "null"] }
-        scope: { type: string }
-        mayCancel: { type: boolean }
-        mayRetry: { type: boolean }
     AccessSupportInput:
       type: object
       additionalProperties: false
@@ -1446,6 +1398,47 @@ components:
         request: { type: string }
         status: { type: string }
         createdAt: { type: string }
+    WorkspaceExportRequest:
+      type: object
+      required: [requestKey]
+      additionalProperties: false
+      properties:
+        requestKey: {type: string, format: uuid}
+    WorkspaceExportAction:
+      type: object
+      required: [expectedVersion]
+      additionalProperties: false
+      properties:
+        expectedVersion: {type: integer, minimum: 1}
+    WorkspaceExportPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items: {type: array, items: {$ref: "#/components/schemas/WorkspaceExportJob"}}
+        nextCursor: {type: string, nullable: true}
+    WorkspaceExportJob:
+      type: object
+      required: [id, status, version, attempts, createdAt, expiresAt, snapshotAt, size, counts, errorCode, notice, progress, retryAvailable]
+      properties:
+        id: {type: string, format: uuid}
+        status: {type: string, enum: [queued, preparing, interrupted, ready, cancelled, expired]}
+        version: {type: integer, minimum: 1}
+        retryAvailable: {type: boolean}
+        progress:
+          type: object
+          required: [section, rows, bytes]
+          properties:
+            section: {type: string, nullable: true}
+            rows: {type: integer, minimum: 0}
+            bytes: {type: integer, minimum: 0}
+        attempts: {type: integer}
+        createdAt: {type: string, format: date-time}
+        expiresAt: {type: string, format: date-time}
+        snapshotAt: {type: string, nullable: true}
+        size: {type: number, nullable: true}
+        counts: {type: object, additionalProperties: {type: integer}, nullable: true}
+        errorCode: {type: string, nullable: true}
+        notice: {type: string}
     WorkspaceDataExport:
       type: object
       required: [schemaVersion, exportedAt, workspaceId, scope, data]
@@ -3840,5 +3833,6 @@ components:
           type: string
       required:
         - status
+
 
 

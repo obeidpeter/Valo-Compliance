@@ -3,8 +3,9 @@ import {useGetStaffRoleAdministration,verifyStaffRoleTarget,changeStaffRole,type
 import {describeError,formatDate} from "@/lib/api";
 const roles=["content","support","finance","system","privacy"] as const;
 export function StaffRoleAdministration(){
- const q=useGetStaffRoleAdministration({query:{retry:false,refetchInterval:15000}});
  const[identityId,setIdentityId]=useState(""),[role,setRole]=useState<StaffRoleAssignment["role"]>("support");
+ const params=/^user_[A-Za-z0-9_-]+$/.test(identityId)?{identityId}:undefined;
+ const q=useGetStaffRoleAdministration(params,{query:{retry:false,refetchInterval:15000}});
  const[action,setAction]=useState<"grant"|"revoke">("grant"),[mode,setMode]=useState<"permanent"|"break_glass">("break_glass");
  const[minutes,setMinutes]=useState("15"),[reason,setReason]=useState(""),[incident,setIncident]=useState("");
  const[verified,setVerified]=useState<Awaited<ReturnType<typeof verifyStaffRoleTarget>>|null>(null);
@@ -45,7 +46,7 @@ export function StaffRoleAdministration(){
    </fieldset>
    <div className="sm:col-span-2 flex flex-wrap gap-2"><button className="btn btn-primary" disabled={busy||(!pending&&(!confirmed||reason.trim().length<20||(action==="grant"&&verified?.identityId!==identityId)||(action==="revoke"&&!existing?.active)))}>{pending?"Retry exact saved role change":"Save authorised role change"}</button><button type="button" className="btn btn-secondary" disabled={busy} onClick={()=>void q.refetch()}>Check saved role changes</button></div>
   </form>
-  <div><h3 className="font-semibold">Current assignments</h3><ul className="mt-2 space-y-2">{q.data.assignments.map(r=><li key={r.id} className="rounded-lg border p-3 text-sm"><p className="break-all">{r.identityId} · {r.role} · {effective(r)?"active":"inactive or expired"}</p><p>{r.grantMode.replaceAll("_"," ")}{r.expiresAt?` until ${formatDate(r.expiresAt)}`:""} · revision {r.version}</p><button className="btn btn-ghost btn-sm mt-2" disabled={busy||!!pending} onClick={()=>{setIdentityId(r.identityId);setRole(r.role);setAction("revoke");setVerified(null);setAckFor("");}}>Review this assignment</button></li>)}</ul></div>
+  <div><h3 className="font-semibold">Current assignments</h3><p className="my-2 text-sm">{params?"Assignments for the exact identity entered above, including inactive or expired permissions. Revocation does not require the target account to be available.":"Latest 250 assignments. Enter an exact managed identity ID above to retrieve all of its saved permissions, including older assignments."}</p><ul className="mt-2 space-y-2">{q.data.assignments.map(r=><li key={r.id} className="rounded-lg border p-3 text-sm"><p className="break-all">{r.identityId} · {r.role} · {effective(r)?"active":"inactive or expired"}</p><p>{r.grantMode.replaceAll("_"," ")}{r.expiresAt?` until ${formatDate(r.expiresAt)}`:""} · revision {r.version}</p><button className="btn btn-ghost btn-sm mt-2" disabled={busy||!!pending} onClick={()=>{setIdentityId(r.identityId);setRole(r.role);setAction("revoke");setVerified(null);setAckFor("");}}>Review this assignment</button></li>)}</ul></div>
   <div><h3 className="font-semibold">Recent role-change alerts</h3><p className="my-2 text-sm">Append-only history, newest first. Role changes require review as part of incident monitoring; no external message is sent by this screen.</p><ul className="space-y-2">{q.data.changes.map(c=><li key={c.id} className="rounded-lg border p-3 text-sm"><p className="break-all">{c.action} {c.role} · {c.targetIdentityId}</p><p>{formatDate(c.createdAt)} · {c.reason}</p><p className="break-all">Actor {c.actorId} · audit {c.id}</p>{c.incidentReference&&<p>Incident {c.incidentReference}</p>}</li>)}</ul></div>
  </section>;
 }

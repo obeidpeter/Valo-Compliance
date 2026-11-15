@@ -5,10 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { WorkspaceDataExportJob } from './workspaceDataExportJob';
+import type { WorkspaceExportJob } from './workspaceExportJob';
 
-export interface WorkspaceDataExportPage {
-  items: WorkspaceDataExportJob[];
+export interface WorkspaceExportPage {
+  items: WorkspaceExportJob[];
   /** @nullable */
   nextCursor: string | null;
 }

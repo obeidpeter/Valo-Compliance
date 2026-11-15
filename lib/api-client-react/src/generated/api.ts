@@ -63,6 +63,7 @@ import type {
   FinanceRefunds,
   GetCommerceReceipt200,
   GetStaffOperationsParams,
+  GetStaffRoleAdministrationParams,
   HealthStatus,
   ListPublicCatalogueParams,
   ListStaffPrivacyCases200,
@@ -110,11 +111,11 @@ import type {
   VerifyStaffRoleTargetInput,
   Workspace,
   WorkspaceDataExport,
-  WorkspaceDataExportAction,
-  WorkspaceDataExportJob,
-  WorkspaceDataExportPage,
-  WorkspaceDataExportRequest,
   WorkspaceDisputes,
+  WorkspaceExportAction,
+  WorkspaceExportJob,
+  WorkspaceExportPage,
+  WorkspaceExportRequest,
   WorkspaceTask,
   WriteLimitResponse
 } from './api.schemas';
@@ -146,17 +147,24 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getGetStaffRoleAdministrationUrl = () => {
+export const getGetStaffRoleAdministrationUrl = (params?: GetStaffRoleAdministrationParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/admin/staff-roles`
+  return stringifiedParams.length > 0 ? `/api/admin/staff-roles?${stringifiedParams}` : `/api/admin/staff-roles`
 }
 
-export const getStaffRoleAdministration = async ( options?: Parameters<typeof customFetch>[1]): Promise<StaffRoleAdministration> => {
+export const getStaffRoleAdministration = async (params?: GetStaffRoleAdministrationParams, options?: Parameters<typeof customFetch>[1]): Promise<StaffRoleAdministration> => {
 
-  return customFetch<StaffRoleAdministration>(getGetStaffRoleAdministrationUrl(),
+  return customFetch<StaffRoleAdministration>(getGetStaffRoleAdministrationUrl(params),
   {
     ...options,
     method: 'GET'
@@ -169,23 +177,23 @@ export const getStaffRoleAdministration = async ( options?: Parameters<typeof cu
 
 
 
-export const getGetStaffRoleAdministrationQueryKey = () => {
+export const getGetStaffRoleAdministrationQueryKey = (params?: GetStaffRoleAdministrationParams,) => {
     return [
-    `/api/admin/staff-roles`
+    `/api/admin/staff-roles`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetStaffRoleAdministrationQueryOptions = <TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetStaffRoleAdministrationQueryOptions = <TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>(params?: GetStaffRoleAdministrationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetStaffRoleAdministrationQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetStaffRoleAdministrationQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStaffRoleAdministration>>> = ({ signal }) => getStaffRoleAdministration({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStaffRoleAdministration>>> = ({ signal }) => getStaffRoleAdministration(params, { signal, ...requestOptions });
 
 
 
@@ -199,7 +207,7 @@ export type GetStaffRoleAdministrationQueryError = ErrorType<unknown>
 
 
 export function useGetStaffRoleAdministration<TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>> & Pick<
+ params: undefined |  GetStaffRoleAdministrationParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getStaffRoleAdministration>>,
           TError,
@@ -209,7 +217,7 @@ export function useGetStaffRoleAdministration<TData = Awaited<ReturnType<typeof 
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetStaffRoleAdministration<TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>> & Pick<
+ params?: GetStaffRoleAdministrationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getStaffRoleAdministration>>,
           TError,
@@ -219,15 +227,15 @@ export function useGetStaffRoleAdministration<TData = Awaited<ReturnType<typeof 
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetStaffRoleAdministration<TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ params?: GetStaffRoleAdministrationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetStaffRoleAdministration<TData = Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ params?: GetStaffRoleAdministrationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffRoleAdministration>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetStaffRoleAdministrationQueryOptions(options)
+  const queryOptions = getGetStaffRoleAdministrationQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -403,543 +411,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getVerifyStaffRoleTargetMutationOptions(options), queryClient);
     }
-
-export const getListWorkspaceDataExportsUrl = (params?: ListWorkspaceDataExportsParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/workspace/data-exports?${stringifiedParams}` : `/api/workspace/data-exports`
-}
-
-export const listWorkspaceDataExports = async (params?: ListWorkspaceDataExportsParams, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceDataExportPage> => {
-
-  return customFetch<WorkspaceDataExportPage>(getListWorkspaceDataExportsUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListWorkspaceDataExportsQueryKey = (params?: ListWorkspaceDataExportsParams,) => {
-    return [
-    `/api/workspace/data-exports`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getListWorkspaceDataExportsQueryOptions = <TData = Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError = ErrorType<AuthErrorResponse>>(params?: ListWorkspaceDataExportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListWorkspaceDataExportsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkspaceDataExports>>> = ({ signal }) => listWorkspaceDataExports(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListWorkspaceDataExportsQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkspaceDataExports>>>
-export type ListWorkspaceDataExportsQueryError = ErrorType<AuthErrorResponse>
-
-
-export function useListWorkspaceDataExports<TData = Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError = ErrorType<AuthErrorResponse>>(
- params: undefined |  ListWorkspaceDataExportsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listWorkspaceDataExports>>,
-          TError,
-          Awaited<ReturnType<typeof listWorkspaceDataExports>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListWorkspaceDataExports<TData = Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError = ErrorType<AuthErrorResponse>>(
- params?: ListWorkspaceDataExportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listWorkspaceDataExports>>,
-          TError,
-          Awaited<ReturnType<typeof listWorkspaceDataExports>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListWorkspaceDataExports<TData = Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError = ErrorType<AuthErrorResponse>>(
- params?: ListWorkspaceDataExportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListWorkspaceDataExports<TData = Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError = ErrorType<AuthErrorResponse>>(
- params?: ListWorkspaceDataExportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getListWorkspaceDataExportsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getRequestWorkspaceDataExportUrl = () => {
-
-
-
-
-  return `/api/workspace/data-exports`
-}
-
-export const requestWorkspaceDataExport = async (workspaceDataExportRequest: WorkspaceDataExportRequest, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceDataExportJob> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<WorkspaceDataExportJob>(getRequestWorkspaceDataExportUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(workspaceDataExportRequest)
-  }
-);}
-
-
-
-
-
-export const getRequestWorkspaceDataExportMutationKey = () => ['requestWorkspaceDataExport'] as const;
-
-export const getRequestWorkspaceDataExportMutationOptions = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse | QuotaErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestWorkspaceDataExport>>, TError,RequestWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof requestWorkspaceDataExport>>, TError,RequestWorkspaceDataExportMutationVariables, TContext> => {
-
-const mutationKey = getRequestWorkspaceDataExportMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestWorkspaceDataExport>>, RequestWorkspaceDataExportMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  requestWorkspaceDataExport(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RequestWorkspaceDataExportMutationResult = NonNullable<Awaited<ReturnType<typeof requestWorkspaceDataExport>>>
-    export type RequestWorkspaceDataExportMutationBody = BodyType<WorkspaceDataExportRequest>
-    export type RequestWorkspaceDataExportMutationError = ErrorType<AuthErrorResponse | ConflictErrorResponse | QuotaErrorResponse>
-    export type RequestWorkspaceDataExportMutationVariables = {data: BodyType<WorkspaceDataExportRequest>}
-
-    export const useRequestWorkspaceDataExport = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse | QuotaErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestWorkspaceDataExport>>, TError,RequestWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof requestWorkspaceDataExport>>,
-        TError,
-        RequestWorkspaceDataExportMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRequestWorkspaceDataExportMutationOptions(options), queryClient);
-    }
-
-export const getGetWorkspaceDataExportUrl = (id: string,) => {
-
-
-
-
-  return `/api/workspace/data-exports/${id}`
-}
-
-export const getWorkspaceDataExport = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceDataExportJob> => {
-
-  return customFetch<WorkspaceDataExportJob>(getGetWorkspaceDataExportUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetWorkspaceDataExportQueryKey = (id: string,) => {
-    return [
-    `/api/workspace/data-exports/${id}`
-    ] as const;
-    }
-
-
-export const getGetWorkspaceDataExportQueryOptions = <TData = Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError = ErrorType<AuthErrorResponse>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetWorkspaceDataExportQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWorkspaceDataExport>>> = ({ signal }) => getWorkspaceDataExport(id, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetWorkspaceDataExportQueryResult = NonNullable<Awaited<ReturnType<typeof getWorkspaceDataExport>>>
-export type GetWorkspaceDataExportQueryError = ErrorType<AuthErrorResponse>
-
-
-export function useGetWorkspaceDataExport<TData = Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError = ErrorType<AuthErrorResponse>>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getWorkspaceDataExport>>,
-          TError,
-          Awaited<ReturnType<typeof getWorkspaceDataExport>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetWorkspaceDataExport<TData = Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError = ErrorType<AuthErrorResponse>>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getWorkspaceDataExport>>,
-          TError,
-          Awaited<ReturnType<typeof getWorkspaceDataExport>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetWorkspaceDataExport<TData = Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError = ErrorType<AuthErrorResponse>>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetWorkspaceDataExport<TData = Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError = ErrorType<AuthErrorResponse>>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetWorkspaceDataExportQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getCancelWorkspaceDataExportUrl = (id: string,) => {
-
-
-
-
-  return `/api/workspace/data-exports/${id}/cancel`
-}
-
-export const cancelWorkspaceDataExport = async (id: string,
-    workspaceDataExportAction: WorkspaceDataExportAction, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceDataExportJob> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<WorkspaceDataExportJob>(getCancelWorkspaceDataExportUrl(id),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(workspaceDataExportAction)
-  }
-);}
-
-
-
-
-
-export const getCancelWorkspaceDataExportMutationKey = () => ['cancelWorkspaceDataExport'] as const;
-
-export const getCancelWorkspaceDataExportMutationOptions = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelWorkspaceDataExport>>, TError,CancelWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof cancelWorkspaceDataExport>>, TError,CancelWorkspaceDataExportMutationVariables, TContext> => {
-
-const mutationKey = getCancelWorkspaceDataExportMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelWorkspaceDataExport>>, CancelWorkspaceDataExportMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  cancelWorkspaceDataExport(id,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CancelWorkspaceDataExportMutationResult = NonNullable<Awaited<ReturnType<typeof cancelWorkspaceDataExport>>>
-    export type CancelWorkspaceDataExportMutationBody = BodyType<WorkspaceDataExportAction>
-    export type CancelWorkspaceDataExportMutationError = ErrorType<AuthErrorResponse | ConflictErrorResponse>
-    export type CancelWorkspaceDataExportMutationVariables = {id: string;data: BodyType<WorkspaceDataExportAction>}
-
-    export const useCancelWorkspaceDataExport = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelWorkspaceDataExport>>, TError,CancelWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof cancelWorkspaceDataExport>>,
-        TError,
-        CancelWorkspaceDataExportMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCancelWorkspaceDataExportMutationOptions(options), queryClient);
-    }
-
-export const getRetryWorkspaceDataExportUrl = (id: string,) => {
-
-
-
-
-  return `/api/workspace/data-exports/${id}/retry`
-}
-
-export const retryWorkspaceDataExport = async (id: string,
-    workspaceDataExportAction: WorkspaceDataExportAction, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceDataExportJob> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<WorkspaceDataExportJob>(getRetryWorkspaceDataExportUrl(id),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(workspaceDataExportAction)
-  }
-);}
-
-
-
-
-
-export const getRetryWorkspaceDataExportMutationKey = () => ['retryWorkspaceDataExport'] as const;
-
-export const getRetryWorkspaceDataExportMutationOptions = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryWorkspaceDataExport>>, TError,RetryWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof retryWorkspaceDataExport>>, TError,RetryWorkspaceDataExportMutationVariables, TContext> => {
-
-const mutationKey = getRetryWorkspaceDataExportMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retryWorkspaceDataExport>>, RetryWorkspaceDataExportMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  retryWorkspaceDataExport(id,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RetryWorkspaceDataExportMutationResult = NonNullable<Awaited<ReturnType<typeof retryWorkspaceDataExport>>>
-    export type RetryWorkspaceDataExportMutationBody = BodyType<WorkspaceDataExportAction>
-    export type RetryWorkspaceDataExportMutationError = ErrorType<AuthErrorResponse | ConflictErrorResponse>
-    export type RetryWorkspaceDataExportMutationVariables = {id: string;data: BodyType<WorkspaceDataExportAction>}
-
-    export const useRetryWorkspaceDataExport = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryWorkspaceDataExport>>, TError,RetryWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof retryWorkspaceDataExport>>,
-        TError,
-        RetryWorkspaceDataExportMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRetryWorkspaceDataExportMutationOptions(options), queryClient);
-    }
-
-export const getDownloadPreparedWorkspaceDataUrl = (id: string,) => {
-
-
-
-
-  return `/api/workspace/data-exports/${id}/file`
-}
-
-export const downloadPreparedWorkspaceData = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
-
-  return customFetch<Blob>(getDownloadPreparedWorkspaceDataUrl(id),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getDownloadPreparedWorkspaceDataQueryKey = (id: string,) => {
-    return [
-    `/api/workspace/data-exports/${id}/file`
-    ] as const;
-    }
-
-
-export const getDownloadPreparedWorkspaceDataQueryOptions = <TData = Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDownloadPreparedWorkspaceDataQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>> = ({ signal }) => downloadPreparedWorkspaceData(id, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DownloadPreparedWorkspaceDataQueryResult = NonNullable<Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>>
-export type DownloadPreparedWorkspaceDataQueryError = ErrorType<AuthErrorResponse | ConflictErrorResponse>
-
-
-export function useDownloadPreparedWorkspaceData<TData = Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>,
-          TError,
-          Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDownloadPreparedWorkspaceData<TData = Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>,
-          TError,
-          Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDownloadPreparedWorkspaceData<TData = Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDownloadPreparedWorkspaceData<TData = Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPreparedWorkspaceData>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDownloadPreparedWorkspaceDataQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
 
 export const getRequestAccessSupportUrl = () => {
 
@@ -1469,6 +940,543 @@ export function useDownloadWorkspaceData<TData = Awaited<ReturnType<typeof downl
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getDownloadWorkspaceDataQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListWorkspaceDataExportsUrl = (params?: ListWorkspaceDataExportsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/workspace/data-exports?${stringifiedParams}` : `/api/workspace/data-exports`
+}
+
+export const listWorkspaceDataExports = async (params?: ListWorkspaceDataExportsParams, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceExportPage> => {
+
+  return customFetch<WorkspaceExportPage>(getListWorkspaceDataExportsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWorkspaceDataExportsQueryKey = (params?: ListWorkspaceDataExportsParams,) => {
+    return [
+    `/api/workspace/data-exports`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListWorkspaceDataExportsQueryOptions = <TData = Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError = ErrorType<unknown>>(params?: ListWorkspaceDataExportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorkspaceDataExportsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkspaceDataExports>>> = ({ signal }) => listWorkspaceDataExports(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListWorkspaceDataExportsQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkspaceDataExports>>>
+export type ListWorkspaceDataExportsQueryError = ErrorType<unknown>
+
+
+export function useListWorkspaceDataExports<TData = Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError = ErrorType<unknown>>(
+ params: undefined |  ListWorkspaceDataExportsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWorkspaceDataExports>>,
+          TError,
+          Awaited<ReturnType<typeof listWorkspaceDataExports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWorkspaceDataExports<TData = Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError = ErrorType<unknown>>(
+ params?: ListWorkspaceDataExportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWorkspaceDataExports>>,
+          TError,
+          Awaited<ReturnType<typeof listWorkspaceDataExports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWorkspaceDataExports<TData = Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError = ErrorType<unknown>>(
+ params?: ListWorkspaceDataExportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWorkspaceDataExports<TData = Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError = ErrorType<unknown>>(
+ params?: ListWorkspaceDataExportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceDataExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListWorkspaceDataExportsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateWorkspaceDataExportUrl = () => {
+
+
+
+
+  return `/api/workspace/data-exports`
+}
+
+export const createWorkspaceDataExport = async (workspaceExportRequest: WorkspaceExportRequest, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceExportJob> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<WorkspaceExportJob>(getCreateWorkspaceDataExportUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(workspaceExportRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateWorkspaceDataExportMutationKey = () => ['createWorkspaceDataExport'] as const;
+
+export const getCreateWorkspaceDataExportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkspaceDataExport>>, TError,CreateWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWorkspaceDataExport>>, TError,CreateWorkspaceDataExportMutationVariables, TContext> => {
+
+const mutationKey = getCreateWorkspaceDataExportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWorkspaceDataExport>>, CreateWorkspaceDataExportMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createWorkspaceDataExport(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWorkspaceDataExportMutationResult = NonNullable<Awaited<ReturnType<typeof createWorkspaceDataExport>>>
+    export type CreateWorkspaceDataExportMutationBody = BodyType<WorkspaceExportRequest>
+    export type CreateWorkspaceDataExportMutationError = ErrorType<unknown>
+    export type CreateWorkspaceDataExportMutationVariables = {data: BodyType<WorkspaceExportRequest>}
+
+    export const useCreateWorkspaceDataExport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkspaceDataExport>>, TError,CreateWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createWorkspaceDataExport>>,
+        TError,
+        CreateWorkspaceDataExportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateWorkspaceDataExportMutationOptions(options), queryClient);
+    }
+
+export const getGetWorkspaceDataExportUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/data-exports/${id}`
+}
+
+export const getWorkspaceDataExport = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceExportJob> => {
+
+  return customFetch<WorkspaceExportJob>(getGetWorkspaceDataExportUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWorkspaceDataExportQueryKey = (id: string,) => {
+    return [
+    `/api/workspace/data-exports/${id}`
+    ] as const;
+    }
+
+
+export const getGetWorkspaceDataExportQueryOptions = <TData = Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError = ErrorType<unknown>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWorkspaceDataExportQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWorkspaceDataExport>>> = ({ signal }) => getWorkspaceDataExport(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetWorkspaceDataExportQueryResult = NonNullable<Awaited<ReturnType<typeof getWorkspaceDataExport>>>
+export type GetWorkspaceDataExportQueryError = ErrorType<unknown>
+
+
+export function useGetWorkspaceDataExport<TData = Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError = ErrorType<unknown>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWorkspaceDataExport>>,
+          TError,
+          Awaited<ReturnType<typeof getWorkspaceDataExport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWorkspaceDataExport<TData = Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWorkspaceDataExport>>,
+          TError,
+          Awaited<ReturnType<typeof getWorkspaceDataExport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWorkspaceDataExport<TData = Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWorkspaceDataExport<TData = Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkspaceDataExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetWorkspaceDataExportQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCancelWorkspaceDataExportUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/data-exports/${id}/cancel`
+}
+
+export const cancelWorkspaceDataExport = async (id: string,
+    workspaceExportAction: WorkspaceExportAction, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceExportJob> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<WorkspaceExportJob>(getCancelWorkspaceDataExportUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(workspaceExportAction)
+  }
+);}
+
+
+
+
+
+export const getCancelWorkspaceDataExportMutationKey = () => ['cancelWorkspaceDataExport'] as const;
+
+export const getCancelWorkspaceDataExportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelWorkspaceDataExport>>, TError,CancelWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelWorkspaceDataExport>>, TError,CancelWorkspaceDataExportMutationVariables, TContext> => {
+
+const mutationKey = getCancelWorkspaceDataExportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelWorkspaceDataExport>>, CancelWorkspaceDataExportMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  cancelWorkspaceDataExport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelWorkspaceDataExportMutationResult = NonNullable<Awaited<ReturnType<typeof cancelWorkspaceDataExport>>>
+    export type CancelWorkspaceDataExportMutationBody = BodyType<WorkspaceExportAction>
+    export type CancelWorkspaceDataExportMutationError = ErrorType<unknown>
+    export type CancelWorkspaceDataExportMutationVariables = {id: string;data: BodyType<WorkspaceExportAction>}
+
+    export const useCancelWorkspaceDataExport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelWorkspaceDataExport>>, TError,CancelWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof cancelWorkspaceDataExport>>,
+        TError,
+        CancelWorkspaceDataExportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCancelWorkspaceDataExportMutationOptions(options), queryClient);
+    }
+
+export const getRetryWorkspaceDataExportUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/data-exports/${id}/retry`
+}
+
+export const retryWorkspaceDataExport = async (id: string,
+    workspaceExportAction: WorkspaceExportAction, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceExportJob> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<WorkspaceExportJob>(getRetryWorkspaceDataExportUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(workspaceExportAction)
+  }
+);}
+
+
+
+
+
+export const getRetryWorkspaceDataExportMutationKey = () => ['retryWorkspaceDataExport'] as const;
+
+export const getRetryWorkspaceDataExportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryWorkspaceDataExport>>, TError,RetryWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof retryWorkspaceDataExport>>, TError,RetryWorkspaceDataExportMutationVariables, TContext> => {
+
+const mutationKey = getRetryWorkspaceDataExportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof retryWorkspaceDataExport>>, RetryWorkspaceDataExportMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  retryWorkspaceDataExport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RetryWorkspaceDataExportMutationResult = NonNullable<Awaited<ReturnType<typeof retryWorkspaceDataExport>>>
+    export type RetryWorkspaceDataExportMutationBody = BodyType<WorkspaceExportAction>
+    export type RetryWorkspaceDataExportMutationError = ErrorType<unknown>
+    export type RetryWorkspaceDataExportMutationVariables = {id: string;data: BodyType<WorkspaceExportAction>}
+
+    export const useRetryWorkspaceDataExport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryWorkspaceDataExport>>, TError,RetryWorkspaceDataExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof retryWorkspaceDataExport>>,
+        TError,
+        RetryWorkspaceDataExportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRetryWorkspaceDataExportMutationOptions(options), queryClient);
+    }
+
+export const getDownloadWorkspaceDataArtifactUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/data-exports/${id}/download`
+}
+
+export const downloadWorkspaceDataArtifact = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceDataExport | Blob> => {
+
+  return customFetch<WorkspaceDataExport | Blob>(getDownloadWorkspaceDataArtifactUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadWorkspaceDataArtifactQueryKey = (id: string,) => {
+    return [
+    `/api/workspace/data-exports/${id}/download`
+    ] as const;
+    }
+
+
+export const getDownloadWorkspaceDataArtifactQueryOptions = <TData = Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError = ErrorType<unknown>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadWorkspaceDataArtifactQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>> = ({ signal }) => downloadWorkspaceDataArtifact(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadWorkspaceDataArtifactQueryResult = NonNullable<Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>>
+export type DownloadWorkspaceDataArtifactQueryError = ErrorType<unknown>
+
+
+export function useDownloadWorkspaceDataArtifact<TData = Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError = ErrorType<unknown>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>,
+          TError,
+          Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadWorkspaceDataArtifact<TData = Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>,
+          TError,
+          Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadWorkspaceDataArtifact<TData = Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadWorkspaceDataArtifact<TData = Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadWorkspaceDataArtifact>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadWorkspaceDataArtifactQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

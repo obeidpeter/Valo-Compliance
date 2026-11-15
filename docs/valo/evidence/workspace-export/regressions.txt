@@ -1,0 +1,54 @@
+▶ real development access intake, privacy isolation and staff boundaries
+  ✔ no login or account lookup is needed; confirmation is saved, never dispatched (24.879977ms)
+  ✔ idempotent retry preserves one record; altered reuse fails (26.367381ms)
+  ✔ honeypot and invalid email fail without saving (2.828066ms)
+  ✔ concurrent verified-or-unverified contacts cannot create unlimited anonymous tickets (322.049141ms)
+  ✔ different contacts receive the same non-enumerating wording (32.331025ms)
+  ✔ privacy requests really persist and do not claim deletion (123.706553ms)
+  ✔ workspace JSON export includes saved revisions but excludes another business (278.418735ms)
+  ✔ JSON v2 includes owned file/job metadata, never private locators or queue identifiers (192.271672ms)
+  ✔ activity export is restricted to this requester and workspace (75.038754ms)
+  ✔ an over-limit metadata section fails explicitly rather than returning a truncated download (456.04369ms)
+  ✔ large scoped download spans pages without truncation, private fields or another tenant; scratch is removed (8288.922803ms)
+  ✔ download consumer failure removes private scratch instead of leaving a prepared result (312.685645ms)
+  ✔ revoked membership cannot retrieve exports or saved privacy requests (14.29264ms)
+  ✔ no staff permission, missing MFA and cross-area substitution all fail (58.402833ms)
+✔ real development access intake, privacy isolation and staff boundaries (10493.55571ms)
+✔ download release accepts only the same active session and currently verified primary identity (2.798497ms)
+✔ download rejects missing user before provider reads (0.578734ms)
+✔ download rejects missing session before provider reads (3.430549ms)
+✔ download rejects changed requester before provider reads (0.188702ms)
+✔ download rejects revoked session at release (0.236577ms)
+✔ download rejects wrong session user at release (3.023721ms)
+✔ download rejects wrong returned user at release (0.192842ms)
+✔ download rejects banned identity at release (0.115758ms)
+✔ download rejects locked identity at release (3.827874ms)
+✔ download rejects unverified primary email at release (1.217072ms)
+✔ download rejects missing primary email at release (1.3682ms)
+✔ provider failure holds the file instead of accepting the earlier session check (1.045144ms)
+▶ erasure holds, bounded recovery and accepted-upload process death
+  ✔ distinct advisory locks cannot exhaust a one-connection shared data pool (124.723161ms)
+  ✔ holds and revoked roles stop the next object, while an in-flight result remains recorded (8952.982202ms)
+  ✔ actual export worker cleans an upload finishing after its tracking/job rows were erased (1863.720783ms)
+  ✔ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (5991.948611ms)
+✔ erasure holds, bounded recovery and accepted-upload process death (16996.497968ms)
+▶ real paged workspace download, final authorization and disconnect cleanup
+  ✔ same-origin cookie download spans pages and returns a complete private attachment (4783.74587ms)
+  ✔ an unauthenticated browser receives no attachment (8.245054ms)
+  ✔ session_revoked after preparation releases no private bytes and removes scratch (4499.233038ms)
+  ✔ locked after preparation releases no private bytes and removes scratch (3917.229844ms)
+  ✔ email_unverified after preparation releases no private bytes and removes scratch (3835.153108ms)
+  ✔ membership_revoked after preparation releases no private bytes and removes scratch (3114.609226ms)
+  ✔ cooperative cancellation stops the actual row collector before another row is written (92.75535ms)
+  ✔ browser disconnect while awaiting final session read prevents release and cleans scratch (2904.538752ms)
+  ✔ disconnect during native transfer removes the completed private scratch file (2883.738869ms)
+  ✔ a fresh request after an interrupted download regenerates the complete snapshot (3001.687326ms)
+✔ real paged workspace download, final authorization and disconnect cleanup (29701.566155ms)
+ℹ tests 43
+ℹ suites 0
+ℹ pass 43
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 34262.595055

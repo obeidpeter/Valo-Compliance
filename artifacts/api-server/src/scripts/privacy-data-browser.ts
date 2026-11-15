@@ -24,7 +24,6 @@ window.fetch=async(url,options={})=>{
  // listPrivacyCases is an array in the actual OpenAPI contract.
  if(path.includes("privacy-cases"))return Response.json([]);
  if(path.includes("/account"))return Response.json({workspaceId:actor,privacyRequests:[]});
-  if(path.includes("/data-exports"))return Response.json({items:[],nextCursor:null});
   if(path.includes("/data-export"))throw Error("EXPORT_MUST_USE_NATIVE_ATTACHMENT");
  return Response.json({});
 };
@@ -98,7 +97,6 @@ try{
   await expect(page.getByTestId("workspace-export-scope")).toContainText("export/file metadata");
   await expect(page.getByTestId("workspace-export-scope")).toContainText("not complete privacy fulfilment");
   const button=page.getByTestId("button-download-workspace");
-   await page.getByTestId("workspace-export-fallback").locator("summary").click();
   await button.focus();await expect(button).toBeFocused();
   const event=page.waitForEvent("download");await page.keyboard.press("Enter");const download=await event;
   const file=await download.path();if(!file)throw Error("DOWNLOAD_FILE_MISSING");
@@ -122,8 +120,7 @@ try{
    await page.waitForTimeout(100);
   expect(downloads.length).toBe(1);
    checks.push("Real AccountStateBoundary unmounted A's iframe and aborted its held HTTP request before headers; server release produced no previous-account attachment");
-   await page.getByTestId("workspace-export-fallback").locator("summary").click();
-   const next=page.waitForEvent("download");await page.getByTestId("button-download-workspace").click();
+  const next=page.waitForEvent("download");await page.getByTestId("button-download-workspace").click();
   const nextFile=await(await next).path();if(!nextFile)throw Error("DOWNLOAD_FILE_MISSING");
   const b=JSON.parse(await readFile(nextFile,"utf8"));expect(b.workspaceId).toBe("B");
    expect(b.data.fileMetadata[0].id).toBe("FILE_B");expect(JSON.stringify(b)).not.toContain("FILE_A");
@@ -143,5 +140,4 @@ try{
   await page.screenshot({path:resolve(out,"privacy-data-browser.jpg"),fullPage:true});
    await browser.close();server.closeAllConnections();await new Promise<void>((r,j)=>server.close(e=>e?j(e):r()));
 }
-
 

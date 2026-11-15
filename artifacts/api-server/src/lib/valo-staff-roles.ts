@@ -2,7 +2,7 @@ import {randomUUID,createHash} from "node:crypto";
 import {clerkClient} from "@clerk/express";
 import {and,desc,eq,sql} from "drizzle-orm";
 import {db,valoStaffAssignments,valoStaffAccessAudit,valoStaffRoleChanges} from "@workspace/db";
-import {ChangeStaffRoleBody,VerifyStaffRoleTargetBody} from "@workspace/api-zod";
+import {ChangeStaffRoleBody,VerifyStaffRoleTargetBody,GetStaffRoleAdministrationQueryParams} from "@workspace/api-zod";
 import {activeStaffAssignment,assertStaffAssignmentCurrent,requireFreshStaffSession,type StaffActor} from "./valo-staff-authority";
 import {ValoProblem} from "./valo-problem";
 type Tx=Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -37,11 +37,11 @@ function assertTarget(target:StaffTarget,id:string){
 }
 export function makeStaffRoleService(verifyTarget:TargetVerifier=verifyManagedTarget){
  return{
- async list(actor:StaffActor){return db.transaction(async tx=>{
+ async list(actor:StaffActor,raw:unknown={}){const input=GetStaffRoleAdministrationQueryParams.strict().parse(raw);return db.transaction(async tx=>{
   const access=await systemAuthority(tx,actor);
   await tx.insert(valoStaffAccessAudit).values({id:randomUUID(),assignmentId:access.id,actorId:actor.identityId,area:"system",reason:"Read staff assignments and immutable role-change alerts"});
-  const assignments=await tx.select().from(valoStaffAssignments).orderBy(desc(valoStaffAssignments.grantedAt),valoStaffAssignments.id).limit(250);
-  const changes=await tx.select().from(valoStaffRoleChanges).orderBy(desc(valoStaffRoleChanges.createdAt),desc(valoStaffRoleChanges.id)).limit(100);
+  const assignments=await tx.select().from(valoStaffAssignments).where(input.identityId?eq(valoStaffAssignments.identityId,input.identityId):undefined).orderBy(desc(valoStaffAssignments.grantedAt),valoStaffAssignments.id).limit(250);
+  const changes=await tx.select().from(valoStaffRoleChanges).where(input.identityId?eq(valoStaffRoleChanges.targetIdentityId,input.identityId):undefined).orderBy(desc(valoStaffRoleChanges.createdAt),desc(valoStaffRoleChanges.id)).limit(100);
   return{assignments:assignments.map(assignmentView),changes:changes.map(changeView),
    notice:"Role changes are permanent audit records. Emergency permissions expire after at most 60 minutes without a worker. No role bypasses content, privacy or payment safeguards."};
  });},
@@ -57,7 +57,7 @@ export function makeStaffRoleService(verifyTarget:TargetVerifier=verifyManagedTa
   if(input.action==="grant"&&input.identityId===actor.identityId)throw new ValoProblem(403,"You cannot grant or renew your own permissions.");
   if(input.action==="grant"){
    if(!input.grantMode)throw new ValoProblem(422,"Choose permanent or emergency access.");
-   if(input.grantMode==="break_glass"&&(!input.durationMinutes||!input.incidentReference?.trim()))
+   if(input.grantMode==="break_glass"&&(!input.durationMinutes||(input.incidentReference?.trim().length??0)<5))
     throw new ValoProblem(422,"Emergency access requires a duration of 5–60 minutes and an incident reference.");
    if(input.grantMode==="permanent"&&(input.durationMinutes!==undefined||input.incidentReference!==undefined))
     throw new ValoProblem(422,"Permanent access must not include emergency expiry fields.");
@@ -90,6 +90,9 @@ export function makeStaffRoleService(verifyTarget:TargetVerifier=verifyManagedTa
     if(permanent.filter(a=>a.id!==old.id).length===0)throw new ValoProblem(409,"Keep at least one permanent system administrator. Verify and assign another administrator first.");
    }
    const clock=await tx.execute(sql`SELECT clock_timestamp() AS current_time`),now=new Date(String(clock.rows[0].current_time));
+   // Target row and last-admin reads may wait: authority and provider eligibility
+   // must still be fresh at the actual write boundary, not only before the wait.
+   requireFreshStaffSession(actor);if(target)assertTarget(target,input.identityId);
    const grant=input.action==="grant"?{active:true,grantMode:input.grantMode!,expiresAt:input.grantMode==="break_glass"?new Date(now.getTime()+input.durationMinutes!*60_000):null,grantedAt:now,grantedBy:actor.identityId,reason:input.reason}:{active:false,reason:input.reason};
    const[next]=old?await tx.update(valoStaffAssignments).set({...grant,version:old.version+1}).where(eq(valoStaffAssignments.id,old.id)).returning():
     await tx.insert(valoStaffAssignments).values({id:randomUUID(),identityId:input.identityId,role:input.role,...grant,grantedBy:actor.identityId,reason:input.reason}).returning();

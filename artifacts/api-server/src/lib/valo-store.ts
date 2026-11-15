@@ -16,6 +16,16 @@ import {privacyIdentityHashes} from "./valo-privacy-keys";
 export {ValoProblem} from "./valo-problem";
 export type WorkspaceActor = { workspaceId: string; identityId: string };
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+/** Read authorization must not retain a membership SHARE lock during a long
+ * snapshot. Call using a current, separate transaction at each page boundary. */
+export async function authorizeWorkspaceRead(tx:Tx,actor:WorkspaceActor){
+  const[member]=await tx.select().from(valoMemberships).where(and(eq(valoMemberships.workspaceId,actor.workspaceId),
+    eq(valoMemberships.identityId,actor.identityId)));
+  if(!member||member.active!=="yes")throw new ValoProblem(403,"Active workspace membership is required.");
+  const[deleted]=await tx.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones)
+    .where(eq(valoPrivacyTombstones.workspaceId,actor.workspaceId)).limit(1);
+  if(deleted)throw new ValoProblem(403,"Workspace deletion is recorded. Access is unavailable.");
+}
 /** Acquire after potentially blocking resource locks, immediately before writing.
  * Revocation committed while a request waited must win. Holding this row lock
  * makes the eventual write/revocation order linearizable until commit. */

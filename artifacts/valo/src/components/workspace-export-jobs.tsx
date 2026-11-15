@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { WorkspaceDataDownload } from './workspace-data-download';
+import { PreparedWorkspaceDownload } from './prepared-workspace-download';
 import {
   activeWorkspaceExport, expiredWorkspaceExport, workspaceExportDownloadPath, mergeWorkspaceExports,
   workspaceExportError, listWorkspaceExports, getWorkspaceExport, requestWorkspaceExport, actOnWorkspaceExport,
@@ -7,8 +7,8 @@ import {
 } from '../lib/workspace-export-jobs';
 
 const LABELS: Record<WorkspaceExportJob['status'], string> = {
-  queued: 'Queued', running: 'Preparing', retrying: 'Retrying preparation', ready: 'Ready to download',
-  failed: 'Preparation failed', cancelled: 'Cancelled', expired: 'Expired',
+  queued: 'Queued', preparing: 'Preparing', ready: 'Ready to download',
+  interrupted: 'Preparation interrupted', cancelled: 'Cancelled', expired: 'Expired',
 };
 const bytesLabel = (bytes: number) => bytes < 1_000_000 ? `${Math.ceil(bytes / 1000).toLocaleString()} KB` : `${(bytes / 1_000_000).toFixed(1)} MB`;
 const dateLabel = (date: string) => new Date(date).toLocaleString();
@@ -78,7 +78,7 @@ export function WorkspaceExportJobs({ pollMs = 2000 }: { pollMs?: number }) {
     return () => clearInterval(timer);
   }, [activeIds, accessDenied, pollMs, report]);
   useEffect(() => {
-    if (!jobs.some(job => job.status === 'ready')) return;
+    if (!jobs.some(job => !['cancelled','expired'].includes(job.status))) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [jobs]);
@@ -115,9 +115,9 @@ export function WorkspaceExportJobs({ pollMs = 2000 }: { pollMs?: number }) {
   }
 
   return <div className="mt-5 grid min-w-0 gap-4" data-testid="workspace-export-jobs">
-    <p className="text-sm text-muted-foreground">Prepare a private JSON snapshot, then return here to download it. Preparation continues when you leave or reload. Prepared files are available for 24 hours after they are ready; this is a product availability limit, not a legal retention period.</p>
+    <p className="text-sm text-muted-foreground">Prepare a private JSON snapshot, then return here to download it. Preparation continues when you leave or reload. Prepared files are available until the displayed expiry, 24 hours after the original request; this is a product availability limit, not a legal retention period.</p>
     <div className="flex flex-wrap gap-3">
-      <button type="button" className="btn btn-primary" data-testid="button-request-workspace-export" disabled={!loaded || loading || !!busy || accessDenied || !!activeIds && !uncertainCreate} onClick={() => void mutate('create')}>
+      <button type="button" className="btn btn-primary" data-testid="button-request-workspace-export" disabled={!loaded || loading || !!busy || accessDenied || jobs.some(job => !expiredWorkspaceExport(job, now) && ['queued','preparing','interrupted'].includes(job.status)) && !uncertainCreate} onClick={() => void mutate('create')}>
         {busy === 'create' ? 'Requesting export…' : uncertainCreate ? 'Retry export request' : 'Prepare workspace export'}
       </button>
       <button type="button" className="btn btn-ghost" disabled={loading || !!busy} onClick={() => void refresh()} data-testid="button-refresh-workspace-exports">{loading ? 'Refreshing…' : 'Refresh exports'}</button>
@@ -138,17 +138,17 @@ export function WorkspaceExportJobs({ pollMs = 2000 }: { pollMs?: number }) {
             <span className="text-xs text-muted-foreground">Requested {dateLabel(job.createdAt)}</span>
           </div>
           <p className="mt-2 text-xs break-all text-muted-foreground">Reference {job.id}</p>
-          {(activeWorkspaceExport(job) || job.status === 'ready') && !expired && <p className="mt-2 text-sm" aria-live="polite">{job.rowsProcessed.toLocaleString()} rows read · {bytesLabel(job.bytesPrepared)} prepared{activeWorkspaceExport(job) ? ' so far' : ''}</p>}
-          {job.status === 'failed' && <p className="mt-2 text-sm">Preparation could not finish. {job.mayRetry ? 'You can request another preparation attempt.' : 'Retry is unavailable; request a new export or contact support with this reference.'}</p>}
+          {(activeWorkspaceExport(job) || job.status === 'ready') && !expired && <p className="mt-2 text-sm" aria-live="polite">{job.progress.rows.toLocaleString()} rows read · {bytesLabel(job.progress.bytes)} prepared{activeWorkspaceExport(job) ? ' so far' : ''}</p>}
+          {job.status === 'interrupted' && <p className="mt-2 text-sm">Preparation could not finish. {job.retryAvailable ? 'You can request another preparation attempt.' : 'Retry is unavailable; request a new export or contact support with this reference.'}</p>}
           {expired && <p className="mt-2 text-sm">This prepared file is no longer available. Request a new export for current data.</p>}
           {job.status === 'ready' && !expired && job.expiresAt && <p className="mt-2 text-sm">Available until {dateLabel(job.expiresAt)}.</p>}
-          {job.status === 'ready' && !expired && job.mayCancel && <p className="mt-2 text-sm">Removing this prepared export withdraws download availability. Cleanup follows recorded holds; downloaded copies are not removed.</p>}
-          <details className="mt-3 text-sm"><summary className="cursor-pointer">Export scope</summary><p className="mt-2 break-words text-muted-foreground">{job.scope}</p></details>
+          {job.status === 'ready' && !expired && !['cancelled', 'expired'].includes(job.status) && <p className="mt-2 text-sm">Removing this prepared export withdraws download availability. Cleanup follows recorded holds; downloaded copies are not removed.</p>}
+          <details className="mt-3 text-sm"><summary className="cursor-pointer">Export scope</summary><p className="mt-2 break-words text-muted-foreground">{job.notice}</p></details>
           <div className="mt-3 flex flex-wrap gap-3">
-            {job.mayCancel && (activeWorkspaceExport(job) || job.status === 'ready' && !expired) && <button type="button" className="btn btn-ghost btn-sm" disabled={!!busy} onClick={() => void mutate('cancel', job)} data-testid={`cancel-export-${job.id}`}>{busy === job.id ? 'Updating…' : job.status === 'ready' ? 'Remove prepared export' : 'Cancel export'}</button>}
-            {job.mayRetry && !activeWorkspaceExport(job) && !file && <button type="button" className="btn btn-ghost btn-sm" disabled={!!busy} onClick={() => void mutate('retry', job)} data-testid={`retry-export-${job.id}`}>{busy === job.id ? 'Updating…' : 'Retry preparation'}</button>}
+            {!['cancelled', 'expired'].includes(job.status) && !expired && <button type="button" className="btn btn-ghost btn-sm" disabled={!!busy} onClick={() => void mutate('cancel', job)} data-testid={`cancel-export-${job.id}`}>{busy === job.id ? 'Updating…' : job.status === 'ready' ? 'Remove prepared export' : 'Cancel export'}</button>}
+            {job.retryAvailable && !activeWorkspaceExport(job) && !file && <button type="button" className="btn btn-ghost btn-sm" disabled={!!busy} onClick={() => void mutate('retry', job)} data-testid={`retry-export-${job.id}`}>{busy === job.id ? 'Updating…' : 'Retry preparation'}</button>}
           </div>
-          {file && <WorkspaceDataDownload key={`${job.id}:${job.version}`} endpoint={file} buttonLabel="Download prepared JSON" testIdPrefix={`export-${job.id}`} preparedFile />}
+          {file && <PreparedWorkspaceDownload key={`${job.id}:${job.version}`} endpoint={file} buttonLabel="Download prepared JSON" testIdPrefix={`export-${job.id}`} preparedFile />}
         </li>;
       })}
     </ul>

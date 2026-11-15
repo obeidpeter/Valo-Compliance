@@ -2,7 +2,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
 import express from "express";
-import {and,eq,sql} from "drizzle-orm";
+import {and,eq,inArray,sql} from "drizzle-orm";
 import {db,pool,valoStaffAssignments,valoStaffRoleChanges} from "@workspace/db";
 import {makeStaffRoleService,type StaffTarget} from "./valo-staff-roles";
 import {requireFinance,assertFinanceActor} from "./valo-refunds";
@@ -54,6 +54,23 @@ test("staff role governance: disposable PostgreSQL, managed-session boundary and
    await db.update(valoStaffAssignments).set({active:false}).where(eq(valoStaffAssignments.id,role));release();assert.equal((await result)?.status,403);
    barrier=undefined;await db.update(valoStaffAssignments).set({active:true}).where(eq(valoStaffAssignments.id,role));assert.equal(await assignment(c,"finance"),undefined);
   });
+  await t.test("actor and target freshness are rechecked after the actual target-row lock wait",async()=>{
+   for(const stale of ["actor","target"] as const){
+    const before=await assignment(b,"finance"),auditBefore=(await db.select().from(valoStaffRoleChanges)).length;
+    let entered!:(pid:number)=>void,release!:()=>void;const locked=new Promise<number>(r=>entered=r),hold=new Promise<void>(r=>release=r);
+    const blocker=db.transaction(async tx=>{const pid=await tx.execute(sql`SELECT pg_backend_pid() AS pid`);await tx.execute(sql`SELECT id FROM valo_staff_assignments WHERE id=${before.id} FOR UPDATE`);entered(Number(pid.rows[0].pid));await hold;});const blockerPid=await locked;
+    const measured=Date.now()-29000,currentActor=stale==="actor"?{...actor(),verifiedAt:measured}:actor();target=stale==="target"?{verifiedAt:measured}:{};
+    const pending=service.change(currentActor,input(b,{expectedVersion:before.version}));const result=pending.then(()=>null,e=>e);
+    let observed=false;const deadline=Date.now()+3000;
+    try{
+     while(Date.now()<deadline){const waiting=await db.execute(sql`SELECT pid FROM pg_stat_activity WHERE ${blockerPid}::integer=ANY(pg_blocking_pids(pid))`);if(waiting.rowCount){observed=true;break;}await new Promise(r=>setTimeout(r,10));}
+     assert.equal(observed,true,"the real role mutation waits on this target row");
+     await new Promise(r=>setTimeout(r,Math.max(0,30010-(Date.now()-measured))));
+    }finally{release();await blocker;target={};}
+    assert.equal((await result)?.status,403);assert.equal((await assignment(b,"finance")).version,before.version);
+    assert.equal((await db.select().from(valoStaffRoleChanges)).length,auditBefore,"stale eligibility creates no role-change receipt");
+   }
+  });
   await t.test("all current staff guards reject expired emergency roles without a cleanup worker",async()=>{
    for(const r of ["content","support","finance","system","privacy"] as const){
     const old=await assignment(b,r);await service.change(actor(),input(b,{role:r,expectedVersion:old?.version??0,grantMode:"break_glass",durationMinutes:5,incidentReference:"SYNTHETIC-INCIDENT"}));
@@ -88,6 +105,15 @@ test("staff role governance: disposable PostgreSQL, managed-session boundary and
     const before=lookups;assert.equal((await fetch(base+"/admin/staff-role-target",{method:"POST",headers:{"Content-Type":"application/json",Origin:"https://hostile.invalid"},body:JSON.stringify({identityId:c})})).status,403);assert.equal(lookups,before);
     const valid=await fetch(base+"/admin/staff-role-target",{method:"POST",headers:{"Content-Type":"application/json",Origin:base},body:JSON.stringify({identityId:c})});assert.equal(valid.status,200);
    }finally{await new Promise<void>(r=>server.close(()=>r()));if(origin===undefined)delete process.env.VALO_TRUSTED_ORIGIN;else process.env.VALO_TRUSTED_ORIGIN=origin;}
+  });
+  await t.test("exact identity lookup reaches old permissions and revokes without the target provider",async()=>{
+   const fillers=Array.from({length:251},()=>({id:randomUUID(),identityId:"user_synthetic_old_"+randomUUID(),role:"support" as const,active:false,grantedBy:"owned synthetic fixture",reason:"Inactive directory pagination fixture only",grantedAt:new Date()}));
+   await db.insert(valoStaffAssignments).values(fillers);
+   try{
+    const old=await assignment(b,"finance"),overview=await service.list(actor());assert.equal(overview.assignments.some(r=>r.id===old.id),false);
+    lookupFailure=true;const exact=await service.list(actor(),{identityId:b});assert.equal(exact.assignments.find(r=>r.id===old.id)?.version,old.version);
+    const revoked=await service.change(actor(),input(b,{action:"revoke",grantMode:undefined,expectedVersion:old.version}));assert.equal(revoked.action,"revoke");assert.equal((await assignment(b,"finance")).active,false);
+   }finally{lookupFailure=false;await db.delete(valoStaffAssignments).where(inArray(valoStaffAssignments.id,fillers.map(r=>r.id)));}
   });
   await t.test("last permanent admin survives self-revocation and racing mutual revocations",async()=>{
    await assert.rejects(service.change(actor(),input(a,{action:"revoke",role:"system",expectedVersion:1,grantMode:undefined})),{status:409});
