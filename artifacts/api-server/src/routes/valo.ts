@@ -15,10 +15,13 @@ import { GetReleasedResourceResponse as ReleasedResource } from "@workspace/api-
 import { publicAccessRouter,customerAccessRouter,staffOperationsRouter } from "./valo-customer-access";
 import { releasedResources } from "../lib/valo-released-content";
 import { commerceRouter } from "./valo-commerce";
+import {savedTemplateList,saveTemplate,unsaveTemplate} from "../lib/valo-saved-templates";
+import {publicDiscovery} from "../lib/valo-public-discovery";
 
 const router = Router();
 router.use(publicAccessRouter);
 router.use(staffOperationsRouter);
+router.get("/public/discovery",async(_req,res)=>{res.set("Cache-Control","no-store");res.json(await publicDiscovery());});
 router.get("/public/resources",async(_req,res)=>{
   res.set("Cache-Control","no-store");res.json((await releasedResources()).map(r=>ReleasedResource.parse(r)));
 });
@@ -46,7 +49,7 @@ router.get("/public/templates/:slug",async(req,res)=>{
   res.set("Cache-Control","no-store");res.json(GetReleasedTemplateResponse.parse(await releasedTemplate(z.string().max(100).parse(req.params.slug))));
 });
 router.get("/public/recommendations",async(_req,res)=>{
-  res.set("Cache-Control","no-store");res.json(await releasedCatalogue());
+  res.set("Cache-Control","no-store");res.json(await releasedCatalogue({type:"template"}));
 });
 router.get("/public/status", async (_req, res) => {
   const state = readiness();
@@ -82,6 +85,9 @@ router.get("/development/content", async (_req, res) => {
 router.use("/workspace", sameOriginMutation, verifiedWorkspace);
 router.use(customerAccessRouter);
 router.use(commerceRouter);
+router.get("/workspace/saved-templates",async(_req,res)=>{res.set("Cache-Control","private, no-store");res.json(await savedTemplateList(res.locals.valoActor));});
+router.put("/workspace/saved-templates/:id",async(req,res)=>{res.set("Cache-Control","private, no-store");res.json(await saveTemplate(res.locals.valoActor,z.string().uuid().parse(req.params.id)));});
+router.delete("/workspace/saved-templates/by-template/:templateId",async(req,res)=>{res.set("Cache-Control","private, no-store");res.json(await unsaveTemplate(res.locals.valoActor,z.string().regex(/^[A-Za-z0-9_-]{1,80}$/).parse(req.params.templateId)));});
 router.get("/workspace", async (_req, res) => { res.json(await store.getWorkspace(res.locals.valoActor)); });
 router.put("/workspace/profile", async (req, res) => { res.json(await store.saveProfile(res.locals.valoActor, req.body)); });
 router.get("/workspace/documents", async (_req, res) => { res.json(await store.listDocuments(res.locals.valoActor)); });

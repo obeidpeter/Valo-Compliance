@@ -72,8 +72,39 @@ export const valoPaymentDisputes=pgTable("valo_payment_disputes",{
   id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),orderId:uuid("order_id").notNull(),
   providerId:text("provider_id").notNull().unique(),status:text("status").notNull(),resolution:text("resolution"),
   amountKobo:integer("amount_kobo"),checkedAt:timestamp("checked_at",{withTimezone:true}).notNull().defaultNow(),
+  providerUpdatedAt:timestamp("provider_updated_at",{withTimezone:true}),snapshotHash:text("snapshot_hash"),category:text("category"),
 },t=>[foreignKey({name:"valo_dispute_order_tenant_fk",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
 export const insertValoOrderSchema=createInsertSchema(valoOrders);
+/** Financial evidence is structured text, never attachment bytes or signed URLs.
+ * A customer statement is not a bank dispute or independent proof of delivery. */
+export const valoDisputeInformation=pgTable("valo_dispute_information",{
+  id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),orderId:uuid("order_id").notNull(),
+  disputeId:uuid("dispute_id").notNull().references(()=>valoPaymentDisputes.id),actorId:text("actor_id").notNull(),
+  requestKey:uuid("request_key").notNull(),information:jsonb("information").$type<Record<string,string>>().notNull(),
+  consentVersion:text("consent_version").notNull(),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
+},t=>[uniqueIndex("valo_dispute_information_request").on(t.workspaceId,t.requestKey),
+  foreignKey({name:"valo_dispute_information_order_fk",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
+export const valoDisputeActions=pgTable("valo_dispute_actions",{
+  id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),orderId:uuid("order_id").notNull(),
+  disputeId:uuid("dispute_id").notNull().references(()=>valoPaymentDisputes.id),requestKey:uuid("request_key").notNull(),
+  kind:text("kind").notNull(),status:text("status").notNull().default("prepared"),version:integer("version").notNull().default(1),
+  informationId:uuid("information_id").references(()=>valoDisputeInformation.id),
+  payload:jsonb("payload").$type<Record<string,string|number>>().notNull(),sourceHash:text("source_hash").notNull(),
+  policyVersion:text("policy_version").notNull(),authorisedBy:text("authorised_by").notNull(),
+  attempts:integer("attempts").notNull().default(0),claimToken:uuid("claim_token"),
+  result:jsonb("result").$type<Record<string,string>>(),failure:text("failure"),
+  createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
+  updatedAt:timestamp("updated_at",{withTimezone:true}).notNull().defaultNow(),
+},t=>[uniqueIndex("valo_dispute_action_request").on(t.disputeId,t.requestKey),
+  index("valo_dispute_action_order").on(t.workspaceId,t.orderId),
+  foreignKey({name:"valo_dispute_action_order_fk",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
+export const insertValoDisputeActionSchema=createInsertSchema(valoDisputeActions);
+export const valoDisputeTransitions=pgTable("valo_dispute_transitions",{
+  id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull(),orderId:uuid("order_id").notNull(),
+  actionId:uuid("action_id").notNull().references(()=>valoDisputeActions.id),
+  actorId:text("actor_id").notNull(),status:text("status").notNull(),
+  createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
+},t=>[foreignKey({name:"valo_dispute_transition_order_fk",columns:[t.workspaceId,t.orderId],foreignColumns:[valoOrders.workspaceId,valoOrders.id]})]);
 export const valoPaymentReconciliations=pgTable("valo_payment_reconciliations",{
   id:uuid("id").primaryKey(),workspaceId:uuid("workspace_id").notNull().references(()=>valoWorkspaces.id),
   orderId:uuid("order_id").notNull(),day:text("day").notNull(),status:text("status").notNull().default("pending"),

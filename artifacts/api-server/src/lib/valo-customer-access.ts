@@ -4,11 +4,11 @@ import { and,eq,desc,like } from "drizzle-orm";
 import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoAssessments,valoTasks,valoReminderPreferences,
   valoReminderOutbox,valoAIDrafts,valoContentVersions,valoSafetySwitches,valoStaffAccessAudit,
-  valoExportJobs,valoFileAssets,valoEvents } from "@workspace/db";
+  valoExportJobs,valoFileAssets,valoEvents,valoSavedTemplates } from "@workspace/db";
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { authorizeWorkspaceWrite,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
-import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations,valoPrivacyMessages } from "@workspace/db";
+import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations,valoPrivacyMessages,valoDisputeInformation,valoDisputeActions } from "@workspace/db";
 export const accessMessage="Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack=(id:string)=>({reference:`VALO-ACCESS-${id}`,message:accessMessage,delivery:"not_dispatched" as const});
 export async function saveAccessSupport(raw:unknown,remoteAddress:string){
@@ -59,11 +59,12 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
     const header={schemaVersion:2,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,
       scope:"Only the named application sections under data are included; this is not complete privacy fulfilment. Includes export/file metadata and your own workspace activity, but not private file bytes or storage links. Does not include membership records, other people's activity, full system/staff audits, managed identity records, external provider data or unlinked public contact requests. Request coordinated access for those systems."};
     if(sink)await sink(JSON.stringify(header).slice(0,-1)+',"data":{');
-    const tables={profileVersions:valoProfileVersions,documents:valoDocuments,documentRevisions:valoDocumentRevisions,
+    const tables={savedTemplates:valoSavedTemplates,profileVersions:valoProfileVersions,documents:valoDocuments,documentRevisions:valoDocumentRevisions,
       assessments:valoAssessments,tasks:valoTasks,reminderPreferences:valoReminderPreferences,
       reminderDeliveries:valoReminderOutbox,supportRequests:valoSupportTickets,aiDrafts:valoAIDrafts,
       orders:valoOrders,entitlements:valoEntitlements,purchaseMessages:valoPurchaseOutbox,
-      refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations,privacyInformation:valoPrivacyMessages};
+      refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations,privacyInformation:valoPrivacyMessages,
+      disputeInformation:valoDisputeInformation,disputeIntents:valoDisputeActions};
     const data:Record<string,unknown>={};
     let bytes=0;
     let sections=0;

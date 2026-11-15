@@ -169,6 +169,27 @@
       "when": 1794701000000,
       "tag": "0023_privacy_information",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794702000000,
+      "tag": "0025_dispute_merchant",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794702000001,
+      "tag": "0026_dispute_category",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794703000003,
+      "tag": "0030_saved_templates",
+      "breakpoints": true
     }
   ]
 }

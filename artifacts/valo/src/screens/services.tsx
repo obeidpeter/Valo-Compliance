@@ -1,10 +1,13 @@
 import { PageHeader, Notice } from '@/components/states';
 import { CATEGORY_LABELS, TicketForm } from '@/components/ticket-form';
 import type { TicketInputCategory } from '@workspace/api-client-react';
+import {useSearch} from 'wouter';
 
 const SERVICE_CATS: TicketInputCategory[] = ['registration', 'tax', 'accounting', 'employment', 'legal', 'privacy', 'sector_approval'];
 
 export default function Services() {
+  const requested=new URLSearchParams(useSearch()).get('category');
+  const selected=SERVICE_CATS.find(c=>c===requested)??'registration';
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <PageHeader eyebrow="Services" title="Need a person, not a page?">
@@ -22,7 +25,7 @@ export default function Services() {
           </ul>
           <Notice className="mt-6" tone="ink" title="No prices, no promises">We have not set fees or response times. You will hear from a person before anything is arranged.</Notice>
         </div>
-        <TicketForm defaultCategory="registration" categories={SERVICE_CATS} intro="Enquiries require a signed-in, verified account." />
+        <TicketForm key={selected} defaultCategory={selected} categories={SERVICE_CATS} intro="Enquiries require a signed-in, verified account." />
       </div>
     </div>
   );

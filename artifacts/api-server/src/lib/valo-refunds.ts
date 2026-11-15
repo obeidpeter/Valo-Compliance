@@ -57,7 +57,10 @@ async function transition(tx:Tx,r:Refund,actorId:string,action:string,reason:str
 }
 async function openDispute(tx:Tx,orderId:string){
   const rows=await tx.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.orderId,orderId));
-  return rows.some(r=>!["resolved","archived"].includes(r.status)||r.resolution==="merchant-accepted");
+  // Archived/declined is not documented proof of final bank disposition. Hold
+  // competing refunds until a separate supported financial reconciliation can
+  // establish the balance; never treat terminal labels as a merchant victory.
+  return rows.length>0;
 }
 export async function requestOrderRefund(actor:WorkspaceActor,id:string,raw:unknown){
   const input=RequestCommerceRefundBody.strict().parse(raw);

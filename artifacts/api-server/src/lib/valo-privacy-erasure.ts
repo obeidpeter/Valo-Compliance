@@ -13,6 +13,7 @@ import {quotaSubjectHash} from "./valo-quota";
 import {assertErasureObjectScope,inventoryHasher,signErasureSeal,verifyErasureSeal,erasureSealHash,
   assertSealedInventory,startReplay,signReplayState,verifyReplayState,type ErasureSeal,type ReplayState} from "./valo-erasure-seal";
 import {ValoProblem} from "./valo-problem";
+import {cancelUnsentDisputeWork} from "./valo-dispute-actions";
 import {assertPrivacyVersion} from "./valo-privacy-state";
 import {readPrivacyCase,requirePrivacyStaff,privacyChange,privacyDetail,type PrivacyStaffActor,type PrivacyRow} from "./valo-privacy";
 
@@ -20,7 +21,7 @@ const phases=[
   "valo_reminder_outbox","valo_tasks","valo_assessments","valo_ai_drafts",
   "valo_export_requests","valo_file_assets","valo_export_objects","valo_export_jobs",
   "valo_document_revisions","valo_documents","valo_profile_versions","valo_reminder_preferences",
-  "purchase_notifications","support_content","privacy_messages","privacy_content",
+  "purchase_notifications","support_content","privacy_messages","privacy_content","dispute_work",
 ] as const;
 const removedMessage="[Private content removed by verified workspace erasure]";
 const scope="development-application-content-erasure-v2";
@@ -97,6 +98,7 @@ export async function holdUnsentPrivacyNotifications(tx:Tx,workspaceId:string){
       AND status IN ('awaiting_email_configuration','pending','retry') LIMIT 100)`);
 }
 async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[number],currentCaseId:string){
+  if(section==="dispute_work")return cancelUnsentDisputeWork(tx,workspaceId);
   if(section==="privacy_messages")return tx.execute(sql`DELETE FROM valo_privacy_messages WHERE ctid IN
     (SELECT ctid FROM valo_privacy_messages WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
   if(section==="purchase_notifications")return holdUnsentPrivacyNotifications(tx,workspaceId);
@@ -105,6 +107,11 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
     WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
       AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);
   if(section==="privacy_content"){
+    // Preserve the signed historical phase indices. Replays also remove saved
+    // metadata added after the original erasure engine was introduced.
+    const saved=await tx.execute(sql`DELETE FROM valo_saved_templates WHERE ctid IN
+      (SELECT ctid FROM valo_saved_templates WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
+    if(saved.rowCount)return saved;
     const rows=await tx.select().from(valoPrivacyCases).where(and(eq(valoPrivacyCases.workspaceId,workspaceId),
       ne(valoPrivacyCases.id,currentCaseId),sql`(${valoPrivacyCases.message}<>${removedMessage} OR ${valoPrivacyCases.resultJson} IS NOT NULL)`)).limit(100).for("update");
     for(const target of rows){
