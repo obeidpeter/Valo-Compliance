@@ -64,7 +64,8 @@ export async function privacyDetail(tx:Tx,row:PrivacyRow){
     eq(valoPrivacyMessages.workspaceId,row.workspaceId))).orderBy(asc(valoPrivacyMessages.createdAt),asc(valoPrivacyMessages.id));
   return {request:privacyCaseRecord(row),events:events.map(e=>({sequence:e.sequence,action:e.action,actorType:e.actorType,
     reason:e.reason,createdAt:e.createdAt.toISOString()})),steps:row.steps,
-    messages:messages.map(m=>({id:m.id,body:m.body,createdAt:m.createdAt.toISOString()})),mayRespond:row.status==="needs_information"&&row.erasurePhase==="not_started"};
+    messages:messages.map(m=>({id:m.id,body:m.body,createdAt:m.createdAt.toISOString()})),
+    mayRespond:row.status==="needs_information"&&(row.erasurePhase==="not_started"||!!row.verifiedAt)};
 }
 export async function privacyChange(tx:Tx,row:PrivacyRow,actor:{identityId:string;type:PrivacyAuditInput["actorType"]},
   action:string,reason:string,patch:Partial<Pick<PrivacyRow,"message"|"status"|"assignedIdentityId"|"verifiedAt"|"resultJson"|"resultScope"|"steps"|"erasurePhase">>){
@@ -162,19 +163,25 @@ export async function respondPrivacyCase(actor:WorkspaceActor,id:string,raw:unkn
   const input=RespondPrivacyCaseBody.strict().parse(raw);
   if(input.message.trim().length<10)throw new ValoProblem(422,"Provide at least ten non-padding characters of additional information.");
   return db.transaction(async tx=>{
-    await authorizeWorkspaceWrite(tx,actor);
     let row=await readPrivacyCase(tx,id,actor);
+    // A quarantined requester retains case-only rights, never workspace rights.
+    // The HTTP entry verifies the live identity; the signed case binds that
+    // identity and workspace. Ordinary pre-erasure writes still need membership.
+    if(row.erasurePhase==="not_started")await authorizeWorkspaceWrite(tx,actor);
+    else if(!row.verifiedAt)throw new ValoProblem(403,"A verified requester is required.");
     const[existing]=await tx.select().from(valoPrivacyMessages).where(and(eq(valoPrivacyMessages.caseId,id),
       eq(valoPrivacyMessages.replyToVersion,input.expectedVersion)));
     if(existing&&existing.body===input.message.trim())return privacyDetail(tx,row);
     assertPrivacyVersion(row.version,input.expectedVersion);
-    if(row.status!=="needs_information"||row.erasurePhase!=="not_started")
+    if(row.status!=="needs_information")
       throw new ValoProblem(409,"This case is not waiting for additional information. No reply was saved.");
     await limitWorkspaceWrite(tx,actor,"support");
     await tx.insert(valoPrivacyMessages).values({id:randomUUID(),workspaceId:actor.workspaceId,caseId:id,
       replyToVersion:input.expectedVersion,body:input.message.trim()});
     row=await privacyChange(tx,row,{identityId:actor.identityId,type:"customer"},"information_received",
       "The customer supplied additional information. This did not verify identity or fulfil the request.",{
+        // Information returns to the assigned operator; it does not itself
+        // resume destruction or imply any fulfilment.
         status:row.verifiedAt?row.assignedIdentityId?"assigned":"verified":"awaiting_verification",
       });
     return privacyDetail(tx,row);
@@ -187,6 +194,7 @@ export function availablePrivacyActions(row:PrivacyRow,identityId:string){
   if(can("held"))actions.push("hold");
   if(row.erasurePhase!=="not_started"){
     if(row.status==="held")actions.push("release_hold");
+    else if(can("needs_information"))actions.push("request_information");
     if(["assigned","in_progress","failed","partially_fulfilled"].includes(row.status))actions.push("resume_erasure");
     return actions;
   }

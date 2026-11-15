@@ -74,10 +74,11 @@ async function readTombstone(tx:Tx,caseId:string){
 /** Full exact inventory verification uses bounded memory. It precedes object
  * dispatch, and the DB trigger forbids key insert/update/delete after sealing. */
 async function inventory(tx:Tx,t:Tombstone){
-  const h=inventoryHasher(t.workspaceId);let cursor="";
+  const h=inventoryHasher(t.workspaceId);let cursor:string|null=null;
   for(;;){
-    const page=await tx.execute<{workspace_id:string;object_key:string}>(sql`SELECT workspace_id,object_key
-      FROM valo_privacy_erasure_objects WHERE case_id=${t.caseId}::uuid AND object_key COLLATE "C">${cursor}
+    const page:{rows:{workspace_id:string;object_key:string}[]}=await tx.execute(sql`SELECT workspace_id,object_key
+      FROM valo_privacy_erasure_objects WHERE case_id=${t.caseId}::uuid
+      AND (${cursor}::text IS NULL OR object_key COLLATE "C">${cursor})
       ORDER BY object_key COLLATE "C" LIMIT 250`);
     for(const row of page.rows){
       if(row.workspace_id!==t.workspaceId)throw Error("ERASURE_INVENTORY_WORKSPACE_CHANGED");
@@ -179,7 +180,8 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
           {...s,status:"running",detail:"Resumable synthetic erasure; no complete account/provider fulfilment is claimed."}:s)});
     }else{
       if(input.action!=="resume_erasure")throw new ValoProblem(409,"Resume the existing erasure with its current version.");
-      await readTombstone(tx,id); // Missing historical keys or unsigned journals hold closed.
+      const journal=await readTombstone(tx,id); // Missing historical keys or unsigned journals hold closed.
+      if(journal.seal.inventoryHash)await verifyInventory(tx,journal.t,journal.seal);
     }
     return{workspaceId:row.workspaceId,version:row.version,phase:row.erasurePhase};
   });
@@ -287,7 +289,7 @@ async function persistReplay(t:Tombstone,input:Omit<ReplayState,"keyVersion"|"ma
 }
 async function replay(caseId:string,mode:ReplayState["mode"],remove:DeleteObject){
   let {t,seal,state,candidates}=await db.transaction(async tx=>{
-    const ready=await replayReady(tx,caseId);
+    const ready=await replayReady(tx,caseId,true);
     let state=ready.t.replayState?await progressOf(tx,ready.t.replayState,ready.seal):null;
     if(state&&state.phase!=="done"&&state.mode!==mode)throw new ValoProblem(409,"Another recovery mode has unfinished recorded progress.");
     if(!state||state.phase==="done")state=startReplay(ready.seal,mode,await privacySigner(tx));
@@ -309,7 +311,7 @@ async function replay(caseId:string,mode:ReplayState["mode"],remove:DeleteObject
     // authenticated inventory; no later untrusted candidate query is allowed.
     for(const object of candidates){
       await db.transaction(async tx=>{
-        const now=await replayReady(tx,caseId);
+        const now=await replayReady(tx,caseId,true);
         if(erasureSealHash(now.seal)!==state.sealHash)throw Error("ERASURE_SEAL_CHANGED");
         assertErasureLocatorScope(t.workspaceId,object.object_key);
       });
@@ -326,7 +328,7 @@ async function replay(caseId:string,mode:ReplayState["mode"],remove:DeleteObject
   if(typeof state.phase==="number"){
     const phase=state.phase;
     await db.transaction(async tx=>{
-      const now=await replayReady(tx,caseId);
+      const now=await replayReady(tx,caseId,true);
       const persisted=await progressOf(tx,now.t.replayState,now.seal);
       if(persisted.mac!==state.mac)throw new ValoProblem(409,"Recovery progress changed.");
       // One bounded application section; no object inventory rescan/redelete.

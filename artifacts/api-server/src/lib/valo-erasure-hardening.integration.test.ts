@@ -10,8 +10,8 @@ import {db,pool,valoPrivacyErasureObjects,valoPrivacyCases,valoPrivacyEvents,val
   valoWorkspaces,valoMemberships,valoStaffAssignments,valoStaffAccessAudit,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoSupportTickets,valoEvents,valoExportRequests,valoFileAssets,
   valoExportObjects,valoExportJobs} from "@workspace/db";
-import {resolveWorkspace,createDocument} from "./valo-store";
-import {syntheticDocument} from "./valo-test-fixtures";
+import {resolveWorkspace,createDocument,saveProfile} from "./valo-store";
+import {syntheticDocument,syntheticProfile} from "./valo-test-fixtures";
 import {RENDER_VERSION} from "./valo-render";
 import {createPrivacyCase,confirmPrivacyCase,simpleStaffPrivacyAction} from "./valo-privacy";
 import {processPrivacyErasure,replayErasureObjects,replayErasedApplication,reconcileErasedObjects,closePrivacyErasureLocks} from "./valo-privacy-erasure";
@@ -19,10 +19,11 @@ import {requestExport,executeExport} from "./valo-exports";
 import {reconcileExportOrphans} from "./valo-export-recovery";
 import {privacyKeys,privacySigner} from "./valo-privacy-keys";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {writePrivateFile,readPrivateFile,deletePrivateFile} from "./valo-private-storage";
 
 const reason="Controlled synthetic erasure race and recovery proof; no production or provider deletion.";
 test("erasure holds, bounded recovery and accepted-upload process death",{
-  skip:process.env.VALO_RUN_DB_TESTS!=="synthetic-development-only",timeout:120000,
+  skip:process.env.VALO_RUN_DB_TESTS!=="synthetic-development-only",timeout:180000,
 },async t=>{
   assertDevelopmentRuntime();
   const owners:string[]=[],operators:string[]=[],children:ChildProcess[]=[];
@@ -73,6 +74,55 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
     }
   };
   try{
+    await t.test("application replay authenticates the entire inventory and case before revocation or profile deletion",async()=>{
+      const f=await setup(),key=`valo/development/${f.owner.workspaceId}/${randomUUID()}.docx`,
+        altered=`valo/development/${f.owner.workspaceId}/${randomUUID()}.docx`;
+      await saveProfile(f.owner,{expectedRevision:0,profile:syntheticProfile});
+      const [profile]=await db.select().from(valoProfileVersions).where(eq(valoProfileVersions.workspaceId,f.owner.workspaceId));
+      await db.insert(valoPrivacyErasureObjects).values({workspaceId:f.owner.workspaceId,caseId:f.id,objectKey:key});
+      await finish(f,async()=>{});
+      for(let n=0;n<12;n++){
+        const [tomb]=await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,f.id));
+        if((tomb.replayState as {phase?:unknown}|null)?.phase===10)break;
+        await replayErasedApplication(f.id,async()=>{});
+      }
+      const [tomb]=await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,f.id));
+      assert.equal((tomb.replayState as {phase:unknown}).phase,10); // v3 profile-deletion phase.
+      await db.insert(valoProfileVersions).values(profile);
+      await db.update(valoMemberships).set({active:"yes"}).where(eq(valoMemberships.workspaceId,f.owner.workspaceId));
+      // Simulate a corrupt restored inventory in one atomic DDL transaction.
+      // The trigger is never disabled for concurrent sessions or other rows.
+      const replaceKey=(from:string,to:string)=>db.transaction(async tx=>{
+        await tx.execute(sql`ALTER TABLE valo_privacy_erasure_objects DISABLE TRIGGER valo_erasure_inventory_immutable`);
+        const result=await tx.execute(sql`UPDATE valo_privacy_erasure_objects SET object_key=${to}
+          WHERE workspace_id=${f.owner.workspaceId}::uuid AND case_id=${f.id}::uuid AND object_key=${from}`);
+        assert.equal(result.rowCount,1);
+        await tx.execute(sql`ALTER TABLE valo_privacy_erasure_objects ENABLE TRIGGER valo_erasure_inventory_immutable`);
+      });
+      let calls=0;
+      const intact=async()=>{
+        assert.equal((await db.select().from(valoProfileVersions).where(eq(valoProfileVersions.id,profile.id))).length,1);
+        const [m]=await db.select().from(valoMemberships).where(eq(valoMemberships.workspaceId,f.owner.workspaceId));
+        assert.equal(m.active,"yes");assert.equal(calls,0);
+      };
+      await replaceKey(key,altered);
+      try{await assert.rejects(()=>replayErasedApplication(f.id,async()=>{calls++;}));await intact();}
+      finally{await replaceKey(altered,key);}
+      const emptyKey=(insert:boolean)=>db.transaction(async tx=>{
+        await tx.execute(sql`ALTER TABLE valo_privacy_erasure_objects DISABLE TRIGGER valo_erasure_inventory_immutable`);
+        if(insert)await tx.execute(sql`INSERT INTO valo_privacy_erasure_objects(workspace_id,case_id,object_key)
+          VALUES(${f.owner.workspaceId}::uuid,${f.id}::uuid,'')`);
+        else await tx.execute(sql`DELETE FROM valo_privacy_erasure_objects WHERE case_id=${f.id}::uuid AND object_key=''`);
+        await tx.execute(sql`ALTER TABLE valo_privacy_erasure_objects ENABLE TRIGGER valo_erasure_inventory_immutable`);
+      });
+      await emptyKey(true);
+      try{await assert.rejects(()=>replayErasedApplication(f.id,async()=>{calls++;}));await intact();}
+      finally{await emptyKey(false);}
+      const [original]=await db.select().from(valoPrivacyCases).where(eq(valoPrivacyCases.id,f.id));
+      await db.update(valoPrivacyCases).set({message:"Corrupted synthetic restored case."}).where(eq(valoPrivacyCases.id,f.id));
+      try{await assert.rejects(()=>replayErasedApplication(f.id,async()=>{calls++;}),{status:409});await intact();}
+      finally{await db.update(valoPrivacyCases).set({message:original.message}).where(eq(valoPrivacyCases.id,f.id));}
+    });
     await t.test("distinct advisory locks cannot exhaust a one-connection shared data pool",async()=>{
       const data=new Pool({connectionString:process.env.DATABASE_URL,max:1,connectionTimeoutMillis:1000,allowExitOnIdle:true});
       const locks=new Pool({connectionString:process.env.DATABASE_URL,max:2,connectionTimeoutMillis:1000,allowExitOnIdle:true});
@@ -130,7 +180,7 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       const f=await setup(),job=await exportJob(f),objects=new Map<string,Buffer>();
       let release!:()=>void,accepted!:(key:string)=>void,uploaded=false,lateCleanup=false;
       const barrier=new Promise<void>(r=>{release=r;}),ready=new Promise<string>(r=>{accepted=r;});
-      const running=executeExport(job.id,f.owner.workspaceId,job.queueId,undefined,{
+      const running=executeExport(job.id,f.owner.workspaceId,job.queueId!,undefined,{
         write:async(key,bytes,onUploading)=>{
           await onUploading?.();accepted(key);await barrier;objects.set(key,bytes);uploaded=true;
           return{checksum:createHash("sha256").update(bytes).digest("hex"),size:bytes.length};
@@ -167,6 +217,29 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       assert.equal(cleanup.cleaned,1);assert.equal(cleanup.held,0);assert.equal(lateCleanup,true);assert.equal(objects.size,0);
       assert.equal((await db.select().from(valoPrivacyErasureObjects).where(eq(valoPrivacyErasureObjects.caseId,f.id))).length,1);
     });
+    await t.test("native private upload spans complete erasure and is removed by automatic maintenance",{
+      skip:!process.env.PRIVATE_OBJECT_DIR,
+    },async()=>{
+      const f=await setup(),job=await exportJob(f);
+      let release!:()=>void,accepted!:(key:string)=>void,key="",checksum="";
+      const barrier=new Promise<void>(r=>{release=r;}),reached=new Promise<string>(r=>{accepted=r;});
+      const running=executeExport(job.id,f.owner.workspaceId,job.queueId,undefined,{
+        write:async(k,bytes,beforeWrite)=>{
+          key=k;await beforeWrite?.();accepted(k);await barrier;
+          const stored=await writePrivateFile(k,bytes);checksum=stored.checksum;return stored;
+        },remove:deletePrivateFile,
+      }).then(()=>null,error=>error);
+      try{
+        await Promise.race([reached,new Promise<never>((_,reject)=>setTimeout(()=>reject(Error("NATIVE_UPLOAD_BARRIER_NOT_REACHED")),15000).unref())]);
+        await finish(f,deletePrivateFile);
+        assert.equal((await db.select().from(valoExportJobs).where(eq(valoExportJobs.id,job.id))).length,0);
+        release();assert.ok(await running instanceof Error);
+        await readPrivateFile(key,checksum); // Correct checksum proves actual late bytes existed.
+        const result=await reconcileExportOrphans(undefined,deletePrivateFile,{workspaceId:f.owner.workspaceId,caseId:f.id});
+        assert.equal(result.failed,0);assert.equal(result.privacyHeld,0);assert.equal(result.cleaned,1);
+        await assert.rejects(()=>readPrivateFile(key,checksum));
+      }finally{release();await running;if(key)await deletePrivateFile(key);}
+    });
     await t.test("SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path",async()=>{
       const f=await setup(),objects=new Map<string,Buffer>();
       const[revision]=await db.select().from(valoDocumentRevisions).where(eq(valoDocumentRevisions.id,f.document.revisionId));
@@ -195,9 +268,23 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       assert.equal(child.signalCode,"SIGKILL");
       // The controlled object service completes a request accepted before the
       // client process died. No catch/finally in that client can clean it up.
-      objects.set(accepted.key,Buffer.from(accepted.bytes,"base64"));
-      const result=await reconcileErasedObjects(async key=>{objects.delete(key);},f.id);
-      assert.equal(result.held,0);assert.equal(result.failed,0);assert.equal(result.cleaned,1);assert.equal(objects.size,0);
+      let checksum="";
+      const native=Boolean(process.env.PRIVATE_OBJECT_DIR);
+      t.diagnostic(native?"Killed-upload completion used native private App Storage.":"Killed-upload completion used controlled object transport; native storage unconfigured.");
+      if(native){checksum=(await writePrivateFile(accepted.key,Buffer.from(accepted.bytes,"base64"))).checksum;
+        await readPrivateFile(accepted.key,checksum);}
+      else objects.set(accepted.key,Buffer.from(accepted.bytes,"base64"));
+      try{
+        const [scheduled]=await db.select().from(valoPrivacyTombstones).where(eq(valoPrivacyTombstones.caseId,f.id));
+        assert.ok(scheduled.nextReplayAt.getTime()<=Date.now()+3_600_000);
+        // Advance only this new fixture's persisted scheduler clock. An
+        // unknown upload's hourly rescan is not an immediate completion signal.
+        await db.update(valoPrivacyTombstones).set({nextReplayAt:new Date(0)}).where(eq(valoPrivacyTombstones.caseId,f.id));
+        const result=await reconcileExportOrphans(undefined,native?deletePrivateFile:async key=>{objects.delete(key);},
+          {workspaceId:f.owner.workspaceId,caseId:f.id});
+        assert.equal(result.privacyHeld,0);assert.equal(result.failed,0);assert.equal(result.cleaned,1);assert.equal(objects.size,0);
+        if(native)await assert.rejects(()=>readPrivateFile(accepted.key,checksum));
+      }finally{if(native)await deletePrivateFile(accepted.key);}
       assert.equal((await db.select().from(valoExportObjects).where(eq(valoExportObjects.workspaceId,f.owner.workspaceId))).length,0);
     });
   }finally{

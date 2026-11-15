@@ -12,6 +12,7 @@ export function PrivacyCases(){
   return <section className="mt-8" aria-labelledby="privacy-cases-heading">
     <h2 id="privacy-cases-heading" className="font-display text-2xl">Request processing and results</h2>
     <p className="mt-2 text-sm text-muted-foreground">Verification, assignment and preparation are separate steps. A received or partially fulfilled request is not a confirmed deletion or complete provider-wide export.</p>
+    <p className="mt-2 text-sm text-muted-foreground">Up to 100 recent requests are shown. You can read and answer your own requests after workspace access is quarantined; this does not restore business-data access.</p>
     {cases.isLoading&&<p role="status" className="mt-4">Loading your requests…</p>}
     {cases.isError&&<ErrorState error={cases.error} onRetry={()=>cases.refetch()}/>}
     {cases.data?.length===0&&<p className="mt-4 text-sm text-muted-foreground">No structured privacy requests yet. Older support-only requests remain listed separately.</p>}
