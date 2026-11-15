@@ -1,4 +1,5 @@
 import {emptyBudget,inferenceProposal,additionalInferenceAllocation,requestDigest,validateBudgetState,type BudgetState} from "./inference-budget";
+import {inspectInferenceBudget} from "./inference-budget-inspection";
 /** One locked row covers every lane of this named allocation, not all historic
  * project spending. No caller-facing approval endpoint is provided. */
 export class InferenceBudgetStore{
@@ -7,6 +8,23 @@ export class InferenceBudgetStore{
   constructor(private pool:Pick<import("pg").Pool,"connect">,private schema="public",
     private scope:"legacy"|"additional-new"="legacy"){
     if(!/^[a-z_][a-z0-9_]*$/.test(schema))throw Error("INVALID_LEDGER_SCHEMA");
+  }
+  /** No initialization, policy adoption, approvals, reservations or audit writes.
+   * One PostgreSQL snapshot binds the timestamp, policy, version and state. */
+  async inspect(){
+    const c=await this.pool.connect();
+    try{
+      await c.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
+      const result=await c.query(`SELECT clock.observed_at,b.id,b.version,b.policy_hash,b.state
+        FROM (SELECT CURRENT_TIMESTAMP AS observed_at) clock
+        LEFT JOIN "${this.schema}".valo_inference_budgets b ON b.id=$1`,[this.allocationId()]);
+      const r=result.rows[0];
+      if(!r)throw Error("BUDGET_INSPECTION_UNAVAILABLE");
+      const value=inspectInferenceBudget({scope:this.scope,observedAt:new Date(r.observed_at).toISOString(),
+        row:r.id?{version:r.version,policyHash:r.policy_hash,state:r.state}:null});
+      await c.query("COMMIT");
+      return value;
+    }catch(error){await c.query("ROLLBACK");throw error;}finally{c.release();}
   }
   async mutate<T>(action:string,fn:(s:BudgetState,c:import("pg").PoolClient)=>{state:BudgetState;value:T}|Promise<{state:BudgetState;value:T}>){
     const c=await this.pool.connect();

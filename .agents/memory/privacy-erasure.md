@@ -65,3 +65,15 @@ work must preserve corruption/hold checks. Schema publishing can omit triggers.
 **How to apply:** Recovery imports force fresh independent validation. Keep live
 authority checks before dispatch and fail back to full checks when guard
 semantics cannot be established; do not claim protection from a database owner.
+
+Deletion controls must remain effective after physical removal of the workspace
+owner record and the workspace itself; checking a retained record alone does
+not prove that boundary.
+
+**Why:** The user explicitly required protection against identity recreation
+even when later full physical erasure removes the owner record.
+
+**How to apply:** Keep authenticated deletion-identity controls independently
+of deletable workspace records and restored snapshots, and verify them before
+automatic provisioning. Test record removal separately from retained-row
+quarantine; missing historical verification keys must hold access.

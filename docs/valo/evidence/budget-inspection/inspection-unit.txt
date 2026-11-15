@@ -1,0 +1,18 @@
+
+> @workspace/api-server@0.0.0 test:valo-budget-inspection /home/runner/workspace/artifacts/api-server
+> node --import tsx --test src/lib/inference-budget-inspection.test.ts
+
+✔ inspection preserves full unknown reservations, exact integer room and no request identifiers (2.694787ms)
+✔ historical unknown exposure is visible but never subtracted from or relabelled as a new allocation (1.399839ms)
+✔ mismatched policies, unknown liabilities, suspension and unreconciled usage cannot advertise available capacity (2.24572ms)
+✔ store inspection uses a read-only snapshot, never initializes/adopts a policy or appends an event (2.898974ms)
+✔ failed snapshot rolls back and releases instead of falling back to an invented balance (0.426159ms)
+✔ standard database CI invokes the non-skipped HTTP privacy suite and keeps storage lanes separate (35.575292ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 561.213431

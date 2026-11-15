@@ -24,6 +24,16 @@ async function main(){
     import("../editorial/operational-policy"),import("../lib/inference-budget-store")]);
   try{
   const[mode,batchId,...extra]=process.argv.slice(2);
+  if(mode==="--inspect"){
+    if(batchId||extra.length)throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+    // Sequential scopes are explicitly separate observations, not a fictitious
+    // global account balance or a change to the allocation's start boundary.
+    const historical=await new InferenceBudgetStore(pool).inspect();
+    const additional=await new InferenceBudgetStore(pool,"public","additional-new").inspect();
+    console.log(JSON.stringify({mode:"read-only-inspection",historical,additional,
+      approvalRowsWritten:0,providerCalls:0,quotaChanges:0,authorizesDispatch:false}));
+    return;
+  }
   if(mode==="--prepare-candidate"){
     if(!batchId||!supportsOperationalInferenceTemplate(batchId)||extra.length!==1||!extra[0])
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");

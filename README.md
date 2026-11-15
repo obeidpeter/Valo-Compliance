@@ -2,6 +2,13 @@
 
 ## Latest application unit — usable disabled inference budget and reconciliation
 
+**Latest budget addition:** a read-only `inference:inspect` command now reports
+scoped ledger commitments and unknown exposure without changing accounting or
+authorizing calls. Standard database CI explicitly chains the actual HTTP
+privacy-role regression. See
+[budget inspection and privacy CI evidence](docs/valo/finite-budget-inspection-and-privacy-ci.md).
+Spending remains disabled; full physical erasure and R1/R2 acceptance remain open.
+
 **Current test/CI repair:** runtime harness capability canary and separate
 portable/native erasure lanes are documented in
 [CI boundary and storage repair](docs/valo/ci-boundary-erasure-repair.md).

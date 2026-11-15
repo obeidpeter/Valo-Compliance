@@ -1,0 +1,165 @@
+
+> @workspace/api-server@0.0.0 test:valo-db /home/runner/workspace/artifacts/api-server
+> pnpm run test:valo-db-core && pnpm run test:valo-privacy-http-db
+
+
+> @workspace/api-server@0.0.0 test:valo-db-core /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development tsx --test src/lib/valo-privacy-keys.integration.test.ts src/lib/inference-batch-dispatch.integration.test.ts src/lib/inference-history-ledger.integration.test.ts src/lib/inference-budget.integration.test.ts src/lib/inference-budget-inspection.integration.test.ts src/lib/valo-store.integration.test.ts src/lib/valo-quota.integration.test.ts src/lib/valo-requirements.integration.test.ts src/lib/valo-customer-ai.integration.test.ts src/lib/valo-customer-access.integration.test.ts src/lib/valo-reminder-delivery.integration.test.ts src/lib/valo-task-pages.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts src/lib/valo-receipt-recovery.integration.test.ts
+
+▶ durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls
+  ✔ actual managed entry dispatches all four approved lanes through shared durable reservation, SDK observation and settlement (2162.381162ms)
+  ✔ disabled durable authority and missing allowlist cannot dispatch (51.211922ms)
+  ✔ authorized controlled work really dispatches and settles; unchanged result reuses without a call (265.511504ms)
+  ✔ PostgreSQL Date timestamps preserve millisecond approval order (349.116018ms)
+  ✔ review pair reserves atomically and charges its actual editorial lane (718.81123ms)
+  ✔ changed request, source bindings, expiry and forged manifest stop before transport (109.142467ms)
+  ✔ timeout keeps the whole reservation, duplicates cannot redispatch and new retry consumes another slot (220.267729ms)
+  ✔ concurrency two and duplicate runs cover every lane under one locked ledger (208.04003ms)
+  ✔ reserved sibling cannot dispatch after first role breaches its bound (130.583289ms)
+  ✔ pair role contexts dispatch their own requests without leaking the other key (113.380447ms)
+  ✔ invalid model or usage retains maximum liability and returns no usable response (338.00258ms)
+  ✔ revocation during transport stops new work but still accounts the admitted receipt (50.668008ms)
+  ✔ expiry during transport still accounts its receipt, then denies new dispatch (398.713671ms)
+  ✔ schema retry requires a distinct approved key and unknown work cannot cycle batch identity (130.760873ms)
+  ✔ new allowance preserves unrelated historical liabilities without adopting them as its budget (55.447939ms)
+  ✔ delegated children share one cap and recheck parent revocation before reserved dispatch (390.543685ms)
+  ✔ a preflight failure before the first role reserves no paid capacity (22.795067ms)
+  ✔ SDK adapter observes dispatch after reservation for each correct lane and settles all under the same cap (186.906183ms)
+  ✔ cross-corpus role relabeling and independent-review candidate substitution cannot reserve or dispatch (28.009755ms)
+  ✔ real SIGKILL after durable dispatch cannot redispatch on a new dispatcher and retains its full reservation (1885.778003ms)
+  ✔ unapproved priced model suspends the allocation before another work item (51.597325ms)
+  ✔ policy adoption keeps old usage and all unresolved liability instead of resetting history (19.401093ms)
+  ✔ holds inside the new allocation and a depleted ceiling stop all further calls (38.708657ms)
+✔ durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls (8329.854213ms)
+✔ PostgreSQL inspection reads exact scoped state without initializing or mutating either ledger (957.563292ms)
+✔ isolated PostgreSQL global ledger serializes races and preserves unknown/retry liability (4583.967263ms)
+▶ locked historical classification is resumable and concurrent without deleting any usage or approving spending
+  ✔ crashed transaction leaves original state and prior events intact (23.473704ms)
+  ✔ eight concurrent calls and a repeated call classify exactly once and retain all original entries (235.618434ms)
+  ✔ policy adoption preserves unresolved failed-call history rather than minting authority (43.925353ms)
+✔ locked historical classification is resumable and concurrent without deleting any usage or approving spending (528.264982ms)
+▶ real development access intake, privacy isolation and staff boundaries
+  ✔ no login or account lookup is needed; confirmation is saved, never dispatched (27.935897ms)
+  ✔ idempotent retry preserves one record; altered reuse fails (38.284121ms)
+  ✔ honeypot and invalid email fail without saving (4.595251ms)
+  ✔ concurrent verified-or-unverified contacts cannot create unlimited anonymous tickets (245.858139ms)
+  ✔ different contacts receive the same non-enumerating wording (25.693375ms)
+  ✔ privacy requests really persist and do not claim deletion (114.532932ms)
+  ✔ workspace JSON export includes saved revisions but excludes another business (178.974192ms)
+  ✔ JSON v2 includes owned file/job metadata, never private locators or queue identifiers (176.376226ms)
+  ✔ activity export is restricted to this requester and workspace (72.0628ms)
+  ✔ an over-limit metadata section fails explicitly rather than returning a truncated download (404.86674ms)
+  ✔ large scoped download spans pages without truncation, private fields or another tenant; scratch is removed (9341.587144ms)
+  ✔ download consumer failure removes private scratch instead of leaving a prepared result (799.410267ms)
+  ✔ revoked membership cannot retrieve exports or saved privacy requests (30.515301ms)
+  ✔ no staff permission, missing MFA and cross-area substitution all fail (175.605142ms)
+✔ real development access intake, privacy isolation and staff boundaries (12101.534613ms)
+▶ development AI persistence, private ownership, atomic acceptance and quotas
+  ✔ missing information persists privately without an outbound call (16.513371ms)
+  ✔ other tenant IDs and forged actor membership fail (32.063984ms)
+  ✔ consent and request shape are checked before persistence (5.129621ms)
+  ✔ same request is idempotent; changed facts cannot reuse its key (22.584694ms)
+  ✔ concurrent acceptance creates one real document and one revision (73.992121ms)
+  ✔ changed acceptance cannot silently overwrite the existing document (10.388774ms)
+  ✔ derived totals cannot be altered or their financial model stripped (15.744727ms)
+  ✔ database composite FK independently rejects a foreign accepted document (32.237718ms)
+  ✔ interrupted request becomes an honest manual fallback, not a fabricated completion (37.693032ms)
+  ✔ disabled shared spending gate rejects concurrent requests without consuming daily allowance (918.892519ms)
+✔ development AI persistence, private ownership, atomic acceptance and quotas (1405.343932ms)
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (90.602883ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (124.900568ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (461.73835ms)
+  ✔ ready, pending and cleanup objects are inventoried once before rows disappear and stale workers stay fenced (61.963016ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (2475.342452ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (4891.469853ms)
+  ✔ selected storage backend deletes actual synthetic bytes after late write and repeated replay (1488.83879ms)
+  ✔ sealed key tampering and corrupted completion proof stop before deletion (500.932565ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (14.756628ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (38.381141ms)
+✔ resumable physical development erasure with retained exclusions and replay (10741.86155ms)
+ℹ {"backend":"controlled-private-filesystem","nativeProviderProof":false,"productionProof":false,"syntheticOnly":true,"storageOperations":{"writes":3,"reads":7,"deletes":12}}
+▶ isolated privacy signing-key rotation — no real secret rotation
+  ✔ legacy version is pinned only after its retained signature verifies (24.441422ms)
+  ✔ new version signs while old and legacy signatures still verify (22.239408ms)
+  ✔ missing historical material holds both history verification and identity matching (9.735763ms)
+  ✔ reusing a pinned version name with another key cannot silently re-sign history (7.77382ms)
+  ✔ unsent notices are held idempotently without rewriting accepted outcomes or another tenant (21.704292ms)
+✔ isolated privacy signing-key rotation — no real secret rotation (288.403583ms)
+▶ synthetic PostgreSQL quotas are atomic, durable and scoped
+  ✔ concurrent callers cannot exceed one shared database cap (192.508377ms)
+  ✔ another subject and operation have independent allowances (18.141396ms)
+  ✔ durable state is visible through a separate database connection (6.582627ms)
+  ✔ expiry cleanup removes only expired windows, leaving current usage intact (20.95748ms)
+  ✔ invalid bucket, identity and ceilings never mutate storage (7.334128ms)
+✔ synthetic PostgreSQL quotas are atomic, durable and scoped (262.022149ms)
+▶ recorded synthetic receipt recovery, no provider verification or messages
+  ✔ missing maintenance opt-in and missing recorded grant both fail closed (24.399352ms)
+  ✔ concurrent repair produces one held receipt and one audit without reactivating the grant (288.222229ms)
+  ✔ retries preserve the original receipt; other tenants cannot read it (288.862892ms)
+✔ recorded synthetic receipt recovery, no provider verification or messages (961.768829ms)
+▶ durable reminder delivery controls; controlled transport, not real email
+  ✔ turning reminders off needs no selected offset and cancels before dispatch (74.554002ms)
+  ✔ twenty-five held source reminders cannot starve an eligible later reminder (813.631686ms)
+  ✔ no configured provider holds the reminder and consumes no attempt (56.413809ms)
+  ✔ parallel scheduler invocations send once; acceptance is not inbox delivery (89.614109ms)
+  ✔ failed acceptance persists its attempt and waits; retry keeps the same message reference (130.480024ms)
+  ✔ five failed attempts remain bounded even with repeated scheduler runs (486.356818ms)
+  ✔ SIGKILL during dispatch preserves the claim; expiry recovers without losing the attempt (3295.637911ms)
+  ✔ abandoned final attempt becomes visibly failed instead of permanently running (44.772532ms)
+  ✔ expired or unknown first acceptance time holds before any new provider invocation (128.074279ms)
+  ✔ opt-out before dispatch cancels failed work without sending (101.108209ms)
+✔ durable reminder delivery controls; controlled transport, not real email (5465.126652ms)
+▶ development saved assessments, task isolation, concurrency and reminder outbox
+  ✔ explicit consent required; anonymous bodies cannot supply rules (9.541292ms)
+  ✔ saved profile assessment preserves unknowns and real coverage gaps (45.813742ms)
+  ✔ other tenants cannot read or compare assessment identifiers (32.10438ms)
+  ✔ profile changes create dated comparisons without rewriting old assessments (70.42517ms)
+  ✔ manual task creation works without falsely published requirements (36.494803ms)
+  ✔ all cross-tenant task writes and origin substitutions are denied (27.776431ms)
+  ✔ two concurrent task edits cannot silently overwrite notes (51.834533ms)
+  ✔ unconfirmed and invalid calendar dates are rejected (1.534095ms)
+  ✔ reminders default off and opt-in schedules are durable, held not sent (61.557188ms)
+  ✔ scheduler retries and preference updates preserve idempotent reminder identities (64.049059ms)
+  ✔ dispatch checks opt-out before any adapter invocation (62.641817ms)
+  ✔ source withdrawal flags a historical task without changing user completion (22.172211ms)
+  ✔ archiving a task preserves assessments and cancels reminders (44.10088ms)
+✔ development saved assessments, task isolation, concurrency and reminder outbox (737.416192ms)
+▶ development PostgreSQL tenant, concurrency, history and durable-ticket proof
+  ✔ server membership resolution is idempotent and tenants are separate (19.982132ms)
+  ✔ profile correction appends history, preserves declined marketing and rejects stale saves (70.398743ms)
+  ✔ document and revision identifiers cannot expose a different tenant (13.174432ms)
+  ✔ two concurrent tabs produce exactly one new revision and one conflict (37.959142ms)
+  ✔ restore appends a new revision without rewriting the original (28.064366ms)
+  ✔ enquiry acknowledgement follows a durable save, not an appointment or email claim (22.875804ms)
+  ✔ suspended membership is not automatically restored (16.423966ms)
+✔ development PostgreSQL tenant, concurrency, history and durable-ticket proof (374.012755ms)
+✔ actual task pages exceed 200 without losing totals, filters or tenant scope (453.391574ms)
+ℹ tests 117
+ℹ suites 0
+ℹ pass 117
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 25740.950424
+
+> @workspace/api-server@0.0.0 test:valo-privacy-http-db /home/runner/workspace/artifacts/api-server
+> VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/routes/valo-privacy-http.integration.test.ts
+
+▶ actual HTTP privacy routes apply an independent privacy role and fresh MFA
+  ✔ information replies do not substitute for owner verification (145.651518ms)
+  ✔ privacy-only identity can read and claim; finance-only cannot (68.832262ms)
+  ✔ read-only inspection and customer replies preserve verification and deduplicate actual HTTP writes (241.642706ms)
+  ✔ quarantined verified requester can answer without restored workspace membership (285.597593ms)
+  ✔ revoked and stale-MFA privacy identities fail on the HTTP route (21.711204ms)
+  ✔ hostile origin never reaches the privacy mutation (2.745654ms)
+✔ actual HTTP privacy routes apply an independent privacy role and fresh MFA (993.463475ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5067.7474
