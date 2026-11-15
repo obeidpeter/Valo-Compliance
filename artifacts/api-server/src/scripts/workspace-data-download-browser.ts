@@ -35,10 +35,21 @@ const bundle = await build({
 type Mode = 'complete' | 'pending' | 'unauthorized' | 'forbidden' | 'oversized-error';
 let mode: Mode = 'complete';
 const metrics = { started: 0, completed: 0, cancelledBeforeHeaders: 0, cookieAuthorized: 0 };
+let fixtureJob:Record<string,unknown>|null=null;
 const server = createServer(async (req, res) => {
   const path = new URL(req.url ?? '/', 'http://fixture').pathname;
+  if(path==='/api/workspace/data-exports'){
+    res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','private, no-store');
+    if(req.method==='POST'){
+      fixtureJob={id:'b04b9cc1-e594-4c87-8093-6a5791c9fd01',status:'queued',attempts:0,
+        createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+86400000).toISOString(),
+        snapshotAt:null,size:null,counts:null,errorCode:null,notice:'Controlled private export; named application sections only.'};
+      res.statusCode=201;res.end(JSON.stringify(fixtureJob));return;
+    }
+    res.end(JSON.stringify(fixtureJob?[fixtureJob]:[]));return;
+  }
   if (path === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(bundle.outputFiles[0].contents); return; }
-  if (path !== '/api/workspace/data-export') {
+  if (!/^\/api\/workspace\/data-exports\/[a-f0-9-]+\/download$/.test(path)) {
     res.setHeader('Content-Type', 'text/html');
     res.end('<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Controlled download test</title><style>body{font:16px system-ui;margin:16px;overflow-wrap:anywhere}main{max-width:600px}button{min-height:44px;margin:4px;padding:8px 12px}p{line-height:1.5}button:focus-visible{outline:3px solid #18583d}</style><div id="root"></div><script src="/fixture.js"></script></html>');
     return;
@@ -56,10 +67,12 @@ const server = createServer(async (req, res) => {
   }
   let headersSent = false;
   const timer = setTimeout(() => { void send(); }, selectedMode === 'pending' ? 2000 : 20);
-  res.once('close', () => { clearTimeout(timer); if (!headersSent) metrics.cancelledBeforeHeaders++; });
+  if(fixtureJob)fixtureJob.status='preparing';
+  res.once('close', () => { clearTimeout(timer); if (!headersSent) {metrics.cancelledBeforeHeaders++;if(fixtureJob)fixtureJob.status='interrupted';} });
   async function send() {
     if (res.destroyed) return;
     headersSent = true;
+    if(fixtureJob){fixtureJob.status='ready';fixtureJob.attempts=1;}
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="valo-workspace-data.json"');
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -77,7 +90,7 @@ assert.ok(address && typeof address !== 'string');
 const origin = `http://127.0.0.1:${address.port}`;
 let browser: Awaited<ReturnType<typeof chromium.launch>>;
 try {
-  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? '/usr/bin/chromium', headless: true, args: ['--no-sandbox'] });
+  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? '/repl/tools/bin/chromium', headless: true, args: ['--no-sandbox'] });
 } catch (error) {
   await writeFile(join(evidence, 'workspace-data-download-browser.json'), JSON.stringify({ passed: false, stage: 'browser startup', error: String(error), checks: [] }, null, 2));
   server.closeAllConnections(); await new Promise<void>(done => server.close(() => done()));
@@ -88,7 +101,12 @@ const context = await browser.newContext({ acceptDownloads: true, viewport: { wi
 await context.addCookies([{ name: 'fixture-owner', value: 'owner-a', url: origin, httpOnly: true, sameSite: 'Lax' }]);
 await context.addInitScript({content: `
   const guard = (name) => { throw new Error('App attempted forbidden export transport: ' + name); };
-  window.fetch = () => guard('fetch');
+  const fetchMetadata=window.fetch.bind(window);
+  window.fetch = (input, options) => {
+    const path=new URL(typeof input==='string'?input:input.url,location.href).pathname;
+    if(path==='/api/workspace/data-exports'||path.endsWith('/cancel'))return fetchMetadata(input,options);
+    return guard('export body fetch');
+  };
   window.Blob = new Proxy(window.Blob, { construct: () => guard('Blob') });
   URL.createObjectURL = () => guard('createObjectURL');
   const parse = JSON.parse;
@@ -131,11 +149,11 @@ try {
   assert.equal(new Set(data.data.records.map((row: { id: number }) => row.id)).size, 6001);
   assert.ok(data.data.records.every((row: { workspaceId: string }) => row.workspaceId === 'synthetic-owner-a'));
   assert.doesNotMatch(raw, /storageLocator|another-tenant/);
-  assert.match(await page.getByRole('status').innerText(), /Download requested; check browser downloads/);
+  assert.match(await page.getByRole('status').first().innerText(), /Download requested; check browser downloads/);
   assert.doesNotMatch(await page.locator('body').innerText(), /Downloaded\.|Download complete/);
   assert.equal(await page.evaluate("document.documentElement.scrollWidth <= innerWidth"), true);
   await page.screenshot({ path: join(evidence, 'workspace-data-download-mobile.png'), fullPage: true });
-  checks.push('6001-row >8MB cookie-authenticated native attachment; keyboard activation; mobile width; no app fetch/Blob/object URL/JSON parsing');
+  checks.push('6001-row >8MB native attachment; small metadata only; keyboard/mobile; no export fetch/Blob/object URL/JSON parsing');
 
   for (const action of ['cancel', 'unmount', 'account', 'reload'] as const) {
     mode = 'pending'; await open();

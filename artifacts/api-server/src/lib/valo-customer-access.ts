@@ -1,13 +1,15 @@
 import { randomUUID,createHash } from "node:crypto";
 import {createPrivacyCase} from "./valo-privacy";
-import { and,eq,desc,like } from "drizzle-orm";
+import { and,eq,desc,like,sql } from "drizzle-orm";
+import {setImmediate as yieldPreparation} from "node:timers/promises";
+import {abortable} from "./valo-abort";
 import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoAssessments,valoTasks,valoReminderPreferences,
   valoReminderOutbox,valoAIDrafts,valoContentVersions,valoSafetySwitches,valoStaffAccessAudit,
   valoExportJobs,valoFileAssets,valoEvents } from "@workspace/db";
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
-import { authorizeWorkspaceWrite,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
+import { authorizeWorkspaceWrite,authorizeWorkspaceRead,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
 import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations,valoPrivacyMessages,valoDisputeInformation,valoDisputeActions } from "@workspace/db";
 export const accessMessage="Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack=(id:string)=>({reference:`VALO-ACCESS-${id}`,message:accessMessage,delivery:"not_dispatched" as const});
@@ -51,10 +53,17 @@ export async function customerAccount(actor:WorkspaceActor){
 export async function requestPrivacy(actor:WorkspaceActor,email:string,raw:unknown){
   return createPrivacyCase(actor,email,raw);
 }
-export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:string)=>Promise<void>,signal?:AbortSignal){
+export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:string)=>Promise<void>,signal?:AbortSignal,
+  onPage?:(section:string,rows:number)=>Promise<void>){
   signal?.throwIfAborted();
+  const currentAccess=()=>abortable(signal,()=>db.transaction(tx=>authorizeWorkspaceRead(tx,actor)));
+  await currentAccess();
   return db.transaction(async tx=>{
-    await authorizeWorkspaceWrite(tx,actor);
+    // Pin only source data, not authorization. Revocation is checked through
+    // separate READ COMMITTED reads and never waits for this snapshot to end.
+    await tx.execute(sql`set local statement_timeout='2000ms'`);
+    await tx.execute(sql`set local idle_in_transaction_session_timeout='15000ms'`);
+    await tx.execute(sql`select pg_current_snapshot()`);
     signal?.throwIfAborted();
     const header={schemaVersion:2,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,
       scope:"Only the named application sections under data are included; this is not complete privacy fulfilment. Includes export/file metadata and your own workspace activity, but not private file bytes or storage links. Does not include membership records, other people's activity, full system/staff audits, managed identity records, external provider data or unlinked public contact requests. Request coordinated access for those systems."};
@@ -68,6 +77,7 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
     const data:Record<string,unknown>={};
     let bytes=0;
     let sections=0;
+    const counts:Record<string,number>={};
     const collect=async<T>(name:string,query:(offset:number)=>PromiseLike<T[]>)=>{
       signal?.throwIfAborted();
       if(!sink){append(name,await query(0));return;}
@@ -75,12 +85,17 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
       let offset=0,first=true;
       for(;;){
         signal?.throwIfAborted();
+        await currentAccess();
         const rows=await query(offset);
         signal?.throwIfAborted();
+        let produced=0;
         for(const row of rows){
           signal?.throwIfAborted();
           await sink((first?"":",")+JSON.stringify(row));first=false;
+          if(++produced%25===0)await yieldPreparation(undefined,{signal});
         }
+        counts[name]=(counts[name]??0)+rows.length;
+        await abortable(signal,async()=>{await onPage?.(name,counts[name]!);});
         if(rows.length<500)break;
         offset+=rows.length;
       }
@@ -112,8 +127,9 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
     await collect("yourActivity",offset=>tx.select().from(valoEvents).where(and(eq(valoEvents.workspaceId,actor.workspaceId),
       eq(valoEvents.actorId,actor.identityId))).orderBy(valoEvents.id).limit(sink?500:5001).offset(offset));
     signal?.throwIfAborted();
-    if(sink)await sink("}}");
-    return{...header,data};
+    await currentAccess();
+    if(sink)await sink('},"counts":'+JSON.stringify(counts)+',"complete":true}');
+    return{...header,data,counts};
   },{isolationLevel:"repeatable read"});
 }
 export type StaffArea="content"|"support"|"finance"|"system";

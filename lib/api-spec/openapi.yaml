@@ -86,6 +86,56 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/WorkspaceDataExport" }
+  /workspace/data-exports:
+    get:
+      operationId: listWorkspaceDataExports
+      responses:
+        "200":
+          description: Current user's durable private exports.
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/WorkspaceExportJob"}}
+    post:
+      operationId: createWorkspaceDataExport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceExportRequest"
+      responses:
+        "201":
+          description: Persistent export identity; not proof of completed preparation.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}/cancel:
+    post:
+      operationId: cancelWorkspaceDataExport
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Discarded with private cleanup scheduled; not a processor erasure claim.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceExportJob"}
+  /workspace/data-exports/{id}/download:
+    get:
+      operationId: downloadWorkspaceDataArtifact
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+      responses:
+        "200":
+          description: Complete verified private JSON artifact, never a partial preparation.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/WorkspaceDataExport"}
+        "206":
+          description: Authorized byte range of an already complete verified artifact.
+          content:
+            application/octet-stream:
+              schema: {type: string}
   /workspace/purchases:
     get:
       operationId: getCustomerPurchases
@@ -1189,6 +1239,26 @@ components:
         request: { type: string }
         status: { type: string }
         createdAt: { type: string }
+    WorkspaceExportRequest:
+      type: object
+      required: [requestKey]
+      additionalProperties: false
+      properties:
+        requestKey: {type: string, format: uuid}
+    WorkspaceExportJob:
+      type: object
+      required: [id, status, attempts, createdAt, expiresAt, snapshotAt, size, counts, errorCode, notice]
+      properties:
+        id: {type: string, format: uuid}
+        status: {type: string, enum: [queued, preparing, interrupted, ready, cancelled, expired]}
+        attempts: {type: integer}
+        createdAt: {type: string, format: date-time}
+        expiresAt: {type: string, format: date-time}
+        snapshotAt: {type: string, nullable: true}
+        size: {type: number, nullable: true}
+        counts: {type: object, additionalProperties: {type: integer}, nullable: true}
+        errorCode: {type: string, nullable: true}
+        notice: {type: string}
     WorkspaceDataExport:
       type: object
       required: [schemaVersion, exportedAt, workspaceId, scope, data]

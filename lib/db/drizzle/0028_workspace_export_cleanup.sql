@@ -1,0 +1,2 @@
+ALTER TABLE valo_workspace_export_attempts ADD COLUMN cleanup_checked_at timestamptz;
+CREATE INDEX valo_workspace_export_cleanup_round_robin ON valo_workspace_export_attempts(cleanup_checked_at);

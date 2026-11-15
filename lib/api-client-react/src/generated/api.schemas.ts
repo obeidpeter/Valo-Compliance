@@ -241,6 +241,44 @@ export interface CustomerAccount {
   privacyRequests: PrivacyRequestRecord[];
 }
 
+export interface WorkspaceExportRequest {
+  requestKey: string;
+}
+
+export type WorkspaceExportJobStatus = typeof WorkspaceExportJobStatus[keyof typeof WorkspaceExportJobStatus];
+
+
+export const WorkspaceExportJobStatus = {
+  queued: 'queued',
+  preparing: 'preparing',
+  interrupted: 'interrupted',
+  ready: 'ready',
+  cancelled: 'cancelled',
+  expired: 'expired',
+} as const;
+
+/**
+ * @nullable
+ */
+export type WorkspaceExportJobCounts = {[key: string]: number} | null;
+
+export interface WorkspaceExportJob {
+  id: string;
+  status: WorkspaceExportJobStatus;
+  attempts: number;
+  createdAt: string;
+  expiresAt: string;
+  /** @nullable */
+  snapshotAt: string | null;
+  /** @nullable */
+  size: number | null;
+  /** @nullable */
+  counts: WorkspaceExportJobCounts;
+  /** @nullable */
+  errorCode: string | null;
+  notice: string;
+}
+
 export type WorkspaceDataExportData = { [key: string]: unknown };
 
 export interface WorkspaceDataExport {
