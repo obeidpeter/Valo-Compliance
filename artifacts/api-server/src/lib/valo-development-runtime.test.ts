@@ -52,7 +52,7 @@ test("actual export entries and worker startup reject before database, queue or 
   ]);
   const plugin:Plugin={name:"count-effects-only-in-isolated-proof",setup(b){
     b.onResolve({filter:/.*/},args=>{
-      const name=files.has(args.path)?args.path:args.path.split("/").at(-1)!;
+      const name=files.has(args.path)?args.path:args.path.split("/").at(-1)!.replace(/\.[mc]?[jt]sx?$/,"");
       return files.has(name)?{path:name,namespace:"controlled-effects"}:undefined;
     });
     b.onLoad({filter:/.*/,namespace:"controlled-effects"},args=>({contents:files.get(args.path)!,loader:"js"}));
@@ -68,13 +68,23 @@ test("actual export entries and worker startup reject before database, queue or 
     let rejected=0;for(const op of ops){try{await op()}catch(e){if(e.status!==503&&e.code!=="DEVELOPMENT_RUNTIME_REQUIRED")throw e;rejected++;}}
     if(rejected!==ops.length)throw Error("UNGUARDED_EXPORT_ENTRY");`;
   try{
+    const authorizationCanary=`import{authorizeWorkspaceWrite}from${JSON.stringify(resolve("src/lib/valo-store.ts"))};
+      try{await authorizeWorkspaceWrite({},{});throw Error("HARNESS_CAPABILITY_NOT_REACHED")}
+      catch(e){if(e.message!=="AUTHORIZATION_EFFECT")throw e;}`;
     const entries:[string,BuildOptions][]=[["api",{stdin:{contents:source,resolveDir:process.cwd(),loader:"ts"}}],
+      ["authorization-canary",{stdin:{contents:authorizationCanary,resolveDir:process.cwd(),loader:"ts"}}],
       ["worker",{entryPoints:[entry]}]];
     for(const [name,options]of entries){
       const result=await build({...options,bundle:true,write:false,platform:"node",format:"esm",plugins:[plugin],
         banner:{js:`globalThis.guardEffects=${JSON.stringify(zero)};process.on("exit",()=>console.log("GUARD_EFFECTS:"+JSON.stringify(globalThis.guardEffects)));`}});
       await writeFile(join(dir,`${name}.mjs`),result.outputFiles![0]!.contents);
     }
+    await t.test("controlled workspace-write authorization capability is executable, not a missing-export compile refusal",()=>{
+      const child=spawnSync(process.execPath,[join(dir,"authorization-canary.mjs")],{env:{NODE_ENV:"development"},encoding:"utf8",timeout:10000});
+      assert.equal(child.error,undefined);assert.equal(child.status,0,child.stderr);
+      const record=child.stdout.match(/GUARD_EFFECTS:(\{[^\n]+\})/);assert.ok(record);
+      assert.deepEqual(JSON.parse(record[1]!),{...zero,authorization:1});
+    });
     const modes:Record<string,string>[]=[{},...["","production","test","staging","preview"].map(NODE_ENV=>({NODE_ENV}))];
     for(const key of testedMarkers)for(const v of ["1","true","arbitrary-deployment","0","false"," "])
       modes.push({NODE_ENV:"development",[key]:v});

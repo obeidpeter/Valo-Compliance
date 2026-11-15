@@ -22,12 +22,14 @@ import {reconcileExportOrphans} from "./valo-export-recovery";
 import {privacyKeys,privacySigner} from "./valo-privacy-keys";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import {writePrivateFile,readPrivateFile,deletePrivateFile} from "./valo-private-storage";
+import {erasureProofMode} from "../test-support/erasure-proof-storage";
 
 const reason="Controlled synthetic erasure race and recovery proof; no production or provider deletion.";
 test("erasure holds, bounded recovery and accepted-upload process death",{
   skip:process.env.VALO_RUN_DB_TESTS!=="synthetic-development-only",timeout:180000,
 },async t=>{
   assertDevelopmentRuntime();
+  const nativeProof=erasureProofMode(process.env)==="native-replit";
   const owners:string[]=[],operators:string[]=[],children:ChildProcess[]=[];
   const setup=async()=>{
     const run=randomUUID(),owner=await resolveWorkspace(`synthetic-erasure-race-${run}`);
@@ -268,7 +270,7 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       assert.equal((await db.select().from(valoPrivacyErasureObjects).where(eq(valoPrivacyErasureObjects.caseId,f.id))).length,1);
     });
     await t.test("native private upload spans complete erasure and is removed by automatic maintenance",{
-      skip:!process.env.PRIVATE_OBJECT_DIR,
+      skip:!nativeProof?"Native-provider lane not selected; portable race/recovery checks remain active.":false,
     },async()=>{
       const f=await setup(),job=await exportJob(f);
       let release!:()=>void,accepted!:(key:string)=>void,key="",checksum="";
@@ -319,7 +321,7 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       // The controlled object service completes a request accepted before the
       // client process died. No catch/finally in that client can clean it up.
       let checksum="";
-      const native=Boolean(process.env.PRIVATE_OBJECT_DIR);
+      const native=nativeProof;
       t.diagnostic(native?"Killed-upload completion used native private App Storage.":"Killed-upload completion used controlled object transport; native storage unconfigured.");
       if(native){checksum=(await writePrivateFile(accepted.key,Buffer.from(accepted.bytes,"base64"))).checksum;
         await readPrivateFile(accepted.key,checksum);}

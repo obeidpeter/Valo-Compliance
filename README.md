@@ -2,6 +2,13 @@
 
 ## Latest application unit — usable disabled inference budget and reconciliation
 
+**Current test/CI repair:** runtime harness capability canary and separate
+portable/native erasure lanes are documented in
+[CI boundary and storage repair](docs/valo/ci-boundary-erasure-repair.md).
+Local results: 46 boundary checks, 2 storage controls, portable erasure 18 pass
+with one explicit native-only skip, native erasure 19 pass/no skips, and 47
+budget controls. This is not a whole-project CI or R1/R2 acceptance claim.
+
 The actual managed entry now has controlled evidence through reservation,
 dispatch, outbound observation and settlement across all four lanes. Source-
 verified price/context evidence supports whole-context reservations. The named

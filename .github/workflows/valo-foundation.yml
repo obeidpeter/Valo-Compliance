@@ -99,6 +99,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-rich-checker
       - name: Prove signed erasure inventory and isolated lock controls
         run: pnpm --filter @workspace/api-server test:valo-erasure-controls
+      - name: Prove portable storage bytes and fail-closed native proof selection
+        run: pnpm --filter @workspace/api-server test:valo-erasure-storage
       - name: Run foundation unit tests
         run: pnpm --filter @workspace/scripts test:valo
       - name: Install standard PDF readers
@@ -169,6 +171,8 @@ jobs:
       # Ephemeral synthetic CI service only; no workspace/provider/production secret.
       DATABASE_URL: postgresql://valo_ci:synthetic_ci_only@localhost:5432/valo_ci
       VALO_RUN_DB_TESTS: synthetic-development-only
+      # Never attach native App Storage credentials to this disposable runner.
+      VALO_ERASURE_STORAGE_PROOF: portable
       SESSION_SECRET: synthetic-ci-only-write-quota-key-not-a-production-secret
       NODE_ENV: test
     steps:
@@ -198,6 +202,10 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-erasure-db
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db
+      - name: Install the locked Chromium for controlled dispute PDF evidence
+        run: |
+          pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
+          echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Prove durable dispute intents against synthetic orders and controlled transport
         run: pnpm --filter @workspace/api-server test:valo-disputes-db
       - name: Prove durable write limits and membership revocation races

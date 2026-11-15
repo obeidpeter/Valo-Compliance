@@ -1,0 +1,92 @@
+
+> @workspace/api-server@0.0.0 test:valo-runtime-boundaries /home/runner/workspace/artifacts/api-server
+> tsx --test src/lib/valo-development-runtime.test.ts src/lib/valo-request-scope.test.ts
+
+✔ explicit development only; empty markers are absent, every nonempty marker rejects (2.773714ms)
+✘ [ERROR] No matching export in "controlled-effects:@workspace/db" for import "valoPrivacyEvents"
+
+    src/lib/valo-privacy-keys.ts:3:11:
+      3 │ import {db,valoPrivacyEvents,valoPrivacyTombstones} from "@workspac...
+        ╵            ~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] No matching export in "controlled-effects:@workspace/db" for import "valoWorkspaces"
+
+    src/lib/valo-store.ts:5:6:
+      5 │   db, valoWorkspaces, valoMemberships, valoProfileVersions, valoDoc...
+        ╵       ~~~~~~~~~~~~~~
+
+✘ [ERROR] No matching export in "controlled-effects:@workspace/db" for import "valoProfileVersions"
+
+    src/lib/valo-store.ts:5:39:
+      5 │ ...aloWorkspaces, valoMemberships, valoProfileVersions, valoDocuments,
+        ╵                                    ~~~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] No matching export in "controlled-effects:@workspace/db" for import "valoSupportTickets"
+
+    src/lib/valo-store.ts:6:25:
+      6 │   valoDocumentRevisions, valoSupportTickets, valoEvents, valoPrivac...
+        ╵                          ~~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] No matching export in "controlled-effects:valo-validation" for import "documentUpdate"
+
+    src/lib/valo-store.ts:9:24:
+      9 │ import { documentInput, documentUpdate, profileInput, ticketInput }...
+        ╵                         ~~~~~~~~~~~~~~
+
+✘ [ERROR] No matching export in "controlled-effects:valo-validation" for import "profileInput"
+
+    src/lib/valo-store.ts:9:40:
+      9 │ ...entInput, documentUpdate, profileInput, ticketInput } from "./va...
+        ╵                              ~~~~~~~~~~~~
+
+✘ [ERROR] No matching export in "controlled-effects:valo-validation" for import "ticketInput"
+
+    src/lib/valo-store.ts:9:54:
+      9 │ ...cumentUpdate, profileInput, ticketInput } from "./valo-validation";
+        ╵                                ~~~~~~~~~~~
+
+✖ actual export entries and worker startup reject before database, queue or storage effects (220.671156ms)
+▶ account transport boundaries
+  ✔ expired scope cannot dispatch a mutation (2.52171ms)
+  ✔ late A response after B installation is discarded even when transport ignores abort (44.723083ms)
+  ✔ late body parsing cannot return previous-account data (13.478846ms)
+  ✔ current 401 invalidates current UI scope once (5.039418ms)
+  ✔ late A 401 cannot invalidate B (1.1759ms)
+  ✔ caller cancellation composes with account cancellation without adding browser bearer credentials (0.976308ms)
+✔ account transport boundaries (174.334756ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 8
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 832.821612
+
+✖ failing tests:
+
+test at src/lib/valo-development-runtime.test.ts:21:1
+✖ actual export entries and worker startup reject before database, queue or storage effects (220.671156ms)
+  Error: Build failed with 7 errors:
+  src/lib/valo-privacy-keys.ts:3:11: ERROR: No matching export in "controlled-effects:@workspace/db" for import "valoPrivacyEvents"
+  src/lib/valo-store.ts:5:6: ERROR: No matching export in "controlled-effects:@workspace/db" for import "valoWorkspaces"
+  src/lib/valo-store.ts:5:39: ERROR: No matching export in "controlled-effects:@workspace/db" for import "valoProfileVersions"
+  src/lib/valo-store.ts:6:25: ERROR: No matching export in "controlled-effects:@workspace/db" for import "valoSupportTickets"
+  src/lib/valo-store.ts:9:24: ERROR: No matching export in "controlled-effects:valo-validation" for import "documentUpdate"
+  ...
+      at failureErrorWithLog (/home/runner/workspace/node_modules/.pnpm/esbuild@0.28.2/node_modules/esbuild/lib/main.js:1752:15)
+      at /home/runner/workspace/node_modules/.pnpm/esbuild@0.28.2/node_modules/esbuild/lib/main.js:1211:25
+      at runOnEndCallbacks (/home/runner/workspace/node_modules/.pnpm/esbuild@0.28.2/node_modules/esbuild/lib/main.js:1592:45)
+      at buildResponseToResult (/home/runner/workspace/node_modules/.pnpm/esbuild@0.28.2/node_modules/esbuild/lib/main.js:1209:7)
+      at /home/runner/workspace/node_modules/.pnpm/esbuild@0.28.2/node_modules/esbuild/lib/main.js:1236:16
+      at responseCallbacks.<computed> (/home/runner/workspace/node_modules/.pnpm/esbuild@0.28.2/node_modules/esbuild/lib/main.js:886:9)
+      at handleIncomingPacket (/home/runner/workspace/node_modules/.pnpm/esbuild@0.28.2/node_modules/esbuild/lib/main.js:941:12)
+      at Socket.readFromStdout (/home/runner/workspace/node_modules/.pnpm/esbuild@0.28.2/node_modules/esbuild/lib/main.js:864:7)
+      at Socket.emit (node:events:514:28)
+      at addChunk (node:internal/streams/readable:569:12) {
+    errors: [ { detail: undefined, id: '', location: [Object], notes: [], pluginName: '', text: 'No matching export in "controlled-effects:@workspace/db" for import "valoPrivacyEvents"' }, { detail: undefined, id: '', location: [Object], notes: [], pluginName: '', text: 'No matching export in "controlled-effects:@workspace/db" for import "valoWorkspaces"' }, { detail: undefined, id: '', location: [Object], notes: [], pluginName: '', text: 'No matching export in "controlled-effects:@workspace/db" for import "valoProfileVersions"' }, { detail: undefined, id: '', location: [Object], notes: [], pluginName: '', text: 'No matching export in "controlled-effects:@workspace/db" for import "valoSupportTickets"' }, { detail: undefined, id: '', location: [Object], notes: [], pluginName: '', text: 'No matching export in "controlled-effects:valo-validation" for import "documentUpdate"' }, { detail: undefined, id: '', location: [Object], notes: [], pluginName: '', text: 'No matching export in "controlled-effects:valo-validation" for import "profileInput"' }, { detail: undefined, id: '', location: [Object], notes: [], pluginName: '', text: 'No matching export in "controlled-effects:valo-validation" for import "ticketInput"' } ],
+    warnings: []
+  }
+/home/runner/workspace/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 test:valo-runtime-boundaries: `tsx --test src/lib/valo-development-runtime.test.ts src/lib/valo-request-scope.test.ts`
+Exit status 1
