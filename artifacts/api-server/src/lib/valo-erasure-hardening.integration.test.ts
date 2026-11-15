@@ -102,6 +102,9 @@ test("erasure holds, bounded recovery and accepted-upload process death",{
       const remove=async(key:string)=>{calls++;objects.delete(key);};
       const storage={put:async()=>{throw Error("UNEXPECTED_UPLOAD");},get:async()=>{throw Error("UNEXPECTED_READ");},remove};
       const blocked=async(label:string)=>{
+        // Make each authority state independently due despite durable retry backoff.
+        await db.update(valoWorkspaceExportAttempts).set({nextCleanupAt:new Date(0)})
+          .where(eq(valoWorkspaceExportAttempts.id,attemptId));
         await db.update(valoExportObjects).set({state:"cleanup",nextCleanupAt:new Date(0)})
           .where(eq(valoExportObjects.objectKey,tracked.objectKey));
         const orphan=await reconcileExportOrphans(job.id,remove);

@@ -1,4 +1,4 @@
-import {pgTable,uuid,text,integer,bigint,jsonb,timestamp,uniqueIndex,foreignKey} from "drizzle-orm/pg-core";
+import {pgTable,uuid,text,integer,bigint,jsonb,timestamp,index,uniqueIndex,foreignKey} from "drizzle-orm/pg-core";
 import {createInsertSchema} from "drizzle-zod";
 import {valoWorkspaces} from "./valo-workspaces";
 export const valoWorkspaceExports=pgTable("valo_workspace_exports",{
@@ -21,7 +21,11 @@ export const valoWorkspaceExportAttempts=pgTable("valo_workspace_export_attempts
   objectKey:text("object_key").notNull().unique(),
   status:text("status",{enum:["reserved","uploading","ready","cleanup"]}).notNull().default("reserved"),
   cleanupCheckedAt:timestamp("cleanup_checked_at",{withTimezone:true}),
+  nextCleanupAt:timestamp("next_cleanup_at",{withTimezone:true}).notNull().defaultNow(),
+  cleanupAttempts:integer("cleanup_attempts").notNull().default(0),
+  cleanupErrorCode:text("cleanup_error_code",{enum:["INVALID_PRIVATE_KEY","PRIVACY_HOLD","PRIVACY_REPLAY_OWNED","STORAGE_DELETE_FAILED"]}),
   createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),
-},t=>[foreignKey({columns:[t.jobId,t.workspaceId],foreignColumns:[valoWorkspaceExports.id,valoWorkspaceExports.workspaceId]})]);
+},t=>[foreignKey({columns:[t.jobId,t.workspaceId],foreignColumns:[valoWorkspaceExports.id,valoWorkspaceExports.workspaceId]}),
+  index("valo_workspace_cleanup_due").on(t.nextCleanupAt,t.id)]);
 export const insertWorkspaceExportSchema=createInsertSchema(valoWorkspaceExports);
 export type WorkspaceExport=typeof valoWorkspaceExports.$inferSelect;
