@@ -4,7 +4,7 @@ import {logger} from "./logger";
 import {withPrivacyCaseLock,ErasureLockBusyError} from "./valo-erasure-lock";
 import {and,eq,ne,sql,lte,asc} from "drizzle-orm";
 import {db,valoPrivacyCases,valoPrivacyTombstones,valoPrivacyEvents,valoWorkspaces,valoMemberships,valoExportJobs,
-  valoExportObjects} from "@workspace/db";
+  valoExportObjects,valoWorkspaceExports} from "@workspace/db";
 import {ActOnStaffPrivacyCaseBody} from "@workspace/api-zod";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
 import {deletePrivateFile} from "./valo-private-storage";
@@ -97,15 +97,26 @@ export async function holdUnsentPrivacyNotifications(tx:Tx,workspaceId:string){
     WHERE ctid IN (SELECT ctid FROM valo_purchase_outbox WHERE workspace_id=${workspaceId}::uuid
       AND status IN ('awaiting_email_configuration','pending','retry') LIMIT 100)`);
 }
+/** One shared row budget. Returning fewer than 100 means every family below
+ * is exhausted, so the signed cursor can safely advance to its next phase. */
+export async function eraseSupportContentBatch(tx:Tx,workspaceId:string){
+ let count=0;
+ const support=await tx.execute(sql`UPDATE valo_support_tickets SET scope=${removedMessage},contact_email='erased@invalid'
+  WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
+    AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);count+=support.rowCount??0;
+ if(count<100){const concerns=await tx.execute(sql`UPDATE valo_payment_concerns SET message=${removedMessage},latest_reply=NULL
+  WHERE ctid IN (SELECT ctid FROM valo_payment_concerns WHERE workspace_id=${workspaceId}::uuid
+    AND (message<>${removedMessage} OR latest_reply IS NOT NULL) LIMIT ${100-count})`);count+=concerns.rowCount??0;}
+ if(count<100){const messages=await tx.execute(sql`DELETE FROM valo_concern_messages WHERE ctid IN
+  (SELECT ctid FROM valo_concern_messages WHERE workspace_id=${workspaceId}::uuid LIMIT ${100-count})`);count+=messages.rowCount??0;}
+ return{rowCount:count};
+}
 async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[number],currentCaseId:string){
   if(section==="dispute_work")return cancelUnsentDisputeWork(tx,workspaceId);
   if(section==="privacy_messages")return tx.execute(sql`DELETE FROM valo_privacy_messages WHERE ctid IN
     (SELECT ctid FROM valo_privacy_messages WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
   if(section==="purchase_notifications")return holdUnsentPrivacyNotifications(tx,workspaceId);
-  if(section==="support_content")return tx.execute(sql`UPDATE valo_support_tickets SET
-    scope=${removedMessage},contact_email='erased@invalid'
-    WHERE ctid IN (SELECT ctid FROM valo_support_tickets WHERE workspace_id=${workspaceId}::uuid
-      AND (scope<>${removedMessage} OR contact_email<>'erased@invalid') LIMIT 100)`);
+  if(section==="support_content")return eraseSupportContentBatch(tx,workspaceId);
   if(section==="privacy_content"){
     // Preserve the signed historical phase indices. Replays also remove saved
     // metadata added after the original erasure engine was introduced.
@@ -128,6 +139,14 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
     accepted_document_id=NULL,status='privacy_erased',updated_at=now()
     WHERE ctid IN (SELECT ctid FROM valo_ai_drafts WHERE workspace_id=${workspaceId}::uuid
     AND status<>'privacy_erased' LIMIT 100)`);
+  if(section==="valo_export_jobs"){
+    const workspaceJobs=await tx.execute(sql`DELETE FROM valo_workspace_exports WHERE ctid IN
+      (SELECT ctid FROM valo_workspace_exports WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
+    const removed=workspaceJobs.rowCount??0;
+    const documentJobs=removed<100?await tx.execute(sql`DELETE FROM valo_export_jobs WHERE ctid IN
+      (SELECT ctid FROM valo_export_jobs WHERE workspace_id=${workspaceId}::uuid LIMIT ${100-removed})`):{rowCount:0};
+    return{rowCount:removed+(documentJobs.rowCount??0)};
+  }
   const table=sql.identifier(section);
   return tx.execute(sql`DELETE FROM ${table} WHERE ctid IN
     (SELECT ctid FROM ${table} WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
@@ -200,6 +219,9 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
     const journal=await readTombstone(tx,id);await privacySigner(tx);
     let next=start.phase,detail="Private-object deletion remains pending; failed keys are retryable.";
     if(start.phase==="quarantined"){
+      await tx.update(valoWorkspaceExports).set({status:"cancelled",queueId:randomUUID(),errorCode:"PRIVACY_ERASURE",
+        version:sql`${valoWorkspaceExports.version}+1`,leaseExpiresAt:null,updatedAt:new Date()})
+        .where(eq(valoWorkspaceExports.workspaceId,row.workspaceId));
       await tx.update(valoExportJobs).set({status:"failed",queueId:randomUUID(),errorCode:"PRIVACY_ERASURE",
         updatedAt:new Date()}).where(eq(valoExportJobs.workspaceId,row.workspaceId));
       await tx.update(valoExportObjects).set({state:"cleanup"}).where(eq(valoExportObjects.workspaceId,row.workspaceId));
@@ -226,7 +248,7 @@ async function processErasure(actor:PrivacyStaffActor,id:string,input:Input,remo
     row=await privacyChange(tx,row,{identityId:actor.identityId,type:"staff"},"erasure_batch_recorded",input.reason,{
       ...(start.phase==="privacy_content"?{message:removedMessage,resultJson:null}:{}),
       erasurePhase:next,status:done?"partially_fulfilled":"in_progress",
-      resultScope:done?"Scoped synthetic application rows erased; captured object deletes acknowledged with durable repeated late-write cleanup. V2 removes support/contact and privacy prepared-result copies. Financial records, minimal case references, signed audit text, managed identity, backups and external-provider/write uncertainty remain retained or held; this is not complete account deletion.":row.resultScope,
+      resultScope:done?"Scoped synthetic application rows erased; captured object deletes acknowledged with durable repeated late-write cleanup. V2 removes support/contact and privacy prepared-result copies. Financial records (including consented dispute information and prepared evidence/action history), minimal case references, signed audit text, managed identity, backups and external-provider/write uncertainty remain retained or held; this is not complete account deletion.":row.resultScope,
       steps:row.steps.map(s=>s.system==="application"?{...s,status:done?"confirmed":"running",detail}:
         s.system==="private_files"?{...s,status:next==="objects"||next==="quarantined"?"running":"held",
           detail:"Captured deletions are recorded; signed object keys outlive job rows for repeated cleanup. Future completion of an interrupted upload is not claimed impossible."}:
@@ -346,3 +368,4 @@ export async function reconcileErasedObjects(remove:DeleteObject=deletePrivateFi
   }
   return{cleaned,failed,held};
 }
+

@@ -89,6 +89,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
+      - name: Prove bounded private workspace storage and job UI helpers
+        run: pnpm --filter @workspace/api-server test:valo-workspace-export-controls
       - name: Prove workspace download release requires the current session
         run: pnpm --filter @workspace/api-server test:valo-workspace-download
       - name: Prove finite inference scope, actual callers and disabled entry without network
@@ -115,6 +117,14 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo
       - name: Prove catalogue filters and saved-item journeys
         run: pnpm --filter @workspace/api-server test:valo-catalogue-browser
+      - name: Prove durable export browser status, cancellation, retry and account boundaries
+        run: pnpm --filter @workspace/api-server test:valo-workspace-export-browser
+      - name: Retain durable export controlled browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: controlled-workspace-export-jobs-browser
+          path: generated-artifacts/valo-completion/workspace-export-jobs-*
       - name: Prove native workspace download, cancellation and account boundaries
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-browser
       - name: Retain controlled workspace download browser evidence
@@ -148,6 +158,14 @@ jobs:
         run: pnpm --filter @workspace/valo run build
       - name: Prove controlled profile and checker state does not cross accounts
         run: NODE_ENV=development VALO_RUN_ACCOUNT_SCOPE_BROWSER=synthetic-development-only pnpm --filter @workspace/api-server exec tsx src/scripts/account-switch-browser.ts
+      - name: Prove native dispute workflow and payment concerns in a controlled browser
+        run: pnpm --filter @workspace/api-server test:valo-dispute-browser
+      - name: Retain controlled dispute browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: controlled-dispute-workflow-browser
+          path: generated-artifacts/valo-completion/dispute-*
       - name: Print factual readiness
         run: pnpm --filter @workspace/scripts valo:readiness
   postgres:
@@ -188,6 +206,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Apply tracked migrations to empty synthetic database
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
+      - name: Prove durable workspace jobs, real process death, cancellation and mixed privacy inventory
+        run: pnpm --filter @workspace/api-server test:valo-workspace-export-db
       - name: Prove paged workspace attachment, final authorization and disconnect cleanup
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-db
       - name: Prove saved-template ownership, concurrency and withdrawal
@@ -198,6 +218,12 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-erasure-db
       - name: Prove tenant boundaries, conflicts and history
         run: pnpm --filter @workspace/api-server test:valo-db
+      - name: Install real PDF rendering and reading tools for dispute database tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+          pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
+          echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Prove durable dispute intents against synthetic orders and controlled transport
         run: pnpm --filter @workspace/api-server test:valo-disputes-db
       - name: Prove durable write limits and membership revocation races
@@ -206,3 +232,4 @@ jobs:
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce
           pnpm --filter @workspace/api-server test:valo-refunds
+

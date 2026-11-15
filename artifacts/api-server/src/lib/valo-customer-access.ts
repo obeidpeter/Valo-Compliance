@@ -1,14 +1,15 @@
 import { randomUUID,createHash } from "node:crypto";
 import {createPrivacyCase} from "./valo-privacy";
-import { and,eq,desc,like } from "drizzle-orm";
+import { and,eq,desc,like,sql } from "drizzle-orm";
 import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoAssessments,valoTasks,valoReminderPreferences,
   valoReminderOutbox,valoAIDrafts,valoContentVersions,valoSafetySwitches,valoStaffAccessAudit,
-  valoExportJobs,valoFileAssets,valoEvents,valoSavedTemplates } from "@workspace/db";
+  valoExportJobs,valoWorkspaceExports,valoFileAssets,valoEvents,valoSavedTemplates } from "@workspace/db";
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { authorizeWorkspaceWrite,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
 import { valoOrders,valoEntitlements,valoPurchaseOutbox,valoRefundRequests,valoPaymentReconciliations,valoPrivacyMessages,valoDisputeInformation,valoDisputeActions } from "@workspace/db";
+import {valoPaymentConcerns,valoConcernMessages,valoPaymentConcernEvents} from "@workspace/db";
 export const accessMessage="Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack=(id:string)=>({reference:`VALO-ACCESS-${id}`,message:accessMessage,delivery:"not_dispatched" as const});
 export async function saveAccessSupport(raw:unknown,remoteAddress:string){
@@ -51,23 +52,25 @@ export async function customerAccount(actor:WorkspaceActor){
 export async function requestPrivacy(actor:WorkspaceActor,email:string,raw:unknown){
   return createPrivacyCase(actor,email,raw);
 }
-export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:string)=>Promise<void>,signal?:AbortSignal){
+export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:string)=>Promise<void>,signal?:AbortSignal,onProgress?:(rows:number)=>Promise<void>){
   signal?.throwIfAborted();
   return db.transaction(async tx=>{
+    await tx.execute(sql`SET LOCAL statement_timeout = '30s'`);
+    await tx.execute(sql`SET LOCAL lock_timeout = '5s'`);
     await authorizeWorkspaceWrite(tx,actor);
     signal?.throwIfAborted();
     const header={schemaVersion:2,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,
-      scope:"Only the named application sections under data are included; this is not complete privacy fulfilment. Includes export/file metadata and your own workspace activity, but not private file bytes or storage links. Does not include membership records, other people's activity, full system/staff audits, managed identity records, external provider data or unlinked public contact requests. Request coordinated access for those systems."};
+      scope:"Only the named application sections under data are included; this is not complete privacy fulfilment. Includes export/file metadata and your own workspace activity, but not private file bytes or storage links. Does not include membership records, other people's activity, full system/staff audits and private finance evidence/intent payloads, managed identity records, external provider data or unlinked public contact requests. Request coordinated access for those systems."};
     if(sink)await sink(JSON.stringify(header).slice(0,-1)+',"data":{');
     const tables={savedTemplates:valoSavedTemplates,profileVersions:valoProfileVersions,documents:valoDocuments,documentRevisions:valoDocumentRevisions,
       assessments:valoAssessments,tasks:valoTasks,reminderPreferences:valoReminderPreferences,
       reminderDeliveries:valoReminderOutbox,supportRequests:valoSupportTickets,aiDrafts:valoAIDrafts,
       orders:valoOrders,entitlements:valoEntitlements,purchaseMessages:valoPurchaseOutbox,
       refundRequests:valoRefundRequests,paymentReconciliations:valoPaymentReconciliations,privacyInformation:valoPrivacyMessages,
-      disputeInformation:valoDisputeInformation,disputeIntents:valoDisputeActions};
+      disputeInformation:valoDisputeInformation};
     const data:Record<string,unknown>={};
     let bytes=0;
-    let sections=0;
+    let sections=0,totalRows=0;
     const collect=async<T>(name:string,query:(offset:number)=>PromiseLike<T[]>)=>{
       signal?.throwIfAborted();
       if(!sink){append(name,await query(0));return;}
@@ -81,6 +84,7 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
           signal?.throwIfAborted();
           await sink((first?"":",")+JSON.stringify(row));first=false;
         }
+        totalRows+=rows.length;await onProgress?.(totalRows);
         if(rows.length<500)break;
         offset+=rows.length;
       }
@@ -96,6 +100,24 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
       await collect(name,offset=>tx.select().from(table).where(eq(table.workspaceId,actor.workspaceId))
         .orderBy("id" in table?table.id:table.workspaceId).limit(sink?500:5001).offset(offset));
     }
+    // Payment concern text and public status/history only. Provider evidence,
+    // private staff audit, receipt bytes, intent payloads and authority stay private.
+    await collect("paymentConcerns",offset=>tx.select({id:valoPaymentConcerns.id,orderId:valoPaymentConcerns.orderId,
+      message:valoPaymentConcerns.message,latestReply:valoPaymentConcerns.latestReply,status:valoPaymentConcerns.status,
+      version:valoPaymentConcerns.version,createdAt:valoPaymentConcerns.createdAt,updatedAt:valoPaymentConcerns.updatedAt})
+      .from(valoPaymentConcerns).where(eq(valoPaymentConcerns.workspaceId,actor.workspaceId)).orderBy(valoPaymentConcerns.id).limit(sink?500:5001).offset(offset));
+    await collect("paymentConcernMessages",offset=>tx.select({id:valoConcernMessages.id,concernId:valoConcernMessages.concernId,
+      body:valoConcernMessages.body,createdAt:valoConcernMessages.createdAt}).from(valoConcernMessages)
+      .where(eq(valoConcernMessages.workspaceId,actor.workspaceId)).orderBy(valoConcernMessages.id).limit(sink?500:5001).offset(offset));
+    await collect("paymentConcernHistory",offset=>tx.select({id:valoPaymentConcernEvents.id,orderId:valoPaymentConcernEvents.orderId,
+      concernId:valoPaymentConcernEvents.concernId,action:valoPaymentConcernEvents.action,
+      reason:valoPaymentConcernEvents.reason,actorType:valoPaymentConcernEvents.actorType,createdAt:valoPaymentConcernEvents.createdAt})
+      .from(valoPaymentConcernEvents).where(and(eq(valoPaymentConcernEvents.workspaceId,actor.workspaceId),eq(valoPaymentConcernEvents.customerVisible,true)))
+      .orderBy(valoPaymentConcernEvents.id).limit(sink?500:5001).offset(offset));
+    await collect("disputeIntents",offset=>tx.select({id:valoDisputeActions.id,orderId:valoDisputeActions.orderId,
+      disputeId:valoDisputeActions.disputeId,kind:valoDisputeActions.kind,status:valoDisputeActions.status,
+      createdAt:valoDisputeActions.createdAt,updatedAt:valoDisputeActions.updatedAt})
+      .from(valoDisputeActions).where(eq(valoDisputeActions.workspaceId,actor.workspaceId)).orderBy(valoDisputeActions.id).limit(sink?500:5001).offset(offset));
     // Explicit projections: never include storage locators, queue identifiers or leases.
     await collect("exportJobs",offset=>tx.select({id:valoExportJobs.id,workspaceId:valoExportJobs.workspaceId,
       documentId:valoExportJobs.documentId,revisionId:valoExportJobs.revisionId,revision:valoExportJobs.revision,
@@ -104,8 +126,13 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
       createdAt:valoExportJobs.createdAt,updatedAt:valoExportJobs.updatedAt})
       .from(valoExportJobs).where(eq(valoExportJobs.workspaceId,actor.workspaceId))
       .orderBy(valoExportJobs.id).limit(sink?500:5001).offset(offset));
+    await collect("workspaceDataExports",offset=>tx.select({id:valoWorkspaceExports.id,status:valoWorkspaceExports.status,
+      schemaVersion:valoWorkspaceExports.schemaVersion,createdAt:valoWorkspaceExports.createdAt,
+      updatedAt:valoWorkspaceExports.updatedAt,expiresAt:valoWorkspaceExports.expiresAt})
+      .from(valoWorkspaceExports).where(and(eq(valoWorkspaceExports.workspaceId,actor.workspaceId),
+        eq(valoWorkspaceExports.requestedBy,actor.identityId))).orderBy(valoWorkspaceExports.id).limit(sink?500:5001).offset(offset));
     await collect("fileMetadata",offset=>tx.select({id:valoFileAssets.id,workspaceId:valoFileAssets.workspaceId,
-      jobId:valoFileAssets.jobId,checksum:valoFileAssets.checksum,mime:valoFileAssets.mime,
+      jobId:valoFileAssets.jobId,workspaceExportJobId:valoFileAssets.workspaceExportJobId,withdrawnAt:valoFileAssets.withdrawnAt,checksum:valoFileAssets.checksum,mime:valoFileAssets.mime,
       size:valoFileAssets.size,retentionAt:valoFileAssets.retentionAt,createdAt:valoFileAssets.createdAt})
       .from(valoFileAssets).where(eq(valoFileAssets.workspaceId,actor.workspaceId))
       .orderBy(valoFileAssets.id).limit(sink?500:5001).offset(offset));
@@ -151,3 +178,4 @@ export async function staffOperations(identityId:string,recentMfa:boolean,area:S
     return{area,notice,records};
   });
 }
+

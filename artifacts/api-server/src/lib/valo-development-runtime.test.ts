@@ -25,16 +25,19 @@ test("actual export entries and worker startup reject before database, queue or 
     ["@workspace/db",`const hit=()=>{globalThis.guardEffects.database++;throw Error("DATABASE_EFFECT")};
       export const db=new Proxy({},{get:()=>hit});export const pool={end:hit};
       export const valoMemberships={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
-      valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={};`],
-    ["drizzle-orm","export const and=()=>{},eq=()=>{},ne=()=>{},desc=()=>{},inArray=()=>{},lte=()=>{},sql=()=>{};"],
+      valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={},
+      valoWorkspaceExports={},valoWorkspaces={},valoPrivacyCases={};`],
+    ["drizzle-orm","export const and=()=>{},or=()=>{},eq=()=>{},ne=()=>{},desc=()=>{},inArray=()=>{},lte=()=>{},lt=()=>{},asc=()=>{},sql=()=>{};"],
     ["pg-boss",`export class PgBoss{constructor(){globalThis.guardEffects.queue++;}
       on(){} async start(){globalThis.guardEffects.queue++;}async work(){globalThis.guardEffects.queue++;}}`],
-    ["@workspace/api-zod","export const CreateDocumentExportBody={strict(){return this},parse(x){return x}},CreateDocumentExportResponse={parse:x=>x};"],
+    ["@workspace/api-zod","export const CreateDocumentExportBody={strict(){return this},parse(x){return x}},CreateDocumentExportResponse={parse:x=>x},RequestWorkspaceDataExportBody=CreateDocumentExportBody,CancelWorkspaceDataExportBody=CreateDocumentExportBody;"],
     ["@workspace/valo-core","export const sha256=x=>x;"],
     ["valo-store",`export class ValoProblem extends Error{constructor(status,message){super(message);this.status=status;}}
       export const authorizeWorkspaceWrite=()=>{globalThis.guardEffects.authorization++;throw Error("AUTHORIZATION_EFFECT")};`],
     ["valo-private-storage",`const hit=()=>{globalThis.guardEffects.storage++;throw Error("STORAGE_EFFECT")};
-      export const readPrivateFile=hit,writePrivateFile=hit,deletePrivateFile=hit;`],
+      export const readPrivateFile=hit,writePrivateFile=hit,deletePrivateFile=hit,privateStorageObject=hit;`],
+    ["valo-customer-access","export const workspaceDataExport=async()=>{globalThis.guardEffects.services++;throw Error('COLLECTION_EFFECT')};"],
+    ["valo-privacy","export const readPrivacyCase=async()=>{globalThis.guardEffects.services++;throw Error('PRIVACY_EFFECT')};"],
     ["valo-render","export const RENDER_VERSION='controlled';export const exportMime=()=>'';export const renderDocument=()=>{globalThis.guardEffects.render++};"],
     ["valo-validation","export const documentInput={parse:x=>x};"],
     ["valo-revision-codec","export const serializeRevision=x=>x;"],
@@ -57,11 +60,16 @@ test("actual export entries and worker startup reject before database, queue or 
   const entry=resolve("src/workers/export-worker.ts");
   const source=`import{requestExport,getExport,listExports,retryExport,downloadExport,executeExport}from${JSON.stringify(resolve("src/lib/valo-exports.ts"))};
     import{recoverAbandonedExports,reconcileExportOrphans}from${JSON.stringify(resolve("src/lib/valo-export-recovery.ts"))};
+    import{requestWorkspaceExport,listWorkspaceExports,getWorkspaceExport,actOnWorkspaceExport,executeWorkspaceExport,recoverWorkspaceExports,expireWorkspaceExports,pendingWorkspaceExports,withPreparedWorkspaceExport}from${JSON.stringify(resolve("src/lib/valo-workspace-exports.ts"))};
     import{exportQueue}from${JSON.stringify(resolve("src/lib/valo-export-queue.ts"))};
     const actor={workspaceId:"not-accessed",identityId:"not-accessed"};
     const ops=[()=>requestExport(actor,"id","key",{}),()=>getExport(actor,"id"),()=>listExports(actor,"id"),
       ()=>retryExport(actor,"id"),()=>downloadExport(actor,"id"),()=>executeExport("id","ws","queue"),
-      ()=>recoverAbandonedExports(),()=>reconcileExportOrphans(),()=>exportQueue()];
+      ()=>recoverAbandonedExports(),()=>reconcileExportOrphans(),()=>exportQueue(),
+      ()=>requestWorkspaceExport(actor,{}),()=>listWorkspaceExports(actor),()=>getWorkspaceExport(actor,"id"),
+      ()=>actOnWorkspaceExport(actor,"id",{},"cancel"),()=>executeWorkspaceExport("id","ws","queue"),
+      ()=>recoverWorkspaceExports(),()=>expireWorkspaceExports(),()=>pendingWorkspaceExports(),
+      ()=>withPreparedWorkspaceExport(actor,"id",async()=>{}, {beforeRelease:async()=>{}})];
     let rejected=0;for(const op of ops){try{await op()}catch(e){if(e.status!==503&&e.code!=="DEVELOPMENT_RUNTIME_REQUIRED")throw e;rejected++;}}
     if(rejected!==ops.length)throw Error("UNGUARDED_EXPORT_ENTRY");`;
   try{

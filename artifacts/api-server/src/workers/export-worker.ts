@@ -9,10 +9,13 @@ import { reconcileDueReminders } from "../lib/valo-reminder-worker";
 import { recoverAbandonedExports,reconcileExportOrphans } from "../lib/valo-export-recovery";
 import { processPaymentEvents,reconcilePayments } from "../lib/valo-commerce";
 import {processRefundQueue} from "../lib/valo-refunds";
+import {reconcileDisputeActions} from "../lib/valo-dispute-actions";
 import {reconcileKnownDisputes} from "../lib/valo-payment-disputes";
 import {dispatchOperationalJobs} from "../lib/valo-operational-dispatch";
 import {assertRecoveryEffectsAllowed} from "../lib/valo-recovery-effects";
 import {recordWorkerHeartbeat,collectOperationalSample,recordOperationalAlerts} from "../lib/valo-operations";
+
+import {WORKSPACE_EXPORT_QUEUE,executeWorkspaceExport,recoverWorkspaceExports,expireWorkspaceExports,pendingWorkspaceExports} from "../lib/valo-workspace-exports";
 
 developmentExportsOnly();
 assertRecoveryEffectsAllowed();
@@ -34,6 +37,9 @@ await boss.work(EXPORT_QUEUE, {batchSize:1,pollingIntervalSeconds:1}, async jobs
     }:undefined);
   }
 });
+await boss.work(WORKSPACE_EXPORT_QUEUE,{batchSize:1,pollingIntervalSeconds:1},async entries=>{
+  for(const entry of entries){const input=payload.parse(entry.data);await executeWorkspaceExport(input.jobId,input.workspaceId,entry.id);}
+});
 let dispatching = false;
 let dispatchIdle:Promise<void>=Promise.resolve();
 let reminderCheckedAt=0;
@@ -45,6 +51,9 @@ async function dispatch() {
   let finishDispatch!:()=>void;dispatchIdle=new Promise(resolve=>{finishDispatch=resolve;});
   try {
     try{
+    await recoverWorkspaceExports();await expireWorkspaceExports();
+    for(const job of await pendingWorkspaceExports())
+      await boss.send(WORKSPACE_EXPORT_QUEUE,{jobId:job.id,workspaceId:job.workspaceId},{id:job.queueId});
     await recoverAbandonedExports();
     const cleanup=await reconcileExportOrphans();
     if(cleanup.failed)logger.error({event:"export.orphan_cleanup_failed",count:cleanup.failed});
@@ -58,7 +67,7 @@ async function dispatch() {
       reminderCheckedAt=Date.now();
       const failures=await dispatchOperationalJobs({reminders:()=>reconcileDueReminders(),
         paymentEvents:()=>processPaymentEvents(),refunds:()=>processRefundQueue(),
-        disputes:()=>reconcileKnownDisputes(),paymentReconciliation:()=>reconcilePayments()});
+        disputes:()=>reconcileKnownDisputes(),disputeActions:()=>reconcileDisputeActions(),paymentReconciliation:()=>reconcilePayments()});
       for(const domain of failures)logger.error({event:"operational.dispatch_failed",domain});
     }
   } catch { logger.error({event:"export.dispatch_failed"}); }
@@ -88,3 +97,4 @@ async function stop() {
 }
 process.on("SIGTERM",()=>{void stop();});
 process.on("SIGINT",()=>{void stop();});
+

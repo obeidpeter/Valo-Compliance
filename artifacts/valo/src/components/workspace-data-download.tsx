@@ -21,7 +21,9 @@ function readError(frame: HTMLIFrameElement): string | undefined {
   return GENERIC_ERROR;
 }
 
-export function WorkspaceDataDownload({ timeoutMs = 120_000 }: { timeoutMs?: number }) {
+export function WorkspaceDataDownload({ timeoutMs = 120_000, endpoint = DOWNLOAD_PATH, buttonLabel = 'Download JSON', testIdPrefix, preparedFile = false }: {
+  timeoutMs?: number; endpoint?: string; buttonLabel?: string; testIdPrefix?: string; preparedFile?: boolean;
+}) {
   const [state, setState] = useState<DownloadState>({ phase: 'idle' });
   const pending = useRef<PendingDownload | null>(null);
   const stop = useCallback(() => {
@@ -45,6 +47,11 @@ export function WorkspaceDataDownload({ timeoutMs = 120_000 }: { timeoutMs?: num
 
   function download() {
     if (pending.current) return;
+    let url: URL;
+    try {
+      url = new URL(endpoint, window.location.origin);
+      if (url.origin !== window.location.origin || !url.pathname.startsWith('/api/workspace/') || url.search || url.hash) throw new Error('Invalid attachment route');
+    } catch { setState({ phase: 'error', message: GENERIC_ERROR }); return; }
     const frame = document.createElement('iframe');
     frame.name = `valo-data-download-${crypto.randomUUID()}`;
     frame.title = 'Workspace data download';
@@ -65,19 +72,20 @@ export function WorkspaceDataDownload({ timeoutMs = 120_000 }: { timeoutMs?: num
       stop(); setState({ phase: 'timeout' });
     }, timeoutMs);
     setState({ phase: 'requested' });
-    frame.src = new URL(DOWNLOAD_PATH, window.location.origin).href;
+    frame.src = url.href;
     document.body.appendChild(frame);
   }
 
-  return <div className="mt-5" data-testid="workspace-data-download">
+  return <div className="mt-5" data-testid={testIdPrefix ? `${testIdPrefix}-download` : 'workspace-data-download'}>
     <div className="flex flex-wrap gap-3">
-      <button type="button" className="btn btn-primary" onClick={download} disabled={state.phase === 'requested'} data-testid="button-download-workspace">Download JSON</button>
-      {state.phase === 'requested' && <button type="button" className="btn btn-ghost" onClick={() => { stop(); setState({ phase: 'stopped' }); }} data-testid="button-cancel-workspace-download">Cancel preparation</button>}
+      <button type="button" className="btn btn-primary" onClick={download} disabled={state.phase === 'requested'} data-testid={testIdPrefix ? `${testIdPrefix}-file` : 'button-download-workspace'}>{buttonLabel}</button>
+      {state.phase === 'requested' && <button type="button" className="btn btn-ghost" onClick={() => { stop(); setState({ phase: 'stopped' }); }} data-testid={testIdPrefix ? `${testIdPrefix}-stop-download` : 'button-cancel-workspace-download'}>{preparedFile ? 'Stop waiting' : 'Cancel preparation'}</button>}
     </div>
     {state.phase === 'requested' && <p role="status" className="mt-3 text-sm">Download requested; check browser downloads. This page cannot confirm that a file was saved.</p>}
     {state.phase === 'stopped' && <p role="status" className="mt-3 text-sm">Stopped this page's request. Cancel any transfer that already started in your browser.</p>}
     {state.phase === 'timeout' && <p role="status" className="mt-3 text-sm">Stopped waiting for the download. Check browser downloads before trying again; a transfer that already started may continue there.</p>}
-    {state.phase === 'error' && <p role="alert" className="mt-3 text-sm text-destructive" data-testid="text-download-error">{state.message}</p>}
-    <p className="mt-3 text-xs text-muted-foreground">Preparation can take a few minutes. You can cancel preparation here; once a download starts, use your browser to cancel it. Leaving this page stops preparation. Keep any downloaded file private.</p>
+    {state.phase === 'error' && <p role="alert" className="mt-3 text-sm text-destructive" data-testid={testIdPrefix ? `${testIdPrefix}-download-error` : 'text-download-error'}>{state.message}</p>}
+    <p className="mt-3 text-xs text-muted-foreground">{preparedFile ? 'This file is already prepared. Leaving this page stops a pending download request; it does not cancel the saved export. Use your browser to cancel a transfer that has started. Keep the file private.' : 'Preparation can take a few minutes. You can cancel preparation here; once a download starts, use your browser to cancel it. Leaving this page stops preparation. Keep any downloaded file private.'}</p>
   </div>;
 }
+

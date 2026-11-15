@@ -23,7 +23,9 @@ publicAccessRouter.post("/public/access-support",sameOriginMutation,async(req,re
   res.set("Cache-Control","private, no-store");
   res.status(201).json(AccessSupportAck.parse(await saveAccessSupport(req.body,req.socket.remoteAddress??"unknown-socket")));
 });
+import {createWorkspaceExportRouter} from "./valo-workspace-exports";
 export const customerAccessRouter=Router();
+customerAccessRouter.use("/workspace/data-exports",createWorkspaceExportRouter());
 customerAccessRouter.get("/workspace/orders/:id/dispute-information",async(req,res)=>{
   res.set("Cache-Control","private, no-store");
   res.json(await orderDisputeInformation(res.locals.valoActor,z.string().uuid().parse(req.params.id)));

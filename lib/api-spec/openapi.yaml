@@ -33,6 +33,103 @@ paths:
                         title: { type: string }
                         description: { type: string }
                         modifiedAt: { type: [string, "null"] }
+  /workspace/data-exports:
+    get:
+      operationId: listWorkspaceDataExports
+      tags: [workspace]
+      parameters:
+        - { name: cursor, in: query, required: false, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Current requester's durable scoped export history; no private storage locators.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkspaceDataExportPage" }
+        "403": { $ref: "#/components/responses/AuthError" }
+    post:
+      operationId: requestWorkspaceDataExport
+      tags: [workspace]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WorkspaceDataExportRequest" }
+      responses:
+        "202":
+          description: Persisted request; preparation and download are not yet complete.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkspaceDataExportJob" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
+  /workspace/data-exports/{id}:
+    get:
+      operationId: getWorkspaceDataExport
+      tags: [workspace]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Current request state and authorized attachment availability.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkspaceDataExportJob" }
+        "404": { $ref: "#/components/responses/AuthError" }
+  /workspace/data-exports/{id}/cancel:
+    post:
+      operationId: cancelWorkspaceDataExport
+      tags: [workspace]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WorkspaceDataExportAction" }
+      responses:
+        "200":
+          description: Preparation cancelled or prepared copy withdrawn; physical cleanup remains governed by recorded holds.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkspaceDataExportJob" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+  /workspace/data-exports/{id}/retry:
+    post:
+      operationId: retryWorkspaceDataExport
+      tags: [workspace]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WorkspaceDataExportAction" }
+      responses:
+        "202":
+          description: Existing failed request queued for a bounded fresh attempt; original history preserved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkspaceDataExportJob" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
+  /workspace/data-exports/{id}/file:
+    get:
+      operationId: downloadPreparedWorkspaceData
+      tags: [workspace]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Native private JSON attachment after fresh session, membership, expiry and integrity checks; use browser download transport.
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/ConflictError" }
   /public/access-support:
     post:
       operationId: requestAccessSupport
@@ -1068,6 +1165,13 @@ paths:
               schema: { $ref: "#/components/schemas/PrivacyCaseDetail" }
         "403": { $ref: "#/components/responses/AuthError" }
         "409": { $ref: "#/components/responses/ConflictError" }
+  /workspace/disputes: {"get":{"operationId":"getWorkspaceDisputes","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/WorkspaceDisputes"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}}}}
+  /workspace/orders/{orderId}/concerns: {"post":{"operationId":"createPaymentConcern","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcern"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}},"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcernInput"}}}},"parameters":[{"name":"orderId","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]}}
+  /workspace/concerns/{id}/respond: {"post":{"operationId":"respondPaymentConcern","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcern"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}},"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcernResponse"}}}},"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]}}
+  /admin/payment-concerns/{id}/action: {"post":{"operationId":"actOnPaymentConcern","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcern"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}},"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcernAction"}}}},"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]}}
+  /admin/payment-concerns: {"get": {"operationId": "getFinancePaymentConcerns", "tags": ["disputes"], "responses": {"200": {"description": "Private durable test-mode finance workflow.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FinancePaymentConcerns"}}}}}}}
+  /admin/disputes/link: {"post": {"operationId": "linkFinanceDispute", "tags": ["disputes"], "responses": {"200": {"description": "Private durable test-mode finance workflow.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FinanceDispute"}}}}}, "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FinanceDisputeLink"}}}}}}
+  /admin/disputes/{id}/hold: {"post": {"operationId": "holdFinanceDispute", "tags": ["disputes"], "responses": {"200": {"description": "Private durable test-mode finance workflow.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FinanceDispute"}}}}}, "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DisputeHoldInput"}}}}, "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}]}}
 components:
   responses:
     WriteLimit:
@@ -1108,6 +1212,55 @@ components:
           schema:
             $ref: "#/components/schemas/ApiProblem"
   schemas:
+    DisputeHistory: {"type":"object","additionalProperties":false,"required":["id","action","reason","actorType","createdAt"],"properties":{"id":{"type":"string"},"action":{"type":"string"},"reason":{"type":"string"},"actorType":{"type":"string","enum":["customer","finance","worker"]},"createdAt":{"type":"string"}}}
+    PaymentConcern: {"type":"object","additionalProperties":false,"required":["id","orderId","orderReference","message","status","latestReply","version","createdAt","updatedAt","history"],"properties":{"id":{"type":"string"},"orderId":{"type":"string"},"orderReference":{"type":"string"},"message":{"type":"string"},"status":{"type":"string","enum":["open","needs_information","responded","closed"]},"latestReply":{"type":["string","null"]},"version":{"type":"integer"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"history":{"type":"array","items":{"$ref":"#/components/schemas/DisputeHistory"}}}}
+    PaymentConcernInput: {"type":"object","additionalProperties":false,"required":["requestKey","message","acknowledgement"],"properties":{"requestKey":{"type":"string","format":"uuid"},"message":{"type":"string","minLength":20,"maxLength":2000},"acknowledgement":{"type":"boolean","enum":[true]}}}
+    PaymentConcernResponse: {"type":"object","additionalProperties":false,"required":["expectedVersion","message"],"properties":{"expectedVersion":{"type":"integer","minimum":1},"message":{"type":"string","minLength":10,"maxLength":2000}}}
+    PaymentConcernAction: {"type":"object","additionalProperties":false,"required":["expectedVersion","action","message"],"properties":{"expectedVersion":{"type":"integer","minimum":1},"action":{"type":"string","enum":["reply","request_information","close"]},"message":{"type":"string","minLength":10,"maxLength":2000}}}
+    WorkspaceDisputes: {"type": "object", "additionalProperties": false, "required": ["concerns", "notice"], "properties": {"concerns": {"type": "array", "items": {"$ref": "#/components/schemas/PaymentConcern"}}, "notice": {"type": "string"}}}
+    FinancePaymentConcerns: {"type": "object", "additionalProperties": false, "required": ["concerns", "notice"], "properties": {"concerns": {"type": "array", "items": {"$ref": "#/components/schemas/PaymentConcern"}}, "notice": {"type": "string"}}}
+    DisputeHoldInput: {"type": "object", "additionalProperties": false, "required": ["expectedVersion", "held", "reason"], "properties": {"expectedVersion": {"type": "integer", "minimum": 1}, "held": {"type": "boolean"}, "reason": {"type": "string", "minLength": 10, "maxLength": 1500}}}
+    FinanceDisputeLink: {"type": "object", "additionalProperties": false, "required": ["orderId", "providerId"], "properties": {"orderId": {"type": "string", "format": "uuid"}, "providerId": {"type": "string", "pattern": "^\\d{1,40}$"}}}
+    WorkspaceDataExportRequest:
+      type: object
+      additionalProperties: false
+      required: [idempotencyKey]
+      properties:
+        idempotencyKey: { type: string, format: uuid }
+    WorkspaceDataExportAction:
+      type: object
+      additionalProperties: false
+      required: [expectedVersion]
+      properties:
+        expectedVersion: { type: integer, minimum: 1 }
+    WorkspaceDataExportPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/WorkspaceDataExportJob" } }
+        nextCursor: { type: [string, "null"], format: uuid }
+    WorkspaceDataExportJob:
+      type: object
+      additionalProperties: false
+      required: [id, status, version, schemaVersion, attempts, retryCycles, rowsProcessed, bytesPrepared, createdAt, updatedAt, expiresAt, errorCode, downloadUrl, scope, mayCancel, mayRetry]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [queued, running, retrying, ready, failed, cancelled, expired] }
+        version: { type: integer, minimum: 1 }
+        schemaVersion: { type: integer, enum: [2] }
+        attempts: { type: integer, minimum: 0, maximum: 3 }
+        retryCycles: { type: integer, minimum: 0, maximum: 2 }
+        rowsProcessed: { type: integer, minimum: 0 }
+        bytesPrepared: { type: integer, minimum: 0 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        expiresAt: { type: [string, "null"], format: date-time }
+        errorCode: { type: [string, "null"] }
+        downloadUrl: { type: [string, "null"] }
+        scope: { type: string }
+        mayCancel: { type: boolean }
+        mayRetry: { type: boolean }
     AccessSupportInput:
       type: object
       additionalProperties: false
@@ -1358,6 +1511,7 @@ components:
       additionalProperties: false
       required: [expectedVersion]
       properties:
+        acknowledgement: { type: boolean }
         expectedVersion: { type: integer, minimum: 1 }
     DisputeActionRecord:
       type: object
@@ -1373,8 +1527,13 @@ components:
         failure: { type: string, nullable: true }
     FinanceDispute:
       type: object
-      required: [id, orderReference, amountKobo, status, resolution, actions, information, executionEnabled, policy]
+      required: [providerId, held, controlVersion, category, entitlementStatus, id, orderReference, amountKobo, status, resolution, actions, information, executionEnabled, policy]
       properties:
+        providerId: { type: string }
+        held: { type: boolean }
+        controlVersion: { type: integer }
+        category: { type: string, nullable: true }
+        entitlementStatus: { type: string, nullable: true }
         id: { type: string }
         orderReference: { type: string }
         amountKobo: { type: integer }

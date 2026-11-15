@@ -6,6 +6,7 @@ import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {randomBytes} from "node:crypto";
 import assert from "node:assert/strict";
+import {withoutVerifiedSourceHashFindings} from "./security-evidence-exceptions";
 import {dependencySummary,secretSummary} from "./security-reports";
 const exec=promisify(execFile),root=resolve(import.meta.dirname,"../../../");
 const dir=await mkdtemp(join(tmpdir(),"valo-scan-"));
@@ -22,7 +23,7 @@ try{
   const canaryReport=join(dir,"canary.json");
   const c=await run("gitleaks",["dir",dir,"--no-banner","--redact=100","--report-format=json","--report-path",canaryReport]);
   assert.equal(c.code,1,"SECRET_DETECTOR_CANARY_MUST_FAIL");
-  const canaryResult=secretSummary(JSON.parse(await readFile(canaryReport,"utf8")));
+  const canaryResult=secretSummary(withoutVerifiedSourceHashFindings(JSON.parse(await readFile(canaryReport,"utf8"))));
   assert.ok(canaryResult.count>0);assert.ok(!JSON.stringify(canaryResult).includes(canary));
   const dependencyCanary=dependencySummary({metadata:{vulnerabilities:{high:1}},advisories:{fixture:{id:0,
     module_name:"synthetic-detector-canary",severity:"high",title:canary}}});
@@ -44,7 +45,9 @@ try{
   const secrets=await run("gitleaks",["git",root,"--log-opts=--all","--ignore-gitleaks-allow",
     "--no-banner","--redact=100","--report-format=json","--report-path",secretPath]);
   if(![0,1].includes(secrets.code))throw Error("SECRET_SCANNER_EXECUTION_FAILED");
-  report.secrets=secretSummary(JSON.parse(await readFile(secretPath,"utf8")));
+  const findings=JSON.parse(await readFile(secretPath,"utf8")),remaining=withoutVerifiedSourceHashFindings(findings);
+  report.reviewedSourceHashExceptions={count:findings.length-remaining.length,scope:"Two exact immutable source-binding findings independently verified; no general hash/path exclusion"};
+  report.secrets=secretSummary(remaining);
   report.passed=(report.dependencies as {status:string}).status==="pass"&&(report.secrets as {status:string}).status==="pass";
 }catch{
   report.passed=false;report.error="SCAN_OR_CANARY_FAILED_NO_RAW_OUTPUT_RETAINED";
@@ -54,3 +57,4 @@ try{
   await rm(dir,{recursive:true,force:true});console.log(JSON.stringify(report));
   if(!report.passed)process.exitCode=1;
 }
+
