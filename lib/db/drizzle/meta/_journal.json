@@ -176,6 +176,13 @@
       "when": 1794703000002,
       "tag": "0029_source_correction_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794703000006,
+      "tag": "0035_editorial_lifecycle_integrity",
+      "breakpoints": true
     }
   ]
 }

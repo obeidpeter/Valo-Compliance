@@ -93,6 +93,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-workspace-download
       - name: Prove finite inference scope, actual callers and disabled entry without network
         run: pnpm --filter @workspace/api-server test:valo-finite-entry
+      - name: Prove original lifecycle admission and final publication expiry/scope checks
+        run: pnpm --filter @workspace/api-server test:valo-editorial-lifecycle
       - name: Prove exact editorial baselines and current-run denial evidence
         run: pnpm --filter @workspace/api-server test:valo-editorial-provenance
       - name: Prove rich checker contracts, factual states and UI helper targets
@@ -190,6 +192,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-db
       - name: Prove durable source corrections, staff authority and dispatch races
         run: pnpm --filter @workspace/api-server test:valo-source-controls-db
+      - name: Prove concrete editorial reviewer denial, retained snapshots and isolated lifecycle copies
+        run: pnpm --filter @workspace/api-server test:valo-editorial-lifecycle-db
       - name: Prove current-rule task guards against synthetic PostgreSQL
         run: pnpm --filter @workspace/api-server test:valo-task-source-guard
       - name: Prove synthetic erasure holds, late-upload races and bounded recovery

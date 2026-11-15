@@ -15,14 +15,24 @@ import {recheckOperationalExports} from "./operational-export-inspection";
 import {lockSourceState} from "../lib/valo-source-state";
 import {recordSourceImpact} from "../lib/valo-source-corrections";
 import {bindReleasedSources} from "./source-release-bindings";
+import {publicationCheckTime} from "./operational-restrictions";
+import {finalOperationalPublicationCheck} from "./publication-final-check";
+type PublicationTx=Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type ReleaseAttestations={
   sourceSnapshots?:Record<string,string>;
   provenance:ArtifactRef;rights:ArtifactRef;reviews:ArtifactRef[];rightsApplicabilityHash?:string;
   exports:{docx:ArtifactRef;pdf:ArtifactRef};exportReport:ArtifactRef;
 };
-export async function publishOperationalVersion(id:string){
+/** Shared trusted checks for the real publisher and rollback-only validation.
+ * A future evaluation time can deny stale evidence; it can never backdate it. */
+export async function validateOperationalVersionInTransaction(tx:PublicationTx,id:string,requestedTime?:Date){
   developmentPublicationOnly();
-  return db.transaction(async tx=>{
+  // SET ROLE on a shared development connection must not turn an explicitly
+  // scoped author/reviewer call back into a publisher call.
+  const actor=(await tx.execute(sql`select current_user as role`)).rows[0]?.role;
+  if(actor==="valo_content_drafter_dev"||actor==="valo_content_reviewer_dev")
+    throw Error("EDITORIAL_ROLE_CANNOT_PUBLISH");
+  const now=publicationCheckTime(requestedTime);
     await lockSourceState(tx,true);
     await tx.execute(sql`SET LOCAL ROLE valo_content_publisher_dev`);
     const[row]=await tx.select().from(valoContentVersions).where(eq(valoContentVersions.id,id)).for("update");
@@ -32,8 +42,8 @@ export async function publishOperationalVersion(id:string){
     const trusted=await operationalPolicy();
     if(!policy||policy.hash!==trusted.policy.hash||digest(policy.policy)!==digest(bundle.policy)||
       bundle.policy.hash!==trusted.policy.hash||!bundle.policy.developmentOnly)throw Error("POLICY_NOT_TRUSTED");
-    if(row.reviewBy.toISOString()!==bundle.candidate.reviewBy||+row.reviewBy<=Date.now())throw Error("STALE_RELEASE");
-    const result=evaluatePublication(bundle);
+    if(row.reviewBy.toISOString()!==bundle.candidate.reviewBy||+row.reviewBy<=+now)throw Error("STALE_RELEASE");
+    const result=evaluatePublication(bundle,now);
     if(result.decision!=="eligible")throw Error(`PUBLICATION_HELD:${result.reasons.join(",")}`);
     if((bundle.candidate.contentClass==="general_template")!==bundle.candidate.id.startsWith("TPL-"))
       throw Error("CONTENT_CLASS_ID_MISMATCH");
@@ -73,7 +83,7 @@ export async function publishOperationalVersion(id:string){
       throw Error("PROVIDER_RIGHTS_APPLICABILITY_UNVERIFIED");
     if(digest(rights)!==bundle.rights.evidenceHash||bundle.rights.evidence!==JSON.stringify(rights)||
       !rights.originalOperationalOnly||rights.customerLicenceAccepted!==false||
-      rights.provenanceHash!==a.provenance.hash||Date.parse(rights.validUntil)<=Date.now())
+      rights.provenanceHash!==a.provenance.hash||Date.parse(rights.validUntil)<=+now)
       throw Error("RIGHTS_EVIDENCE_INVALID");
     if(JSON.stringify(rights.permissions)!==JSON.stringify(applicability.record.evidence))
       throw Error("RECORDED_PROVIDER_PERMISSION_TEXT_MISSING");
@@ -99,7 +109,7 @@ export async function publishOperationalVersion(id:string){
         checked.rightsArtifactHash!==a.rights.hash||checked.exportReportArtifactHash!==a.exportReport.hash||
         checked.providerSnapshotHash!==rights.snapshot.hash||checked.authoringRoute!==rights.authoringRoute)
         throw Error("REVIEW_SERVER_BINDING_INVALID");
-      if(!bound||record.providerResponseId!==bound.runId||!record.model||record.receivedOtherVerdict||
+      if(!bound||record.providerResponseId!==bound.runId||record.model!==bound.model||record.promptVersion!==bound.promptVersion||record.receivedOtherVerdict||
         output.verdict!=="pass"||output.findings.length||output.missingEvidence.length||
         record.candidateHash!==bundle.candidate.hash||record.evidenceHash!==digest(bundle.sources))
         throw Error("REVIEW_ATTESTATION_INVALID");
@@ -115,7 +125,16 @@ export async function publishOperationalVersion(id:string){
       if(attested?.fileHash!==a.exports[format].hash||exportReport.hashes[format]!==attested.fileHash)
         throw Error("EXPORT_ATTESTATION_INVALID");
     }
-    await bindReleasedSources(tx,"content",id,bundle,a.sourceSnapshots);
+    await bindReleasedSources(tx,"content",id,bundle,a.sourceSnapshots,now);
+    // Artifact/source I/O is not instantaneous. Re-read current owner scope and
+    // actual time immediately before state mutation, while locks remain held.
+    const finalNow=await finalOperationalPublicationCheck(bundle,trusted.policy.hash,row.reviewBy,rights.validUntil,requestedTime);
+    await bindReleasedSources(tx,"content",id,bundle,a.sourceSnapshots,finalNow);
+    return{row,bundle,checkedAt:finalNow.toISOString()};
+}
+
+export async function publishOperationalVersionInTransaction(tx:PublicationTx,id:string){
+    const{row,bundle}=await validateOperationalVersionInTransaction(tx,id);
     if(row.status==="published")return{id,decision:"published" as const,idempotent:true};
     await tx.update(valoContentVersions).set({status:"published",publishedAt:new Date()})
       .where(and(eq(valoContentVersions.id,id),eq(valoContentVersions.status,"candidate")));
@@ -125,7 +144,10 @@ export async function publishOperationalVersion(id:string){
       from valo_source_impacts i where w.impact_id=i.id and w.status='awaiting_authorized_review' and i.target_kind='content'
       and i.target_key=${row.templateId} and i.target_version<${row.version}`);
     return{id,decision:"published" as const,idempotent:false};
-  });
+}
+export async function publishOperationalVersion(id:string){
+  developmentPublicationOnly();
+  return db.transaction(tx=>publishOperationalVersionInTransaction(tx,id));
 }
 export async function withdrawOperationalVersion(id:string,reason:string){
   developmentPublicationOnly();if(!reason.trim())throw Error("WITHDRAWAL_REASON_REQUIRED");

@@ -47,7 +47,9 @@
     "test:valo-erasure-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts",
     "test:valo-finite-entry": "node --experimental-test-module-mocks --import tsx --test src/lib/inference-manifest.test.ts src/lib/inference-allocation-package.test.ts src/lib/inference-history-reconciliation.test.ts src/lib/managed-inference-entry.test.ts src/lib/managed-operational-recovery.test.ts src/lib/inference-operational-preparation.test.ts",
     "test:valo-source-controls": "node --import tsx --test src/lib/valo-source-controls.test.ts",
-    "test:valo-source-controls-db": "NODE_ENV=development node --import tsx --test src/lib/valo-source-controls.integration.test.ts"
+    "test:valo-source-controls-db": "NODE_ENV=development node --import tsx --test src/lib/valo-source-controls.integration.test.ts",
+    "test:valo-editorial-lifecycle": "NODE_ENV=development node --import tsx --test src/editorial/editorial-lifecycle-controls.test.ts src/editorial/publication-final-check.test.ts",
+    "test:valo-editorial-lifecycle-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/editorial/editorial-lifecycle.integration.test.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",
