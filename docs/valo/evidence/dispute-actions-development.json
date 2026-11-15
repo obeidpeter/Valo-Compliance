@@ -57,24 +57,34 @@
     "artifacts/api-server/src/lib/valo-payment-disputes.ts": "03aa6c2750e278d45db2dfc57679e38270ce5fc754e3ce6463788dcea2d8d10f",
     "artifacts/api-server/src/lib/valo-render.ts": "891d9a9a406d56af3d6d4c5db35cdfe68fb0681b1fc65c014f5e77595534363a",
     "artifacts/api-server/src/lib/valo-privacy-erasure.ts": "f4bb68b48cd14ccac68c542c096958c8bf8ca7f4cebdfdacc558465bdaea0c42",
-    "artifacts/api-server/src/routes/valo-customer-access.ts": "f64cdcf24944fb98679fcd38ef57bd07bb5c45172356e91309496809bb74085d",
+    "artifacts/api-server/src/routes/valo-customer-access.ts": "0ebc96f9321f18306204a290dd83a0170af2add81507841e343478fc7040fafc",
     "artifacts/valo/src/components/dispute-workflows.tsx": "e28e5027692065eee7f693ae77ff70946c08266596f55a8a386f70eca0adbf1c",
     "artifacts/valo/src/screens/finance-refunds.tsx": "675d4dc983f8a0e1b5a08eb8eddfc521faf96caa1bbaaa2954c26a24ad40edc9",
     "artifacts/valo/src/screens/purchase-history.tsx": "b40dac587e251478ee27f5db433aecf8d611a30c6b278697595aa1e28a55e774",
     "lib/db/drizzle/0025_dispute_merchant.sql": "8cc55743642c4a01ae5db8df3a7231a1e5caa7586324df511113f1c53b3894f2",
     "lib/db/drizzle/0026_dispute_category.sql": "611ad44aeb636ffc8c241a89c6d6b1c010e68d8c9471b0beff04115792e89fc8",
     "artifacts/api-server/src/lib/valo-dispute-actions.integration.test.ts": "5e23f4553e20f5fa346fd41e97614c5f03da25b41772aa2f762c3e0b2e3a3b5f",
-    "docs/valo/evidence/dispute-actions-development.txt": "1dd57b6cd6e7ecc2b1ebf02b034dc134af0162bec0c6872d6e0b9983e93db188",
-    "docs/valo/evidence/dispute-http-current.txt": "4f79ab3e9fd558837c3093a0bf0b5d1a5087c253720c31f218364c3506100377",
-    "docs/valo/evidence/dispute-privacy-regression.txt": "3be9b0851ba161d9e541ddb0998f77f095c93bd3bedb79065f485edd2252b360",
+    "docs/valo/evidence/dispute-actions-development.txt": "364c18c397149c978d372c4fc6a444ced243a41b4b2705a0e6b0b4063d09bc5a",
+    "docs/valo/evidence/dispute-http-current.txt": "67cc56b7e83159f2a89d3397034723f880958234fb8471f5c1740d75c22831ea",
+    "docs/valo/evidence/dispute-privacy-regression.txt": "b746c381c9397e6a1465c5414257064a1aa7e85b64e9b138edab135532655d79",
     "docs/valo/evidence/dispute-refund-current.txt": "019adf1c402fe9df2edc27385b8e0d28a92ec887da65036d7005bcf7af661b6f",
     "artifacts/api-server/src/lib/valo-dispute-schema.ts": "9d9aef8e530d30fcf7cebc5e0252343e0e8cf75598aeb2d964a30f9c80dfc8c2"
   },
-  "recordedAt": "2026-11-15T00:07:56.933Z",
+  "recordedAt": "2026-11-15T00:13:07.413Z",
   "mergeReconciliation": {
     "preservedApplicationCommit": "6059bb3",
     "sharedHead": "7b6a356",
     "largeExportAncestor": "7c3ec83",
-    "changes": "Preserved shared DB-free schema, fraud-decline contract, editorial/preparation work and large-export ancestry; affected native and HTTP regressions rerun."
+    "changes": "Preserved shared DB-free schema, fraud-decline contract, editorial/preparation work and large-export ancestry; affected native and HTTP regressions rerun.",
+    "synchronizedApplicationCommit": "5c77a5ac3c7e4d78491682bf1b45b86c113c028e",
+    "additionalSharedHead": "e6b2131",
+    "rechecked": [
+      "typecheck",
+      "12 dispute tests",
+      "18 HTTP/transport tests",
+      "114 customer/privacy tests",
+      "174 engineering tests",
+      "production frontend build"
+    ]
   }
 }
