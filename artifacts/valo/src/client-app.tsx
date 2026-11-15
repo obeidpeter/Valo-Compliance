@@ -1,17 +1,27 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import * as React from 'react';
 
-// The Wouter + Clerk app reads window.location directly, so it mounts only after hydration.
-const App = dynamic(() => import('./App'), {
-  ssr: false,
-  loading: () => (
+function LoadingApp() {
+  return (
     <div className="boot" aria-busy="true" aria-label="Loading Valo">
       <span className="boot-mark">V</span>
     </div>
-  ),
+  );
+}
+
+// App reads window.location at module scope. Keep that module browser-only.
+const App = dynamic(() => import('./App'), {
+  ssr: false,
+  loading: LoadingApp,
 });
 
 export default function ClientApp() {
-  return <App />;
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => { setMounted(true); }, []);
+
+  // Render identical HTML on the server and the first client pass, even if the
+  // dynamic chunk is already cached. Mount the browser router after hydration.
+  return mounted ? <App /> : <LoadingApp />;
 }
