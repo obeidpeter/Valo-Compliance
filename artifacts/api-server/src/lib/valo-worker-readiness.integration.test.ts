@@ -64,7 +64,7 @@ test("real worker loses readiness on queue drift, recovers, drains and restarts"
     }finally{clearTimeout(deadline);}
   }
   try{
-    start();await waitFor(async()=>await status("/readyz")===200,"initial successful dispatch");
+    start();await waitFor(async()=>await status("/readyz")===200&&(await heartbeat()).phase==="running","initial successful dispatch");
     const first=await heartbeat();assert.equal(first.phase,"running");assert.ok(first.dispatches>=1);
     await pool.query("UPDATE valo_jobs.queue SET expire_seconds=361 WHERE name=$1",[queue]);
     await waitFor(async()=>await status("/readyz")===503&&(await heartbeat()).phase==="failed","queue drift rejection");
@@ -73,7 +73,7 @@ test("real worker loses readiness on queue drift, recovers, drains and restarts"
     await pool.query("UPDATE valo_jobs.queue SET expire_seconds=360 WHERE name=$1",[queue]);
     await waitFor(async()=>await status("/readyz")===200,"recovery after queue repair");
     await stop();start();
-    await waitFor(async()=>await status("/readyz")===200,"restart");
+    await waitFor(async()=>await status("/readyz")===200&&(await heartbeat()).instanceId!==first.instanceId,"restart");
     assert.notEqual((await heartbeat()).instanceId,first.instanceId);await stop();
     assert.doesNotMatch(diagnostic,/NATIVE_STORAGE_FORBIDDEN/);
   }finally{
