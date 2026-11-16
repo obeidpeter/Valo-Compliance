@@ -7,7 +7,6 @@ import { z } from "zod";
 import {
   RequestAccessSupportResponse as AccessSupportAck,
   GetCustomerAccountResponse as CustomerAccount,
-  GetCustomerPurchasesResponse as CustomerPurchases,
   GetStaffOperationsResponse as StaffOperations,
   GetStaffOperationsQueryParams,
 } from "@workspace/api-zod";
@@ -26,7 +25,6 @@ import {
   reconcileFinanceRefund,
   assertFinanceActor,
 } from "../lib/valo-refunds";
-import { ValoProblem } from "../lib/valo-problem";
 import {
   GetFinanceRefundsResponse,
   DecideFinanceRefundResponse,

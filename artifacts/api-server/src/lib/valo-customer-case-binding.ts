@@ -3,7 +3,6 @@ import {
   customerAIInput,
   missingCustomerFields,
   unsupportedCustomerInput,
-  type CustomerAIInput,
 } from "./valo-customer-ai-domain";
 import {
   financialBlocks,

@@ -17,13 +17,11 @@ import {
   valoPaymentEvents,
   valoAccessSupport,
   valoStaffAssignments,
-  valoPrivacyCases,
   valoPrivacyMessages,
   valoWorkspaceExports,
   valoWorkspaceExportAttempts,
   valoAIDrafts,
   valoDocumentRevisions,
-  valoEvents,
 } from "@workspace/db";
 import { resolveWorkspace, saveProfile, createDocument } from "./valo-store";
 import { syntheticProfile, syntheticDocument } from "./valo-test-fixtures";
@@ -42,7 +40,6 @@ import {
 import { financeHeldFixture } from "./valo-finance-test-fixture";
 import { workspaceDataExport } from "./valo-customer-access";
 import { workspaceExportScratch } from "./valo-workspace-export-jobs";
-import { removedPrivateText } from "./valo-privacy-redactions";
 test(
   "new synthetic private-copy inventory: scoped export, physical redaction, signed proof and crash scratch replay",
   {

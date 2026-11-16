@@ -21,7 +21,6 @@ import { deletePrivateFile } from "./valo-private-storage";
 import { privacyKey, privacySigner } from "./valo-privacy-keys";
 import { quotaSubjectHash } from "./valo-quota";
 import {
-  assertErasureObjectScope,
   inventoryHasher,
   signErasureSeal,
   verifyErasureSeal,
@@ -639,7 +638,7 @@ async function persistReplay(t: Tombstone, input: Omit<ReplayState, "keyVersion"
   });
 }
 async function replay(caseId: string, mode: ReplayState["mode"], remove: DeleteObject) {
-  let { t, seal, state, candidates } = await db.transaction(async (tx) => {
+  let { t, state, candidates } = await db.transaction(async (tx) => {
     const ready = await replayReady(tx, caseId, "cached");
     let state = ready.t.replayState ? await progressOf(tx, ready.t.replayState, ready.seal) : null;
     if (state && state.phase !== "done" && state.mode !== mode)

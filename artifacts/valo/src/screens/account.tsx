@@ -2,18 +2,16 @@ import { useState, type FormEvent } from "react";
 import { Link } from "wouter";
 import { UserProfile } from "@clerk/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Loader2, ShoppingBag } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import {
   useGetCustomerAccount,
   useRequestCustomerPrivacy,
-  useGetCustomerPurchases,
   getGetCustomerAccountQueryKey,
-  getGetCustomerPurchasesQueryKey,
   type AccessSupportAck,
   type PrivacyRequestInputKind,
 } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
-import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
+import { ErrorState, Notice, Skel } from "@/components/states";
 import { describeError, formatDate } from "@/lib/api";
 import { PurchaseHistoryPage } from "./purchase-history";
 import { PrivacyCases } from "@/components/privacy-cases";

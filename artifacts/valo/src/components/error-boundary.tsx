@@ -57,17 +57,17 @@ function DefaultFallback({ error, resetError }: ErrorFallbackProps) {
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { error: null };
+  override state: ErrorBoundaryState = { error: null };
 
   static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
     return { error: toError(error) };
   }
 
-  componentDidCatch(error: unknown, info: ErrorInfo): void {
+  override componentDidCatch(error: unknown, info: ErrorInfo): void {
     console.error("ErrorBoundary caught an error:", toError(error), info.componentStack);
   }
 
-  componentDidUpdate(prevProps: ErrorBoundaryProps): void {
+  override componentDidUpdate(prevProps: ErrorBoundaryProps): void {
     if (this.state.error !== null && prevProps.resetKey !== this.props.resetKey) {
       this.resetError();
     }
@@ -77,7 +77,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.setState({ error: null });
   };
 
-  render(): ReactNode {
+  override render(): ReactNode {
     const { error } = this.state;
     if (error === null) {
       return this.props.children;

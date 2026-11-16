@@ -3,7 +3,7 @@ import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { parseBoundedProviderJSON } from "../lib/provider-output-budget";
-import { sha256, digest } from "@workspace/valo-core";
+import { digest } from "@workspace/valo-core";
 import { putPublicationArtifact } from "./publication-artifacts";
 import { originalFormSchema, formMarkdown } from "./operational-authoring-contract";
 export async function recordOriginalAuthoring() {

@@ -8,14 +8,7 @@ import {
   GetContentRegisterResponse,
   GetPublicCoverageResponse,
 } from "@workspace/api-zod";
-import {
-  readiness,
-  catalogueSummary,
-  contentReadiness,
-  contentTraceRows,
-  expansionReadiness,
-  coveragePlan,
-} from "@workspace/valo-core";
+import { readiness, contentReadiness, contentTraceRows, expansionReadiness } from "@workspace/valo-core";
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
 import * as store from "../lib/valo-store";
 import requirementsRouter from "./valo-requirements";

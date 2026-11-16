@@ -31,12 +31,11 @@ import {
   valoEvents,
   valoSavedTemplates,
 } from "@workspace/db";
-import { RequestAccessSupportBody, RequestCustomerPrivacyBody } from "@workspace/api-zod";
+import { RequestAccessSupportBody } from "@workspace/api-zod";
 import { consumeQuota, quotaSubjectHash } from "./valo-quota";
 import {
   authorizeWorkspaceWrite,
   authorizeWorkspaceRead,
-  createTicket,
   ValoProblem,
   type WorkspaceActor,
 } from "./valo-store";

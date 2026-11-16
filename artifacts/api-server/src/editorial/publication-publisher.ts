@@ -6,7 +6,6 @@ import {
   assertPermissionRoute,
   chatGPTSourcePath,
 } from "./rights-applicability";
-import { readOperationalIntake } from "./operational-intake";
 import { and, eq, sql } from "drizzle-orm";
 import { db, valoPublicationPolicies, valoContentVersions, valoPublicationAudit } from "@workspace/db";
 import { digest, evaluatePublication, publicationSchema, sha256 } from "@workspace/valo-core";

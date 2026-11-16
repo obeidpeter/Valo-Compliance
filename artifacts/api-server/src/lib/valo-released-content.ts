@@ -18,7 +18,6 @@ import {
   type WorkspaceActor,
 } from "./valo-store";
 import { documentInput } from "./valo-validation";
-import { loadRightsApplicability } from "../editorial/rights-applicability";
 import {
   paginateReleasedItems,
   templateCategory,

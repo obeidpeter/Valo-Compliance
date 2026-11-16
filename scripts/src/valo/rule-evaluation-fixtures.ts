@@ -2,7 +2,6 @@ import {
   assess,
   checkerFactsSchema,
   digest,
-  ruleSchema,
   type CheckerFacts,
   type ReleasedRule,
 } from "@workspace/valo-core";

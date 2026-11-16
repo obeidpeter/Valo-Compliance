@@ -8,13 +8,8 @@ import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as database from "@workspace/db";
 import { InferenceBudgetStore } from "./inference-budget-store";
-import { FiniteInferenceDispatcher, type FiniteManifest, type FiniteWork } from "./inference-batch-dispatch";
-import {
-  additionalInferenceAllocation,
-  inferenceProposal,
-  requestDigest,
-  emptyBudget,
-} from "./inference-budget";
+import { FiniteInferenceDispatcher, type FiniteManifest } from "./inference-batch-dispatch";
+import { inferenceProposal, requestDigest, emptyBudget } from "./inference-budget";
 import { createManagedSDKTransport } from "./managed-sdk-transport";
 import type { ArtifactRef } from "../editorial/publication-artifacts";
 import type { ManagedRequest, ManagedCompletionResult } from "./managed-inference";
@@ -186,8 +181,7 @@ test(
       const { prepareOperationalFiniteManifest } = await import("./inference-manifest");
       const { withBoundInferenceDispatcher, withApprovedInferencePair, withApprovedInferenceWork } =
         await import("./managed-inference");
-      const { organizeCustomerDraft, customerCompletionRequest } = await import("./valo-customer-ai-model");
-      const { customerAIInput, customerProviderPayload } = await import("./valo-customer-ai-domain");
+      const { organizeCustomerDraft } = await import("./valo-customer-ai-model");
       const store = new InferenceBudgetStore(scoped, schema, "additional-new");
       const state = () => store.mutate("controlled-state-observation", (s) => ({ state: s, value: s }));
       const reset = () =>
@@ -403,14 +397,6 @@ test(
           assert.equal((await state()).entries.length, 0);
         },
       );
-      const path = "docs/evaluation-candidates/customer-ai.json",
-        bytes = await readFile(new URL("../../../../" + path, import.meta.url));
-      const original = JSON.parse(bytes.toString()).cases.find(
-        (r: { caseID: string }) => r.caseID === "CAI-CAND-INV-01",
-      );
-      const facts = original.suppliedFacts,
-        caseHash = requestDigest(original),
-        sourceHash = sha(bytes);
       const { prepareCustomerFiniteManifest, executeApprovedCustomerManifest } =
         await import("./inference-customer-manifest");
       const { input } = await prepareCustomerFiniteManifest("CAI-CAND-INV-01");

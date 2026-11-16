@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from "express";
+import { Router, type Request } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { z } from "zod";
 import { createReadStream } from "node:fs";
@@ -25,7 +25,6 @@ const live = async (req: Request, actor: WorkspaceActor) =>
 /** Dependencies are server-owned. HTTP input never supplies authorization or storage. */
 export function makeWorkspaceExportRouter(
   verify: typeof live = live,
-  onPage?: (section: string, rows: number) => Promise<void>,
   storage: WorkspaceExportStorage = workspaceExportStorage,
 ) {
   const router = Router();

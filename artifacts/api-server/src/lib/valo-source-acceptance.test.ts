@@ -9,7 +9,7 @@ import {
   explicitBoundaryFollowup,
   type AuthoredCustomerCase,
 } from "./valo-customer-case-binding";
-import { missingCustomerFields, customerProviderPayload } from "./valo-customer-ai-domain";
+import { customerProviderPayload } from "./valo-customer-ai-domain";
 import { candidateArithmetic } from "../editorial/candidate-arithmetic";
 import { readTemplateIntake, readGuidanceIntake } from "../editorial/operational-intake";
 import { templateCandidate } from "../editorial/operational-content";

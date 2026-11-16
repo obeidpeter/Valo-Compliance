@@ -27,7 +27,7 @@ import {
 } from "./valo-paystack-contract";
 import { trustedSiteOrigin } from "./valo-site-origin";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
-import { CreateCommerceOrderBody, RequestCommerceRefundBody } from "@workspace/api-zod";
+import { CreateCommerceOrderBody } from "@workspace/api-zod";
 import { requestOrderRefund, refundView, handleRefundEvent } from "./valo-refunds";
 import { syncDispute } from "./valo-payment-disputes";
 import { refundBalance, TEST_REFUND_POLICY } from "./valo-refund-provider";

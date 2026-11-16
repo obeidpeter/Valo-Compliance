@@ -13,7 +13,7 @@ import {
   hashAI,
   customerProviderPayload,
 } from "../lib/valo-customer-ai-domain";
-import { resolveWorkspace, getDocument, listRevisions, saveDocument } from "../lib/valo-store";
+import { getDocument, listRevisions, saveDocument } from "../lib/valo-store";
 import { requestExport, getExport, downloadExport } from "../lib/valo-exports";
 import { documentInput } from "../lib/valo-validation";
 import { readerContainsText } from "../lib/valo-reader-checks";

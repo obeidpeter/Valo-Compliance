@@ -32,7 +32,7 @@ const saved = JSON.parse(await readFile(join(bundle, "controls.json"), "utf8")) 
 assert.equal(hash(await readFile(join(bundle, "synthetic.dump"))), saved.snapshotHash);
 const fixtures = JSON.parse(await readFile(join(bundle, "fixtures.json"), "utf8"));
 assert.equal(fixtures.length, 3);
-const { db, pool } = await import("@workspace/db");
+const { pool } = await import("@workspace/db");
 const { replayErasedApplication, closePrivacyErasureLocks } = await import("../lib/valo-privacy-erasure");
 const client = await pool.connect();
 try {

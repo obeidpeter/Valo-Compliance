@@ -580,13 +580,9 @@ test(
             next();
           });
           app.use(
-            makeWorkspaceExportRouter(
-              async () => {
-                checks++;
-              },
-              undefined,
-              storage,
-            ),
+            makeWorkspaceExportRouter(async () => {
+              checks++;
+            }, storage),
           );
           app.use((e: unknown, _q: express.Request, res: express.Response, _n: express.NextFunction) =>
             res.status(e instanceof ValoProblem ? e.status : 503).json({ error: "Controlled rejection" }),
