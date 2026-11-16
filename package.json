@@ -10,7 +10,8 @@
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,cjs,mts,cts}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,mts,cts}\"",
-    "lint": "pnpm run format:check && pnpm --filter @workspace/scripts valo:architecture"
+    "lint": "pnpm run format:check && pnpm --filter @workspace/scripts valo:architecture",
+    "test": "pnpm run typecheck && pnpm run lint && pnpm --filter @workspace/scripts test:valo && pnpm --filter @workspace/api-server test:valo && pnpm --filter @workspace/api-server test:valo-operations"
   },
   "private": true,
   "dependencies": {

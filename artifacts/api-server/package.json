@@ -83,7 +83,8 @@
     "test:valo-customer-controls-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/lib/inference-customer-controls.integration.test.ts",
     "test:valo-saved-templates": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/lib/valo-saved-templates.integration.test.ts",
     "test:valo-catalogue-browser": "NODE_ENV=development VALO_RUN_CATALOGUE_BROWSER=synthetic-development-only tsx src/scripts/catalogue-browser.ts",
-    "settings:env-example": "tsx -e \"import('./src/platform/settings.ts').then(({renderEnvExample})=>require('node:fs').writeFileSync('../../.env.example',renderEnvExample()))\""
+    "settings:env-example": "tsx -e \"import('./src/platform/settings.ts').then(({renderEnvExample})=>require('node:fs').writeFileSync('../../.env.example',renderEnvExample()))\"",
+    "test:valo-web": "node --import tsx --test ../valo/src/client-app.test.tsx"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",

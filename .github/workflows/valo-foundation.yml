@@ -189,6 +189,13 @@ jobs:
           path: artifacts/api-server/generated-artifacts/valo-recovery/isolated-recovery.json
       - name: Prove isolated source-candidate controls, not legal acceptance
         run: pnpm --filter @workspace/api-server test:valo-source-candidates
+      - name: Prove editorial pipeline contracts, source controls and review clarifications
+        run: |
+          pnpm --filter @workspace/api-server test:valo-editorial
+          pnpm --filter @workspace/api-server test:valo-sources
+          pnpm --filter @workspace/api-server test:valo-source-challenges
+      - name: Prove the web app shell renders deterministically without browser state
+        run: pnpm --filter @workspace/api-server test:valo-web
       - name: Prove refund reference and timeout contract without a merchant
         run: pnpm --filter @workspace/api-server test:valo-refund-provider
       - name: Build the Next.js application
