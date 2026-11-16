@@ -40,7 +40,9 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
         throw Error("CUSTOMER_CASE_REQUEST_CHANGED");
     }
   } else if (work.lane !== "publication") throw Error("EVALUATION_CASE_REQUIRED");
-  if (work.lane === "customer") {
+  // Customer works prepared from a saved evaluation plan also carry that plan; validate
+  // it and its actor. Case-selection works are bound by the recomputed case request above.
+  if (work.lane === "customer" && b.customerPlan) {
     const [
       { getPublicationArtifact },
       { validateCustomerEvaluationWork },

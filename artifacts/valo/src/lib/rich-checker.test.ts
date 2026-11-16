@@ -145,7 +145,7 @@ test("rich question targets cover every declared customer control, including sup
       new RegExp(`const ${group}_FIELDS: Field\\[\\] = \\[([\\s\\S]*?)\\n\\];`),
     )?.[1];
     assert.ok(definitions, `${group} controls are declared`);
-    const keys = [...definitions.matchAll(/(?:flag|select)\('([^']+)'|key: '([^']+)'/g)].map(
+    const keys = [...definitions.matchAll(/(?:flag|select)\(["']([^"']+)["']|key: ["']([^"']+)["']/g)].map(
       (match) => match[1] ?? match[2],
     );
     assert.ok(keys.length > 0);
