@@ -6,6 +6,7 @@ import { z } from "zod";
 import { sha256 } from "@workspace/valo-core";
 import { trustedSiteOrigin } from "./valo-site-origin";
 import type { ReminderSender } from "./valo-reminder-worker";
+import { environment } from "../platform/settings";
 
 const envelope = z.email().max(254);
 type Config = { from: string; recipient: string; origin: string };
@@ -13,7 +14,7 @@ type Proxy = (
   path: string,
   options: { method: string; body: string; headers: Record<string, string>; signal: AbortSignal },
 ) => Promise<Response>;
-export function reminderEmailConfiguration(env: NodeJS.ProcessEnv = process.env): Config | null {
+export function reminderEmailConfiguration(env: NodeJS.ProcessEnv = environment()): Config | null {
   // This adapter cannot enable production email or arbitrary-recipient sending.
   if (env.NODE_ENV !== "development" || !!env.REPLIT_DEPLOYMENT || env.VALO_EMAIL_MODE !== "development-test")
     return null;
@@ -27,7 +28,7 @@ export function createResendReminderSender(
   config: Config,
   proxy: Proxy,
   verifiedRecipient: (identityId: string) => Promise<string | null>,
-  env: NodeJS.ProcessEnv = process.env,
+  env: NodeJS.ProcessEnv = environment(),
 ): ReminderSender {
   return {
     // Resend retains idempotency keys for 24 hours. Stop conservatively before
@@ -70,7 +71,7 @@ export function createResendReminderSender(
     },
   };
 }
-export function automaticReminderDeliveryReady(env: NodeJS.ProcessEnv = process.env) {
+export function automaticReminderDeliveryReady(env: NodeJS.ProcessEnv = environment()) {
   return env.VALO_EMAIL_OUTBOX_ENABLED === "development-test" && reminderEmailConfiguration(env) !== null;
 }
 export function configuredReminderSender(): ReminderSender | null {

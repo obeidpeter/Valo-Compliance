@@ -19,6 +19,7 @@ import {
 } from "./pipeline-contract";
 import { logger } from "../lib/logger";
 import { editorialDraftInput } from "./citation-selection";
+import { setting } from "../platform/settings";
 
 async function sourceBundle(): Promise<EvidenceBundle> {
   const [source] = await db
@@ -257,9 +258,9 @@ async function executeRun(row: ValoEditorialRun, input: unknown, candidateHash: 
 }
 export async function runDevelopmentEditorialProof() {
   if (
-    process.env.NODE_ENV !== "development" ||
-    process.env.REPLIT_DEPLOYMENT ||
-    process.env.VALO_RUN_EDITORIAL_PROOF !== "official-development-only"
+    setting("NODE_ENV") !== "development" ||
+    setting("REPLIT_DEPLOYMENT") ||
+    setting("VALO_RUN_EDITORIAL_PROOF") !== "official-development-only"
   )
     throw Error("EDITORIAL_DEVELOPMENT_ACK_REQUIRED");
   const bundle = await sourceBundle(),

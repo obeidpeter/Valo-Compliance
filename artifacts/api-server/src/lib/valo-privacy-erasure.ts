@@ -47,6 +47,7 @@ import {
   type PrivacyStaffActor,
   type PrivacyRow,
 } from "./valo-privacy";
+import { setting } from "../platform/settings";
 
 const legacyPhases = [
   "valo_reminder_outbox",
@@ -89,7 +90,7 @@ async function withErasureLock<T>(caseId: string, fn: () => Promise<T>) {
   assertDevelopmentRuntime();
   if (!lockPool) {
     lockPool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: setting("DATABASE_URL"),
       max: 2,
       connectionTimeoutMillis: 1000,
       idleTimeoutMillis: 10000,

@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { performance } from "node:perf_hooks";
 import { workerReadiness, WORKER_FRESH_MS, type WorkerHeartbeat } from "./valo-worker-health";
+import { environment } from "../platform/settings";
 
 export const supervisorTiming = Object.freeze({
   pollMs: 1000,
@@ -192,7 +193,7 @@ export async function superviseWorker({
 
 export function launchBuiltWorker(entry: string) {
   return spawn(process.execPath, ["--enable-source-maps", entry], {
-    env: { ...process.env, VALO_SUPERVISED_WORKER: "ipc-v1" },
+    env: { ...environment(), VALO_SUPERVISED_WORKER: "ipc-v1" },
     stdio: ["ignore", "inherit", "inherit", "ipc"],
   });
 }

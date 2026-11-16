@@ -31,6 +31,7 @@ import { inspectOperationalExports } from "./operational-export-inspection";
 import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
 import { supportsOperationalInferenceTemplate } from "../lib/inference-operational-coverage";
 import { readOperationalIntake } from "./operational-intake";
+import { setting } from "../platform/settings";
 export async function prepareInventoryRelease(snapshotPath: string) {
   return prepareRelease("TPL-07", snapshotPath, true);
 }
@@ -45,7 +46,7 @@ export async function prepareOperationalCandidateRelease(templateId: string, sna
 async function prepareRelease(templateId: string, snapshotPath: string, requestReviews: boolean) {
   developmentPublicationOnly();
   const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
-  const useRecordedAuthoring = requestReviews && process.env.VALO_OPERATIONAL_AUTHORING === "recorded";
+  const useRecordedAuthoring = requestReviews && setting("VALO_OPERATIONAL_AUTHORING") === "recorded";
   const versions = await db
     .select()
     .from(valoContentVersions)

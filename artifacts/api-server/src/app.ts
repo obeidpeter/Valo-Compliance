@@ -4,6 +4,7 @@ import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import { requestComplexityLimit } from "./lib/request-complexity";
 import { onError } from "./lib/http-errors";
+import { setting } from "./platform/settings";
 export { onError } from "./lib/http-errors";
 import {
   CLERK_PROXY_PATH,
@@ -40,7 +41,7 @@ app.use((req, res, next) => {
 });
 // Rehearsal is deliberately non-serving, before auth, webhooks and request bodies.
 app.use((req, res, next) => {
-  if (process.env.NODE_ENV !== "production") return next();
+  if (setting("NODE_ENV") !== "production") return next();
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
   if (req.method === "GET" && req.path === "/api/healthz")
@@ -55,7 +56,7 @@ app.use(express.json({ limit: "128kb", inflate: false }));
 app.use(requestComplexityLimit);
 app.use(
   clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(getClerkProxyHost(req) ?? "", process.env.CLERK_PUBLISHABLE_KEY),
+    publishableKey: publishableKeyFromHost(getClerkProxyHost(req) ?? "", setting("CLERK_PUBLISHABLE_KEY")),
   })),
 );
 app.use((_req, res, next) => {

@@ -55,6 +55,7 @@ import {
 import { valoDisputeInformation, valoDisputeActions } from "@workspace/db";
 import { ownedPaymentEvent } from "./valo-private-copy-inventory";
 import { valoPaymentConcerns, valoConcernMessages, valoPaymentConcernEvents } from "@workspace/db";
+import { setting } from "../platform/settings";
 export const accessMessage =
   "Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack = (id: string) => ({
@@ -98,7 +99,7 @@ export async function saveAccessSupport(raw: unknown, remoteAddress: string) {
       ["ip", `access-socket:${remoteAddress}`, 20, 100],
       ["user", "access-intake-global", 100, 1000],
     ] as const) {
-      const hash = quotaSubjectHash(process.env.SESSION_SECRET, kind, value);
+      const hash = quotaSubjectHash(setting("SESSION_SECRET"), kind, value);
       for (const [bucket, limit, window] of [
         ["public-support", minute, "minute"],
         ["public-support-day", day, "day"],

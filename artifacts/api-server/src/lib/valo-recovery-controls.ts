@@ -4,6 +4,7 @@ import { z } from "zod";
 import { quotaSubjectHash } from "./valo-quota-policy";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
 import { assertWindowsRecoveryTarget } from "./valo-recovery-target";
+import { setting } from "../platform/settings";
 const controlsSchema = z
   .object({
     snapshotHash: z.string().regex(/^[a-f0-9]{64}$/),
@@ -33,9 +34,9 @@ export function signRecoveryControls(input: RecoveryControls, key: Buffer) {
 }
 export async function assertIsolatedRecoveryTarget(client: PoolClient) {
   assertDevelopmentRuntime();
-  if (process.env.VALO_ISOLATED_RECOVERY !== "synthetic-local-only")
+  if (setting("VALO_ISOLATED_RECOVERY") !== "synthetic-local-only")
     throw Error("EXPLICIT_ISOLATED_RECOVERY_REQUIRED");
-  if (process.env.VALO_RECOVERY_WINDOWS_ROOT) {
+  if (setting("VALO_RECOVERY_WINDOWS_ROOT")) {
     await assertWindowsRecoveryTarget(client);
     return;
   }
@@ -72,14 +73,14 @@ export async function replayRecoveryControls(
   if (controls.entries.some((e) => Date.parse(e.recordedAt) < Date.parse(controls.cutoff)))
     throw Error("INVALID_RECOVERY_CONTROL_PERIOD");
   await assertIsolatedRecoveryTarget(client);
-  const connection = new URL(process.env.DATABASE_URL ?? "");
+  const connection = new URL(setting("DATABASE_URL") ?? "");
   const directory = (
     await client.query(
       "SELECT current_setting('data_directory') AS directory,current_setting('port') AS port",
     )
   ).rows[0];
   if (
-    !process.env.VALO_RECOVERY_WINDOWS_ROOT &&
+    !setting("VALO_RECOVERY_WINDOWS_ROOT") &&
     (connection.protocol !== "postgresql:" ||
       connection.hostname !== "localhost" ||
       connection.pathname !== "/valo_restore_target" ||

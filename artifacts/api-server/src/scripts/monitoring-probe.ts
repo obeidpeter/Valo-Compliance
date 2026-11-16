@@ -1,6 +1,7 @@
 import { externalMonitorConfiguration, pingExternalMonitor } from "../lib/valo-external-monitor";
+import { setting } from "../platform/settings";
 try {
-  if (process.env.VALO_MONITORING_PROBE !== "synthetic-notification-only")
+  if (setting("VALO_MONITORING_PROBE") !== "synthetic-notification-only")
     throw Error("EXPLICIT_MONITORING_PROBE_REQUIRED");
   const [check, state, ...extra] = process.argv.slice(2);
   if (

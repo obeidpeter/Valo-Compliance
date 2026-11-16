@@ -2,6 +2,7 @@ import { assertRecoveryEffectsAllowed } from "./valo-recovery-effects";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { ValoProblem } from "./valo-problem";
+import { setting } from "../platform/settings";
 
 export type WebhookConfiguration =
   { mode: "timestamped"; secrets: string[] } | { mode: "legacy"; apiSecret: string };
@@ -85,24 +86,24 @@ export function assertOrderMatch(
 }
 export function sandboxPaymentsConfigured() {
   return (
-    process.env.NODE_ENV === "development" &&
-    !process.env.REPLIT_DEPLOYMENT &&
-    process.env.VALO_SANDBOX_CHECKOUT_ENABLED === "true" &&
-    Boolean(process.env.PAYSTACK_SECRET_KEY?.startsWith("sk_test_"))
+    setting("NODE_ENV") === "development" &&
+    !setting("REPLIT_DEPLOYMENT") &&
+    setting("VALO_SANDBOX_CHECKOUT_ENABLED") === "true" &&
+    Boolean(setting("PAYSTACK_SECRET_KEY")?.startsWith("sk_test_"))
   );
 }
 function testSecret() {
   if (
-    process.env.NODE_ENV !== "development" ||
-    process.env.REPLIT_DEPLOYMENT ||
-    process.env.VALO_SANDBOX_CHECKOUT_ENABLED !== "true" ||
-    !process.env.PAYSTACK_SECRET_KEY?.startsWith("sk_test_")
+    setting("NODE_ENV") !== "development" ||
+    setting("REPLIT_DEPLOYMENT") ||
+    setting("VALO_SANDBOX_CHECKOUT_ENABLED") !== "true" ||
+    !setting("PAYSTACK_SECRET_KEY")?.startsWith("sk_test_")
   )
     throw new ValoProblem(
       503,
       "Sandbox checkout needs a configured Paystack test merchant and explicit enablement. No charge or entitlement was created.",
     );
-  return process.env.PAYSTACK_SECRET_KEY;
+  return setting("PAYSTACK_SECRET_KEY");
 }
 /** Only the fixed provider host is reachable; discard all instrument/customer data. */
 export async function paystackRequest(

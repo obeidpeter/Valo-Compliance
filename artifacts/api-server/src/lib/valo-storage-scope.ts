@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { environment as processEnvironment } from "../platform/settings";
 
 type Environment = Record<string, string | undefined>;
 export type StorageScope = Readonly<{
@@ -35,7 +36,7 @@ function overlaps(a: ReturnType<typeof root>, b: ReturnType<typeof root>) {
  * This configuration is not permission to activate customer routes or workers. */
 export function privateStorageScope(
   environment: StorageScope["environment"],
-  env: Environment = process.env,
+  env: Environment = processEnvironment(),
 ): StorageScope {
   if (environment === "development") assertDevelopmentRuntime(env);
   else if (environment !== "production" || env.NODE_ENV !== "production")

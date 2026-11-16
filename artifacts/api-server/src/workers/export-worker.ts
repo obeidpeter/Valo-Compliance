@@ -27,6 +27,7 @@ import {
   recordOperationalAlerts,
 } from "../lib/valo-operations";
 import { WorkerHealth, workerHealthServer, drainWithDeadline } from "../lib/valo-worker-health";
+import { environment, setting } from "../platform/settings";
 
 await initializeApplicationRuntime();
 developmentExportsOnly();
@@ -40,7 +41,7 @@ function publishHeartbeat() {
   const snapshot = health.snapshot(),
     next = heartbeatWrite.then(() => recordWorkerHeartbeat(snapshot));
   const published = next.then(() => {
-    if (process.env.VALO_SUPERVISED_WORKER === "ipc-v1" && process.connected && process.send)
+    if (setting("VALO_SUPERVISED_WORKER") === "ipc-v1" && process.connected && process.send)
       process.send({ type: "valo.worker.health", heartbeat: snapshot }, () => {});
   });
   // Keeps later heartbeats serialised after a failed write; callers receive the failure via `published`.
@@ -72,7 +73,7 @@ async function stop() {
     await pool.end();
     if (healthServer)
       await new Promise<void>((resolve, reject) => healthServer!.close((e) => (e ? reject(e) : resolve())));
-    if (process.env.VALO_SUPERVISED_WORKER === "ipc-v1" && process.connected) process.disconnect?.();
+    if (setting("VALO_SUPERVISED_WORKER") === "ipc-v1" && process.connected) process.disconnect?.();
   });
 }
 const shutdown = () => {
@@ -84,18 +85,16 @@ const shutdown = () => {
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 // Loss of the supervisor must not leave an unmanaged worker processing jobs.
-if (process.env.VALO_SUPERVISED_WORKER === "ipc-v1") {
+if (setting("VALO_SUPERVISED_WORKER") === "ipc-v1") {
   if (!process.send) throw Error("WORKER_SUPERVISOR_IPC_REQUIRED");
   process.once("disconnect", shutdown);
 }
 startup = (async () => {
-  if (process.env.VALO_WORKER_HEALTH_PORT !== undefined) {
-    if (
-      process.env.VALO_WORKER_HEALTH_PORT.trim() !== process.env.VALO_WORKER_HEALTH_PORT ||
-      !/^[1-9][0-9]{0,4}$/.test(process.env.VALO_WORKER_HEALTH_PORT)
-    )
+  const healthPort = setting("VALO_WORKER_HEALTH_PORT");
+  if (healthPort !== undefined) {
+    if (healthPort.trim() !== healthPort || !/^[1-9][0-9]{0,4}$/.test(healthPort))
       throw Error("INVALID_WORKER_HEALTH_PORT");
-    healthServer = await workerHealthServer(health, Number(process.env.VALO_WORKER_HEALTH_PORT));
+    healthServer = await workerHealthServer(health, Number(healthPort));
   }
   await publishHeartbeat();
   await boss.start();
@@ -104,18 +103,18 @@ startup = (async () => {
     for (const entry of jobs) {
       const input = payload.parse(entry.data);
       const faultHarness =
-        process.env.NODE_ENV === "development" &&
-        !process.env.REPLIT_DEPLOYMENT &&
-        process.env.VALO_RUN_EXPORT_CRASH_TESTS === "synthetic-development-only" &&
+        setting("NODE_ENV") === "development" &&
+        !setting("REPLIT_DEPLOYMENT") &&
+        setting("VALO_RUN_EXPORT_CRASH_TESTS") === "synthetic-development-only" &&
         process.send &&
-        process.env.VALO_EXPORT_CRASH_JOB === input.jobId;
+        setting("VALO_EXPORT_CRASH_JOB") === input.jobId;
       await executeExport(
         input.jobId,
         input.workspaceId,
         entry.id,
         faultHarness
           ? async (stage) => {
-              if (stage !== process.env.VALO_EXPORT_CRASH_STAGE) return;
+              if (stage !== setting("VALO_EXPORT_CRASH_STAGE")) return;
               const [owned] = await db
                 .select()
                 .from(valoExportJobs)
@@ -151,11 +150,11 @@ async function dispatch() {
     finishDispatch = resolve;
   });
   try {
-    if (process.env.NODE_ENV === "production")
+    if (setting("NODE_ENV") === "production")
       await verifyRehearsalDatabase((sql) => {
         const query = { text: sql, query_timeout: 1500 };
         return pool.query(query);
-      }, process.env);
+      }, environment());
     // An idle queue must still prove that both configured queues are reachable.
     const queueQuery = {
       text: "SELECT name,retry_limit,expire_seconds FROM valo_jobs.queue WHERE name=ANY($1::text[])",
@@ -203,7 +202,7 @@ async function dispatch() {
       if (stopping) break;
       await boss.send(EXPORT_QUEUE, { jobId: job.id, workspaceId: job.workspaceId }, { id: job.queueId });
     }
-    if (process.env.NODE_ENV !== "production" && !stopping && Date.now() - reminderCheckedAt >= 60000) {
+    if (setting("NODE_ENV") !== "production" && !stopping && Date.now() - reminderCheckedAt >= 60000) {
       reminderCheckedAt = Date.now();
       const failures = await dispatchOperationalJobs({
         reminders: () => reconcileDueReminders(),
@@ -230,7 +229,7 @@ async function dispatch() {
           return pool.query(config);
         });
         const alerts = await recordOperationalAlerts(sample);
-        if (process.env.VALO_SUPERVISED_WORKER === "ipc-v1" && process.connected && process.send)
+        if (setting("VALO_SUPERVISED_WORKER") === "ipc-v1" && process.connected && process.send)
           process.send(
             {
               type: "valo.worker.operations",

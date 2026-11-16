@@ -33,6 +33,7 @@ import { releasedResources } from "../lib/valo-released-content";
 import { commerceRouter } from "./valo-commerce";
 import { savedTemplateList, saveTemplate, unsaveTemplate } from "../lib/valo-saved-templates";
 import { publicDiscovery } from "../lib/valo-public-discovery";
+import { setting } from "../platform/settings";
 
 import { customerPaymentConcernsRouter, financePaymentConcernsRouter } from "./valo-payment-concerns";
 import { createSessionVerificationRouter } from "./valo-session-verification";
@@ -63,7 +64,7 @@ router.get("/public/resources/:slug", async (req, res) => {
   res.json(ReleasedResource.parse(item));
 });
 router.get("/development/source-evidence", async (_req, res): Promise<void> => {
-  if (process.env.NODE_ENV !== "development") {
+  if (setting("NODE_ENV") !== "development") {
     res.status(404).json({ error: "Not found" });
     return;
   }
@@ -104,7 +105,7 @@ router.get("/public/status", async (_req, res) => {
   });
 });
 router.get("/development/requirements", (_req, res) => {
-  if (process.env.NODE_ENV === "production") {
+  if (setting("NODE_ENV") === "production") {
     res.sendStatus(404);
     return;
   }
@@ -112,7 +113,7 @@ router.get("/development/requirements", (_req, res) => {
   res.json(readiness());
 });
 router.get("/development/proof", (_req, res) => {
-  if (process.env.NODE_ENV === "production") {
+  if (setting("NODE_ENV") === "production") {
     res.sendStatus(404);
     return;
   }
@@ -120,7 +121,7 @@ router.get("/development/proof", (_req, res) => {
   res.json(GetProofRegisterResponse.parse(readiness()));
 });
 router.get("/development/content", async (_req, res) => {
-  if (process.env.NODE_ENV === "production") {
+  if (setting("NODE_ENV") === "production") {
     res.sendStatus(404);
     return;
   }

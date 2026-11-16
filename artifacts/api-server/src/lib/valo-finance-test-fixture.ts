@@ -2,6 +2,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db, valoContentVersions, valoPublicationPolicies } from "@workspace/db";
+import { setting } from "../platform/settings";
 export async function financeHeldFixture() {
   const [existing] = await db
     .select()
@@ -9,7 +10,7 @@ export async function financeHeldFixture() {
     .where(eq(valoContentVersions.status, "held"))
     .limit(1);
   if (existing) return existing;
-  if (process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only" || process.env.REPLIT_DEPLOYMENT)
+  if (setting("VALO_RUN_DB_TESTS") !== "synthetic-development-only" || setting("REPLIT_DEPLOYMENT"))
     throw Error("Existing held development candidate or isolated synthetic CI flag required.");
   const token = randomUUID(),
     policyId = `synthetic-finance-${token}`;

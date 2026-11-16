@@ -12,6 +12,7 @@ import {
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
 import { requestExport, listExports, retryExport, downloadExport } from "../lib/valo-exports";
 import { consumeQuota, quotaSubjectHash } from "../lib/valo-quota";
+import { setting } from "../platform/settings";
 const router = Router();
 const paths = ["/v1/documents/:id/exports", "/v1/exports/:id/retry", "/v1/exports/:id/file"];
 router.use(paths, sameOriginMutation, verifiedWorkspace);
@@ -19,7 +20,7 @@ router.use(paths, async (req, res, next) => {
   if (req.method === "POST") {
     const quota = await consumeQuota(
       "export-create",
-      quotaSubjectHash(process.env.SESSION_SECRET, "user", res.locals.valoActor.identityId),
+      quotaSubjectHash(setting("SESSION_SECRET"), "user", res.locals.valoActor.identityId),
     );
     if (!quota.allowed) {
       res.setHeader("Retry-After", String(quota.retryAfter));

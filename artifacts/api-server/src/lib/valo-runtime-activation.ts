@@ -3,6 +3,7 @@ import { assertDevelopmentRuntime } from "./valo-development-runtime";
 import { externalMonitorConfiguration } from "./valo-external-monitor";
 import { productionPreflight } from "./valo-production-readiness";
 import { privateStorageScope, privateObjectName } from "./valo-storage-scope";
+import { environment, setting } from "../platform/settings";
 
 type Environment = Record<string, string | undefined>;
 type Query = (sql: string) => Promise<{ rows: Record<string, unknown>[] }>;
@@ -106,23 +107,23 @@ export async function verifyRehearsalDatabase(query: Query, env: Environment) {
   };
 }
 export async function initializeApplicationRuntime() {
-  if (process.env.NODE_ENV !== "production") {
+  if (setting("NODE_ENV") !== "production") {
     assertDevelopmentRuntime();
     return;
   }
-  rehearsalConfiguration(process.env); // Fail before connecting if configuration is incomplete.
+  rehearsalConfiguration(environment()); // Fail before connecting if configuration is incomplete.
   const { Client } = await import("pg");
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: setting("DATABASE_URL"),
     connectionTimeoutMillis: 5000,
     query_timeout: 5000,
   });
   try {
     await client.connect();
     await client.query("BEGIN READ ONLY");
-    await verifyRehearsalDatabase((sql) => client.query(sql), process.env);
+    await verifyRehearsalDatabase((sql) => client.query(sql), environment());
     await client.query("ROLLBACK");
-    verifiedBinding = binding(process.env);
+    verifiedBinding = binding(environment());
   } catch (error) {
     const code = (error as { code?: string }).code;
     fail(code?.startsWith("PRODUCTION_") ? code : "PRODUCTION_DATABASE_PREFLIGHT_FAILED");
@@ -131,16 +132,16 @@ export async function initializeApplicationRuntime() {
   }
 }
 export function assertApplicationRuntime() {
-  if (process.env.NODE_ENV !== "production") {
+  if (setting("NODE_ENV") !== "production") {
     assertDevelopmentRuntime();
     return;
   }
-  rehearsalConfiguration(process.env);
-  if (!verifiedBinding || verifiedBinding !== binding(process.env)) fail("PRODUCTION_RUNTIME_NOT_VERIFIED");
+  rehearsalConfiguration(environment());
+  if (!verifiedBinding || verifiedBinding !== binding(environment())) fail("PRODUCTION_RUNTIME_NOT_VERIFIED");
 }
 export function runtimeEnvironment(): "development" | "production" {
   assertApplicationRuntime();
-  return process.env.NODE_ENV === "production" ? "production" : "development";
+  return setting("NODE_ENV") === "production" ? "production" : "development";
 }
 export function runtimePrivateScope() {
   return privateStorageScope(runtimeEnvironment());

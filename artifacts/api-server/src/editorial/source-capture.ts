@@ -4,8 +4,9 @@ import { fetchOfficialSource, referenceFor, sourceBodyLimit, SourceFailure } fro
 import { extractSource, EXTRACTION_VERSION } from "./source-extract";
 import { storeSourceSnapshot } from "./source-storage";
 import { instrumentIdentity } from "./source-identity";
+import { setting } from "../platform/settings";
 export async function captureReference(id: string) {
-  if (process.env.NODE_ENV !== "development") throw Error("SOURCE_CAPTURE_DEVELOPMENT_ONLY");
+  if (setting("NODE_ENV") !== "development") throw Error("SOURCE_CAPTURE_DEVELOPMENT_ONLY");
   const lead = referenceFor(id);
   let identity: ReturnType<typeof instrumentIdentity> = null;
   const row: typeof valoSourceSnapshots.$inferInsert = {

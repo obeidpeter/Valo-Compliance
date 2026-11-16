@@ -1,5 +1,6 @@
+import { environment } from "../platform/settings";
 /** Trust deployment configuration, never request Host/Forwarded headers. */
-export function trustedSiteOrigin(env: NodeJS.ProcessEnv = process.env): string | undefined {
+export function trustedSiteOrigin(env: NodeJS.ProcessEnv = environment()): string | undefined {
   const raw =
     env.VALO_TRUSTED_ORIGIN ??
     (env.NODE_ENV === "development" &&

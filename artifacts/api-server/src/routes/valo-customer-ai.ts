@@ -9,6 +9,7 @@ import {
 } from "../lib/valo-customer-ai";
 import { consumeQuota } from "../lib/valo-quota";
 import { quotaSubjectHash } from "../lib/valo-quota-policy";
+import { setting } from "../platform/settings";
 const router = Router();
 router.get("/workspace/ai-usage", async (_req, res) => {
   res.json(await customerAIUsage(res.locals.valoActor));
@@ -16,7 +17,7 @@ router.get("/workspace/ai-usage", async (_req, res) => {
 router.post("/workspace/ai-drafts", async (req, res): Promise<void> => {
   const quota = await consumeQuota(
     "customer-ai",
-    quotaSubjectHash(process.env.SESSION_SECRET, "user", res.locals.valoActor.identityId),
+    quotaSubjectHash(setting("SESSION_SECRET"), "user", res.locals.valoActor.identityId),
   );
   if (!quota.allowed) {
     res.set("Retry-After", String(quota.retryAfter));

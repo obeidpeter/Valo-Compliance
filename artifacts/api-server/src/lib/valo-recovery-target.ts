@@ -1,6 +1,7 @@
 import { realpath, lstat } from "node:fs/promises";
 import { resolve, basename, join } from "node:path";
 import type { PoolClient } from "pg";
+import { setting } from "../platform/settings";
 /** Windows is an additional disposable target, never a generic remote-DB override. */
 export function windowsRecoveryBinding(
   state: { name: string; directory: string; port: string; address: string; user: string },
@@ -25,7 +26,7 @@ export function windowsRecoveryBinding(
     throw Error("LOCAL_DISPOSABLE_RECOVERY_TARGET_REQUIRED");
 }
 export async function assertWindowsRecoveryTarget(client: PoolClient) {
-  const root = process.env.VALO_RECOVERY_WINDOWS_ROOT ?? "";
+  const root = setting("VALO_RECOVERY_WINDOWS_ROOT") ?? "";
   if (
     process.platform !== "win32" ||
     !/^valo-recovery-[a-f0-9-]{36}$/.test(basename(root)) ||
@@ -40,7 +41,7 @@ export async function assertWindowsRecoveryTarget(client: PoolClient) {
     await client.query(`SELECT current_database() AS name,current_user AS "user",
     current_setting('data_directory') AS directory,current_setting('port') AS port,host(inet_server_addr()) AS address`)
   ).rows[0];
-  windowsRecoveryBinding(state, new URL(process.env.DATABASE_URL ?? ""), root);
+  windowsRecoveryBinding(state, new URL(setting("DATABASE_URL") ?? ""), root);
   const { rows } = await client.query(
     "SELECT EXISTS(SELECT 1 FROM valo_workspaces WHERE owner_identity_id NOT LIKE 'synthetic-recovery-%') AS unsafe",
   );

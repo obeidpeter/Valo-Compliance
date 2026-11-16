@@ -1,30 +1,31 @@
 import { Client } from "pg";
 import { inspectExportRetention, proposeExportRetention } from "../lib/valo-export-retention-inventory";
+import { environment, setting } from "../platform/settings";
 let client: Client | undefined;
 try {
   const [mode, databaseId, ...args] = process.argv.slice(2);
   if (
-    process.env.VALO_RETENTION_INSPECTION !== "read-only" ||
+    setting("VALO_RETENTION_INSPECTION") !== "read-only" ||
     !databaseId ||
     !((mode === "inventory" && args.length === 0) || (mode === "plan" && args.length === 3)) ||
-    !["development", "production"].includes(process.env.NODE_ENV ?? "")
+    !["development", "production"].includes(setting("NODE_ENV") ?? "")
   )
     throw Error("RETENTION_INSPECTION_USAGE_REQUIRED");
   if (
-    process.env.NODE_ENV === "development" &&
-    Object.entries(process.env).some(([key, value]) => key.startsWith("REPLIT_DEPLOYMENT") && value)
+    setting("NODE_ENV") === "development" &&
+    Object.entries(environment()).some(([key, value]) => key.startsWith("REPLIT_DEPLOYMENT") && value)
   )
     throw Error("RETENTION_INSPECTION_CONTEXT_INVALID");
-  if (!process.env.DATABASE_URL) throw Error("RETENTION_DATABASE_REQUIRED");
+  if (!setting("DATABASE_URL")) throw Error("RETENTION_DATABASE_REQUIRED");
   client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: setting("DATABASE_URL"),
     connectionTimeoutMillis: 5000,
     query_timeout: 15000,
   });
   await client.connect();
   const inventory = await inspectExportRetention(client, {
     databaseId,
-    environment: process.env.NODE_ENV === "development" ? "development" : "production-rehearsal",
+    environment: setting("NODE_ENV") === "development" ? "development" : "production-rehearsal",
   });
   const proposal =
     mode === "plan"

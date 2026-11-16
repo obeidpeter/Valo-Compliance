@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
 import { Client } from "@replit/object-storage";
+import { setting } from "../platform/settings";
 const checksum = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 function sourceObject(snapshotId: string, kind: "raw" | "text") {
   if (!/^[a-f0-9-]{36}$/.test(snapshotId)) throw Error("SOURCE_STORAGE_INVALID_ID");
   if (kind !== "raw" && kind !== "text") throw Error("SOURCE_STORAGE_INVALID_KIND");
-  const root = process.env.PRIVATE_OBJECT_DIR;
+  const root = setting("PRIVATE_OBJECT_DIR");
   if (!root) throw Error("SOURCE_STORAGE_UNCONFIGURED");
   const [bucket, ...parts] = root.replace(/^\/+|\/+$/g, "").split("/");
   if (!bucket || !parts.length) throw Error("SOURCE_STORAGE_UNCONFIGURED");

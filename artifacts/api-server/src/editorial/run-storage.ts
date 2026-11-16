@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { Client } from "@replit/object-storage";
+import { setting } from "../platform/settings";
 export const hashEditorial = (value: string) => createHash("sha256").update(value).digest("hex");
 function object(id: string) {
   if (!/^[a-f0-9-]{36}$/.test(id)) throw Error("EDITORIAL_STORAGE_INVALID_ID");
-  const root = process.env.PRIVATE_OBJECT_DIR;
+  const root = setting("PRIVATE_OBJECT_DIR");
   if (!root) throw Error("EDITORIAL_STORAGE_UNCONFIGURED");
   const [bucket, ...parts] = root.replace(/^\/+|\/+$/g, "").split("/");
   if (!bucket || !parts.length) throw Error("EDITORIAL_STORAGE_UNCONFIGURED");

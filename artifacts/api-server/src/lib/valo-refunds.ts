@@ -24,6 +24,7 @@ import {
   TEST_REFUND_POLICY_VERSION,
   type RefundProvider,
 } from "./valo-refund-provider";
+import { setting } from "../platform/settings";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Refund = typeof valoRefundRequests.$inferSelect;
 export type FinanceActor = { identityId: string; recentMfa: boolean; verifiedAt: number };
@@ -156,7 +157,7 @@ export async function requestOrderRefund(actor: WorkspaceActor, id: string, raw:
         );
       return { reference: old.id, status: old.status };
     }
-    const subject = quotaSubjectHash(process.env.SESSION_SECRET, "user", actor.identityId);
+    const subject = quotaSubjectHash(setting("SESSION_SECRET"), "user", actor.identityId);
     for (const [window, max] of [
       ["minute", 10],
       ["day", 50],
@@ -286,9 +287,9 @@ export async function processRefund(
     const { row, order } = await refundLock(tx, id);
     if (
       provider !== refundProvider &&
-      (process.env.NODE_ENV !== "development" ||
-        process.env.REPLIT_DEPLOYMENT ||
-        process.env.VALO_RUN_REFUND_TESTS !== "synthetic-development-only" ||
+      (setting("NODE_ENV") !== "development" ||
+        setting("REPLIT_DEPLOYMENT") ||
+        setting("VALO_RUN_REFUND_TESTS") !== "synthetic-development-only" ||
         !order.requestedBy.startsWith("synthetic-refund-"))
     )
       throw new ValoProblem(403, "Controlled adapters require owned synthetic development orders.");

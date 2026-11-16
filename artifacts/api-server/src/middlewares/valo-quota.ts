@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import { getAuth } from "@clerk/express";
 import { consumeQuota, purgeExpiredQuotaBuckets, quotaSubjectHash } from "../lib/valo-quota";
 import { clientAddress } from "../lib/valo-proxy-boundary";
+import { setting } from "../platform/settings";
 
 export const requestReadQuota: RequestHandler = async (req, res, next): Promise<void> => {
   if (!["GET", "HEAD"].includes(req.method) || !req.path.startsWith("/api/") || req.path === "/api/healthz") {
@@ -11,7 +12,7 @@ export const requestReadQuota: RequestHandler = async (req, res, next): Promise<
   // Clerk's supported server validation, never a client-supplied identity header.
   const { userId } = getAuth(req);
   const subject = userId ?? clientAddress(req);
-  const key = quotaSubjectHash(process.env.SESSION_SECRET, userId ? "user" : "ip", subject ?? "");
+  const key = quotaSubjectHash(setting("SESSION_SECRET"), userId ? "user" : "ip", subject ?? "");
   await purgeExpiredQuotaBuckets();
   const bucket = userId ? "authenticated-read" : "anonymous-read";
   const decision = await consumeQuota(bucket, key);

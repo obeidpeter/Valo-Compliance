@@ -17,6 +17,7 @@ import { documentInput, documentUpdate, profileInput, ticketInput } from "./valo
 import { z } from "zod";
 import { guidedDataFromBlocks } from "@workspace/valo-core/guided-runtime";
 import { consumeQuota, quotaPolicy, quotaSubjectHash } from "./valo-quota";
+import { setting } from "../platform/settings";
 
 import { ValoProblem } from "./valo-problem";
 import { privacyIdentityHashes } from "./valo-privacy-keys";
@@ -72,7 +73,7 @@ export async function limitWorkspaceWrite(
   actor: WorkspaceActor,
   operation: "profile" | "document" | "support",
 ) {
-  const key = quotaSubjectHash(process.env.SESSION_SECRET, "user", actor.identityId);
+  const key = quotaSubjectHash(setting("SESSION_SECRET"), "user", actor.identityId);
   for (const window of ["minute", "day"] as const) {
     const bucket = `${operation}-write${window === "day" ? "-day" : ""}` as keyof typeof quotaPolicy;
     const q = await consumeQuota(bucket, key, quotaPolicy[bucket], window, tx);

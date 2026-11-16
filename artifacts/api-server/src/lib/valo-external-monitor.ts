@@ -1,4 +1,5 @@
 import { workerReadiness, type WorkerHeartbeat } from "./valo-worker-health";
+import { environment } from "../platform/settings";
 
 type Environment = Record<string, string | undefined>;
 export type MonitorCheck = "worker" | "operations";
@@ -8,7 +9,7 @@ function invalid(): never {
   throw Error("EXTERNAL_MONITOR_CONFIGURATION_INVALID");
 }
 /** Ping URLs are capabilities. Never include them in logs, reports, or client config. */
-export function externalMonitorConfiguration(env: Environment = process.env): MonitorConfiguration | null {
+export function externalMonitorConfiguration(env: Environment = environment()): MonitorConfiguration | null {
   const worker = env.VALO_WORKER_MONITOR_URL,
     operations = env.VALO_OPERATIONS_MONITOR_URL;
   if (!env.VALO_EXTERNAL_MONITORING && !worker && !operations) return null;

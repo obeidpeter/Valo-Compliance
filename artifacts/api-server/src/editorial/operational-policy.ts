@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { digest, sha256, type PublicationBundle } from "@workspace/valo-core";
+import { setting } from "../platform/settings";
 export function publicationWorkspaceRoot() {
   let dir = process.cwd();
   for (let i = 0; i < 6; i++, dir = dirname(dir))
@@ -10,7 +11,7 @@ export function publicationWorkspaceRoot() {
 }
 // Production is intentionally not authorised by this policy.
 export function developmentPublicationOnly() {
-  if (process.env.NODE_ENV !== "development" || process.env.REPLIT_DEPLOYMENT)
+  if (setting("NODE_ENV") !== "development" || setting("REPLIT_DEPLOYMENT"))
     throw Error("DEVELOPMENT_PUBLICATION_ONLY");
 }
 export async function operationalPolicy() {

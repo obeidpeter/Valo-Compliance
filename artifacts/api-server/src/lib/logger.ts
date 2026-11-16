@@ -1,12 +1,13 @@
 import pino, { type DestinationStream } from "pino";
 import { safeError } from "./safe-error";
+import { setting } from "../platform/settings";
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = setting("NODE_ENV") === "production";
 
 export function createApplicationLogger(destination?: DestinationStream) {
   return pino(
     {
-      level: process.env.LOG_LEVEL ?? "info",
+      level: setting("LOG_LEVEL") ?? "info",
       redact: [
         "req.headers.authorization",
         "req.headers.cookie",
@@ -30,7 +31,7 @@ export function createApplicationLogger(destination?: DestinationStream) {
           return method.apply(this, args);
         },
       },
-      ...(isProduction || destination || process.env.VALO_PRETTY_LOGS !== "1"
+      ...(isProduction || destination || setting("VALO_PRETTY_LOGS") !== "1"
         ? {}
         : {
             transport: {

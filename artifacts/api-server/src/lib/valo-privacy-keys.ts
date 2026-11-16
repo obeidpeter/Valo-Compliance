@@ -4,6 +4,7 @@ import { db, valoPrivacyEvents, valoPrivacyTombstones } from "@workspace/db";
 import { privacyAuditHash, privacyAuditEqual } from "./valo-privacy-state";
 import { quotaSubjectHash } from "./valo-quota";
 import { ValoProblem } from "./valo-problem";
+import { setting } from "../platform/settings";
 type Tx = Pick<Parameters<Parameters<typeof db.transaction>[0]>[0], "execute" | "select" | "selectDistinct">;
 export type PrivacyKeys = { current: string; keys: Record<string, string> };
 const legacy = "session-derived-v1";
@@ -17,9 +18,10 @@ const held = () =>
 export function privacyKeys(): PrivacyKeys {
   let ring: PrivacyKeys;
   try {
-    if (process.env.VALO_PRIVACY_KEYRING) ring = JSON.parse(process.env.VALO_PRIVACY_KEYRING);
+    const keyring = setting("VALO_PRIVACY_KEYRING");
+    if (keyring) ring = JSON.parse(keyring);
     else {
-      const key = process.env.SESSION_SECRET;
+      const key = setting("SESSION_SECRET");
       if (!key || key.length < 32) throw held();
       const current = `session-${fingerprint(key).slice(0, 20)}`;
       ring = { current, keys: { [current]: key, [legacy]: key } };

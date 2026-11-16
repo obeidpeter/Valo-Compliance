@@ -1,5 +1,6 @@
 import { initializeApplicationRuntime } from "../lib/valo-runtime-activation";
 import { productionPreflight } from "../lib/valo-production-readiness";
+import { environment } from "../platform/settings";
 const args = process.argv.slice(2);
 if (
   args.length > 1 ||
@@ -8,7 +9,7 @@ if (
   console.error("USAGE: production-preflight [--configuration-only|--activate-rehearsal]");
   process.exitCode = 1;
 } else {
-  const report = productionPreflight(process.env);
+  const report = productionPreflight(environment());
   console.log(JSON.stringify(report, null, 2));
   // Default invocation remains nonzero while launch evidence/approval is absent.
   if (args[0] === "--activate-rehearsal") {

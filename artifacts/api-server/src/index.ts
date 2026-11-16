@@ -1,8 +1,9 @@
 import { initializeApplicationRuntime } from "./lib/valo-runtime-activation";
 import app from "./app";
 import { logger } from "./lib/logger";
+import { setting } from "./platform/settings";
 
-const rawPort = process.env["PORT"];
+const rawPort = setting("PORT");
 
 if (!rawPort) {
   throw new Error("PORT environment variable is required but was not provided.");

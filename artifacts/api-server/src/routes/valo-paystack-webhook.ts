@@ -1,6 +1,7 @@
 import { Router, raw } from "express";
 import { authenticPaystackBody, type WebhookConfiguration } from "../lib/valo-paystack-contract";
 import { recordPaymentEvent } from "../lib/valo-commerce";
+import { setting } from "../platform/settings";
 /** Mounted before JSON, identity and browser-CSRF middleware. */
 export const paystackWebhookRouter = Router();
 paystackWebhookRouter.post(
@@ -9,21 +10,20 @@ paystackWebhookRouter.post(
   async (req, res) => {
     res.set("Cache-Control", "no-store");
     if (
-      process.env.NODE_ENV !== "development" ||
-      process.env.REPLIT_DEPLOYMENT ||
-      process.env.VALO_SANDBOX_CHECKOUT_ENABLED !== "true"
+      setting("NODE_ENV") !== "development" ||
+      setting("REPLIT_DEPLOYMENT") ||
+      setting("VALO_SANDBOX_CHECKOUT_ENABLED") !== "true"
     ) {
       res.status(503).json({ error: "Paystack test webhook is not enabled." });
       return;
     }
     let config: WebhookConfiguration;
-    if (process.env.PAYSTACK_WEBHOOK_MODE === "timestamped" && process.env.PAYSTACK_WEBHOOK_SECRET)
-      config = { mode: "timestamped", secrets: process.env.PAYSTACK_WEBHOOK_SECRET.split(",") };
-    else if (
-      process.env.PAYSTACK_WEBHOOK_MODE === "legacy" &&
-      process.env.PAYSTACK_SECRET_KEY?.startsWith("sk_test_")
-    )
-      config = { mode: "legacy", apiSecret: process.env.PAYSTACK_SECRET_KEY };
+    const mode = setting("PAYSTACK_WEBHOOK_MODE"),
+      webhookSecret = setting("PAYSTACK_WEBHOOK_SECRET"),
+      apiSecret = setting("PAYSTACK_SECRET_KEY");
+    if (mode === "timestamped" && webhookSecret)
+      config = { mode: "timestamped", secrets: webhookSecret.split(",") };
+    else if (mode === "legacy" && apiSecret?.startsWith("sk_test_")) config = { mode: "legacy", apiSecret };
     else {
       res.status(503).json({ error: "The merchant webhook signature mode is not configured." });
       return;

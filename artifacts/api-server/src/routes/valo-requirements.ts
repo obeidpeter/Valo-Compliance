@@ -19,13 +19,14 @@ import * as tasks from "../lib/valo-tasks";
 import { consumeQuota } from "../lib/valo-quota";
 import { quotaSubjectHash } from "../lib/valo-quota-policy";
 import { clientAddress } from "../lib/valo-proxy-boundary";
+import { setting } from "../platform/settings";
 const router = Router();
 const id = (v: unknown) => z.string().uuid().parse(v);
 router.post("/checker/preview", async (req, res): Promise<void> => {
   res.set("Cache-Control", "no-store");
   const quota = await consumeQuota(
     "anonymous-read",
-    quotaSubjectHash(process.env.SESSION_SECRET, "ip", clientAddress(req)),
+    quotaSubjectHash(setting("SESSION_SECRET"), "ip", clientAddress(req)),
   );
   if (!quota.allowed) {
     res.set("Retry-After", String(quota.retryAfter));
@@ -43,7 +44,7 @@ router.post("/workspace/checker/preview", async (req, res): Promise<void> => {
   res.set("Cache-Control", "private, no-store");
   const quota = await consumeQuota(
     "anonymous-read",
-    quotaSubjectHash(process.env.SESSION_SECRET, "user", res.locals.valoActor.identityId),
+    quotaSubjectHash(setting("SESSION_SECRET"), "user", res.locals.valoActor.identityId),
   );
   if (!quota.allowed) {
     res.set("Retry-After", String(quota.retryAfter));

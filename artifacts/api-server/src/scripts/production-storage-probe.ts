@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Client } from "@replit/object-storage";
 import { privateStorageScope, storageProbeName } from "../lib/valo-storage-scope";
 import { runStorageProbe } from "../lib/valo-storage-probe";
+import { setting } from "../platform/settings";
 
 // This opt-in operator command only addresses a separate synthetic canary prefix.
 // No production route or background worker invokes it automatically.
@@ -16,7 +17,7 @@ const configurationCodes = new Set([
   "INVALID_STORAGE_PROBE_SCOPE",
 ]);
 try {
-  if (process.env.VALO_PRODUCTION_STORAGE_PROBE !== "synthetic-canary-only")
+  if (setting("VALO_PRODUCTION_STORAGE_PROBE") !== "synthetic-canary-only")
     throw Error("EXPLICIT_STORAGE_PROBE_REQUIRED");
   const [action, id, ...extra] = process.argv.slice(2);
   if (

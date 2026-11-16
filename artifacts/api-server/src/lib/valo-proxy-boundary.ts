@@ -1,5 +1,6 @@
 import { isIP } from "node:net";
 import type { Express, Request } from "express";
+import { environment } from "../platform/settings";
 
 /** Trust exact infrastructure addresses/CIDRs only after observing the ingress
  * topology. Empty configuration trusts no forwarding headers. Hop counts and
@@ -22,7 +23,7 @@ export function trustedProxyRanges(raw: string | undefined): string[] {
   }
   return ranges;
 }
-export function configureProxyBoundary(app: Express, env: NodeJS.ProcessEnv = process.env) {
+export function configureProxyBoundary(app: Express, env: NodeJS.ProcessEnv = environment()) {
   const ranges = trustedProxyRanges(env.VALO_TRUSTED_PROXY_CIDRS);
   app.set("trust proxy", ranges.length ? ranges : false);
 }

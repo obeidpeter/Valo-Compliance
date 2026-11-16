@@ -26,6 +26,7 @@ import {
   type ReleasedLibraryItem,
 } from "./valo-catalogue";
 import { currentOperationalPermission } from "../editorial/operational-read-permission";
+import { setting } from "../platform/settings";
 export function releaseVisible(
   row: typeof valoContentVersions.$inferSelect,
   policyHash: string,
@@ -42,7 +43,7 @@ export function releaseVisible(
   );
 }
 export async function liveReleasedVersions() {
-  if (process.env.NODE_ENV !== "development" || process.env.REPLIT_DEPLOYMENT) return [];
+  if (setting("NODE_ENV") !== "development" || setting("REPLIT_DEPLOYMENT")) return [];
   const currentPolicy = await operationalPolicy();
   const rows = await db
     .select({ content: valoContentVersions, policy: valoPublicationPolicies })

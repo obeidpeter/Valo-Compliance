@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { Client } from "@replit/object-storage";
 import { sha256 } from "@workspace/valo-core";
+import { setting } from "../platform/settings";
 export type ArtifactRef = { id: string; hash: string; extension: "json" | "pdf" | "docx" };
 function location(ref: Pick<ArtifactRef, "id" | "extension">) {
   if (!/^[a-f0-9-]{36}$/.test(ref.id) || !["json", "pdf", "docx"].includes(ref.extension))
     throw Error("INVALID_PUBLICATION_ASSET");
-  const [bucket, ...parts] = (process.env.PRIVATE_OBJECT_DIR ?? "").replace(/^\/+|\/+$/g, "").split("/");
+  const [bucket, ...parts] = (setting("PRIVATE_OBJECT_DIR") ?? "").replace(/^\/+|\/+$/g, "").split("/");
   if (!bucket || !parts.length) throw Error("PRIVATE_STORAGE_NOT_CONFIGURED");
   return {
     client: new Client({ bucketId: bucket }),

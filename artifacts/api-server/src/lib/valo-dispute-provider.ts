@@ -4,6 +4,7 @@ import { ValoProblem } from "./valo-problem";
 import { verifiedDispute } from "./valo-dispute-schema";
 import { paystackRequest, sandboxPaymentsConfigured } from "./valo-paystack-contract";
 import { assertRecoveryEffectsAllowed } from "./valo-recovery-effects";
+import { setting } from "../platform/settings";
 
 const providerId = z.string().regex(/^\d{1,40}$/);
 const filename = z.string().regex(/^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}$/);
@@ -271,5 +272,5 @@ export function makeDisputeTransport(
 export const disputeTransport = makeDisputeTransport(
   paystackRequest,
   fetch,
-  () => sandboxPaymentsConfigured() && process.env.VALO_SANDBOX_DISPUTES_ENABLED === "true",
+  () => sandboxPaymentsConfigured() && setting("VALO_SANDBOX_DISPUTES_ENABLED") === "true",
 );

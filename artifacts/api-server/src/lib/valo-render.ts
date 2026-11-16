@@ -14,6 +14,7 @@ import {
 import { chromium } from "playwright";
 import { documentInput } from "./valo-validation";
 import { GUIDED_PREFIX, guidedRenderableBlocks } from "@workspace/valo-core/guided-runtime";
+import { setting } from "../platform/settings";
 
 export const RENDER_VERSION = "manual-draft-1";
 export const DRAFT_NOTICE =
@@ -160,7 +161,7 @@ export async function renderDocument(
     );
   }
   const browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || "/repl/tools/bin/chromium",
+    executablePath: setting("CHROMIUM_EXECUTABLE_PATH") || "/repl/tools/bin/chromium",
     headless: true,
     timeout: 15000,
   });

@@ -7,12 +7,13 @@ import {
   runtimeEnvironment,
 } from "./valo-runtime-activation";
 import { privateCleanupAuthority } from "./valo-private-cleanup-authority";
+import { environment } from "../platform/settings";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Job = typeof valoExportJobs.$inferSelect;
 type Asset = typeof valoFileAssets.$inferSelect;
 export const EXPORT_EXPIRED = "EXPORT_EXPIRED";
-export function exportRetentionAt(now = new Date(), env: Record<string, string | undefined> = process.env) {
+export function exportRetentionAt(now = new Date(), env: Record<string, string | undefined> = environment()) {
   const value = env.VALO_EXPORT_RETENTION_DAYS ?? "30";
   if (!/^[1-9][0-9]{0,2}$/.test(value) || Number(value) > 365) throw Error("INVALID_EXPORT_RETENTION_DAYS");
   return new Date(now.getTime() + Number(value) * 86_400_000);

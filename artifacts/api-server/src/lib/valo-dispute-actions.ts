@@ -33,6 +33,7 @@ import {
 import { storeVerifiedDispute, disputeSnapshotHash } from "./valo-payment-disputes";
 import { assertRecoveryEffectsAllowed } from "./valo-recovery-effects";
 import { renderDocument } from "./valo-render";
+import { setting } from "../platform/settings";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Action = typeof valoDisputeActions.$inferSelect;
 type Order = typeof valoOrders.$inferSelect;
@@ -482,9 +483,9 @@ export async function controlDisputeAction(
     const [a] = await tx.select().from(valoDisputeActions).where(eq(valoDisputeActions.id, id)).for("update");
     if (
       provider !== disputeTransport &&
-      (process.env.NODE_ENV !== "development" ||
-        process.env.REPLIT_DEPLOYMENT ||
-        process.env.VALO_RUN_DISPUTE_TESTS !== "synthetic-development-only" ||
+      (setting("NODE_ENV") !== "development" ||
+        setting("REPLIT_DEPLOYMENT") ||
+        setting("VALO_RUN_DISPUTE_TESTS") !== "synthetic-development-only" ||
         !order.requestedBy.startsWith("synthetic-dispute-"))
     )
       throw new ValoProblem(403, "Controlled transports require an owned synthetic development fixture.");
@@ -808,9 +809,9 @@ export async function linkFinanceDispute(
   });
   if (
     provider !== disputeTransport &&
-    (process.env.NODE_ENV !== "development" ||
-      process.env.REPLIT_DEPLOYMENT ||
-      process.env.VALO_RUN_DISPUTE_TESTS !== "synthetic-development-only" ||
+    (setting("NODE_ENV") !== "development" ||
+      setting("REPLIT_DEPLOYMENT") ||
+      setting("VALO_RUN_DISPUTE_TESTS") !== "synthetic-development-only" ||
       !order.requestedBy.startsWith("synthetic-dispute-"))
   )
     throw new ValoProblem(403, "Owned synthetic adapter required.");
@@ -864,9 +865,9 @@ export async function reconcileDisputeActions(provider: DisputeTransport = dispu
     if (!saved || !provider.configured()) continue;
     if (
       provider !== disputeTransport &&
-      (process.env.NODE_ENV !== "development" ||
-        process.env.REPLIT_DEPLOYMENT ||
-        process.env.VALO_RUN_DISPUTE_TESTS !== "synthetic-development-only" ||
+      (setting("NODE_ENV") !== "development" ||
+        setting("REPLIT_DEPLOYMENT") ||
+        setting("VALO_RUN_DISPUTE_TESTS") !== "synthetic-development-only" ||
         !saved.order.requestedBy.startsWith("synthetic-dispute-"))
     )
       throw new ValoProblem(403, "Owned recovery adapter required.");

@@ -31,13 +31,14 @@ import { CreateCommerceOrderBody } from "@workspace/api-zod";
 import { requestOrderRefund, refundView, handleRefundEvent } from "./valo-refunds";
 import { syncDispute } from "./valo-payment-disputes";
 import { refundBalance, TEST_REFUND_POLICY } from "./valo-refund-provider";
+import { setting } from "../platform/settings";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const originalReceiptActions = ["payment.verified_success", "payment.synthetic_receipt_recovered"];
 function audit(tx: Tx, workspaceId: string, actorId: string, action: string, id: string) {
   return tx.insert(valoEvents).values({ id: randomUUID(), workspaceId, actorId, action, entityId: id });
 }
 async function limit(tx: Tx, actor: WorkspaceActor) {
-  const hash = quotaSubjectHash(process.env.SESSION_SECRET, "user", actor.identityId);
+  const hash = quotaSubjectHash(setting("SESSION_SECRET"), "user", actor.identityId);
   for (const [window, max] of [
     ["minute", 10],
     ["day", 100],
@@ -442,7 +443,7 @@ async function repairVerifiedFulfilment(
  * Recovered messages stay held even if delivery is configured later. */
 export async function recoverSyntheticPurchaseReceipt(id: string) {
   assertDevelopmentRuntime();
-  if (process.env.VALO_SYNTHETIC_RECEIPT_RECOVERY !== "owned-recorded-fixtures-only")
+  if (setting("VALO_SYNTHETIC_RECEIPT_RECOVERY") !== "owned-recorded-fixtures-only")
     throw new ValoProblem(403, "Explicit synthetic receipt maintenance is required.");
   return db.transaction(async (tx) => {
     const [order] = await tx.select().from(valoOrders).where(eq(valoOrders.id, id)).for("update");

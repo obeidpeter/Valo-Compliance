@@ -1,3 +1,4 @@
+import { environment } from "../platform/settings";
 /** Approval boundary, not an environment-name heuristic. No environment values
  * are included in errors/logs. Whitespace and "0"/"false" are nonempty markers. */
 export const deployedEnvironmentMarkers = [
@@ -6,7 +7,7 @@ export const deployedEnvironmentMarkers = [
   "REPLIT_DEPLOYMENT_TYPE",
   "REPLIT_DEPLOYMENT_REGION",
 ] as const;
-export function assertDevelopmentRuntime(env: Record<string, string | undefined> = process.env): void {
+export function assertDevelopmentRuntime(env: Record<string, string | undefined> = environment()): void {
   if (
     env.NODE_ENV !== "development" ||
     Object.keys(env).some(

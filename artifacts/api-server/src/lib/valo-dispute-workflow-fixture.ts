@@ -12,12 +12,13 @@ import { resolveWorkspace } from "./valo-store";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
 import { type FinanceActor } from "./valo-refunds";
 import { makeDisputeTransport } from "./valo-dispute-provider";
+import { setting } from "../platform/settings";
 export async function disputeFixture() {
   if (
-    process.env.NODE_ENV !== "development" ||
-    process.env.REPLIT_DEPLOYMENT ||
-    process.env.VALO_RUN_DISPUTE_TESTS !== "synthetic-development-only" ||
-    process.env.PAYSTACK_SECRET_KEY
+    setting("NODE_ENV") !== "development" ||
+    setting("REPLIT_DEPLOYMENT") ||
+    setting("VALO_RUN_DISPUTE_TESTS") !== "synthetic-development-only" ||
+    setting("PAYSTACK_SECRET_KEY")
   )
     throw Error("OWNED_DISPUTE_FIXTURE_REQUIRED");
   const owner = await resolveWorkspace(`synthetic-dispute-${randomUUID()}`),
