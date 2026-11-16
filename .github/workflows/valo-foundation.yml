@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, "feature/valo-p0-foundation"]
   push:
-    branches: [main, "feature/valo-*"]
+    branches: [main, "feature/valo-*", "claude/**"]
 
 permissions:
   contents: read
@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: "24"
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: "1.24"
@@ -82,7 +82,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Set up pinned pnpm
         run: |
           corepack enable
@@ -242,7 +242,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Set up pinned pnpm
         run: |
           corepack enable

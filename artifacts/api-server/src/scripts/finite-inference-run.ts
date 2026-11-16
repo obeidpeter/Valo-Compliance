@@ -15,17 +15,23 @@ import {prepareFiniteAllocationPackage,allocationPackageId,registerPreparedInfer
 /** No approval/enable operation exists in this command. Preparation creates
  * exact, disabled private artifacts; execution can only use an existing owner
  * approval independently verified by the production dispatcher. */
+const finiteRunCommands=["--inspect","--prepare","--prepare-selection","--prepare-customer",
+  "--prepare-template-candidate","--verify-prepared","--admit","--execute"] as const;
+type FiniteRunCommand=typeof finiteRunCommands[number];
+function isFiniteRunCommand(value:string|undefined):value is FiniteRunCommand{
+  return (finiteRunCommands as readonly string[]).includes(value??"");
+}
 async function main(){
   assertDevelopmentRuntime();
   const[mode,batchId,...extra]=process.argv.slice(2);
-  const commands=["--inspect","--prepare","--prepare-selection","--prepare-customer",
-    "--prepare-template-candidate","--verify-prepared","--admit","--execute"];
+  const commands=finiteRunCommands;
   if(mode==="--help"&&!batchId&&!extra.length){
     console.log(JSON.stringify({commands,inferenceCalls:0,ownerApprovalCreated:false,authorizesDispatch:false,
       note:"Preparation is disabled work only. Execution requires existing exact durable owner authorization."}));
     return;
   }
-  if(!mode||!commands.includes(mode))throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+  // Narrowing to the command union makes a misspelled branch below a compile error.
+  if(!isFiniteRunCommand(mode))throw Error("FINITE_RUN_ARGUMENTS_INVALID");
   if(mode.startsWith("--prepare"))console.error(JSON.stringify({event:"finite-preparation-loading",inferenceCalls:0}));
   const [{db,pool,valoContentVersions},{readOperationalInferenceReadiness},{assertFiniteWorkBindings},
     {withApprovedInferencePair},{saveOperationalReviewPlan,executeOperationalReviewPlan},
@@ -61,7 +67,7 @@ async function main(){
       worstCaseReservationNanoUsd:proposal.worstCaseReservationNanoUsd,
       enabled:false,ownerApproved:false,providerCalls:0,approvalRowsWritten:0}));return;
   }
-  if(mode==="--prepare-candidate"){
+  if(mode==="--prepare-template-candidate"){
     if(!batchId||!supportsOperationalInferenceTemplate(batchId)||extra.length!==1||!extra[0])
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");
     const {prepareOperationalCandidateRelease}=await import("../editorial/operational-preparation");

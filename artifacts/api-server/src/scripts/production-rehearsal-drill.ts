@@ -73,7 +73,7 @@ try{
   report.phase="production-runtime";
   api=await child("index",prod);worker=await child("export-worker",prod);
   await ready(8095,"/api/healthz",api);await ready(8096,"/readyz",worker);
-  for(const [path,method] of [["/api/v1/workspace","GET"],["/api/admin/staff-roles","GET"],["/api/paystack/webhook","POST"],["/","GET"]]){
+  for(const [path,method] of [["/api/workspace","GET"],["/api/admin/staff-roles","GET"],["/api/webhooks/paystack","POST"],["/api/public/catalogue","GET"],["/","GET"]]){
     const r=await fetch("http://127.0.0.1:8095"+path,{method});assert.equal(r.status,503);assert.equal((await r.json() as {code:string}).code,"PRODUCTION_REHEARSAL_ONLY");
   }
   report.apiReady=true;report.realProductionWorkerReady=true;report.customerAndWebhookRoutesClosed=true;
