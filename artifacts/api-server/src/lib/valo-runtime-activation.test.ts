@@ -19,6 +19,7 @@ const env = {
   VALO_EXTERNAL_MONITORING: "healthchecks",
   VALO_WORKER_MONITOR_URL: "https://hc-ping.com/" + "11111111-1111-4111-8111-111111111111",
   VALO_OPERATIONS_MONITOR_URL: "https://hc-ping.com/" + "22222222-2222-4222-8222-222222222222",
+  VALO_TRUSTED_PROXY_CIDRS: "10.0.0.0/8",
   SESSION_SECRET: "synthetic-production-rehearsal-only-key",
   VALO_CUSTOMER_AI_ENABLED: "false",
   VALO_SANDBOX_CHECKOUT_ENABLED: "false",
@@ -78,6 +79,11 @@ test("production activation cannot be granted by configuration inspection or a d
   ])
     for (const value of [undefined, "true"])
       assert.throws(() => rehearsalConfiguration({ ...env, [name]: value }), /EFFECTS_MUST_BE_DISABLED/);
+  for (const proxies of [undefined, "", "  "])
+    assert.throws(
+      () => rehearsalConfiguration({ ...env, VALO_TRUSTED_PROXY_CIDRS: proxies }),
+      /PRODUCTION_REHEARSAL_CONFIGURATION_REQUIRED/,
+    );
   assert.throws(
     () => rehearsalConfiguration({ ...env, VALO_ISOLATED_RECOVERY: "synthetic-local-only" }),
     /RECOVERY_CANNOT/,

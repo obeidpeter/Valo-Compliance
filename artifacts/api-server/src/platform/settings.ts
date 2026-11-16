@@ -239,6 +239,10 @@ export const SETTINGS = {
     group: "Operator commands",
     description: "Opt-in for the production storage isolation probe.",
   },
+  VALO_STAFF_BOOTSTRAP: {
+    group: "Operator commands",
+    description: "`first-system-administrator` to confirm the one-time first administrator bootstrap.",
+  },
   VALO_MONITORING_PROBE: {
     group: "Operator commands",
     description: "Opt-in for the external monitoring delivery probe.",

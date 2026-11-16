@@ -314,3 +314,111 @@ export function makeStaffRoleService(verifyTarget: TargetVerifier = verifyManage
   };
 }
 export const staffRoleService = makeStaffRoleService();
+
+export type FirstAdministratorInput = { identityId: string; operator: string; reason: string };
+const MANAGED_IDENTITY = /^user_[A-Za-z0-9_-]{1,120}$/;
+const OPERATOR_LABEL = /^[A-Za-z0-9._@-]{3,80}$/;
+
+function firstAdministratorInput(raw: FirstAdministratorInput): FirstAdministratorInput {
+  const input = { identityId: raw.identityId, operator: raw.operator, reason: raw.reason.trim() };
+  if (!MANAGED_IDENTITY.test(input.identityId))
+    throw new ValoProblem(422, "Use the managed account's user ID (user_...).");
+  if (!OPERATOR_LABEL.test(input.operator))
+    throw new ValoProblem(422, "Name the operator with 3-80 letters, digits or . _ @ -.");
+  if (input.reason.length < 20 || input.reason.length > 1000)
+    throw new ValoProblem(422, "Explain the bootstrap in 20-1000 characters.");
+  return input;
+}
+
+/**
+ * Creates the first permanent system administrator inside an existing transaction.
+ * Refuses when any active permanent system administrator exists, so it can never
+ * add a second administrator or bypass the audited role service. The role change is
+ * recorded like any other; its actor is the named operator and, because no earlier
+ * administrator exists, its actor assignment is the new assignment itself.
+ */
+export async function bootstrapFirstSystemAdministratorIn(
+  tx: Tx,
+  raw: FirstAdministratorInput,
+  target: StaffTarget,
+) {
+  const input = firstAdministratorInput(raw);
+  assertTarget(target, input.identityId);
+  await tx.execute(sql`SET LOCAL lock_timeout='5s'`);
+  await tx.execute(sql`SET LOCAL statement_timeout='10s'`);
+  // Same lock as every role change, so a concurrent grant cannot race the bootstrap.
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended('valo:staff-role-changes:v1',0))`);
+  const permanent = await tx
+    .select({ id: valoStaffAssignments.id })
+    .from(valoStaffAssignments)
+    .where(
+      and(
+        eq(valoStaffAssignments.role, "system"),
+        eq(valoStaffAssignments.grantMode, "permanent"),
+        activeStaffAssignment(),
+      ),
+    );
+  if (permanent.length)
+    throw new ValoProblem(
+      409,
+      "A permanent system administrator already exists. Use staff role administration to grant access.",
+    );
+  const clock = await tx.execute(sql`SELECT clock_timestamp() AS current_time`),
+    now = new Date(String(clock.rows[0]!.current_time));
+  const actorId = `operator-bootstrap:${input.operator}`;
+  const [old] = await tx
+    .select()
+    .from(valoStaffAssignments)
+    .where(
+      and(eq(valoStaffAssignments.identityId, input.identityId), eq(valoStaffAssignments.role, "system")),
+    )
+    .for("update");
+  const grant = {
+    active: true,
+    grantMode: "permanent" as const,
+    expiresAt: null,
+    grantedAt: now,
+    grantedBy: actorId,
+    reason: input.reason,
+  };
+  const [next] = old
+    ? await tx
+        .update(valoStaffAssignments)
+        .set({ ...grant, version: old.version + 1 })
+        .where(eq(valoStaffAssignments.id, old.id))
+        .returning()
+    : await tx
+        .insert(valoStaffAssignments)
+        .values({ id: randomUUID(), identityId: input.identityId, role: "system", ...grant })
+        .returning();
+  const [receipt] = await tx
+    .insert(valoStaffRoleChanges)
+    .values({
+      id: randomUUID(),
+      requestKey: randomUUID(),
+      inputHash: createHash("sha256").update(JSON.stringify(input)).digest("hex"),
+      actorId,
+      actorAssignmentId: next!.id,
+      assignmentId: next!.id,
+      targetIdentityId: input.identityId,
+      action: "grant",
+      role: "system",
+      reason: input.reason,
+      incidentReference: null,
+      before: old ? assignmentView(old) : null,
+      after: assignmentView(next!),
+      targetVerifiedAt: new Date(target.verifiedAt),
+    })
+    .returning();
+  return changeView(receipt!);
+}
+
+/** Operator entry point: verifies the managed account, then bootstraps in one transaction. */
+export async function bootstrapFirstSystemAdministrator(
+  raw: FirstAdministratorInput,
+  verifyTarget: TargetVerifier = verifyManagedTarget,
+) {
+  const input = firstAdministratorInput(raw);
+  const target = await verifyTarget(input.identityId);
+  return db.transaction((tx) => bootstrapFirstSystemAdministratorIn(tx, input, target));
+}

@@ -13,3 +13,19 @@ Validation registered in normal CI includes actual disposable PostgreSQL races, 
 Phase 2 integrates the merged Phase 1 foundation (`994b1f6`) and registers the unapplied staff migration as `0032_staff_role_governance.sql`, index 31, timestamp 1794705000003. The original branch's reserved 0034 number and older timestamp must not be used: Drizzle would skip that timestamp on a tracked 0031 database. All 31 applied SQL files remain unchanged. Other unmerged branches must renumber their pending migrations after this one when integrating.
 
 The database rejects emergency assignments with NULL expiry or durations outside 5–60 minutes. Privacy and operational reads carry the server verification timestamp and recheck its freshness after assignment lock waits. The PostgreSQL suite observes actual blocking before letting that verification expire; both reads must deny access. See [the Phase 2 migration plan](phase2-staff-migration-plan.md) for the tracked and unadopted development paths, preservation tests and rollback boundaries.
+
+## First administrator
+
+The first permanent system administrator is created once with the shipped
+operator command, never with hand-written SQL:
+
+```sh
+VALO_STAFF_BOOTSTRAP=first-system-administrator \
+  node artifacts/api-server/dist/staff-bootstrap.mjs <user_id> <operator-label> "<reason, 20+ characters>"
+```
+
+It verifies the managed account is active with a verified primary email, takes
+the same lock as every role change, refuses when any permanent system
+administrator already exists, and records an ordinary immutable role change whose
+actor is `operator-bootstrap:<operator-label>`. All later grants go through staff
+role administration.

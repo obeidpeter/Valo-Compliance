@@ -76,7 +76,7 @@
     "test:valo-workspace-export-controls": "node --experimental-test-module-mocks --import tsx --test src/lib/valo-workspace-export-storage.test.ts ../valo/src/lib/workspace-export-jobs.test.ts",
     "test:valo-workspace-export-convergence-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-export-convergence.integration.test.ts src/lib/valo-workspace-export-controls.integration.test.ts",
     "test:valo-dispute-browser": "VALO_RUN_DISPUTE_BROWSER=synthetic-development-only NODE_ENV=development node --import tsx src/scripts/dispute-workflow-browser.ts",
-    "test:valo-staff-roles": "NODE_ENV=development VALO_RUN_STAFF_ROLE_TESTS=synthetic-development-only tsx --test src/lib/valo-staff-roles.integration.test.ts",
+    "test:valo-staff-roles": "NODE_ENV=development VALO_RUN_STAFF_ROLE_TESTS=synthetic-development-only tsx --test --test-concurrency=1 src/lib/valo-staff-roles.integration.test.ts src/lib/valo-staff-bootstrap.integration.test.ts",
     "test:valo-staff-role-browser": "NODE_ENV=development VALO_RUN_STAFF_ROLE_BROWSER=synthetic-development-only tsx src/scripts/staff-role-browser.ts",
     "test:valo-production-rehearsal": "tsx src/scripts/production-rehearsal-drill.ts",
     "content:preparation-readiness": "tsx src/scripts/content-preparation-readiness.ts",

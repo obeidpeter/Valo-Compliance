@@ -36,7 +36,9 @@ export function rehearsalConfiguration(env: Environment) {
     ) ||
     env.VALO_EXTERNAL_MONITORING !== "healthchecks" ||
     !env.VALO_WORKER_MONITOR_URL ||
-    !env.VALO_OPERATIONS_MONITOR_URL
+    !env.VALO_OPERATIONS_MONITOR_URL ||
+    // Without trusted proxy ranges every anonymous client behind the ingress shares one quota.
+    !env.VALO_TRUSTED_PROXY_CIDRS?.trim()
   )
     fail("PRODUCTION_REHEARSAL_CONFIGURATION_REQUIRED");
   for (const name of [

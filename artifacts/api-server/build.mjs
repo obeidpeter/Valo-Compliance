@@ -24,6 +24,7 @@ async function buildAll() {
       "export-retention-inventory": path.resolve(artifactDir, "src/scripts/export-retention-inventory.ts"),
       "production-storage-probe": path.resolve(artifactDir, "src/scripts/production-storage-probe.ts"),
       "monitoring-probe": path.resolve(artifactDir, "src/scripts/monitoring-probe.ts"),
+      "staff-bootstrap": path.resolve(artifactDir, "src/scripts/staff-bootstrap.ts"),
     },
     platform: "node",
     bundle: true,

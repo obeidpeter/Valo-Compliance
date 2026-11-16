@@ -13,6 +13,7 @@ const shipped = new Set([
   "scripts/export-retention-inventory.ts",
   "scripts/production-storage-probe.ts",
   "scripts/monitoring-probe.ts",
+  "scripts/staff-bootstrap.ts",
 ]);
 
 function productFiles(directory: string): string[] {

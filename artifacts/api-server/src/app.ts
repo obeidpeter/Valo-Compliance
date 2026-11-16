@@ -18,6 +18,7 @@ import { logger } from "./lib/logger";
 import { requestReadQuota } from "./middlewares/valo-quota";
 import { paystackWebhookRouter } from "./routes/valo-paystack-webhook";
 import { configureProxyBoundary } from "./lib/valo-proxy-boundary";
+import { trustedSiteOrigin } from "./lib/valo-site-origin";
 
 const app: Express = express();
 configureProxyBoundary(app);
@@ -55,13 +56,20 @@ app.use(paystackWebhookRouter);
 app.use(express.json({ limit: "128kb", inflate: false }));
 app.use(requestComplexityLimit);
 app.use(
-  clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(getClerkProxyHost(req) ?? "", setting("CLERK_PUBLISHABLE_KEY")),
-  })),
+  clerkMiddleware((req) => {
+    // Accept only session tokens issued for the trusted site origin (the same origin writes require).
+    const origin = trustedSiteOrigin();
+    return {
+      publishableKey: publishableKeyFromHost(getClerkProxyHost(req) ?? "", setting("CLERK_PUBLISHABLE_KEY")),
+      ...(origin ? { authorizedParties: [origin] } : {}),
+    };
+  }),
 );
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "same-origin");
+  // Browsers ignore HSTS on plain HTTP, so this is safe in local development.
+  res.setHeader("Strict-Transport-Security", "max-age=31536000");
   next();
 });
 

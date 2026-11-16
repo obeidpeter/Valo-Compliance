@@ -13,6 +13,8 @@ export function middleware(request: NextRequest) {
   response.headers.set("Content-Security-Policy", policy);
   response.headers.set("Cache-Control", "private, no-store, max-age=0");
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  // Browsers ignore HSTS on plain HTTP, so this is safe in local development.
+  response.headers.set("Strict-Transport-Security", "max-age=31536000");
   return response;
 }
 export const config = { matcher: ["/((?!api(?:/|$)|_next/static|_next/image|favicon\\.svg|logo\\.svg).*)"] };
