@@ -76,7 +76,9 @@ async function ready(port: number, path: string, process: ChildProcess) {
         await r.body?.cancel();
         return;
       }
-    } catch {}
+    } catch {
+      // Expected while the process is still starting; keep polling.
+    }
     await new Promise((r) => setTimeout(r, 250));
   }
   throw Error("RUNTIME_READY_TIMEOUT");

@@ -25,6 +25,7 @@ try {
   await client.query("COMMIT");
   console.log(JSON.stringify(result));
 } catch {
+  // Best-effort rollback; the failure itself is reported below.
   await client?.query("ROLLBACK").catch(() => {});
   console.error("EMPTY_REHEARSAL_BOOTSTRAP_FAILED");
   process.exitCode = 1;

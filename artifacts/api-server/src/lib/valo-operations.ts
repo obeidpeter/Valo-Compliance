@@ -52,6 +52,7 @@ async function atomicJson(file: string, value: unknown) {
   try {
     await rename(temp, file);
   } finally {
+    // After a successful rename the temporary file is already gone; otherwise this is best-effort cleanup.
     await unlink(temp).catch(() => {});
   }
 }
@@ -159,10 +160,14 @@ async function recordOperationalAlertsLocked(sample: OperationalSample, director
             try {
               process.kill(pid, 0);
               alive = true;
-            } catch {}
+            } catch {
+              // Expected: signal 0 throws when the lock holder no longer exists.
+            }
           if (!alive) await unlink(lock);
         }
-      } catch {}
+      } catch {
+        // Expected race: another process released or replaced the lock; retry below.
+      }
       await new Promise((r) => setTimeout(r, 10));
     }
   }

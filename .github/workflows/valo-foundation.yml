@@ -91,6 +91,12 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
+      - name: Check formatting and repository rules
+        run: pnpm run lint
+      - name: Check the generated API client matches the contract
+        run: |
+          pnpm --filter @workspace/api-spec run codegen
+          git diff --exit-code -- lib/api-zod lib/api-client-react
       - name: Reject first-factor-only staff sessions and untrusted proxy chains
         run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-managed-session.test.ts src/lib/valo-proxy-boundary.test.ts ../valo/src/lib/content-security-policy.test.ts
       - name: Prove bounded native workspace storage and versioned UI helpers

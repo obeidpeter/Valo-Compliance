@@ -50,6 +50,7 @@ async function main() {
     );
     console.log("NATIVE_STORAGE_DEPENDENCY_COMPATIBILITY_PASSED");
   } finally {
+    // Best-effort cleanup of the synthetic object.
     await deletePrivateFile(key).catch(() => {});
   }
 }

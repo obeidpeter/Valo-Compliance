@@ -66,6 +66,9 @@ Rules that apply now:
 - Change the API contract in `lib/api-spec/openapi.yaml`, then run
   `pnpm --filter @workspace/api-spec run codegen`. Never edit generated files.
 - Validate all request input with the generated Zod schemas.
+- An empty `catch` or `.catch(() => {})` needs a comment saying why the error is
+  ignored. Prefer logging it. New import cycles fail CI.
+- Run `pnpm run format` before committing; CI rejects unformatted code.
 - Domain failures throw `ValoProblem` with a safe customer message. Never put
   private data in error messages or logs.
 - Every customer query is scoped to the server-resolved workspace. Never accept
@@ -76,6 +79,7 @@ Rules that apply now:
 ```sh
 pnpm install --frozen-lockfile
 pnpm run typecheck
+pnpm run lint        # formatting and repository rules
 pnpm --filter @workspace/scripts test:valo
 pnpm --filter @workspace/api-server test:valo
 ```

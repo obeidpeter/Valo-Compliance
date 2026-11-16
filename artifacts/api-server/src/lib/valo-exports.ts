@@ -428,6 +428,7 @@ export async function executeExport(
     )
       throw new Error("REVISION_INTEGRITY_FAILED");
     const rendering = renderDocument(savedInput, job.format, job.revision);
+    // Only prevents an unhandled rejection while onStage runs; `await rendering` below rethrows it.
     void rendering.catch(() => {});
     await onStage?.("rendering");
     const bytes = await rendering;

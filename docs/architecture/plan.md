@@ -41,11 +41,15 @@ Measured on the integration branch at `14c8f38`:
 
 | Item | Status |
 | --- | --- |
-| Formatter and linter, one mechanical reformat commit | not started |
-| Full TypeScript strictness | not started |
+| Prettier formatter, one mechanical reformat commit, CI format check | done |
+| Repository rules checker (empty catches need a reason; no new import cycles) in CI | done |
+| ESLint | blocked (adding any dependency fails the supply-chain checks on already-locked packages: `pino` 9.14.0 trust downgrade; `pg-boss` 12.38.2 and `@scalar/openapi-parser` inside the 7-day window until about 17 November). Fix by upgrading `pino` to a release with provenance, then add ESLint. |
+| TypeScript: strictFunctionTypes, noUnusedLocals/Parameters, noImplicitOverride | done |
+| TypeScript: exactOptionalPropertyTypes (91 errors), noUncheckedIndexedAccess (825) | not started |
+| Generated API client checked against the contract in CI | done |
 | Typed settings module with startup validation and `.env.example` | not started |
 | One test command with lanes and its own database | not started |
-| Delete unused UI kit, packages, `mockup-sandbox` | not started |
+| Delete unused UI kit, packages, `mockup-sandbox` | in progress (`mockup-sandbox` removed; its lockfile entry is pruned once the lockfile can change) |
 | Safe error logging; no silently discarded errors | not started |
 
 Exit: CI rejects unformatted code, stray environment reads and discarded errors.

@@ -79,6 +79,7 @@ async function check(name: string, fn: () => Promise<void>) {
     await fn();
     checks.push({ name, status: "pass" });
   } catch (error) {
+    // Best-effort diagnostics for an already failed check.
     const safe = await page
       ?.evaluate(
         `({path:location.pathname,headings:document.querySelectorAll("main h1").length,
@@ -649,6 +650,7 @@ try {
         response.request().method() === "GET" &&
         response.status() === 200
       ) {
+        // A non-JSON response simply does not match the expected listing.
         const value = await response.json().catch(() => null);
         if (
           value?.items?.some(

@@ -35,6 +35,7 @@ const payload = z.object({ jobId: z.string().uuid(), workspaceId: z.string().uui
 const boss = exportQueue();
 const health = new WorkerHealth();
 let heartbeatWrite = Promise.resolve();
+const heartbeatPublishFailed = () => logger.warn({ event: "worker.heartbeat_publish_failed" });
 function publishHeartbeat() {
   const snapshot = health.snapshot(),
     next = heartbeatWrite.then(() => recordWorkerHeartbeat(snapshot));
@@ -42,13 +43,14 @@ function publishHeartbeat() {
     if (process.env.VALO_SUPERVISED_WORKER === "ipc-v1" && process.connected && process.send)
       process.send({ type: "valo.worker.health", heartbeat: snapshot }, () => {});
   });
+  // Keeps later heartbeats serialised after a failed write; callers receive the failure via `published`.
   heartbeatWrite = published.catch(() => {});
   return published;
 }
 boss.on("error", () => {
   health.fail();
   logger.error({ event: "queue.database_error" });
-  void publishHeartbeat().catch(() => {});
+  void publishHeartbeat().catch(heartbeatPublishFailed);
 });
 let timer: ReturnType<typeof setInterval> | undefined;
 let dispatching = false;
@@ -62,7 +64,8 @@ async function stop() {
   health.drain();
   clearInterval(timer);
   await drainWithDeadline(async () => {
-    await publishHeartbeat().catch(() => {});
+    await publishHeartbeat().catch(heartbeatPublishFailed);
+    // Startup failures are already logged as export.startup_failed.
     await startup.catch(() => {});
     await Promise.all([boss.stop({ graceful: true, timeout: 60000 }), dispatchIdle]);
     await closePrivacyErasureLocks();
@@ -240,7 +243,7 @@ async function dispatch() {
     } catch {
       health.fail();
       logger.error({ event: "operations.internal_probe_failed" });
-      await publishHeartbeat().catch(() => {});
+      await publishHeartbeat().catch(heartbeatPublishFailed);
     }
     dispatching = false;
     finishDispatch();
@@ -254,7 +257,7 @@ try {
       timer = setInterval(() => {
         void dispatch().catch(() => {
           health.fail();
-          void publishHeartbeat().catch(() => {});
+          void publishHeartbeat().catch(heartbeatPublishFailed);
         });
       }, 3000);
   }

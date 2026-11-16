@@ -58,7 +58,9 @@ try {
         ready = true;
         break;
       }
-    } catch {}
+    } catch {
+      // Expected while the server is still starting; keep polling.
+    }
     await delay(250);
   }
   assert.ok(ready, "compiled Next server starts");

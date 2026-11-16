@@ -353,6 +353,7 @@ try {
       .then((value) => {
         peak = Math.max(peak, value);
       })
+      // Sampling is best-effort; the page may be closing.
       .catch(() => {});
   }, 10);
   const event = page.waitForEvent("download");

@@ -50,6 +50,7 @@ async function check(name: string, fn: () => Promise<void>) {
     process.exitCode = 1;
     logger.error({ event: "checker.journey_check_failed", check: name, phase, diagnostic });
     if (name.startsWith("task_") && page?.url().includes("/workspace/tasks"))
+      // Best-effort failure capture; the failed check is already recorded above.
       await page
         .screenshot({
           path: fileURLToPath(
