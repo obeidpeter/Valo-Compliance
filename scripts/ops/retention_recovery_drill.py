@@ -18,7 +18,11 @@ def command(name,args,values=env,cwd=repo,timeout=120):
  return (run/(name+'.log')).read_text(encoding='utf-8')
 try:
  command('initdb',['initdb','-D',str(data),'-U','valo_retention_test','--auth=trust','--no-locale','-E','UTF8'])
- with (data/'postgresql.conf').open('a') as file:file.write("\nlisten_addresses='127.0.0.1'\nport="+str(port)+"\n")
+ with (data/'postgresql.conf').open('a') as file:
+  file.write("\nlisten_addresses='127.0.0.1'\nport="+str(port)+"\n")
+  # Every fixture uses loopback TCP. Do not inherit a distribution's shared
+  # socket directory, which the unprivileged CI runner cannot write.
+  if os.name=='posix':file.write("unix_socket_directories=''\n")
  command('start',['pg_ctl','-D',str(data),'-l',str(run/'postgres.log'),'-w','start']);started=True
  values={**env,'DATABASE_URL':f'postgresql://valo_retention_test@127.0.0.1:{port}/postgres','NODE_ENV':'development',
   'VALO_RETENTION_RECOVERY':'synthetic-local-only','VALO_ISOLATED_RECOVERY':'synthetic-local-only',
@@ -30,14 +34,20 @@ try:
  report.update(passed=True,testOutput=output)
 except Exception as error:
  report['errorCode']=str(error);report['logDirectory']=str(run)
- if (run/'retention.log').exists():print((run/'retention.log').read_text(encoding='utf-8'))
+ report['diagnostics']={name:(run/name).read_text(encoding='utf-8',errors='replace')[-8000:]
+                        for name in ('initdb.log','start.log','postgres.log','retention.log') if (run/name).exists()}
 finally:
- if started:command('stop',['pg_ctl','-D',str(data),'-m','fast','-w','stop'])
- report['clusterStopped']=True
+ # A failed/timed-out start can still leave a server behind. Stop that exact
+ # disposable cluster before removing anything, and retain it if stop fails.
+ if started or (data/'postmaster.pid').exists():
+  try:command('stop',['pg_ctl','-D',str(data),'-m','fast','-w','stop'])
+  except Exception:report.update(passed=False,cleanupError='DISPOSABLE_CLUSTER_STOP_FAILED')
+ report['clusterStopped']=not (data/'postmaster.pid').exists()
+ if not report['clusterStopped']:report.update(passed=False,logDirectory=str(run))
  # Delete only our verified newly created child, after PostgreSQL has stopped.
  assert run.parent==parent and run.name.startswith('valo-retention-recovery-') and not run.is_symlink()
- if report['passed']:shutil.rmtree(run);report['disposableDataRemoved']=True
- else:
+ if report['passed'] and report['clusterStopped']:shutil.rmtree(run);report['disposableDataRemoved']=True
+ elif report['clusterStopped']:
   for name in ('data','objects'):
    target=run/name
    if target.exists():assert target.resolve().parent==run and not target.is_symlink();shutil.rmtree(target)
