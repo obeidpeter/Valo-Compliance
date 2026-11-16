@@ -3741,6 +3741,7 @@ components:
         checksum: { type: [string, "null"] }
         size: { type: [integer, "null"] }
         downloadUrl: { type: [string, "null"] }
+        expiresAt: { type: [string, "null"], format: date-time }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
     DocumentBlock:

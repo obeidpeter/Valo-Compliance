@@ -11,6 +11,8 @@ import { readPrivateFile, writePrivateFile, deletePrivateFile } from "./valo-pri
 import { documentInput } from "./valo-validation";
 import {EXPORT_HEARTBEAT_MS,EXPORT_LEASE_MS,recoverAbandonedExports} from "./valo-export-recovery";
 import {assertApplicationRuntime,runtimeEnvironment} from "./valo-runtime-activation";
+import {EXPORT_EXPIRED,exportIsExpired,exportRetentionAt,retireExpiredExport} from "./valo-export-retention";
+import {privateCleanupAuthority} from "./valo-private-cleanup-authority";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export function developmentExportsOnly() {
@@ -28,11 +30,13 @@ export async function assertExportActor(actor: WorkspaceActor, connection: typeo
   if(erased)throw new ValoProblem(404,"Export not found or access revoked");
 }
 function publicJob(job: typeof valoExportJobs.$inferSelect, asset?: typeof valoFileAssets.$inferSelect | null) {
+  const expired=job.status==="ready"&&exportIsExpired(asset);
   return CreateDocumentExportResponse.parse({
     id:job.id, documentId:job.documentId, revisionId:job.revisionId, revision:job.revision, format:job.format,
-    renderVersion:job.renderVersion, sourceHash:job.sourceHash, status:job.status, attempts:job.attempts,
-    errorCode:job.errorCode, checksum:asset?.checksum ?? null, size:asset?.size ?? null,
-    downloadUrl:job.status === "ready" && asset ? `/api/v1/exports/${job.id}/file` : null,
+    renderVersion:job.renderVersion, sourceHash:job.sourceHash, status:expired?"failed":job.status, attempts:job.attempts,
+    errorCode:expired?EXPORT_EXPIRED:job.errorCode, checksum:asset?.checksum ?? null, size:asset?.size ?? null,
+    expiresAt:asset?.retentionAt?.toISOString()??null,
+    downloadUrl:job.status === "ready" && asset && !expired ? `/api/v1/exports/${job.id}/file` : null,
     createdAt:job.createdAt.toISOString(), updatedAt:job.updatedAt.toISOString(),
   });
 }
@@ -99,24 +103,34 @@ export async function retryExport(actor: WorkspaceActor, id: string) {
   await recoverAbandonedExports(id);
   await db.transaction(async tx => {
     await assertExportActor(actor,tx);
+    const cleanup=await privateCleanupAuthority(tx,actor.workspaceId);
     const [job] = await tx.select().from(valoExportJobs).where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,actor.workspaceId))).for("update");
     if (!job) throw new ValoProblem(404,"Export not found");
     await authorizeWorkspaceWrite(tx,actor);
-    if (job.status !== "failed") return;
-    if (job.retryCycles >= 3) throw new ValoProblem(409,"Retry limit reached. Your saved draft is safe; contact support.");
-    await tx.update(valoExportJobs).set({ status:"queued", attempts:0, leaseRecoveries:0,retryCycles:job.retryCycles+1, queueId:randomUUID(), errorCode:null, updatedAt:new Date() })
+    const [asset]=await tx.select().from(valoFileAssets).where(eq(valoFileAssets.jobId,id)).for("update");
+    const regenerate=job.errorCode===EXPORT_EXPIRED||job.status==="ready"&&exportIsExpired(asset);
+    if(regenerate&&!cleanup.allowed)throw new ValoProblem(409,"Export regeneration is held for privacy review. Your saved draft is safe.");
+    if(job.status==="ready"&&asset&&exportIsExpired(asset))await retireExpiredExport(tx,job,asset);
+    if (job.status !== "failed"&&!regenerate) return;
+    if (!regenerate&&job.retryCycles >= 3) throw new ValoProblem(409,"Retry limit reached. Your saved draft is safe; contact support.");
+    await tx.update(valoExportJobs).set({ status:"queued", attempts:0, leaseRecoveries:0,retryCycles:regenerate?0:job.retryCycles+1, queueId:randomUUID(), errorCode:null, updatedAt:new Date() })
       .where(eq(valoExportJobs.id,id));
-    await tx.insert(valoEvents).values({ id:randomUUID(),workspaceId:actor.workspaceId,actorId:actor.identityId,action:"export.retry_requested",entityId:id,revision:job.revision });
+    await tx.insert(valoEvents).values({ id:randomUUID(),workspaceId:actor.workspaceId,actorId:actor.identityId,action:regenerate?"export.regeneration_requested":"export.retry_requested",entityId:id,revision:job.revision });
   });
   const row = await getExport(actor,id);
   return publicJob(row.job,row.asset);
 }
 export async function downloadExport(actor: WorkspaceActor, id: string) {
   const { job, asset } = await getExport(actor,id);
+  if(job.errorCode===EXPORT_EXPIRED)throw new ValoProblem(410,"Export expired. Regenerate it from your saved revision.");
   if (job.status !== "ready" || !asset) throw new ValoProblem(404,"Export is not ready");
+  if(exportIsExpired(asset))throw new ValoProblem(410,"Export expired. Regenerate it from your saved revision.");
   const bytes = await readPrivateFile(asset.objectKey,asset.checksum);
   if (bytes.length !== asset.size || asset.mime !== exportMime[job.format]) throw new Error("PRIVATE_FILE_BINDING_MISMATCH");
   await assertExportActor(actor);
+  const current=await getExport(actor,id);
+  if(current.job.status!=="ready"||current.asset?.id!==asset.id||exportIsExpired(current.asset))
+    throw new ValoProblem(410,"Export availability changed during retrieval. Regenerate it from your saved revision.");
   return { bytes, mime:asset.mime, filename:`valo-business-draft-r${job.revision}.${job.format}` };
 }
 /** Worker entry: load scoped immutable inputs afresh; never trust queue-supplied document bodies or paths. */
@@ -212,7 +226,7 @@ export async function executeExport(id: string, workspaceId: string, queueId: st
         eq(valoMemberships.identityId,actor.identityId),eq(valoMemberships.active,"yes"),eq(valoMemberships.role,"owner"))).for("update");
       if (!membership) throw new Error("EXPORT_ACCESS_REVOKED");
       await authorizeWorkspaceWrite(tx,actor);
-      await tx.insert(valoFileAssets).values({id:assetId,workspaceId,jobId:id,objectKey,...stored,mime:exportMime[job.format]});
+      await tx.insert(valoFileAssets).values({id:assetId,workspaceId,jobId:id,objectKey,...stored,mime:exportMime[job.format],retentionAt:exportRetentionAt()});
       await tx.update(valoExportObjects).set({state:"retained"}).where(eq(valoExportObjects.objectKey,objectKey));
       await tx.update(valoExportJobs).set({status:"ready",errorCode:null,updatedAt:new Date()}).where(and(eq(valoExportJobs.id,id),eq(valoExportJobs.workspaceId,workspaceId)));
       await tx.insert(valoEvents).values({id:randomUUID(),workspaceId,actorId:"service:export-worker",action:"export.ready",entityId:id,revision:job.revision});

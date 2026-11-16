@@ -8,6 +8,9 @@ export const readinessQueries={
   database:"SELECT 1 AS value",
   exports:"SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_export_jobs WHERE status IN ('queued','running') LIMIT 10001) bounded",
   cleanup:"SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_export_objects WHERE state='cleanup' AND next_cleanup_at<=now() LIMIT 10001) bounded",
+  exportRetention:`SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_file_assets a
+    JOIN valo_export_jobs j ON j.id=a.job_id AND j.workspace_id=a.workspace_id
+    WHERE j.status='ready' AND a.retention_at<=now() LIMIT 10001) bounded`,
   workspaceCleanup:`SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_workspace_export_attempts a
     JOIN valo_workspace_exports j ON j.id=a.job_id AND j.workspace_id=a.workspace_id
     WHERE (a.status='cleanup' OR j.status IN ('cancelled','expired'))
@@ -17,8 +20,8 @@ export const readinessQueries={
     OR NOT EXISTS(SELECT 1 FROM valo_purchase_outbox r WHERE r.order_id=o.id AND r.workspace_id=o.workspace_id AND r.kind='purchase_receipt')) LIMIT 10001) bounded`,
 }as const;
 type Metric={status:"ok"|"unavailable";value:number|null;elapsedMs:number};
-export type OperationalSample={checkedAt:string;scope:"development-project-local"|"production-rehearsal-local";database:Metric;exports:Metric;cleanup:Metric;workspaceCleanup:Metric;payments:Metric;
-  worker:{status:"healthy"|"stale"|"unavailable";ageMs:number|null};limits:{exports:number;cleanup:number;workspaceCleanup:number;workerAgeMs:number}};
+export type OperationalSample={checkedAt:string;scope:"development-project-local"|"production-rehearsal-local";database:Metric;exports:Metric;cleanup:Metric;exportRetention:Metric;workspaceCleanup:Metric;payments:Metric;
+  worker:{status:"healthy"|"stale"|"unavailable";ageMs:number|null};limits:{exports:number;cleanup:number;exportRetention:number;workspaceCleanup:number;workerAgeMs:number}};
 async function atomicJson(file:string,value:unknown){
   const temp=file+"."+randomUUID()+".tmp";const fd=await open(temp,"wx",0o600);
   try{await fd.writeFile(JSON.stringify(value));await fd.sync();}finally{await fd.close();}
@@ -50,7 +53,7 @@ export async function collectOperationalSample(query:(sql:string)=>Promise<{rows
     worker={status:ageMs>90000?"stale":workerReadiness(heartbeat),ageMs};
   }catch{/* Absence, malformed data or a dead worker is not a healthy heartbeat. */}
   return{...Object.fromEntries(metrics),checkedAt:new Date().toISOString(),scope:runtimeEnvironment()==="production"?"production-rehearsal-local":"development-project-local",
-    worker,limits:{exports:100,cleanup:0,workspaceCleanup:0,workerAgeMs:90000}}as OperationalSample;
+    worker,limits:{exports:100,cleanup:0,exportRetention:0,workspaceCleanup:0,workerAgeMs:90000}}as OperationalSample;
 }
 type Alert={id:string;at:string;code:string;state:"active"|"resolved"};
 type AlertState={sequence:number;active:string[];events:Alert[];sample?:OperationalSample};
@@ -89,8 +92,8 @@ async function recordOperationalAlertsLocked(sample:OperationalSample,directory:
     const active:string[]=[];
     if(sample.database.status!=="ok"||sample.database.value!==1)active.push("DATABASE_UNAVAILABLE");
     if(sample.worker.status!=="healthy")active.push("WORKER_UNAVAILABLE");
-    for(const name of ["exports","cleanup","workspaceCleanup","payments"]as const){
-      const code=name==="workspaceCleanup"?"WORKSPACE_CLEANUP":name.toUpperCase();
+    for(const name of ["exports","cleanup","exportRetention","workspaceCleanup","payments"]as const){
+      const code=name==="workspaceCleanup"?"WORKSPACE_CLEANUP":name==="exportRetention"?"EXPORT_RETENTION":name.toUpperCase();
       const metric=sample[name];if(metric.status!=="ok")active.push(code+"_PROBE_UNAVAILABLE");
       else if(metric.value!>(name==="payments"?0:sample.limits[name]))active.push(code+"_BACKLOG");
     }

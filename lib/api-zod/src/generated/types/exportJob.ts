@@ -26,6 +26,8 @@ export interface ExportJob {
   size: number | null;
   /** @nullable */
   downloadUrl: string | null;
+  /** @nullable */
+  expiresAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
