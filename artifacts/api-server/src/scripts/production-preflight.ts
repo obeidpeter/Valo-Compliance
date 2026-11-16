@@ -1,9 +1,13 @@
+import {initializeApplicationRuntime} from "../lib/valo-runtime-activation";
 import {productionPreflight} from "../lib/valo-production-readiness";
 const args=process.argv.slice(2);
-if(args.length>1||args.length===1&&args[0]!=="--configuration-only"){
-  console.error("USAGE: production-preflight [--configuration-only]");process.exitCode=1;
+if(args.length>1||args.length===1&&!["--configuration-only","--activate-rehearsal"].includes(args[0])){
+  console.error("USAGE: production-preflight [--configuration-only|--activate-rehearsal]");process.exitCode=1;
 }else{
   const report=productionPreflight(process.env);console.log(JSON.stringify(report,null,2));
   // Default invocation remains nonzero while launch evidence/approval is absent.
-  process.exitCode=report.configurationValid?(args[0]==="--configuration-only"?0:2):1;
+  if(args[0]==="--activate-rehearsal"){
+    try{await initializeApplicationRuntime();console.log(JSON.stringify({runtimeReady:true,launchReady:false,customerTrafficEnabled:false}));}
+    catch{console.error("PRODUCTION_REHEARSAL_PREFLIGHT_FAILED");process.exitCode=1;}
+  }else process.exitCode=report.configurationValid?(args[0]==="--configuration-only"?0:2):1;
 }

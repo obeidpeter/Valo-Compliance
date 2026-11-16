@@ -1,10 +1,10 @@
 import {randomUUID} from "node:crypto";
 import {and,eq,inArray,lte,sql} from "drizzle-orm";
 import {db,valoExportJobs,valoExportObjects,valoFileAssets,valoEvents,valoPrivacyTombstones} from "@workspace/db";
-import {assertErasureObjectScope} from "./valo-erasure-seal";
+import {assertRuntimeObjectScope} from "./valo-runtime-activation";
 import {deletePrivateFile} from "./valo-private-storage";
 import {privateCleanupAuthority} from "./valo-private-cleanup-authority";
-import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {assertApplicationRuntime} from "./valo-runtime-activation";
 
 export const EXPORT_LEASE_MS=90_000;
 export const EXPORT_HEARTBEAT_MS=10_000;
@@ -13,7 +13,7 @@ export const EXPORT_HEARTBEAT_MS=10_000;
  * Rotate the generation before redispatch, fencing every prior worker.
  */
 export async function recoverAbandonedExports(jobId?:string){
-  assertDevelopmentRuntime();
+  assertApplicationRuntime();
   return db.transaction(async tx=>{
     const due=await tx.select().from(valoExportJobs).where(and(
       inArray(valoExportJobs.status,["queued","running","retrying"]),
@@ -39,7 +39,7 @@ export async function recoverAbandonedExports(jobId?:string){
  */
 export async function reconcileExportOrphans(jobId?:string,remove:(key:string)=>Promise<void>=deletePrivateFile,
   scope?:{workspaceId:string;caseId:string}){
-  assertDevelopmentRuntime();
+  assertApplicationRuntime();
   if(scope){
     const [bound]=await db.select({id:valoPrivacyTombstones.id}).from(valoPrivacyTombstones).where(and(
       eq(valoPrivacyTombstones.caseId,scope.caseId),eq(valoPrivacyTombstones.workspaceId,scope.workspaceId))).limit(1);
@@ -55,7 +55,7 @@ export async function reconcileExportOrphans(jobId?:string,remove:(key:string)=>
       const [locked]=await tx.select().from(valoExportObjects).where(and(eq(valoExportObjects.objectKey,object.objectKey),
         eq(valoExportObjects.state,"cleanup"),lte(valoExportObjects.nextCleanupAt,new Date()))).for("update",{skipLocked:true});
       if(!locked)return;
-      try{assertErasureObjectScope(locked.workspaceId,locked.objectKey);}catch{
+      try{assertRuntimeObjectScope(locked.workspaceId,locked.objectKey);}catch{
         failed++;await tx.update(valoExportObjects).set({nextCleanupAt:new Date(Date.now()+60_000)})
           .where(eq(valoExportObjects.objectKey,locked.objectKey));return;
       }
@@ -80,7 +80,7 @@ export async function reconcileExportOrphans(jobId?:string,remove:(key:string)=>
   }
   // Completed privacy journals outlive the export-job FK chain. They must be
   // revisited by the same running worker, including after a killed uploader.
-  if(!jobId){
+  if(!jobId&&process.env.NODE_ENV!=="production"){
     const {reconcileErasedObjects}=await import("./valo-privacy-erasure");
     const erased=await reconcileErasedObjects(remove,scope?.caseId);
     return{cleaned:cleaned+erased.cleaned,failed:failed+erased.failed,privacyHeld:privacyHeld+erased.held};

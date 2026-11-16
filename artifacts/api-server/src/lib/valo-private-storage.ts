@@ -1,8 +1,9 @@
+import {runtimePrivateScope} from "./valo-runtime-activation";
 import { createHash } from "node:crypto";
 import { Client } from "@replit/object-storage";
 import {privateStorageScope,privateObjectName,type StorageScope} from "./valo-storage-scope";
 export const fileChecksum = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
-function object(key:string,scope=privateStorageScope("development")) {
+function object(key:string,scope=runtimePrivateScope()) {
   const name=privateObjectName(scope,key);
   return{client:new Client({bucketId:scope.bucket}),bucket:scope.bucket,name};
 }
@@ -49,9 +50,9 @@ export function productionPrivateStorage(env:Record<string,string|undefined>=pro
     remove:(key:string)=>remove(scope,key),
   });
 }
-export const writePrivateFile=(key:string,bytes:Buffer,onUploading?:()=>Promise<void>)=>write(privateStorageScope("development"),key,bytes,onUploading);
-export const readPrivateFile=(key:string,checksum:string)=>read(privateStorageScope("development"),key,checksum);
-export const deletePrivateFile=(key:string)=>remove(privateStorageScope("development"),key);
+export const writePrivateFile=(key:string,bytes:Buffer,onUploading?:()=>Promise<void>)=>write(runtimePrivateScope(),key,bytes,onUploading);
+export const readPrivateFile=(key:string,checksum:string)=>read(runtimePrivateScope(),key,checksum);
+export const deletePrivateFile=(key:string)=>remove(runtimePrivateScope(),key);
 /** Compatibility probe only: never returns the bucket/object locator. */
 export async function anonymousPrivateFileStatus(key: string) {
   const {bucket,name} = object(key);
