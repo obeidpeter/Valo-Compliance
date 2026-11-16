@@ -208,7 +208,7 @@ async function drill(){
     await exec("initdb",["-D",data,"--auth=trust","--no-locale"],options);
     await exec("pg_ctl",["-D",data,"-l",join(directory,"postgres.log"),"-o",`-k ${directory} -h '' -p 58463`,"-w","start"],options);running=true;
     const admin=new Pool({host:directory,port:58463,user,database:"postgres"});
-    try{await admin.query("CREATE DATABASE valo_restore_source");await admin.query("CREATE DATABASE valo_restore_target");}finally{await admin.end();}
+    try{await admin.query("CREATE DATABASE valo_restore_source");await admin.query("CREATE DATABASE valo_restore_target");await admin.query("ALTER DATABASE valo_restore_target SET timezone='Pacific/Honolulu'");}finally{await admin.end();}
     env.DATABASE_URL=url("valo_restore_source");
     report.phase="apply_journalled_migrations";
     await exec("pnpm",["--filter","@workspace/db","exec","drizzle-kit","migrate","--config","./drizzle.config.ts"],options);
@@ -244,6 +244,19 @@ async function drill(){
     await source.query("UPDATE valo_memberships SET active='no' WHERE workspace_id=ANY($1::uuid[])",[fixtures.slice(0,2).map(f=>f.workspaceId)]);
     await source.query("INSERT INTO valo_events(id,workspace_id,actor_id,action,entity_id) VALUES($1,$2,'synthetic-recovery','recovery.post_cutoff',$3)",
       [randomUUID(),fixtures[2].workspaceId,randomUUID()]);
+    if(mode==="--prepare-separate-host"){
+      const handoff=process.env.VALO_RECOVERY_HANDOFF_DIR??"";
+      assert.ok(handoff.startsWith("/tmp/valo-recovery-handoff-")&&resolve(handoff)===handoff);
+      await mkdir(handoff,{mode:0o700});
+      await cp(dump,join(handoff,"synthetic.dump"));
+      await cp(snapshotObjects,join(handoff,"objects"),{recursive:true});
+      await writeFile(join(handoff,"fixtures.json"),JSON.stringify(fixtures),{mode:0o600});
+      await writeFile(join(handoff,"controls.json"),JSON.stringify({controls,signature,snapshotHash}),{mode:0o600});
+      await writeFile(join(handoff,"synthetic-keys.json"),JSON.stringify({SESSION_SECRET:env.SESSION_SECRET,
+        controlKey:key.toString("hex"),syntheticOnly:true}),{mode:0o600});
+      report.separateHostPackagePrepared=true;report.sourceErasureCompletedAfterSnapshot=true;
+      report.passed=true;return;
+    }
     const restoreStart=performance.now();report.restoreStartedAt=new Date().toISOString();
     report.phase="restore_disposable_target";
     await exec("pg_restore",["--exit-on-error","--no-owner","-d","valo_restore_target",dump],options);

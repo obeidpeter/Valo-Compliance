@@ -9,7 +9,7 @@ import {assertWorkspaceDownloadSession} from "./valo-download-session";
 import {createWorkspaceExport,listWorkspaceExports,getWorkspaceExport,cancelWorkspaceExport,retryWorkspaceExport,withPreparedWorkspaceExport} from "./valo-workspace-export-jobs";
 import {workspaceExportStorage,type WorkspaceExportStorage} from "./valo-workspace-export-storage";
 import {type WorkspaceActor,ValoProblem} from "./valo-store";
-import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {assertApplicationRuntime} from "./valo-runtime-activation";
 const live=async(req:Request,actor:WorkspaceActor)=>assertWorkspaceDownloadSession(actor,getAuth(req),{
   session:id=>clerkClient.sessions.getSession(id),user:id=>clerkClient.users.getUser(id),
 });
@@ -18,7 +18,7 @@ export function makeWorkspaceExportRouter(verify:typeof live=live,onPage?:(secti
   storage:WorkspaceExportStorage=workspaceExportStorage){
   const router=Router();
   router.use("/workspace/data-exports",(_req,res,next)=>{
-    assertDevelopmentRuntime();res.set({"Cache-Control":"private, no-store, max-age=0","Vary":"Cookie","X-Content-Type-Options":"nosniff"});next();
+    assertApplicationRuntime();res.set({"Cache-Control":"private, no-store, max-age=0","Vary":"Cookie","X-Content-Type-Options":"nosniff"});next();
   });
   router.get("/workspace/data-exports",async(req,res)=>{res.json(await listWorkspaceExports(res.locals.valoActor,z.string().uuid().optional().parse(req.query.cursor)));});
   router.get("/workspace/data-exports/:id",async(req,res)=>{res.json(await getWorkspaceExport(res.locals.valoActor,z.string().uuid().parse(req.params.id)));});

@@ -10,11 +10,11 @@ import { RENDER_VERSION, renderDocument, exportMime } from "./valo-render";
 import { readPrivateFile, writePrivateFile, deletePrivateFile } from "./valo-private-storage";
 import { documentInput } from "./valo-validation";
 import {EXPORT_HEARTBEAT_MS,EXPORT_LEASE_MS,recoverAbandonedExports} from "./valo-export-recovery";
-import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {assertApplicationRuntime,runtimeEnvironment} from "./valo-runtime-activation";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export function developmentExportsOnly() {
-  try{assertDevelopmentRuntime();}catch{
+  try{assertApplicationRuntime();}catch{
     throw new ValoProblem(503, "Exports remain disabled pending production storage, worker, recovery and privacy approval.");
   }
 }
@@ -193,7 +193,7 @@ export async function executeExport(id: string, workspaceId: string, queueId: st
     const bytes = await rendering;
     if (bytes.length > 10 * 1024 * 1024) throw new Error("EXPORT_SIZE_LIMIT");
     const assetId = randomUUID();
-    const objectKey = `valo/development/${workspaceId}/${assetId}.${job.format}`;
+    const objectKey = `valo/${runtimeEnvironment()}/${workspaceId}/${assetId}.${job.format}`;
     temporaryKey = objectKey;
     await db.transaction(async tx=>{
       const [current]=await tx.select().from(valoExportJobs).where(eq(valoExportJobs.id,id)).for("update");

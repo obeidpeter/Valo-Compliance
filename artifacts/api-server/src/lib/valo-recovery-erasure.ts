@@ -25,6 +25,9 @@ async function ownedSynthetic(client:PoolClient,workspaceId:string,identityId?:s
 export async function captureRecoveryErasureReceipt(client:PoolClient,caseId:string,workspaceId:string){
   const db=drizzle(client,{schema});
   return db.transaction(async tx=>{
+    // PostgreSQL to_jsonb(timestamptz) follows the session timezone. Pin receipt
+    // serialization so the same instant compares identically on another host.
+    await client.query("SET LOCAL TIME ZONE 'UTC'");
     const state=(await client.query("SELECT current_database() AS name,current_setting('data_directory') AS directory")).rows[0];
     if(state.name!=="valo_restore_source"||!state.directory.startsWith("/tmp/valo-recovery-"))
       throw Error("DISPOSABLE_RECOVERY_SOURCE_REQUIRED");
@@ -59,6 +62,7 @@ function jsonEqual(a:unknown,b:unknown):boolean{
 /** The caller supplies a transaction on the exact guarded target. A partial
  * import, bad chain/key/inventory, wrong owner or conflict rolls back entirely. */
 export async function importRecoveryErasureReceipt(client:PoolClient,tx:Tx,raw:unknown,identityId:string){
+  await client.query("SET LOCAL TIME ZONE 'UTC'");
   const receipt=recoveryErasureReceiptSchema.parse(raw);
   await ownedSynthetic(client,receipt.workspaceId,identityId);
   for(const table of tables)for(const row of receipt.records[table]){

@@ -3,6 +3,7 @@ import type {PoolClient} from "pg";
 import {z} from "zod";
 import {quotaSubjectHash} from "./valo-quota-policy";
 import {assertDevelopmentRuntime} from "./valo-development-runtime";
+import {assertWindowsRecoveryTarget} from "./valo-recovery-target";
 const controlsSchema=z.object({snapshotHash:z.string().regex(/^[a-f0-9]{64}$/),cutoff:z.string().datetime(),
   entries:z.array(z.object({id:z.string().uuid(),workspaceId:z.string().uuid(),identityId:z.string().startsWith("synthetic-recovery-"),
     kind:z.enum(["deletion","revocation"]),recordedAt:z.string().datetime()}).strict()).min(1).max(100),
@@ -14,6 +15,7 @@ export function signRecoveryControls(input:RecoveryControls,key:Buffer){
 export async function assertIsolatedRecoveryTarget(client:PoolClient){
   assertDevelopmentRuntime();
   if(process.env.VALO_ISOLATED_RECOVERY!=="synthetic-local-only")throw Error("EXPLICIT_ISOLATED_RECOVERY_REQUIRED");
+  if(process.env.VALO_RECOVERY_WINDOWS_ROOT){await assertWindowsRecoveryTarget(client);return;}
   const {rows:[r]}=await client.query("SELECT current_database() AS name,current_setting('data_directory') AS directory,current_setting('unix_socket_directories') AS sockets");
   if(r.name!=="valo_restore_target"||!r.directory.startsWith("/tmp/valo-recovery-")||
     !r.sockets.startsWith("/tmp/valo-recovery-"))throw Error("LOCAL_DISPOSABLE_RECOVERY_TARGET_REQUIRED");
@@ -28,8 +30,9 @@ export async function replayRecoveryControls(client:PoolClient,raw:unknown,signa
   await assertIsolatedRecoveryTarget(client);
   const connection=new URL(process.env.DATABASE_URL??"");
   const directory=(await client.query("SELECT current_setting('data_directory') AS directory,current_setting('port') AS port")).rows[0];
-  if(connection.protocol!=="postgresql:"||connection.hostname!=="localhost"||connection.pathname!=="/valo_restore_target"||
+  if(!process.env.VALO_RECOVERY_WINDOWS_ROOT&&(connection.protocol!=="postgresql:"||connection.hostname!=="localhost"||connection.pathname!=="/valo_restore_target"||
     connection.port!==directory.port||connection.searchParams.get("host")!==directory.directory.replace(/\/data$/,""))
+    )
     throw Error("RECOVERY_RUNTIME_DATABASE_BINDING_REQUIRED");
   {
     // Only the guarded child has an explicit local DATABASE_URL. Bind the

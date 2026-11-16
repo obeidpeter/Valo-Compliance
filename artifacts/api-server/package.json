@@ -45,7 +45,7 @@
     "valo:monitoring-probe": "node dist/monitoring-probe.mjs",
     "valo:production-preflight": "node dist/production-preflight.mjs",
     "valo:production-storage-probe": "node dist/production-storage-probe.mjs",
-    "test:valo-production-readiness": "node --experimental-test-module-mocks --import tsx --test src/lib/valo-production-storage.test.ts src/lib/valo-worker-health.test.ts src/lib/valo-worker-supervisor.test.ts src/lib/valo-external-monitor.test.ts src/lib/valo-operations.test.ts",
+    "test:valo-production-readiness": "node --experimental-test-module-mocks --import tsx --test src/lib/valo-production-storage.test.ts src/lib/valo-worker-health.test.ts src/lib/valo-worker-supervisor.test.ts src/lib/valo-external-monitor.test.ts src/lib/valo-operations.test.ts src/lib/valo-runtime-activation.test.ts src/lib/valo-recovery-target.test.ts",
     "test:valo-deployment-artifacts": "node --import tsx --test src/lib/valo-deployment-artifacts.test.ts",
     "queue:generate": "tsx src/scripts/queue-migration.ts generate",
     "sources:retrieve-development": "NODE_ENV=development tsx src/scripts/retrieve-sources.ts",
@@ -76,7 +76,8 @@
     "test:valo-workspace-export-convergence-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-workspace-export-convergence.integration.test.ts src/lib/valo-workspace-export-controls.integration.test.ts",
     "test:valo-dispute-browser": "VALO_RUN_DISPUTE_BROWSER=synthetic-development-only NODE_ENV=development node --import tsx src/scripts/dispute-workflow-browser.ts",
     "test:valo-staff-roles": "NODE_ENV=development VALO_RUN_STAFF_ROLE_TESTS=synthetic-development-only tsx --test src/lib/valo-staff-roles.integration.test.ts",
-    "test:valo-staff-role-browser": "NODE_ENV=development VALO_RUN_STAFF_ROLE_BROWSER=synthetic-development-only tsx src/scripts/staff-role-browser.ts"
+    "test:valo-staff-role-browser": "NODE_ENV=development VALO_RUN_STAFF_ROLE_BROWSER=synthetic-development-only tsx src/scripts/staff-role-browser.ts",
+    "test:valo-production-rehearsal": "tsx src/scripts/production-rehearsal-drill.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",

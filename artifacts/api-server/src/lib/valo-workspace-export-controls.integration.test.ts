@@ -29,10 +29,22 @@ test("controlled workspace artifact failures and privacy fences",{
       failDelete=true;abort.abort();await pending;
       assert.equal((await row(job.id)).status,"interrupted");
       await assert.rejects(stat(workspaceExportScratch(oldId)),{code:"ENOENT"});
+      assert.equal((await cleanupWorkspaceExports(storage,actor.workspaceId)).failed,1);
       const oldAttempt=(await db.select().from(attempts).where(eq(attempts.id,oldId)))[0]!;
+      assert.equal(oldAttempt.cleanupErrorCode,"STORAGE_DELETE_FAILED");
+      assert.ok(oldAttempt.nextCleanupAt.getTime()>Date.now());
       delay=false;await retryWorkspaceExport(actor,job.id,(await row(job.id)).version);await prepareWorkspaceExport(actor,job.id,new AbortController().signal,async()=>{},storage);
       const ready=await row(job.id);assert.equal(ready.status,"ready");assert.notEqual(ready.currentAttemptId,oldId);
-      release.resolve();await new Promise(r=>setTimeout(r,20));assert.ok(objects.has(oldAttempt.objectKey));
+      const releasedAt=Date.now();release.resolve();
+      // Observe the durable late-upload reservation, not a 20 ms timing guess.
+      // Cleanup uses SKIP LOCKED; racing that update can legitimately skip this row.
+      const deadline=Date.now()+5000;
+      while(true){
+        const late=(await db.select().from(attempts).where(eq(attempts.id,oldId)))[0]!;
+        if(objects.has(oldAttempt.objectKey)&&late.nextCleanupAt.getTime()>=releasedAt&&late.cleanupErrorCode===null)break;
+        assert.ok(Date.now()<deadline,"late upload cleanup reservation was not committed");
+        await new Promise(r=>setTimeout(r,10));
+      }
       failDelete=false;await cleanupWorkspaceExports(storage,actor.workspaceId);assert.ok(!objects.has(oldAttempt.objectKey));
       assert.equal((await row(job.id)).status,"ready");assert.equal((await row(job.id)).attempts,2);
       let released=false;

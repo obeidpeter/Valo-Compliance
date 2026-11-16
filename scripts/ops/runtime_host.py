@@ -1,7 +1,7 @@
 """Outer API/worker process supervision for one POSIX host.
 
-Production runs the existing release gate before spawning any service. That gate
-currently declines activation; this manager cannot bypass the application guards.
+Production verifies the built release and database-bound private rehearsal gate
+before spawning services. Customer traffic stays closed.
 """
 from collections import deque
 import json
@@ -35,9 +35,14 @@ def runtime_configuration(path, env):
         require(path.is_absolute() and path == path.resolve() and path.is_dir(), 'CANONICAL_HOST_DIRECTORY_REQUIRED')
     state = Path(config['stateDirectory']).stat()
     require(state.st_uid == os.getuid() and not state.st_mode & 0o077, 'PRIVATE_HOST_STATE_REQUIRED')
-    revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=config['sourceRoot'], env=process_environment(env),
-                              capture_output=True, timeout=10)
-    require(revision.returncode == 0 and revision.stdout.decode().strip() == config['releaseSha'], 'PINNED_HOST_RELEASE_REQUIRED')
+    if config['mode'] == 'production':
+        from release_manifest import verify
+        verify(Path(config['sourceRoot']), config['releaseSha'])
+        require(env.get('VALO_RELEASE_SHA') == config['releaseSha'], 'PINNED_HOST_RELEASE_REQUIRED')
+    else:
+        revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=config['sourceRoot'], env=process_environment(env),
+                                  capture_output=True, timeout=10)
+        require(revision.returncode == 0 and revision.stdout.decode().strip() == config['releaseSha'], 'PINNED_HOST_RELEASE_REQUIRED')
     return config
 
 
@@ -52,7 +57,7 @@ def production_gate(config, env):
     if config['mode'] != 'production': return
     gate = Path(config['sourceRoot']) / 'artifacts/api-server/dist/production-preflight.mjs'
     require(gate.is_file() and not gate.is_symlink(), 'BUILT_PRODUCTION_GATE_REQUIRED')
-    result = subprocess.run(['node', str(gate)], cwd=config['sourceRoot'], env=env, capture_output=True, timeout=30)
+    result = subprocess.run(['node', str(gate), '--activate-rehearsal'], cwd=config['sourceRoot'], env=env, capture_output=True, timeout=30)
     # Do not use --configuration-only, set NODE_ENV=development or invent an override.
     require(result.returncode == 0, 'PRODUCTION_ACTIVATION_NOT_APPROVED')
 
