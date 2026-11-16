@@ -73,7 +73,7 @@ reach the 80% branch coverage NFR-011 requires.
 | --- | --- |
 | Regenerate schema snapshots; timestamp-named migrations; CI fails on schema changes without a migration | done |
 | Automatic cross-workspace route tests (SEC-001) | in progress: every private customer operation in the contract that takes a workspace-owned identifier (30) is tried by another workspace, whose reply must equal the reply for an unknown identifier while the owner's rows stay unchanged; a guard fails on any new uncovered operation. Gap: the template file entitlement check needs released content. |
-| Workspace context object required by every query | not started |
+| Workspace context object required by every query | in progress: the actor is a server-issued type created only from a membership or a stored record; HTTP code cannot create, cast or redirect one (rule `workspace-actor`). Query-level enforcement (row-level security) not started. |
 | R2 membership design | done as a proposal ([r2-team-access.md](r2-team-access.md)); five owner decisions listed |
 | Adopt the migration ledger on the Replit development database | blocked (needs access to that database) |
 

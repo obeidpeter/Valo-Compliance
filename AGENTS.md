@@ -72,7 +72,10 @@ Rules that apply now:
 - Domain failures throw `ValoProblem` with a safe customer message. Never put
   private data in error messages or logs.
 - Every customer query is scoped to the server-resolved workspace. Never accept
-  a workspace, role or identity from the browser.
+  a workspace, role or identity from the browser. Services take a
+  `WorkspaceActor`, which only `resolveWorkspace` and `workspaceActorFromRecord`
+  (never in HTTP code) can create; the `workspace-actor` repository rule
+  enforces this.
 
 ## 5. Checks
 

@@ -7,6 +7,8 @@ import {
   importCycles,
   silentCatchReport,
   silentCatchViolations,
+  workspaceActorReport,
+  workspaceActorViolations,
 } from "./architecture-check";
 
 test("an empty catch needs a comment; a catch that handles the error does not", () => {
@@ -41,8 +43,54 @@ test("new import cycles fail while recorded cycles are tolerated", () => {
   assert.equal(cycleViolations(graph).length, 1);
 });
 
+test("HTTP code cannot create, cast or redirect a workspace actor", () => {
+  const route = "artifacts/api-server/src/routes/example.ts";
+  const flagged = (path: string, text: string) => workspaceActorViolations(path, text).length;
+  assert.match(
+    workspaceActorViolations(route, "await getDocument(workspaceActorFromRecord(record), id);").join("\n"),
+    /may not create a workspace actor/,
+  );
+  assert.equal(flagged(route, "await getDocument(res.locals.valoActor as WorkspaceActor, id);"), 1);
+  assert.equal(flagged(route, "const scope = { workspaceId: req.params.workspace };"), 1);
+  assert.equal(flagged("artifacts/api-server/src/lib/valo-orders-http.ts", "run({ workspaceId });"), 1);
+  assert.equal(flagged(route, "await getDocument(res.locals.valoActor, req.params.id);"), 0);
+  assert.equal(flagged("artifacts/api-server/src/routes/example.test.ts", "run({ workspaceId });"), 0);
+  // Background work may act for a stored requester; every use re-checks membership.
+  assert.equal(
+    flagged(
+      "artifacts/api-server/src/lib/valo-exports.ts",
+      "workspaceActorFromRecord({ workspaceId, identityId })",
+    ),
+    0,
+  );
+  assert.equal(
+    flagged("artifacts/api-server/src/lib/valo-exports.ts", "insert({ id, workspaceId, ...values })"),
+    0,
+    "rows that spread other values are not actors",
+  );
+});
+
+test("only resolveWorkspace issues actors from memberships, and no code redirects an actor", () => {
+  const lib = "artifacts/api-server/src/lib/valo-tasks.ts";
+  assert.equal(workspaceActorViolations(lib, "workspaceActorFromMembership(row);").length, 1);
+  assert.equal(
+    workspaceActorViolations(
+      "artifacts/api-server/src/lib/valo-store.ts",
+      "workspaceActorFromMembership(row);",
+    ).length,
+    0,
+  );
+  assert.equal(workspaceActorViolations(lib, "const other = { ...actor, workspaceId: target };").length, 1);
+  assert.equal(
+    workspaceActorViolations(lib, "const other = { ...ownerActor, identityId: target };").length,
+    1,
+  );
+  assert.equal(workspaceActorViolations(lib, "const copy = { ...res.locals.valoActor };").length, 0);
+});
+
 test("the repository has no silent catches and no new import cycles", () => {
   assert.deepEqual(silentCatchReport(), []);
+  assert.deepEqual(workspaceActorReport(), []);
   const graph = apiImportGraph();
   assert.ok(graph.size > 100, "the API import graph was actually read");
   assert.deepEqual(cycleViolations(graph), []);

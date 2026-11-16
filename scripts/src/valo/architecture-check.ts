@@ -179,6 +179,74 @@ export const KNOWN_CYCLES: string[][] = [
   ],
 ];
 
+/** HTTP code: routes, middlewares, `*-http.ts` handlers and the app itself. */
+export const isHttpSource = (path: string) =>
+  /^artifacts\/api-server\/src\/(routes|middlewares)\//.test(path) ||
+  /^artifacts\/api-server\/src\/lib\/[^/]+-http\.ts$/.test(path) ||
+  path === "artifacts/api-server/src/app.ts";
+
+/**
+ * workspace-actor: a workspace named by the browser must never become the workspace a
+ * request acts in (see platform/workspace-context.ts). HTTP code may not create an
+ * actor, cast to WorkspaceActor, or write a `workspaceId` in an object literal. No
+ * code may copy an actor while changing its workspace or identity.
+ * `workspaceActorFromMembership` belongs to resolveWorkspace alone.
+ */
+export function workspaceActorViolations(path: string, text: string): string[] {
+  if (!/\.tsx?$/.test(path) || /\.test\.tsx?$/.test(path)) return [];
+  const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const violations: string[] = [];
+  const http = isHttpSource(path);
+  const report = (node: ts.Node, message: string) =>
+    violations.push(`${path}:${lineOf(source, node.getStart(source))} workspace-actor ${message}`);
+  const visit = (node: ts.Node) => {
+    if (ts.isIdentifier(node)) {
+      if (http && node.text === "workspaceActorFromRecord")
+        report(node, "HTTP code may not create a workspace actor from a record");
+      if (
+        node.text === "workspaceActorFromMembership" &&
+        path !== "artifacts/api-server/src/lib/valo-store.ts" &&
+        path !== "artifacts/api-server/src/platform/workspace-context.ts"
+      )
+        report(node, "only resolveWorkspace may issue an actor from a membership");
+    }
+    if (
+      http &&
+      (ts.isAsExpression(node) || ts.isTypeAssertionExpression(node)) &&
+      ts.isTypeReferenceNode(node.type) &&
+      node.type.typeName.getText(source) === "WorkspaceActor"
+    )
+      report(node, "HTTP code may not cast a value to WorkspaceActor");
+    if (ts.isObjectLiteralExpression(node)) {
+      const named = (property: ts.ObjectLiteralElementLike) =>
+        (ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property)) &&
+        ["workspaceId", "identityId"].includes(property.name.getText(source).replace(/["']/g, ""));
+      const spreadsActor = node.properties.some(
+        (property) =>
+          ts.isSpreadAssignment(property) && /(^|\.)\w*[aA]ctor$/.test(property.expression.getText(source)),
+      );
+      if (spreadsActor && node.properties.some(named))
+        report(node, "do not change the workspace or identity of an existing actor");
+    }
+    if (http && ts.isObjectLiteralExpression(node))
+      for (const property of node.properties)
+        if (
+          (ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property)) &&
+          property.name.getText(source).replace(/["']/g, "") === "workspaceId"
+        )
+          report(property, "HTTP code may not write a workspaceId; use the server-issued actor");
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return violations;
+}
+
+export function workspaceActorReport(root = repositoryRoot): string[] {
+  return sourceFiles(join(root, "artifacts/api-server/src"), isProductSource).flatMap((file) =>
+    workspaceActorViolations(relative(root, file), readFileSync(file, "utf8")),
+  );
+}
+
 export function cycleViolations(graph = apiImportGraph()): string[] {
   const allowed = new Set(KNOWN_CYCLES.map((c) => [...c].sort().join("|")));
   return importCycles(graph)
@@ -203,7 +271,7 @@ export function silentCatchReport(root = repositoryRoot): string[] {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
-  const violations = [...silentCatchReport(), ...cycleViolations()];
+  const violations = [...silentCatchReport(), ...cycleViolations(), ...workspaceActorReport()];
   for (const violation of violations) process.stdout.write(`${violation}\n`);
   process.stdout.write(`architecture check: ${violations.length} violation(s)\n`);
   if (violations.length) process.exitCode = 1;
