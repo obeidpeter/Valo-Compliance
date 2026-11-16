@@ -1,4 +1,5 @@
 import pino, { type DestinationStream } from "pino";
+import { safeError } from "./safe-error";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -16,7 +17,19 @@ export function createApplicationLogger(destination?: DestinationStream) {
         "document",
         "profile",
       ],
-      serializers: { err: () => ({ type: "Error", detail: "Details withheld; correlate by request ID." }) },
+      // Errors keep class, code and stack frames; never free text.
+      serializers: { err: safeError },
+      hooks: {
+        // pino copies err.message into msg when no message is given. Always supply one
+        // (the event name) so an error message can never become the log message.
+        logMethod(args, method) {
+          if (args.length === 1 && typeof args[0] === "object" && args[0] !== null) {
+            const event = (args[0] as { event?: unknown }).event;
+            return method.apply(this, [args[0], typeof event === "string" ? event : "log"]);
+          }
+          return method.apply(this, args);
+        },
+      },
       ...(isProduction || destination || process.env.VALO_PRETTY_LOGS !== "1"
         ? {}
         : {

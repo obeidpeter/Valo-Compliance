@@ -182,8 +182,8 @@ async function dispatch() {
       const privateData = await cleanupWorkspaceExports();
       if (privateData.failed)
         logger.error({ event: "workspace_export.cleanup_pending", count: privateData.failed });
-    } catch {
-      logger.error({ event: "workspace_export.cleanup_failed" });
+    } catch (error) {
+      logger.error({ event: "workspace_export.cleanup_failed", err: error });
     }
     for (const job of await pendingWorkspaceExports()) {
       if (stopping) break;
@@ -217,8 +217,8 @@ async function dispatch() {
       operationalDispatchHealthy = failures.length === 0;
     }
     succeeded = operationalDispatchHealthy;
-  } catch {
-    logger.error({ event: "export.dispatch_failed" });
+  } catch (error) {
+    logger.error({ event: "export.dispatch_failed", err: error });
   } finally {
     health.finish(started, succeeded);
     try {
@@ -240,9 +240,9 @@ async function dispatch() {
             () => {},
           );
       }
-    } catch {
+    } catch (error) {
       health.fail();
-      logger.error({ event: "operations.internal_probe_failed" });
+      logger.error({ event: "operations.internal_probe_failed", err: error });
       await publishHeartbeat().catch(heartbeatPublishFailed);
     }
     dispatching = false;
@@ -262,9 +262,9 @@ try {
       }, 3000);
   }
   if (!stopping) logger.info({ event: "export.worker_started", mode: "synthetic-development-only" });
-} catch {
+} catch (error) {
   health.fail();
-  logger.error({ event: "export.startup_failed" });
+  logger.error({ event: "export.startup_failed", err: error });
   process.exitCode = 1;
   await stop();
 }

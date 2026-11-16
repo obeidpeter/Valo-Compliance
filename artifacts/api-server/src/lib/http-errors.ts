@@ -43,11 +43,15 @@ export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) =>
     });
     return;
   }
-  req.log.error({
-    event: "request.failed",
-    errorType:
-      error instanceof TypeError ? "TypeError" : error instanceof RangeError ? "RangeError" : "Error",
-  });
+  req.log.error(
+    {
+      event: "request.failed",
+      errorType:
+        error instanceof TypeError ? "TypeError" : error instanceof RangeError ? "RangeError" : "Error",
+      err: error,
+    },
+    "request failed",
+  );
   res.status(503).json({
     error:
       "A required service is unavailable. Check the saved status before retrying; your request may need recovery.",
