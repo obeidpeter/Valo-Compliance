@@ -298,6 +298,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-task-source-guard
       - name: Prove rich checker HTTP preview, consent, history and tenant boundaries
         run: pnpm --filter @workspace/api-server test:valo-checker-http-db
+      - name: Prove another workspace's identifiers are refused like unknown ones on every private route (SEC-001)
+        run: pnpm --filter @workspace/api-server test:valo-tenant-substitution
       - name: Prove synthetic erasure holds, late-upload races and bounded recovery
         run: pnpm --filter @workspace/api-server test:valo-erasure-portable-db
         env:

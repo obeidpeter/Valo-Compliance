@@ -72,6 +72,8 @@ Every change must keep these true. Each has tests; none may be weakened.
 1. **Tenant isolation.** Every private query is scoped to the workspace the
    server resolves from the verified session. Writes re-check membership inside
    the transaction, so a revocation that commits first wins.
+   `valo-tenant-substitution.integration.test.ts` tries every private route that
+   takes an identifier with another workspace's identifiers.
 2. **Identity.** Private requests require an active Clerk session and a verified
    primary email. Payments, downloads, privacy and AI drafts check Clerk live on
    every request; listed everyday routes re-check at least once a minute
