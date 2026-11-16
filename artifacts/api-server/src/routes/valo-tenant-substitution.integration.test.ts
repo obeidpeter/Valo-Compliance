@@ -27,7 +27,7 @@ const NOT_WORKSPACE_OWNED: Record<string, string> = {
   "POST /workspace/templates/{id}/draft":
     "Public catalogue template identifier; the draft is created in the caller's own workspace.",
   "GET /workspace/templates/{id}/files/{format}":
-    "Public catalogue template identifier. Its entitlement check needs released content, which tests may not create; not yet covered.",
+    "Public catalogue template identifier. The purchase check it relies on is proven in valo-template-entitlement.integration.test.ts.",
   "PUT /workspace/saved-templates/{id}":
     "Public catalogue template identifier; saved-template ownership is proven in valo-saved-templates.integration.test.ts.",
   "DELETE /workspace/saved-templates/by-template/{templateId}":
@@ -549,6 +549,47 @@ test(
           assert.equal(reply.status, c.ownerStatus, `${key}: ${reply.text}`);
         }
       });
+
+      await t.test(
+        "every staff operation refuses customers and anonymous callers and changes nothing",
+        async () => {
+          // Read from the contract, so a new staff operation is covered without editing this test.
+          const staffOperations = contractOperations().filter((o) => o.path.startsWith("/admin/"));
+          assert.ok(staffOperations.length >= 15, "staff operations were read from the contract");
+          const customer = identity("customer-without-staff-role");
+          await resolveWorkspace(customer);
+          const staffRows = async () =>
+            (
+              await pool.query<{ n: string }>(
+                "SELECT (SELECT count(*) FROM valo_staff_assignments) + (SELECT count(*) FROM valo_staff_role_changes) + (SELECT count(*) FROM valo_staff_access_audit) AS n",
+              )
+            ).rows[0]!.n;
+          const ownerBeforeStaff = await ownerState(),
+            staffBefore = await staffRows();
+          for (const operation of staffOperations) {
+            const params = Object.fromEntries(
+              pathParameters(operation.path).map((name) => [
+                name,
+                name === "operation" ? "cancel" : randomUUID(),
+              ]),
+            );
+            for (const caller of [customer, "anonymous"]) {
+              const reply = await call(
+                caller,
+                operation.method,
+                pathFor(operation, params),
+                operation.method === "GET" ? undefined : {},
+              );
+              assert.ok(
+                [401, 403, 404].includes(reply.status),
+                `${operation.key} as ${caller === customer ? "a customer" : "an anonymous caller"} answered ${reply.status}: ${reply.text.slice(0, 200)}`,
+              );
+            }
+          }
+          assert.equal(await ownerState(), ownerBeforeStaff);
+          assert.equal(await staffRows(), staffBefore, "no staff role, assignment or audit row was written");
+        },
+      );
     } finally {
       if (previousOrigin === undefined) delete process.env.VALO_TRUSTED_ORIGIN;
       else process.env.VALO_TRUSTED_ORIGIN = previousOrigin;
