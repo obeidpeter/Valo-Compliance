@@ -73,11 +73,11 @@ test("actual export entries and worker startup reject before database, queue or 
     ],
     [
       "valo-render",
-      "export const RENDER_VERSION='controlled';export const exportMime=()=>'';export const renderDocument=()=>{globalThis.guardEffects.render++};",
+      "export const RENDER_VERSION='controlled';export const exportMime=()=>'';export const renderDocument=()=>{globalThis.guardEffects.render++};export const closeRenderer=async()=>{};",
     ],
     ["valo-validation", "export const documentInput={parse:x=>x};"],
     ["valo-revision-codec", "export const serializeRevision=x=>x;"],
-    ["logger", "export const logger={info(){},error(){}};"],
+    ["logger", "export const logger={info(){},warn(){},error(){}};"],
     [
       "valo-reminder-worker",
       "export const reconcileDueReminders=async()=>{globalThis.guardEffects.services++};",

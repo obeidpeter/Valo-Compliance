@@ -78,15 +78,14 @@ Rules that apply now:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm run typecheck
-pnpm run lint        # formatting and repository rules
-pnpm --filter @workspace/scripts test:valo
-pnpm --filter @workspace/api-server test:valo
+pnpm test        # typecheck, lint (formatting and repository rules), fast unit suites
 ```
 
 Database, browser and recovery groups are listed in
-`.github/workflows/valo-foundation.yml`. Tests create only synthetic records and
-never call real providers. A green local run is not hosted CI; check the actual
+`.github/workflows/valo-foundation.yml`. Every test file must be run by a package
+script that CI calls; `scripts/src/valo/test-inventory.test.ts` fails otherwise,
+unless the exception and its reason are recorded there. Tests create only
+synthetic records and never call real providers. A green local run is not hosted CI; check the actual
 workflow run for the exact commit before reporting CI status.
 
 ## 6. Database changes
