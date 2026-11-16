@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {prepareFiniteAllocationPackage,allocationPackageId,validateAllocationPackage,assertWorkPackageMembership} from "./inference-allocation-package";
+import {prepareFiniteAllocationPackage,allocationPackageId,validateAllocationPackage,validatePackageScope,assertWorkPackageMembership} from "./inference-allocation-package";
 import {additionalInferenceAllocation,requestDigest} from "./inference-budget";
 import type {FiniteWork} from "./inference-batch-dispatch";
 import {readFile} from "node:fs/promises";
@@ -43,6 +43,8 @@ test("historical disabled artifact retains exact source pins but cannot authoriz
   assert.equal(frozen.status,"DISABLED_PROPOSAL_ONLY");assert.equal(frozen.ownerApproved,false);assert.equal(frozen.enabled,false);
   assert.equal(frozen.approvalRowsWritten,0);assert.equal(frozen.providerCalls,0);
   assert.throws(()=>validateAllocationPackage(frozen.package),/ALLOCATION_PACKAGE_INVALID/);
+  // Its content identities remain valid; only its allocation terms are superseded.
+  assert.doesNotThrow(()=>validatePackageScope(frozen.package));
   assert.equal(frozen.packageHash,requestDigest(frozen.package));assert.equal(frozen.packageId,allocationPackageId(frozen.package));
   assert.equal(frozen.packageId,"finite-package:3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8");
   const actual=await prepareFiniteAllocationPackage(new Date(frozen.package.preparedAt));

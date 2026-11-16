@@ -2,7 +2,7 @@ import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import {digest,sha256} from "@workspace/valo-core";
 import {documentInput} from "../lib/valo-validation";
-import {allocationPackageId,validateAllocationPackage,type FiniteAllocationPackage} from "../lib/inference-allocation-package";
+import {allocationPackageId,validatePackageScope,type FiniteAllocationPackage} from "../lib/inference-allocation-package";
 import {supportsOperationalInferenceTemplate} from "../lib/inference-operational-coverage";
 import {readTemplateIntake,readGuidanceIntake} from "./operational-intake";
 import {publicationWorkspaceRoot} from "./operational-policy";
@@ -18,7 +18,7 @@ export type ContentPreparationClass="operational_template"|"enhanced_template"|"
  * File equality is a provenance boundary, never evidence of a content review. */
 export async function readFrozenContentPackage():Promise<FiniteAllocationPackage>{
   const root=publicationWorkspaceRoot(),frozen=JSON.parse(await readFile(resolve(root,frozenPath),"utf8"));
-  const pkg=frozen.package as FiniteAllocationPackage;validateAllocationPackage(pkg);
+  const pkg=frozen.package as FiniteAllocationPackage;validatePackageScope(pkg);
   if(frozen.packageId!==frozenContentPackageId||allocationPackageId(pkg)!==frozenContentPackageId)
     throw Error("FROZEN_CONTENT_PACKAGE_CHANGED");
   for(const source of pkg.sourceFiles){
@@ -58,7 +58,7 @@ export function extractNamedContentDraft(section:FiniteAllocationPackage["namedC
 /** Builds a real canonical draft for one frozen identity. This function has no
  * provider, database, publication, approval or customer-data dependency. */
 export async function prepareFrozenContentDraft(identity:string,pkg:FiniteAllocationPackage){
-  validateAllocationPackage(pkg);
+  validatePackageScope(pkg);
   if(allocationPackageId(pkg)!==frozenContentPackageId)throw Error("FROZEN_CONTENT_PACKAGE_CHANGED");
   const root=publicationWorkspaceRoot();
   if(pkg.contentIds.includes(identity)){

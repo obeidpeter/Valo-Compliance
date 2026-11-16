@@ -62,11 +62,11 @@ export async function prepareFiniteAllocationPackage(now=new Date()):Promise<Fin
       "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt."]};
 }
 export function allocationPackageId(value:FiniteAllocationPackage){return`finite-package:${requestDigest(value)}`;}
-export function validateAllocationPackage(value:FiniteAllocationPackage){
+/** Validates the frozen content identities and case rosters only. This is not
+ * admission authority: it accepts historical packages whose allocation terms are
+ * superseded, so callers that admit or dispatch work must use validateAllocationPackage. */
+export function validatePackageScope(value:FiniteAllocationPackage){
   if(value.version!==3||value.kind!=="finite-inference-package"||!Number.isFinite(Date.parse(value.preparedAt))||
-    value.policyVersion!==inferenceProposal.priceVersion||requestDigest(value.allocation)!==requestDigest(additionalInferenceAllocation)||
-    requestDigest(value.laneAttemptLimits)!==requestDigest({publication:216,editorial_evaluation:68,checker_challenge:80,customer:94})||
-    requestDigest(value.allowedRoles)!==requestDigest(["factual","challenge","customer"])||
     !Array.isArray(value.contentIds)||!value.contentIds.length||new Set(value.contentIds).size!==value.contentIds.length||
     value.sourceFiles.length!==scopePaths.length||value.sourceFiles.some((f,i)=>f.path!==scopePaths[i]||!/^[a-f0-9]{64}$/.test(f.sha256)))
     throw Error("ALLOCATION_PACKAGE_INVALID");
@@ -80,6 +80,15 @@ export function validateAllocationPackage(value:FiniteAllocationPackage){
     if(corpus.length!==1||corpus[0]!.cases.length!==count||new Set(corpus[0]!.cases.map(c=>c.id)).size!==count||
       corpus[0]!.cases.some(c=>!c.id||!/^[a-f0-9]{64}$/.test(c.hash)))throw Error("ALLOCATION_PACKAGE_INVALID");
   }
+}
+/** Full validation for admission: the frozen scope plus the current allocation,
+ * policy version, lane ceilings and allowed roles. */
+export function validateAllocationPackage(value:FiniteAllocationPackage){
+  validatePackageScope(value);
+  if(value.policyVersion!==inferenceProposal.priceVersion||requestDigest(value.allocation)!==requestDigest(additionalInferenceAllocation)||
+    requestDigest(value.laneAttemptLimits)!==requestDigest({publication:216,editorial_evaluation:68,checker_challenge:80,customer:94})||
+    requestDigest(value.allowedRoles)!==requestDigest(["factual","challenge","customer"]))
+    throw Error("ALLOCATION_PACKAGE_INVALID");
 }
 export function assertWorkPackageMembership(work:FiniteWork,pkg:FiniteAllocationPackage,contentId:string|null){
   validateAllocationPackage(pkg);
