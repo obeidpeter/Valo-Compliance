@@ -77,7 +77,9 @@ Every change must keep these true. Each has tests; none may be weakened.
 2. **Identity.** Private requests require an active Clerk session and a verified
    primary email. Payments, downloads, privacy and AI drafts check Clerk live on
    every request; listed everyday routes re-check at least once a minute
-   (decision 0003). Staff actions also require both MFA factors and a fresh check.
+   (decision 0003). Staff routes first refuse any account without an active staff
+   assignment, before reading input; staff actions also require both MFA factors
+   and a fresh check.
 3. **Same-origin writes.** Mutations require the configured exact origin and a
    JSON body.
 4. **Immutable history.** Document revisions, publication records, audit logs,
