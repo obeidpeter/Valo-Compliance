@@ -489,10 +489,15 @@ paths:
             schema: { $ref: "#/components/schemas/ExportRetryInput" }
       responses:
         "202":
-          description: "Retry recorded, or the existing job state."
+          description: "Retry or expired-file regeneration recorded, or the existing job state."
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ExportJob" }
+        "409":
+          description: "Retry limit reached or regeneration is held for privacy review."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
   /v1/exports/{id}/file:
     get:
       operationId: downloadDocumentExport
@@ -508,6 +513,11 @@ paths:
             application/vnd.openxmlformats-officedocument.wordprocessingml.document:
               schema: { type: string, format: binary }
         "404": { description: "Missing, unavailable or unauthorised file." }
+        "410":
+          description: "Export expired or its availability changed during retrieval. Regenerate from the saved revision."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
   /public/coverage:
     get:
       operationId: getPublicCoverage
@@ -3741,6 +3751,7 @@ components:
         checksum: { type: [string, "null"] }
         size: { type: [integer, "null"] }
         downloadUrl: { type: [string, "null"] }
+        expiresAt: { type: [string, "null"], format: date-time }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
     DocumentBlock:

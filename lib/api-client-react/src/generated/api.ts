@@ -27,6 +27,7 @@ import type {
 import type {
   AccessSupportAck,
   AccessSupportInput,
+  ApiProblem,
   AssessmentComparison,
   AssessmentInput,
   AssessmentResult,
@@ -3025,7 +3026,7 @@ return customFetch<ExportJob>(getRetryDocumentExportUrl(id),
 
 export const getRetryDocumentExportMutationKey = () => ['retryDocumentExport'] as const;
 
-export const getRetryDocumentExportMutationOptions = <TError = ErrorType<unknown>,
+export const getRetryDocumentExportMutationOptions = <TError = ErrorType<ApiProblem>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryDocumentExport>>, TError,RetryDocumentExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof retryDocumentExport>>, TError,RetryDocumentExportMutationVariables, TContext> => {
 
@@ -3054,10 +3055,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RetryDocumentExportMutationResult = NonNullable<Awaited<ReturnType<typeof retryDocumentExport>>>
     export type RetryDocumentExportMutationBody = BodyType<ExportRetryInput>
-    export type RetryDocumentExportMutationError = ErrorType<unknown>
+    export type RetryDocumentExportMutationError = ErrorType<ApiProblem>
     export type RetryDocumentExportMutationVariables = {id: string;data: BodyType<ExportRetryInput>}
 
-    export const useRetryDocumentExport = <TError = ErrorType<unknown>,
+    export const useRetryDocumentExport = <TError = ErrorType<ApiProblem>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof retryDocumentExport>>, TError,RetryDocumentExportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof retryDocumentExport>>,
@@ -3098,7 +3099,7 @@ export const getDownloadDocumentExportQueryKey = (id: string,) => {
     }
 
 
-export const getDownloadDocumentExportQueryOptions = <TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getDownloadDocumentExportQueryOptions = <TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void | ApiProblem>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -3117,10 +3118,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type DownloadDocumentExportQueryResult = NonNullable<Awaited<ReturnType<typeof downloadDocumentExport>>>
-export type DownloadDocumentExportQueryError = ErrorType<void>
+export type DownloadDocumentExportQueryError = ErrorType<void | ApiProblem>
 
 
-export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(
+export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void | ApiProblem>>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof downloadDocumentExport>>,
@@ -3130,7 +3131,7 @@ export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof down
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(
+export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void | ApiProblem>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof downloadDocumentExport>>,
@@ -3140,11 +3141,11 @@ export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof down
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(
+export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void | ApiProblem>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void>>(
+export function useDownloadDocumentExport<TData = Awaited<ReturnType<typeof downloadDocumentExport>>, TError = ErrorType<void | ApiProblem>>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadDocumentExport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

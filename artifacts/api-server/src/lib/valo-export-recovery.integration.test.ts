@@ -134,6 +134,15 @@ test(`real process death, PostgreSQL lease fencing and ${process.env.VALO_PORTAB
       while(Date.now()<readyBy&&(await getExport(a,job.id)).job.status!=="ready")await new Promise(r=>setTimeout(r,200));
       assert.equal((await getExport(a,job.id)).job.status,"ready");
       assert.equal((await db.select().from(valoFileAssets).where(eq(valoFileAssets.jobId,job.id))).length,1);
+      const retained=(await getExport(a,job.id)).asset!;
+      await db.update(valoFileAssets).set({retentionAt:new Date(0)}).where(eq(valoFileAssets.id,retained.id));
+      const expiryBy=Date.now()+30000;
+      while(Date.now()<expiryBy){
+        const [row]=await db.select().from(valoExportJobs).where(eq(valoExportJobs.id,job.id));
+        if(row?.errorCode==="EXPORT_EXPIRED")break;await new Promise(r=>setTimeout(r,200));
+      }
+      assert.equal((await getExport(a,job.id)).job.errorCode,"EXPORT_EXPIRED","actual dispatcher retires expired bytes");
+      assert.equal((await getExport(a,job.id)).asset,null);
       await kill();
     });
   }finally{

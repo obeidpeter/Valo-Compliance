@@ -257,6 +257,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-workspace-export-convergence-db
       - name: Prove cleanup retry fairness, privacy holds and outage recovery
         run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-workspace-cleanup.integration.test.ts
+      - name: Prove export retention, hold safety, regeneration and final-byte expiry
+        run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --experimental-test-module-mocks --import tsx --test src/lib/valo-export-retention.integration.test.ts
       - name: Prove dispute immutability and authenticated privacy-copy redaction coexist
         run: VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-private-copy-inventory.integration.test.ts
       - name: Prove paged workspace attachment, final authorization and disconnect cleanup

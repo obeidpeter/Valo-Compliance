@@ -2576,6 +2576,8 @@ export interface ExportJob {
   size: number | null;
   /** @nullable */
   downloadUrl: string | null;
+  /** @nullable */
+  expiresAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

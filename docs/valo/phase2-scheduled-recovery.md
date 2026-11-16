@@ -82,9 +82,21 @@ python3 scripts/ops/backup_scheduler.py /private/configuration.json
 Use one scheduler or one approved host timer, never both. Cycle and scheduler locks
 prevent overlap. The workspace scheduler runs immediately, then at most once per
 hour, without burst catch-up. It rechecks the pinned source and credential expiry.
-The provider key must have more than two hours left. The current development key
-expires November 22, 2026 at approximately 21:26 UTC; rotate it and update independent
-custody and the verified expiry before that boundary.
+The provider key must have more than two hours left. Read its current verified
+expiry from the private configuration and provider key inventory; a date in this
+runbook is not credential authority. Rotate before that boundary.
+
+For an equivalent rotation, retain the same development bucket/prefix, access
+scope and bounded lifetime. Save the replacement in the existing Replit Secrets
+and independent encrypted custody. Verify its fingerprint in a fresh process,
+read back an existing database archive and independent privacy journal, drain
+the old scheduler gracefully, then update the provider-verified expiry and start
+one scheduler with the new environment. Confirm its first backup and both
+read-backs before revoking the superseded key. Observe the next elapsed hourly
+cycle; an immediate startup cycle alone does not prove an elapsed schedule.
+Preserve the existing restic password and snapshots. Changing the expiry field
+without rotating the provider credential does not renew access. API, supervisor
+and worker processes must continue to exclude backup credentials.
 
 A cycle sends a bodyless start signal, captures and verifies the database/object
 archive, then captures and independently verifies the newer privacy journal. It
