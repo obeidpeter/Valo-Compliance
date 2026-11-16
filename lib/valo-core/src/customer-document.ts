@@ -20,13 +20,23 @@ const headings:Record<CustomerPlan["sections"][number]["heading"],string>={
 /** The model only selects structure and approved connective wording. All facts remain verbatim inputs. */
 export function buildBusinessDraft(input:CustomerDraftInput,plan:CustomerPlan|null){
   const narrative:{id:string;type:"paragraph";text:string;rows:string[][]}[]=[];
+  // Dates and balances stay outside the model. An upcoming reminder must never
+  // become an overdue assertion just because the requested instruction says so.
+  const upcoming=input.task==="payment_reminder"&&!!input.issueDate&&!!input.dueDate&&input.dueDate>input.issueDate;
+  if(input.task==="payment_reminder"){
+    if(upcoming)narrative.push({id:"payment-timing",type:"paragraph",
+      text:`Upcoming payment: the supplied due date is ${input.dueDate}, after the supplied as-of date ${input.issueDate}. This reminder does not assert that payment is overdue.`,rows:[]});
+    narrative.push({id:"payment-reconciliation",type:"paragraph",
+      text:"If you have already paid, please share the payment date, amount and reference so the supplied record can be reconciled. This draft does not independently verify payment.",rows:[]});
+  }
   if(plan){
     const indexes=plan.sections.flatMap(s=>s.lineIndexes);
     if(indexes.length!==input.contextLines.length||new Set(indexes).size!==indexes.length||
       indexes.some(i=>!Number.isInteger(i)||i<0||i>=input.contextLines.length))
       throw Error("AI_PLAN_MUST_PRESERVE_EVERY_SUPPLIED_LINE_ONCE");
     if(plan.opening==="outstanding_record"&&input.task!=="payment_reminder")throw Error("AI_OPENING_OUTSIDE_TASK");
-    if(openings[plan.opening])narrative.push({id:"draft-opening",type:"paragraph",text:openings[plan.opening],rows:[]});
+    if(openings[plan.opening]&&!(upcoming&&plan.opening==="outstanding_record"))
+      narrative.push({id:"draft-opening",type:"paragraph",text:openings[plan.opening],rows:[]});
     plan.sections.forEach((s,i)=>{
       const text=`${headings[s.heading]}\n${s.lineIndexes.map(index=>input.contextLines[index]).join("\n")}`;
       if(text.length>8000)throw Error("AI_SECTION_TOO_LONG");
@@ -41,6 +51,7 @@ export function buildBusinessDraft(input:CustomerDraftInput,plan:CustomerPlan|nu
     blocks:[...narrative,...financialBlocks(input.financialInput)],selectedClauses:[] as string[],
     formatting:{font:"serif" as const,accent:"forest" as const},financialInput:input.financialInput};
   const title=input.task==="payment_reminder"&&input.financialInput.paymentRecord&&
-    recordedBalance(input.financialInput.paymentRecord).amountDueKobo==="0"?"Payment record enquiry":titles[input.task];
+    recordedBalance(input.financialInput.paymentRecord).amountDueKobo==="0"?"Payment record enquiry":
+      upcoming?"Upcoming payment reminder":titles[input.task];
   return{title:`${title}${input.documentNumber?` — ${input.documentNumber}`:""}`.slice(0,160),content};
 }

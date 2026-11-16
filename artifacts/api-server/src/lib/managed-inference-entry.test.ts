@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
-import {readFile} from "node:fs/promises";
-import {createHash} from "node:crypto";
+import {createHash,randomUUID} from "node:crypto";
+import {PgDialect,pgTable,uuid,text,boolean,timestamp} from "drizzle-orm/pg-core";
+import type {SQL} from "drizzle-orm";
 import {fileURLToPath} from "node:url";
 import {additionalInferenceAllocation,emptyBudget,inferenceProposal,requestDigest,validateBudgetState,type BudgetState}
   from "./inference-budget";
@@ -111,7 +112,45 @@ test("default managed entry and customer organizer use actual finite dispatch an
       ["VALO_CUSTOMER_AI_ENABLED",originalEnvironment.enabled]] as const)
       if(value===undefined)delete process.env[name];else process.env[name]=value;
   });
-  t.mock.module("@workspace/db",{namedExports:{pool:{connect:()=>{throw Error("UNEXPECTED_REAL_LEDGER_CONNECTION");}}}});
+  const actor={workspaceId:"11111111-1111-4111-8111-111111111111",anchorDraftId:"22222222-2222-4222-8222-222222222222",
+    identityId:"valo-ai-eval-invoice-controlled"};
+  const artifacts=new Map<string,Buffer>(),customerRows:any[]=[];
+  const drafts=pgTable("valo_ai_drafts",{id:uuid(),workspaceId:uuid("workspace_id"),idempotencyKey:uuid("idempotency_key"),
+    budgetReserved:boolean("budget_reserved"),createdAt:timestamp("created_at")});
+  const switches=pgTable("valo_safety_switches",{key:text()});
+  const dialect=new PgDialect();
+  const match=(row:any,where:SQL)=>dialect.sqlToQuery(where).params.every(p=>
+    p===row.workspaceId||p===row.idempotencyKey||p===row.id);
+  const tx={execute:async(query:SQL)=>{assert.match(dialect.sqlToQuery(query).sql,/pg_advisory_xact_lock/);return{rows:[]};},select:(selection?:unknown)=>({from:(table:unknown)=>({where:(where:SQL)=>{
+    const rows=table===switches?[]:selection?[{n:customerRows.filter(r=>r.budgetReserved).length}]:customerRows.filter(r=>match(r,where));
+    return Object.assign(Promise.resolve(rows),{for:()=>Promise.resolve(rows)});
+  }})}),insert:()=>({values:(values:any)=>({returning:async()=>{
+    const row={...values,providerInputHash:null,providerCalls:0,acceptedDocumentId:null,createdAt:new Date()};customerRows.push(row);return[row];
+  }})}),update:()=>({set:(values:any)=>({where:(where:SQL)=>({returning:async()=>{
+    const row=customerRows.find(r=>match(r,where));assert.ok(row);Object.assign(row,values);return[row];
+  }})})})};
+  t.mock.module(new URL("./valo-assessments.ts",import.meta.url).href,{namedExports:{
+    workspaceTransaction:async(current:unknown,fn:(t:typeof tx)=>Promise<unknown>)=>{assert.deepEqual(current,{workspaceId:actor.workspaceId,identityId:actor.identityId});return fn(tx);},
+    workspaceEvent:async()=>undefined,
+  }});
+  t.mock.module(new URL("./valo-store.ts",import.meta.url).href,{namedExports:{
+    ValoProblem:class extends Error{constructor(public status:number,message:string){super(message);}},
+    createDocumentInTransaction:async()=>{throw Error("ACCEPTANCE_NOT_AUTHORIZED_IN_TEST");},
+    getDocument:async()=>{throw Error("DOCUMENT_READ_NOT_EXPECTED");},
+  }});
+  t.mock.module("@workspace/db",{namedExports:{valoAIDrafts:drafts,valoSafetySwitches:switches,pool:{connect:()=>{throw Error("UNEXPECTED_REAL_LEDGER_CONNECTION");},
+    query:async(text:string)=>{
+      if(text.startsWith("select d.id"))return{rows:[{id:actor.anchorDraftId}]};
+      if(text.startsWith("select enabled"))return{rows:[]};
+      if(text.startsWith("select id,workspace_id"))return{rows:customerRows.map(r=>({id:r.id,workspace_id:r.workspaceId,
+        idempotency_key:r.idempotencyKey,input_hash:r.inputHash,provider_input_hash:r.providerInputHash,prompt_version:r.promptVersion,
+        provider_runs:r.providerRuns,status:r.status,created_at:r.createdAt}))};
+      throw Error("UNEXPECTED_CUSTOMER_READ_SQL");
+    }}}});
+  t.mock.module(new URL("../editorial/publication-artifacts.ts",import.meta.url).href,{namedExports:{
+    getPublicationArtifact:async(ref:{id:string;hash:string})=>{const bytes=artifacts.get(ref.id);assert.ok(bytes);
+      assert.equal(createHash("sha256").update(bytes).digest("hex"),ref.hash);return bytes;},
+  }});
   t.mock.module(new URL("./inference-budget-store.ts",import.meta.url).href,{namedExports:{InferenceBudgetStore:MemoryBudgetStore}});
   t.mock.module("@workspace/integrations-openai-ai-server",{namedExports:{openai:{chat:{completions:{
     create:async(request:ManagedRequest,options:{timeout:number;maxRetries:number})=>{
@@ -124,32 +163,24 @@ test("default managed entry and customer organizer use actual finite dispatch an
     },
   }}}}});
   const {managedCompletion,withApprovedInferenceWork,withBoundInferenceDispatcher}=await import("./managed-inference");
-  const {organizeCustomerDraft,customerCompletionRequest}=await import("./valo-customer-ai-model");
-  const {customerAIInput,customerProviderPayload}=await import("./valo-customer-ai-domain");
-  const path="docs/evaluation-candidates/customer-ai.json";
-  const bytes=await readFile(new URL("../../../../"+path,import.meta.url));
-  const corpus=JSON.parse(bytes.toString()) as {cases:{caseID:string;task:string;suppliedFacts:{
-    parties:{business:string;customer:string};reference:string;issueDate:string;dueDate:string;
-    lines:{description:string;quantity:string;unitPrice:string}[]}}[]};
-  const source=corpus.cases.find(c=>c.caseID==="CAI-CAND-INV-01");assert.ok(source);
-  const {prepareCustomerFiniteManifest}=await import("./inference-customer-manifest");
-  const {input}=await prepareCustomerFiniteManifest(source.caseID);
-  const request=customerCompletionRequest(customerProviderPayload(input));
-  const caseId=source.caseID,caseHash=requestDigest(source),sourceHash=createHash("sha256").update(bytes).digest("hex");
+  const {organizeCustomerDraft}=await import("./valo-customer-ai-model");
+  const {prepareCustomerEvaluationPlan,prepareCustomerFiniteManifest}=await import("./inference-customer-evaluation");
+  const plan=await prepareCustomerEvaluationPlan(actor,new Date(Date.now()-10000));
+  const entry=plan.cases.find(c=>c.caseId==="CAI-CAND-INV-01")!,input=entry.input!,request=entry.request!;
   let batchNumber=0;
   function prepare(options:{retry?:boolean;modify?:(work:FiniteWork)=>void}={}){
-    const id=`controlled-entry-${++batchNumber}`,key=`${id}:attempt-1`;
-    const work:FiniteWork={key,lane:"customer",role:"customer",pair:null,candidateHash:caseHash,caseHash,
-      sourceHashes:[sourceHash],request:structuredClone(request),bindings:{candidateVersionId:null,
-        corpus:"customer-ai",caseId,sourceFiles:[{path,sha256:sourceHash}]}};
-    options.modify?.(work);
-    const works=[work];if(options.retry)works.push({...structuredClone(work),key:`${id}:attempt-2`,retryOf:key});
-    const manifest:FiniteManifest={version:2,policyVersion:inferenceProposal.priceVersion,
-      allocation:{...additionalInferenceAllocation},preparedAt:new Date(Date.now()-2000).toISOString(),works};
+    const id=`controlled-entry-${++batchNumber}`,bytes=Buffer.from(JSON.stringify(plan));
+    const artifact={id:randomUUID(),hash:createHash("sha256").update(bytes).digest("hex"),extension:"json" as const};
+    artifacts.set(artifact.id,bytes);
+    const manifest=prepareCustomerFiniteManifest(plan,artifact,entry.caseId,"finite-package:"+"a".repeat(64));
+    delete manifest.packageId;
+    if(!options.retry)manifest.works=manifest.works.slice(0,1);
+    const key=manifest.works[0]!.key,retryKey=manifest.works[1]?.key;
+    options.modify?.(manifest.works[0]!);
     batches.set(id,{id,manifest,manifest_hash:requestDigest(manifest),policy_hash:requestDigest(inferenceProposal),
       enabled:true,approved_by:"synthetic-test-only",approval_reference:"controlled-node-test-not-owner-approval",
       approved_at:new Date(Date.now()-1000).toISOString(),expires_at:new Date(Date.now()+60000).toISOString(),results:{}});
-    return{id,key};
+    return{id,key,retryKey};
   }
   await t.test("approved context reaches the actual default entry and settles the exact work",async()=>{
     const batch=prepare(),before=sdkCalls;responses.push(JSON.stringify({opening:"none",sections:[]}));
@@ -173,7 +204,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
   });
   await t.test("actual default customer organizer uses two separately approved attempts after invalid schema",async()=>{
     const batch=prepare({retry:true}),before=sdkCalls;responses.push("{}",JSON.stringify({opening:"none",sections:[]}));
-    await assert.rejects(()=>withApprovedInferenceWork(batch.id,`${batch.id}:attempt-2`,
+    await assert.rejects(()=>withApprovedInferenceWork(batch.id,batch.retryKey!,
       ()=>managedCompletion("customer",request,{timeout:18000,maxRetries:0})),/RETRY_REQUIRES_PRIMARY_CONTEXT/);
     assert.equal(sdkCalls,before);
     const result=await withApprovedInferenceWork(batch.id,batch.key,()=>organizeCustomerDraft(input));
@@ -252,6 +283,29 @@ test("default managed entry and customer organizer use actual finite dispatch an
     await loading;callerRequest.model="unapproved-model";release();
     await pending;assert.equal(creates,1);
     assert.equal(state.entries.find(e=>e.runKey===`${batch.id}:${batch.key}`)?.status,"settled");
+  });
+  await t.test("prepared evaluation invokes the actual customer service and organizer, then replays without another paid attempt",async()=>{
+    const {createCustomerAIDraft,customerAIUsage}=await import("./valo-customer-ai");
+    const {executePreparedCustomerCase,assertCustomerEvaluationActor}=await import("./inference-customer-runtime");
+    const batch=prepare({retry:true}),manifest=batches.get(batch.id)!.manifest;
+    const workspaceActor={workspaceId:actor.workspaceId,identityId:actor.identityId};
+    const deps={recheck:()=>assertCustomerEvaluationActor(plan,entry),withWork:withApprovedInferenceWork,
+      usage:()=>customerAIUsage(workspaceActor),recentRequests:async()=>customerRows.length,
+      create:async(current:typeof input)=>{
+        let newProviderAttempts:number|null=0;
+        const preview=await createCustomerAIDraft(workspaceActor,current,async value=>{
+          newProviderAttempts=null;const result=await organizeCustomerDraft(value);
+          newProviderAttempts=result.runs.filter(r=>r.outboundAttempted).length;return result;
+        });return{preview,newProviderAttempts};
+      },stored:async(id:string)=>{const row=customerRows.find(r=>r.id===id);assert.ok(row);return row;}};
+    const before=sdkCalls;responses.push(JSON.stringify({opening:"none",sections:[]}));
+    const first=await executePreparedCustomerCase(batch.id,manifest,plan,deps);
+    assert.equal(sdkCalls-before,1);assert.equal(first.actualNewProviderAttempts,1);assert.equal(first.factsPreserved,true);
+    assert.equal(first.status,"partial_provider_evidence");assert.equal(first.providerQualityAccepted,false);assert.equal(first.formalAcceptance,false);
+    assert.equal(customerRows.length,1);assert.equal(customerRows[0].status,"ready");
+    const replay=await executePreparedCustomerCase(batch.id,manifest,plan,deps);
+    assert.equal(replay.previewId,first.previewId);assert.equal(replay.actualNewProviderAttempts,0);
+    assert.equal(sdkCalls-before,1);assert.equal(customerRows.length,1);
   });
   assert.equal(unexpectedNetwork,0);assert.equal(responses.length,0);
 });

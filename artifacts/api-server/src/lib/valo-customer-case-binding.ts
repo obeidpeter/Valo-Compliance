@@ -19,6 +19,11 @@ export function bindCustomerCase(c:AuthoredCustomerCase,followup:Record<string,s
     "purpose","deliverables","timeline","customerInputs","phases","baseBudget","contingencyPercent","contingencyApprovedForSpending",
     "packagePrice","customerBudgetCeiling","approvedDiscount","scopeChangesApproved","price","newDraftInputs","briefUnitPrice"]);
   const excludedFacts:string[]=[];
+  // Harness-selected workspace/revision identities are checked by the native
+  // evaluation journey. They are never extra document context for the model.
+  for(const key of["selectedWorkspace","existingSavedRevision"])if(typeof f[key]==="string"){
+    mapped.add(key);excludedFacts.push(key);
+  }
   // Null/empty evidence is intentionally represented as uncertainty, not invented.
   const uncertainties:Record<string,string>={deliveryDate:"Delivery date unconfirmed.",offerExpiry:"Offer expiry unspecified.",
     deliveryCommitment:"No delivery commitment supplied.",warranty:"No warranty supplied.",agreedInterestRate:"No agreed interest rate supplied.",
@@ -45,6 +50,10 @@ export function bindCustomerCase(c:AuthoredCustomerCase,followup:Record<string,s
     return{description:l.description,quantity:l.quantity,unitPriceKobo:nairaKobo(l.unitPrice),...(l.currency?{currency:l.currency}:{})};
   };
   let sourceLines=(f.lines??f.baseLines??[]) as Line[];
+  if(task==="business_proposal"&&f.newDraftInputs){
+    const details=f.newDraftInputs as {sessions:string;pricePerSession:string};
+    sourceLines=[{description:"Sessions",quantity:details.sessions,unitPrice:details.pricePerSession}];
+  }
   if(Array.isArray(f.phases))sourceLines=(f.phases as {name:string;price:string}[]).map(x=>({description:x.name,quantity:"1",unitPrice:x.price}));
   const financial:FinancialInput={kind:task as FinancialInput["kind"],lines:sourceLines.map(convert).filter(x=>x!==null),
     taxAmountKobo:null,taxLabel:"",discountKobo:money("discountAmount")??null,amountDueKobo:null,
@@ -101,7 +110,8 @@ export function explicitBoundaryFollowup(c:AuthoredCustomerCase){
   return{documentNumber:`SYNTHETIC-EVAL-${c.caseID}`,issueDate:"2026-11-13",
     ...(c.task==="payment-reminder"?{dueDate:"2026-11-01"}:{})};
 }
-export function expectedSourceNumbers(c:AuthoredCustomerCase,b:ReturnType<typeof bindCustomerCase>){
+export function expectedSourceNumbers(c:AuthoredCustomerCase,b:ReturnType<typeof bindCustomerCase>):
+  {key:string;expected:string;actualKobo:string|null;pass:boolean}[]{
   if(b.subtotalKobo===null)return Object.entries(c.expectedNumeric??{}).map(([key,expected])=>({key,expected,actualKobo:null,pass:false}));
   const actual:Record<string,string>={},f=c.suppliedFacts,fi=b.financial;
   const assign=(keys:string[],value:string)=>{for(const k of keys)actual[k]=value;};

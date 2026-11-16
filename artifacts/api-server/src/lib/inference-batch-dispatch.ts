@@ -11,7 +11,7 @@ export type FiniteWork={key:string;lane:BudgetLane;role:"factual"|"challenge"|"c
   pair:string|null;retryOf?:string;candidateHash:string;sourceHashes:string[];caseHash:string;request:ManagedRequest;
   bindings:{candidateVersionId:string|null;corpus:"editorial"|"checker"|"customer-ai"|null;caseId:string|null;
     sourceFiles:{path:string;sha256:string}[];historicalCutoff?:string;
-    operationalPlan?:{id:string;hash:string;extension:"json"}}};
+    operationalPlan?:{id:string;hash:string;extension:"json"};customerPlan?:{id:string;hash:string;extension:"json"}}};
 export type FiniteManifest={version:2;policyVersion:string;preparedAt:string;
   allocation:typeof additionalInferenceAllocation;packageId?:string;works:FiniteWork[]};
 export type CompletionTransport=(request:ManagedRequest,options:{timeout:number;maxRetries:0;

@@ -27,7 +27,7 @@ test("delegated membership cannot broaden the content inventory or enable unsupp
   for(const id of ["TPL-13","TPL-39","TPL-40","GUD-01"])assert.throws(()=>assertWorkPackageMembership(w,pkg,id),/PREPARER_UNAVAILABLE/);
   const customer={...w,lane:"customer" as const,role:"customer" as const,pair:null,
     caseHash:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.hash,
-    bindings:{...w.bindings,corpus:"customer-ai" as const,caseId:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.id}};
+    bindings:{...w.bindings,candidateVersionId:null,corpus:"customer-ai" as const,caseId:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.id}};
   assert.doesNotThrow(()=>assertWorkPackageMembership(customer,pkg,null));
   customer.caseHash="f".repeat(64);assert.throws(()=>assertWorkPackageMembership(customer,pkg,null),/OUTSIDE_PACKAGE/);
 });
@@ -45,12 +45,15 @@ test("historical disabled artifact retains exact source pins but cannot authoriz
   assert.throws(()=>validateAllocationPackage(frozen.package),/ALLOCATION_PACKAGE_INVALID/);
   assert.equal(frozen.packageHash,requestDigest(frozen.package));assert.equal(frozen.packageId,allocationPackageId(frozen.package));
   assert.equal(frozen.packageId,"finite-package:3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8");
-  // Runtime preparation can improve inside these same frozen identities without
-  // replacing the package, clearing its holds or authorising a provider call.
-  for(const id of ["TPL-12","TPL-22","TPL-24","TPL-34","TPL-35","TPL-38"])
-    assert.doesNotThrow(()=>assertWorkPackageMembership(work(),frozen.package,id));
   const actual=await prepareFiniteAllocationPackage(new Date(frozen.package.preparedAt));
   validateAllocationPackage(actual);
+  // Runtime preparation can improve inside the same frozen content identities without
+  // clearing holds or authorising a provider call. The frozen artifact is no longer
+  // admission authority, so membership is checked against the current package.
+  for(const id of ["TPL-12","TPL-22","TPL-24","TPL-34","TPL-35","TPL-38"]){
+    assert.ok(frozen.package.contentIds.includes(id),id);
+    assert.doesNotThrow(()=>assertWorkPackageMembership(work(),actual,id));
+  }
   assert.equal(actual.allocation.startBoundary,"durable-owner-approval-of-exact-finite-package");
   assert.notEqual(requestDigest(actual),frozen.packageHash);
   // In particular, do not normalize/trim JSON or Markdown before file hashing.

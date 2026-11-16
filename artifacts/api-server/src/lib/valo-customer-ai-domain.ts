@@ -5,7 +5,7 @@ import { buildBusinessDraft,type CustomerPlan } from "@workspace/valo-core/custo
 import { financialBlocks,recordedBalance } from "@workspace/valo-core/money";
 import { calendarDate } from "./valo-validation";
 import { z } from "zod";
-export const customerPromptVersion="customer-extractive-v2";
+export const customerPromptVersion="customer-extractive-v3";
 export const customerNoticeVersion="customer-ai-development-notice-v2";
 export const hashAI=(value:unknown)=>createHash("sha256").update(canonical(value)).digest("hex");
 export const customerAIInput=CreateCustomerAIDraftBody.strict().superRefine((i,ctx)=>{
