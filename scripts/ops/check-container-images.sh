@@ -17,8 +17,17 @@ web="valo-web:$tag"
 web_port="${VALO_IMAGE_CHECK_PORT:-3000}"
 
 if [ "${VALO_SKIP_IMAGE_BUILD:-}" != "1" ]; then
-  docker build --target api -t "$api" .
-  docker build --target web -t "$web" .
+  revision=$(git rev-parse HEAD)
+  docker build --target api --build-arg VALO_RELEASE_SHA="$revision" -t "$api" .
+  docker build --target web --build-arg VALO_RELEASE_SHA="$revision" -t "$web" .
+  echo "Both images carry the commit they were built from."
+  for image in "$api" "$web"; do
+    label=$(docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$image")
+    if [ "$label" != "$revision" ]; then
+      echo "$image is labelled '$label', expected $revision" >&2
+      exit 1
+    fi
+  done
 fi
 
 echo "Both images run as a non-root user."

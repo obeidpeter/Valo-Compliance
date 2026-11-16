@@ -47,10 +47,10 @@ Measured on the integration branch at `14c8f38`:
 | TypeScript: strictFunctionTypes, noUnusedLocals/Parameters, noImplicitOverride | done |
 | TypeScript: exactOptionalPropertyTypes (91 errors), noUncheckedIndexedAccess (825) | not started |
 | Generated API client checked against the contract in CI | done |
-| Typed settings module with startup validation and `.env.example` | not started |
-| One test command with lanes and its own database | not started |
-| Delete unused UI kit, packages, `mockup-sandbox` | in progress (`mockup-sandbox` removed; its lockfile entry is pruned once the lockfile can change) |
-| Safe error logging; no silently discarded errors | not started |
+| Typed settings registry and generated `.env.example`; reading an unregistered variable fails a test | done |
+| One test command with lanes and its own database | in progress (`pnpm test` runs typecheck, lint and the fast suites; a test fails when a test file is run by no script; database groups still run as separate CI steps) |
+| Delete unused UI kit, packages, `mockup-sandbox` | in progress (52 components and `mockup-sandbox` removed; their npm packages are pruned once the lockfile can change) |
+| Safe error logging; no silently discarded errors | done (errors are logged by class, code and stack frames, never by message; empty catches need a reason) |
 
 Exit: CI rejects unformatted code, stray environment reads and discarded errors.
 
@@ -71,7 +71,7 @@ reach the 80% branch coverage NFR-011 requires.
 
 | Item | Status |
 | --- | --- |
-| Regenerate schema snapshots; timestamp-named migrations | not started |
+| Regenerate schema snapshots; timestamp-named migrations; CI fails on schema changes without a migration | done |
 | Workspace context object required by every query; automatic cross-workspace route tests | not started |
 | R2 membership design | not started |
 | Adopt the migration ledger on the Replit development database | blocked (needs access to that database) |
@@ -81,18 +81,19 @@ reach the 80% branch coverage NFR-011 requires.
 | Item | Status |
 | --- | --- |
 | Local session verification, live checks for sensitive actions | not started |
-| Rate-limit cleanup off the request path | not started |
+| Rate-limit cleanup off the request path | done |
 | Published-content cache with invalidation | not started |
-| Reuse one browser for PDFs, five in parallel | not started |
+| Reuse one browser for PDFs, five in parallel | done |
 | Server-rendered public pages, split bundle, self-hosted fonts | not started |
 
 ### Phase 5 — Environments and operations
 
 | Item | Status |
 | --- | --- |
-| Container image and environment profiles | not started |
-| Release and rollback procedure | not started |
-| Metrics, error tracking hooks, alert definitions | not started |
+| Container images (API, web) built and start-checked in CI; environment profiles documented | done |
+| Release and rollback procedure | done ([release-and-rollback.md](../valo/release-and-rollback.md)) |
+| Alert definitions in one place | done (catalogue of the existing internal and external alerts) |
+| External error tracking and metrics service | blocked (a new dependency and a new processor of operational data; needs owner approval) |
 | Backup retention policy (backups are never pruned today) | not started |
 | Staging and production environments | blocked (needs spend approval) |
 

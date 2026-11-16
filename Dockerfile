@@ -2,11 +2,14 @@
 # One image per process type, built from the same frozen install. Configuration comes
 # only from environment variables (see .env.example); no secret is baked into an image.
 #
-#   docker build --target api -t valo-api .     # API, worker and operator commands
-#   docker build --target web -t valo-web --build-arg CLERK_PUBLISHABLE_KEY=pk_test_... .
+#   docker build --target api --build-arg VALO_RELEASE_SHA=<commit> -t valo-api:<commit> .
+#   docker build --target web --build-arg VALO_RELEASE_SHA=<commit> \
+#     --build-arg CLERK_PUBLISHABLE_KEY=pk_test_... -t valo-web:<commit> .
 #
-# The API image runs the API by default. Run the worker with
-#   docker run ... valo-api node --enable-source-maps dist/export-worker.mjs
+# The API image runs the API by default and also holds the worker and operator
+# commands. Run the supervised worker with
+#   docker run ... valo-api:<commit> node --enable-source-maps dist/export-supervisor.mjs
+# See docs/valo/release-and-rollback.md before using an image anywhere but CI.
 #
 # Dependencies are only ever installed from the frozen lockfile, so the supply-chain
 # rules in pnpm-workspace.yaml apply unchanged. `pnpm deploy` is not used because it
@@ -27,6 +30,8 @@ RUN pnpm --filter @workspace/api-server run build \
  && pnpm install --frozen-lockfile --offline --prod --filter @workspace/api-server
 
 FROM node:24-bookworm-slim AS api
+ARG VALO_RELEASE_SHA=unknown
+LABEL org.opencontainers.image.revision="$VALO_RELEASE_SHA"
 ENV NODE_ENV=production \
     PORT=8080 \
     PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright \
@@ -52,6 +57,8 @@ RUN CLERK_PUBLISHABLE_KEY="$CLERK_PUBLISHABLE_KEY" BASE_PATH="$BASE_PATH" pnpm -
 # React and the UI libraries are dev dependencies of the web app, so the web image keeps
 # the full install. Next.js starts directly; pnpm is not needed at runtime.
 FROM node:24-bookworm-slim AS web
+ARG VALO_RELEASE_SHA=unknown
+LABEL org.opencontainers.image.revision="$VALO_RELEASE_SHA"
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000
 COPY --from=web-build /repo /repo
 RUN chown -R node:node /repo/artifacts/valo/.next

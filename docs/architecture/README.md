@@ -59,7 +59,11 @@ everything else. This is deliberate: no production launch is approved.
 | `lib/valo-core` | Logic shared by API and web: guided forms, money, checker, publication rules, plus requirement and evidence registers. |
 | `lib/integrations-openai-ai-server` | OpenAI client configured through Replit AI Integrations. |
 | `scripts` | Readiness report, register synchronisation, security scans. |
-| `scripts/ops` | Backup, restore, retention replay, release manifest, host supervision. |
+| `scripts/ops` | Backup, restore, retention replay and planning, release manifest, host supervision, container image check. |
+
+Releases, rollback, environment profiles, backup retention and alerts are described in
+[docs/valo/release-and-rollback.md](../valo/release-and-rollback.md). The `Dockerfile` builds
+the API and web images; no environment runs them yet.
 
 ## Invariants
 
