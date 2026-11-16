@@ -93,9 +93,14 @@ workflow run for the exact commit before reporting CI status.
 
 - Migrations in `lib/db/drizzle` are append-only. Never edit, rename or delete a
   migration that has been merged into the integration branch.
-- Register every new migration in `lib/db/drizzle/meta/_journal.json` with the
-  next index and a later timestamp, and extend
-  `lib/db/scripts/phase1-migrations.test.mjs`.
+- Change the Drizzle schema, then run
+  `pnpm --filter @workspace/db exec drizzle-kit generate --name <change>`. New
+  files are timestamp-named. For functions, triggers or grants use
+  `drizzle-kit generate --custom --name <change>` and write the SQL by hand.
+  CI fails if the schema changes without a migration (`test:schema-drift`).
+- Extend `lib/db/scripts/phase1-migrations.test.mjs` with an upgrade check for
+  every new migration. When two branches both add migrations, renumber the
+  journal `idx` values on merge so they stay contiguous.
 - The Replit development database has no migration ledger. New migrations are
   applied there one file at a time, following `docs/valo/phase1-migration-plan.md`.
   Never run the full migrator against it and never fabricate ledger rows.
