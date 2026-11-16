@@ -4,7 +4,7 @@ import {randomUUID} from "node:crypto";
 import {db,pool,valoPrivacyErasureObjects,valoPrivacyCases,valoPrivacyEvents,valoPrivacyTombstones,
   valoWorkspaces,valoMemberships,valoStaffAssignments,valoStaffAccessAudit,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoSupportTickets,valoEvents,valoAIDrafts,
-  valoExportJobs,valoFileAssets,valoExportObjects,valoPrivacyMessages} from "@workspace/db";
+  valoExportJobs,valoFileAssets,valoExportObjects,valoPrivacyMessages,valoSavedTemplates} from "@workspace/db";
 import {eq,inArray,sql} from "drizzle-orm";
 import {resolveWorkspace,saveProfile,createDocument,authorizeWorkspaceWrite} from "./valo-store";
 import {syntheticProfile,syntheticDocument} from "./valo-test-fixtures";
@@ -38,6 +38,7 @@ test("resumable physical development erasure with retained exclusions and replay
     await saveProfile(a,{expectedRevision:0,profile:syntheticProfile});
     await createDocument(a,syntheticDocument);
     await createDocument(b,syntheticDocument);
+    await db.insert(valoSavedTemplates).values(Array.from({length:101},(_,i)=>({id:randomUUID(),workspaceId:a.workspaceId,templateId:'CONTROLLED-SAVED-'+i,savedTitle:'Controlled metadata only',savedVersion:1})));
     const[revision]=await db.select().from(valoDocumentRevisions).where(eq(valoDocumentRevisions.workspaceId,a.workspaceId));
     for(const state of["retained","pending","cleanup"] as const){
       const key=`valo/development/${a.workspaceId}/${randomUUID()}.pdf`,jobId=randomUUID(),queueId=randomUUID();
@@ -145,7 +146,7 @@ test("resumable physical development erasure with retained exclusions and replay
         detail=await act("resume_erasure");version=detail.request.version;
       }
       assert.equal(detail.request.status,"partially_fulfilled");
-      for(const table of[valoDocuments,valoDocumentRevisions,valoProfileVersions])
+      for(const table of[valoDocuments,valoDocumentRevisions,valoProfileVersions,valoSavedTemplates])
         assert.equal((await db.select().from(table).where(eq(table.workspaceId,a.workspaceId))).length,0);
       assert.equal((await db.select().from(valoDocuments).where(eq(valoDocuments.workspaceId,b.workspaceId))).length,1);
       assert.ok((await db.select().from(valoSupportTickets).where(eq(valoSupportTickets.workspaceId,a.workspaceId))).length>0);

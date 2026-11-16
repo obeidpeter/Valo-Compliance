@@ -147,11 +147,14 @@ async function eraseSection(tx:Tx,workspaceId:string,section:typeof phases[numbe
   if(section==="purchase_notifications")return holdUnsentPrivacyNotifications(tx,workspaceId);
   if(section==="support_content")return eraseSupportContentBatch(tx,workspaceId);
   if(section==="privacy_content"){
-    // Keep historical signed phase indices. The exact JSON keys are already
-    // sealed independently before removing their customer-bearing metadata.
-    const removedAttempts=await tx.execute(sql`DELETE FROM valo_workspace_export_attempts WHERE ctid IN
-      (SELECT ctid FROM valo_workspace_export_attempts WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
-    let used=removedAttempts.rowCount??0;
+    // Preserve historical signed phase indices and one shared 100-row budget.
+    // Exact native export object keys are sealed before customer metadata goes.
+    const saved=await tx.execute(sql`DELETE FROM valo_saved_templates WHERE ctid IN
+      (SELECT ctid FROM valo_saved_templates WHERE workspace_id=${workspaceId}::uuid LIMIT 100)`);
+    let used=saved.rowCount??0;
+    if(used<100){const removedAttempts=await tx.execute(sql`DELETE FROM valo_workspace_export_attempts WHERE ctid IN
+      (SELECT ctid FROM valo_workspace_export_attempts WHERE workspace_id=${workspaceId}::uuid LIMIT ${100-used})`);
+      used+=removedAttempts.rowCount??0;}
     if(used<100){const removedJobs=await tx.execute(sql`DELETE FROM valo_workspace_exports WHERE ctid IN
       (SELECT ctid FROM valo_workspace_exports j WHERE workspace_id=${workspaceId}::uuid
        AND NOT EXISTS (SELECT 1 FROM valo_workspace_export_attempts a WHERE a.job_id=j.id) LIMIT ${100-used})`);

@@ -5,6 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ListPublicCatalogueAccess } from './listPublicCatalogueAccess';
+import type { ListPublicCatalogueSort } from './listPublicCatalogueSort';
 import type { ListPublicCatalogueType } from './listPublicCatalogueType';
 
 export type ListPublicCatalogueParams = {
@@ -13,6 +15,10 @@ export type ListPublicCatalogueParams = {
   type?: ListPublicCatalogueType;
   /** @maxLength 80 */
   industry?: string;
+  /** @maxLength 80 */
+  category?: string;
+  access?: ListPublicCatalogueAccess;
+  sort?: ListPublicCatalogueSort;
   /** @minimum 1 */
   page?: number;
 };

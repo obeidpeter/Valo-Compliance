@@ -115,6 +115,16 @@ export const VerifyStaffRoleTargetResponse = zod.object({
 })
 
 
+export const GetPublicDiscoveryResponse = zod.object({
+  "items": zod.array(zod.object({
+  "path": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "modifiedAt": zod.string().nullable()
+}))
+})
+
+
 export const requestAccessSupportBodyEmailMax = 254;
 
 export const requestAccessSupportBodyMessageMin = 20;
@@ -1221,14 +1231,19 @@ export const listPublicCatalogueQueryQMax = 120;
 
 export const listPublicCatalogueQueryIndustryMax = 80;
 
+export const listPublicCatalogueQueryCategoryMax = 80;
+
 export const listPublicCatalogueQueryPageDefault = 1;
 
 
 
 export const ListPublicCatalogueQueryParams = zod.object({
   "q": zod.coerce.string().max(listPublicCatalogueQueryQMax).optional(),
-  "type": zod.enum(['all', 'template', 'guidance', 'service']).optional(),
+  "type": zod.enum(['all', 'template', 'guidance', 'article', 'industry', 'service']).optional(),
   "industry": zod.coerce.string().max(listPublicCatalogueQueryIndustryMax).optional(),
+  "category": zod.coerce.string().max(listPublicCatalogueQueryCategoryMax).optional(),
+  "access": zod.enum(['all', 'free', 'premium']).optional(),
+  "sort": zod.enum(['relevance', 'name', 'recently_checked']).optional(),
   "page": zod.coerce.number().int().min(1).default(listPublicCatalogueQueryPageDefault)
 })
 
@@ -1239,7 +1254,13 @@ export const ListPublicCatalogueResponse = zod.object({
   "title": zod.string(),
   "type": zod.string(),
   "summary": zod.string(),
-  "industry": zod.string()
+  "industry": zod.string(),
+  "templateId": zod.string().optional(),
+  "category": zod.string().optional(),
+  "access": zod.enum(['free', 'premium']).optional(),
+  "reviewedAt": zod.string().optional(),
+  "href": zod.string().optional(),
+  "reason": zod.string().optional()
 })),
   "total": zod.int(),
   "page": zod.int(),
@@ -1274,6 +1295,152 @@ export const GetReleasedTemplateResponse = zod.object({
 })
 
 
+export const listSavedTemplatesResponseItemsMax = 200;
+
+
+
+export const ListSavedTemplatesResponse = zod.object({
+  "notice": zod.string(),
+  "recommendations": zod.array(zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "type": zod.string(),
+  "summary": zod.string(),
+  "industry": zod.string(),
+  "templateId": zod.string().optional(),
+  "category": zod.string().optional(),
+  "access": zod.enum(['free', 'premium']).optional(),
+  "reviewedAt": zod.string().optional(),
+  "href": zod.string().optional(),
+  "reason": zod.string().optional()
+})),
+  "items": zod.array(zod.object({
+  "templateId": zod.string(),
+  "title": zod.string(),
+  "savedVersion": zod.int(),
+  "savedAt": zod.string(),
+  "available": zod.boolean(),
+  "current": zod.union([zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "type": zod.string(),
+  "summary": zod.string(),
+  "industry": zod.string(),
+  "templateId": zod.string().optional(),
+  "category": zod.string().optional(),
+  "access": zod.enum(['free', 'premium']).optional(),
+  "reviewedAt": zod.string().optional(),
+  "href": zod.string().optional(),
+  "reason": zod.string().optional()
+}),zod.null()])
+})).max(listSavedTemplatesResponseItemsMax)
+})
+
+
+export const SaveReleasedTemplateParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const saveReleasedTemplateResponseItemsMax = 200;
+
+
+
+export const SaveReleasedTemplateResponse = zod.object({
+  "notice": zod.string(),
+  "recommendations": zod.array(zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "type": zod.string(),
+  "summary": zod.string(),
+  "industry": zod.string(),
+  "templateId": zod.string().optional(),
+  "category": zod.string().optional(),
+  "access": zod.enum(['free', 'premium']).optional(),
+  "reviewedAt": zod.string().optional(),
+  "href": zod.string().optional(),
+  "reason": zod.string().optional()
+})),
+  "items": zod.array(zod.object({
+  "templateId": zod.string(),
+  "title": zod.string(),
+  "savedVersion": zod.int(),
+  "savedAt": zod.string(),
+  "available": zod.boolean(),
+  "current": zod.union([zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "type": zod.string(),
+  "summary": zod.string(),
+  "industry": zod.string(),
+  "templateId": zod.string().optional(),
+  "category": zod.string().optional(),
+  "access": zod.enum(['free', 'premium']).optional(),
+  "reviewedAt": zod.string().optional(),
+  "href": zod.string().optional(),
+  "reason": zod.string().optional()
+}),zod.null()])
+})).max(saveReleasedTemplateResponseItemsMax)
+})
+
+
+export const unsaveTemplatePathTemplateIdMax = 80;
+
+
+export const unsaveTemplatePathTemplateIdRegExp = new RegExp('^[A-Za-z0-9_-]{1,80}$');
+
+
+export const UnsaveTemplateParams = zod.object({
+  "templateId": zod.coerce.string().max(unsaveTemplatePathTemplateIdMax).regex(unsaveTemplatePathTemplateIdRegExp)
+})
+
+export const unsaveTemplateResponseItemsMax = 200;
+
+
+
+export const UnsaveTemplateResponse = zod.object({
+  "notice": zod.string(),
+  "recommendations": zod.array(zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "type": zod.string(),
+  "summary": zod.string(),
+  "industry": zod.string(),
+  "templateId": zod.string().optional(),
+  "category": zod.string().optional(),
+  "access": zod.enum(['free', 'premium']).optional(),
+  "reviewedAt": zod.string().optional(),
+  "href": zod.string().optional(),
+  "reason": zod.string().optional()
+})),
+  "items": zod.array(zod.object({
+  "templateId": zod.string(),
+  "title": zod.string(),
+  "savedVersion": zod.int(),
+  "savedAt": zod.string(),
+  "available": zod.boolean(),
+  "current": zod.union([zod.object({
+  "id": zod.string(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "type": zod.string(),
+  "summary": zod.string(),
+  "industry": zod.string(),
+  "templateId": zod.string().optional(),
+  "category": zod.string().optional(),
+  "access": zod.enum(['free', 'premium']).optional(),
+  "reviewedAt": zod.string().optional(),
+  "href": zod.string().optional(),
+  "reason": zod.string().optional()
+}),zod.null()])
+})).max(unsaveTemplateResponseItemsMax)
+})
+
+
 export const ListOperationalRecommendationsResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string(),
@@ -1281,7 +1448,13 @@ export const ListOperationalRecommendationsResponse = zod.object({
   "title": zod.string(),
   "type": zod.string(),
   "summary": zod.string(),
-  "industry": zod.string()
+  "industry": zod.string(),
+  "templateId": zod.string().optional(),
+  "category": zod.string().optional(),
+  "access": zod.enum(['free', 'premium']).optional(),
+  "reviewedAt": zod.string().optional(),
+  "href": zod.string().optional(),
+  "reason": zod.string().optional()
 })),
   "total": zod.int(),
   "page": zod.int(),

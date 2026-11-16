@@ -7,7 +7,7 @@ import {abortable} from "./valo-abort";
 import { db,valoAccessSupport,valoStaffAssignments,valoSupportTickets,valoProfileVersions,
   valoDocuments,valoDocumentRevisions,valoAssessments,valoTasks,valoReminderPreferences,
   valoReminderOutbox,valoAIDrafts,valoContentVersions,valoSafetySwitches,valoStaffAccessAudit,
-  valoExportJobs,valoFileAssets,valoEvents,valoWorkspaceExports } from "@workspace/db";
+  valoExportJobs,valoWorkspaceExports,valoFileAssets,valoEvents,valoSavedTemplates } from "@workspace/db";
 import { RequestAccessSupportBody,RequestCustomerPrivacyBody } from "@workspace/api-zod";
 import { consumeQuota,quotaSubjectHash } from "./valo-quota";
 import { authorizeWorkspaceWrite,authorizeWorkspaceRead,createTicket,ValoProblem,type WorkspaceActor } from "./valo-store";
@@ -73,7 +73,7 @@ export async function workspaceDataExport(actor:WorkspaceActor,sink?:(chunk:stri
     const header={schemaVersion:2,exportedAt:new Date().toISOString(),workspaceId:actor.workspaceId,
       scope:"Only the named application sections under data are included; this is not complete privacy fulfilment. Includes all historical application rows, linked financial event metadata, privacy case/result metadata and your own activity, but not private file bytes/storage locators. Previously prepared full workspace snapshots are deliberately not nested in new exports; their source records are exported directly. Private finance evidence/intent payloads, memberships, other people's activity, shared safety/usage/staff audits, managed identity, external processor copies and unlinked public contact intake are excluded. No ownership is inferred from a matching email."};
     if(sink)await sink(JSON.stringify(header).slice(0,-1)+',"data":{');
-    const tables={profileVersions:valoProfileVersions,documents:valoDocuments,documentRevisions:valoDocumentRevisions,
+    const tables={savedTemplates:valoSavedTemplates,profileVersions:valoProfileVersions,documents:valoDocuments,documentRevisions:valoDocumentRevisions,
       assessments:valoAssessments,tasks:valoTasks,reminderPreferences:valoReminderPreferences,
       reminderDeliveries:valoReminderOutbox,supportRequests:valoSupportTickets,aiDrafts:valoAIDrafts,
       orders:valoOrders,entitlements:valoEntitlements,purchaseMessages:valoPurchaseOutbox,

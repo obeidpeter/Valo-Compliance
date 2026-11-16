@@ -58,6 +58,28 @@ paths:
                   identityId: { type: string }
                   label: { type: string }
                   verifiedAt: { type: string, format: date-time }
+  /public/discovery:
+    get:
+      operationId: getPublicDiscovery
+      responses:
+        "200":
+          description: Public metadata for current releases and existing directory pages; no source files or private records
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [path, title, description, modifiedAt]
+                      properties:
+                        path: { type: string }
+                        title: { type: string }
+                        description: { type: string }
+                        modifiedAt: { type: [string, "null"] }
   /public/access-support:
     post:
       operationId: requestAccessSupport
@@ -578,8 +600,11 @@ paths:
       operationId: listPublicCatalogue
       parameters:
         - { in: query, name: q, schema: { type: string, maxLength: 120 } }
-        - { in: query, name: type, schema: { type: string, enum: [all, template, guidance, service] } }
+        - { in: query, name: type, schema: { type: string, enum: [all, template, guidance, article, industry, service] } }
         - { in: query, name: industry, schema: { type: string, maxLength: 80 } }
+        - { in: query, name: category, schema: { type: string, maxLength: 80 } }
+        - { in: query, name: access, schema: { type: string, enum: [all, free, premium] } }
+        - { in: query, name: sort, schema: { type: string, enum: [relevance, name, recently_checked] } }
         - { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
       responses:
         "200":
@@ -601,6 +626,42 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ReleasedTemplate" }
         "404": { $ref: "#/components/responses/AuthError" }
+  /workspace/saved-templates:
+    get:
+      operationId: listSavedTemplates
+      responses:
+        "200":
+          description: Owner-scoped saved items and currently released suggestions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SavedTemplates" }
+        "401": { description: Sign-in required }
+  /workspace/saved-templates/{id}:
+    put:
+      operationId: saveReleasedTemplate
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Saved after current release and owner checks; no entitlement is granted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SavedTemplates" }
+        "404": { description: Release unavailable }
+        "403": { description: Active owner required }
+        "409": { description: Saved-item limit reached }
+  /workspace/saved-templates/by-template/{templateId}:
+    delete:
+      operationId: unsaveTemplate
+      parameters:
+        - { in: path, name: templateId, required: true, schema: { type: string, maxLength: 80, pattern: "^[A-Za-z0-9_-]{1,80}$" } }
+      responses:
+        "200":
+          description: Idempotent removal, including unavailable templates
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SavedTemplates" }
+        "403": { description: Active owner required }
   /public/recommendations:
     get:
       operationId: listOperationalRecommendations
@@ -3642,6 +3703,34 @@ components:
         type: { type: string }
         summary: { type: string }
         industry: { type: string }
+        templateId: { type: string }
+        category: { type: string }
+        access: { type: string, enum: [free, premium] }
+        reviewedAt: { type: string }
+        href: { type: string }
+        reason: { type: string }
+    SavedTemplates:
+      type: object
+      required: [items, recommendations, notice]
+      properties:
+        notice: { type: string }
+        recommendations: { type: array, items: { $ref: "#/components/schemas/PublicItem" } }
+        items:
+          type: array
+          maxItems: 200
+          items:
+            type: object
+            required: [templateId, title, savedVersion, savedAt, available, current]
+            properties:
+              templateId: { type: string }
+              title: { type: string }
+              savedVersion: { type: integer }
+              savedAt: { type: string }
+              available: { type: boolean }
+              current:
+                anyOf:
+                  - { $ref: "#/components/schemas/PublicItem" }
+                  - { type: "null" }
     ReleasedTemplate:
       type: object
       required: [id, templateId, slug, title, summary, version, reviewedAt, reviewBy, disclosure, scope, limitations, preview, developmentOnly, commercialLicenceAccepted, formats]

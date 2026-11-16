@@ -7,6 +7,7 @@ import { WorkspaceNav } from '@/components/workspace-nav';
 import { EmptyState, ErrorState, Notice, Skel } from '@/components/states';
 import { blankContent, describeError, formatDate, missingFields } from '@/lib/api';
 import {GuidedDraftStarter} from '@/components/guided-draft-starter';
+import {SavedTemplates} from '@/components/saved-templates';
 
 export default function WorkspaceHome() {
   const { user } = useUser();
@@ -99,6 +100,7 @@ export default function WorkspaceHome() {
           </section>
         </div>
       )}
+      {ws.isSuccess&&<SavedTemplates/>}
     </div>
   );
 }

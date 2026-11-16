@@ -63,6 +63,7 @@ import type {
   FinancePaymentConcerns,
   FinanceRefunds,
   GetCommerceReceipt200,
+  GetPublicDiscovery200,
   GetStaffOperationsParams,
   GetStaffRoleAdministrationParams,
   HealthStatus,
@@ -96,6 +97,7 @@ import type {
   RequirementsRegister,
   SavedAssessment,
   SavedAssessmentInput,
+  SavedTemplates,
   SourceEvidenceRegister,
   StaffOperations,
   StaffRoleAdministration,
@@ -412,6 +414,100 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getVerifyStaffRoleTargetMutationOptions(options), queryClient);
     }
+
+export const getGetPublicDiscoveryUrl = () => {
+
+
+
+
+  return `/api/public/discovery`
+}
+
+export const getPublicDiscovery = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetPublicDiscovery200> => {
+
+  return customFetch<GetPublicDiscovery200>(getGetPublicDiscoveryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicDiscoveryQueryKey = () => {
+    return [
+    `/api/public/discovery`
+    ] as const;
+    }
+
+
+export const getGetPublicDiscoveryQueryOptions = <TData = Awaited<ReturnType<typeof getPublicDiscovery>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicDiscovery>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicDiscoveryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicDiscovery>>> = ({ signal }) => getPublicDiscovery({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicDiscovery>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPublicDiscoveryQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicDiscovery>>>
+export type GetPublicDiscoveryQueryError = ErrorType<unknown>
+
+
+export function useGetPublicDiscovery<TData = Awaited<ReturnType<typeof getPublicDiscovery>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicDiscovery>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicDiscovery>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicDiscovery>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicDiscovery<TData = Awaited<ReturnType<typeof getPublicDiscovery>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicDiscovery>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicDiscovery>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicDiscovery>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicDiscovery<TData = Awaited<ReturnType<typeof getPublicDiscovery>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicDiscovery>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPublicDiscovery<TData = Awaited<ReturnType<typeof getPublicDiscovery>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicDiscovery>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPublicDiscoveryQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getRequestAccessSupportUrl = () => {
 
@@ -3827,6 +3923,236 @@ export function useGetReleasedTemplate<TData = Awaited<ReturnType<typeof getRele
 
 
 
+
+export const getListSavedTemplatesUrl = () => {
+
+
+
+
+  return `/api/workspace/saved-templates`
+}
+
+export const listSavedTemplates = async ( options?: Parameters<typeof customFetch>[1]): Promise<SavedTemplates> => {
+
+  return customFetch<SavedTemplates>(getListSavedTemplatesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSavedTemplatesQueryKey = () => {
+    return [
+    `/api/workspace/saved-templates`
+    ] as const;
+    }
+
+
+export const getListSavedTemplatesQueryOptions = <TData = Awaited<ReturnType<typeof listSavedTemplates>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSavedTemplates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSavedTemplatesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSavedTemplates>>> = ({ signal }) => listSavedTemplates({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSavedTemplates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListSavedTemplatesQueryResult = NonNullable<Awaited<ReturnType<typeof listSavedTemplates>>>
+export type ListSavedTemplatesQueryError = ErrorType<void>
+
+
+export function useListSavedTemplates<TData = Awaited<ReturnType<typeof listSavedTemplates>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSavedTemplates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSavedTemplates>>,
+          TError,
+          Awaited<ReturnType<typeof listSavedTemplates>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSavedTemplates<TData = Awaited<ReturnType<typeof listSavedTemplates>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSavedTemplates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSavedTemplates>>,
+          TError,
+          Awaited<ReturnType<typeof listSavedTemplates>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSavedTemplates<TData = Awaited<ReturnType<typeof listSavedTemplates>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSavedTemplates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSavedTemplates<TData = Awaited<ReturnType<typeof listSavedTemplates>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSavedTemplates>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListSavedTemplatesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSaveReleasedTemplateUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/saved-templates/${id}`
+}
+
+export const saveReleasedTemplate = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<SavedTemplates> => {
+
+  return customFetch<SavedTemplates>(getSaveReleasedTemplateUrl(id),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getSaveReleasedTemplateMutationKey = () => ['saveReleasedTemplate'] as const;
+
+export const getSaveReleasedTemplateMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveReleasedTemplate>>, TError,SaveReleasedTemplateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveReleasedTemplate>>, TError,SaveReleasedTemplateMutationVariables, TContext> => {
+
+const mutationKey = getSaveReleasedTemplateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveReleasedTemplate>>, SaveReleasedTemplateMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  saveReleasedTemplate(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveReleasedTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof saveReleasedTemplate>>>
+
+    export type SaveReleasedTemplateMutationError = ErrorType<void>
+    export type SaveReleasedTemplateMutationVariables = {id: string}
+
+    export const useSaveReleasedTemplate = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveReleasedTemplate>>, TError,SaveReleasedTemplateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof saveReleasedTemplate>>,
+        TError,
+        SaveReleasedTemplateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveReleasedTemplateMutationOptions(options), queryClient);
+    }
+
+export const getUnsaveTemplateUrl = (templateId: string,) => {
+
+
+
+
+  return `/api/workspace/saved-templates/by-template/${templateId}`
+}
+
+export const unsaveTemplate = async (templateId: string, options?: Parameters<typeof customFetch>[1]): Promise<SavedTemplates> => {
+
+  return customFetch<SavedTemplates>(getUnsaveTemplateUrl(templateId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnsaveTemplateMutationKey = () => ['unsaveTemplate'] as const;
+
+export const getUnsaveTemplateMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unsaveTemplate>>, TError,UnsaveTemplateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unsaveTemplate>>, TError,UnsaveTemplateMutationVariables, TContext> => {
+
+const mutationKey = getUnsaveTemplateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unsaveTemplate>>, UnsaveTemplateMutationVariables> = (props) => {
+          const {templateId} = props ?? {};
+
+          return  unsaveTemplate(templateId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnsaveTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof unsaveTemplate>>>
+
+    export type UnsaveTemplateMutationError = ErrorType<void>
+    export type UnsaveTemplateMutationVariables = {templateId: string}
+
+    export const useUnsaveTemplate = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unsaveTemplate>>, TError,UnsaveTemplateMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unsaveTemplate>>,
+        TError,
+        UnsaveTemplateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnsaveTemplateMutationOptions(options), queryClient);
+    }
 
 export const getListOperationalRecommendationsUrl = () => {
 

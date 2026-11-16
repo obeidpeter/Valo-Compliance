@@ -13,5 +13,7 @@ export const ListPublicCatalogueType = {
   all: 'all',
   template: 'template',
   guidance: 'guidance',
+  article: 'article',
+  industry: 'industry',
   service: 'service',
 } as const;

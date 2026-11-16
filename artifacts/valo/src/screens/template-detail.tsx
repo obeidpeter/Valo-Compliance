@@ -6,6 +6,7 @@ import { useGetReleasedTemplate, useCreateTemplateDraft, downloadReleasedTemplat
 import { useQueryClient } from '@tanstack/react-query';
 import { describeError } from '@/lib/api';
 import { EmptyState, ErrorState, Notice, Skel } from '@/components/states';
+import {SaveTemplateButton} from '@/components/saved-templates';
 
 function fmtDay(iso: string) {
   const d = new Date(iso);
@@ -51,6 +52,7 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
   const createErr = create.isError ? describeError(create.error) : null;
   return (
     <div className="grid gap-3">
+      <SaveTemplateButton releaseId={t.id} templateId={t.templateId}/>
       <button className="btn btn-primary w-full" disabled={create.isPending} onClick={() => create.mutate({ id: t.id })} data-testid="button-create-draft">
         <FilePlus2 className="h-4 w-4" aria-hidden />{create.isPending ? 'Creating private draft…' : 'Create a private draft'}
       </button>

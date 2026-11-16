@@ -2330,6 +2330,14 @@ export interface ApiProblem {
   currentRevision?: number;
 }
 
+export type PublicItemAccess = typeof PublicItemAccess[keyof typeof PublicItemAccess];
+
+
+export const PublicItemAccess = {
+  free: 'free',
+  premium: 'premium',
+} as const;
+
 export interface PublicItem {
   id: string;
   slug: string;
@@ -2337,6 +2345,28 @@ export interface PublicItem {
   type: string;
   summary: string;
   industry: string;
+  templateId?: string;
+  category?: string;
+  access?: PublicItemAccess;
+  reviewedAt?: string;
+  href?: string;
+  reason?: string;
+}
+
+export type SavedTemplatesItemsItem = {
+  templateId: string;
+  title: string;
+  savedVersion: number;
+  savedAt: string;
+  available: boolean;
+  current: PublicItem | null;
+};
+
+export interface SavedTemplates {
+  notice: string;
+  recommendations: PublicItem[];
+  /** @maxItems 200 */
+  items: SavedTemplatesItemsItem[];
 }
 
 export type ReleasedTemplateFormatsItem = typeof ReleasedTemplateFormatsItem[keyof typeof ReleasedTemplateFormatsItem];
@@ -2710,6 +2740,18 @@ export type VerifyStaffRoleTarget200 = {
   verifiedAt: string;
 };
 
+export type GetPublicDiscovery200ItemsItem = {
+  path: string;
+  title: string;
+  description: string;
+  /** @nullable */
+  modifiedAt: string | null;
+};
+
+export type GetPublicDiscovery200 = {
+  items: GetPublicDiscovery200ItemsItem[];
+};
+
 export type ListWorkspaceDataExportsParams = {
   cursor?: string;
 };
@@ -2748,6 +2790,10 @@ export type ListPublicCatalogueParams = {
   type?: ListPublicCatalogueType;
   /** @maxLength 80 */
   industry?: string;
+  /** @maxLength 80 */
+  category?: string;
+  access?: ListPublicCatalogueAccess;
+  sort?: ListPublicCatalogueSort;
   /** @minimum 1 */
   page?: number;
 };
@@ -2759,7 +2805,27 @@ export const ListPublicCatalogueType = {
   all: 'all',
   template: 'template',
   guidance: 'guidance',
+  article: 'article',
+  industry: 'industry',
   service: 'service',
+} as const;
+
+export type ListPublicCatalogueAccess = typeof ListPublicCatalogueAccess[keyof typeof ListPublicCatalogueAccess];
+
+
+export const ListPublicCatalogueAccess = {
+  all: 'all',
+  free: 'free',
+  premium: 'premium',
+} as const;
+
+export type ListPublicCatalogueSort = typeof ListPublicCatalogueSort[keyof typeof ListPublicCatalogueSort];
+
+
+export const ListPublicCatalogueSort = {
+  relevance: 'relevance',
+  name: 'name',
+  recently_checked: 'recently_checked',
 } as const;
 
 export type ListTasksPageParams = {
