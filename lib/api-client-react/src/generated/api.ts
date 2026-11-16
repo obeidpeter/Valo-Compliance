@@ -98,6 +98,7 @@ import type {
   SavedAssessment,
   SavedAssessmentInput,
   SavedTemplates,
+  SessionMfaVerification,
   SourceEvidenceRegister,
   StaffOperations,
   StaffRoleAdministration,
@@ -5216,6 +5217,120 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getCreateSupportTicketMutationOptions(options), queryClient);
     }
+
+export const getVerifySessionMfaUrl = () => {
+
+
+
+
+  return `/api/session/mfa`
+}
+
+/**
+ * A read-only provider check. It grants no application role and returns no identity, token or session identifier.
+ * @summary Check that the signed-in staff session recently verified both factors
+ */
+export const verifySessionMfa = async ( options?: Parameters<typeof customFetch>[1]): Promise<SessionMfaVerification> => {
+
+  return customFetch<SessionMfaVerification>(getVerifySessionMfaUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getVerifySessionMfaQueryKey = () => {
+    return [
+    `/api/session/mfa`
+    ] as const;
+    }
+
+
+export const getVerifySessionMfaQueryOptions = <TData = Awaited<ReturnType<typeof verifySessionMfa>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof verifySessionMfa>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getVerifySessionMfaQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof verifySessionMfa>>> = ({ signal }) => verifySessionMfa({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof verifySessionMfa>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type VerifySessionMfaQueryResult = NonNullable<Awaited<ReturnType<typeof verifySessionMfa>>>
+export type VerifySessionMfaQueryError = ErrorType<void>
+
+
+/**
+ * A read-only provider check. It grants no application role and returns no identity, token or session identifier.
+ * @summary Check that the signed-in staff session recently verified both factors
+ */
+export function useVerifySessionMfa<TData = Awaited<ReturnType<typeof verifySessionMfa>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof verifySessionMfa>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof verifySessionMfa>>,
+          TError,
+          Awaited<ReturnType<typeof verifySessionMfa>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * A read-only provider check. It grants no application role and returns no identity, token or session identifier.
+ * @summary Check that the signed-in staff session recently verified both factors
+ */
+export function useVerifySessionMfa<TData = Awaited<ReturnType<typeof verifySessionMfa>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof verifySessionMfa>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof verifySessionMfa>>,
+          TError,
+          Awaited<ReturnType<typeof verifySessionMfa>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * A read-only provider check. It grants no application role and returns no identity, token or session identifier.
+ * @summary Check that the signed-in staff session recently verified both factors
+ */
+export function useVerifySessionMfa<TData = Awaited<ReturnType<typeof verifySessionMfa>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof verifySessionMfa>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * A read-only provider check. It grants no application role and returns no identity, token or session identifier.
+ * @summary Check that the signed-in staff session recently verified both factors
+ */
+export function useVerifySessionMfa<TData = Awaited<ReturnType<typeof verifySessionMfa>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof verifySessionMfa>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getVerifySessionMfaQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getHealthCheckUrl = () => {
 

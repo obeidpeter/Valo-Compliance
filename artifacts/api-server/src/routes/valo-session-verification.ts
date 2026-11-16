@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { reverificationError } from "@clerk/shared/authorization-errors";
+import { VerifySessionMfaResponse } from "@workspace/api-zod";
 import { verifiedStaffSession } from "../lib/valo-managed-session";
 
 /** A read-only provider check. It grants no application role and returns no
@@ -26,7 +27,9 @@ export function createSessionVerificationRouter(authenticate = verifiedStaffSess
       });
       return;
     }
-    res.json({ verified: true, checkedAt: new Date(actor.verifiedAt).toISOString() });
+    res.json(
+      VerifySessionMfaResponse.parse({ verified: true, checkedAt: new Date(actor.verifiedAt).toISOString() }),
+    );
   });
   return router;
 }

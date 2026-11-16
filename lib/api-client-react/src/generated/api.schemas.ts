@@ -5,6 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface SessionMfaVerification {
+  verified: true;
+  checkedAt: string;
+}
+
 export interface VerifyStaffRoleTargetInput {
   /**
      * @maxLength 128

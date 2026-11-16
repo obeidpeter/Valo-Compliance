@@ -2683,6 +2683,16 @@ export const CreateSupportTicketResponse = zod.object({
 
 
 /**
+ * A read-only provider check. It grants no application role and returns no identity, token or session identifier.
+ * @summary Check that the signed-in staff session recently verified both factors
+ */
+export const VerifySessionMfaResponse = zod.object({
+  "verified": zod.literal(true),
+  "checkedAt": zod.coerce.date()
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

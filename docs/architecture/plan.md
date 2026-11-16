@@ -60,7 +60,8 @@ Exit: CI rejects unformatted code, stray environment reads and discarded errors.
 | --- | --- |
 | Move API code into `platform/` and `modules/` with public entry files | not started |
 | Remove the three import cycles | in progress (two removed; the third shrank from 13 to 8 files and needs the inference dispatcher to receive its lanes from a composition root) |
-| Split the API contract per module; add the ~11 missing routes | not started |
+| Every client-facing route in the API contract | done (the staff MFA check was the last one missing; the Paystack webhook faces the provider and stays outside the client contract) |
+| Split the API contract per module | not started |
 | Worker loop becomes scheduled queue jobs | not started |
 | Separate product logic from requirement/evidence bookkeeping in `valo-core` | not started |
 

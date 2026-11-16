@@ -253,6 +253,7 @@ export * from './savedAssessment';
 export * from './savedAssessmentInput';
 export * from './savedTemplates';
 export * from './savedTemplatesItemsItem';
+export * from './sessionMfaVerification';
 export * from './sourceEvidenceRegister';
 export * from './staffOperations';
 export * from './staffOperationsArea';
