@@ -4,6 +4,7 @@ import { z } from "zod";
 import { sha256 } from "@workspace/valo-core";
 import { publicationWorkspaceRoot } from "./operational-policy";
 import {readOperationalIntake} from "./operational-intake";
+import {supportsOperationalInferenceTemplate} from "../lib/inference-operational-coverage";
 const schema=z.object({
   version:z.string().min(1),status:z.enum(["verified","unverified"]),accountPlan:z.string().min(1),
   accountTerms:z.string().min(1).nullable(),integration:z.enum(["replit_managed_openai","chatgpt"]),provider:z.literal("openai"),
@@ -49,7 +50,7 @@ export function chatGPTPermissionRecord(raw:unknown,source:string,note:string,no
   const snapshot=termsSnapshotSchema.parse(raw),sourceHash=sha256(source);
   if(binding.templateId){
     const manifest=JSON.parse(note);
-    if(!/^TPL-(0[1-9]|1[0-2])$/.test(binding.templateId)||!manifest.authoring?.context?.includes("ChatGPT")||
+    if(!supportsOperationalInferenceTemplate(binding.templateId)||!manifest.authoring?.context?.includes("ChatGPT")||
       manifest.authoring.upstreamProviderExecutionReceiptsRecorded!==false||
       !manifest.templates.some((r:{id:string;sourcePath:string;sourceSHA256:string})=>
         r.id===binding.templateId&&r.sourcePath===binding.path&&r.sourceSHA256===sourceHash))

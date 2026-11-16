@@ -3,6 +3,7 @@ import {candidateDigest,digest,disclosure,mandatoryMechanicalChecks,publicationS
 import {documentInput} from "../lib/valo-validation";
 import {candidateArithmetic} from "./candidate-arithmetic";
 import {claimLocatorMatches} from "./claim-locator";
+import {supportsOperationalInferenceTemplate} from "../lib/inference-operational-coverage";
 type Provenance={hash:string;sourceText:string;note:string;noteHash:string;templateId:string;version:number};
 type Rights={applicabilityHash:string;provenanceHash:string;validUntil:string;
   permissions:{url:string;hash:string;quote:string}[]};
@@ -29,8 +30,8 @@ export function operationalMechanicalChecks(input:{
     "TPL-16":"employment","TPL-17":"employment","TPL-18":"contracts","TPL-19":"contracts","TPL-20":"contracts",
     "TPL-21":"contracts","TPL-23":"contracts","TPL-25":"governance","TPL-26":"employment","TPL-27":"employment",
     "TPL-28":"employment","TPL-29":"privacy","TPL-30":"contracts","TPL-31":"privacy","TPL-32":"privacy",
-    "TPL-33":"regulated_sector","TPL-36":"regulated_sector","TPL-37":"regulated_sector"};
-  const originalScope=templateId&&c.contentClass==="general_template"&&c.risk==="general"&&
+    "TPL-33":"regulated_sector","TPL-36":"regulated_sector","TPL-37":"regulated_sector","TPL-39":"contracts"};
+  const originalScope=supportsOperationalInferenceTemplate(c.id)&&c.contentClass==="general_template"&&c.risk==="general"&&
     c.evidenceMode==="original_operational"&&c.legalScopeStatus==="not_applicable"&&c.claims.length===0;
   const sources=input.sources??[];
   const sourceFacts=c.claims.map(claim=>{

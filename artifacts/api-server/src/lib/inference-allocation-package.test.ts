@@ -22,8 +22,9 @@ test("delegated membership cannot broaden the content inventory or enable unsupp
   const pkg=await prepareFiniteAllocationPackage(),w=work();
   assert.doesNotThrow(()=>assertWorkPackageMembership(w,pkg,"TPL-07"));
   assert.throws(()=>assertWorkPackageMembership(w,pkg,"unapproved-content"),/OUTSIDE_PACKAGE/);
-  for(const id of ["TPL-01","TPL-06","TPL-09","TPL-11"])assert.doesNotThrow(()=>assertWorkPackageMembership(w,pkg,id));
-  for(const id of ["TPL-12","TPL-13","TPL-40","GUD-01"])assert.throws(()=>assertWorkPackageMembership(w,pkg,id),/PREPARER_UNAVAILABLE/);
+  for(const id of ["TPL-01","TPL-06","TPL-09","TPL-11","TPL-12","TPL-22","TPL-24","TPL-34","TPL-35","TPL-38"])
+    assert.doesNotThrow(()=>assertWorkPackageMembership(w,pkg,id));
+  for(const id of ["TPL-13","TPL-39","TPL-40","GUD-01"])assert.throws(()=>assertWorkPackageMembership(w,pkg,id),/PREPARER_UNAVAILABLE/);
   const customer={...w,lane:"customer" as const,role:"customer" as const,pair:null,
     caseHash:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.hash,
     bindings:{...w.bindings,corpus:"customer-ai" as const,caseId:pkg.corpora.find(c=>c.name==="customer-ai")!.cases[0]!.id}};
@@ -43,6 +44,11 @@ test("historical disabled artifact retains exact source pins but cannot authoriz
   assert.equal(frozen.approvalRowsWritten,0);assert.equal(frozen.providerCalls,0);
   assert.throws(()=>validateAllocationPackage(frozen.package),/ALLOCATION_PACKAGE_INVALID/);
   assert.equal(frozen.packageHash,requestDigest(frozen.package));assert.equal(frozen.packageId,allocationPackageId(frozen.package));
+  assert.equal(frozen.packageId,"finite-package:3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8");
+  // Runtime preparation can improve inside these same frozen identities without
+  // replacing the package, clearing its holds or authorising a provider call.
+  for(const id of ["TPL-12","TPL-22","TPL-24","TPL-34","TPL-35","TPL-38"])
+    assert.doesNotThrow(()=>assertWorkPackageMembership(work(),frozen.package,id));
   const actual=await prepareFiniteAllocationPackage(new Date(frozen.package.preparedAt));
   validateAllocationPackage(actual);
   assert.equal(actual.allocation.startBoundary,"durable-owner-approval-of-exact-finite-package");
