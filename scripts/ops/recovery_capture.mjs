@@ -7,6 +7,7 @@ import {mkdir,readFile,writeFile,chmod,stat,realpath} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import assert from 'node:assert/strict';
 import {signJournal,privacyTable} from './recovery_contract.mjs';
+import {captureExportRetention} from './export_retention_contract.mjs';
 const exec=promisify(execFile),root=resolve(process.env.VALO_RECOVERY_SOURCE_ROOT||'.');
 const require=createRequire(join(root,'artifacts/api-server/package.json')),{Client}=require('pg');
 const hash=x=>createHash('sha256').update(Buffer.isBuffer(x)||typeof x==='string'?x:JSON.stringify(x)).digest('hex');
@@ -112,10 +113,11 @@ try{
  assert.ok(regs.every(r=>keys[r.id]&&hash(keys[r.id])===r.fingerprint),'PRIVACY_KEY_COVERAGE_REQUIRED');
  if(mode==='journal'){
   const rawFingerprints=await rows(client,controlTables),fingerprints=Object.fromEntries(Object.entries(rawFingerprints).map(([k,v])=>[k.slice(7),v]));
-  const journal=signJournal({version:1,kind:'current-development-privacy-journal',sourceIdentitySha256:expectedIdentity,releaseSha,cutoff:boundary.cutoff,walCutoff:boundary.lsn,controls,fingerprints},key);
+  const exportRetention=await captureExportRetention(client);
+  const journal=signJournal({version:1,kind:'current-development-privacy-journal',sourceIdentitySha256:expectedIdentity,releaseSha,cutoff:boundary.cutoff,walCutoff:boundary.lsn,controls,fingerprints,exportRetention},key);
   const encoded=JSON.stringify(journal)+'\n';assert.ok(Buffer.byteLength(encoded)<=20_000_000,'BOUNDED_JOURNAL_REQUIRED');
   await writeFile(join(out,'privacy-journal.json'),encoded,{mode:0o600,flag:'wx'});
-  console.log(JSON.stringify({version:1,kind:'privacy-journal',sourceIdentitySha256:expectedIdentity,cutoff:boundary.cutoff,sha256:hash(encoded),controlTables:controlTables.length,sourceWrites:0}));
+  console.log(JSON.stringify({version:1,kind:'privacy-journal',sourceIdentitySha256:expectedIdentity,cutoff:boundary.cutoff,sha256:hash(encoded),controlTables:controlTables.length,retentionEntries:exportRetention.entries.length,sourceWrites:0}));
  }else{
   const bundle=join(out,'bundle'),sourceSchema=await snapshot(client,[identity.actor]),sourceRows=await rows(client,tables);
   const sourceRoles=(await client.query("SELECT rolname,rolinherit,rolsuper,rolcreaterole,rolcreatedb,rolcanlogin,rolbypassrls FROM pg_roles WHERE rolname NOT LIKE 'pg_%' ORDER BY rolname")).rows;

@@ -152,9 +152,17 @@ jobs:
           echo /usr/lib/postgresql/16/bin >> "$GITHUB_PATH"
       - name: Reject stale recovery controls, unsafe archives and false backup success
         run: |
-          node --test scripts/ops/recovery_contract.test.mjs
+          node --test scripts/ops/recovery_contract.test.mjs scripts/ops/export_retention_contract.test.mjs
           VALO_REQUIRE_REAL_RESTIC=1 python3 -m unittest discover -s scripts/ops -p 'test_*.py'
           systemd-analyze verify scripts/ops/systemd/*.service scripts/ops/systemd/*.timer
+      - name: Restore old export deadlines with authenticated current controls
+        run: python3 scripts/ops/retention_recovery_drill.py
+      - name: Retain isolated retention recovery evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: isolated-retention-recovery
+          path: generated-artifacts/valo-retention-recovery/report.json
       - name: Activate real production-mode API and worker against an isolated empty database
         run: pnpm --filter @workspace/api-server test:valo-production-rehearsal
       - name: Restore disposable synthetic database and fixture objects

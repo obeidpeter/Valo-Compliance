@@ -29,7 +29,7 @@ class BackupCycleTest(unittest.TestCase):
 
     def capture(self, mode, directory, config, env):
         directory.mkdir(); (directory / 'bundle').mkdir()
-        return {'sourceWrites': 0, 'sourceIdentitySha256': 'a' * 64, 'cutoff': self.cutoff}
+        return {'sourceWrites': 0, 'sourceIdentitySha256': 'a' * 64, 'cutoff': self.cutoff, 'retentionEntries': 0}
 
     def test_success_requires_both_readbacks_and_removes_plaintext_before_green(self):
         calls = []
@@ -40,7 +40,7 @@ class BackupCycleTest(unittest.TestCase):
             return True
         with patch.object(backup, 'capture', self.capture), patch.object(backup, 'ping', ping), \
              patch.object(backup, 'backup_and_verify', return_value={'snapshotId': 'c' * 64}), \
-             patch.object(backup, 'archive_journal', return_value={'snapshotId': 'd' * 64}):
+             patch.object(backup, 'archive_journal', return_value={'snapshotId': 'd' * 64, 'retentionInventoryPresent': True}):
             self.assertEqual(backup.cycle(self.config, self.env)['status'], 'verified')
         self.assertEqual(calls, ['/start', ''])
 
@@ -49,7 +49,7 @@ class BackupCycleTest(unittest.TestCase):
             with self.subTest(boundary=boundary), patch.object(backup, 'capture', self.capture), \
                  patch.object(backup, 'ping', return_value=True) as ping, \
                  patch.object(backup, 'backup_and_verify', return_value={'snapshotId': 'c' * 64}) as archive, \
-                 patch.object(backup, 'archive_journal', return_value={'snapshotId': 'd' * 64}) as journal:
+                 patch.object(backup, 'archive_journal', return_value={'snapshotId': 'd' * 64, 'retentionInventoryPresent': True}) as journal:
                 (archive if boundary == 'backup_and_verify' else journal).side_effect = RuntimeError('SYNTHETIC_FAILURE')
                 with self.assertRaises(RuntimeError): backup.cycle(self.config, self.env)
                 self.assertEqual([c.args[1] for c in ping.call_args_list], ['/start', '/fail'])
@@ -61,6 +61,21 @@ class BackupCycleTest(unittest.TestCase):
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             with self.assertRaisesRegex(RuntimeError, 'BACKUP_ALREADY_RUNNING'): backup.cycle(self.config, self.env)
             ping.assert_not_called()
+
+    def test_missing_retention_capture_or_readback_cannot_emit_success(self):
+        for boundary in ('capture', 'archive'):
+            def capture(mode, directory, config, env):
+                result = self.capture(mode, directory, config, env)
+                if boundary == 'capture' and mode == 'journal': result.pop('retentionEntries')
+                return result
+            journal = {'snapshotId': 'd' * 64, 'retentionInventoryPresent': boundary != 'archive'}
+            with self.subTest(boundary=boundary), patch.object(backup, 'capture', capture), \
+                 patch.object(backup, 'ping', return_value=True) as ping, \
+                 patch.object(backup, 'backup_and_verify', return_value={'snapshotId': 'c' * 64}), \
+                 patch.object(backup, 'archive_journal', return_value=journal):
+                with self.assertRaisesRegex(Exception, 'RETENTION_JOURNAL_'):
+                    backup.cycle(self.config, self.env)
+                self.assertEqual([c.args[1] for c in ping.call_args_list], ['/start', '/fail'])
 
     def test_preflight_rejects_deployment_expiry_public_config_and_wrong_monitor(self):
         for env in ({**self.env, 'NODE_ENV': 'production'}, {**self.env, 'REPLIT_DEPLOYMENT_ID': 'false'}):
