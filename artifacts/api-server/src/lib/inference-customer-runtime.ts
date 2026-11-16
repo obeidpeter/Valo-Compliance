@@ -11,7 +11,7 @@ import type {
   CustomerEvaluationPlan,
   CustomerCasePreparation,
 } from "./inference-customer-evaluation";
-import type { FiniteManifest } from "./inference-batch-dispatch";
+import type { FiniteManifest } from "./inference-types";
 type Query = (text: string, values: unknown[]) => Promise<{ rows: Record<string, any>[] }>;
 async function query(text: string, values: unknown[]) {
   const { pool } = await import("@workspace/db");

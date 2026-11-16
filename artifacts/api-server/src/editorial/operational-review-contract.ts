@@ -18,3 +18,17 @@ export const operationalReviewSchema = z
     observations: z.array(z.string()),
   })
   .strict();
+/** Server-recorded facts a blind operational review is bound to. */
+export type OperationalServerEvidence = {
+  candidateHash: string;
+  policyHash: string;
+  sourceCheckedAt: string;
+  sourceHash: string;
+  provenanceArtifactHash: string;
+  rightsArtifactHash: string;
+  exportReportArtifactHash: string;
+  providerSnapshotHash: string;
+  authoringRoute: string;
+  sourceAttribution: string;
+  performedChecks: string[];
+};

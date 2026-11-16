@@ -7,7 +7,7 @@ import {
   inferenceTimestamp,
   requestDigest,
 } from "./inference-budget";
-import type { FiniteManifest, FiniteWork } from "./inference-batch-dispatch";
+import type { FiniteManifest, FiniteWork } from "./inference-types";
 import type { InferenceBudgetStore } from "./inference-budget-store";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
 import {

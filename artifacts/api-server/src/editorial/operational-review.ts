@@ -13,21 +13,13 @@ import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { digest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import { putPublicationArtifact, getPublicationArtifact } from "./publication-artifacts";
-import { operationalReviewSchema, assertBlindReviewInputs } from "./operational-review-contract";
+import {
+  operationalReviewSchema,
+  assertBlindReviewInputs,
+  type OperationalServerEvidence,
+} from "./operational-review-contract";
+export type { OperationalServerEvidence } from "./operational-review-contract";
 import { meterReviewRequest, providerUsage } from "./review-meter";
-export type OperationalServerEvidence = {
-  candidateHash: string;
-  policyHash: string;
-  sourceCheckedAt: string;
-  sourceHash: string;
-  provenanceArtifactHash: string;
-  rightsArtifactHash: string;
-  exportReportArtifactHash: string;
-  providerSnapshotHash: string;
-  authoringRoute: string;
-  sourceAttribution: string;
-  performedChecks: string[];
-};
 export function operationalReviewRequests(
   candidate: PublicationBundle["candidate"],
   rights: unknown,

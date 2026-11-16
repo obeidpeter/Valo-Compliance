@@ -12,19 +12,9 @@ import { ValoProblem } from "./valo-store";
 import { releasedRegistry, workspaceTransaction } from "./valo-assessments";
 import { reminderInstant } from "./valo-tasks";
 import { configuredReminderSender } from "./valo-reminder-resend";
+import type { ReminderSender } from "./valo-reminder-sender";
 
-/** Only an explicitly configured development recipient can receive real email. */
-export type ReminderSender = {
-  replayWindowMs?: number;
-  send(input: {
-    idempotencyKey: string;
-    ownerIdentityId: string;
-    title: string;
-    dueDate: string;
-    timezone: "Africa/Lagos";
-    signal: AbortSignal;
-  }): Promise<{ providerMessageId: string }>;
-};
+export type { ReminderSender } from "./valo-reminder-sender";
 export const reminderAttemptLimit = 5;
 export function reminderRetryAt(attempt: number, now: Date) {
   if (!Number.isInteger(attempt) || attempt < 1) throw Error("INVALID_REMINDER_ATTEMPT");

@@ -1,4 +1,4 @@
-import type { FiniteWork } from "./inference-batch-dispatch";
+import type { FiniteWork } from "./inference-types";
 /** Admission is to a particular role and corpus, never a caller's lane label. */
 export function assertFiniteWorkShape(work: FiniteWork) {
   const corpus = {

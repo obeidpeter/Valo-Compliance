@@ -15,42 +15,17 @@ import {
   type BudgetState,
   type ReserveInput,
 } from "./inference-budget";
-import type { ManagedCompletionResult, ManagedRequest } from "./managed-inference";
+import type {
+  CompletionTransport,
+  FiniteManifest,
+  FiniteWork,
+  ManagedCompletionResult,
+  ManagedRequest,
+} from "./inference-types";
+export type { CompletionTransport, FiniteManifest, FiniteWork } from "./inference-types";
 import { assertDelegatedBatchAuthority } from "./inference-allocation-package";
 import { assertFiniteWorkShape } from "./inference-work-shape";
 import { assertManagedRatePolicy } from "./inference-price-evidence";
-export type FiniteWork = {
-  key: string;
-  lane: BudgetLane;
-  role: "factual" | "challenge" | "customer";
-  pair: string | null;
-  retryOf?: string;
-  candidateHash: string;
-  sourceHashes: string[];
-  caseHash: string;
-  request: ManagedRequest;
-  bindings: {
-    candidateVersionId: string | null;
-    corpus: "editorial" | "checker" | "customer-ai" | null;
-    caseId: string | null;
-    sourceFiles: { path: string; sha256: string }[];
-    historicalCutoff?: string;
-    operationalPlan?: { id: string; hash: string; extension: "json" };
-    customerPlan?: { id: string; hash: string; extension: "json" };
-  };
-};
-export type FiniteManifest = {
-  version: 2;
-  policyVersion: string;
-  preparedAt: string;
-  allocation: typeof additionalInferenceAllocation;
-  packageId?: string;
-  works: FiniteWork[];
-};
-export type CompletionTransport = (
-  request: ManagedRequest,
-  options: { timeout: number; maxRetries: 0; beforeOutbound?: () => Promise<void>; onOutbound?: () => void },
-) => Promise<ManagedCompletionResult>;
 type Context = { batchId: string; key: string | null; lane: BudgetLane; pair?: string; rootKey?: string };
 /** Approval is a durable, expiring authorization of this exact immutable
  * roster. Every batch shares the same additional allocation; legacy charges

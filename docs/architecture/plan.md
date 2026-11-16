@@ -59,7 +59,7 @@ Exit: CI rejects unformatted code, stray environment reads and discarded errors.
 | Item | Status |
 | --- | --- |
 | Move API code into `platform/` and `modules/` with public entry files | not started |
-| Remove the three import cycles | not started |
+| Remove the three import cycles | in progress (two removed; the third shrank from 13 to 8 files and needs the inference dispatcher to receive its lanes from a composition root) |
 | Split the API contract per module; add the ~11 missing routes | not started |
 | Worker loop becomes scheduled queue jobs | not started |
 | Separate product logic from requirement/evidence bookkeeping in `valo-core` | not started |

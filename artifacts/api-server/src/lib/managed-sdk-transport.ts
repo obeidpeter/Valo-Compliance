@@ -1,5 +1,4 @@
-import type { CompletionTransport } from "./inference-batch-dispatch";
-import type { ManagedRequest, ManagedCompletionResult } from "./managed-inference";
+import type { CompletionTransport, ManagedRequest, ManagedCompletionResult } from "./inference-types";
 export type ManagedSDKClient = {
   chat: {
     completions: {

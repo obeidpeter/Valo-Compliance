@@ -9,7 +9,7 @@ import { loadChatGPTPermission } from "../editorial/rights-applicability";
 import { operationalPolicy } from "../editorial/operational-policy";
 import { operationalMechanicalChecks } from "../editorial/operational-mechanical";
 import { inspectOperationalExports } from "../editorial/operational-export-inspection";
-import type { OperationalServerEvidence } from "../editorial/operational-review";
+import type { OperationalServerEvidence } from "../editorial/operational-review-contract";
 import type { ReleaseAttestations } from "../editorial/publication-publisher";
 
 /** Reconstruct a supported saved original form and recheck all its retained

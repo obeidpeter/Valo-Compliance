@@ -3,16 +3,8 @@ import { inferenceProposal, type BudgetLane } from "./inference-budget";
 import type { FiniteInferenceDispatcher } from "./inference-batch-dispatch";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
 import type { ManagedSDKClient } from "./managed-sdk-transport";
-export type ManagedRequest = {
-  model: string;
-  max_completion_tokens?: number;
-  messages: readonly unknown[];
-  response_format?: unknown;
-  stream?: boolean;
-  tools?: unknown[];
-  n?: number;
-  tool_choice?: unknown;
-};
+import type { ManagedCompletionResult, ManagedRequest } from "./inference-types";
+export type { ManagedCompletionResult, ManagedRequest } from "./inference-types";
 export class InferenceHeld extends Error {
   constructor(public readonly code = "INFERENCE_BUDGET_DISABLED") {
     super(code);
@@ -140,14 +132,6 @@ export async function managedCompletion(
     throw held(error);
   }
 }
-export type ManagedCompletionResult = {
-  id: string;
-  model: string;
-  created: number;
-  _request_id?: string | null;
-  choices: { finish_reason: string | null; message: { content: string | null } }[];
-  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
-};
 export function assertManagedInferenceAvailable(): void {
   if (!hasApprovedInferenceContext()) throw new InferenceHeld();
 }

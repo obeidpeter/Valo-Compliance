@@ -6,10 +6,12 @@ import {
   emptyBudget,
   importPilotUsage,
   type PilotUsage,
-  type BudgetEntry,
   type BudgetState,
   type BudgetLane,
+  type HistoryClassification,
+  type HistoryResolution,
 } from "./inference-budget";
+export type { HistoryClassification, HistoryResolution };
 import type {
   HistoricalPublicationAttempt,
   HistoricalArtifactInput,
@@ -49,25 +51,6 @@ export type HistoryEvidence = {
   sourceReferences: { path: string; sha256: string }[];
   excludedNoOutboundCustomerRuns: number;
   excludedCustomerSources?: { sourceKey: string; metadataHash: string }[];
-};
-export type HistoryClassification = {
-  sourceKey: string;
-  runKey: string;
-  kind: "reported_usage" | "no_outbound" | "unresolved_charge";
-  sourceRowHash: string;
-  provenance: unknown;
-  model: string | null;
-  responseId: string | null;
-  input: number | null;
-  output: number | null;
-  reason: string;
-};
-export type HistoryResolution = {
-  before: BudgetEntry;
-  classification: HistoryClassification;
-  classificationHash: string;
-  afterHash: string;
-  supersedes?: string;
 };
 const count = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
 const hex = (s: unknown): s is string => typeof s === "string" && /^[a-f0-9]{64}$/.test(s);

@@ -4,8 +4,7 @@ import {
   requestDigest,
   tokenCost,
 } from "./inference-budget";
-import type { FiniteManifest, FiniteWork } from "./inference-batch-dispatch";
-import type { ManagedRequest } from "./managed-inference";
+import type { FiniteManifest, FiniteWork, ManagedRequest } from "./inference-types";
 
 export type OperationalPlanRef = { id: string; hash: string; extension: "json" };
 export type PreparedOperationalPlan = {

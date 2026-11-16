@@ -5,7 +5,7 @@ import { clerkClient } from "@clerk/express";
 import { z } from "zod";
 import { sha256 } from "@workspace/valo-core";
 import { trustedSiteOrigin } from "./valo-site-origin";
-import type { ReminderSender } from "./valo-reminder-worker";
+import type { ReminderSender } from "./valo-reminder-sender";
 import { environment } from "../platform/settings";
 
 const envelope = z.email().max(254);

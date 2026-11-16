@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { managedPriceEvidenceDigest } from "./inference-price-evidence";
-import type { HistoryResolution } from "./inference-history-classification";
 export type BudgetLane = "publication" | "editorial_evaluation" | "checker_challenge" | "customer";
 export const inferenceProposal = {
   id: "valo-managed-inference-30-v1",
@@ -107,6 +106,25 @@ export type BudgetEntry = {
   usageHash?: string;
   legacy?: boolean;
   model?: string;
+};
+export type HistoryClassification = {
+  sourceKey: string;
+  runKey: string;
+  kind: "reported_usage" | "no_outbound" | "unresolved_charge";
+  sourceRowHash: string;
+  provenance: unknown;
+  model: string | null;
+  responseId: string | null;
+  input: number | null;
+  output: number | null;
+  reason: string;
+};
+export type HistoryResolution = {
+  before: BudgetEntry;
+  classification: HistoryClassification;
+  classificationHash: string;
+  afterHash: string;
+  supersedes?: string;
 };
 export type BudgetState = {
   version: 1;

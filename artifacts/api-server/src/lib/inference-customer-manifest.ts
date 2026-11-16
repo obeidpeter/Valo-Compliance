@@ -11,7 +11,7 @@ import { customerProviderPayload } from "./valo-customer-ai-domain";
 import { customerCompletionRequest } from "./valo-customer-ai-model";
 import { withApprovedInferenceWork } from "./managed-inference";
 import { requestDigest, inferenceProposal, additionalInferenceAllocation } from "./inference-budget";
-import type { FiniteManifest, FiniteWork } from "./inference-batch-dispatch";
+import type { FiniteManifest, FiniteWork } from "./inference-types";
 
 const root = resolve(import.meta.dirname, "../../../..");
 const path = "docs/evaluation-candidates/customer-ai.json";

@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import { candidateDigest, publicationSchema } from "@workspace/valo-core";
 import { requestDigest } from "./inference-budget";
-import type { FiniteWork } from "./inference-batch-dispatch";
+import type { FiniteWork } from "./inference-types";
 import { assertFiniteWorkShape } from "./inference-work-shape";
 const root = resolve(import.meta.dirname, "../../../..");
 const hash = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");

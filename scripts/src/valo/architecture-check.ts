@@ -164,30 +164,18 @@ export function importCycles(graph: Map<string, Set<string>>): string[][] {
 
 /** Cycles present when the rule was introduced. Remove entries as cycles are broken; never add. */
 export const KNOWN_CYCLES: string[][] = [
+  // The finite inference dispatcher loads its lane modules lazily, and the lane modules
+  // call the dispatcher. Breaking this needs the dispatcher to receive its lanes from a
+  // composition root (Phase 2 inference module).
   [
     "artifacts/api-server/src/editorial/operational-review.ts",
-    "artifacts/api-server/src/lib/inference-allocation-package.ts",
-    "artifacts/api-server/src/lib/inference-batch-dispatch.ts",
     "artifacts/api-server/src/lib/inference-customer-evaluation.ts",
     "artifacts/api-server/src/lib/inference-customer-manifest.ts",
     "artifacts/api-server/src/lib/inference-customer-runtime.ts",
-    "artifacts/api-server/src/lib/inference-operational-ready.ts",
     "artifacts/api-server/src/lib/inference-work-bindings.ts",
-    "artifacts/api-server/src/lib/inference-work-shape.ts",
     "artifacts/api-server/src/lib/managed-inference.ts",
-    "artifacts/api-server/src/lib/managed-sdk-transport.ts",
     "artifacts/api-server/src/lib/valo-customer-ai-model.ts",
     "artifacts/api-server/src/lib/valo-customer-ai.ts",
-  ],
-  [
-    "artifacts/api-server/src/lib/inference-budget.ts",
-    "artifacts/api-server/src/lib/inference-history-classification.ts",
-    "artifacts/api-server/src/lib/inference-history-reconciliation.ts",
-  ],
-  [
-    "artifacts/api-server/src/lib/valo-reminder-resend.ts",
-    "artifacts/api-server/src/lib/valo-reminder-worker.ts",
-    "artifacts/api-server/src/lib/valo-tasks.ts",
   ],
 ];
 
