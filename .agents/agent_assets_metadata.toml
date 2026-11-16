@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "VBKc1fIWClNOvtYuXv2Us"
+uri = "file://generated-artifacts/valo-readonly-verification-20261115T120507.txt"
+type = "text"
+title = "Valo read-only verification checkpoint"
+description = "Saved revision unchanged; visible Valo name and two disabled review work items reverified with read-only database sessions. No database-writing suites or inference executed."
+logical_id = "bddee390-5f2d-47da-b1c3-a834689ed831"
+content_hash = "sha256:e773c82229eb2d06cbdf6d019d940cdee91e09ea0e0dcbe0fe2c09e312152d04"
+size = 3039
+mtime_ms = 1794744409542
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:dc200a8b-0d2e-4382-a3ce-ce39eb9eb54e/bddee390-5f2d-47da-b1c3-a834689ed831/0b5ef802-658d-4dfa-8141-ed008f0f3e8d"
+storage_version_token = "1794744429019286"
+content_type = "text/plain"

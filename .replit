@@ -42,3 +42,9 @@ timeoutMs = 120000
 [nix]
 channel = "stable-25_05"
 packages = ["gitleaks"]
+
+[userenv]
+
+[userenv.shared]
+RESTIC_REPOSITORY = "s3:https://s3.us-east-005.backblazeb2.com/valotech-valo-dev-backups-20261115/valo-development"
+VALO_EXTERNAL_MONITORING = "healthchecks"
