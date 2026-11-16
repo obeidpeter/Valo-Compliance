@@ -327,3 +327,13 @@ jobs:
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce
           pnpm --filter @workspace/api-server test:valo-refunds
+  container-images:
+    name: Container images build and start safely
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Build the API and web images and prove PDF rendering, refusal without configuration and web headers
+        run: scripts/ops/check-container-images.sh
