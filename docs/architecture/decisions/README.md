@@ -1,0 +1,12 @@
+# Architecture decision records
+
+Each record states one decision, why it was made and what it costs. Records are
+never edited after acceptance; a later record supersedes an earlier one.
+
+| No. | Decision | Status |
+| --- | --- | --- |
+| [0001](0001-modular-monolith-with-enforced-boundaries.md) | Modular monolith with enforced module boundaries | Accepted |
+| [0002](0002-open-pull-request-settlement.md) | Settle the five open pull requests | Accepted |
+| [0003](0003-session-verification.md) | Verify sessions locally; live checks for sensitive actions | Accepted |
+| [0004](0004-evidence-files.md) | Keep existing evidence files; record new evidence in CI | Accepted |
+| [0005](0005-hosting-without-spend.md) | Prepare hosting in code; provision nothing without approval | Accepted |

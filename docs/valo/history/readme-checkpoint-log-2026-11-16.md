@@ -1,3 +1,7 @@
+> **Historical record.** This is the repository README as it stood on 16 November 2026
+> (`14c8f38`), kept unchanged below for traceability. Links are relative to the
+> repository root. It is not a current status; see [docs/status.md](../../status.md).
+
 # Valo Compliance — Valo Platform
 
 ## Current checkpoint — current disabled pair and fresh native controls
