@@ -6,6 +6,11 @@ the API and worker supervisor. Production activation still fails closed through 
 existing production preflight. No migration, customer execution, production database,
 new paid hosting or public deployment is part of this change.
 
+The later [retention recovery increment](phase2-retention-recovery.md) adds current
+export deadlines to the signed independent journal and requires that inventory
+before a new scheduled backup can report success. It does not change backup
+pruning policy or authorize a managed/production restore.
+
 ## Verified development recovery
 
 PR #36 was merged into `feature/valo-p0-foundation` as

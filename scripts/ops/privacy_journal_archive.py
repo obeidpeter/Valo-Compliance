@@ -50,7 +50,11 @@ def archive_journal(path, receipt_path, env, expected_source, snapshot_cutoff):
                'scope': 'development', 'snapshotId': ids[0], 'sha256': checksum, 'sourceIdentitySha256': expected_source,
                'cutoff': payload['cutoff'], 'independentOfDatabaseSnapshot': True,
                'offHostTransportVerified': mode == 'approved-b2', 'signatureAuthenticatedOnRecoveryHost': False,
-               'erasureReplayValidated': False}
+               'erasureReplayValidated': False,
+               'retentionInventoryPresent': isinstance(payload.get('exportRetention'), dict) and
+                   payload['exportRetention'].get('version') == 1 and payload['exportRetention'].get('complete') is True and
+                   isinstance(payload['exportRetention'].get('entries'), list),
+               'retentionReplayValidated': False}
     with os.fdopen(os.open(receipt_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600), 'w') as file:
         json.dump(receipt, file)
     return receipt

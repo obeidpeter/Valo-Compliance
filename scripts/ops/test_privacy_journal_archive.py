@@ -20,7 +20,9 @@ class JournalArchiveTest(unittest.TestCase):
         self.path = self.source / 'privacy-journal.json'
         self.now = datetime.datetime.now(datetime.timezone.utc)
         self.payload = {'version': 1, 'kind': 'current-development-privacy-journal', 'sourceIdentitySha256': 'a' * 64,
-                        'cutoff': self.now.isoformat(), 'controls': {'valo_memberships': []}}
+                        'cutoff': self.now.isoformat(), 'controls': {'valo_memberships': []},
+                        'exportRetention': {'version': 1, 'complete': True, 'environment': 'development',
+                                            'databaseId': '00000000-0000-4000-8000-000000000001', 'entries': []}}
         self.save()
         self.password = self.root / 'password'; self.password.write_text('synthetic-private-test-' * 3); self.password.chmod(0o600)
         self.env = {**os.environ, 'NODE_ENV': 'test', 'VALO_RECOVERY_ARCHIVE_MODE': 'synthetic-local-only',
@@ -56,6 +58,8 @@ class JournalArchiveTest(unittest.TestCase):
         self.assertTrue(receipt['independentOfDatabaseSnapshot'])
         self.assertFalse(receipt['signatureAuthenticatedOnRecoveryHost'])
         self.assertFalse(receipt['erasureReplayValidated'])
+        self.assertTrue(receipt['retentionInventoryPresent'])
+        self.assertFalse(receipt['retentionReplayValidated'])
 
 
 if __name__ == '__main__': unittest.main()
