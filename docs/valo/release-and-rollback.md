@@ -107,6 +107,25 @@ window and a restore point, reviewed before merge.
 During any rollback keep older backups, the restic password and the signing keys
 unchanged.
 
+## Backup retention (proposed, needs owner approval)
+
+Backups are never pruned today. Retention decides how long erased customer data
+survives in backups, so it is an owner decision; the preflight lists it as
+`RETENTION_POLICY_AND_RELEASE_APPROVAL`. The proposal:
+
+- keep every snapshot from the last 48 hours;
+- keep the newest snapshot of each UTC day for 35 days;
+- remove anything older, so erased data leaves the backups within 35 days.
+
+Database archives and privacy journals are planned separately, and the newest of
+each is always kept. If a group's newest snapshot is older than 48 hours, backups
+have stopped, and that group keeps everything until a backup succeeds again.
+
+`scripts/ops/backup_retention.py` applies this policy to the output of
+`restic snapshots --json` and prints what it would keep and remove. It needs no
+credentials and deletes nothing. After approval, removal will be a separate
+reviewed command with its own tests.
+
 ## Alerts
 
 Each alert below already exists in code. Delivery depends on the external

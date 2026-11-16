@@ -94,7 +94,7 @@ reach the 80% branch coverage NFR-011 requires.
 | Release and rollback procedure | done ([release-and-rollback.md](../valo/release-and-rollback.md)) |
 | Alert definitions in one place | done (catalogue of the existing internal and external alerts) |
 | External error tracking and metrics service | blocked (a new dependency and a new processor of operational data; needs owner approval) |
-| Backup retention policy (backups are never pruned today) | not started |
+| Backup retention policy (backups are never pruned today) | blocked (35-day policy proposed with a tested dry-run planner; nothing is removed until the owner approves it) |
 | Staging and production environments | blocked (needs spend approval) |
 
 ### Phase 6 — Content operations
