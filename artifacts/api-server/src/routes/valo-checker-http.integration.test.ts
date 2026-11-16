@@ -230,7 +230,11 @@ test(
             ).status,
             404,
           );
+          // Decision 0003: everyday routes may reuse a passing provider check for up to a
+          // minute (bound proven in platform/session-verification.test.ts). Sensitive
+          // routes check live, and a live refusal also ends cached access at once.
           sessionActive = false;
+          assert.equal((await request("/workspace/account")).status, 401);
           assert.equal((await request("/workspace/assessments")).status, 401);
           sessionActive = true;
           suspended = true;

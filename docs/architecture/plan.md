@@ -80,7 +80,7 @@ reach the 80% branch coverage NFR-011 requires.
 
 | Item | Status |
 | --- | --- |
-| Local session verification, live checks for sensitive actions | not started |
+| Local session verification, live checks for sensitive actions | done (everyday routes re-check Clerk at most once a minute per session; sensitive and unlisted routes check live) |
 | Rate-limit cleanup off the request path | done |
 | Published-content cache with invalidation | not started |
 | Reuse one browser for PDFs, five in parallel | done |
