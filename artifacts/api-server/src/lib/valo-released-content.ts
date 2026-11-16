@@ -284,7 +284,8 @@ export async function lockedLiveVersion(tx: Parameters<Parameters<typeof db.tran
   }
   return row;
 }
-async function requirePurchaseForPricedMaster(
+/** Exported for the entitlement isolation test. */
+export async function requirePurchaseForPricedMaster(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   actor: WorkspaceActor,
   row: typeof valoContentVersions.$inferSelect,
