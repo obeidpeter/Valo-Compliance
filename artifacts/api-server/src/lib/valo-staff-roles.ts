@@ -109,9 +109,9 @@ function assertTarget(target: StaffTarget, id: string) {
 export function makeStaffRoleService(verifyTarget: TargetVerifier = verifyManagedTarget) {
   return {
     async list(actor: StaffActor, raw: unknown = {}) {
-      const input = GetStaffRoleAdministrationQueryParams.strict().parse(raw);
       return db.transaction(async (tx) => {
         const access = await systemAuthority(tx, actor);
+        const input = GetStaffRoleAdministrationQueryParams.strict().parse(raw);
         await tx.insert(valoStaffAccessAudit).values({
           id: randomUUID(),
           assignmentId: access.id,
@@ -140,8 +140,8 @@ export function makeStaffRoleService(verifyTarget: TargetVerifier = verifyManage
       });
     },
     async target(actor: StaffActor, raw: unknown) {
-      const input = VerifyStaffRoleTargetBody.strict().parse(raw);
       await db.transaction((tx) => systemAuthority(tx, actor));
+      const input = VerifyStaffRoleTargetBody.strict().parse(raw);
       const target = await verifyTarget(input.identityId);
       assertTarget(target, input.identityId);
       await db.transaction((tx) => systemAuthority(tx, actor));
@@ -153,6 +153,9 @@ export function makeStaffRoleService(verifyTarget: TargetVerifier = verifyManage
       };
     },
     async change(actor: StaffActor, raw: unknown) {
+      // Refuse callers without system authority before reading their input; the
+      // transaction below checks again under its locks.
+      await db.transaction((tx) => systemAuthority(tx, actor));
       const input = ChangeStaffRoleBody.strict().parse(raw);
       input.reason = input.reason.trim();
       if (input.reason.length < 20)

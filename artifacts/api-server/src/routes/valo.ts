@@ -37,9 +37,12 @@ import { setting } from "../platform/settings";
 
 import { customerPaymentConcernsRouter, financePaymentConcernsRouter } from "./valo-payment-concerns";
 import { createSessionVerificationRouter } from "./valo-session-verification";
+import { makeStaffGate } from "../middlewares/valo-staff-gate";
 const router = Router();
 router.use(createSessionVerificationRouter());
 router.use(publicAccessRouter);
+// Refuse accounts without any active staff assignment before staff routes read input.
+router.use("/admin", makeStaffGate());
 router.use(staffOperationsRouter);
 router.get("/public/discovery", async (_req, res) => {
   res.set("Cache-Control", "no-store");
