@@ -113,8 +113,10 @@ CI artifacts and summarise it in the pull request.
 
 - Synthetic data only. Test identities start with `synthetic-` or
   `privacy-fixture-`; erasure refuses anything else.
-- No secrets in source, logs, tests or docs. Configuration comes from the
-  server secret store.
+- The repository is public by owner decision (16 November 2026). Treat every
+  commit as published: no secrets, credentials, real customer data or private
+  business details in source, logs, tests, docs or commit messages.
+  Configuration comes from the server secret store.
 - Development-only features check the runtime with the existing guards
   (`assertDevelopmentRuntime`). Production mode serves only `/api/healthz`
   until a reviewed launch change exists.

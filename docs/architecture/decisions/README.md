@@ -10,3 +10,4 @@ never edited after acceptance; a later record supersedes an earlier one.
 | [0003](0003-session-verification.md) | Verify sessions locally; live checks for sensitive actions | Accepted |
 | [0004](0004-evidence-files.md) | Keep existing evidence files; record new evidence in CI | Accepted |
 | [0005](0005-hosting-without-spend.md) | Prepare hosting in code; provision nothing without approval | Accepted |
+| [0006](0006-public-repository.md) | The repository is public | Accepted |

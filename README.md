@@ -70,6 +70,8 @@ approves them. Development uses synthetic data and sandbox transactions only.
 
 ## Repository safeguards
 
-The repository must stay private. `main` is the release branch and holds only
-the initial commit; `feature/valo-p0-foundation` is the integration branch.
-Do not change visibility, force-push, delete history or bypass review.
+The repository is public by owner decision (16 November 2026), so every commit
+is published: never commit secrets, credentials or real customer data. `main`
+is the release branch and holds only the initial commit;
+`feature/valo-p0-foundation` is the integration branch. Do not force-push,
+delete history or bypass review.

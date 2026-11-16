@@ -14,3 +14,11 @@ Recheck the intended repository's private visibility immediately before uploadin
 **Why:** Repository state changed independently during coordinated work while connector access remained valid. Authorization success alone does not preserve the owner's private-repository constraint.
 
 **How to apply:** If metadata reports public visibility contrary to that constraint, hold uploads, preserve work in Replit and identify the required owner action. Do not change visibility or publish source as a workaround.
+
+Owner decision, 16 November 2026: the repository is intentionally public.
+Do not hold uploads because metadata reports public visibility.
+
+**Why:** The owner confirmed the public visibility is deliberate when asked.
+
+**How to apply:** Push normally to feature branches. Every commit is
+published, so never commit secrets, credentials or real customer data.
