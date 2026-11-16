@@ -1,43 +1,87 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {spawnSync} from "node:child_process";
-import {resolve} from "node:path";
-const candidate={NODE_ENV:"production",PRIVATE_OBJECT_DIR:"/synthetic-bucket/development",VALO_PRODUCTION_PRIVATE_OBJECT_DIR:"/synthetic-bucket/production",
-  VALO_WORKER_TOPOLOGY:"replit-reserved-vm-same-app",VALO_WORKER_REPLICAS:"1",VALO_RELEASE_SHA:"a".repeat(40),VALO_WORKER_HEALTH_PORT:"8082",PORT:"8080"};
-function invoke(file:string,env:Record<string,string>,args:string[]=[]){
-  const child=spawnSync(process.execPath,[resolve("dist",file+".mjs"),...args],{env,encoding:"utf8",timeout:10000});
-  assert.equal(child.error,undefined);return child;
+import { spawnSync } from "node:child_process";
+import { resolve } from "node:path";
+const candidate = {
+  NODE_ENV: "production",
+  PRIVATE_OBJECT_DIR: "/synthetic-bucket/development",
+  VALO_PRODUCTION_PRIVATE_OBJECT_DIR: "/synthetic-bucket/production",
+  VALO_WORKER_TOPOLOGY: "replit-reserved-vm-same-app",
+  VALO_WORKER_REPLICAS: "1",
+  VALO_RELEASE_SHA: "a".repeat(40),
+  VALO_WORKER_HEALTH_PORT: "8082",
+  PORT: "8080",
+};
+function invoke(file: string, env: Record<string, string>, args: string[] = []) {
+  const child = spawnSync(process.execPath, [resolve("dist", file + ".mjs"), ...args], {
+    env,
+    encoding: "utf8",
+    timeout: 10000,
+  });
+  assert.equal(child.error, undefined);
+  return child;
 }
-test("built preflight distinguishes configuration from launch and never echoes storage roots",()=>{
-  const pending=invoke("production-preflight",candidate);assert.equal(pending.status,2,pending.stderr);
-  const report=JSON.parse(pending.stdout);assert.equal(report.configurationValid,true);assert.equal(report.launchReady,false);
+test("built preflight distinguishes configuration from launch and never echoes storage roots", () => {
+  const pending = invoke("production-preflight", candidate);
+  assert.equal(pending.status, 2, pending.stderr);
+  const report = JSON.parse(pending.stdout);
+  assert.equal(report.configurationValid, true);
+  assert.equal(report.launchReady, false);
   assert.ok(!pending.stdout.includes("synthetic-bucket"));
-  const configuration=invoke("production-preflight",candidate,["--configuration-only"]);assert.equal(configuration.status,0,configuration.stderr);
-  assert.equal(invoke("production-preflight",{NODE_ENV:"production"}).status,1);
+  const configuration = invoke("production-preflight", candidate, ["--configuration-only"]);
+  assert.equal(configuration.status, 0, configuration.stderr);
+  assert.equal(invoke("production-preflight", { NODE_ENV: "production" }).status, 1);
 });
-test("shipped worker still refuses production before starting work and probe requires explicit opt-in",()=>{
-  const worker=invoke("export-worker",{...candidate,DATABASE_URL:"postgresql://synthetic@127.0.0.1:1/must_not_connect",SESSION_SECRET:"synthetic-only-no-external-calls"});
-  assert.equal(worker.status,1);assert.match(worker.stderr,/PRODUCTION_REHEARSAL_CONFIGURATION_REQUIRED/);
-  assert.doesNotMatch(worker.stdout,/worker_started|worker_ready/);
-  const supervisor=invoke("export-supervisor",candidate);
-  assert.equal(supervisor.status,1);assert.match(supervisor.stderr,/PRODUCTION_REHEARSAL_CONFIGURATION_REQUIRED/);
-  assert.doesNotMatch(supervisor.stdout,/worker_supervisor.started/);
-  const probe=invoke("production-storage-probe",candidate,["--start"]);assert.equal(probe.status,1);assert.match(probe.stderr,/EXPLICIT_STORAGE_PROBE_REQUIRED/);assert.equal(probe.stdout,"");
+test("shipped worker still refuses production before starting work and probe requires explicit opt-in", () => {
+  const worker = invoke("export-worker", {
+    ...candidate,
+    DATABASE_URL: "postgresql://synthetic@127.0.0.1:1/must_not_connect",
+    SESSION_SECRET: "synthetic-only-no-external-calls",
+  });
+  assert.equal(worker.status, 1);
+  assert.match(worker.stderr, /PRODUCTION_REHEARSAL_CONFIGURATION_REQUIRED/);
+  assert.doesNotMatch(worker.stdout, /worker_started|worker_ready/);
+  const supervisor = invoke("export-supervisor", candidate);
+  assert.equal(supervisor.status, 1);
+  assert.match(supervisor.stderr, /PRODUCTION_REHEARSAL_CONFIGURATION_REQUIRED/);
+  assert.doesNotMatch(supervisor.stdout, /worker_supervisor.started/);
+  const probe = invoke("production-storage-probe", candidate, ["--start"]);
+  assert.equal(probe.status, 1);
+  assert.match(probe.stderr, /EXPLICIT_STORAGE_PROBE_REQUIRED/);
+  assert.equal(probe.stdout, "");
 });
 
-test("built monitoring probe requires explicit intent and reports only allowlisted failures",()=>{
-  const hidden="https://hc-ping.com/private-capability-must-not-appear";
-  const vars={VALO_EXTERNAL_MONITORING:"healthchecks",VALO_WORKER_MONITOR_URL:hidden};
-  const guarded=invoke("monitoring-probe",vars,["worker","failure"]);
-  assert.equal(guarded.status,1);assert.equal(guarded.stdout,"");assert.equal(guarded.stderr.trim(),"EXPLICIT_MONITORING_PROBE_REQUIRED");
-  const invalid=invoke("monitoring-probe",{...vars,VALO_MONITORING_PROBE:"synthetic-notification-only"},["worker","failure"]);
-  assert.equal(invalid.status,1);assert.equal(invalid.stderr.trim(),"EXTERNAL_MONITOR_CONFIGURATION_INVALID");
+test("built monitoring probe requires explicit intent and reports only allowlisted failures", () => {
+  const hidden = "https://hc-ping.com/private-capability-must-not-appear";
+  const vars = { VALO_EXTERNAL_MONITORING: "healthchecks", VALO_WORKER_MONITOR_URL: hidden };
+  const guarded = invoke("monitoring-probe", vars, ["worker", "failure"]);
+  assert.equal(guarded.status, 1);
+  assert.equal(guarded.stdout, "");
+  assert.equal(guarded.stderr.trim(), "EXPLICIT_MONITORING_PROBE_REQUIRED");
+  const invalid = invoke(
+    "monitoring-probe",
+    { ...vars, VALO_MONITORING_PROBE: "synthetic-notification-only" },
+    ["worker", "failure"],
+  );
+  assert.equal(invalid.status, 1);
+  assert.equal(invalid.stderr.trim(), "EXTERNAL_MONITOR_CONFIGURATION_INVALID");
   assert.ok(!invalid.stderr.includes(hidden));
 });
 
-test("shipped retention inspector requires read-only intent before database access",()=>{
-  const denied=invoke("export-retention-inventory",{NODE_ENV:"development"},["inventory","11111111-1111-4111-8111-111111111111"]);
-  assert.equal(denied.status,1);assert.equal(denied.stdout,"");assert.equal(denied.stderr.trim(),"RETENTION_INSPECTION_USAGE_REQUIRED");
-  const missing=invoke("export-retention-inventory",{NODE_ENV:"development",VALO_RETENTION_INSPECTION:"read-only"},["inventory","11111111-1111-4111-8111-111111111111"]);
-  assert.equal(missing.status,1);assert.equal(missing.stdout,"");assert.equal(missing.stderr.trim(),"RETENTION_DATABASE_REQUIRED");
+test("shipped retention inspector requires read-only intent before database access", () => {
+  const denied = invoke("export-retention-inventory", { NODE_ENV: "development" }, [
+    "inventory",
+    "11111111-1111-4111-8111-111111111111",
+  ]);
+  assert.equal(denied.status, 1);
+  assert.equal(denied.stdout, "");
+  assert.equal(denied.stderr.trim(), "RETENTION_INSPECTION_USAGE_REQUIRED");
+  const missing = invoke(
+    "export-retention-inventory",
+    { NODE_ENV: "development", VALO_RETENTION_INSPECTION: "read-only" },
+    ["inventory", "11111111-1111-4111-8111-111111111111"],
+  );
+  assert.equal(missing.status, 1);
+  assert.equal(missing.stdout, "");
+  assert.equal(missing.stderr.trim(), "RETENTION_DATABASE_REQUIRED");
 });

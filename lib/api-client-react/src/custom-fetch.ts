@@ -1,7 +1,7 @@
-import {captureRequestScope,assertRequestScope,combineRequestSignals} from "./request-scope";
+import { captureRequestScope, assertRequestScope, combineRequestSignals } from "./request-scope";
 // Infer from each host's fetch declarations (browser or Node test runtime).
-type RequestInfo=Parameters<typeof fetch>[0];
-type HeadersInit=NonNullable<ConstructorParameters<typeof Headers>[0]>;
+type RequestInfo = Parameters<typeof fetch>[0];
+type HeadersInit = NonNullable<ConstructorParameters<typeof Headers>[0]>;
 export type CustomFetchOptions = RequestInit & {
   responseType?: "json" | "text" | "blob" | "auto";
 };
@@ -107,11 +107,11 @@ function isJsonMediaType(mediaType: string | null): boolean {
 function isTextMediaType(mediaType: string | null): boolean {
   return Boolean(
     mediaType &&
-      (mediaType.startsWith("text/") ||
-        mediaType === "application/xml" ||
-        mediaType === "text/xml" ||
-        mediaType.endsWith("+xml") ||
-        mediaType === "application/x-www-form-urlencoded"),
+    (mediaType.startsWith("text/") ||
+      mediaType === "application/xml" ||
+      mediaType === "text/xml" ||
+      mediaType.endsWith("+xml") ||
+      mediaType === "application/x-www-form-urlencoded"),
   );
 }
 
@@ -185,11 +185,7 @@ export class ApiError<T = unknown> extends Error {
   readonly method: string;
   readonly url: string;
 
-  constructor(
-    response: Response,
-    data: T | null,
-    requestInfo: { method: string; url: string },
-  ) {
+  constructor(response: Response, data: T | null, requestInfo: { method: string; url: string }) {
     super(buildErrorMessage(response, data));
     Object.setPrototypeOf(this, new.target.prototype);
 
@@ -303,8 +299,7 @@ async function parseSuccessBody(
     return null;
   }
 
-  const effectiveType =
-    responseType === "auto" ? inferResponseType(response) : responseType;
+  const effectiveType = responseType === "auto" ? inferResponseType(response) : responseType;
 
   switch (effectiveType) {
     case "json":
@@ -318,8 +313,7 @@ async function parseSuccessBody(
     case "blob":
       if (typeof response.blob !== "function") {
         throw new TypeError(
-          "Blob responses are not supported in this runtime. " +
-            "Use responseType \"json\" or \"text\" instead.",
+          "Blob responses are not supported in this runtime. " + 'Use responseType "json" or "text" instead.',
         );
       }
       return response.blob();
@@ -330,7 +324,7 @@ export async function customFetch<T = unknown>(
   input: RequestInfo | URL,
   options: CustomFetchOptions = {},
 ): Promise<T> {
-  const accountScope=captureRequestScope();
+  const accountScope = captureRequestScope();
   input = applyBaseUrl(input);
   const { responseType = "auto", headers: headersInit, ...init } = options;
 
@@ -342,11 +336,7 @@ export async function customFetch<T = unknown>(
 
   const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
 
-  if (
-    typeof init.body === "string" &&
-    !headers.has("content-type") &&
-    looksLikeJson(init.body)
-  ) {
+  if (typeof init.body === "string" && !headers.has("content-type") && looksLikeJson(init.body)) {
     headers.set("content-type", "application/json");
   }
 
@@ -366,18 +356,24 @@ export async function customFetch<T = unknown>(
   const requestInfo = { method, url: resolveUrl(input) };
 
   assertRequestScope(accountScope);
-  const cancellation=combineRequestSignals(init.signal,isRequest(input)?input.signal:undefined,accountScope?.signal);
-  try{
-    const response = await fetch(input, { ...init, method, headers,signal:cancellation.signal });
+  const cancellation = combineRequestSignals(
+    init.signal,
+    isRequest(input) ? input.signal : undefined,
+    accountScope?.signal,
+  );
+  try {
+    const response = await fetch(input, { ...init, method, headers, signal: cancellation.signal });
     assertRequestScope(accountScope);
-    if(response.status===401)accountScope?.onUnauthorized?.();
+    if (response.status === 401) accountScope?.onUnauthorized?.();
     if (!response.ok) {
       const errorData = await parseErrorBody(response, method);
       assertRequestScope(accountScope);
       throw new ApiError(response, errorData, requestInfo);
     }
-    const result=await parseSuccessBody(response,responseType,requestInfo);
+    const result = await parseSuccessBody(response, responseType, requestInfo);
     assertRequestScope(accountScope);
     return result as T;
-  }finally{cancellation.dispose();}
+  } finally {
+    cancellation.dispose();
+  }
 }

@@ -1,17 +1,20 @@
 /** Actual dispute React components and guarded generated client; controlled HTTP/identity.
  * This does not exercise Clerk, a merchant account, database authority or Paystack. */
-import {createServer} from "node:http";
-import {once} from "node:events";
-import {mkdir,writeFile,readFile,readdir} from "node:fs/promises";
-import {createHash} from "node:crypto";
-import {resolve} from "node:path";
-import {build} from "esbuild";
-import {chromium,expect} from "@playwright/test";
-import {developmentPublicationOnly,publicationWorkspaceRoot} from "../editorial/operational-policy";
+import { createServer } from "node:http";
+import { once } from "node:events";
+import { mkdir, writeFile, readFile, readdir } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { resolve } from "node:path";
+import { build } from "esbuild";
+import { chromium, expect } from "@playwright/test";
+import { developmentPublicationOnly, publicationWorkspaceRoot } from "../editorial/operational-policy";
 developmentPublicationOnly();
-if(process.env.VALO_RUN_DISPUTE_BROWSER!=="synthetic-development-only")throw Error("EXPLICIT_CONTROLLED_BROWSER_FLAG_REQUIRED");
-const root=publicationWorkspaceRoot(),front=resolve(root,"artifacts/valo"),checks:string[]=[];
-const code=`
+if (process.env.VALO_RUN_DISPUTE_BROWSER !== "synthetic-development-only")
+  throw Error("EXPLICIT_CONTROLLED_BROWSER_FLAG_REQUIRED");
+const root = publicationWorkspaceRoot(),
+  front = resolve(root, "artifacts/valo"),
+  checks: string[] = [];
+const code = `
 import React,{useState} from "react";import{flushSync}from"react-dom";import{createRoot}from"react-dom/client";
 import{AccountStateBoundary}from"./src/components/account-state-boundary";
 import{PaymentConcerns,FinancePaymentConcerns}from"./src/components/payment-concerns";
@@ -74,115 +77,329 @@ function Fixture(){const[state,setState]=useState({actor:"A",view:"customer",epo
  <><FinancePaymentConcerns/><FinanceDisputeCard id={disputeId}/></>}</main></DisputeFormsBoundary></AccountStateBoundary>;
 }createRoot(document.getElementById("root")).render(<Fixture/>);
 `;
-const result=await build({stdin:{contents:code,loader:"tsx",resolveDir:front},absWorkingDir:front,bundle:true,write:false,
-  outdir:"generated-dispute-fixture",format:"iife",jsx:"automatic",alias:{"@":resolve(front,"src")},define:{"process.env":"{}"}});
-const js=result.outputFiles.find(f=>f.path.endsWith(".js"))!.contents;
-let css:string;
-if(process.env.CI==="true"){
-  const directory=resolve(front,".next/static/css"),files=(await readdir(directory,{recursive:true})).filter(p=>p.endsWith(".css"));
-  if(!files.length)throw Error("BUILT_PRODUCT_CSS_REQUIRED");
-  css=(await Promise.all(files.map(p=>readFile(resolve(directory,p),"utf8")))).join("\n");
-}else{
-  if(!process.env.REPLIT_DEV_DOMAIN)throw Error("COMPILED_PRODUCT_CSS_OR_CI_BUILD_REQUIRED");
-  const origin=`https://${process.env.REPLIT_DEV_DOMAIN}`,html=await(await fetch(origin,{redirect:"error"})).text();
-  const paths=[...html.matchAll(/href="([^"]+\.css(?:\?[^"]*)?)"/g)].map(m=>m[1]).filter(p=>p?.startsWith("/_next/"));
-  if(!paths.length)throw Error("COMPILED_PRODUCT_CSS_REQUIRED");
-  css=(await Promise.all(paths.map(async path=>{const response=await fetch(origin+path,{redirect:"error"});if(!response.ok)throw Error("COMPILED_PRODUCT_CSS_FETCH_FAILED");return response.text();}))).join("\n");
-}
-const server=createServer((req,res)=>{
-  res.setHeader("Cache-Control","no-store");
-  if(req.url==="/fixture.js"){res.setHeader("Content-Type","text/javascript");res.end(js);}
-  else if(req.url==="/fixture.css"){res.setHeader("Content-Type","text/css");res.end(css);}
-  else res.end('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>');
+const result = await build({
+  stdin: { contents: code, loader: "tsx", resolveDir: front },
+  absWorkingDir: front,
+  bundle: true,
+  write: false,
+  outdir: "generated-dispute-fixture",
+  format: "iife",
+  jsx: "automatic",
+  alias: { "@": resolve(front, "src") },
+  define: { "process.env": "{}" },
 });
-server.listen(0,"127.0.0.1");await once(server,"listening");const address=server.address();if(!address||typeof address==="string")throw Error("NO_TEST_PORT");
-const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH||"/repl/tools/bin/chromium"});
-const context=await browser.newContext({viewport:{width:360,height:800}}),page=await context.newPage();
-const externalRequests:string[]=[];
-await context.route("**/*",route=>{const url=new URL(route.request().url());if(url.origin===`http://127.0.0.1:${address.port}`)return route.continue();externalRequests.push(url.origin);return route.abort();});
-const report:Record<string,unknown>={startedAt:new Date().toISOString(),controlledIdentity:true,controlledApi:true,realClerkSessions:0,merchantCalls:0,
-  compiledProductCssSha256:createHash("sha256").update(css).digest("hex"),actualComponents:["components/payment-concerns.tsx","components/dispute-workflows.tsx","components/account-state-boundary.tsx"],checks};
-const transitions=async(actor:string,view:string)=>page.evaluate(({actor,view})=>(globalThis as any).transition(actor,view),{actor,view});
-const countRequests=async(suffix:string)=>page.evaluate(suffix=>(globalThis as any).requests.filter((row:any)=>row.method==="POST"&&row.url.endsWith(suffix)).length,suffix);
-try{
+const js = result.outputFiles.find((f) => f.path.endsWith(".js"))!.contents;
+let css: string;
+if (process.env.CI === "true") {
+  const directory = resolve(front, ".next/static/css"),
+    files = (await readdir(directory, { recursive: true })).filter((p) => p.endsWith(".css"));
+  if (!files.length) throw Error("BUILT_PRODUCT_CSS_REQUIRED");
+  css = (await Promise.all(files.map((p) => readFile(resolve(directory, p), "utf8")))).join("\n");
+} else {
+  if (!process.env.REPLIT_DEV_DOMAIN) throw Error("COMPILED_PRODUCT_CSS_OR_CI_BUILD_REQUIRED");
+  const origin = `https://${process.env.REPLIT_DEV_DOMAIN}`,
+    html = await (await fetch(origin, { redirect: "error" })).text();
+  const paths = [...html.matchAll(/href="([^"]+\.css(?:\?[^"]*)?)"/g)]
+    .map((m) => m[1])
+    .filter((p) => p?.startsWith("/_next/"));
+  if (!paths.length) throw Error("COMPILED_PRODUCT_CSS_REQUIRED");
+  css = (
+    await Promise.all(
+      paths.map(async (path) => {
+        const response = await fetch(origin + path, { redirect: "error" });
+        if (!response.ok) throw Error("COMPILED_PRODUCT_CSS_FETCH_FAILED");
+        return response.text();
+      }),
+    )
+  ).join("\n");
+}
+const server = createServer((req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  if (req.url === "/fixture.js") {
+    res.setHeader("Content-Type", "text/javascript");
+    res.end(js);
+  } else if (req.url === "/fixture.css") {
+    res.setHeader("Content-Type", "text/css");
+    res.end(css);
+  } else
+    res.end(
+      '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>',
+    );
+});
+server.listen(0, "127.0.0.1");
+await once(server, "listening");
+const address = server.address();
+if (!address || typeof address === "string") throw Error("NO_TEST_PORT");
+const browser = await chromium.launch({
+  headless: true,
+  executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || "/repl/tools/bin/chromium",
+});
+const context = await browser.newContext({ viewport: { width: 360, height: 800 } }),
+  page = await context.newPage();
+const externalRequests: string[] = [];
+await context.route("**/*", (route) => {
+  const url = new URL(route.request().url());
+  if (url.origin === `http://127.0.0.1:${address.port}`) return route.continue();
+  externalRequests.push(url.origin);
+  return route.abort();
+});
+const report: Record<string, unknown> = {
+  startedAt: new Date().toISOString(),
+  controlledIdentity: true,
+  controlledApi: true,
+  realClerkSessions: 0,
+  merchantCalls: 0,
+  compiledProductCssSha256: createHash("sha256").update(css).digest("hex"),
+  actualComponents: [
+    "components/payment-concerns.tsx",
+    "components/dispute-workflows.tsx",
+    "components/account-state-boundary.tsx",
+  ],
+  checks,
+};
+const transitions = async (actor: string, view: string) =>
+  page.evaluate(({ actor, view }) => (globalThis as any).transition(actor, view), { actor, view });
+const countRequests = async (suffix: string) =>
+  page.evaluate(
+    (suffix) =>
+      (globalThis as any).requests.filter((row: any) => row.method === "POST" && row.url.endsWith(suffix))
+        .length,
+    suffix,
+  );
+try {
   await page.goto(`http://127.0.0.1:${address.port}`);
   await expect(page.getByText("No concerns saved for this order.")).toBeVisible();
-  const concern=page.getByLabel("What happened with this order?");await concern.fill("CONTROLLED_CUSTOMER_A payment concern");
-  await expect(page.getByRole("button",{name:"Save payment concern",exact:true})).toBeDisabled();
-  await page.getByRole("checkbox").check();await page.getByRole("button",{name:"Save payment concern",exact:true}).click();
-  await expect(page.getByText("Concern saved. Your reference is",{exact:false})).toContainText("33333333-3333-4333-8333-333333333333");
-  const firstBody=await page.evaluate(()=>(globalThis as any).requests.find((row:any)=>row.url.endsWith("/concerns")&&row.method==="POST").body);
-  expect(firstBody).toMatchObject({message:"CONTROLLED_CUSTOMER_A payment concern",acknowledgement:true});expect(firstBody.providerId).toBeUndefined();
-  checks.push("Standalone customer concern requires acknowledgement, saves its reference, and sends no provider dispute identifier");
-  await page.getByText("Replies and history",{exact:true}).click();await page.getByLabel("Add information to this concern").fill("CONTROLLED_ADDITIONAL_INFORMATION");
-  await page.getByRole("button",{name:"Save reply",exact:true}).click();await expect(page.getByText("CONTROLLED_ADDITIONAL_INFORMATION",{exact:true})).toBeVisible();
+  const concern = page.getByLabel("What happened with this order?");
+  await concern.fill("CONTROLLED_CUSTOMER_A payment concern");
+  await expect(page.getByRole("button", { name: "Save payment concern", exact: true })).toBeDisabled();
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Save payment concern", exact: true }).click();
+  await expect(page.getByText("Concern saved. Your reference is", { exact: false })).toContainText(
+    "33333333-3333-4333-8333-333333333333",
+  );
+  const firstBody = await page.evaluate(
+    () =>
+      (globalThis as any).requests.find((row: any) => row.url.endsWith("/concerns") && row.method === "POST")
+        .body,
+  );
+  expect(firstBody).toMatchObject({
+    message: "CONTROLLED_CUSTOMER_A payment concern",
+    acknowledgement: true,
+  });
+  expect(firstBody.providerId).toBeUndefined();
+  checks.push(
+    "Standalone customer concern requires acknowledgement, saves its reference, and sends no provider dispute identifier",
+  );
+  await page.getByText("Replies and history", { exact: true }).click();
+  await page.getByLabel("Add information to this concern").fill("CONTROLLED_ADDITIONAL_INFORMATION");
+  await page.getByRole("button", { name: "Save reply", exact: true }).click();
+  await expect(page.getByText("CONTROLLED_ADDITIONAL_INFORMATION", { exact: true })).toBeVisible();
   checks.push("Separate versioned customer reply persists in concern history");
-  await concern.fill("UNSAVED_PRIVATE_CONCERN_A");await page.evaluate(()=>(globalThis as any).history.pushState({},"","/leave-concern"));
-  await expect(page.getByRole("dialog")).toBeVisible();await page.getByRole("button",{name:"Keep editing",exact:true}).click();await expect(concern).toHaveValue("UNSAVED_PRIVATE_CONCERN_A");
+  await concern.fill("UNSAVED_PRIVATE_CONCERN_A");
+  await page.evaluate(() => (globalThis as any).history.pushState({}, "", "/leave-concern"));
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.getByRole("button", { name: "Keep editing", exact: true }).click();
+  await expect(concern).toHaveValue("UNSAVED_PRIVATE_CONCERN_A");
   checks.push("Existing native unsaved-navigation boundary protects the added standalone concern form");
-  await transitions("B","customer");await expect(concern).toHaveValue("");await expect(page.locator("body")).not.toContainText("CONTROLLED_CUSTOMER_A");await expect(page.getByRole("checkbox")).not.toBeChecked();
+  await transitions("B", "customer");
+  await expect(concern).toHaveValue("");
+  await expect(page.locator("body")).not.toContainText("CONTROLLED_CUSTOMER_A");
+  await expect(page.getByRole("checkbox")).not.toBeChecked();
   checks.push("Account boundary clears concern history, unsaved text and acknowledgement on identity switch");
-  await transitions("A","customer");await concern.fill("LATE_PRIVATE_CONCERN_A");await page.getByRole("checkbox").check();await page.evaluate(()=>(globalThis as any).delayMutation=true);
-  await page.getByRole("button",{name:"Save payment concern",exact:true}).click();await expect.poll(()=>page.evaluate(()=>(globalThis as any).delayed.length)).toBe(1);
-  await transitions("B","customer");await page.evaluate(()=>{(globalThis as any).delayMutation=false;for(const resolve of (globalThis as any).delayed)resolve();});
-  await expect(concern).toHaveValue("");await expect(page.locator("body")).not.toContainText("Concern saved. Your reference is");
-  checks.push("Late old-account concern response cannot populate the new account or show its saved reference");
-  await transitions("A","information");await page.getByLabel("Selected existing bank dispute").selectOption("22222222-2222-4222-8222-222222222222");
-  await page.getByLabel("Your actual name").fill("Controlled Customer");await page.getByLabel("Your actual phone number").fill("00000000000");
-  await page.getByLabel("What was actually supplied or disputed").fill("CONTROLLED_SUPPLIED_FACTS");await expect(page.getByRole("button",{name:"Save statement — not a bank decision"})).toBeDisabled();
-  await page.getByRole("checkbox",{name:/I consent to finance sharing/}).check();await page.getByRole("button",{name:"Save statement — not a bank decision"}).click();
-  await expect(page.getByText("Statement saved for this existing dispute.",{exact:false})).toBeVisible();await page.getByText("Saved statements",{exact:true}).click();
-  await expect(page.getByText("CONTROLLED_SUPPLIED_FACTS",{exact:true})).toBeVisible();await expect(page.locator("pre")).toHaveCount(0);
-  const statement=await page.evaluate(()=>(globalThis as any).requests.find((r:any)=>r.method==="POST"&&r.url.endsWith("/dispute-information")).body);
-  expect(statement.consentVersion).toBe("test-dispute-information-v1");expect(statement.deliveryDate).toBeUndefined();expect(statement.deliveryAddress).toBeUndefined();expect(statement.customerEmail).toBeUndefined();
-  checks.push("Native selected-bank-dispute consent flow remains separate, saves actual supplied facts, and invents no optional delivery data or email");
-  await transitions("finance","finance");await page.getByLabel("Message visible to the customer").fill("CONTROLLED_FINANCE_RESPONSE saved in concern history");
-  await page.getByRole("button",{name:"Save concern response",exact:true}).click();await page.getByText("Customer concern history",{exact:true}).click();
-  await expect(page.getByText("CONTROLLED_FINANCE_RESPONSE saved in concern history",{exact:true})).toBeVisible();
-  checks.push("Finance concern response is readable in saved history and does not call an email or provider route");
-  await page.getByLabel("Accurate reason / provider message").fill("Verified controlled order receipt preparation");
-  await page.getByRole("button",{name:"Prepare immutable intent only",exact:true}).click();await expect(page.getByText("Immutable intent saved. No provider operation has been sent.",{exact:true})).toBeVisible();
-  await expect(page.getByRole("button",{name:"Send authorised test action once",exact:true})).toBeDisabled();expect(await countRequests("/execute")).toBe(0);
-  checks.push("Native immutable preparation remains usable while merchant execution is disabled, with no execute call");
-  await page.evaluate(()=>(globalThis as any).fixture.executionEnabled=true);await page.getByRole("button",{name:"Reload saved dispute record",exact:true}).click();
-  const executeAck=page.getByRole("checkbox",{name:/I have reviewed this exact saved intent/});await expect(executeAck).toBeEnabled();await expect(executeAck).not.toBeChecked();
-  await page.getByLabel("Reason for changing the finance hold").fill("Pause this controlled dispute for finance review");await page.getByRole("button",{name:"Place finance hold",exact:true}).click();
-  await expect(page.getByText(/^Finance hold is active · Control revision \d+$/)).toBeVisible();await expect(executeAck).toBeDisabled();expect(await countRequests("/execute")).toBe(0);
-  await page.getByLabel("Reason for changing the finance hold").fill("Release after controlled finance review completed");await page.getByRole("button",{name:"Release finance hold",exact:true}).click();
-  await expect(executeAck).toBeEnabled();await expect(executeAck).not.toBeChecked();await expect(page.getByRole("button",{name:"Send authorised test action once",exact:true})).toBeDisabled();
-  checks.push("Versioned finance hold prevents dispatch; release does not send and leaves per-intent acknowledgement unchecked");
-  await executeAck.check();await page.getByRole("button",{name:"Send authorised test action once",exact:true}).click();await expect(page.getByText("The provider outcome is unknown.",{exact:false})).toBeVisible();
-  expect(await countRequests("/execute")).toBe(1);expect(await page.evaluate(()=>(globalThis as any).requests.find((r:any)=>r.url.endsWith("/execute")).body.acknowledgement)).toBe(true);
-  await expect(page.getByRole("button",{name:"Send authorised test action once",exact:true})).toHaveCount(0);
-  await page.getByRole("button",{name:"Fetch canonical state only",exact:true}).click();await expect.poll(()=>countRequests("/reconcile")).toBe(1);expect(await countRequests("/execute")).toBe(1);
-  checks.push("Separate execute acknowledgement yields one native control call; unknown result has no resend and canonical reconciliation does not execute again");
-  await page.evaluate(()=>{(globalThis as any).fixture.actions=[];});await page.getByRole("button",{name:"Reload saved dispute record",exact:true}).click();await expect(page.getByText("No merchant operations prepared for this dispute.")).toBeVisible();
-  await page.getByRole("combobox",{name:/^Operation/}).selectOption("submit_evidence");await page.getByRole("combobox",{name:/^Exact saved customer statement/}).selectOption("55555555-5555-4555-8555-555555555555");
-  await expect(page.locator("form").getByText("CONTROLLED_SUPPLIED_FACTS",{exact:true})).toBeVisible();await expect(page.locator("pre")).toHaveCount(0);await expect(page.locator('input[type="file"]')).toHaveCount(0);
-  await page.getByRole("combobox",{name:/^Operation/}).selectOption("merchant_decision");await page.getByRole("combobox",{name:/^Merchant response/}).selectOption("merchant-accepted");
-  await page.getByLabel("Accurate reason / provider message").fill("Controlled partial acceptance amount review");await page.getByLabel("Amount to accept in NGN").fill("100.01");
-  await page.getByRole("button",{name:"Prepare immutable intent only",exact:true}).click();await expect(page.getByRole("alert")).toContainText("cannot exceed the original payment");
-  await page.getByLabel("Amount to accept in NGN").fill("12.34");await page.getByRole("button",{name:"Prepare immutable intent only",exact:true}).click();
-  await expect.poll(()=>countRequests("/actions")).toBe(2);expect(await page.evaluate(()=>(globalThis as any).requests.filter((r:any)=>r.url.endsWith("/actions")).at(-1).body.amountKobo)).toBe(1234);
-  checks.push("Consented evidence is readable without raw JSON/private uploads; merchant NGN input blocks overpayment and sends exact integer kobo");
-  expect(await page.evaluate(()=>(globalThis as any).document.documentElement.scrollWidth<=(globalThis as any).innerWidth)).toBe(true);
+  await transitions("A", "customer");
+  await concern.fill("LATE_PRIVATE_CONCERN_A");
+  await page.getByRole("checkbox").check();
+  await page.evaluate(() => ((globalThis as any).delayMutation = true));
+  await page.getByRole("button", { name: "Save payment concern", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (globalThis as any).delayed.length)).toBe(1);
+  await transitions("B", "customer");
+  await page.evaluate(() => {
+    (globalThis as any).delayMutation = false;
+    for (const resolve of (globalThis as any).delayed) resolve();
+  });
+  await expect(concern).toHaveValue("");
+  await expect(page.locator("body")).not.toContainText("Concern saved. Your reference is");
+  checks.push(
+    "Late old-account concern response cannot populate the new account or show its saved reference",
+  );
+  await transitions("A", "information");
+  await page
+    .getByLabel("Selected existing bank dispute")
+    .selectOption("22222222-2222-4222-8222-222222222222");
+  await page.getByLabel("Your actual name").fill("Controlled Customer");
+  await page.getByLabel("Your actual phone number").fill("00000000000");
+  await page.getByLabel("What was actually supplied or disputed").fill("CONTROLLED_SUPPLIED_FACTS");
+  await expect(page.getByRole("button", { name: "Save statement — not a bank decision" })).toBeDisabled();
+  await page.getByRole("checkbox", { name: /I consent to finance sharing/ }).check();
+  await page.getByRole("button", { name: "Save statement — not a bank decision" }).click();
+  await expect(page.getByText("Statement saved for this existing dispute.", { exact: false })).toBeVisible();
+  await page.getByText("Saved statements", { exact: true }).click();
+  await expect(page.getByText("CONTROLLED_SUPPLIED_FACTS", { exact: true })).toBeVisible();
+  await expect(page.locator("pre")).toHaveCount(0);
+  const statement = await page.evaluate(
+    () =>
+      (globalThis as any).requests.find(
+        (r: any) => r.method === "POST" && r.url.endsWith("/dispute-information"),
+      ).body,
+  );
+  expect(statement.consentVersion).toBe("test-dispute-information-v1");
+  expect(statement.deliveryDate).toBeUndefined();
+  expect(statement.deliveryAddress).toBeUndefined();
+  expect(statement.customerEmail).toBeUndefined();
+  checks.push(
+    "Native selected-bank-dispute consent flow remains separate, saves actual supplied facts, and invents no optional delivery data or email",
+  );
+  await transitions("finance", "finance");
+  await page
+    .getByLabel("Message visible to the customer")
+    .fill("CONTROLLED_FINANCE_RESPONSE saved in concern history");
+  await page.getByRole("button", { name: "Save concern response", exact: true }).click();
+  await page.getByText("Customer concern history", { exact: true }).click();
+  await expect(
+    page.getByText("CONTROLLED_FINANCE_RESPONSE saved in concern history", { exact: true }),
+  ).toBeVisible();
+  checks.push(
+    "Finance concern response is readable in saved history and does not call an email or provider route",
+  );
+  await page
+    .getByLabel("Accurate reason / provider message")
+    .fill("Verified controlled order receipt preparation");
+  await page.getByRole("button", { name: "Prepare immutable intent only", exact: true }).click();
+  await expect(
+    page.getByText("Immutable intent saved. No provider operation has been sent.", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Send authorised test action once", exact: true }),
+  ).toBeDisabled();
+  expect(await countRequests("/execute")).toBe(0);
+  checks.push(
+    "Native immutable preparation remains usable while merchant execution is disabled, with no execute call",
+  );
+  await page.evaluate(() => ((globalThis as any).fixture.executionEnabled = true));
+  await page.getByRole("button", { name: "Reload saved dispute record", exact: true }).click();
+  const executeAck = page.getByRole("checkbox", { name: /I have reviewed this exact saved intent/ });
+  await expect(executeAck).toBeEnabled();
+  await expect(executeAck).not.toBeChecked();
+  await page
+    .getByLabel("Reason for changing the finance hold")
+    .fill("Pause this controlled dispute for finance review");
+  await page.getByRole("button", { name: "Place finance hold", exact: true }).click();
+  await expect(page.getByText(/^Finance hold is active · Control revision \d+$/)).toBeVisible();
+  await expect(executeAck).toBeDisabled();
+  expect(await countRequests("/execute")).toBe(0);
+  await page
+    .getByLabel("Reason for changing the finance hold")
+    .fill("Release after controlled finance review completed");
+  await page.getByRole("button", { name: "Release finance hold", exact: true }).click();
+  await expect(executeAck).toBeEnabled();
+  await expect(executeAck).not.toBeChecked();
+  await expect(
+    page.getByRole("button", { name: "Send authorised test action once", exact: true }),
+  ).toBeDisabled();
+  checks.push(
+    "Versioned finance hold prevents dispatch; release does not send and leaves per-intent acknowledgement unchecked",
+  );
+  await executeAck.check();
+  await page.getByRole("button", { name: "Send authorised test action once", exact: true }).click();
+  await expect(page.getByText("The provider outcome is unknown.", { exact: false })).toBeVisible();
+  expect(await countRequests("/execute")).toBe(1);
+  expect(
+    await page.evaluate(
+      () => (globalThis as any).requests.find((r: any) => r.url.endsWith("/execute")).body.acknowledgement,
+    ),
+  ).toBe(true);
+  await expect(
+    page.getByRole("button", { name: "Send authorised test action once", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Fetch canonical state only", exact: true }).click();
+  await expect.poll(() => countRequests("/reconcile")).toBe(1);
+  expect(await countRequests("/execute")).toBe(1);
+  checks.push(
+    "Separate execute acknowledgement yields one native control call; unknown result has no resend and canonical reconciliation does not execute again",
+  );
+  await page.evaluate(() => {
+    (globalThis as any).fixture.actions = [];
+  });
+  await page.getByRole("button", { name: "Reload saved dispute record", exact: true }).click();
+  await expect(page.getByText("No merchant operations prepared for this dispute.")).toBeVisible();
+  await page.getByRole("combobox", { name: /^Operation/ }).selectOption("submit_evidence");
+  await page
+    .getByRole("combobox", { name: /^Exact saved customer statement/ })
+    .selectOption("55555555-5555-4555-8555-555555555555");
+  await expect(page.locator("form").getByText("CONTROLLED_SUPPLIED_FACTS", { exact: true })).toBeVisible();
+  await expect(page.locator("pre")).toHaveCount(0);
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
+  await page.getByRole("combobox", { name: /^Operation/ }).selectOption("merchant_decision");
+  await page.getByRole("combobox", { name: /^Merchant response/ }).selectOption("merchant-accepted");
+  await page
+    .getByLabel("Accurate reason / provider message")
+    .fill("Controlled partial acceptance amount review");
+  await page.getByLabel("Amount to accept in NGN").fill("100.01");
+  await page.getByRole("button", { name: "Prepare immutable intent only", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("cannot exceed the original payment");
+  await page.getByLabel("Amount to accept in NGN").fill("12.34");
+  await page.getByRole("button", { name: "Prepare immutable intent only", exact: true }).click();
+  await expect.poll(() => countRequests("/actions")).toBe(2);
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as any).requests.filter((r: any) => r.url.endsWith("/actions")).at(-1).body.amountKobo,
+    ),
+  ).toBe(1234);
+  checks.push(
+    "Consented evidence is readable without raw JSON/private uploads; merchant NGN input blocks overpayment and sends exact integer kobo",
+  );
+  expect(
+    await page.evaluate(
+      () => (globalThis as any).document.documentElement.scrollWidth <= (globalThis as any).innerWidth,
+    ),
+  ).toBe(true);
   await page.getByLabel("Reason for changing the finance hold").fill("Controlled keyboard-only hold review");
-  const holdButton=page.getByRole("button",{name:"Place finance hold",exact:true});await expect(holdButton).toBeEnabled();
-  await page.getByLabel("Reason for changing the finance hold").focus();await page.keyboard.press("Tab");await expect(holdButton).toBeFocused();
+  const holdButton = page.getByRole("button", { name: "Place finance hold", exact: true });
+  await expect(holdButton).toBeEnabled();
+  await page.getByLabel("Reason for changing the finance hold").focus();
+  await page.keyboard.press("Tab");
+  await expect(holdButton).toBeFocused();
   checks.push("360px compiled-product reflow and native keyboard focus pass on the converged finance UI");
-  await page.evaluate(()=>(globalThis as any).forbidden=true);await transitions("non-finance","finance");
-  await expect(page.getByText("Active finance permission and recent MFA required.",{exact:true}).first()).toBeVisible();await expect(page.getByRole("button",{name:"Prepare immutable intent only"})).toHaveCount(0);
+  await page.evaluate(() => ((globalThis as any).forbidden = true));
+  await transitions("non-finance", "finance");
+  await expect(
+    page.getByText("Active finance permission and recent MFA required.", { exact: true }).first(),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Prepare immutable intent only" })).toHaveCount(0);
   checks.push("Controlled finance permission denial hides native preparation data and controls");
-  expect(externalRequests).toEqual([]);report.status="passed_converged_controlled_browser_not_merchant_or_authority_acceptance";
-}catch(error){report.status="failed";report.failure=error instanceof Error?error.message.slice(0,1500):"BROWSER_CASE_FAILED";process.exitCode=1;}
-finally{
-  report.sourceHashes=await Promise.all(["artifacts/valo/src/components/payment-concerns.tsx","artifacts/valo/src/components/dispute-workflows.tsx",
-    "artifacts/valo/src/screens/purchase-history.tsx","artifacts/valo/src/screens/finance-refunds.tsx","lib/api-client-react/src/custom-fetch.ts",
-    "lib/api-client-react/src/generated/api.ts","lib/api-client-react/src/request-scope.ts"].map(async path=>({path,sha256:createHash("sha256").update(await readFile(resolve(root,path))).digest("hex")})));
-  const out=resolve(root,"generated-artifacts/valo-completion");await mkdir(out,{recursive:true});
-  await writeFile(resolve(out,"dispute-workflow-browser.json"),JSON.stringify(report,null,2)+"\n");
-  await writeFile(resolve(out,`dispute-workflow-browser-${Date.now()}.json`),JSON.stringify(report,null,2)+"\n");
-  await page.screenshot({path:resolve(out,"dispute-workflow-browser.jpg"),fullPage:true});
-  await browser.close();await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
-  console.log(JSON.stringify(report,null,2));
+  expect(externalRequests).toEqual([]);
+  report.status = "passed_converged_controlled_browser_not_merchant_or_authority_acceptance";
+} catch (error) {
+  report.status = "failed";
+  report.failure = error instanceof Error ? error.message.slice(0, 1500) : "BROWSER_CASE_FAILED";
+  process.exitCode = 1;
+} finally {
+  report.sourceHashes = await Promise.all(
+    [
+      "artifacts/valo/src/components/payment-concerns.tsx",
+      "artifacts/valo/src/components/dispute-workflows.tsx",
+      "artifacts/valo/src/screens/purchase-history.tsx",
+      "artifacts/valo/src/screens/finance-refunds.tsx",
+      "lib/api-client-react/src/custom-fetch.ts",
+      "lib/api-client-react/src/generated/api.ts",
+      "lib/api-client-react/src/request-scope.ts",
+    ].map(async (path) => ({
+      path,
+      sha256: createHash("sha256")
+        .update(await readFile(resolve(root, path)))
+        .digest("hex"),
+    })),
+  );
+  const out = resolve(root, "generated-artifacts/valo-completion");
+  await mkdir(out, { recursive: true });
+  await writeFile(resolve(out, "dispute-workflow-browser.json"), JSON.stringify(report, null, 2) + "\n");
+  await writeFile(
+    resolve(out, `dispute-workflow-browser-${Date.now()}.json`),
+    JSON.stringify(report, null, 2) + "\n",
+  );
+  await page.screenshot({ path: resolve(out, "dispute-workflow-browser.jpg"), fullPage: true });
+  await browser.close();
+  await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+  console.log(JSON.stringify(report, null, 2));
 }

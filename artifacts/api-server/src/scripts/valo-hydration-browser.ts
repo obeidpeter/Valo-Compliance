@@ -5,9 +5,7 @@ import { chromium } from "playwright";
 // An iframe is essential: the development proxy injects preview scripts there.
 const base = new URL(
   process.env.VALO_PREVIEW_URL ??
-    (process.env.REPLIT_DEV_DOMAIN
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}/`
-      : "http://127.0.0.1:80/"),
+    (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}/` : "http://127.0.0.1:80/"),
 );
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? "/repl/tools/bin/chromium",
@@ -25,7 +23,10 @@ try {
           const errors: string[] = [];
           page.on("pageerror", (error) => errors.push(error.message));
           page.on("console", (message) => {
-            if (message.type() === "error" && /hydration|uncaught|referenceerror|typeerror/i.test(message.text())) {
+            if (
+              message.type() === "error" &&
+              /hydration|uncaught|referenceerror|typeerror/i.test(message.text())
+            ) {
               errors.push(message.text());
             }
           });
@@ -33,10 +34,12 @@ try {
             const target = new URL(path, base).href;
             if (embedded) {
               const parent = new URL("__valo_hydration_test_parent", base).href;
-              await page.route(parent, (route) => route.fulfill({
-                contentType: "text/html",
-                body: `<!doctype html><html><head><title>Preview regression</title></head><body style="margin:0"><iframe title="Valo preview" style="width:100%;height:800px;border:0" src="${target.replaceAll("&", "&amp;").replaceAll('"', "&quot;")}"></iframe></body></html>`,
-              }));
+              await page.route(parent, (route) =>
+                route.fulfill({
+                  contentType: "text/html",
+                  body: `<!doctype html><html><head><title>Preview regression</title></head><body style="margin:0"><iframe title="Valo preview" style="width:100%;height:800px;border:0" src="${target.replaceAll("&", "&amp;").replaceAll('"', "&quot;")}"></iframe></body></html>`,
+                }),
+              );
               await page.goto(parent, { waitUntil: "networkidle" });
             } else {
               const response = await page.goto(target, { waitUntil: "networkidle" });
@@ -44,7 +47,8 @@ try {
             }
             const app = embedded ? page.frameLocator('iframe[title="Valo preview"]') : page;
             await app.getByLabel("Loading Valo", { exact: true }).waitFor({ state: "hidden" });
-            await app.getByTestId(path === "sign-in" ? "link-auth-access-help" : "text-dev-banner")
+            await app
+              .getByTestId(path === "sign-in" ? "link-auth-access-help" : "text-dev-banner")
               .waitFor({ state: "visible" });
             await page.waitForTimeout(200);
             assert.deepEqual(errors, [], `${embedded ? "iframe" : "standalone"} ${width}px /${path}`);

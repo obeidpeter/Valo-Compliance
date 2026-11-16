@@ -1,11 +1,12 @@
 import type { RequestHandler } from "express";
 import { getAuth } from "@clerk/express";
 import { consumeQuota, purgeExpiredQuotaBuckets, quotaSubjectHash } from "../lib/valo-quota";
-import {clientAddress} from "../lib/valo-proxy-boundary";
+import { clientAddress } from "../lib/valo-proxy-boundary";
 
 export const requestReadQuota: RequestHandler = async (req, res, next): Promise<void> => {
   if (!["GET", "HEAD"].includes(req.method) || !req.path.startsWith("/api/") || req.path === "/api/healthz") {
-    next(); return;
+    next();
+    return;
   }
   // Clerk's supported server validation, never a client-supplied identity header.
   const { userId } = getAuth(req);
@@ -21,7 +22,9 @@ export const requestReadQuota: RequestHandler = async (req, res, next): Promise<
   if (!decision.allowed) {
     req.log.warn({ event: "quota.denied", bucket });
     res.setHeader("Retry-After", String(decision.retryAfter));
-    res.status(429).json({ error: `Request limit reached. Retry in ${decision.retryAfter} seconds. Your saved work has not changed.` });
+    res.status(429).json({
+      error: `Request limit reached. Retry in ${decision.retryAfter} seconds. Your saved work has not changed.`,
+    });
     return;
   }
   next();

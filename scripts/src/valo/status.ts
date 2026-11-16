@@ -23,8 +23,13 @@ export function renderStatus(): string {
   ) as EvidenceRegister;
   const byStatus = new Map<string, number>();
   for (const requirement of register.requirements)
-    byStatus.set(requirement.implementation_status, (byStatus.get(requirement.implementation_status) ?? 0) + 1);
-  const unverified = register.requirements.filter((r) => r.implementation_status === "unverified").map((r) => r.id);
+    byStatus.set(
+      requirement.implementation_status,
+      (byStatus.get(requirement.implementation_status) ?? 0) + 1,
+    );
+  const unverified = register.requirements
+    .filter((r) => r.implementation_status === "unverified")
+    .map((r) => r.id);
   const lines = [
     "# Valo status",
     "",
@@ -46,11 +51,15 @@ export function renderStatus(): string {
     "",
     `${state.receivedFormalRequirements} of ${state.expectedFormalRequirements} formal requirements are registered.`,
     `Implementation evidence register dated ${register.execution_register?.generatedAt ?? register.date}` +
-      (register.execution_register?.codeRevision ? ` at \`${register.execution_register.codeRevision.slice(0, 7)}\`.` : "."),
+      (register.execution_register?.codeRevision
+        ? ` at \`${register.execution_register.codeRevision.slice(0, 7)}\`.`
+        : "."),
     "",
     "| Implementation status | Requirements |",
     "| --- | ---: |",
-    ...[...byStatus.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([status, count]) => `| ${status} | ${count} |`),
+    ...[...byStatus.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([status, count]) => `| ${status} | ${count} |`),
     "",
     `No recorded implementation evidence: ${unverified.join(", ") || "none"}.`,
     "",
@@ -64,7 +73,10 @@ export function renderStatus(): string {
     "",
     "| Suite | Required cases | Executed | Accepted |",
     "| --- | ---: | ---: | --- |",
-    ...state.suites.map((suite) => `| ${suite.id} | ${suite.requiredCases} | ${suite.executedCases} | ${yesNo(suite.accepted)} |`),
+    ...state.suites.map(
+      (suite) =>
+        `| ${suite.id} | ${suite.requiredCases} | ${suite.executedCases} | ${yesNo(suite.accepted)} |`,
+    ),
     "",
     "## User acceptance packages",
     "",

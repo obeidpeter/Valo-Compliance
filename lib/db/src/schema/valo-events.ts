@@ -4,7 +4,9 @@ import { valoWorkspaces } from "./valo-workspaces";
 
 export const valoEvents = pgTable("valo_events", {
   id: uuid("id").primaryKey(),
-  workspaceId: uuid("workspace_id").notNull().references(() => valoWorkspaces.id),
+  workspaceId: uuid("workspace_id")
+    .notNull()
+    .references(() => valoWorkspaces.id),
   actorId: text("actor_id").notNull(),
   action: text("action").notNull(),
   entityId: uuid("entity_id").notNull(),

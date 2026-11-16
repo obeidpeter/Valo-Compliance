@@ -1,30 +1,63 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { Link } from 'wouter';
-import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, Plus, X } from 'lucide-react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { Link } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Loader2, Plus, X } from "lucide-react";
 import {
-  useGetWorkspace, useSaveBusinessProfile, getGetWorkspaceQueryKey,
-  Answer, ProfileLegalForm, ProfileRegistrationStatus, ProfileTurnoverBand, ProfileTurnoverCurrency, ProfileTurnoverMetric, ProfileState,
+  useGetWorkspace,
+  useSaveBusinessProfile,
+  getGetWorkspaceQueryKey,
+  Answer,
+  ProfileLegalForm,
+  ProfileRegistrationStatus,
+  ProfileTurnoverBand,
+  ProfileTurnoverCurrency,
+  ProfileTurnoverMetric,
+  ProfileState,
   type Profile,
-} from '@workspace/api-client-react';
-import { useToast } from '@/hooks/use-toast';
-import {useAccountEpoch} from '@/components/account-state-boundary';
-import { ErrorState, Notice, Skel } from '@/components/states';
-import { describeError } from '@/lib/api';
-import { WorkspaceNav } from '@/components/workspace-nav';
-import {useUnsavedNavigation} from '@/lib/use-unsaved-navigation';
-import {UnsavedNavigationDialog} from '@/components/unsaved-navigation-dialog';
+} from "@workspace/api-client-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAccountEpoch } from "@/components/account-state-boundary";
+import { ErrorState, Notice, Skel } from "@/components/states";
+import { describeError } from "@/lib/api";
+import { WorkspaceNav } from "@/components/workspace-nav";
+import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
+import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
 
 const EMPTY: Profile = {
-  businessName: '', legalForm: 'unknown', registrationStatus: 'unknown', activities: [''], state: 'unanswered', lga: '',
-  employees: 'unanswered', turnoverBand: 'unanswered', turnoverYear: 'unknown', turnoverMetric: 'unknown', turnoverCurrency: 'unknown',
-  premises: 'unanswered', manufacturing: 'unanswered', importing: 'unanswered', personalData: 'unanswered', marketingConsent: false,
+  businessName: "",
+  legalForm: "unknown",
+  registrationStatus: "unknown",
+  activities: [""],
+  state: "unanswered",
+  lga: "",
+  employees: "unanswered",
+  turnoverBand: "unanswered",
+  turnoverYear: "unknown",
+  turnoverMetric: "unknown",
+  turnoverCurrency: "unknown",
+  premises: "unanswered",
+  manufacturing: "unanswered",
+  importing: "unanswered",
+  personalData: "unanswered",
+  marketingConsent: false,
 };
 
-const label = (s: string) => ({ unknown: 'Unknown', unanswered: 'Not answered yet', not_applicable: 'Not applicable', NGN: 'Naira (NGN)', under_5m: 'Under N5m', '5m_to_25m': 'N5m to N25m', '25m_to_100m': 'N25m to N100m', over_100m: 'Over N100m' } as Record<string, string>)[s] ?? s.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+const label = (s: string) =>
+  (
+    ({
+      unknown: "Unknown",
+      unanswered: "Not answered yet",
+      not_applicable: "Not applicable",
+      NGN: "Naira (NGN)",
+      under_5m: "Under N5m",
+      "5m_to_25m": "N5m to N25m",
+      "25m_to_100m": "N25m to N100m",
+      over_100m: "Over N100m",
+    }) as Record<string, string>
+  )[s] ?? s.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 
 export default function ProfilePage() {
-  const currentAccount=useAccountEpoch();
+  const currentAccount = useAccountEpoch();
   const qc = useQueryClient();
   const { toast } = useToast();
   const ws = useGetWorkspace({ query: { enabled: true, queryKey: getGetWorkspaceQueryKey() } });
@@ -33,61 +66,114 @@ export default function ProfilePage() {
   const [touched, setTouched] = useState(false);
   const [conflict, setConflict] = useState(false);
   const init = useRef(false);
-  const form=useRef<HTMLFormElement>(null),leaving=useRef(false);
-  const navigation=useUnsavedNavigation(()=>touched||save.isPending);
+  const form = useRef<HTMLFormElement>(null),
+    leaving = useRef(false);
+  const navigation = useUnsavedNavigation(() => touched || save.isPending);
 
   useEffect(() => {
     if (ws.data && !init.current) {
       init.current = true;
-      if (ws.data.profile) setP({ ...ws.data.profile, activities: ws.data.profile.activities.length ? ws.data.profile.activities : [''] });
+      if (ws.data.profile)
+        setP({
+          ...ws.data.profile,
+          activities: ws.data.profile.activities.length ? ws.data.profile.activities : [""],
+        });
     }
   }, [ws.data]);
 
-  const set = <K extends keyof Profile>(k: K, v: Profile[K]) => {setTouched(true);setP((o) => ({ ...o, [k]: v }));};
+  const set = <K extends keyof Profile>(k: K, v: Profile[K]) => {
+    setTouched(true);
+    setP((o) => ({ ...o, [k]: v }));
+  };
   const acts = p.activities.map((a) => a.trim()).filter(Boolean);
-  const empMode = ['unknown', 'unanswered', 'not_applicable'].includes(p.employees) ? p.employees : 'number';
-  const yearMode = p.turnoverYear === 'unknown' ? 'unknown' : 'year';
+  const empMode = ["unknown", "unanswered", "not_applicable"].includes(p.employees) ? p.employees : "number";
+  const yearMode = p.turnoverYear === "unknown" ? "unknown" : "year";
   const errors: Record<string, string> = {};
-  if (!p.businessName.trim()) errors.businessName = 'Enter the name you trade under.';
-  if (acts.length < 1) errors.activities = 'Add at least one activity.';
-  if (empMode === 'number' && !/^[0-9]{1,7}$/.test(p.employees)) errors.employees = 'Use a whole number.';
-  if (yearMode === 'year' && !/^[0-9]{4}$/.test(p.turnoverYear)) errors.turnoverYear = 'Use a four-digit year.';
+  if (!p.businessName.trim()) errors.businessName = "Enter the name you trade under.";
+  if (acts.length < 1) errors.activities = "Add at least one activity.";
+  if (empMode === "number" && !/^[0-9]{1,7}$/.test(p.employees)) errors.employees = "Use a whole number.";
+  if (yearMode === "year" && !/^[0-9]{4}$/.test(p.turnoverYear))
+    errors.turnoverYear = "Use a four-digit year.";
 
   function submit(e: FormEvent) {
     e.preventDefault();
     setTouched(true);
     if (Object.keys(errors).length || !ws.data) return;
-    save.mutate({ data: { expectedRevision: ws.data.profileRevision, profile: { ...p, businessName: p.businessName.trim(), activities: acts, state: p.state, lga: p.lga.trim() } } }, {
-      onSuccess: (next) => {
-        if(!currentAccount())return;
-        setTouched(false);
-        setConflict(false);
-        qc.setQueryData(getGetWorkspaceQueryKey(), next);
-        toast({ title: 'Profile saved', description: 'Saved as revision ' + next.profileRevision + '.' });
-        if(leaving.current){leaving.current=false;navigation.proceed();}
+    save.mutate(
+      {
+        data: {
+          expectedRevision: ws.data.profileRevision,
+          profile: {
+            ...p,
+            businessName: p.businessName.trim(),
+            activities: acts,
+            state: p.state,
+            lga: p.lga.trim(),
+          },
+        },
       },
-      onError: (err) => { if(!currentAccount())return;leaving.current=false;
-        if (describeError(err).kind === 'conflict') setConflict(true); },
-    });
+      {
+        onSuccess: (next) => {
+          if (!currentAccount()) return;
+          setTouched(false);
+          setConflict(false);
+          qc.setQueryData(getGetWorkspaceQueryKey(), next);
+          toast({ title: "Profile saved", description: "Saved as revision " + next.profileRevision + "." });
+          if (leaving.current) {
+            leaving.current = false;
+            navigation.proceed();
+          }
+        },
+        onError: (err) => {
+          if (!currentAccount()) return;
+          leaving.current = false;
+          if (describeError(err).kind === "conflict") setConflict(true);
+        },
+      },
+    );
   }
 
   async function reloadLatest() {
     const r = await ws.refetch();
-    if(!currentAccount())return;
-    if (r.data?.profile) setP({ ...r.data.profile, activities: r.data.profile.activities.length ? r.data.profile.activities : [''] });
+    if (!currentAccount()) return;
+    if (r.data?.profile)
+      setP({
+        ...r.data.profile,
+        activities: r.data.profile.activities.length ? r.data.profile.activities : [""],
+      });
     setTouched(false);
     setConflict(false);
     save.reset();
   }
 
-  if (ws.isLoading) return <div className="mx-auto max-w-3xl px-5 py-12"><Skel className="h-[32rem]" /></div>;
-  if (ws.isError) return <div className="mx-auto max-w-3xl px-5 py-12"><ErrorState error={ws.error} onRetry={() => ws.refetch()} /></div>;
+  if (ws.isLoading)
+    return (
+      <div className="mx-auto max-w-3xl px-5 py-12">
+        <Skel className="h-[32rem]" />
+      </div>
+    );
+  if (ws.isError)
+    return (
+      <div className="mx-auto max-w-3xl px-5 py-12">
+        <ErrorState error={ws.error} onRetry={() => ws.refetch()} />
+      </div>
+    );
 
   const err = save.error ? describeError(save.error) : null;
   const sel = (id: keyof Profile, opts: Record<string, string>, l: string, hint?: string) => (
     <Field label={l} id={id} hint={hint}>
-      <select id={id} className="field" value={p[id] as string} onChange={(e) => set(id, e.target.value as never)} data-testid={'select-' + id}>
-        {Object.values(opts).map((o) => <option key={o} value={o}>{label(o)}</option>)}
+      <select
+        id={id}
+        className="field"
+        value={p[id] as string}
+        onChange={(e) => set(id, e.target.value as never)}
+        data-testid={"select-" + id}
+      >
+        {Object.values(opts).map((o) => (
+          <option key={o} value={o}>
+            {label(o)}
+          </option>
+        ))}
       </select>
     </Field>
   );
@@ -95,111 +181,297 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 lg:px-8">
       <WorkspaceNav />
-      <Link href="/workspace" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Workspace</Link>
+      <Link
+        href="/workspace"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" /> Workspace
+      </Link>
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-4xl">Business profile</h1>
-        <span className="font-mono text-xs text-muted-foreground" data-testid="text-profile-revision">revision {ws.data?.profileRevision ?? 0}</span>
+        <span className="font-mono text-xs text-muted-foreground" data-testid="text-profile-revision">
+          revision {ws.data?.profileRevision ?? 0}
+        </span>
       </div>
-      <p className="mt-2 text-muted-foreground">Each save creates a new revision. "Unknown" is always an acceptable answer.</p>
+      <p className="mt-2 text-muted-foreground">
+        Each save creates a new revision. "Unknown" is always an acceptable answer.
+      </p>
 
       <form ref={form} onSubmit={submit} noValidate className="mt-8 grid gap-6">
         <Section title="Identity">
           <Field label="Business name" id="businessName" error={touched ? errors.businessName : undefined}>
-            <input id="businessName" className="field" maxLength={160} value={p.businessName} aria-invalid={touched && !!errors.businessName} onChange={(e) => set('businessName', e.target.value)} data-testid="input-business-name" />
+            <input
+              id="businessName"
+              className="field"
+              maxLength={160}
+              value={p.businessName}
+              aria-invalid={touched && !!errors.businessName}
+              onChange={(e) => set("businessName", e.target.value)}
+              data-testid="input-business-name"
+            />
           </Field>
           <div className="grid gap-5 sm:grid-cols-2">
-            {sel('legalForm', ProfileLegalForm, 'Legal form')}
-            {sel('registrationStatus', ProfileRegistrationStatus, 'CAC registration')}
+            {sel("legalForm", ProfileLegalForm, "Legal form")}
+            {sel("registrationStatus", ProfileRegistrationStatus, "CAC registration")}
           </div>
         </Section>
 
         <Section title="What you do">
-          <Field label="Activities" id="activity-0" error={touched ? errors.activities : undefined} hint="Up to 10, in your own words.">
+          <Field
+            label="Activities"
+            id="activity-0"
+            error={touched ? errors.activities : undefined}
+            hint="Up to 10, in your own words."
+          >
             <div className="grid gap-2">
               {p.activities.map((a, i) => (
                 <div key={i} className="flex gap-2">
-                  <label className="sr-only" htmlFor={'activity-'+i}>Business activity {i+1}</label>
-                  <input id={'activity-' + i} className="field" maxLength={120} value={a} placeholder="e.g. Selling fabric wholesale" onChange={(e) => set('activities', p.activities.map((x, j) => (j === i ? e.target.value : x)))} data-testid={'input-activity-' + i} />
-                  {p.activities.length > 1 && <button type="button" aria-label={'Remove business activity '+(i+1)} className="btn btn-ghost !px-3" onClick={() => set('activities', p.activities.filter((_, j) => j !== i))}><X className="h-4 w-4" /></button>}
+                  <label className="sr-only" htmlFor={"activity-" + i}>
+                    Business activity {i + 1}
+                  </label>
+                  <input
+                    id={"activity-" + i}
+                    className="field"
+                    maxLength={120}
+                    value={a}
+                    placeholder="e.g. Selling fabric wholesale"
+                    onChange={(e) =>
+                      set(
+                        "activities",
+                        p.activities.map((x, j) => (j === i ? e.target.value : x)),
+                      )
+                    }
+                    data-testid={"input-activity-" + i}
+                  />
+                  {p.activities.length > 1 && (
+                    <button
+                      type="button"
+                      aria-label={"Remove business activity " + (i + 1)}
+                      className="btn btn-ghost !px-3"
+                      onClick={() =>
+                        set(
+                          "activities",
+                          p.activities.filter((_, j) => j !== i),
+                        )
+                      }
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               ))}
-              {p.activities.length < 10 && <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => set('activities', [...p.activities, ''])} data-testid="button-add-activity"><Plus className="h-4 w-4" /> Add activity</button>}
+              {p.activities.length < 10 && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm w-fit"
+                  onClick={() => set("activities", [...p.activities, ""])}
+                  data-testid="button-add-activity"
+                >
+                  <Plus className="h-4 w-4" /> Add activity
+                </button>
+              )}
             </div>
           </Field>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="State or FCT" id="state"><select id="state" className="field" value={p.state} onChange={(e) => set('state', e.target.value as ProfileState)} data-testid="input-state">
-              {Object.values(ProfileState).map(state=><option key={state} value={state}>{label(state)}</option>)}
-            </select></Field>
-            <Field label="LGA" id="lga"><input id="lga" className="field" maxLength={100} value={p.lga} placeholder="e.g. Ikeja" onChange={(e) => set('lga', e.target.value)} data-testid="input-lga" /></Field>
+            <Field label="State or FCT" id="state">
+              <select
+                id="state"
+                className="field"
+                value={p.state}
+                onChange={(e) => set("state", e.target.value as ProfileState)}
+                data-testid="input-state"
+              >
+                {Object.values(ProfileState).map((state) => (
+                  <option key={state} value={state}>
+                    {label(state)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="LGA" id="lga">
+              <input
+                id="lga"
+                className="field"
+                maxLength={100}
+                value={p.lga}
+                placeholder="e.g. Ikeja"
+                onChange={(e) => set("lga", e.target.value)}
+                data-testid="input-lga"
+              />
+            </Field>
           </div>
         </Section>
 
         <Section title="Size">
           <Field label="Employees" id="employees" error={touched ? errors.employees : undefined}>
             <div className="grid gap-2 sm:grid-cols-[1fr_1fr]">
-              <select className="field" aria-label="Employees answer type" value={empMode} onChange={(e) => set('employees', e.target.value === 'number' ? '0' : e.target.value)} data-testid="select-employees-mode">
-                <option value="number">I know the number</option><option value="unknown">Unknown</option><option value="unanswered">Not answered yet</option><option value="not_applicable">Not applicable</option>
+              <select
+                className="field"
+                aria-label="Employees answer type"
+                value={empMode}
+                onChange={(e) => set("employees", e.target.value === "number" ? "0" : e.target.value)}
+                data-testid="select-employees-mode"
+              >
+                <option value="number">I know the number</option>
+                <option value="unknown">Unknown</option>
+                <option value="unanswered">Not answered yet</option>
+                <option value="not_applicable">Not applicable</option>
               </select>
-              {empMode === 'number' && <input id="employees" inputMode="numeric" className="field" value={p.employees} aria-invalid={touched && !!errors.employees} onChange={(e) => set('employees', e.target.value.replace(/[^0-9]/g, '').slice(0, 7))} data-testid="input-employees" />}
+              {empMode === "number" && (
+                <input
+                  id="employees"
+                  inputMode="numeric"
+                  className="field"
+                  value={p.employees}
+                  aria-invalid={touched && !!errors.employees}
+                  onChange={(e) => set("employees", e.target.value.replace(/[^0-9]/g, "").slice(0, 7))}
+                  data-testid="input-employees"
+                />
+              )}
             </div>
           </Field>
           <div className="grid gap-5 sm:grid-cols-2">
-            {sel('turnoverBand', ProfileTurnoverBand, 'Annual turnover band')}
+            {sel("turnoverBand", ProfileTurnoverBand, "Annual turnover band")}
             <Field label="Turnover year" id="turnoverYear" error={touched ? errors.turnoverYear : undefined}>
               <div className="grid grid-cols-2 gap-2">
-                <select className="field" aria-label="Year answer type" value={yearMode} onChange={(e) => set('turnoverYear', e.target.value === 'unknown' ? 'unknown' : String(new Date().getFullYear() - 1))} data-testid="select-year-mode"><option value="unknown">Unknown</option><option value="year">Year</option></select>
-                {yearMode === 'year' && <input id="turnoverYear" inputMode="numeric" className="field" value={p.turnoverYear} onChange={(e) => set('turnoverYear', e.target.value.replace(/[^0-9]/g, '').slice(0, 4))} data-testid="input-turnover-year" />}
+                <select
+                  className="field"
+                  aria-label="Year answer type"
+                  value={yearMode}
+                  onChange={(e) =>
+                    set(
+                      "turnoverYear",
+                      e.target.value === "unknown" ? "unknown" : String(new Date().getFullYear() - 1),
+                    )
+                  }
+                  data-testid="select-year-mode"
+                >
+                  <option value="unknown">Unknown</option>
+                  <option value="year">Year</option>
+                </select>
+                {yearMode === "year" && (
+                  <input
+                    id="turnoverYear"
+                    inputMode="numeric"
+                    className="field"
+                    value={p.turnoverYear}
+                    onChange={(e) => set("turnoverYear", e.target.value.replace(/[^0-9]/g, "").slice(0, 4))}
+                    data-testid="input-turnover-year"
+                  />
+                )}
               </div>
             </Field>
-            {sel('turnoverMetric', ProfileTurnoverMetric, 'Turnover measured as')}
-            {sel('turnoverCurrency', ProfileTurnoverCurrency, 'Currency')}
+            {sel("turnoverMetric", ProfileTurnoverMetric, "Turnover measured as")}
+            {sel("turnoverCurrency", ProfileTurnoverCurrency, "Currency")}
           </div>
         </Section>
 
         <Section title="Characteristics">
           <div className="grid gap-5 sm:grid-cols-2">
-            {sel('premises', Answer, 'Do you operate from premises?')}
-            {sel('manufacturing', Answer, 'Do you manufacture goods?')}
-            {sel('importing', Answer, 'Do you import goods?')}
-            {sel('personalData', Answer, 'Do you hold customer personal data?')}
+            {sel("premises", Answer, "Do you operate from premises?")}
+            {sel("manufacturing", Answer, "Do you manufacture goods?")}
+            {sel("importing", Answer, "Do you import goods?")}
+            {sel("personalData", Answer, "Do you hold customer personal data?")}
           </div>
         </Section>
 
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-5 text-sm">
-          <input type="checkbox" className="mt-1 h-4 w-4 accent-[hsl(155_42%_21%)]" checked={p.marketingConsent} onChange={(e) => set('marketingConsent', e.target.checked)} data-testid="checkbox-marketing" />
-          <span>Send me occasional product updates. <span className="text-muted-foreground">Optional, off by default.</span></span>
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 accent-[hsl(155_42%_21%)]"
+            checked={p.marketingConsent}
+            onChange={(e) => set("marketingConsent", e.target.checked)}
+            data-testid="checkbox-marketing"
+          />
+          <span>
+            Send me occasional product updates.{" "}
+            <span className="text-muted-foreground">Optional, off by default.</span>
+          </span>
         </label>
 
         {conflict && (
-          <Notice title="This profile changed in another tab">Your edits are still here. Load the latest saved version to continue (this replaces the form with the newer revision), or copy anything you need first.
-            <button type="button" className="btn btn-ink btn-sm mt-3" onClick={reloadLatest} data-testid="button-reload-profile">Load latest revision</button>
+          <Notice title="This profile changed in another tab">
+            Your edits are still here. Load the latest saved version to continue (this replaces the form with
+            the newer revision), or copy anything you need first.
+            <button
+              type="button"
+              className="btn btn-ink btn-sm mt-3"
+              onClick={reloadLatest}
+              data-testid="button-reload-profile"
+            >
+              Load latest revision
+            </button>
           </Notice>
         )}
-        {err && !conflict && <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{err.message}</p>}
+        {err && !conflict && (
+          <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {err.message}
+          </p>
+        )}
 
         <div className="sticky bottom-24 z-10 flex justify-end lg:bottom-4">
-          <button type="submit" className="btn btn-primary shadow-[var(--shadow-lg)]" disabled={save.isPending} data-testid="button-save-profile">{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save new revision</button>
+          <button
+            type="submit"
+            className="btn btn-primary shadow-[var(--shadow-lg)]"
+            disabled={save.isPending}
+            data-testid="button-save-profile"
+          >
+            {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save new revision
+          </button>
         </div>
       </form>
-      <UnsavedNavigationDialog open={navigation.blocked} busy={save.isPending}
+      <UnsavedNavigationDialog
+        open={navigation.blocked}
+        busy={save.isPending}
         description="You have unsaved changes to your business profile. Save, explicitly discard, or stay here."
-        onSave={()=>{if(Object.keys(errors).length)return;leaving.current=true;form.current?.requestSubmit();}}
-        onDiscard={navigation.proceed} onStay={navigation.stay}
-        error={Object.keys(errors).length?"Correct the highlighted profile details before saving.":err?.message}/>
+        onSave={() => {
+          if (Object.keys(errors).length) return;
+          leaving.current = true;
+          form.current?.requestSubmit();
+        }}
+        onDiscard={navigation.proceed}
+        onStay={navigation.stay}
+        error={
+          Object.keys(errors).length ? "Correct the highlighted profile details before saving." : err?.message
+        }
+      />
     </div>
   );
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
-  return <fieldset className="surface grid gap-5 p-6 sm:p-7"><legend className="eyebrow float-left mb-1 w-full">{title}</legend>{children}</fieldset>;
+  return (
+    <fieldset className="surface grid gap-5 p-6 sm:p-7">
+      <legend className="eyebrow float-left mb-1 w-full">{title}</legend>
+      {children}
+    </fieldset>
+  );
 }
 
-function Field({ label: l, id, error, hint, children }: { label: string; id: string; error?: string; hint?: string; children: ReactNode }) {
+function Field({
+  label: l,
+  id,
+  error,
+  hint,
+  children,
+}: {
+  label: string;
+  id: string;
+  error?: string;
+  hint?: string;
+  children: ReactNode;
+}) {
   return (
     <div>
-      <label className="label" htmlFor={id}>{l}</label>
+      <label className="label" htmlFor={id}>
+        {l}
+      </label>
       {children}
-      {error ? <p className="hint !text-destructive">{error}</p> : hint ? <p className="hint">{hint}</p> : null}
+      {error ? (
+        <p className="hint !text-destructive">{error}</p>
+      ) : hint ? (
+        <p className="hint">{hint}</p>
+      ) : null}
     </div>
   );
 }
