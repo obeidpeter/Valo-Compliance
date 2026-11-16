@@ -20,6 +20,7 @@ import {
 } from "../lib/inference-allocation-package";
 import type { FiniteManifest } from "../lib/inference-batch-dispatch";
 import type { ArtifactRef } from "../editorial/publication-artifacts";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 
 /** Private development preparation/execution only. No command writes owner
  * approval, creates an identity, changes quotas, injects provider receipts or
@@ -199,7 +200,7 @@ async function main() {
         return assertCustomerEvaluationActor(plan, entry);
       },
       withWork: withApprovedInferenceWork,
-      usage: () => customerAIUsage(actor),
+      usage: () => customerAIUsage(workspaceActorFromRecord(actor)),
       recentRequests: async () =>
         Number(
           (
@@ -211,12 +212,16 @@ async function main() {
         ),
       create: async (input) => {
         let newProviderAttempts: number | null = 0;
-        const preview = await createCustomerAIDraft(actor, input, async (current) => {
-          newProviderAttempts = null;
-          const response = await organizeCustomerDraft(current);
-          newProviderAttempts = response.runs.filter((run) => run.outboundAttempted).length;
-          return response;
-        });
+        const preview = await createCustomerAIDraft(
+          workspaceActorFromRecord(actor),
+          input,
+          async (current) => {
+            newProviderAttempts = null;
+            const response = await organizeCustomerDraft(current);
+            newProviderAttempts = response.runs.filter((run) => run.outboundAttempted).length;
+            return response;
+          },
+        );
         return { preview, newProviderAttempts };
       },
       stored: async (previewId) => {

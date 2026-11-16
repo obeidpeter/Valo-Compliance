@@ -13,6 +13,7 @@ import { releasedRegistry, workspaceTransaction } from "./valo-assessments";
 import { reminderInstant } from "./valo-tasks";
 import { configuredReminderSender } from "./valo-reminder-resend";
 import type { ReminderSender } from "./valo-reminder-sender";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 
 export type { ReminderSender } from "./valo-reminder-sender";
 export const reminderAttemptLimit = 5;
@@ -82,7 +83,7 @@ export async function processReminder(
 ) {
   const [workspace] = await db.select().from(valoWorkspaces).where(eq(valoWorkspaces.id, workspaceId));
   if (!workspace) throw new ValoProblem(404, "Workspace not found");
-  const actor = { workspaceId, identityId: workspace.ownerIdentityId };
+  const actor = workspaceActorFromRecord({ workspaceId, identityId: workspace.ownerIdentityId });
   // Commit the bounded attempt BEFORE network activity. A dead process cannot
   // erase its attempt. The lease makes abandoned work recoverable, not immortal.
   const claim = await workspaceTransaction(actor, async (tx) => {

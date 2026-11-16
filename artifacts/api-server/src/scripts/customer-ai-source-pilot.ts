@@ -17,6 +17,7 @@ import { getDocument, listRevisions, saveDocument } from "../lib/valo-store";
 import { requestExport, getExport, downloadExport } from "../lib/valo-exports";
 import { documentInput } from "../lib/valo-validation";
 import { readerContainsText } from "../lib/valo-reader-checks";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 const exec = promisify(callbackExec);
 type SourceCase = {
   caseID: string;
@@ -69,7 +70,7 @@ async function main() {
     "Existing evaluation identity required; do not create a replacement to bypass limits",
   );
   const actor = existingActor;
-  const before = await customerAIUsage(actor),
+  const before = await customerAIUsage(workspaceActorFromRecord(actor)),
     startDay = new Date();
   startDay.setUTCHours(0, 0, 0, 0);
   const [globalBefore] = await db
@@ -129,7 +130,7 @@ async function main() {
         .select({ id: valoAIDrafts.id })
         .from(valoAIDrafts)
         .where(and(eq(valoAIDrafts.workspaceId, actor.workspaceId), eq(valoAIDrafts.idempotencyKey, key)));
-      const preview = await createCustomerAIDraft(actor, input);
+      const preview = await createCustomerAIDraft(workspaceActorFromRecord(actor), input);
       previewId = preview.id;
       const [stored] = await db.select().from(valoAIDrafts).where(eq(valoAIDrafts.id, preview.id));
       assert.ok(stored);
@@ -173,7 +174,7 @@ async function main() {
         );
       }
       stage = "private-save-and-edit";
-      let doc = await acceptCustomerAIDraft(actor, preview.id, {
+      let doc = await acceptCustomerAIDraft(workspaceActorFromRecord(actor), preview.id, {
         title: preview.title,
         content: preview.content,
         confirmBusinessDraft: true,
@@ -181,10 +182,13 @@ async function main() {
       let canonical = documentInput.parse({ title: doc.title, content: doc.content });
       if (!canonical.content.fields.notes.includes("Synthetic revision check.")) {
         canonical.content.fields.notes += "\nSynthetic revision check.";
-        doc = await saveDocument(actor, doc.id, { ...canonical, expectedRevision: doc.revision });
+        doc = await saveDocument(workspaceActorFromRecord(actor), doc.id, {
+          ...canonical,
+          expectedRevision: doc.revision,
+        });
       }
-      const reloaded = await getDocument(actor, doc.id),
-        history = await listRevisions(actor, doc.id);
+      const reloaded = await getDocument(workspaceActorFromRecord(actor), doc.id),
+        history = await listRevisions(workspaceActorFromRecord(actor), doc.id);
       assert.equal(reloaded.contentHash, doc.contentHash);
       assert.ok(history.length >= 2);
       assert.notEqual(history[0]!.contentHash, history[1]!.contentHash);
@@ -194,19 +198,19 @@ async function main() {
       const files = [];
       for (const format of ["docx", "pdf"] as const) {
         const job = await requestExport(
-          actor,
+          workspaceActorFromRecord(actor),
           doc.id,
           uuidFor({ case: fixture.caseID, revision: doc.revisionId, format }),
           { format, revisionId: doc.revisionId, acknowledgeDraft: true },
         );
         const deadline = Date.now() + 90000;
-        let current = await getExport(actor, job.id);
+        let current = await getExport(workspaceActorFromRecord(actor), job.id);
         while (["queued", "running", "retrying"].includes(current.job.status) && Date.now() < deadline) {
           await new Promise((done) => setTimeout(done, 500));
-          current = await getExport(actor, job.id);
+          current = await getExport(workspaceActorFromRecord(actor), job.id);
         }
         assert.equal(current.job.status, "ready");
-        const file = await downloadExport(actor, job.id),
+        const file = await downloadExport(workspaceActorFromRecord(actor), job.id),
           path = resolve(out, `${fixture.caseID}.${format}`);
         await writeFile(path, file.bytes);
         const { stdout: text } =

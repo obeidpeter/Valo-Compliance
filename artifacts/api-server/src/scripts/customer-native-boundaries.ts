@@ -22,6 +22,7 @@ import {
 import { getDocument, saveDocument } from "../lib/valo-store";
 import { documentInput } from "../lib/valo-validation";
 import { downloadExport } from "../lib/valo-exports";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 async function main() {
   assert.equal(process.env.NODE_ENV, "development");
   assert.ok(!process.env.REPLIT_DEPLOYMENT);
@@ -40,7 +41,7 @@ async function main() {
     anchor && anchor.actorId.startsWith("valo-ai-eval-invoice-"),
     "Existing evaluation identity required",
   );
-  const actor = { workspaceId: anchor.workspaceId, identityId: anchor.actorId };
+  const actor = workspaceActorFromRecord({ workspaceId: anchor.workspaceId, identityId: anchor.actorId });
   const beforeUsage = await customerAIUsage(actor);
   assert.ok(
     beforeUsage.enabled &&

@@ -29,6 +29,7 @@ import {
   retireExpiredExport,
 } from "./valo-export-retention";
 import { privateCleanupAuthority } from "./valo-private-cleanup-authority";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export function developmentExportsOnly() {
@@ -335,7 +336,7 @@ export async function executeExport(
     return { ...row, attempts: row.attempts + 1 };
   });
   if (!job || job.status === "ready") return;
-  const actor = { workspaceId, identityId: job.requestedBy };
+  const actor = workspaceActorFromRecord({ workspaceId, identityId: job.requestedBy });
   let temporaryKey: string | null = null;
   let heartbeating = false;
   const heartbeat = setInterval(() => {

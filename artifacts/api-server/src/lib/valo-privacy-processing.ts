@@ -14,6 +14,7 @@ import {
   type PrivacyStaffActor,
 } from "./valo-privacy";
 import { processPrivacyErasure } from "./valo-privacy-erasure";
+import { workspaceActorFromRecord, type WorkspaceActor } from "../platform/workspace-context";
 export async function processPrivacyAction(actor: PrivacyStaffActor, id: string, raw: unknown) {
   const input = ActOnStaffPrivacyCaseBody.strict().parse(raw);
   if (input.action === "prepare_export") return preparePrivacyExport(actor, id, input);
@@ -62,20 +63,25 @@ async function preparePrivacyExport(
       return privacyDetail(tx, await readPrivacyCase(tx, id));
     });
   try {
-    const result = await workspaceDataExport({
-      identityId: start.row.requesterIdentityId,
-      workspaceId: start.row.workspaceId,
-    });
+    const result = await workspaceDataExport(
+      workspaceActorFromRecord({
+        identityId: start.row.requesterIdentityId,
+        workspaceId: start.row.workspaceId,
+      }),
+    );
     return await db.transaction(async (tx) => {
       await requirePrivacyStaff(tx, actor);
       let row = await readPrivacyCase(tx, id);
       assertPrivacyVersion(row.version, start.row.version);
       if (row.assignedIdentityId !== actor.identityId)
         throw new ValoProblem(403, "The case assignment changed. No result was released.");
-      await authorizeWorkspaceWrite(tx, {
-        identityId: row.requesterIdentityId,
-        workspaceId: row.workspaceId,
-      });
+      await authorizeWorkspaceWrite(
+        tx,
+        workspaceActorFromRecord({
+          identityId: row.requesterIdentityId,
+          workspaceId: row.workspaceId,
+        }),
+      );
       row = await privacyChange(
         tx,
         row,
@@ -164,7 +170,10 @@ async function recordPrivacyCorrection(
       throw new ValoProblem(422, "Only a correction request can record this outcome.");
     if (!row.verifiedAt || row.assignedIdentityId !== actor.identityId)
       throw new ValoProblem(403, "Verify and claim this case before recording a correction.");
-    await authorizeWorkspaceWrite(tx, { identityId: row.requesterIdentityId, workspaceId: row.workspaceId });
+    await authorizeWorkspaceWrite(
+      tx,
+      workspaceActorFromRecord({ identityId: row.requesterIdentityId, workspaceId: row.workspaceId }),
+    );
     const [profile] = await tx
       .select()
       .from(valoProfileVersions)
@@ -247,7 +256,7 @@ async function recordPrivacyCorrection(
     return privacyDetail(tx, row);
   });
 }
-export async function privacyPreparedResult(actor: { identityId: string; workspaceId: string }, id: string) {
+export async function privacyPreparedResult(actor: WorkspaceActor, id: string) {
   return db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
     const row = await readPrivacyCase(tx, id, actor);

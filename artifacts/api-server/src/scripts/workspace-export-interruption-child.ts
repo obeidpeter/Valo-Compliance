@@ -2,6 +2,7 @@ import { db, pool, valoWorkspaceExports } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
 import { prepareWorkspaceExport } from "../lib/valo-workspace-export-jobs";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 assertDevelopmentRuntime();
 if (process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only" || !process.send)
   throw Error("CONTROLLED_CHILD_ONLY");
@@ -12,7 +13,7 @@ if (!row || row.requesterId !== identityId || row.workspaceId !== workspaceId)
   throw Error("FIXTURE_MISMATCH");
 try {
   await prepareWorkspaceExport(
-    { workspaceId: workspaceId!, identityId },
+    workspaceActorFromRecord({ workspaceId: workspaceId!, identityId }),
     id!,
     new AbortController().signal,
     async () => {},

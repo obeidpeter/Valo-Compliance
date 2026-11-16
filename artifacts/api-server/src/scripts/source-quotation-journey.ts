@@ -12,6 +12,7 @@ import { requestExport, getExport, downloadExport } from "../lib/valo-exports";
 import { documentInput } from "../lib/valo-validation";
 import { readerContainsText } from "../lib/valo-reader-checks";
 import { caseUUID } from "../lib/valo-customer-case-binding";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 const execFile = promisify(callbackExec);
 let stage = "bound-provider-result";
 async function main() {
@@ -31,7 +32,7 @@ async function main() {
   const [row] = await db.select().from(valoAIDrafts).where(eq(valoAIDrafts.id, record.previewId));
   assert.ok(row);
   assert.equal(row.status, "ready");
-  const actor = { workspaceId: row.workspaceId, identityId: row.actorId },
+  const actor = workspaceActorFromRecord({ workspaceId: row.workspaceId, identityId: row.actorId }),
     preview = await getCustomerAIDraft(actor, row.id);
   assert.equal(preview.status, "ready");
   assert.ok((row.providerRuns as Record<string, unknown>[]).some((r) => r.outboundAttempted && r.responseId));

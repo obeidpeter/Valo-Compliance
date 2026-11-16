@@ -22,7 +22,8 @@ import { setting } from "../platform/settings";
 import { ValoProblem } from "./valo-problem";
 import { privacyIdentityHashes } from "./valo-privacy-keys";
 export { ValoProblem } from "./valo-problem";
-export type WorkspaceActor = { workspaceId: string; identityId: string };
+import { workspaceActorFromMembership, type WorkspaceActor } from "../platform/workspace-context";
+export type { WorkspaceActor };
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /** Read authorization must not retain a membership SHARE lock during a long
  * snapshot. Call using a current, separate transaction at each page boundary. */
@@ -121,7 +122,7 @@ export async function resolveWorkspace(identityId: string): Promise<WorkspaceAct
         .limit(1);
       if (deleted) throw new ValoProblem(403, "Workspace deletion is recorded. Access cannot be recreated.");
       if (existing.active !== "yes") throw new ValoProblem(403, "Workspace membership is suspended");
-      return { workspaceId: existing.workspaceId, identityId };
+      return workspaceActorFromMembership({ workspaceId: existing.workspaceId, identityId });
     }
     await tx
       .insert(valoWorkspaces)
@@ -152,7 +153,7 @@ export async function resolveWorkspace(identityId: string): Promise<WorkspaceAct
       .from(valoMemberships)
       .where(eq(valoMemberships.identityId, identityId));
     if (membership.active !== "yes") throw new ValoProblem(403, "Workspace membership is suspended");
-    return { workspaceId: membership.workspaceId, identityId };
+    return workspaceActorFromMembership({ workspaceId: membership.workspaceId, identityId });
   });
 }
 export async function getWorkspace(actor: WorkspaceActor) {

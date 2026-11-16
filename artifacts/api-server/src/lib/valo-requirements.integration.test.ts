@@ -19,6 +19,7 @@ import * as assessments from "./valo-assessments";
 import * as tasks from "./valo-tasks";
 import { processReminder } from "./valo-reminder-worker";
 import { syntheticProfile } from "./valo-test-fixtures";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 test(
   "development saved assessments, task isolation, concurrency and reminder outbox",
   {
@@ -58,7 +59,9 @@ test(
         await assert.rejects(assessments.getAssessment(b, first.id), { status: 404 });
         await assert.rejects(assessments.compareAssessments(b, first.id, first.id), { status: 404 });
         await assert.rejects(
-          assessments.listAssessments({ workspaceId: a.workspaceId, identityId: b.identityId }),
+          assessments.listAssessments(
+            workspaceActorFromRecord({ workspaceId: a.workspaceId, identityId: b.identityId }),
+          ),
           { status: 403 },
         );
       });

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { assess, checkerFactsSchema, digest, ruleSchema, type ReleasedRule } from "@workspace/valo-core";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 
 /** Run against an isolated loopback development PostgreSQL database:
  * VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development
@@ -117,8 +118,14 @@ test(
       },
     });
     const tasks = await import("./valo-tasks");
-    const actor = { workspaceId: randomUUID(), identityId: `synthetic-task-guard-${randomUUID()}` };
-    const other = { workspaceId: randomUUID(), identityId: `synthetic-task-guard-other-${randomUUID()}` };
+    const actor = workspaceActorFromRecord({
+      workspaceId: randomUUID(),
+      identityId: `synthetic-task-guard-${randomUUID()}`,
+    });
+    const other = workspaceActorFromRecord({
+      workspaceId: randomUUID(),
+      identityId: `synthetic-task-guard-other-${randomUUID()}`,
+    });
     const workspaceIds = [actor.workspaceId, other.workspaceId];
     const registryBefore = digest(await db.select().from(valoRuleReleases));
     let saved: Awaited<ReturnType<typeof assessments.getAssessment>>;

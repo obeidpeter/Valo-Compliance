@@ -15,6 +15,7 @@ import {
 } from "./inference-budget";
 import type { FiniteManifest, FiniteWork } from "./inference-batch-dispatch";
 import type { ManagedCompletionResult, ManagedRequest } from "./managed-inference";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 
 type Batch = {
   id: string;
@@ -659,7 +660,10 @@ test("default managed entry and customer organizer use actual finite dispatch an
         await import("./inference-customer-runtime");
       const batch = prepare({ retry: true }),
         manifest = batches.get(batch.id)!.manifest;
-      const workspaceActor = { workspaceId: actor.workspaceId, identityId: actor.identityId };
+      const workspaceActor = workspaceActorFromRecord({
+        workspaceId: actor.workspaceId,
+        identityId: actor.identityId,
+      });
       const deps = {
         recheck: () => assertCustomerEvaluationActor(plan, entry),
         withWork: withApprovedInferenceWork,

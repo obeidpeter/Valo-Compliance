@@ -19,6 +19,7 @@ import {
 import { organizeCustomerDraft, type CustomerTransport } from "../lib/valo-customer-ai-model";
 import { createCustomerAIDraft, customerAIUsage, getCustomerAIDraft } from "../lib/valo-customer-ai";
 import { sha256 } from "@workspace/valo-core";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 type NativeRecord = {
   caseID: string;
   caseHash: string;
@@ -70,7 +71,7 @@ async function main() {
         .orderBy(asc(valoAIDrafts.createdAt))
         .limit(1)
     : [];
-  const usage = actor ? await customerAIUsage(actor) : null;
+  const usage = actor ? await customerAIUsage(workspaceActorFromRecord(actor)) : null;
   let native: NativeReceipt | null = null,
     nativeReceiptHash: string | null = null;
   if (process.env.VALO_SOURCE_AI_NATIVE_RESULTS) {
@@ -278,8 +279,8 @@ async function main() {
         continue;
       }
       const preview = reusable
-        ? await getCustomerAIDraft(actor, old.id)
-        : await createCustomerAIDraft(actor, input);
+        ? await getCustomerAIDraft(workspaceActorFromRecord(actor), old.id)
+        : await createCustomerAIDraft(workspaceActorFromRecord(actor), input);
       const [row] = await db
         .select()
         .from(valoAIDrafts)

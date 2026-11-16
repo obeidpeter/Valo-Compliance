@@ -19,6 +19,7 @@ import {
   type RecoveryControls,
 } from "../lib/valo-recovery-controls";
 import { logger } from "../lib/logger";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 const exec = promisify(execFile),
   hash = (b: Buffer) => createHash("sha256").update(b).digest("hex");
 const script = fileURLToPath(import.meta.url),
@@ -121,7 +122,10 @@ async function captureErasure() {
   const [fixture] = JSON.parse(await readFile(process.argv[3], "utf8")) as Fixture[];
   const objects = process.argv[4];
   assert.ok(objects.startsWith("/tmp/valo-recovery-"));
-  const actor = { workspaceId: fixture.workspaceId, identityId: fixture.identityId };
+  const actor = workspaceActorFromRecord({
+    workspaceId: fixture.workspaceId,
+    identityId: fixture.identityId,
+  });
   const staff = {
     identityId: `synthetic-recovery-privacy-${randomUUID()}`,
     recentMfa: true,

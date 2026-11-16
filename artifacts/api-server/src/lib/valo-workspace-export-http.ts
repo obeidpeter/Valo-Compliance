@@ -73,7 +73,7 @@ export function makeWorkspaceExportRouter(
     );
   });
   router.get("/workspace/data-exports/:id/download", async (req, res) => {
-    const actor = { ...res.locals.valoActor } as WorkspaceActor,
+    const actor = { ...res.locals.valoActor },
       id = z.string().uuid().parse(req.params.id),
       controller = new AbortController();
     const stop = () => controller.abort();

@@ -15,6 +15,7 @@ import {
 import { processPrivacyAction, privacyPreparedResult } from "../lib/valo-privacy-processing";
 import { saveProfile } from "../lib/valo-store";
 import { syntheticProfile } from "../lib/valo-test-fixtures";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 const checks: { name: string; status: "pass" | "fail"; errorType?: string }[] = [],
   owned: string[] = [],
   roles: string[] = [];
@@ -60,9 +61,16 @@ const body = (kind: "correction" | "export" | "deletion", key = randomUUID()) =>
 async function opened(kind: "correction" | "export" | "deletion") {
   const actor = await owner(),
     s = await staff(),
-    request = await createPrivacyCase(actor, "synthetic@example.invalid", body(kind)),
+    request = await createPrivacyCase(
+      workspaceActorFromRecord(actor),
+      "synthetic@example.invalid",
+      body(kind),
+    ),
     id = request.reference.slice(5);
-  let result = await confirmPrivacyCase(actor, id, { expectedVersion: 1, acknowledgement: true });
+  let result = await confirmPrivacyCase(workspaceActorFromRecord(actor), id, {
+    expectedVersion: 1,
+    acknowledgement: true,
+  });
   result = await simpleStaffPrivacyAction(s, id, {
     expectedVersion: result.request.version,
     action: "claim",
@@ -81,8 +89,8 @@ try {
     const actor = await owner(),
       input = body("export");
     const [a, b] = await Promise.all([
-      createPrivacyCase(actor, "synthetic@example.invalid", input),
-      createPrivacyCase(actor, "synthetic@example.invalid", input),
+      createPrivacyCase(workspaceActorFromRecord(actor), "synthetic@example.invalid", input),
+      createPrivacyCase(workspaceActorFromRecord(actor), "synthetic@example.invalid", input),
     ]);
     assert.equal(a.reference, b.reference);
     assert.equal(
@@ -95,7 +103,7 @@ try {
     );
     await assert.rejects(
       () =>
-        createPrivacyCase(actor, "synthetic@example.invalid", {
+        createPrivacyCase(workspaceActorFromRecord(actor), "synthetic@example.invalid", {
           ...input,
           message: "A different synthetic request body.",
         }),
@@ -104,35 +112,56 @@ try {
   });
   await check("owner_verification_cancellation_history_and_stale_write", async () => {
     const actor = await owner(),
-      created = await createPrivacyCase(actor, "synthetic@example.invalid", body("export")),
+      created = await createPrivacyCase(
+        workspaceActorFromRecord(actor),
+        "synthetic@example.invalid",
+        body("export"),
+      ),
       id = created.reference.slice(5);
-    const verified = await confirmPrivacyCase(actor, id, { expectedVersion: 1, acknowledgement: true });
+    const verified = await confirmPrivacyCase(workspaceActorFromRecord(actor), id, {
+      expectedVersion: 1,
+      acknowledgement: true,
+    });
     assert.equal(verified.request.status, "verified");
     assert.equal(verified.events.length, 2);
     await assert.rejects(
-      () => confirmPrivacyCase(actor, id, { expectedVersion: 1, acknowledgement: true }, true),
+      () =>
+        confirmPrivacyCase(
+          workspaceActorFromRecord(actor),
+          id,
+          { expectedVersion: 1, acknowledgement: true },
+          true,
+        ),
       { status: 409 },
     );
     const cancelled = await confirmPrivacyCase(
-      actor,
+      workspaceActorFromRecord(actor),
       id,
       { expectedVersion: 2, acknowledgement: true },
       true,
     );
     assert.equal(cancelled.request.status, "cancelled");
     assert.equal(cancelled.events.length, 3);
-    await assert.rejects(() => privacyPreparedResult(actor, id), { status: 404 });
+    await assert.rejects(() => privacyPreparedResult(workspaceActorFromRecord(actor), id), { status: 404 });
   });
   await check("tenant_substitution_and_revoked_membership_fail", async () => {
     const a = await owner(),
       b = await owner(),
-      saved = await createPrivacyCase(a, "synthetic@example.invalid", body("export")),
+      saved = await createPrivacyCase(
+        workspaceActorFromRecord(a),
+        "synthetic@example.invalid",
+        body("export"),
+      ),
       id = saved.reference.slice(5);
-    await assert.rejects(() => customerPrivacyDetail(b, id), { status: 404 });
+    await assert.rejects(() => customerPrivacyDetail(workspaceActorFromRecord(b), id), { status: 404 });
     await pool.query("UPDATE valo_memberships SET active='no' WHERE workspace_id=$1", [a.workspaceId]);
-    await assert.rejects(() => confirmPrivacyCase(a, id, { expectedVersion: 1, acknowledgement: true }), {
-      status: 403,
-    });
+    await assert.rejects(
+      () =>
+        confirmPrivacyCase(workspaceActorFromRecord(a), id, { expectedVersion: 1, acknowledgement: true }),
+      {
+        status: 403,
+      },
+    );
   });
   await check("fresh_mfa_privacy_role_and_revocation_required", async () => {
     const s = await staff(),
@@ -148,7 +177,11 @@ try {
   await check("unverified_hold_release_cannot_fake_verification_or_assignment", async () => {
     const actor = await owner(),
       s = await staff(),
-      created = await createPrivacyCase(actor, "synthetic@example.invalid", body("export")),
+      created = await createPrivacyCase(
+        workspaceActorFromRecord(actor),
+        "synthetic@example.invalid",
+        body("export"),
+      ),
       id = created.reference.slice(5);
     await assert.rejects(
       () =>
@@ -181,7 +214,7 @@ try {
     });
     assert.equal(r.request.status, "partially_fulfilled");
     assert(r.request.resultAvailable);
-    const output = await privacyPreparedResult(actor, id);
+    const output = await privacyPreparedResult(workspaceActorFromRecord(actor), id);
     assert.equal(output.workspaceId, actor.workspaceId);
     assert.match(String(output.scope), /not complete privacy fulfilment/);
     assert.equal(typeof output.data, "object");
@@ -192,15 +225,22 @@ try {
     });
     assert.equal(repeat.request.version, r.request.version);
     const other = await owner();
-    await assert.rejects(() => privacyPreparedResult(other, id), { status: 404 });
+    await assert.rejects(() => privacyPreparedResult(workspaceActorFromRecord(other), id), { status: 404 });
   });
   await check("actual_current_profile_correction_is_bound_and_history_preserved", async () => {
     const actor = await owner(),
       s = await staff();
-    await saveProfile(actor, { expectedRevision: 0, profile: syntheticProfile });
-    const created = await createPrivacyCase(actor, "synthetic@example.invalid", body("correction")),
+    await saveProfile(workspaceActorFromRecord(actor), { expectedRevision: 0, profile: syntheticProfile });
+    const created = await createPrivacyCase(
+        workspaceActorFromRecord(actor),
+        "synthetic@example.invalid",
+        body("correction"),
+      ),
       id = created.reference.slice(5);
-    await confirmPrivacyCase(actor, id, { expectedVersion: 1, acknowledgement: true });
+    await confirmPrivacyCase(workspaceActorFromRecord(actor), id, {
+      expectedVersion: 1,
+      acknowledgement: true,
+    });
     const result = await simpleStaffPrivacyAction(s, id, {
       expectedVersion: 2,
       action: "claim",
@@ -223,7 +263,7 @@ try {
         }),
       { status: 409 },
     );
-    await saveProfile(actor, {
+    await saveProfile(workspaceActorFromRecord(actor), {
       expectedRevision: 1,
       profile: { ...syntheticProfile, businessName: "Corrected synthetic development business" },
     });
@@ -240,7 +280,7 @@ try {
       reason: "Checked the actual new synthetic business profile revision.",
     });
     assert.equal(r.request.status, "partially_fulfilled");
-    assert.equal((await privacyPreparedResult(actor, id)).profileVersionId, p.id);
+    assert.equal((await privacyPreparedResult(workspaceActorFromRecord(actor), id)).profileVersionId, p.id);
     assert.equal(
       (
         await pool.query("SELECT count(*)::int AS n FROM valo_profile_versions WHERE workspace_id=$1", [
@@ -258,14 +298,18 @@ try {
   await check("altered_state_or_audit_prevents_result_and_processing", async () => {
     const { actor, id } = await opened("export");
     await pool.query("UPDATE valo_privacy_cases SET message='Altered synthetic text' WHERE id=$1", [id]);
-    await assert.rejects(() => customerPrivacyDetail(actor, id), { status: 409 });
+    await assert.rejects(() => customerPrivacyDetail(workspaceActorFromRecord(actor), id), { status: 409 });
   });
   await check("durable_request_limits_preserve_prior_work", async () => {
     const actor = await owner();
-    for (let n = 0; n < 3; n++) await createPrivacyCase(actor, "synthetic@example.invalid", body("export"));
-    await assert.rejects(() => createPrivacyCase(actor, "synthetic@example.invalid", body("export")), {
-      status: 429,
-    });
+    for (let n = 0; n < 3; n++)
+      await createPrivacyCase(workspaceActorFromRecord(actor), "synthetic@example.invalid", body("export"));
+    await assert.rejects(
+      () => createPrivacyCase(workspaceActorFromRecord(actor), "synthetic@example.invalid", body("export")),
+      {
+        status: 429,
+      },
+    );
     assert.equal(
       (
         await pool.query("SELECT count(*)::int AS n FROM valo_privacy_cases WHERE workspace_id=$1", [
@@ -287,7 +331,10 @@ try {
         }),
       { status: 422 },
     );
-    assert.equal((await customerPrivacyDetail(actor, id)).request.status, "assigned");
+    assert.equal(
+      (await customerPrivacyDetail(workspaceActorFromRecord(actor), id)).request.status,
+      "assigned",
+    );
   });
 } finally {
   for (const workspaceId of owned)

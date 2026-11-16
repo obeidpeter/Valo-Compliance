@@ -8,6 +8,7 @@ import {
   respondPrivacyCase,
 } from "./valo-privacy";
 import { ValoProblem } from "./valo-problem";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 
 /** Case-only identity scope. Never provisions a workspace or revives membership.
  * Callers supply the server-verified identity, not an email or browser tenant. */
@@ -18,7 +19,7 @@ export async function requesterCaseActor(identityId: string, id: string) {
     .where(and(eq(valoPrivacyCases.id, id), eq(valoPrivacyCases.requesterIdentityId, identityId)))
     .limit(1);
   if (!row) throw new ValoProblem(404, "Privacy request not found.");
-  return { identityId, workspaceId: row.workspaceId };
+  return workspaceActorFromRecord({ identityId, workspaceId: row.workspaceId });
 }
 export async function requesterPrivacyList(identityId: string) {
   return db.transaction(async (tx) => {

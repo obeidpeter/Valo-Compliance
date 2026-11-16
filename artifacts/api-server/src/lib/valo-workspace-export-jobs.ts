@@ -27,6 +27,7 @@ import {
 import { abortable } from "./valo-abort";
 import { assertApplicationRuntime, runtimeEnvironment } from "./valo-runtime-activation";
 import { privateCleanupAuthority } from "./valo-private-cleanup-authority";
+import { workspaceActorFromRecord } from "../platform/workspace-context";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export const WORKSPACE_EXPORT_QUEUE = "valo-workspace-data-v1";
 export const WORKSPACE_EXPORT_LEASE_MS = 90_000;
@@ -288,7 +289,7 @@ export async function executeWorkspaceExport(
       old.expiresAt.getTime() <= Date.now()
     )
       return null;
-    const actor = { workspaceId, identityId: old.requesterId };
+    const actor = workspaceActorFromRecord({ workspaceId, identityId: old.requesterId });
     try {
       await authorizeWorkspaceWrite(tx, actor);
     } catch (error) {
