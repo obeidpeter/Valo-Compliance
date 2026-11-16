@@ -116,3 +116,6 @@ Rules:
 
 These rules are enforced by tooling as each phase lands. See [plan.md](plan.md)
 for the order of work and what is already done.
+
+The proposed R2 team access model (roles, grants, invitations and the migration path)
+is in [r2-team-access.md](r2-team-access.md).

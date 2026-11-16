@@ -73,7 +73,7 @@ reach the 80% branch coverage NFR-011 requires.
 | --- | --- |
 | Regenerate schema snapshots; timestamp-named migrations; CI fails on schema changes without a migration | done |
 | Workspace context object required by every query; automatic cross-workspace route tests | not started |
-| R2 membership design | not started |
+| R2 membership design | done as a proposal ([r2-team-access.md](r2-team-access.md)); five owner decisions listed |
 | Adopt the migration ledger on the Replit development database | blocked (needs access to that database) |
 
 ### Phase 4 — Speed and capacity
