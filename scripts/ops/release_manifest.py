@@ -10,7 +10,8 @@ from recovery_archive import require
 
 def files(root):
     paths = [*sorted((root / 'artifacts/api-server/dist').glob('*.mjs')),
-             *sorted((root / 'scripts/ops').glob('*.py')), root / 'pnpm-lock.yaml', root / 'lib/db/drizzle/pg-boss-development.sql']
+             *sorted((root / 'scripts/ops').glob('*.py')), *sorted((root / 'scripts/ops').glob('*.mjs')),
+             root / 'pnpm-lock.yaml', root / 'lib/db/drizzle/pg-boss-development.sql']
     require(all((root / 'artifacts/api-server/dist' / name).is_file() for name in
                 ('index.mjs', 'export-worker.mjs', 'export-supervisor.mjs', 'production-preflight.mjs')), 'BUILT_RELEASE_REQUIRED')
     require(all(p.is_file() and not p.is_symlink() and p.resolve().is_relative_to(root) for p in paths), 'RELEASE_FILE_INVALID')

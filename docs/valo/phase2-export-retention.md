@@ -43,6 +43,10 @@ The subsequent [legacy inventory workflow](phase2-retention-inventory.md) prepar
 read-only counts, exclusions and a fingerprint-bound dated proposal. It does not
 apply deadlines or authorize cleanup of historical files.
 
+[Retention recovery](phase2-retention-recovery.md) preserves later deadline
+decisions in the independent journal and tests an older restore without reviving
+expired or superseded exports. Its replay operator remains synthetic-only.
+
 After review and merge, take the existing verified database/private-file backup
 and independent privacy journal, preserve native preview overrides, then deploy
 the reviewed build. Use a new synthetic export to verify deadline, download denial,

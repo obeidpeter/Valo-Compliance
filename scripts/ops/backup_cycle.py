@@ -102,9 +102,12 @@ def cycle(config_path, env):
                 archive_env = {**env, 'VALO_RECOVERY_ARCHIVE_MODE': 'approved-b2', 'RESTIC_PASSWORD_FILE': str(password)}
                 archived = backup_and_verify(scratch / 'snapshot' / 'bundle', scratch / 'archive.json', archive_env)
                 journal = capture('journal', scratch / 'journal', config, env)
+                require(type(journal.get('retentionEntries')) is int and 0 <= journal['retentionEntries'] <= 10000,
+                        'RETENTION_JOURNAL_CAPTURE_REQUIRED')
                 journal_archive = archive_journal(scratch / 'journal' / 'privacy-journal.json', scratch / 'journal-receipt.json',
                                                  archive_env, config['sourceIdentitySha256'], snapshot['cutoff'])
                 require(journal_archive['snapshotId'] != archived['snapshotId'], 'INDEPENDENT_JOURNAL_SNAPSHOT_REQUIRED')
+                require(journal_archive.get('retentionInventoryPresent') is True, 'RETENTION_JOURNAL_READBACK_REQUIRED')
                 report.update(status='verified', snapshot=snapshot, archive=archived, journal=journal_archive,
                               completedAt=datetime.datetime.now(datetime.timezone.utc).isoformat())
             # The private plaintext staging and temporary password are gone before success.

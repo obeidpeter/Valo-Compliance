@@ -1,5 +1,6 @@
 import {createHash,createHmac,timingSafeEqual} from 'node:crypto';
 import assert from 'node:assert/strict';
+import {validateExportRetention} from './export_retention_contract.mjs';
 
 export const sha256=value=>createHash('sha256').update(value).digest('hex');
 export const privacyTable=name=>/^valo_(privacy_|erasure_)/.test(name)||['valo_memberships','valo_staff_assignments'].includes(name);
@@ -11,7 +12,7 @@ export function signJournal(payload,key){
 }
 /** The trusted key and expected identity/cutoff come from independent custody.
  * A valid journal is evidence for replay, never permission to open the restored app. */
-export function verifyJournal(envelope,key,{sourceIdentitySha256,snapshotCutoff,now=Date.now(),maxAgeMs=3_600_000}){
+export function verifyJournal(envelope,key,{sourceIdentitySha256,snapshotCutoff,now=Date.now(),maxAgeMs=3_600_000,requireExportRetention=false}){
   assert.ok(envelope?.version===1&&typeof envelope.payload==='string'&&Buffer.byteLength(envelope.payload)<=20_000_000,'JOURNAL_SHAPE_INVALID');
   assert.ok(typeof key==='string'&&Buffer.byteLength(key)>=32,'RECOVERY_SIGNING_KEY_REQUIRED');
   const auth=envelope.authentication;
@@ -26,5 +27,6 @@ export function verifyJournal(envelope,key,{sourceIdentitySha256,snapshotCutoff,
     assert.ok(privacyTable(name)&&Array.isArray(rows)&&rows.length<=250_000,'JOURNAL_TABLE_INVALID');
     assert.ok(p.fingerprints[name]?.count===String(rows.length)&&/^[a-f0-9]{32}$/.test(p.fingerprints[name].digest),'JOURNAL_FINGERPRINT_INVALID');
   }
+  if(requireExportRetention||p.exportRetention!==undefined)validateExportRetention(p.exportRetention);
   return p;
 }

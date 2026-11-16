@@ -12,11 +12,12 @@ class ReleaseManifestTest(unittest.TestCase):
             ops=root/'scripts/ops';ops.mkdir(parents=True)
             for name in ('index.mjs','export-worker.mjs','export-supervisor.mjs','production-preflight.mjs'): (dist/name).write_text('synthetic')
             (ops/'runtime_host.py').write_text('synthetic');(root/'pnpm-lock.yaml').write_text('frozen')
+            (ops/'export_retention_contract.mjs').write_text('synthetic recovery helper')
             sql=root/'lib/db/drizzle/pg-boss-development.sql';sql.parent.mkdir(parents=True);sql.write_text('pinned queue')
             sha='a'*40
             (dist/'release.json').write_text(json.dumps({'version':1,'releaseSha':sha,'files':files(root)}))
             verify(root,sha)
-            for path in (dist/'index.mjs',ops/'runtime_host.py',root/'pnpm-lock.yaml'):
+            for path in (dist/'index.mjs',ops/'runtime_host.py',ops/'export_retention_contract.mjs',root/'pnpm-lock.yaml'):
                 old=path.read_text();path.write_text('changed')
                 with self.assertRaisesRegex(Exception,'MISMATCH'): verify(root,sha)
                 path.write_text(old)
