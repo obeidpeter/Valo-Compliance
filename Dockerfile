@@ -50,6 +50,8 @@ EXPOSE 8080
 CMD ["node", "--enable-source-maps", "dist/index.mjs"]
 
 FROM build AS web-build
+# The publishable key is public: Clerk sends it to every browser. BuildKit warns about any
+# build argument whose name ends in KEY; never pass the secret key here.
 ARG CLERK_PUBLISHABLE_KEY=""
 ARG BASE_PATH="/"
 RUN CLERK_PUBLISHABLE_KEY="$CLERK_PUBLISHABLE_KEY" BASE_PATH="$BASE_PATH" pnpm --filter @workspace/valo run build
