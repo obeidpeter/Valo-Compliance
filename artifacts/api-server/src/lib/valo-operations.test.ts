@@ -28,9 +28,9 @@ test("internal probes measure failures independently and persist/deduplicate/rec
     assert.equal(failures.database.status,"unavailable");assert.equal(failures.worker.status,"healthy");
     assert.equal(failures.payments.value,2);
     const parallel=await Promise.all(Array.from({length:32},()=>recordOperationalAlerts(failures,dir)));
-    assert.equal(parallel.reduce((n,r)=>n+r.emitted,0),5);
+    assert.equal(parallel.reduce((n,r)=>n+r.emitted,0),6);
     let history=JSON.parse(await readFile(join(dir,"alerts.json"),"utf8"));
-    assert.equal(history.events.length,5);assert.ok(history.active.includes("WORKSPACE_CLEANUP_BACKLOG"));assert.ok(!JSON.stringify(history).includes("SYNTHETIC_PRIVATE"));
+    assert.equal(history.events.length,6);assert.ok(history.active.includes("WORKSPACE_CLEANUP_BACKLOG"));assert.ok(history.active.includes("EXPORT_RETENTION_BACKLOG"));assert.ok(!JSON.stringify(history).includes("SYNTHETIC_PRIVATE"));
     await writeFile(join(dir,"worker.json"),JSON.stringify({at:new Date(Date.now()-100000).toISOString(),pid:process.pid}));
     const stale=await collectOperationalSample(async sql=>({rows:[{value:sql===readinessQueries.database?1:0}]}),dir);
     assert.equal(stale.worker.status,"stale");
@@ -39,7 +39,7 @@ test("internal probes measure failures independently and persist/deduplicate/rec
     const healthy=await collectOperationalSample(async sql=>({rows:[{value:sql===readinessQueries.database?1:0}]}),dir);
     assert.deepEqual((await recordOperationalAlerts(healthy,dir)).active,[]);
     history=JSON.parse(await readFile(join(dir,"alerts.json"),"utf8"));
-    assert.equal(history.events.filter((r:{state:string})=>r.state==="resolved").length,6);
+    assert.equal(history.events.filter((r:{state:string})=>r.state==="resolved").length,7);
     await writeFile(join(dir,"alerts.json"),"{bad");
     await assert.rejects(()=>recordOperationalAlerts(healthy,dir),/INTERNAL_ALERT_HISTORY_UNREADABLE/);
     await writeFile(join(dir,"alerts.json"),JSON.stringify(history));

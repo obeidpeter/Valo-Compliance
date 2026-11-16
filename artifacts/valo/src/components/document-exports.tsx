@@ -55,13 +55,14 @@ export function DocumentExports({ documentId,revisionId,revisionNumber,disabled 
     <ul className="mt-5 divide-y divide-border" aria-live="polite">
       {jobs.data?.map(job=><li key={job.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium">Revision {job.revision} · {job.format.toUpperCase()} · {job.status}</p>
+          <p className="text-sm font-medium">Revision {job.revision} · {job.format.toUpperCase()} · {job.errorCode==="EXPORT_EXPIRED"?"expired":job.status}</p>
           <p className="text-xs text-muted-foreground">Attempts: {job.attempts}{job.size !== null ? ` · ${job.size.toLocaleString("en-NG")} bytes` : ""}</p>
-          {job.errorCode && <p className="mt-1 break-words text-sm text-red-800">{job.errorCode}. Your saved draft has not been changed.</p>}
+          {job.expiresAt&&job.downloadUrl&&<p className="text-xs text-muted-foreground">Download available until {new Date(job.expiresAt).toLocaleString()}.</p>}
+          {job.errorCode && <p className="mt-1 break-words text-sm text-red-800">{job.errorCode==="EXPORT_EXPIRED"?"This generated file has expired. You can regenerate it from the same saved revision.":job.errorCode+"."} Your saved draft has not been changed.</p>}
         </div>
         {job.downloadUrl && <a href={job.downloadUrl} className="btn btn-primary btn-sm"><Download className="h-4 w-4"/>Download {job.format.toUpperCase()}</a>}
         {job.status === "failed" && <button className="btn btn-ghost btn-sm" disabled={retry.isPending}
-          onClick={()=>retry.mutate({id:job.id,data:{}})}><RotateCcw className="h-4 w-4"/>Retry export</button>}
+          onClick={()=>retry.mutate({id:job.id,data:{}})}><RotateCcw className="h-4 w-4"/>{job.errorCode==="EXPORT_EXPIRED"?"Regenerate export":"Retry export"}</button>}
       </li>)}
     </ul>
     {retry.isError && <p role="alert" className="text-sm text-red-800">{describeError(retry.error).message}</p>}

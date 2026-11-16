@@ -923,6 +923,7 @@ export const ListDocumentExportsResponseItem = zod.object({
   "checksum": zod.string().nullable(),
   "size": zod.int().nullable(),
   "downloadUrl": zod.string().nullable(),
+  "expiresAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -957,6 +958,7 @@ export const CreateDocumentExportResponse = zod.object({
   "checksum": zod.string().nullable(),
   "size": zod.int().nullable(),
   "downloadUrl": zod.string().nullable(),
+  "expiresAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -984,6 +986,7 @@ export const RetryDocumentExportResponse = zod.object({
   "checksum": zod.string().nullable(),
   "size": zod.int().nullable(),
   "downloadUrl": zod.string().nullable(),
+  "expiresAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })

@@ -8,6 +8,7 @@ import { executeExport, developmentExportsOnly } from "../lib/valo-exports";
 import { logger } from "../lib/logger";
 import { reconcileDueReminders } from "../lib/valo-reminder-worker";
 import { recoverAbandonedExports,reconcileExportOrphans } from "../lib/valo-export-recovery";
+import {expireGeneratedExports} from "../lib/valo-export-retention";
 import { processPaymentEvents,reconcilePayments } from "../lib/valo-commerce";
 import {processRefundQueue} from "../lib/valo-refunds";
 import {reconcileDisputeActions} from "../lib/valo-dispute-actions";
@@ -102,6 +103,8 @@ async function dispatch() {
     if(queues.rows.length!==2||!queues.rows.some(q=>q.name===EXPORT_QUEUE&&q.retry_limit===2&&q.expire_seconds===120)||
       !queues.rows.some(q=>q.name===WORKSPACE_EXPORT_QUEUE&&q.retry_limit===0&&q.expire_seconds===360))throw Error("WORKER_QUEUE_CONFIGURATION_INVALID");
     await recoverAbandonedExports();
+    const retention=await expireGeneratedExports();
+    if(retention.failed)logger.error({event:"export.retention_binding_failed",count:retention.failed});
     const cleanup=await reconcileExportOrphans();
     if(cleanup.failed)logger.error({event:"export.orphan_cleanup_failed",count:cleanup.failed});
     if(cleanup.privacyHeld)logger.error({event:"privacy.erasure_replay_held",count:cleanup.privacyHeld});
