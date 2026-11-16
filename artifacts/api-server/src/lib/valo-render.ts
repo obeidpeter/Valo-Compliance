@@ -11,7 +11,7 @@ import {
   PageNumber,
   WidthType,
 } from "docx";
-import { chromium } from "playwright";
+import { chromium, type Browser, type BrowserContext } from "playwright";
 import { documentInput } from "./valo-validation";
 import { GUIDED_PREFIX, guidedRenderableBlocks } from "@workspace/valo-core/guided-runtime";
 import { setting } from "../platform/settings";
@@ -160,16 +160,15 @@ export async function renderDocument(
       }),
     );
   }
-  const browser = await chromium.launch({
-    executablePath: setting("CHROMIUM_EXECUTABLE_PATH") || "/repl/tools/bin/chromium",
-    headless: true,
-    timeout: 15000,
-  });
+  await acquirePdfSlot();
+  let context: BrowserContext | undefined;
+  // A hung render closes only its own context; the shared browser keeps serving others.
   const timeout = setTimeout(() => {
-    void browser.close();
-  }, 45000);
+    void context?.close();
+  }, RENDER_TIMEOUT_MS);
   try {
-    const context = await browser.newContext({ javaScriptEnabled: false, serviceWorkers: "block" });
+    const browser = await sharedBrowser();
+    context = await browser.newContext({ javaScriptEnabled: false, serviceWorkers: "block" });
     await context.route("**/*", (route) => route.abort("blockedbyclient"));
     const page = await context.newPage();
     await page.setContent(controlledHtml(raw, revision, mode), { waitUntil: "load", timeout: 15000 });
@@ -184,6 +183,86 @@ export async function renderDocument(
     });
   } finally {
     clearTimeout(timeout);
-    await browser.close();
+    // Best-effort: the context may already be closed by the timeout or a browser crash.
+    await context?.close().catch(() => {});
+    releasePdfSlot();
   }
+}
+
+/*
+ * One shared Chromium per process instead of one launch per PDF. Each PDF still gets
+ * a fresh, isolated context with JavaScript disabled and all network blocked. At most
+ * MAX_PARALLEL_PDF render at once. A crashed or disconnected browser is replaced on
+ * the next render, and an idle browser closes itself so short-lived processes exit.
+ */
+const MAX_PARALLEL_PDF = 5;
+const RENDER_TIMEOUT_MS = 45_000;
+const IDLE_CLOSE_MS = 1_000;
+let browserPromise: Promise<Browser> | undefined;
+let idleTimer: ReturnType<typeof setTimeout> | undefined;
+let renderingSlots = 0;
+const statistics = { launches: 0, peakParallel: 0 };
+const waitingForSlot: Array<() => void> = [];
+
+function sharedBrowser(): Promise<Browser> {
+  if (browserPromise) return browserPromise;
+  statistics.launches++;
+  const launching = chromium.launch({
+    executablePath: setting("CHROMIUM_EXECUTABLE_PATH") || "/repl/tools/bin/chromium",
+    headless: true,
+    timeout: 15000,
+  });
+  browserPromise = launching;
+  launching.then(
+    (browser) =>
+      browser.on("disconnected", () => {
+        if (browserPromise === launching) browserPromise = undefined;
+      }),
+    () => {
+      if (browserPromise === launching) browserPromise = undefined;
+    },
+  );
+  return launching;
+}
+
+async function acquirePdfSlot(): Promise<void> {
+  if (idleTimer) {
+    clearTimeout(idleTimer);
+    idleTimer = undefined;
+  }
+  if (renderingSlots < MAX_PARALLEL_PDF) {
+    renderingSlots++;
+    statistics.peakParallel = Math.max(statistics.peakParallel, renderingSlots);
+    return;
+  }
+  // The releasing render hands its slot over directly, so the limit is never exceeded.
+  await new Promise<void>((resolve) => waitingForSlot.push(resolve));
+}
+
+function releasePdfSlot(): void {
+  const next = waitingForSlot.shift();
+  if (next) return next();
+  renderingSlots--;
+  if (renderingSlots === 0)
+    idleTimer = setTimeout(() => {
+      idleTimer = undefined;
+      void closeRenderer();
+    }, IDLE_CLOSE_MS);
+}
+
+/** Closes the shared browser, for worker shutdown and idle processes. */
+export async function closeRenderer(): Promise<void> {
+  const pending = browserPromise;
+  browserPromise = undefined;
+  if (!pending) return;
+  try {
+    await (await pending).close();
+  } catch {
+    // Expected when the browser already exited or failed to launch.
+  }
+}
+
+/** Browser launches and peak concurrent renders in this process, for tests and diagnostics. */
+export function rendererStatistics() {
+  return { ...statistics };
 }

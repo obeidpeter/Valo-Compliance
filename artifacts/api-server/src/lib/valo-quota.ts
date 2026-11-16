@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "@workspace/db";
+import { logger } from "./logger";
 import { quotaPolicy, type QuotaBucket, type QuotaDecision } from "./valo-quota-policy";
 export { quotaPolicy, quotaSubjectHash } from "./valo-quota-policy";
 
@@ -50,4 +51,16 @@ export async function consumeQuota(
 /** Request-driven expiry only; not a claim of an independently running scheduler. */
 export async function purgeExpiredQuotaBuckets(): Promise<void> {
   await db.execute(sql`DELETE FROM valo_rate_buckets WHERE expires_at < CURRENT_TIMESTAMP`);
+}
+
+const PURGE_INTERVAL_MS = 30_000;
+let lastPurgeStartedAt = 0;
+/**
+ * Expired buckets never affect a decision (windows are keyed by their start), so
+ * cleanup runs at most every 30 seconds per process and never delays a request.
+ */
+export function schedulePurgeExpiredQuotaBuckets(now = Date.now()): void {
+  if (now - lastPurgeStartedAt < PURGE_INTERVAL_MS) return;
+  lastPurgeStartedAt = now;
+  void purgeExpiredQuotaBuckets().catch((error) => logger.warn({ event: "quota.purge_failed", err: error }));
 }

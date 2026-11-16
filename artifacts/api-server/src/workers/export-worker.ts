@@ -5,6 +5,7 @@ import { db, pool, valoExportJobs } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { exportQueue, EXPORT_QUEUE } from "../lib/valo-export-queue";
 import { executeExport, developmentExportsOnly } from "../lib/valo-exports";
+import { closeRenderer } from "../lib/valo-render";
 import { logger } from "../lib/logger";
 import { reconcileDueReminders } from "../lib/valo-reminder-worker";
 import { recoverAbandonedExports, reconcileExportOrphans } from "../lib/valo-export-recovery";
@@ -70,6 +71,7 @@ async function stop() {
     await startup.catch(() => {});
     await Promise.all([boss.stop({ graceful: true, timeout: 60000 }), dispatchIdle]);
     await closePrivacyErasureLocks();
+    await closeRenderer();
     await pool.end();
     if (healthServer)
       await new Promise<void>((resolve, reject) => healthServer!.close((e) => (e ? reject(e) : resolve())));

@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { getAuth } from "@clerk/express";
-import { consumeQuota, purgeExpiredQuotaBuckets, quotaSubjectHash } from "../lib/valo-quota";
+import { consumeQuota, schedulePurgeExpiredQuotaBuckets, quotaSubjectHash } from "../lib/valo-quota";
 import { clientAddress } from "../lib/valo-proxy-boundary";
 import { setting } from "../platform/settings";
 
@@ -13,7 +13,7 @@ export const requestReadQuota: RequestHandler = async (req, res, next): Promise<
   const { userId } = getAuth(req);
   const subject = userId ?? clientAddress(req);
   const key = quotaSubjectHash(setting("SESSION_SECRET"), userId ? "user" : "ip", subject ?? "");
-  await purgeExpiredQuotaBuckets();
+  schedulePurgeExpiredQuotaBuckets();
   const bucket = userId ? "authenticated-read" : "anonymous-read";
   const decision = await consumeQuota(bucket, key);
   res.setHeader("Cache-Control", "private, no-store");
