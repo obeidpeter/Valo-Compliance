@@ -44,6 +44,7 @@
     "worker:supervise": "node --enable-source-maps dist/export-supervisor.mjs",
     "valo:monitoring-probe": "node dist/monitoring-probe.mjs",
     "valo:production-preflight": "node dist/production-preflight.mjs",
+    "valo:retention-inventory": "node dist/export-retention-inventory.mjs",
     "valo:production-storage-probe": "node dist/production-storage-probe.mjs",
     "test:valo-production-readiness": "node --experimental-test-module-mocks --import tsx --test src/lib/valo-production-storage.test.ts src/lib/valo-worker-health.test.ts src/lib/valo-worker-supervisor.test.ts src/lib/valo-external-monitor.test.ts src/lib/valo-operations.test.ts src/lib/valo-runtime-activation.test.ts src/lib/valo-recovery-target.test.ts",
     "test:valo-deployment-artifacts": "node --import tsx --test src/lib/valo-deployment-artifacts.test.ts",

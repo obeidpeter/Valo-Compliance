@@ -39,6 +39,10 @@ deadline authorizes deletion, and never change financial or privacy retention to
 clear an export alert. The new code has not been activated in the native workspace
 by this PR; production resources remain uncreated.
 
+The subsequent [legacy inventory workflow](phase2-retention-inventory.md) prepares
+read-only counts, exclusions and a fingerprint-bound dated proposal. It does not
+apply deadlines or authorize cleanup of historical files.
+
 After review and merge, take the existing verified database/private-file backup
 and independent privacy journal, preserve native preview overrides, then deploy
 the reviewed build. Use a new synthetic export to verify deadline, download denial,

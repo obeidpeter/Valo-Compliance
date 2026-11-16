@@ -21,6 +21,7 @@ async function buildAll() {
       "export-supervisor":path.resolve(artifactDir,"src/workers/export-supervisor.ts"),
       "production-bootstrap":path.resolve(artifactDir,"src/scripts/production-bootstrap.ts"),
       "production-preflight":path.resolve(artifactDir,"src/scripts/production-preflight.ts"),
+      "export-retention-inventory":path.resolve(artifactDir,"src/scripts/export-retention-inventory.ts"),
       "production-storage-probe":path.resolve(artifactDir,"src/scripts/production-storage-probe.ts"),
       "monitoring-probe":path.resolve(artifactDir,"src/scripts/monitoring-probe.ts"),
     },

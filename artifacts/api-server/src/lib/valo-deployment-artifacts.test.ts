@@ -34,3 +34,10 @@ test("built monitoring probe requires explicit intent and reports only allowlist
   assert.equal(invalid.status,1);assert.equal(invalid.stderr.trim(),"EXTERNAL_MONITOR_CONFIGURATION_INVALID");
   assert.ok(!invalid.stderr.includes(hidden));
 });
+
+test("shipped retention inspector requires read-only intent before database access",()=>{
+  const denied=invoke("export-retention-inventory",{NODE_ENV:"development"},["inventory","11111111-1111-4111-8111-111111111111"]);
+  assert.equal(denied.status,1);assert.equal(denied.stdout,"");assert.equal(denied.stderr.trim(),"RETENTION_INSPECTION_USAGE_REQUIRED");
+  const missing=invoke("export-retention-inventory",{NODE_ENV:"development",VALO_RETENTION_INSPECTION:"read-only"},["inventory","11111111-1111-4111-8111-111111111111"]);
+  assert.equal(missing.status,1);assert.equal(missing.stdout,"");assert.equal(missing.stderr.trim(),"RETENTION_DATABASE_REQUIRED");
+});
