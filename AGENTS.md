@@ -107,10 +107,11 @@ workflow run for the exact commit before reporting CI status.
   files are timestamp-named. For functions, triggers or grants use
   `drizzle-kit generate --custom --name <change>` and write the SQL by hand.
   CI fails if the schema changes without a migration (`test:schema-drift`).
-- In hand-written SQL, name every primary key, unique constraint, foreign key
-  and index exactly as the latest snapshot in `lib/db/drizzle/meta` does, and
-  declare each one in the Drizzle schema. Never leave PostgreSQL to choose a
-  name. The migration tests fail on any difference.
+- In hand-written SQL, give every primary key, unique constraint, foreign key
+  and index the name the latest snapshot in `lib/db/drizzle/meta` records, and
+  declare each one in the Drizzle schema. Only a single-column primary key may
+  keep PostgreSQL's own name (`<table>_pkey`), which is also Drizzle's. The
+  migration tests fail on any difference.
 - Extend `lib/db/scripts/phase1-migrations.test.mjs` with an upgrade check for
   every new migration. When two branches both add migrations, renumber the
   journal `idx` values on merge so they stay contiguous.
