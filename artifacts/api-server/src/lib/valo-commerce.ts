@@ -21,6 +21,7 @@ import { consumeQuota, quotaSubjectHash } from "./valo-quota";
 import {
   assertOrderMatch,
   paystack,
+  paystackEventFamily,
   verifiedTransaction,
   sandboxPaymentsConfigured,
   type VerifiedTransaction,
@@ -556,10 +557,11 @@ export async function recordPaymentEvent(raw: Buffer) {
         .optional(),
     })
     .parse(JSON.parse(raw.toString("utf8")));
-  const charge = event.event === "charge.success",
-    refund = /^refund\.(pending|processing|needs-attention|failed|processed)$/.test(event.event),
-    dispute = /^charge\.dispute\.(create|remind|resolve)$/.test(event.event);
-  const supported = charge || refund || dispute;
+  const family = paystackEventFamily(event.event);
+  const charge = family === "charge",
+    refund = family === "refund",
+    dispute = family === "dispute";
+  const supported = family !== undefined;
   if (charge && (!event.data?.id || !event.data.reference))
     throw new ValoProblem(422, "A charge event requires its transaction ID and reference.");
   const reference = refund

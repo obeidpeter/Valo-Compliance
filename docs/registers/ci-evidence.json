@@ -70,6 +70,34 @@
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
       "proves": "Applying the later migrations to a synthetic database that already holds the applied phase 1 migrations keeps the applied SQL, staff access and history."
+    },
+    {
+      "requirement": "WRK-005",
+      "job": "foundation",
+      "file": "scripts/src/valo/r1-boundaries.test.ts",
+      "test": "R1 has no way to upload a file: the API takes JSON only and the web app has no file input",
+      "proves": "Every request body in the API contract is JSON with no field carrying file bytes, task inputs hold only structured fields, the API parses JSON bodies only and depends on no upload parser, and the web app has no file input, drop zone or file reader."
+    },
+    {
+      "requirement": "PAY-010",
+      "job": "foundation",
+      "file": "scripts/src/valo/r1-boundaries.test.ts",
+      "test": "R1 calls Paystack only for one-time charges, refunds and disputes and keeps no subscriptions, wallets or payouts",
+      "proves": "Every Paystack call in the API goes through one function, to the transaction, refund and dispute endpoints only, and no database table holds subscriptions, plans, wallets, balances, splits, transfers, payouts or collections."
+    },
+    {
+      "requirement": "PAY-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-paystack-contract.test.ts",
+      "test": "checkout asks Paystack only for a one-time charge, with no plan, split, subaccount or saved card",
+      "proves": "Checkout initialisation sends Paystack exactly the fields of a single naira charge (reference, amount, currency, email, return URL and order metadata) and nothing that sets up a plan, split, subaccount or saved card."
+    },
+    {
+      "requirement": "PAY-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-paystack-contract.test.ts",
+      "test": "only one-time charge, refund and dispute events are processed; subscription, invoice and transfer events are not",
+      "proves": "The webhook processes only charge, refund and dispute events; subscription, invoice, transfer, payment request and dedicated account events are classed as not processed."
     }
   ]
 }

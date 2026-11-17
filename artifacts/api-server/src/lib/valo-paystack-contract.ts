@@ -84,6 +84,17 @@ export function assertOrderMatch(
       "The payment verification does not match this order. No purchase was granted; staff reconciliation is required.",
     );
 }
+/**
+ * The Paystack events Valo processes: one-time charges, refunds and disputes. Any other event,
+ * such as a subscription, invoice, transfer or payment request, is stored as ignored and never
+ * processed: R1 keeps recurring billing, wallets, split settlements and collections off (PAY-010).
+ */
+export function paystackEventFamily(event: string): "charge" | "refund" | "dispute" | undefined {
+  if (event === "charge.success") return "charge";
+  if (/^refund\.(pending|processing|needs-attention|failed|processed)$/.test(event)) return "refund";
+  if (/^charge\.dispute\.(create|remind|resolve)$/.test(event)) return "dispute";
+  return undefined;
+}
 export function sandboxPaymentsConfigured() {
   return (
     setting("NODE_ENV") === "development" &&

@@ -1,7 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHmac, randomUUID } from "node:crypto";
-import { authenticPaystackBody, verifiedTransaction, assertOrderMatch } from "./valo-paystack-contract";
+import {
+  authenticPaystackBody,
+  verifiedTransaction,
+  assertOrderMatch,
+  paystack,
+  paystackEventFamily,
+} from "./valo-paystack-contract";
 const raw = Buffer.from('{"event":"charge.success","data":{"id":123, "amount":1.50}}'),
   secret = "whsec_synthetic_control_not_a_credential";
 const signature = (t: number, body = raw, key = secret) =>
@@ -90,4 +96,86 @@ test("server verification rejects live domain, unsafe amounts and mismatched imm
     assert.throws(() => assertOrderMatch(order, verifiedTransaction.parse({ ...input, ...bad })), {
       status: 409,
     });
+});
+
+test("checkout asks Paystack only for a one-time charge, with no plan, split, subaccount or saved card", async () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  const sent: { url: string; method: string | undefined; body: Record<string, unknown> }[] = [];
+  Object.assign(process.env, {
+    NODE_ENV: "development",
+    VALO_SANDBOX_CHECKOUT_ENABLED: "true",
+    PAYSTACK_SECRET_KEY: "sk_test_synthetic_control_not_a_credential",
+  });
+  delete process.env.REPLIT_DEPLOYMENT;
+  delete process.env.VALO_ISOLATED_RECOVERY;
+  globalThis.fetch = async (input, init) => {
+    const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    sent.push({ url: String(input), method: init?.method, body });
+    return Response.json({
+      status: true,
+      data: { authorization_url: "https://checkout.paystack.com/synthetic", reference: body.reference },
+    });
+  };
+  try {
+    const order = {
+      reference: "synthetic-order-ref",
+      amountKobo: 150000,
+      id: randomUUID(),
+      workspaceId: randomUUID(),
+    };
+    const url = await paystack.initialise(
+      order,
+      "synthetic-buyer@example.invalid",
+      "https://valo.example.invalid/return",
+    );
+    assert.equal(url, "https://checkout.paystack.com/synthetic");
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0]!.url, "https://api.paystack.co/transaction/initialize");
+    assert.equal(sent[0]!.method, "POST");
+    // Exactly the fields of a single charge: no plan, subaccount, split_code, bearer,
+    // transaction_charge, invoice_limit or authorization_code can reach Paystack.
+    assert.deepEqual(Object.keys(sent[0]!.body).sort(), [
+      "amount",
+      "callback_url",
+      "currency",
+      "email",
+      "metadata",
+      "reference",
+    ]);
+    assert.equal(sent[0]!.body.currency, "NGN");
+    assert.equal(sent[0]!.body.amount, 150000);
+    assert.deepEqual(Object.keys(sent[0]!.body.metadata as object).sort(), ["valoOrderId", "workspaceId"]);
+  } finally {
+    globalThis.fetch = realFetch;
+    for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
+    Object.assign(process.env, saved);
+  }
+});
+
+test("only one-time charge, refund and dispute events are processed; subscription, invoice and transfer events are not", () => {
+  const processed = {
+    "charge.success": "charge",
+    "refund.processed": "refund",
+    "refund.needs-attention": "refund",
+    "charge.dispute.create": "dispute",
+    "charge.dispute.resolve": "dispute",
+  } as const;
+  for (const [event, family] of Object.entries(processed))
+    assert.equal(paystackEventFamily(event), family, event);
+  for (const event of [
+    "subscription.create",
+    "subscription.disable",
+    "subscription.not_renew",
+    "invoice.create",
+    "invoice.payment_failed",
+    "transfer.success",
+    "transfer.failed",
+    "paymentrequest.success",
+    "customeridentification.success",
+    "dedicatedaccount.assign.success",
+    "charge.successful",
+    "refund.unknown",
+  ])
+    assert.equal(paystackEventFamily(event), undefined, event);
 });
