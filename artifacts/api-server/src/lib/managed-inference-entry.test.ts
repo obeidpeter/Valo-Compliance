@@ -96,6 +96,38 @@ test("default managed entry and customer organizer use actual finite dispatch an
     assert.match(result.stdout, /DISABLED_WITHOUT_DATABASE_OR_SDK/);
   });
 
+  await t.test(
+    "without an operator command's binding checks the default entry holds before any database or SDK",
+    () => {
+      // The operator commands hand the dispatcher its checks (provideFiniteWorkBindings); a
+      // process that did not is refused before anything loads.
+      const url = new URL("./managed-inference.ts", import.meta.url).href;
+      const code = `import assert from 'node:assert/strict';
+      const {withApprovedInferenceWork,withApprovedInferencePair}=await import(${JSON.stringify(url)});
+      await assert.rejects(()=>withApprovedInferenceWork('unused','unused',async()=>null),/INFERENCE_WORK_BINDINGS_UNAVAILABLE/);
+      await assert.rejects(()=>withApprovedInferencePair('unused','unused',async()=>null),/INFERENCE_WORK_BINDINGS_UNAVAILABLE/);
+      console.log('HELD_WITHOUT_BINDING_CHECKS');`;
+      const result = spawnSync(
+        process.execPath,
+        ["--import", import.meta.resolve("tsx"), "--input-type=module", "-e", code],
+        {
+          cwd: fileURLToPath(new URL("../../..", import.meta.url)),
+          encoding: "utf8",
+          env: {
+            ...process.env,
+            NODE_ENV: "development",
+            DATABASE_URL: "",
+            AI_INTEGRATIONS_OPENAI_API_KEY: "",
+            OPENAI_API_KEY: "",
+          },
+          timeout: 15000,
+        },
+      );
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.stdout, /HELD_WITHOUT_BINDING_CHECKS/);
+    },
+  );
+
   await t.test("all nonempty deployment markers block before database or SDK initialization", () => {
     for (const [marker, value] of [
       ["REPLIT_DEPLOYMENT_ID", "0"],
@@ -398,8 +430,15 @@ test("default managed entry and customer organizer use actual finite dispatch an
       },
     },
   });
-  const { managedCompletion, withApprovedInferenceWork, withBoundInferenceDispatcher } =
-    await import("./managed-inference");
+  const {
+    managedCompletion,
+    withApprovedInferenceWork,
+    withBoundInferenceDispatcher,
+    provideFiniteWorkBindings,
+  } = await import("./managed-inference");
+  // As the operator commands do, the test composes the default dispatcher with the real checks.
+  const { assertFiniteWorkBindings } = await import("./inference-work-bindings");
+  provideFiniteWorkBindings(assertFiniteWorkBindings);
   const { organizeCustomerDraft } = await import("./valo-customer-ai-model");
   const { prepareCustomerEvaluationPlan, prepareCustomerFiniteManifest } =
     await import("./inference-customer-evaluation");
@@ -580,7 +619,6 @@ test("default managed entry and customer organizer use actual finite dispatch an
   );
   const { FiniteInferenceDispatcher } = await import("./inference-batch-dispatch");
   const { createManagedSDKTransport } = await import("./managed-sdk-transport");
-  const { assertFiniteWorkBindings } = await import("./inference-work-bindings");
   for (const boundary of ["suspension", "unreconciled", "revocation", "expiry", "manifest-change"] as const) {
     await t.test(`actual entry rechecks ${boundary} after lazy SDK load, before outbound`, async () => {
       state = { ...emptyBudget(), priorUseReconciled: true };

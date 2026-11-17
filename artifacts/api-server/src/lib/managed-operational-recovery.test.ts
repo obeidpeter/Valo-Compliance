@@ -215,14 +215,6 @@ test("actual operational caller recovers an artifact failure from settled receip
   t.mock.module(new URL("./inference-budget-store.ts", import.meta.url).href, {
     namedExports: { InferenceBudgetStore: MemoryBudgetStore },
   });
-  t.mock.module(new URL("./inference-work-bindings.ts", import.meta.url).href, {
-    namedExports: {
-      assertFiniteWorkBindings: async (work: FiniteWork) => {
-        bindingChecks++;
-        assert.equal(work.lane, "publication");
-      },
-    },
-  });
   t.mock.module(new URL("../editorial/publication-artifacts.ts", import.meta.url).href, {
     namedExports: {
       putPublicationArtifact: put,
@@ -281,7 +273,12 @@ test("actual operational caller recovers an artifact failure from settled receip
   });
   const { saveOperationalReviewPlan, executeOperationalReviewPlan } =
     await import("../editorial/operational-review");
-  const { withApprovedInferencePair } = await import("./managed-inference");
+  const { withApprovedInferencePair, provideFiniteWorkBindings } = await import("./managed-inference");
+  // As the operator command does, the test composes the dispatcher with its binding checks.
+  provideFiniteWorkBindings(async (work: FiniteWork) => {
+    bindingChecks++;
+    assert.equal(work.lane, "publication");
+  });
   const candidate = publicationSchema.shape.candidate.parse({
     id: "TPL-07",
     version: 999,

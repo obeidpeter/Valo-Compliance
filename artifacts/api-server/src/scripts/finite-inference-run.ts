@@ -61,7 +61,7 @@ async function main() {
     { db, pool, valoContentVersions },
     { readOperationalInferenceReadiness },
     { assertFiniteWorkBindings },
-    { withApprovedInferencePair },
+    { withApprovedInferencePair, provideFiniteWorkBindings },
     { saveOperationalReviewPlan, executeOperationalReviewPlan },
     { getPublicationArtifact, putPublicationArtifact },
     { publicationWorkspaceRoot },
@@ -76,6 +76,8 @@ async function main() {
     import("../editorial/operational-policy"),
     import("../lib/inference-budget-store"),
   ]);
+  // This command is the composition root: the dispatcher checks approved work with these.
+  provideFiniteWorkBindings(assertFiniteWorkBindings);
   try {
     if (mode === "--inspect") {
       if (batchId || extra.length) throw Error("FINITE_RUN_ARGUMENTS_INVALID");

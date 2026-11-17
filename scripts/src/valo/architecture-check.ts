@@ -10,9 +10,9 @@ import ts from "typescript";
  * - silent-catch: an empty catch block, or a `.catch()` handler that does
  *   nothing, must carry a comment explaining why the error is ignored. A catch
  *   that records, returns or rethrows a failure is handling it.
- * - import-cycle: no new import cycles between API source files. Cycles that
- *   existed when the rule was introduced are listed in KNOWN_CYCLES and must
- *   only ever shrink.
+ * - import-cycle: no import cycles between API source files, counting type-only
+ *   and lazy imports.
+ * - workspace-actor: see workspaceActorViolations.
  */
 
 export const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -162,23 +162,6 @@ export function importCycles(graph: Map<string, Set<string>>): string[][] {
   return cycles.sort((a, b) => b.length - a.length || a[0]!.localeCompare(b[0]!));
 }
 
-/** Cycles present when the rule was introduced. Remove entries as cycles are broken; never add. */
-export const KNOWN_CYCLES: string[][] = [
-  // The finite inference dispatcher loads its lane modules lazily, and the lane modules
-  // call the dispatcher. Breaking this needs the dispatcher to receive its lanes from a
-  // composition root (Phase 2 inference module).
-  [
-    "artifacts/api-server/src/editorial/operational-review.ts",
-    "artifacts/api-server/src/lib/inference-customer-evaluation.ts",
-    "artifacts/api-server/src/lib/inference-customer-manifest.ts",
-    "artifacts/api-server/src/lib/inference-customer-runtime.ts",
-    "artifacts/api-server/src/lib/inference-work-bindings.ts",
-    "artifacts/api-server/src/lib/managed-inference.ts",
-    "artifacts/api-server/src/lib/valo-customer-ai-model.ts",
-    "artifacts/api-server/src/lib/valo-customer-ai.ts",
-  ],
-];
-
 /** HTTP code: routes, middlewares, `*-http.ts` handlers and the app itself. */
 export const isHttpSource = (path: string) =>
   /^artifacts\/api-server\/src\/(routes|middlewares)\//.test(path) ||
@@ -264,10 +247,7 @@ export function workspaceActorReport(root = repositoryRoot): string[] {
 }
 
 export function cycleViolations(graph = apiImportGraph()): string[] {
-  const allowed = new Set(KNOWN_CYCLES.map((c) => [...c].sort().join("|")));
-  return importCycles(graph)
-    .filter((cycle) => !allowed.has(cycle.join("|")))
-    .map((cycle) => `${cycle[0]}:1 import-cycle new import cycle: ${cycle.join(" -> ")}`);
+  return importCycles(graph).map((cycle) => `${cycle[0]}:1 import-cycle import cycle: ${cycle.join(" -> ")}`);
 }
 
 export function silentCatchReport(root = repositoryRoot): string[] {

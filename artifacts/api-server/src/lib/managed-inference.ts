@@ -40,6 +40,18 @@ const active = new AsyncLocalStorage<FiniteInferenceDispatcher>();
 export function withBoundInferenceDispatcher<T>(d: FiniteInferenceDispatcher, fn: () => Promise<T>) {
   return active.run(d, fn);
 }
+type WorkBindingChecks = ConstructorParameters<typeof FiniteInferenceDispatcher>[2];
+let workBindings: WorkBindingChecks | undefined;
+/**
+ * Server composition only: the operator command that runs approved work hands the default
+ * dispatcher the checks that compare each approved work with the current code
+ * (`assertFiniteWorkBindings`). This module cannot import them, because those checks load the
+ * callers that call it. Without them the default dispatcher holds every request.
+ */
+export function provideFiniteWorkBindings(checks: WorkBindingChecks) {
+  if (workBindings && workBindings !== checks) throw Error("FINITE_WORK_BINDINGS_ALREADY_PROVIDED");
+  workBindings = checks;
+}
 let runtime: Promise<FiniteInferenceDispatcher> | undefined;
 function requireDevelopment() {
   try {
@@ -52,27 +64,23 @@ async function dispatcher() {
   requireDevelopment();
   const composed = active.getStore();
   if (composed) return composed;
+  const checks = workBindings;
+  if (!checks) throw new InferenceHeld("INFERENCE_WORK_BINDINGS_UNAVAILABLE");
   runtime ??= (async () => {
-    const [
-      { pool },
-      { InferenceBudgetStore },
-      { FiniteInferenceDispatcher },
-      { assertFiniteWorkBindings },
-      { createManagedSDKTransport },
-    ] = await Promise.all([
-      import("@workspace/db"),
-      import("./inference-budget-store"),
-      import("./inference-batch-dispatch"),
-      import("./inference-work-bindings"),
-      import("./managed-sdk-transport"),
-    ]);
+    const [{ pool }, { InferenceBudgetStore }, { FiniteInferenceDispatcher }, { createManagedSDKTransport }] =
+      await Promise.all([
+        import("@workspace/db"),
+        import("./inference-budget-store"),
+        import("./inference-batch-dispatch"),
+        import("./managed-sdk-transport"),
+      ]);
     return new FiniteInferenceDispatcher(
       new InferenceBudgetStore(pool, "public", "additional-new"),
       createManagedSDKTransport(async () => {
         const { openai } = await import("@workspace/integrations-openai-ai-server");
         return openai as unknown as ManagedSDKClient;
       }),
-      assertFiniteWorkBindings,
+      checks,
     );
   })();
   return runtime;

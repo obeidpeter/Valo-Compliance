@@ -185,7 +185,7 @@ async function main() {
     );
     if (requestDigest(expected) !== row.manifest_hash) throw Error("CUSTOMER_RUNNER_MANIFEST_CHANGED");
     const [
-      { withApprovedInferenceWork },
+      { withApprovedInferenceWork, provideFiniteWorkBindings },
       { createCustomerAIDraft, customerAIUsage },
       { organizeCustomerDraft },
     ] = await Promise.all([
@@ -193,6 +193,8 @@ async function main() {
       import("../lib/valo-customer-ai"),
       import("../lib/valo-customer-ai-model"),
     ]);
+    // This command is the composition root: the dispatcher checks approved work with these.
+    provideFiniteWorkBindings(assertFiniteWorkBindings);
     const actor = plan.actor!;
     const result = await executePreparedCustomerCase(id!, manifest, plan, {
       recheck: async () => {

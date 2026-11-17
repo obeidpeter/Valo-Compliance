@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  KNOWN_CYCLES,
   apiImportGraph,
   cycleViolations,
   importCycles,
@@ -34,7 +33,7 @@ test("an empty promise rejection handler needs a comment on its statement", () =
   assert.deepEqual(silentCatchViolations("h.ts", "void job().catch((error) => log(error));\n"), []);
 });
 
-test("new import cycles fail while recorded cycles are tolerated", () => {
+test("an import cycle fails", () => {
   const graph = new Map([
     ["a.ts", new Set(["b.ts"])],
     ["b.ts", new Set(["a.ts"])],
@@ -97,13 +96,11 @@ test("only the reviewed entries may enter a workspace scope", () => {
     assert.equal(workspaceActorViolations(entry, scoped).length, 0);
 });
 
-test("the repository has no silent catches and no new import cycles", () => {
+test("the repository has no silent catches and no import cycles", () => {
   assert.deepEqual(silentCatchReport(), []);
   assert.deepEqual(workspaceActorReport(), []);
   const graph = apiImportGraph();
   assert.ok(graph.size > 100, "the API import graph was actually read");
+  assert.deepEqual(importCycles(graph), []);
   assert.deepEqual(cycleViolations(graph), []);
-  // Recorded cycles must still exist exactly; remove an entry once its cycle is broken.
-  const actual = new Set(importCycles(graph).map((cycle) => cycle.join("|")));
-  for (const known of KNOWN_CYCLES) assert.ok(actual.has([...known].sort().join("|")), known.join(" -> "));
 });

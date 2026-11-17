@@ -67,7 +67,8 @@ Rules that apply now:
   `pnpm --filter @workspace/api-spec run codegen`. Never edit generated files.
 - Validate all request input with the generated Zod schemas.
 - An empty `catch` or `.catch(() => {})` needs a comment saying why the error is
-  ignored. Prefer logging it. New import cycles fail CI.
+  ignored. Prefer logging it. Import cycles fail CI, type-only and lazy imports
+  included.
 - oxlint checks the code with type information (`.oxlintrc.json`). A promise
   nobody awaits is handled or marked with `void`. An exception names the rule
   and says why: `// oxlint-disable-next-line <plugin>/<rule> -- <reason>`; one that
