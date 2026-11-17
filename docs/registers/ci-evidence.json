@@ -245,6 +245,27 @@
       "file": "artifacts/valo/src/components/release-notices.test.tsx",
       "test": "the web app never claims lawyer approval, professional verification or guaranteed compliance",
       "proves": "No sentence in the web app's source claims lawyer approval, legal or professional verification or guaranteed compliance unless it denies the claim."
+    },
+    {
+      "requirement": "WEB-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/discoverability.test.ts",
+      "test": "the sitemap lists the public pages and released items only, never accounts, drafts or staff pages",
+      "proves": "The sitemap lists the fixed public pages and the released items the configured origin's discovery endpoint returns, with their review dates, and drops any workspace, staff, account or traversal path it is given."
+    },
+    {
+      "requirement": "WEB-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/discoverability.test.ts",
+      "test": "public pages get a title, description and canonical URL; private or unknown pages get neither",
+      "proves": "Public pages and released items get their own title, description and canonical URL; workspace, staff, account and unreleased pages get only an unavailable-or-private title, and every page stays out of search engines until launch."
+    },
+    {
+      "requirement": "WEB-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/discoverability.test.ts",
+      "test": "the web app shows no testimonials, customer counts, ratings or regulator endorsements",
+      "proves": "No sentence in the web app's source shows a testimonial, customer count, rating or regulator or government endorsement unless it denies one, and every page's footer says no regulator endorses Valo."
     }
   ]
 }
