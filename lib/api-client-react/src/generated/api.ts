@@ -204,7 +204,7 @@ export const getStaffRoleAdministration = async (params?: GetStaffRoleAdministra
 
 export const getGetStaffRoleAdministrationQueryKey = (params?: GetStaffRoleAdministrationParams,) => {
     return [
-    `/api/admin/staff-roles`, ...(params ? [params] : [])
+    "getStaffRoleAdministration", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -462,7 +462,7 @@ export const getPublicDiscovery = async ( options?: Parameters<typeof customFetc
 
 export const getGetPublicDiscoveryQueryKey = () => {
     return [
-    `/api/public/discovery`
+    "getPublicDiscovery"
     ] as const;
     }
 
@@ -638,7 +638,7 @@ export const listReleasedResources = async ( options?: Parameters<typeof customF
 
 export const getListReleasedResourcesQueryKey = () => {
     return [
-    `/api/public/resources`
+    "listReleasedResources"
     ] as const;
     }
 
@@ -712,7 +712,7 @@ export const getGetReleasedResourceUrl = (slug: string,) => {
 
 
 
-  return `/api/public/resources/${slug}`
+  return `/api/public/resources/${encodeURIComponent(String(slug))}`
 }
 
 export const getReleasedResource = async (slug: string, options?: Parameters<typeof customFetch>[1]): Promise<ReleasedResource> => {
@@ -732,7 +732,7 @@ export const getReleasedResource = async (slug: string, options?: Parameters<typ
 
 export const getGetReleasedResourceQueryKey = (slug: string,) => {
     return [
-    `/api/public/resources/${slug}`
+    "getReleasedResource", ...(slug ? [slug] : [])
     ] as const;
     }
 
@@ -826,7 +826,7 @@ export const getCustomerAccount = async ( options?: Parameters<typeof customFetc
 
 export const getGetCustomerAccountQueryKey = () => {
     return [
-    `/api/workspace/account`
+    "getCustomerAccount"
     ] as const;
     }
 
@@ -1002,7 +1002,7 @@ export const downloadWorkspaceData = async ( options?: Parameters<typeof customF
 
 export const getDownloadWorkspaceDataQueryKey = () => {
     return [
-    `/api/workspace/data-export`
+    "downloadWorkspaceData"
     ] as const;
     }
 
@@ -1103,7 +1103,7 @@ export const listWorkspaceDataExports = async (params?: ListWorkspaceDataExports
 
 export const getListWorkspaceDataExportsQueryKey = (params?: ListWorkspaceDataExportsParams,) => {
     return [
-    `/api/workspace/data-exports`, ...(params ? [params] : [])
+    "listWorkspaceDataExports", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -1259,7 +1259,7 @@ export const getGetWorkspaceDataExportUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/data-exports/${id}`
+  return `/api/workspace/data-exports/${encodeURIComponent(String(id))}`
 }
 
 export const getWorkspaceDataExport = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceExportJob> => {
@@ -1279,7 +1279,7 @@ export const getWorkspaceDataExport = async (id: string, options?: Parameters<ty
 
 export const getGetWorkspaceDataExportQueryKey = (id: string,) => {
     return [
-    `/api/workspace/data-exports/${id}`
+    "getWorkspaceDataExport", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -1353,7 +1353,7 @@ export const getCancelWorkspaceDataExportUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/data-exports/${id}/cancel`
+  return `/api/workspace/data-exports/${encodeURIComponent(String(id))}/cancel`
 }
 
 export const cancelWorkspaceDataExport = async (id: string,
@@ -1436,7 +1436,7 @@ export const getRetryWorkspaceDataExportUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/data-exports/${id}/retry`
+  return `/api/workspace/data-exports/${encodeURIComponent(String(id))}/retry`
 }
 
 export const retryWorkspaceDataExport = async (id: string,
@@ -1519,7 +1519,7 @@ export const getDownloadWorkspaceDataArtifactUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/data-exports/${id}/download`
+  return `/api/workspace/data-exports/${encodeURIComponent(String(id))}/download`
 }
 
 export const downloadWorkspaceDataArtifact = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<WorkspaceDataExport | Blob> => {
@@ -1539,7 +1539,7 @@ export const downloadWorkspaceDataArtifact = async (id: string, options?: Parame
 
 export const getDownloadWorkspaceDataArtifactQueryKey = (id: string,) => {
     return [
-    `/api/workspace/data-exports/${id}/download`
+    "downloadWorkspaceDataArtifact", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -1633,7 +1633,7 @@ export const getCustomerPurchases = async ( options?: Parameters<typeof customFe
 
 export const getGetCustomerPurchasesQueryKey = () => {
     return [
-    `/api/workspace/purchases`
+    "getCustomerPurchases"
     ] as const;
     }
 
@@ -1789,7 +1789,7 @@ export const getStartCommerceCheckoutUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/orders/${id}/checkout`
+  return `/api/workspace/orders/${encodeURIComponent(String(id))}/checkout`
 }
 
 export const startCommerceCheckout = async (id: string,
@@ -1872,7 +1872,7 @@ export const getRefreshCommerceOrderUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/orders/${id}/refresh`
+  return `/api/workspace/orders/${encodeURIComponent(String(id))}/refresh`
 }
 
 export const refreshCommerceOrder = async (id: string,
@@ -1955,7 +1955,7 @@ export const getGetCommerceReceiptUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/orders/${id}/receipt`
+  return `/api/workspace/orders/${encodeURIComponent(String(id))}/receipt`
 }
 
 export const getCommerceReceipt = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<GetCommerceReceipt200> => {
@@ -1975,7 +1975,7 @@ export const getCommerceReceipt = async (id: string, options?: Parameters<typeof
 
 export const getGetCommerceReceiptQueryKey = (id: string,) => {
     return [
-    `/api/workspace/orders/${id}/receipt`
+    "getCommerceReceipt", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -2049,7 +2049,7 @@ export const getRequestCommerceRefundUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/orders/${id}/refund`
+  return `/api/workspace/orders/${encodeURIComponent(String(id))}/refund`
 }
 
 export const requestCommerceRefund = async (id: string,
@@ -2159,7 +2159,7 @@ export const getStaffOperations = async (params: GetStaffOperationsParams, optio
 
 export const getGetStaffOperationsQueryKey = (params?: GetStaffOperationsParams,) => {
     return [
-    `/api/admin/operations`, ...(params ? [params] : [])
+    "getStaffOperations", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -2233,7 +2233,7 @@ export const getGetOrderDisputeInformationUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/orders/${id}/dispute-information`
+  return `/api/workspace/orders/${encodeURIComponent(String(id))}/dispute-information`
 }
 
 export const getOrderDisputeInformation = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<DisputeInformationList> => {
@@ -2253,7 +2253,7 @@ export const getOrderDisputeInformation = async (id: string, options?: Parameter
 
 export const getGetOrderDisputeInformationQueryKey = (id: string,) => {
     return [
-    `/api/workspace/orders/${id}/dispute-information`
+    "getOrderDisputeInformation", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -2327,7 +2327,7 @@ export const getSaveOrderDisputeInformationUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/orders/${id}/dispute-information`
+  return `/api/workspace/orders/${encodeURIComponent(String(id))}/dispute-information`
 }
 
 export const saveOrderDisputeInformation = async (id: string,
@@ -2410,7 +2410,7 @@ export const getGetFinanceDisputeUrl = (id: string,) => {
 
 
 
-  return `/api/admin/disputes/${id}`
+  return `/api/admin/disputes/${encodeURIComponent(String(id))}`
 }
 
 export const getFinanceDispute = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<FinanceDispute> => {
@@ -2430,7 +2430,7 @@ export const getFinanceDispute = async (id: string, options?: Parameters<typeof 
 
 export const getGetFinanceDisputeQueryKey = (id: string,) => {
     return [
-    `/api/admin/disputes/${id}`
+    "getFinanceDispute", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -2504,7 +2504,7 @@ export const getPrepareFinanceDisputeUrl = (id: string,) => {
 
 
 
-  return `/api/admin/disputes/${id}/actions`
+  return `/api/admin/disputes/${encodeURIComponent(String(id))}/actions`
 }
 
 export const prepareFinanceDispute = async (id: string,
@@ -2588,7 +2588,7 @@ export const getControlFinanceDisputeUrl = (id: string,
 
 
 
-  return `/api/admin/dispute-actions/${id}/${operation}`
+  return `/api/admin/dispute-actions/${encodeURIComponent(String(id))}/${encodeURIComponent(String(operation))}`
 }
 
 export const controlFinanceDispute = async (id: string,
@@ -2692,7 +2692,7 @@ export const getFinanceRefunds = async ( options?: Parameters<typeof customFetch
 
 export const getGetFinanceRefundsQueryKey = () => {
     return [
-    `/api/admin/refunds`
+    "getFinanceRefunds"
     ] as const;
     }
 
@@ -2766,7 +2766,7 @@ export const getDecideFinanceRefundUrl = (id: string,) => {
 
 
 
-  return `/api/admin/refunds/${id}/decision`
+  return `/api/admin/refunds/${encodeURIComponent(String(id))}/decision`
 }
 
 export const decideFinanceRefund = async (id: string,
@@ -2849,7 +2849,7 @@ export const getReconcileFinanceRefundUrl = (id: string,) => {
 
 
 
-  return `/api/admin/refunds/${id}/reconcile`
+  return `/api/admin/refunds/${encodeURIComponent(String(id))}/reconcile`
 }
 
 export const reconcileFinanceRefund = async (id: string,
@@ -2932,7 +2932,7 @@ export const getListDocumentExportsUrl = (id: string,) => {
 
 
 
-  return `/api/v1/documents/${id}/exports`
+  return `/api/v1/documents/${encodeURIComponent(String(id))}/exports`
 }
 
 export const listDocumentExports = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ExportJob[]> => {
@@ -2952,7 +2952,7 @@ export const listDocumentExports = async (id: string, options?: Parameters<typeo
 
 export const getListDocumentExportsQueryKey = (id: string,) => {
     return [
-    `/api/v1/documents/${id}/exports`
+    "listDocumentExports", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -3026,7 +3026,7 @@ export const getCreateDocumentExportUrl = (id: string,) => {
 
 
 
-  return `/api/v1/documents/${id}/exports`
+  return `/api/v1/documents/${encodeURIComponent(String(id))}/exports`
 }
 
 export const createDocumentExport = async (id: string,
@@ -3109,7 +3109,7 @@ export const getRetryDocumentExportUrl = (id: string,) => {
 
 
 
-  return `/api/v1/exports/${id}/retry`
+  return `/api/v1/exports/${encodeURIComponent(String(id))}/retry`
 }
 
 export const retryDocumentExport = async (id: string,
@@ -3192,7 +3192,7 @@ export const getDownloadDocumentExportUrl = (id: string,) => {
 
 
 
-  return `/api/v1/exports/${id}/file`
+  return `/api/v1/exports/${encodeURIComponent(String(id))}/file`
 }
 
 export const downloadDocumentExport = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
@@ -3212,7 +3212,7 @@ export const downloadDocumentExport = async (id: string, options?: Parameters<ty
 
 export const getDownloadDocumentExportQueryKey = (id: string,) => {
     return [
-    `/api/v1/exports/${id}/file`
+    "downloadDocumentExport", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -3306,7 +3306,7 @@ export const getPublicCoverage = async ( options?: Parameters<typeof customFetch
 
 export const getGetPublicCoverageQueryKey = () => {
     return [
-    `/api/public/coverage`
+    "getPublicCoverage"
     ] as const;
     }
 
@@ -3400,7 +3400,7 @@ export const getSourceEvidence = async ( options?: Parameters<typeof customFetch
 
 export const getGetSourceEvidenceQueryKey = () => {
     return [
-    `/api/development/source-evidence`
+    "getSourceEvidence"
     ] as const;
     }
 
@@ -3494,7 +3494,7 @@ export const getProofRegister = async ( options?: Parameters<typeof customFetch>
 
 export const getGetProofRegisterQueryKey = () => {
     return [
-    `/api/development/proof`
+    "getProofRegister"
     ] as const;
     }
 
@@ -3588,7 +3588,7 @@ export const getContentRegister = async ( options?: Parameters<typeof customFetc
 
 export const getGetContentRegisterQueryKey = () => {
     return [
-    `/api/development/content`
+    "getContentRegister"
     ] as const;
     }
 
@@ -3682,7 +3682,7 @@ export const getRequirementsRegister = async ( options?: Parameters<typeof custo
 
 export const getGetRequirementsRegisterQueryKey = () => {
     return [
-    `/api/development/requirements`
+    "getRequirementsRegister"
     ] as const;
     }
 
@@ -3783,7 +3783,7 @@ export const listPublicCatalogue = async (params?: ListPublicCatalogueParams, op
 
 export const getListPublicCatalogueQueryKey = (params?: ListPublicCatalogueParams,) => {
     return [
-    `/api/public/catalogue`, ...(params ? [params] : [])
+    "listPublicCatalogue", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -3857,7 +3857,7 @@ export const getGetReleasedTemplateUrl = (slug: string,) => {
 
 
 
-  return `/api/public/templates/${slug}`
+  return `/api/public/templates/${encodeURIComponent(String(slug))}`
 }
 
 export const getReleasedTemplate = async (slug: string, options?: Parameters<typeof customFetch>[1]): Promise<ReleasedTemplate> => {
@@ -3877,7 +3877,7 @@ export const getReleasedTemplate = async (slug: string, options?: Parameters<typ
 
 export const getGetReleasedTemplateQueryKey = (slug: string,) => {
     return [
-    `/api/public/templates/${slug}`
+    "getReleasedTemplate", ...(slug ? [slug] : [])
     ] as const;
     }
 
@@ -3971,7 +3971,7 @@ export const listSavedTemplates = async ( options?: Parameters<typeof customFetc
 
 export const getListSavedTemplatesQueryKey = () => {
     return [
-    `/api/workspace/saved-templates`
+    "listSavedTemplates"
     ] as const;
     }
 
@@ -4045,7 +4045,7 @@ export const getSaveReleasedTemplateUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/saved-templates/${id}`
+  return `/api/workspace/saved-templates/${encodeURIComponent(String(id))}`
 }
 
 export const saveReleasedTemplate = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<SavedTemplates> => {
@@ -4113,7 +4113,7 @@ export const getUnsaveTemplateUrl = (templateId: string,) => {
 
 
 
-  return `/api/workspace/saved-templates/by-template/${templateId}`
+  return `/api/workspace/saved-templates/by-template/${encodeURIComponent(String(templateId))}`
 }
 
 export const unsaveTemplate = async (templateId: string, options?: Parameters<typeof customFetch>[1]): Promise<SavedTemplates> => {
@@ -4201,7 +4201,7 @@ export const listOperationalRecommendations = async ( options?: Parameters<typeo
 
 export const getListOperationalRecommendationsQueryKey = () => {
     return [
-    `/api/public/recommendations`
+    "listOperationalRecommendations"
     ] as const;
     }
 
@@ -4275,7 +4275,7 @@ export const getCreateTemplateDraftUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/templates/${id}/draft`
+  return `/api/workspace/templates/${encodeURIComponent(String(id))}/draft`
 }
 
 export const createTemplateDraft = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<BusinessDocument> => {
@@ -4344,7 +4344,7 @@ export const getDownloadReleasedTemplateUrl = (id: string,
 
 
 
-  return `/api/workspace/templates/${id}/files/${format}`
+  return `/api/workspace/templates/${encodeURIComponent(String(id))}/files/${encodeURIComponent(String(format))}`
 }
 
 export const downloadReleasedTemplate = async (id: string,
@@ -4366,7 +4366,7 @@ export const downloadReleasedTemplate = async (id: string,
 export const getDownloadReleasedTemplateQueryKey = (id: string,
     format: 'docx' | 'pdf',) => {
     return [
-    `/api/workspace/templates/${id}/files/${format}`
+    "downloadReleasedTemplate", ...(format ? [format] : []), ...(id ? [id] : [])
     ] as const;
     }
 
@@ -4465,7 +4465,7 @@ export const getBuildStatus = async ( options?: Parameters<typeof customFetch>[1
 
 export const getGetBuildStatusQueryKey = () => {
     return [
-    `/api/public/status`
+    "getBuildStatus"
     ] as const;
     }
 
@@ -4559,7 +4559,7 @@ export const getWorkspace = async ( options?: Parameters<typeof customFetch>[1])
 
 export const getGetWorkspaceQueryKey = () => {
     return [
-    `/api/workspace`
+    "getWorkspace"
     ] as const;
     }
 
@@ -4735,7 +4735,7 @@ export const listDocuments = async ( options?: Parameters<typeof customFetch>[1]
 
 export const getListDocumentsQueryKey = () => {
     return [
-    `/api/workspace/documents`
+    "listDocuments"
     ] as const;
     }
 
@@ -4891,7 +4891,7 @@ export const getGetDocumentUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/documents/${id}`
+  return `/api/workspace/documents/${encodeURIComponent(String(id))}`
 }
 
 export const getDocument = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<BusinessDocument> => {
@@ -4911,7 +4911,7 @@ export const getDocument = async (id: string, options?: Parameters<typeof custom
 
 export const getGetDocumentQueryKey = (id: string,) => {
     return [
-    `/api/workspace/documents/${id}`
+    "getDocument", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -4985,7 +4985,7 @@ export const getSaveDocumentUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/documents/${id}`
+  return `/api/workspace/documents/${encodeURIComponent(String(id))}`
 }
 
 export const saveDocument = async (id: string,
@@ -5068,7 +5068,7 @@ export const getListDocumentRevisionsUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/documents/${id}/revisions`
+  return `/api/workspace/documents/${encodeURIComponent(String(id))}/revisions`
 }
 
 export const listDocumentRevisions = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<BusinessDocument[]> => {
@@ -5088,7 +5088,7 @@ export const listDocumentRevisions = async (id: string, options?: Parameters<typ
 
 export const getListDocumentRevisionsQueryKey = (id: string,) => {
     return [
-    `/api/workspace/documents/${id}/revisions`
+    "listDocumentRevisions", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -5268,7 +5268,7 @@ export const verifySessionMfa = async ( options?: Parameters<typeof customFetch>
 
 export const getVerifySessionMfaQueryKey = () => {
     return [
-    `/api/session/mfa`
+    "verifySessionMfa"
     ] as const;
     }
 
@@ -5382,7 +5382,7 @@ export const healthCheck = async ( options?: Parameters<typeof customFetch>[1]):
 
 export const getHealthCheckQueryKey = () => {
     return [
-    `/api/healthz`
+    "healthCheck"
     ] as const;
     }
 
@@ -5554,7 +5554,7 @@ export const getGetCustomerAIDraftUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/ai-drafts/${id}`
+  return `/api/workspace/ai-drafts/${encodeURIComponent(String(id))}`
 }
 
 export const getCustomerAIDraft = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CustomerAIPreview> => {
@@ -5574,7 +5574,7 @@ export const getCustomerAIDraft = async (id: string, options?: Parameters<typeof
 
 export const getGetCustomerAIDraftQueryKey = (id: string,) => {
     return [
-    `/api/workspace/ai-drafts/${id}`
+    "getCustomerAIDraft", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -5648,7 +5648,7 @@ export const getAcceptCustomerAIDraftUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/ai-drafts/${id}/accept`
+  return `/api/workspace/ai-drafts/${encodeURIComponent(String(id))}/accept`
 }
 
 export const acceptCustomerAIDraft = async (id: string,
@@ -5751,7 +5751,7 @@ export const getCustomerAIUsage = async ( options?: Parameters<typeof customFetc
 
 export const getGetCustomerAIUsageQueryKey = () => {
     return [
-    `/api/workspace/ai-usage`
+    "getCustomerAIUsage"
     ] as const;
     }
 
@@ -6009,7 +6009,7 @@ export const listAssessments = async ( options?: Parameters<typeof customFetch>[
 
 export const getListAssessmentsQueryKey = () => {
     return [
-    `/api/workspace/assessments`
+    "listAssessments"
     ] as const;
     }
 
@@ -6165,7 +6165,7 @@ export const getGetAssessmentUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/assessments/${id}`
+  return `/api/workspace/assessments/${encodeURIComponent(String(id))}`
 }
 
 export const getAssessment = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<SavedAssessment> => {
@@ -6185,7 +6185,7 @@ export const getAssessment = async (id: string, options?: Parameters<typeof cust
 
 export const getGetAssessmentQueryKey = (id: string,) => {
     return [
-    `/api/workspace/assessments/${id}`
+    "getAssessment", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -6260,7 +6260,7 @@ export const getCompareAssessmentsUrl = (id: string,
 
 
 
-  return `/api/workspace/assessments/${id}/compare/${previousId}`
+  return `/api/workspace/assessments/${encodeURIComponent(String(id))}/compare/${encodeURIComponent(String(previousId))}`
 }
 
 export const compareAssessments = async (id: string,
@@ -6282,7 +6282,7 @@ export const compareAssessments = async (id: string,
 export const getCompareAssessmentsQueryKey = (id: string,
     previousId: string,) => {
     return [
-    `/api/workspace/assessments/${id}/compare/${previousId}`
+    "compareAssessments", ...(previousId ? [previousId] : []), ...(id ? [id] : [])
     ] as const;
     }
 
@@ -6388,7 +6388,7 @@ export const listTasksPage = async (params?: ListTasksPageParams, options?: Para
 
 export const getListTasksPageQueryKey = (params?: ListTasksPageParams,) => {
     return [
-    `/api/workspace/tasks/page`, ...(params ? [params] : [])
+    "listTasksPage", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -6482,7 +6482,7 @@ export const listTasks = async ( options?: Parameters<typeof customFetch>[1]): P
 
 export const getListTasksQueryKey = () => {
     return [
-    `/api/workspace/tasks`
+    "listTasks"
     ] as const;
     }
 
@@ -6638,7 +6638,7 @@ export const getUpdateTaskUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/tasks/${id}`
+  return `/api/workspace/tasks/${encodeURIComponent(String(id))}`
 }
 
 export const updateTask = async (id: string,
@@ -6721,7 +6721,7 @@ export const getDeleteTaskUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/tasks/${id}`
+  return `/api/workspace/tasks/${encodeURIComponent(String(id))}`
 }
 
 export const deleteTask = async (id: string,
@@ -6824,7 +6824,7 @@ export const getReminderPreferences = async ( options?: Parameters<typeof custom
 
 export const getGetReminderPreferencesQueryKey = () => {
     return [
-    `/api/workspace/reminder-preferences`
+    "getReminderPreferences"
     ] as const;
     }
 
@@ -7000,7 +7000,7 @@ export const listReminders = async ( options?: Parameters<typeof customFetch>[1]
 
 export const getListRemindersQueryKey = () => {
     return [
-    `/api/workspace/reminders`
+    "listReminders"
     ] as const;
     }
 
@@ -7094,7 +7094,7 @@ export const listPrivacyCases = async ( options?: Parameters<typeof customFetch>
 
 export const getListPrivacyCasesQueryKey = () => {
     return [
-    `/api/workspace/privacy-cases`
+    "listPrivacyCases"
     ] as const;
     }
 
@@ -7168,7 +7168,7 @@ export const getRespondPrivacyCaseUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/privacy-cases/${id}/respond`
+  return `/api/workspace/privacy-cases/${encodeURIComponent(String(id))}/respond`
 }
 
 export const respondPrivacyCase = async (id: string,
@@ -7251,7 +7251,7 @@ export const getGetPrivacyCaseUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/privacy-cases/${id}`
+  return `/api/workspace/privacy-cases/${encodeURIComponent(String(id))}`
 }
 
 export const getPrivacyCase = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<PrivacyCaseDetail> => {
@@ -7271,7 +7271,7 @@ export const getPrivacyCase = async (id: string, options?: Parameters<typeof cus
 
 export const getGetPrivacyCaseQueryKey = (id: string,) => {
     return [
-    `/api/workspace/privacy-cases/${id}`
+    "getPrivacyCase", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -7345,7 +7345,7 @@ export const getVerifyPrivacyCaseUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/privacy-cases/${id}/verify`
+  return `/api/workspace/privacy-cases/${encodeURIComponent(String(id))}/verify`
 }
 
 export const verifyPrivacyCase = async (id: string,
@@ -7428,7 +7428,7 @@ export const getCancelPrivacyCaseUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/privacy-cases/${id}/cancel`
+  return `/api/workspace/privacy-cases/${encodeURIComponent(String(id))}/cancel`
 }
 
 export const cancelPrivacyCase = async (id: string,
@@ -7511,7 +7511,7 @@ export const getDownloadPrivacyCaseResultUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/privacy-cases/${id}/result`
+  return `/api/workspace/privacy-cases/${encodeURIComponent(String(id))}/result`
 }
 
 export const downloadPrivacyCaseResult = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<DownloadPrivacyCaseResult200> => {
@@ -7531,7 +7531,7 @@ export const downloadPrivacyCaseResult = async (id: string, options?: Parameters
 
 export const getDownloadPrivacyCaseResultQueryKey = (id: string,) => {
     return [
-    `/api/workspace/privacy-cases/${id}/result`
+    "downloadPrivacyCaseResult", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -7632,7 +7632,7 @@ export const listStaffPrivacyCases = async (params?: ListStaffPrivacyCasesParams
 
 export const getListStaffPrivacyCasesQueryKey = (params?: ListStaffPrivacyCasesParams,) => {
     return [
-    `/api/admin/privacy-cases`, ...(params ? [params] : [])
+    "listStaffPrivacyCases", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -7706,7 +7706,7 @@ export const getGetStaffPrivacyCaseUrl = (id: string,) => {
 
 
 
-  return `/api/admin/privacy-cases/${id}`
+  return `/api/admin/privacy-cases/${encodeURIComponent(String(id))}`
 }
 
 export const getStaffPrivacyCase = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<PrivacyCaseDetail> => {
@@ -7726,7 +7726,7 @@ export const getStaffPrivacyCase = async (id: string, options?: Parameters<typeo
 
 export const getGetStaffPrivacyCaseQueryKey = (id: string,) => {
     return [
-    `/api/admin/privacy-cases/${id}`
+    "getStaffPrivacyCase", ...(id ? [id] : [])
     ] as const;
     }
 
@@ -7800,7 +7800,7 @@ export const getActOnStaffPrivacyCaseUrl = (id: string,) => {
 
 
 
-  return `/api/admin/privacy-cases/${id}/action`
+  return `/api/admin/privacy-cases/${encodeURIComponent(String(id))}/action`
 }
 
 export const actOnStaffPrivacyCase = async (id: string,
@@ -7903,7 +7903,7 @@ export const getWorkspaceDisputes = async ( options?: Parameters<typeof customFe
 
 export const getGetWorkspaceDisputesQueryKey = () => {
     return [
-    `/api/workspace/disputes`
+    "getWorkspaceDisputes"
     ] as const;
     }
 
@@ -7977,7 +7977,7 @@ export const getCreatePaymentConcernUrl = (orderId: string,) => {
 
 
 
-  return `/api/workspace/orders/${orderId}/concerns`
+  return `/api/workspace/orders/${encodeURIComponent(String(orderId))}/concerns`
 }
 
 export const createPaymentConcern = async (orderId: string,
@@ -8060,7 +8060,7 @@ export const getRespondPaymentConcernUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/concerns/${id}/respond`
+  return `/api/workspace/concerns/${encodeURIComponent(String(id))}/respond`
 }
 
 export const respondPaymentConcern = async (id: string,
@@ -8143,7 +8143,7 @@ export const getActOnPaymentConcernUrl = (id: string,) => {
 
 
 
-  return `/api/admin/payment-concerns/${id}/action`
+  return `/api/admin/payment-concerns/${encodeURIComponent(String(id))}/action`
 }
 
 export const actOnPaymentConcern = async (id: string,
@@ -8246,7 +8246,7 @@ export const getFinancePaymentConcerns = async ( options?: Parameters<typeof cus
 
 export const getGetFinancePaymentConcernsQueryKey = () => {
     return [
-    `/api/admin/payment-concerns`
+    "getFinancePaymentConcerns"
     ] as const;
     }
 
@@ -8402,7 +8402,7 @@ export const getHoldFinanceDisputeUrl = (id: string,) => {
 
 
 
-  return `/api/admin/disputes/${id}/hold`
+  return `/api/admin/disputes/${encodeURIComponent(String(id))}/hold`
 }
 
 export const holdFinanceDispute = async (id: string,
@@ -8512,7 +8512,7 @@ export const getSourceControls = async (params: GetSourceControlsParams, options
 
 export const getGetSourceControlsQueryKey = (params?: GetSourceControlsParams,) => {
     return [
-    `/api/admin/source-controls`, ...(params ? [params] : [])
+    "getSourceControls", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -8695,7 +8695,7 @@ export const getCorrectionNotices = async (params?: GetCorrectionNoticesParams, 
 
 export const getGetCorrectionNoticesQueryKey = (params?: GetCorrectionNoticesParams,) => {
     return [
-    `/api/workspace/correction-notices`, ...(params ? [params] : [])
+    "getCorrectionNotices", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -8799,7 +8799,7 @@ export const listCustomerSupportCases = async (params?: ListCustomerSupportCases
 
 export const getListCustomerSupportCasesQueryKey = (params?: ListCustomerSupportCasesParams,) => {
     return [
-    `/api/workspace/support-cases`, ...(params ? [params] : [])
+    "listCustomerSupportCases", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -8885,7 +8885,7 @@ export const getGetCustomerSupportCaseUrl = (id: string,
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/workspace/support-cases/${id}?${stringifiedParams}` : `/api/workspace/support-cases/${id}`
+  return stringifiedParams.length > 0 ? `/api/workspace/support-cases/${encodeURIComponent(String(id))}?${stringifiedParams}` : `/api/workspace/support-cases/${encodeURIComponent(String(id))}`
 }
 
 /**
@@ -8910,7 +8910,7 @@ export const getCustomerSupportCase = async (id: string,
 export const getGetCustomerSupportCaseQueryKey = (id: string,
     params?: GetCustomerSupportCaseParams,) => {
     return [
-    `/api/workspace/support-cases/${id}`, ...(params ? [params] : [])
+    "getCustomerSupportCase", ...(id ? [id] : []), ...(params ? [params] : [])
     ] as const;
     }
 
@@ -8993,7 +8993,7 @@ export const getReplyToSupportCaseUrl = (id: string,) => {
 
 
 
-  return `/api/workspace/support-cases/${id}/reply`
+  return `/api/workspace/support-cases/${encodeURIComponent(String(id))}/reply`
 }
 
 /**
@@ -9114,7 +9114,7 @@ export const listStaffSupportCases = async (params?: ListStaffSupportCasesParams
 
 export const getListStaffSupportCasesQueryKey = (params?: ListStaffSupportCasesParams,) => {
     return [
-    `/api/admin/support-cases`, ...(params ? [params] : [])
+    "listStaffSupportCases", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -9215,7 +9215,7 @@ export const listSupportAssignees = async ( options?: Parameters<typeof customFe
 
 export const getListSupportAssigneesQueryKey = () => {
     return [
-    `/api/admin/support-cases/assignees`
+    "listSupportAssignees"
     ] as const;
     }
 
@@ -9301,7 +9301,7 @@ export const getGetStaffSupportCaseUrl = (id: string,
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/admin/support-cases/${id}?${stringifiedParams}` : `/api/admin/support-cases/${id}`
+  return stringifiedParams.length > 0 ? `/api/admin/support-cases/${encodeURIComponent(String(id))}?${stringifiedParams}` : `/api/admin/support-cases/${encodeURIComponent(String(id))}`
 }
 
 /**
@@ -9326,7 +9326,7 @@ export const getStaffSupportCase = async (id: string,
 export const getGetStaffSupportCaseQueryKey = (id: string,
     params?: GetStaffSupportCaseParams,) => {
     return [
-    `/api/admin/support-cases/${id}`, ...(params ? [params] : [])
+    "getStaffSupportCase", ...(id ? [id] : []), ...(params ? [params] : [])
     ] as const;
     }
 
@@ -9409,7 +9409,7 @@ export const getActOnSupportCaseUrl = (id: string,) => {
 
 
 
-  return `/api/admin/support-cases/${id}/action`
+  return `/api/admin/support-cases/${encodeURIComponent(String(id))}/action`
 }
 
 /**
@@ -9530,7 +9530,7 @@ export const listContentEscalations = async (params?: ListContentEscalationsPara
 
 export const getListContentEscalationsQueryKey = (params?: ListContentEscalationsParams,) => {
     return [
-    `/api/admin/support-escalations`, ...(params ? [params] : [])
+    "listContentEscalations", ...(params ? [params] : [])
     ] as const;
     }
 
@@ -9608,7 +9608,7 @@ export const getActOnContentEscalationUrl = (id: string,) => {
 
 
 
-  return `/api/admin/support-escalations/${id}/action`
+  return `/api/admin/support-escalations/${encodeURIComponent(String(id))}/action`
 }
 
 /**

@@ -82,6 +82,23 @@ function resolveUrl(input: RequestInfo | URL): string {
   return input.url;
 }
 
+// Generated functions encode each path parameter, but an empty, "." or ".." parameter
+// still changes the endpoint: "/api/workspace/documents/" is the document list, and
+// browsers resolve "/api/workspace/documents/.." to "/api/workspace/". URL parsing also
+// treats "%2e" as a dot, drops tabs and newlines and reads "\" as "/".
+const DOT_SEGMENT = /^(?:\.|%2e){1,2}$/i;
+
+/** Refuses a request path with an empty or dot segment before anything is sent. */
+export function assertRequestPath(url: string): void {
+  const path = url
+    .replace(/[\t\n\r]/g, "")
+    .replace(/^[a-z][a-z\d+.-]*:\/\/[^/\\?#]*/i, "")
+    .split(/[?#]/, 1)[0]!;
+  const segments = path === "" ? [] : (/^[/\\]/.test(path) ? path.slice(1) : path).split(/[/\\]/);
+  if (segments.some((segment) => segment === "" || DOT_SEGMENT.test(segment)))
+    throw new TypeError("customFetch: a path parameter is empty or a dot segment.");
+}
+
 function mergeHeaders(...sources: Array<HeadersInit | undefined>): Headers {
   const headers = new Headers();
 
@@ -324,6 +341,8 @@ export async function customFetch<T = unknown>(
   input: RequestInfo | URL,
   options: CustomFetchOptions = {},
 ): Promise<T> {
+  // Before the base URL or any URL parsing, which would already have resolved dot segments.
+  assertRequestPath(resolveUrl(input));
   const accountScope = captureRequestScope();
   input = applyBaseUrl(input);
   const { responseType = "auto", headers: headersInit, ...init } = options;

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 /** One HTTP operation declared in lib/api-spec/openapi.yaml, e.g. "PATCH /workspace/tasks/{id}". */
-export type ContractOperation = { method: string; path: string; key: string };
+export type ContractOperation = { method: string; path: string; key: string; operationId?: string };
 
 const contractPath = new URL("../../../../lib/api-spec/openapi.yaml", import.meta.url);
 const METHODS = new Set(["get", "post", "put", "patch", "delete"]);
@@ -16,34 +16,48 @@ const METHODS = new Set(["get", "post", "put", "patch", "delete"]);
 export function contractOperations(text = readFileSync(contractPath, "utf8")): ContractOperation[] {
   const operations: ContractOperation[] = [];
   let inPaths = false,
-    path: string | null = null;
+    path: string | null = null,
+    current: ContractOperation | null = null;
   for (const line of text.split("\n")) {
     if (/^\S/.test(line)) {
       inPaths = line.startsWith("paths:");
-      path = null;
+      path = current = null;
       continue;
     }
     if (!inPaths) continue;
     const inline = /^ {2}(\/\S*):\s*(\{.*\})\s*$/.exec(line);
     if (inline) {
-      const methods = Object.keys(JSON.parse(inline[2]!) as Record<string, unknown>);
-      for (const name of methods.filter((m) => METHODS.has(m))) {
+      const declared = JSON.parse(inline[2]!) as Record<string, { operationId?: string }>;
+      for (const name of Object.keys(declared).filter((m) => METHODS.has(m))) {
         const method = name.toUpperCase();
-        operations.push({ method, path: inline[1]!, key: `${method} ${inline[1]!}` });
+        operations.push({
+          method,
+          path: inline[1]!,
+          key: `${method} ${inline[1]!}`,
+          operationId: declared[name]?.operationId,
+        });
       }
-      path = null;
+      path = current = null;
       continue;
     }
     const pathMatch = /^ {2}(\/\S*):\s*$/.exec(line);
     if (pathMatch) {
       path = pathMatch[1]!;
+      current = null;
       continue;
     }
     const methodMatch = /^ {4}([a-z]+):\s*$/.exec(line);
-    if (methodMatch && path && METHODS.has(methodMatch[1]!)) {
-      const method = methodMatch[1]!.toUpperCase();
-      operations.push({ method, path, key: `${method} ${path}` });
+    if (methodMatch) {
+      current = null;
+      if (path && METHODS.has(methodMatch[1]!)) {
+        const method = methodMatch[1]!.toUpperCase();
+        current = { method, path, key: `${method} ${path}` };
+        operations.push(current);
+      }
+      continue;
     }
+    const operationId = /^ {6}operationId:\s*(\S+)\s*$/.exec(line);
+    if (operationId && current && !current.operationId) current.operationId = operationId[1]!;
   }
   return operations;
 }

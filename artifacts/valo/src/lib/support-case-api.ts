@@ -86,9 +86,6 @@ export const supportCaseKeys = {
 };
 // A successful status with an unreadable body stays uncertain instead of clearing a draft.
 const json = { responseType: "json" } as const;
-// Generated clients insert path parameters as given; encode them so an identifier can
-// never change which endpoint is called.
-const segment = (id: string) => encodeURIComponent(id);
 export function listSupportCases(
   staff: boolean,
   page: number,
@@ -106,8 +103,8 @@ export function getSupportCase(
   signal?: AbortSignal,
 ): Promise<SupportCaseDetail> {
   return staff
-    ? getStaffSupportCase(segment(id), { messagesPage }, { ...json, signal })
-    : getCustomerSupportCase(segment(id), { messagesPage }, { ...json, signal });
+    ? getStaffSupportCase(id, { messagesPage }, { ...json, signal })
+    : getCustomerSupportCase(id, { messagesPage }, { ...json, signal });
 }
 export function listSupportAssignees(signal?: AbortSignal) {
   return getSupportAssignees({ ...json, signal });
@@ -129,11 +126,11 @@ function confirmedCaseDetail(result: SupportCaseDetail, id: string, expectedVers
   return result;
 }
 export async function replyToSupportCase(id: string, input: SupportReplyInput) {
-  return confirmedCaseDetail(await postSupportReply(segment(id), input, json), id, input.expectedVersion);
+  return confirmedCaseDetail(await postSupportReply(id, input, json), id, input.expectedVersion);
 }
 export async function actOnSupportCase(id: string, input: SupportStaffInput) {
   return confirmedCaseDetail(
-    await postSupportCaseAction(segment(id), input as SupportCaseAction, json),
+    await postSupportCaseAction(id, input as SupportCaseAction, json),
     id,
     input.expectedVersion,
   );
@@ -142,7 +139,7 @@ export function listContentEscalations(page: number, signal?: AbortSignal): Prom
   return getContentEscalations({ page }, { ...json, signal });
 }
 export async function actOnContentEscalation(id: string, input: ContentEscalationInput) {
-  const result: ContentEscalationResult = await postContentEscalationAction(segment(id), input, json);
+  const result: ContentEscalationResult = await postContentEscalationAction(id, input, json);
   if (
     !result ||
     typeof result !== "object" ||

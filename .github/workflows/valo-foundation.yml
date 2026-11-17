@@ -153,6 +153,8 @@ jobs:
           path: generated-artifacts/valo-completion/workspace-export-jobs-*
       - name: Reject unsafe export modes and stale account requests
         run: pnpm --filter @workspace/api-server test:valo-runtime-boundaries
+      - name: Prove the generated web client keeps every identifier inside its path segment
+        run: pnpm --filter @workspace/api-server test:valo-client-paths
       - name: Prove scratch replay cursors preserve tenant and legacy scope
         run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-erasure-replay-cursor.test.ts
       - name: Check HTTP log privacy, internal alerts and recovery effects

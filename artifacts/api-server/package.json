@@ -14,6 +14,7 @@
     "test:valo-isolated-recovery": "NODE_ENV=development VALO_ISOLATED_RECOVERY=synthetic-local-only tsx src/scripts/isolated-recovery.ts",
     "valo:operations-probe": "NODE_ENV=development tsx src/scripts/operations-probe.ts",
     "test:valo-runtime-boundaries": "tsx --test src/lib/valo-development-runtime.test.ts src/lib/valo-request-scope.test.ts",
+    "test:valo-client-paths": "tsx --test src/lib/valo-client-paths.test.ts",
     "test:valo-source-candidates": "tsx --test src/editorial/business-name-candidate-evaluation.test.ts src/editorial/source-candidate-evaluation.test.ts",
     "evaluate:valo-source-checker": "tsx src/scripts/source-checker-evaluation.ts",
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
