@@ -107,6 +107,9 @@ Rules that apply now:
   that returns only that total, like `valo_customer_ai_reservations`. The shared
   inference ledger is written only through its functions
   (`valo_inference_budget_commit` and the others in decision 0008).
+- Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
+  dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
+  `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.
 
 ## 5. Checks
 

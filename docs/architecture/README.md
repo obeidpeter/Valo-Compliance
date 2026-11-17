@@ -98,7 +98,10 @@ Every change must keep these true. Each has tests; none may be weakened.
 6. **Payments.** Access is granted only after server-side verification with the
    provider. Test keys only; live mode needs a code change.
 7. **AI spend.** Model calls run only inside an owner-approved finite budget
-   context created by server code, never from an HTTP request.
+   context created by server code, never from an HTTP request. The operator
+   commands that create it hand the dispatcher the checks that compare each
+   approved work with the current code; only those commands may, and only with
+   the real checks.
 8. **Privacy.** Logs carry no private document text. Erasure works only on
    synthetic identities until a reviewed production procedure exists.
 9. **Development guards.** Development-only features refuse to run when

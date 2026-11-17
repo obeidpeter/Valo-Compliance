@@ -13,6 +13,7 @@ import ts from "typescript";
  * - import-cycle: no import cycles between API source files, counting type-only
  *   and lazy imports.
  * - workspace-actor: see workspaceActorViolations.
+ * - inference-bindings: see inferenceBindingViolations.
  */
 
 export const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -250,6 +251,65 @@ export function cycleViolations(graph = apiImportGraph()): string[] {
   return importCycles(graph).map((cycle) => `${cycle[0]}:1 import-cycle import cycle: ${cycle.join(" -> ")}`);
 }
 
+/**
+ * The only code that may hand the inference dispatcher the checks that compare approved work
+ * with the current code (provideFiniteWorkBindings): the operator commands that run approved
+ * inference work. A new caller needs review.
+ */
+export const FINITE_WORK_BINDING_ENTRIES = [
+  "artifacts/api-server/src/scripts/finite-customer-evaluation.ts",
+  "artifacts/api-server/src/scripts/finite-inference-run.ts",
+];
+
+/**
+ * inference-bindings: outside its own module, provideFiniteWorkBindings may appear only in the
+ * entries in FINITE_WORK_BINDING_ENTRIES, and there only as a call that passes the real
+ * assertFiniteWorkBindings, or where it is destructured from the module. Tests may pass
+ * stand-ins.
+ */
+export function inferenceBindingViolations(path: string, text: string): string[] {
+  if (!/\.tsx?$/.test(path) || /\.test\.tsx?$/.test(path) || !text.includes("provideFiniteWorkBindings"))
+    return [];
+  if (path === "artifacts/api-server/src/lib/managed-inference.ts") return [];
+  const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const violations: string[] = [];
+  const report = (node: ts.Node, message: string) =>
+    violations.push(`${path}:${lineOf(source, node.getStart(source))} inference-bindings ${message}`);
+  const entry = FINITE_WORK_BINDING_ENTRIES.includes(path);
+  const visit = (node: ts.Node) => {
+    if (ts.isIdentifier(node) && node.text === "provideFiniteWorkBindings") {
+      const parent = node.parent;
+      const call = ts.isCallExpression(parent) && parent.expression === node ? parent : undefined;
+      const destructured = ts.isBindingElement(parent) && parent.name === node && !parent.propertyName;
+      if (!entry)
+        report(
+          node,
+          "only the reviewed entries in FINITE_WORK_BINDING_ENTRIES may provide work-binding checks",
+        );
+      else if (call) {
+        const [checks] = call.arguments;
+        if (
+          call.arguments.length !== 1 ||
+          !checks ||
+          !ts.isIdentifier(checks) ||
+          checks.text !== "assertFiniteWorkBindings"
+        )
+          report(node, "provide the real assertFiniteWorkBindings");
+      } else if (!destructured)
+        report(node, "call provideFiniteWorkBindings directly; do not pass it on or rename it");
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return violations;
+}
+
+export function inferenceBindingReport(root = repositoryRoot): string[] {
+  return sourceFiles(join(root, "artifacts/api-server/src"), isProductSource).flatMap((file) =>
+    inferenceBindingViolations(relative(root, file), readFileSync(file, "utf8")),
+  );
+}
+
 export function silentCatchReport(root = repositoryRoot): string[] {
   const roots = [
     "artifacts/api-server/src",
@@ -267,7 +327,12 @@ export function silentCatchReport(root = repositoryRoot): string[] {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
-  const violations = [...silentCatchReport(), ...cycleViolations(), ...workspaceActorReport()];
+  const violations = [
+    ...silentCatchReport(),
+    ...cycleViolations(),
+    ...workspaceActorReport(),
+    ...inferenceBindingReport(),
+  ];
   for (const violation of violations) process.stdout.write(`${violation}\n`);
   process.stdout.write(`architecture check: ${violations.length} violation(s)\n`);
   if (violations.length) process.exitCode = 1;

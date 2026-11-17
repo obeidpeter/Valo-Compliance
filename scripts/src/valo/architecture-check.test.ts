@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  FINITE_WORK_BINDING_ENTRIES,
   apiImportGraph,
   cycleViolations,
   importCycles,
+  inferenceBindingReport,
+  inferenceBindingViolations,
   silentCatchReport,
   silentCatchViolations,
   WORKSPACE_SCOPE_ENTRIES,
@@ -96,9 +99,50 @@ test("only the reviewed entries may enter a workspace scope", () => {
     assert.equal(workspaceActorViolations(entry, scoped).length, 0);
 });
 
-test("the repository has no silent catches and no import cycles", () => {
+test("only the reviewed operator commands provide the dispatcher's binding checks, and only the real ones", () => {
+  const [entry] = FINITE_WORK_BINDING_ENTRIES;
+  const flagged = (path: string, text: string) => inferenceBindingViolations(path, text);
+  const real =
+    "const { provideFiniteWorkBindings } = await import('../lib/managed-inference');\nprovideFiniteWorkBindings(assertFiniteWorkBindings);\n";
+  assert.deepEqual(flagged(entry!, real), []);
+  assert.match(
+    flagged("artifacts/api-server/src/lib/example.ts", real)[0]!,
+    /inference-bindings only the reviewed entries/,
+  );
+  assert.match(
+    flagged(entry!, "provideFiniteWorkBindings(async () => {});\n")[0]!,
+    /provide the real assertFiniteWorkBindings/,
+  );
+  assert.match(
+    flagged(entry!, "provideFiniteWorkBindings(assertFiniteWorkBindings, extra);\n")[0]!,
+    /provide the real assertFiniteWorkBindings/,
+  );
+  assert.match(
+    flagged(entry!, "const provide = provideFiniteWorkBindings;\n")[0]!,
+    /do not pass it on or rename it/,
+  );
+  assert.match(
+    flagged(entry!, "const { provideFiniteWorkBindings: provide } = managed;\n")[0]!,
+    /do not pass it on or rename it/,
+  );
+  // Tests may compose the dispatcher with stand-ins, and the module defines the function.
+  assert.deepEqual(
+    flagged("artifacts/api-server/src/lib/example.test.ts", "provideFiniteWorkBindings(async () => {});\n"),
+    [],
+  );
+  assert.deepEqual(
+    flagged(
+      "artifacts/api-server/src/lib/managed-inference.ts",
+      "export function provideFiniteWorkBindings() {}\n",
+    ),
+    [],
+  );
+});
+
+test("the repository has no silent catches, no import cycles and no unreviewed binding checks", () => {
   assert.deepEqual(silentCatchReport(), []);
   assert.deepEqual(workspaceActorReport(), []);
+  assert.deepEqual(inferenceBindingReport(), []);
   const graph = apiImportGraph();
   assert.ok(graph.size > 100, "the API import graph was actually read");
   assert.deepEqual(importCycles(graph), []);

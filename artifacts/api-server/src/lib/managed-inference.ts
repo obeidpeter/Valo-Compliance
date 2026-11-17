@@ -46,7 +46,9 @@ let workBindings: WorkBindingChecks | undefined;
  * Server composition only: the operator command that runs approved work hands the default
  * dispatcher the checks that compare each approved work with the current code
  * (`assertFiniteWorkBindings`). This module cannot import them, because those checks load the
- * callers that call it. Without them the default dispatcher holds every request.
+ * callers that call it. Without them the default dispatcher holds every request. Only the
+ * reviewed entries in FINITE_WORK_BINDING_ENTRIES may call this (repository rule
+ * `inference-bindings`).
  */
 export function provideFiniteWorkBindings(checks: WorkBindingChecks) {
   if (workBindings && workBindings !== checks) throw Error("FINITE_WORK_BINDINGS_ALREADY_PROVIDED");
