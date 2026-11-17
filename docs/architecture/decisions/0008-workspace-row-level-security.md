@@ -182,6 +182,3 @@ application would stop it.
 - The worker enters scopes too, so it needs `VALO_CUSTOMER_DATABASE_URL` as the API
   does. A job that starts reading another table, or writing in its scope, needs the
   grant first; until then it fails with `permission denied`, and its tests show it.
-- Reminder delivery still waits for the email provider inside its transaction,
-  against the rule in `AGENTS.md`. Changing that changes how a reminder cancelled
-  during a send is recorded, so it is left for its own change.

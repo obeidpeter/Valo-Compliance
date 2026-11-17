@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { eq } from "drizzle-orm";
+import pg from "pg";
 import {
   db,
   pool,
@@ -300,6 +301,115 @@ test(
           }
         },
       );
+      const preferences = async (enabled: boolean) => {
+        const [current] = await db
+          .select()
+          .from(valoReminderPreferences)
+          .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId));
+        await saveReminderPreferences(actor, {
+          enabled,
+          offsets: enabled ? [1] : [],
+          expectedRevision: current!.revision,
+        });
+      };
+      await t.test("the provider is called with no transaction or lock held", async () => {
+        const r = await fresh();
+        const observer = new pg.Client({ connectionString: process.env.DATABASE_URL });
+        await observer.connect();
+        try {
+          let seen: { locked: number; open: number } | undefined;
+          const status = await processReminder(
+            actor.workspaceId,
+            r.id,
+            {
+              send: async () => {
+                // Another session can lock the reminder at once, and no customer connection is
+                // inside a transaction while the provider is called.
+                const locked = await observer.query(
+                  "SELECT id FROM valo_reminder_outbox WHERE id=$1 FOR UPDATE NOWAIT",
+                  [r.id],
+                );
+                const open = await observer.query(
+                  "SELECT count(*)::int AS n FROM pg_stat_activity WHERE usename='valo_workspace_login' AND state LIKE 'idle in transaction%'",
+                );
+                seen = { locked: locked.rowCount ?? 0, open: open.rows[0].n };
+                return { providerMessageId: "controlled-unlocked-ack" };
+              },
+            },
+            now,
+          );
+          assert.equal(status, "sent");
+          assert.deepEqual(seen, { locked: 1, open: 0 });
+        } finally {
+          await observer.end();
+        }
+      });
+      await t.test(
+        "a cancellation during the call does not wait for it, and an accepted message is recorded as sent",
+        async () => {
+          const r = await fresh();
+          const status = await processReminder(
+            actor.workspaceId,
+            r.id,
+            {
+              send: async () => {
+                await preferences(false);
+                return { providerMessageId: "controlled-cancelled-during-call" };
+              },
+            },
+            now,
+          );
+          const saved = await row(r.id);
+          await preferences(true);
+          assert.equal(status, "sent");
+          assert.equal(saved.status, "sent");
+          assert.equal(saved.providerMessageId, "controlled-cancelled-during-call");
+          assert.equal(saved.leaseToken, null);
+        },
+      );
+      await t.test("a failed call leaves a cancellation made during it in place", async () => {
+        const r = await fresh();
+        const status = await processReminder(
+          actor.workspaceId,
+          r.id,
+          {
+            send: async () => {
+              await preferences(false);
+              throw Error("CONTROLLED_UNAVAILABLE");
+            },
+          },
+          now,
+        );
+        const saved = await row(r.id);
+        await preferences(true);
+        assert.equal(status, "cancelled");
+        assert.equal(saved.status, "cancelled");
+        assert.equal(saved.nextAttemptAt, null);
+      });
+      await t.test("an accepted message leaves a newer attempt's lease to that attempt", async () => {
+        const r = await fresh(),
+          newer = randomUUID();
+        const status = await processReminder(
+          actor.workspaceId,
+          r.id,
+          {
+            send: async () => {
+              // The lease expired and another attempt claimed the reminder during the call; it
+              // sends with the same idempotency key and records its own result.
+              await db
+                .update(valoReminderOutbox)
+                .set({ leaseToken: newer })
+                .where(eq(valoReminderOutbox.id, r.id));
+              return { providerMessageId: "controlled-superseded-ack" };
+            },
+          },
+          now,
+        );
+        const saved = await row(r.id);
+        assert.equal(status, "pending");
+        assert.equal(saved.leaseToken, newer);
+        assert.equal(saved.providerMessageId, null);
+      });
       await t.test("opt-out before dispatch cancels failed work without sending", async () => {
         const r = await fresh();
         await processReminder(

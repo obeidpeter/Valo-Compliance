@@ -95,6 +95,8 @@ async function deliverReminder(workspaceId: string, id: string, sender: Reminder
   const actor = workspaceActorFromRecord({ workspaceId, identityId: workspace.ownerIdentityId });
   // Commit the bounded attempt BEFORE network activity. A dead process cannot
   // erase its attempt. The lease makes abandoned work recoverable, not immortal.
+  // Preferences, source freshness, date and membership are checked in the same
+  // transaction, just before the call, not merely when the task was created.
   const claim = await workspaceTransaction(actor, async (tx) => {
     const [row] = await tx
       .select()
@@ -170,6 +172,7 @@ async function deliverReminder(workspaceId: string, id: string, sender: Reminder
         .where(eq(valoReminderOutbox.id, id));
       return "held";
     }
+    if (!eligible.task?.dueDate) throw new ValoProblem(503, "Reminder dispatch context missing");
     const token = randomUUID(),
       leaseUntil = new Date(+now + 30000);
     await tx
@@ -185,86 +188,92 @@ async function deliverReminder(workspaceId: string, id: string, sender: Reminder
         leaseUntil,
       })
       .where(and(eq(valoReminderOutbox.workspaceId, workspaceId), eq(valoReminderOutbox.id, id)));
-    return { token };
+    return {
+      token,
+      attempt: row.attempts + 1,
+      message: {
+        idempotencyKey: row.idempotencyKey,
+        ownerIdentityId: workspace.ownerIdentityId,
+        title: eligible.task.title,
+        dueDate: eligible.task.dueDate,
+        timezone: "Africa/Lagos" as const,
+      },
+    };
   });
   if (typeof claim === "string") return claim;
-  return workspaceTransaction(actor, async (tx) => {
+  // Unreachable: without a sender the claim above holds the reminder instead.
+  if (!sender) throw new ValoProblem(503, "Reminder dispatch context missing");
+  // The provider is called with no transaction, lock or pooled connection held. The lease keeps
+  // other attempts away meanwhile; a call that outlives it is retried with the same idempotency
+  // key, which the provider deduplicates.
+  let providerMessageId: string | undefined;
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        controller.abort();
+        reject(Error("REMINDER_PROVIDER_TIMEOUT"));
+      }, 18000);
+    });
+    const receipt = await Promise.race([
+      sender.send({ ...claim.message, signal: controller.signal }),
+      timeout,
+    ]);
+    if (!receipt.providerMessageId?.trim()) throw Error("EMAIL_PROVIDER_ACK_MISSING");
+    providerMessageId = receipt.providerMessageId;
+  } catch {
+    // A timeout may follow provider acceptance. A retry reuses the SAME provider idempotency
+    // key; an unconfirmed message is never claimed as delivered.
+    providerMessageId = undefined;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+  // The outcome is recorded whatever the owner's access is now: it describes a call already made.
+  return db.transaction(async (tx) => {
     const [row] = await tx
       .select()
       .from(valoReminderOutbox)
       .where(and(eq(valoReminderOutbox.workspaceId, workspaceId), eq(valoReminderOutbox.id, id)))
       .for("update");
     if (!row) throw new ValoProblem(404, "Reminder not found");
-    if (row.leaseToken !== claim.token || ["sent", "cancelled"].includes(row.status)) return row.status;
-    // Preferences, source freshness, date and membership are checked again at
-    // dispatch, not merely when the task or first claim was created.
-    const eligible = await eligibleReminder(tx, workspaceId, row, now);
-    if (eligible.reason) {
-      await tx
-        .update(valoReminderOutbox)
-        .set({
-          status: eligible.status,
-          reason: eligible.reason,
-          leaseToken: null,
-          leaseUntil: null,
-          nextAttemptAt: eligible.status === "held" ? new Date(+now + 15 * 60000) : null,
-        })
-        .where(eq(valoReminderOutbox.id, id));
-      return eligible.status;
-    }
-    if (!sender || !eligible.task?.dueDate) throw new ValoProblem(503, "Reminder dispatch context missing");
-    const controller = new AbortController();
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const attempt = row.attempts;
-    try {
-      const timeout = new Promise<never>((_, reject) => {
-        timer = setTimeout(() => {
-          controller.abort();
-          reject(Error("REMINDER_PROVIDER_TIMEOUT"));
-        }, 18000);
-      });
-      const receipt = await Promise.race([
-        sender.send({
-          idempotencyKey: row.idempotencyKey,
-          ownerIdentityId: workspace.ownerIdentityId,
-          title: eligible.task.title,
-          dueDate: eligible.task.dueDate,
-          timezone: "Africa/Lagos",
-          signal: controller.signal,
-        }),
-        timeout,
-      ]);
-      if (!receipt.providerMessageId?.trim()) throw Error("EMAIL_PROVIDER_ACK_MISSING");
+    if (row.status === "sent") return "sent";
+    if (providerMessageId) {
+      // An accepted message is recorded as sent even if the reminder was cancelled or rescheduled
+      // during the call, as it was when the call held this row's lock: the email has gone. A newer
+      // attempt that took over an expired lease records its own result.
+      if (row.leaseToken !== null && row.leaseToken !== claim.token) return row.status;
       await tx
         .update(valoReminderOutbox)
         .set({
           status: "sent",
           reason: null,
-          providerMessageId: receipt.providerMessageId,
+          providerMessageId,
           nextAttemptAt: null,
           leaseToken: null,
           leaseUntil: null,
         }) // Acceptance is not delivery.
         .where(and(eq(valoReminderOutbox.workspaceId, workspaceId), eq(valoReminderOutbox.id, id)));
       return "sent";
-    } catch {
-      // A timeout may follow provider acceptance. Reuse the SAME provider
-      // idempotency key; never claim that an unconfirmed message was delivered.
-      await tx
-        .update(valoReminderOutbox)
-        .set({
-          status: "failed",
-          reason:
-            attempt >= reminderAttemptLimit ? "EMAIL_ATTEMPT_LIMIT_REACHED" : "EMAIL_ACCEPTANCE_UNCONFIRMED",
-          nextAttemptAt: reminderRetryAt(attempt, now),
-          leaseToken: null,
-          leaseUntil: null,
-        })
-        .where(and(eq(valoReminderOutbox.workspaceId, workspaceId), eq(valoReminderOutbox.id, id)));
-      return "failed";
-    } finally {
-      if (timer) clearTimeout(timer);
     }
+    // A failed or unconfirmed call is recorded only if nothing changed the reminder since the
+    // claim; a cancellation or new schedule made meanwhile stands, and any retry checks
+    // eligibility again before calling the provider.
+    if (row.leaseToken !== claim.token || row.status !== "pending") return row.status;
+    await tx
+      .update(valoReminderOutbox)
+      .set({
+        status: "failed",
+        reason:
+          claim.attempt >= reminderAttemptLimit
+            ? "EMAIL_ATTEMPT_LIMIT_REACHED"
+            : "EMAIL_ACCEPTANCE_UNCONFIRMED",
+        nextAttemptAt: reminderRetryAt(claim.attempt, now),
+        leaseToken: null,
+        leaseUntil: null,
+      })
+      .where(and(eq(valoReminderOutbox.workspaceId, workspaceId), eq(valoReminderOutbox.id, id)));
+    return "failed";
   });
 }
 /** Database outbox is durable; polling is only a wake-up, never an in-memory job queue. */
