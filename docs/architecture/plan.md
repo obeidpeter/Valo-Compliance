@@ -49,7 +49,7 @@ Measured on the integration branch at `14c8f38`:
 | Generated API client checked against the contract in CI | done |
 | Typed settings registry and generated `.env.example`; reading an unregistered variable fails a test | done |
 | One test command with lanes and its own database | in progress (`pnpm test` runs typecheck, lint and the fast suites; a test fails when a test file is run by no script; database groups still run as separate CI steps) |
-| Delete unused UI kit, packages, `mockup-sandbox` | in progress (52 components and `mockup-sandbox` removed, and `mockup-sandbox`'s packages left the lockfile; the UI kit's unused packages can now be removed from `package.json`) |
+| Delete unused UI kit, packages, `mockup-sandbox` | done: 52 components, `mockup-sandbox` and its packages, the 40 web app packages nothing imports (99 fewer locked packages), and the 12 version catalog entries no package used |
 | Safe error logging; no silently discarded errors | done (errors are logged by class, code and stack frames, never by message; empty catches need a reason) |
 
 Exit: CI rejects unformatted code, lint findings, stray environment reads and discarded errors.
