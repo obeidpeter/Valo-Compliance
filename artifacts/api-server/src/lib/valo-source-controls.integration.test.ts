@@ -382,6 +382,77 @@ test(
         });
       },
     );
+    await t.test(
+      "a checkout pause stops checkout but not AI or free guidance, and records its reason, actor and customer impact",
+      async () => {
+        const released = await import("./valo-released-content");
+        const catalogue = await released.releasedCatalogue(),
+          resources = await released.releasedResources();
+        const paused = await controls.actOnSourceControls(fresh(system), {
+          action: "pause_service",
+          service: "checkout",
+          requestKey: randomUUID(),
+          reason,
+        });
+        try {
+          await assert.rejects(
+            state.withSafetyDispatch("checkout", async () => "not reached"),
+            /temporarily paused/,
+          );
+          // Each switch is independent: AI still runs while checkout is paused.
+          assert.equal(await state.withSafetyDispatch("ai", async () => "AI still runs"), "AI still runs");
+          // Free guidance reads the same with checkout and AI both paused.
+          await controls.actOnSourceControls(fresh(system), {
+            action: "pause_service",
+            service: "ai",
+            requestKey: randomUUID(),
+            reason,
+          });
+          assert.deepEqual(await released.releasedCatalogue(), catalogue);
+          assert.deepEqual(await released.releasedResources(), resources);
+          const [audit] = (
+            await db.execute(
+              sql`select actor_id,area,action,target,reason,current from valo_safety_control_audit where id=${paused.auditId}::uuid`,
+            )
+          ).rows as {
+            actor_id: string;
+            area: string;
+            action: string;
+            target: string;
+            reason: string;
+            current: {
+              customerImpact: { refused: string; unaffected: string; ordersAwaitingPayment: unknown };
+            };
+          }[];
+          assert.equal(audit?.actor_id, system.identityId);
+          assert.deepEqual(
+            [audit.area, audit.action, audit.target, audit.reason],
+            ["system", "pause_service", "checkout", reason],
+          );
+          assert.equal(audit.current.customerImpact.refused, "new orders and checkout");
+          assert.match(audit.current.customerImpact.unaffected, /free guidance/);
+          assert.equal(typeof audit.current.customerImpact.ordersAwaitingPayment, "number");
+          const [switched] = (
+            await db.execute(
+              sql`select enabled,reason,actor_id from valo_safety_switches where key='checkout'`,
+            )
+          ).rows;
+          assert.deepEqual(
+            [switched?.enabled, switched?.reason, switched?.actor_id],
+            [false, reason, system.identityId],
+          );
+        } finally {
+          for (const service of ["checkout", "ai"] as const)
+            await controls.actOnSourceControls(fresh(system), {
+              action: "resume_service",
+              service,
+              requestKey: randomUUID(),
+              reason,
+            });
+        }
+        assert.equal(await state.withSafetyDispatch("checkout", async () => "resumed"), "resumed");
+      },
+    );
     await t.test("held versions cannot be manually restored or approved", async () => {
       await assert.rejects(
         controls.actOnSourceControls(fresh(staff), {

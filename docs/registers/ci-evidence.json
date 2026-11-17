@@ -126,6 +126,27 @@
       "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
       "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
       "proves": "A saved request opens exactly one support case with the same reference and full scope, which its own workspace can read and another workspace cannot."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
+      "proves": "Safety actions need an active staff role for their area and fresh MFA; a checkout pause stops new checkouts while AI still runs, free guidance reads the same with AI and checkout both paused, and the pause's reason, actor and customer impact are recorded in an append-only audit."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.test.ts",
+      "test": "source safety adds freshness, binding and sticky-hold checks without manufacturing eligibility",
+      "proves": "The source safety gate refuses a held item, a changed hash, a failed check and a stale review, so a hold takes the item out of use."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
+      "proves": "A hold placed by content staff from a support referral records one source impact and one audit row, and staff without the content role are refused."
     }
   ]
 }

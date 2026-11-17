@@ -144,6 +144,28 @@ export async function sourceControls(actor: SourceStaffActor, area: "content" | 
     };
   });
 }
+/**
+ * What pausing or resuming a service does to customers, recorded with the reason and actor
+ * (ADM-007). A pause refuses only new work of that service: free guidance, saved documents and
+ * what customers already have stay available, because none of them reads the safety switches.
+ */
+async function serviceImpact(tx: SourceTx, service: "ai" | "checkout", paused: boolean) {
+  if (!paused) return { restored: service === "ai" ? "AI drafting and review" : "new orders and checkout" };
+  if (service === "ai")
+    return {
+      refused: "new AI drafting and review",
+      unaffected: "free guidance, saved documents and accepted drafts",
+    };
+  const [open] = (
+    await tx.execute(sql`select count(*)::int as n from valo_orders where status in ('created','pending')`)
+  ).rows;
+  return {
+    refused: "new orders and checkout",
+    unaffected: "free guidance, saved documents, completed purchases, entitlements and downloads",
+    ordersAwaitingPayment: Number(open?.n ?? 0),
+  };
+}
+
 export async function actOnSourceControls(actor: SourceStaffActor, raw: unknown) {
   assertDevelopmentRuntime();
   const input = sourceControlInput.parse(raw),
@@ -176,6 +198,7 @@ export async function actOnSourceControls(actor: SourceStaffActor, raw: unknown)
       current = {
         service: input.service,
         paused: !enabled,
+        customerImpact: await serviceImpact(tx, input.service, !enabled),
         notice:
           "This changes only the safety pause. Existing financial, merchant, publication and development restrictions still apply.",
       };
