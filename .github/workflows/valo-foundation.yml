@@ -102,7 +102,7 @@ jobs:
           pnpm --filter @workspace/db test:schema-drift
           pnpm --filter @workspace/db test:schema-guard
       - name: Reject first-factor-only staff sessions and untrusted proxy chains
-        run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-managed-session.test.ts src/lib/valo-proxy-boundary.test.ts ../valo/src/lib/content-security-policy.test.ts
+        run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-managed-session.test.ts src/lib/valo-proxy-boundary.test.ts src/middlewares/clerkProxyMiddleware.test.ts ../valo/src/lib/content-security-policy.test.ts
       - name: Prove bounded native workspace storage and versioned UI helpers
         run: pnpm --filter @workspace/api-server test:valo-workspace-export-controls
       - name: Prove unit imports and disabled inference need no database or native storage

@@ -37,6 +37,20 @@ trustPolicy: no-downgrade
 minimumReleaseAgeExclude:
   - '@replit/*'
   - stripe-replit-sync
+  # Temporary: remove after 2026-11-19 16:00 UTC, when all of these are 7 days old. The
+  # lockfile was regenerated on 2026-11-17 to clear GHSA-fc5q-39xc-vjpf from the API's
+  # dependencies, while these versions, already locked, were younger than the window. Each is
+  # pinned to its locked version, so no other release gets in (supply-chain-policy.test.ts).
+  - pg-boss@12.38.2
+  - cron-parser@5.10.5
+  - '@clerk/shared@3.48.1'
+  - '@scalar/helpers@0.18.0'
+  - '@scalar/json-magic@0.19.1'
+  - '@scalar/json-schema-validator@0.1.20'
+  - '@scalar/openapi-parser@0.29.22'
+  - '@scalar/openapi-upgrader@0.4.9'
+  - '@scalar/openapi-validator@0.1.20'
+  - '@scalar/types@0.28.1'
 
 onlyBuiltDependencies:
   - '@swc/core'
