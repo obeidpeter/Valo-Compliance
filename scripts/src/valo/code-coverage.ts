@@ -31,6 +31,8 @@ export type AreaCoverage = {
   functions: Count;
   files: FileCoverage[];
   notLoaded: string[];
+  /** The area's tests this run did not include, and why (see coverage-areas). */
+  notRerun: Record<string, string>;
 };
 
 export function percent([covered, total]: Count) {
@@ -59,6 +61,7 @@ export function summarize(
     functions: total("functions"),
     files,
     notLoaded: sources.filter((source) => !byPath.has(source)),
+    notRerun: {},
   };
 }
 
@@ -141,7 +144,7 @@ export function runCoverage(options: CoverageRun): { status: number | null; summ
 /** Runs one NFR-011 area as CI's database job does. */
 export function runArea(area: CoverageAreaName, resultsDirectory: string) {
   const definition = COVERAGE_AREAS[area];
-  return runCoverage({
+  const run = runCoverage({
     area,
     sources: definition.sources,
     tests: definition.tests,
@@ -156,6 +159,7 @@ export function runArea(area: CoverageAreaName, resultsDirectory: string) {
     },
     resultsDirectory,
   });
+  return { ...run, summary: { ...run.summary, notRerun: definition.notRerun } };
 }
 
 /** The area summaries the database job wrote, wherever they sit under the results folder. */
@@ -186,6 +190,7 @@ export function coverageReport(areas: AreaCoverage[]) {
       functionPercent: percent(a.functions),
       branches: a.branches,
       notLoaded: a.notLoaded,
+      notRerun: a.notRerun,
       meetsMinimum: coverageProblems(a, NFR_011_MINIMUM_BRANCH_PERCENT).length === 0,
     })),
   };
@@ -202,6 +207,7 @@ export function coverageTable(summary: AreaCoverage) {
     ...summary.files.map((f) => row(f.path, f)),
     row("**All files**", summary),
     ...summary.notLoaded.map((s) => `| ${s} | not loaded by any test | | |`),
+    ...Object.entries(summary.notRerun).map(([test, why]) => `\nNot run here: ${test}, which ${why}.`),
   ].join("\n");
 }
 

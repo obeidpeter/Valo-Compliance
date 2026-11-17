@@ -14,6 +14,8 @@ export type CoverageArea = {
   /** File names that belong to the area. */
   pattern: RegExp;
   tests: string[];
+  /** Tests of the area that the coverage run cannot run a second time, and why. */
+  notRerun: Record<string, string>;
 };
 
 const api = (path: string) => `artifacts/api-server/src/${path}`;
@@ -58,6 +60,7 @@ export const COVERAGE_AREAS = {
       api("lib/valo-recovery-effects.test.ts"),
       api("lib/valo-template-entitlement.integration.test.ts"),
     ],
+    notRerun: {},
   },
   auth: {
     title: "auth",
@@ -84,11 +87,14 @@ export const COVERAGE_AREAS = {
       api("middlewares/clerkProxyMiddleware.test.ts"),
       api("platform/session-verification.test.ts"),
       api("lib/valo-download-session.test.ts"),
-      api("lib/valo-staff-roles.integration.test.ts"),
-      api("lib/valo-staff-bootstrap.integration.test.ts"),
       api("routes/valo-tenant-substitution.integration.test.ts"),
       api("platform/workspace-row-security.integration.test.ts"),
+      api("lib/valo-staff-bootstrap.integration.test.ts"),
     ],
+    notRerun: {
+      [api("lib/valo-staff-roles.integration.test.ts")]:
+        "refuses a database that already holds an administrator, and the job has already run it once",
+    },
   },
   rules: {
     title: "rules",
@@ -110,6 +116,7 @@ export const COVERAGE_AREAS = {
       api("lib/valo-requirements.integration.test.ts"),
       api("lib/valo-task-source-guard.integration.test.ts"),
     ],
+    notRerun: {},
   },
 } satisfies Record<string, CoverageArea>;
 

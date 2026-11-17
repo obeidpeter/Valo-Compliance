@@ -21,6 +21,10 @@ test("every area lists existing product files and tests, and owns every file nam
     }
     for (const path of Object.keys(area.excluded)) assert.match(path, area.pattern);
     for (const test of area.tests) assert.match(test, /\.test\.tsx?$/);
+    for (const [test, why] of Object.entries(area.notRerun)) {
+      assert.ok(existsSync(join(repositoryRoot, test)), `${name}: ${test} does not exist`);
+      assert.ok(!area.tests.includes(test) && why.trim(), `${name}: ${test} is both run and not run`);
+    }
     const named = tracked.filter((path) => area.pattern.test(path) && !/\.test\.tsx?$/.test(path));
     assert.deepEqual(
       named.filter((path) => !area.sources.includes(path) && !(path in area.excluded)),
