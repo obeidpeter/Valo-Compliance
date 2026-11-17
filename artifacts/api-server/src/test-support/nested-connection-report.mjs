@@ -1,6 +1,7 @@
 // Last step of the CI database job. Fails when any process recorded a pooled connection
 // taken while its transaction held one, except the reviewed exceptions below. It first
-// runs a canary that does exactly that, to prove the check still sees one.
+// runs a canary that does exactly that, to prove the check still sees one, and fails when
+// too few of the job's processes were watched, which means the preload did not load.
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -21,20 +22,29 @@ const ALLOWED = [
   },
 ];
 
+/** The database job runs far more processes that load @workspace/db than this. */
+const MINIMUM_WATCHED_PROCESSES = 20;
+
 /** The first frame outside tests and test helpers names the code that opened the transaction. */
 const opener = (opened) =>
   opened.find((frame) => !frame.includes(".test.") && !frame.includes("/test-support/")) ??
   opened[0] ??
   "unknown";
 
-function recordsIn(directory) {
-  let files = [];
+/** One file per process that loaded @workspace/db while the preload watched it. */
+function processFiles(directory) {
   try {
-    files = readdirSync(directory).filter((name) => name.endsWith(".json"));
+    return readdirSync(directory).filter((name) => name.endsWith(".json"));
   } catch {
-    // No directory means no process recorded anything.
+    // No directory means no process was watched.
+    return [];
   }
-  return files.flatMap((name) => JSON.parse(readFileSync(join(directory, name), "utf8")).records);
+}
+
+function recordsIn(directory) {
+  return processFiles(directory).flatMap(
+    (name) => JSON.parse(readFileSync(join(directory, name), "utf8")).records,
+  );
 }
 
 const canaryDirectory = mkdtempSync(join(tmpdir(), "valo-nested-canary-"));
@@ -66,7 +76,17 @@ try {
   rmSync(canaryDirectory, { recursive: true, force: true });
 }
 
-const records = process.env.VALO_NESTED_REPORT_DIR ? recordsIn(process.env.VALO_NESTED_REPORT_DIR) : [];
+const directory = process.env.VALO_NESTED_REPORT_DIR;
+const watched = directory ? processFiles(directory).length : 0;
+if (watched < MINIMUM_WATCHED_PROCESSES) {
+  console.error(
+    `The preload watched ${watched} processes, fewer than ${MINIMUM_WATCHED_PROCESSES}: it is not loading in ` +
+      "the job's steps, so this check would pass without checking anything. The job's NODE_OPTIONS must " +
+      "import it once VALO_NESTED_PRELOAD is set.",
+  );
+  process.exit(1);
+}
+const records = recordsIn(directory);
 const unexpected = new Map();
 let allowed = 0;
 for (const record of records) {
@@ -80,7 +100,13 @@ for (const record of records) {
 }
 console.log(
   JSON.stringify(
-    { canary: "seen", recorded: records.length, allowed, unexpected: Object.fromEntries(unexpected) },
+    {
+      canary: "seen",
+      watched,
+      recorded: records.length,
+      allowed,
+      unexpected: Object.fromEntries(unexpected),
+    },
     null,
     2,
   ),

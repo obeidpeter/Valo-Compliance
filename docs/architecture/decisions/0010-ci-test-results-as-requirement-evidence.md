@@ -42,5 +42,6 @@ a citation describes only what its test shows.
 - Renaming or skipping a cited test fails CI until the register is updated.
 - The readiness report for a commit is the `readiness-report` artifact of its CI run.
   Run locally, it lists the citations as not run.
-- A job that sets its own `NODE_OPTIONS` must add to the value, not replace it, or its
-  tests are not recorded and its cited tests fail the check.
+- `NODE_OPTIONS` is set in each job's own `env`, because the runner ignores `NODE_OPTIONS`
+  written to `$GITHUB_ENV`; the wiring check fails any step that tries. In the database job its
+  last option loads the nested-connection preload once a step sets `VALO_NESTED_PRELOAD`.

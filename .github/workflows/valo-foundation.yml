@@ -72,6 +72,14 @@ jobs:
     # ubuntu-latest advanced to 26.04, which no longer supplies that package.
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    env:
+      # How each test ends, for the requirement evidence register (decision 0010). NODE_OPTIONS
+      # is set for the whole job here because the runner refuses it through $GITHUB_ENV.
+      VALO_TEST_RESULTS_DIR: ${{ github.workspace }}/generated-artifacts/test-results/foundation
+      NODE_OPTIONS: >-
+        --test-reporter=spec --test-reporter-destination=stdout
+        --test-reporter=${{ github.workspace }}/scripts/src/valo/test-results-reporter.mjs
+        --test-reporter-destination=${{ github.workspace }}/generated-artifacts/test-results/foundation/reporter-output.txt
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -89,11 +97,8 @@ jobs:
           corepack prepare pnpm@10.26.1 --activate
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
-      - name: Record how each test ends, for the requirement evidence register
-        run: |
-          mkdir -p "$PWD/generated-artifacts/test-results/foundation"
-          echo "VALO_TEST_RESULTS_DIR=$PWD/generated-artifacts/test-results/foundation" >> "$GITHUB_ENV"
-          echo "NODE_OPTIONS=--test-reporter=spec --test-reporter-destination=stdout --test-reporter=$PWD/scripts/src/valo/test-results-reporter.mjs --test-reporter-destination=$PWD/generated-artifacts/test-results/foundation/reporter-output.txt" >> "$GITHUB_ENV"
+      - name: Make the folder for this job's test results
+        run: mkdir -p "$VALO_TEST_RESULTS_DIR"
       - name: Typecheck all source
         run: pnpm run typecheck
       - name: Check formatting, lint rules and repository rules
@@ -288,6 +293,15 @@ jobs:
       VALO_ERASURE_STORAGE_PROOF: portable
       SESSION_SECRET: synthetic-ci-only-write-quota-key-not-a-production-secret
       NODE_ENV: test
+      # How each test ends, for the requirement evidence register (decision 0010). NODE_OPTIONS is
+      # set for the whole job here because the runner refuses it through $GITHUB_ENV. Its last
+      # option loads the nested-connection preload once a step sets VALO_NESTED_PRELOAD.
+      VALO_TEST_RESULTS_DIR: ${{ github.workspace }}/generated-artifacts/test-results/postgres
+      NODE_OPTIONS: >-
+        --test-reporter=spec --test-reporter-destination=stdout
+        --test-reporter=${{ github.workspace }}/scripts/src/valo/test-results-reporter.mjs
+        --test-reporter-destination=${{ github.workspace }}/generated-artifacts/test-results/postgres/reporter-output.txt
+        --import=data:text/javascript,if(process.env.VALO_NESTED_PRELOAD)await%20import(process.env.VALO_NESTED_PRELOAD)
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -301,11 +315,8 @@ jobs:
           corepack prepare pnpm@10.26.1 --activate
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
-      - name: Record how each test ends, for the requirement evidence register
-        run: |
-          mkdir -p "$PWD/generated-artifacts/test-results/postgres"
-          echo "VALO_TEST_RESULTS_DIR=$PWD/generated-artifacts/test-results/postgres" >> "$GITHUB_ENV"
-          echo "NODE_OPTIONS=--test-reporter=spec --test-reporter-destination=stdout --test-reporter=$PWD/scripts/src/valo/test-results-reporter.mjs --test-reporter-destination=$PWD/generated-artifacts/test-results/postgres/reporter-output.txt" >> "$GITHUB_ENV"
+      - name: Make the folder for this job's test results
+        run: mkdir -p "$VALO_TEST_RESULTS_DIR"
       - name: Apply tracked migrations to empty synthetic database
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
       - name: Let customer requests connect as the workspace login, and check nothing widens it
@@ -318,7 +329,7 @@ jobs:
           node lib/db/scripts/workspace-row-security.mjs
       - name: Record pooled connections taken inside transactions in every later step
         run: |
-          echo "NODE_OPTIONS=$NODE_OPTIONS --import $PWD/artifacts/api-server/src/test-support/nested-connection-preload.mjs" >> "$GITHUB_ENV"
+          echo "VALO_NESTED_PRELOAD=file://$PWD/artifacts/api-server/src/test-support/nested-connection-preload.mjs" >> "$GITHUB_ENV"
           echo "VALO_NESTED_REPORT_DIR=$PWD/generated-artifacts/nested-connections" >> "$GITHUB_ENV"
       - name: Prove audited staff changes, last-admin concurrency and post-lock emergency expiry
         run: pnpm --filter @workspace/api-server test:valo-staff-roles

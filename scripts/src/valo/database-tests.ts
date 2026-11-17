@@ -71,7 +71,11 @@ export type PlannedStep = {
 export type DatabaseService = { image: string; user: string; password: string; database: string };
 export type DatabaseJob = { service: DatabaseService; env: Record<string, string>; steps: PlannedStep[] };
 
-function settings(value: unknown, where: string): Record<string, string> {
+/**
+ * A step or job setting as GitHub would give it. The only expression allowed is
+ * ${{ github.workspace }}, the checkout's root; anything else would need GitHub to evaluate it.
+ */
+function settings(value: unknown, where: string, workspace: string): Record<string, string> {
   if (value === undefined || value === null) return {};
   if (typeof value !== "object" || Array.isArray(value))
     throw Error(`DATABASE_JOB_UNSUPPORTED: ${where} env`);
@@ -83,12 +87,17 @@ function settings(value: unknown, where: string): Record<string, string> {
         throw Error(
           `DATABASE_JOB_UNSUPPORTED: ${where} sets DATABASE_URL; only the job's service database is used`,
         );
-      return [key, String(setting)];
+      const text = String(setting).replaceAll("${{ github.workspace }}", workspace);
+      if (text.includes("${{"))
+        throw Error(
+          `DATABASE_JOB_UNSUPPORTED: ${where} env ${key} uses an expression other than github.workspace`,
+        );
+      return [key, text];
     }),
   );
 }
 
-function planStep(step: Record<string, unknown>, index: number): PlannedStep {
+function planStep(step: Record<string, unknown>, index: number, workspace: string): PlannedStep {
   const label = typeof step.name === "string" ? step.name : `step ${index + 1}`;
   for (const key of Object.keys(step))
     if (!STEP_KEYS.has(key)) throw Error(`DATABASE_JOB_UNSUPPORTED: ${label} uses "${key}"`);
@@ -114,26 +123,26 @@ function planStep(step: Record<string, unknown>, index: number): PlannedStep {
   return {
     name: label,
     run: step.run,
-    env: settings(step.env, label),
+    env: settings(step.env, label, workspace),
     runsAfterFailure,
     ...(skip ? { skip } : {}),
   };
 }
 
 /** The database job from the workflow text, refusing anything this command cannot run faithfully. */
-export function readDatabaseJob(text: string): DatabaseJob {
+export function readDatabaseJob(text: string, workspace = repositoryRoot): DatabaseJob {
   const workflow = parse(text) as { jobs?: Record<string, Record<string, unknown>> };
   const job = workflow.jobs?.[DATABASE_JOB];
   if (!job) throw Error(`DATABASE_JOB_MISSING: no "${DATABASE_JOB}" job in ${WORKFLOW}`);
   const service = (job.services as Record<string, { image?: unknown; env?: unknown }> | undefined)?.postgres;
-  const serviceEnv = settings(service?.env, "service");
+  const serviceEnv = settings(service?.env, "service", workspace);
   const image = String(service?.image ?? "");
   const { POSTGRES_USER: user, POSTGRES_PASSWORD: password, POSTGRES_DB: database } = serviceEnv;
   if (!/^postgres:\d+/.test(image) || !user || !password || !database)
     throw Error(
       "DATABASE_JOB_UNSUPPORTED: the job needs a postgres service with a user, password and database",
     );
-  const env = settings(job.env, "job");
+  const env = settings(job.env, "job", workspace);
   // The job's database must be its own service on the runner; nothing else is ever replaced.
   const url = new URL(env.DATABASE_URL ?? "postgresql://unset");
   if (
@@ -143,7 +152,9 @@ export function readDatabaseJob(text: string): DatabaseJob {
   )
     throw Error("DATABASE_JOB_UNSUPPORTED: the job's DATABASE_URL must name its own postgres service");
   if (!Array.isArray(job.steps)) throw Error("DATABASE_JOB_UNSUPPORTED: the job has no steps");
-  const steps = (job.steps as Record<string, unknown>[]).map(planStep);
+  const steps = (job.steps as Record<string, unknown>[]).map((step, index) =>
+    planStep(step, index, workspace),
+  );
   for (const name of Object.keys(LOCAL_SKIPS))
     if (!steps.some((step) => step.name === name))
       throw Error(`DATABASE_JOB_CHANGED: "${name}" is no longer a step; update LOCAL_SKIPS`);
@@ -160,6 +171,11 @@ export function githubEnvSettings(text: string): Record<string, string> {
     if (setting[1] === "DATABASE_URL")
       throw Error(
         "DATABASE_JOB_UNSUPPORTED: a step changes DATABASE_URL; only the job's service database is used",
+      );
+    // GitHub's runner ignores NODE_OPTIONS written to $GITHUB_ENV, so a local run must not obey it.
+    if (setting[1] === "NODE_OPTIONS")
+      throw Error(
+        "DATABASE_JOB_UNSUPPORTED: a step writes NODE_OPTIONS to $GITHUB_ENV, which GitHub ignores; set it in the job's env",
       );
     written[setting[1]!] = setting[2]!;
   }

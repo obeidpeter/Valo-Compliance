@@ -82,10 +82,14 @@ export function citationProblems(
 export const EVIDENCE_JOB = "evidence";
 
 type WorkflowStep = { run?: unknown; uses?: unknown; with?: Record<string, unknown> };
-type WorkflowJob = { needs?: string | string[]; steps?: WorkflowStep[] };
+type WorkflowJob = { needs?: string | string[]; env?: Record<string, unknown>; steps?: WorkflowStep[] };
 
-/** CI must record results in, check the citations of, and upload the results of every job the
- * register names, and the evidence job must wait for those jobs and check every citation. */
+/**
+ * CI must record results in, check the citations of, and upload the results of every job the
+ * register names, and the evidence job must wait for those jobs and check every citation. A job
+ * records through NODE_OPTIONS in its own env: the runner refuses NODE_OPTIONS written to
+ * $GITHUB_ENV, so no step may try.
+ */
 export function workflowProblems(citations: Citation[], root = repositoryRoot): string[] {
   const workflow = parse(readFileSync(join(root, WORKFLOW), "utf8")) as {
     jobs?: Record<string, WorkflowJob>;
@@ -103,12 +107,15 @@ export function workflowProblems(citations: Citation[], root = repositoryRoot): 
   const problems: string[] = [];
   const cited = [...new Set(citations.map((c) => c.job))].sort();
   for (const job of cited) {
+    const env = jobs[job]?.env ?? {};
     if (
-      !runs(job).some(
-        (run) => run.includes("VALO_TEST_RESULTS_DIR=") && run.includes("test-results-reporter.mjs"),
-      )
+      typeof env.VALO_TEST_RESULTS_DIR !== "string" ||
+      typeof env.NODE_OPTIONS !== "string" ||
+      !env.NODE_OPTIONS.includes("test-results-reporter.mjs")
     )
-      problems.push(`job ${job} does not record its test results with test-results-reporter.mjs`);
+      problems.push(
+        `job ${job} does not record its test results: its env needs VALO_TEST_RESULTS_DIR and NODE_OPTIONS loading test-results-reporter.mjs`,
+      );
     if (!runs(job).some((run) => run.includes(`valo:ci-evidence --job ${job}`)))
       problems.push(`job ${job} does not check the tests cited for it (valo:ci-evidence --job ${job})`);
     if (!uploads(job, `test-results-${job}`)) problems.push(`job ${job} does not upload test-results-${job}`);
@@ -118,6 +125,11 @@ export function workflowProblems(citations: Citation[], root = repositoryRoot): 
     if (!needs.includes(job)) problems.push(`the ${EVIDENCE_JOB} job does not wait for the ${job} job`);
   if (!runs(EVIDENCE_JOB).some((run) => run.includes("valo:ci-evidence --all")))
     problems.push(`the ${EVIDENCE_JOB} job does not check every citation (valo:ci-evidence --all)`);
+  for (const job of Object.keys(jobs))
+    if (runs(job).some((run) => /\bNODE_OPTIONS=[^\n]*>>\s*"?\$GITHUB_ENV/.test(run)))
+      problems.push(
+        `job ${job} writes NODE_OPTIONS to $GITHUB_ENV, which the runner ignores; set it in the job's env`,
+      );
   return problems;
 }
 

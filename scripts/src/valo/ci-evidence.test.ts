@@ -172,10 +172,24 @@ test("CI must record, check and collect the results of every job the register ci
   try {
     writeFileSync(
       join(root, ".github/workflows/valo-foundation.yml"),
-      "jobs:\n  foundation:\n    steps:\n      - run: pnpm test\n  evidence:\n    needs: [postgres]\n    steps: []\n",
+      [
+        "jobs:",
+        "  foundation:",
+        "    steps:",
+        "      - run: pnpm test",
+        '      - run: echo "NODE_OPTIONS=--import x" >> "$GITHUB_ENV"',
+        "  evidence:",
+        "    needs: [postgres]",
+        "    steps: []",
+        "",
+      ].join("\n"),
     );
     const problems = workflowProblems([cite("scripts/src/valo/ci-evidence.test.ts", "x")], root);
-    assert.equal(problems.length, 5, problems.join("\n"));
+    assert.equal(problems.length, 6, problems.join("\n"));
+    assert.match(
+      problems.join("\n"),
+      /foundation writes NODE_OPTIONS to \$GITHUB_ENV, which the runner ignores/,
+    );
     assert.match(problems.join("\n"), /foundation does not record/);
     assert.match(problems.join("\n"), /foundation does not check/);
     assert.match(problems.join("\n"), /foundation does not upload test-results-foundation/);
