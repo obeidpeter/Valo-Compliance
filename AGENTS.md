@@ -175,7 +175,11 @@ Tests verify these byte-for-byte or by hash:
   `docs/content-candidates/` and `docs/evaluation-candidates/`.
 
 Do not add new evidence files to `docs/valo/evidence/`. Record run evidence as
-CI artifacts and summarise it in the pull request.
+CI artifacts and summarise it in the pull request. To count a test as evidence for a
+requirement, cite it in `docs/registers/ci-evidence.json` with one sentence on what it
+shows (decision 0010). CI fails when a cited test does not pass, and the `evidence`
+job publishes the readiness report with each citation's result as `readiness-report`.
+A citation never accepts a requirement.
 
 ## 8. Privacy and security defaults
 

@@ -1,0 +1,75 @@
+{
+  "description": "Tests cited as implementation evidence for requirements (decision 0010). Each citation names the requirement, the CI job that runs the test, the test file, the test's exact top-level name and what the test shows. The job fails when a test cited for it does not pass, and the evidence job publishes every citation's result for the run in the readiness report. A citation is partial evidence for its requirement: it never accepts the requirement, which needs the acceptance evidence and approvals the specification names.",
+  "citations": [
+    {
+      "requirement": "IAM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+      "test": "another workspace's identifiers are refused exactly like unknown ones and change nothing",
+      "proves": "Every private customer operation in the API contract that takes a workspace-owned identifier, called by another workspace with the owner's real identifier, gets exactly the reply an unknown identifier gets and changes none of the owner's rows."
+    },
+    {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+      "test": "another workspace's identifiers are refused exactly like unknown ones and change nothing",
+      "proves": "On every private customer API operation that takes a workspace-owned identifier, another workspace's identifier is refused exactly like an unknown one and changes nothing."
+    },
+    {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+      "test": "every private operation with an identifier has a substitution case or a recorded reason",
+      "proves": "A private operation added to the API contract with an identifier and no substitution case, or no recorded reason for having none, fails CI."
+    },
+    {
+      "requirement": "IAM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
+      "test": "row-level security limits customer requests to their own workspace",
+      "proves": "Queries with no workspace filter, run as a customer request through every database pool path, see only the request's own workspace rows."
+    },
+    {
+      "requirement": "IAM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/platform/workspace-scope-jobs.integration.test.ts",
+      "test": "background work for one workspace reads it in that workspace's scope",
+      "proves": "Background work done for one workspace (document and workspace data exports, staff privacy exports, reminder delivery) reads that workspace's data in its database scope."
+    },
+    {
+      "requirement": "IAM-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-managed-session.test.ts",
+      "test": "missing, malformed, future and stale factor ages cannot establish MFA",
+      "proves": "A staff session whose second-factor age is missing, malformed, in the future or stale is not treated as multi-factor authenticated."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/content-security-policy.test.ts",
+      "test": "production denies injected scripts, frames, objects and unconfigured origins while allowing required Clerk resources",
+      "proves": "The production content security policy allows scripts only by nonce, no inline or evaluated script, no objects or framing, no unconfigured origins, and fonts and styles only from the app's own origin."
+    },
+    {
+      "requirement": "NFR-011",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "the repository has no silent catches, no import cycles and no unreviewed binding checks",
+      "proves": "The API has no import cycle, no unexplained empty catch, no unreviewed creation of a workspace actor or entry into a workspace scope, no unreviewed caller of the inference dispatcher's binding checks and no import past a module's public entry."
+    },
+    {
+      "requirement": "NFR-011",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "code outside a module reaches it only through its index",
+      "proves": "The module boundary check reports code that imports a module's files other than its public entry, from outside the module or from another module."
+    },
+    {
+      "requirement": "OPS-003",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "Applying the later migrations to a synthetic database that already holds the applied phase 1 migrations keeps the applied SQL, staff access and history."
+    }
+  ]
+}
