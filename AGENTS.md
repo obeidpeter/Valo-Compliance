@@ -79,7 +79,8 @@ Rules that apply now:
 - Never hold a transaction, lock or pooled database connection while waiting on
   an AI model, payment provider or other external service. Check pauses and
   holds just before the call, and recheck them in the transaction that saves its
-  result.
+  result. Inside a transaction, use only that transaction's connection;
+  `guardNestedConnections` in `src/test-support` catches violations in tests.
 
 ## 5. Checks
 

@@ -10,7 +10,7 @@
     "test:valo-checker-http-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-checker-http.integration.test.ts",
     "test:valo-tenant-substitution": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-tenant-substitution.integration.test.ts",
     "test:valo-template-entitlement": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-template-entitlement.integration.test.ts",
-    "test:valo-operations": "tsx --test src/lib/http-logging.test.ts src/lib/safe-error.test.ts src/platform/settings.test.ts src/platform/session-verification.test.ts src/test-support/contract-operations.test.ts src/lib/valo-operations.test.ts src/lib/valo-recovery-effects.test.ts src/lib/valo-reminder-resend.test.ts",
+    "test:valo-operations": "tsx --test src/lib/http-logging.test.ts src/lib/safe-error.test.ts src/platform/settings.test.ts src/platform/session-verification.test.ts src/test-support/contract-operations.test.ts src/test-support/nested-connection-guard.test.ts src/lib/valo-operations.test.ts src/lib/valo-recovery-effects.test.ts src/lib/valo-reminder-resend.test.ts",
     "test:valo-isolated-recovery": "NODE_ENV=development VALO_ISOLATED_RECOVERY=synthetic-local-only tsx src/scripts/isolated-recovery.ts",
     "valo:operations-probe": "NODE_ENV=development tsx src/scripts/operations-probe.ts",
     "test:valo-runtime-boundaries": "tsx --test src/lib/valo-development-runtime.test.ts src/lib/valo-request-scope.test.ts",

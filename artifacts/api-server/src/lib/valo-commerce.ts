@@ -115,6 +115,9 @@ async function presentOrder(tx: Tx, order: typeof valoOrders.$inferSelect) {
     await originalReceiptExists(tx, order.id, order.workspaceId),
   );
 }
+/** The released catalogue. It reads publication artifacts from storage and takes its own
+ * pooled connections, so call it outside transactions: a caller that holds a transaction's
+ * connection while it waits for another lets enough concurrent requests exhaust the pool. */
 export async function commerceProducts() {
   const released = await liveOperationalVersions(),
     ids = new Set(released.filter((v) => !/^TPL-(0[1-9]|1[0-2])$/.test(v.templateId)).map((v) => v.id)),
@@ -135,7 +138,7 @@ export async function commerceProducts() {
     }));
 }
 export async function purchases(actor: WorkspaceActor) {
-  return db.transaction(async (tx) => {
+  const listing = await db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
     const orders = await tx
       .select()
@@ -179,12 +182,15 @@ export async function purchases(actor: WorkspaceActor) {
           originalReceipts.has(o.id),
         ),
       ),
-      products: await commerceProducts(),
     };
   });
+  // After the transaction: the catalogue takes its own connections. It holds no tenant data.
+  return { ...listing, products: await commerceProducts() };
 }
 export async function createOrder(actor: WorkspaceActor, raw: unknown) {
   const input = CreateCommerceOrderBody.strict().parse(raw);
+  // Before the transaction: see commerceProducts.
+  const products = await commerceProducts();
   return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
     // Serialize one tenant's idempotency/price selection without trusting browser prices.
@@ -210,7 +216,7 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
       !price.approvalReference ||
       +price.effectiveFrom > Date.now() ||
       (price.effectiveTo && +price.effectiveTo <= Date.now()) ||
-      !(await commerceProducts()).some((p) => p.id === price.id)
+      !products.some((p) => p.id === price.id)
     )
       throw new ValoProblem(
         409,
@@ -254,6 +260,9 @@ async function ownedOrder(tx: Tx, actor: WorkspaceActor, id: string) {
   return order;
 }
 export async function startCheckout(actor: WorkspaceActor, id: string, email: string) {
+  // Before the transaction: see commerceProducts. It is read again just before the
+  // merchant call, outside any transaction.
+  const products = await commerceProducts();
   const order = await db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
     const order = await ownedOrder(tx, actor, id);
@@ -262,7 +271,7 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
     if (order.status === "needs_review" || order.status === "reversed")
       throw new ValoProblem(409, "This order needs staff reconciliation before any new payment.");
     await limit(tx, actor);
-    if (!(await commerceProducts()).some((p) => p.id === order.priceId))
+    if (!products.some((p) => p.id === order.priceId))
       throw new ValoProblem(
         409,
         "This product is unavailable for new checkout. Your order history and drafts are unchanged.",

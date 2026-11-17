@@ -17,6 +17,7 @@ import * as store from "./valo-store";
 import * as commerce from "./valo-commerce";
 import { verifiedTransaction } from "./valo-paystack-contract";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
+import { guardNestedConnections } from "../test-support/nested-connection-guard";
 
 test(
   "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
@@ -73,6 +74,8 @@ test(
         ...patch,
       });
     }
+    // Inside a transaction, commerce must use only that transaction's connection.
+    const guard = guardNestedConnections({ db, pool });
     try {
       await db.insert(valoPrices).values({
         id: priceId,
@@ -414,7 +417,30 @@ test(
           livePayments: false,
         }),
       );
+      await t.test("checkout of a product that is not released is refused", async () => {
+        const order = await fixture();
+        await assert.rejects(commerce.startCheckout(a, order.id, "synthetic@example.test"), {
+          status: 409,
+          message: /unavailable for new checkout/,
+        });
+      });
+      await t.test("no commerce call takes a second pooled connection inside a transaction", () => {
+        assert.deepEqual(guard.violations, []);
+      });
+      await t.test(
+        "purchase listings beyond the database pool size all finish",
+        { timeout: 20000 },
+        async () => {
+          // Each listing used to read the catalogue on a second connection while its
+          // transaction held one, so ten at once exhausted the pool and none finished.
+          const n = 25;
+          assert.ok(n > (pool.options.max ?? 10));
+          const listings = await Promise.all(Array.from({ length: n }, () => commerce.purchases(a)));
+          assert.equal(listings.length, n);
+        },
+      );
     } finally {
+      guard.restore();
       await db
         .delete(valoPaymentEvents)
         .where(inArray(valoPaymentEvents.eventKey, eventKeys.length ? eventKeys : ["none"]));
