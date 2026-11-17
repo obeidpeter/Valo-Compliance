@@ -16,14 +16,15 @@ async function buildAll() {
 
   await esbuild({
     entryPoints: {
-      index:path.resolve(artifactDir,"src/index.ts"),
-      "export-worker":path.resolve(artifactDir,"src/workers/export-worker.ts"),
-      "export-supervisor":path.resolve(artifactDir,"src/workers/export-supervisor.ts"),
-      "production-bootstrap":path.resolve(artifactDir,"src/scripts/production-bootstrap.ts"),
-      "production-preflight":path.resolve(artifactDir,"src/scripts/production-preflight.ts"),
-      "export-retention-inventory":path.resolve(artifactDir,"src/scripts/export-retention-inventory.ts"),
-      "production-storage-probe":path.resolve(artifactDir,"src/scripts/production-storage-probe.ts"),
-      "monitoring-probe":path.resolve(artifactDir,"src/scripts/monitoring-probe.ts"),
+      index: path.resolve(artifactDir, "src/index.ts"),
+      "export-worker": path.resolve(artifactDir, "src/workers/export-worker.ts"),
+      "export-supervisor": path.resolve(artifactDir, "src/workers/export-supervisor.ts"),
+      "production-bootstrap": path.resolve(artifactDir, "src/scripts/production-bootstrap.ts"),
+      "production-preflight": path.resolve(artifactDir, "src/scripts/production-preflight.ts"),
+      "export-retention-inventory": path.resolve(artifactDir, "src/scripts/export-retention-inventory.ts"),
+      "production-storage-probe": path.resolve(artifactDir, "src/scripts/production-storage-probe.ts"),
+      "monitoring-probe": path.resolve(artifactDir, "src/scripts/monitoring-probe.ts"),
+      "staff-bootstrap": path.resolve(artifactDir, "src/scripts/staff-bootstrap.ts"),
     },
     platform: "node",
     bundle: true,
@@ -114,7 +115,7 @@ async function buildAll() {
     sourcemap: "linked",
     plugins: [
       // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
-      esbuildPluginPino({ transports: ["pino-pretty"] })
+      esbuildPluginPino({ transports: ["pino-pretty"] }),
     ],
     // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
     banner: {

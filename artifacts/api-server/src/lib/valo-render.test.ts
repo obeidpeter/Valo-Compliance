@@ -5,43 +5,98 @@ import { controlledHtml, renderDocument, DRAFT_NOTICE } from "./valo-render";
 import { syntheticDocument } from "./valo-test-fixtures";
 import { readerContainsText } from "./valo-reader-checks";
 
-test("reader comparison tolerates extraction spacing, never changed parties, currency or money",()=>{
-  assert.equal(readerContainsText("Fictional BusinessA","Fictional Business A"),true);
-  assert.equal(readerContainsText("Fictional BusinessB","Fictional Business A"),false);
-  assert.equal(readerContainsText("₦37,000.00","₦37,001.00"),false);
-  assert.equal(readerContainsText("$37,000.00","₦37,000.00"),false);
-  assert.equal(readerContainsText("anything"," "),false);
+test("reader comparison tolerates extraction spacing, never changed parties, currency or money", () => {
+  assert.equal(readerContainsText("Fictional BusinessA", "Fictional Business A"), true);
+  assert.equal(readerContainsText("Fictional BusinessB", "Fictional Business A"), false);
+  assert.equal(readerContainsText("₦37,000.00", "₦37,001.00"), false);
+  assert.equal(readerContainsText("$37,000.00", "₦37,000.00"), false);
+  assert.equal(readerContainsText("anything", " "), false);
 });
 
-test("controlled HTML treats markup, local-file and metadata addresses as inert text",()=>{
+test("controlled HTML treats markup, local-file and metadata addresses as inert text", () => {
   const input = structuredClone(syntheticDocument);
   input.title = '<script>alert("x")</script>';
-  input.content.blocks[0]!.text = '<img src="http://169.254.169.254/">file:///etc/passwd<script>fetch("https://example.com")</script>';
-  const html = controlledHtml(input,7);
-  assert.ok(!html.includes("<script>")); assert.ok(!html.includes("<img"));
-  assert.ok(html.includes("&lt;script&gt;")); assert.ok(html.includes("default-src 'none'"));
-  assert.ok(html.includes("Saved revision 7")); assert.ok(html.includes(DRAFT_NOTICE));
+  input.content.blocks[0]!.text =
+    '<img src="http://169.254.169.254/">file:///etc/passwd<script>fetch("https://example.com")</script>';
+  const html = controlledHtml(input, 7);
+  assert.ok(!html.includes("<script>"));
+  assert.ok(!html.includes("<img"));
+  assert.ok(html.includes("&lt;script&gt;"));
+  assert.ok(html.includes("default-src 'none'"));
+  assert.ok(html.includes("Saved revision 7"));
+  assert.ok(html.includes(DRAFT_NOTICE));
 });
-test("DOCX contains editable OOXML, actual table cells, bullets, draft notice and naira",async()=>{
+test("DOCX contains editable OOXML, actual table cells, bullets, draft notice and naira", async () => {
   const input = structuredClone(syntheticDocument);
   input.content.fields.issuerName = "Synthetic ₦ business";
-  input.content.blocks.push({id:"t",type:"table",text:"",rows:[["Description","Amount"],["Synthetic item","₦12,345.67"]]},
-    {id:"l",type:"list",text:"First action\nSecond action",rows:[]});
-  const bytes = await renderDocument(input,"docx",3);
-  assert.equal(bytes.subarray(0,2).toString(),"PK");
+  input.content.blocks.push(
+    {
+      id: "t",
+      type: "table",
+      text: "",
+      rows: [
+        ["Description", "Amount"],
+        ["Synthetic item", "₦12,345.67"],
+      ],
+    },
+    { id: "l", type: "list", text: "First action\nSecond action", rows: [] },
+  );
+  const bytes = await renderDocument(input, "docx", 3);
+  assert.equal(bytes.subarray(0, 2).toString(), "PK");
   const parts = unzipSync(bytes);
   const xml = strFromU8(parts["word/document.xml"]!);
-  assert.ok(xml.includes("₦12,345.67")); assert.ok(xml.includes("<w:tbl>"));
-  assert.ok(xml.includes("First action")); assert.ok(xml.includes("Saved revision 3"));
-  assert.ok(Object.keys(parts).some(name=>name.startsWith("word/header")));
+  assert.ok(xml.includes("₦12,345.67"));
+  assert.ok(xml.includes("<w:tbl>"));
+  assert.ok(xml.includes("First action"));
+  assert.ok(xml.includes("Saved revision 3"));
+  assert.ok(Object.keys(parts).some((name) => name.startsWith("word/header")));
 });
-test("renderer rejects unknown formatting, arbitrary clause inputs and invalid dates",async()=>{
+test("renderer rejects unknown formatting, arbitrary clause inputs and invalid dates", async () => {
   const invalid = structuredClone(syntheticDocument);
-  (invalid.content.formatting as {font:string}).font = "url(http://169.254.169.254)";
-  await assert.rejects(()=>renderDocument(invalid,"docx",1));
+  (invalid.content.formatting as { font: string }).font = "url(http://169.254.169.254)";
+  await assert.rejects(() => renderDocument(invalid, "docx", 1));
   const clauses = structuredClone(syntheticDocument);
   (clauses.content.selectedClauses as string[]).push("unreleased-contract-clause");
-  await assert.rejects(()=>renderDocument(clauses,"docx",1));
-  const dates = structuredClone(syntheticDocument); dates.content.fields.issueDate = "2026-02-31";
-  await assert.rejects(()=>renderDocument(dates,"docx",1));
+  await assert.rejects(() => renderDocument(clauses, "docx", 1));
+  const dates = structuredClone(syntheticDocument);
+  dates.content.fields.issueDate = "2026-02-31";
+  await assert.rejects(() => renderDocument(dates, "docx", 1));
+});
+
+test("PDFs share one browser, render in isolated contexts and never exceed five at once", async () => {
+  const { rendererStatistics, closeRenderer } = await import("./valo-render");
+  const { execFile } = await import("node:child_process");
+  const { mkdtemp, rm, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { promisify } = await import("node:util");
+  await closeRenderer();
+  const before = rendererStatistics();
+  const inputs = Array.from({ length: 7 }, (_, i) => {
+    const input = structuredClone(syntheticDocument);
+    input.content.blocks[0]!.text = `Parallel render marker ${i}`;
+    return input;
+  });
+  const files = await Promise.all(inputs.map((input) => renderDocument(input, "pdf", 1)));
+  const directory = await mkdtemp(join(tmpdir(), "valo-render-parallel-"));
+  try {
+    for (const [i, file] of files.entries()) {
+      assert.equal(Buffer.from(file).subarray(0, 5).toString(), "%PDF-");
+      const path = join(directory, `${i}.pdf`);
+      await writeFile(path, file);
+      const text = (await promisify(execFile)("pdftotext", ["-raw", path, "-"])).stdout;
+      for (let j = 0; j < files.length; j++)
+        assert.equal(
+          text.includes(`Parallel render marker ${j}`),
+          i === j,
+          `render ${i} contains marker ${j}`,
+        );
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+  const after = rendererStatistics();
+  assert.equal(after.launches - before.launches, 1, "one browser served every render");
+  assert.ok(after.peakParallel <= 5, `peak ${after.peakParallel}`);
+  await closeRenderer();
 });

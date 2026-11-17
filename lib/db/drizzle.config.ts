@@ -8,6 +8,8 @@ if (!process.env.DATABASE_URL) {
 export default defineConfig({
   schema: path.join(__dirname, "./src/schema/index.ts"),
   dialect: "postgresql",
+  // Timestamp names keep parallel branches from colliding on migration numbers.
+  migrations: { prefix: "timestamp" },
   dbCredentials: {
     url: process.env.DATABASE_URL,
   },

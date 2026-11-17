@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, "feature/valo-p0-foundation"]
   push:
-    branches: [main, "feature/valo-*"]
+    branches: [main, "feature/valo-*", "claude/**"]
 
 permissions:
   contents: read
@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: "24"
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: "1.24"
@@ -82,7 +82,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Set up pinned pnpm
         run: |
           corepack enable
@@ -91,8 +91,18 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
+      - name: Check formatting, lint rules and repository rules
+        run: pnpm run lint
+      - name: Check the generated API client matches the contract
+        run: |
+          pnpm --filter @workspace/api-spec run codegen
+          git diff --exit-code -- lib/api-zod lib/api-client-react
+      - name: Check the database schema matches its migrations and the guarded push
+        run: |
+          pnpm --filter @workspace/db test:schema-drift
+          pnpm --filter @workspace/db test:schema-guard
       - name: Reject first-factor-only staff sessions and untrusted proxy chains
-        run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-managed-session.test.ts src/lib/valo-proxy-boundary.test.ts ../valo/src/lib/content-security-policy.test.ts
+        run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-managed-session.test.ts src/lib/valo-proxy-boundary.test.ts src/middlewares/clerkProxyMiddleware.test.ts ../valo/src/lib/content-security-policy.test.ts
       - name: Prove bounded native workspace storage and versioned UI helpers
         run: pnpm --filter @workspace/api-server test:valo-workspace-export-controls
       - name: Prove unit imports and disabled inference need no database or native storage
@@ -103,6 +113,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-finite-entry
       - name: Prove read-only inference capacity and historical-exposure inspection
         run: pnpm --filter @workspace/api-server test:valo-budget-inspection
+      - name: Prove original lifecycle admission and final publication expiry/scope checks
+        run: pnpm --filter @workspace/api-server test:valo-editorial-lifecycle
       - name: Prove exact editorial baselines and current-run denial evidence
         run: pnpm --filter @workspace/api-server test:valo-editorial-provenance
       - name: Prove rich checker contracts, factual states and UI helper targets
@@ -125,6 +137,12 @@ jobs:
           echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Run API input-safety tests
         run: pnpm --filter @workspace/api-server test:valo
+      - name: Prove template downloads read storage outside the source-state lock
+        run: pnpm --filter @workspace/api-server test:valo-released-content
+      - name: Prove catalogue filters and saved-item journeys
+        run: pnpm --filter @workspace/api-server test:valo-catalogue-browser
+      - name: Prove additional source freshness and strict staff command boundaries
+        run: pnpm --filter @workspace/api-server test:valo-source-controls
       - name: Prove native workspace download, cancellation and account boundaries
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-browser
       - name: Retain controlled workspace download browser evidence
@@ -135,6 +153,8 @@ jobs:
           path: generated-artifacts/valo-completion/workspace-export-jobs-*
       - name: Reject unsafe export modes and stale account requests
         run: pnpm --filter @workspace/api-server test:valo-runtime-boundaries
+      - name: Prove the generated web client keeps every identifier inside its path segment
+        run: pnpm --filter @workspace/api-server test:valo-client-paths
       - name: Prove scratch replay cursors preserve tenant and legacy scope
         run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-erasure-replay-cursor.test.ts
       - name: Check HTTP log privacy, internal alerts and recovery effects
@@ -177,6 +197,13 @@ jobs:
           path: artifacts/api-server/generated-artifacts/valo-recovery/isolated-recovery.json
       - name: Prove isolated source-candidate controls, not legal acceptance
         run: pnpm --filter @workspace/api-server test:valo-source-candidates
+      - name: Prove editorial pipeline contracts, source controls and review clarifications
+        run: |
+          pnpm --filter @workspace/api-server test:valo-editorial
+          pnpm --filter @workspace/api-server test:valo-sources
+          pnpm --filter @workspace/api-server test:valo-source-challenges
+      - name: Prove the web app shell renders deterministically without browser state
+        run: pnpm --filter @workspace/api-server test:valo-web
       - name: Prove refund reference and timeout contract without a merchant
         run: pnpm --filter @workspace/api-server test:valo-refund-provider
       - name: Build the Next.js application
@@ -207,6 +234,18 @@ jobs:
         with:
           name: controlled-dispute-workflow-browser
           path: generated-artifacts/valo-completion/dispute-*
+      - name: Prove protected support transport and private conversation rendering
+        run: pnpm --filter @workspace/api-server test:valo-support-ui
+      - name: Exercise actual support components with controlled local responses
+        run: |
+          mkdir -p generated-artifacts/valo-support
+          VALO_SUPPORT_BROWSER_EVIDENCE_PATH="$PWD/generated-artifacts/valo-support/browser.json" pnpm --filter @workspace/api-server test:valo-support-browser
+      - name: Retain controlled support browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: controlled-support-browser
+          path: generated-artifacts/valo-support/browser.json
       - name: Print factual readiness
         run: pnpm --filter @workspace/scripts valo:readiness
   postgres:
@@ -240,7 +279,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Set up pinned pnpm
         run: |
           corepack enable
@@ -249,6 +288,18 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Apply tracked migrations to empty synthetic database
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
+      - name: Let customer requests connect as the workspace login, and check nothing widens it
+        env:
+          # Ephemeral synthetic CI service only; not a production secret.
+          VALO_WORKSPACE_LOGIN_PASSWORD: synthetic_ci_only_workspace_login
+        run: |
+          url=$(node lib/db/scripts/workspace-login.mjs --print-url)
+          echo "VALO_CUSTOMER_DATABASE_URL=$url" >> "$GITHUB_ENV"
+          node lib/db/scripts/workspace-row-security.mjs
+      - name: Record pooled connections taken inside transactions in every later step
+        run: |
+          echo "NODE_OPTIONS=--import $PWD/artifacts/api-server/src/test-support/nested-connection-preload.mjs" >> "$GITHUB_ENV"
+          echo "VALO_NESTED_REPORT_DIR=$PWD/generated-artifacts/nested-connections" >> "$GITHUB_ENV"
       - name: Prove audited staff changes, last-admin concurrency and post-lock emergency expiry
         run: pnpm --filter @workspace/api-server test:valo-staff-roles
       - name: Install reviewed durable queue before payload and erasure tests
@@ -273,10 +324,22 @@ jobs:
         run: VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-private-copy-inventory.integration.test.ts
       - name: Prove paged workspace attachment, final authorization and disconnect cleanup
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-db
+      - name: Prove saved-template ownership, concurrency and withdrawal
+        run: pnpm --filter @workspace/api-server test:valo-saved-templates
+      - name: Prove durable source corrections, staff authority and dispatch races
+        run: pnpm --filter @workspace/api-server test:valo-source-controls-db
+      - name: Prove concrete editorial reviewer denial, retained snapshots and isolated lifecycle copies
+        run: pnpm --filter @workspace/api-server test:valo-editorial-lifecycle-db
       - name: Prove current-rule task guards against synthetic PostgreSQL
         run: pnpm --filter @workspace/api-server test:valo-task-source-guard
       - name: Prove rich checker HTTP preview, consent, history and tenant boundaries
         run: pnpm --filter @workspace/api-server test:valo-checker-http-db
+      - name: Prove another workspace's identifiers are refused like unknown ones on every private route (SEC-001)
+        run: pnpm --filter @workspace/api-server test:valo-tenant-substitution
+      - name: Prove row-level security keeps customer requests inside their own workspace
+        run: pnpm --filter @workspace/api-server test:valo-row-security
+      - name: Prove premium template files need the workspace's own active purchase
+        run: pnpm --filter @workspace/api-server test:valo-template-entitlement
       - name: Prove synthetic erasure holds, late-upload races and bounded recovery
         run: pnpm --filter @workspace/api-server test:valo-erasure-portable-db
         env:
@@ -294,8 +357,12 @@ jobs:
       - name: Prove actual HTTP privacy-role and session boundary
         if: ${{ !cancelled() }}
         run: pnpm --filter @workspace/api-server test:valo-privacy-http-db
+      - name: Prove original customer fault, quota and tenant service controls without a provider
+        run: pnpm --filter @workspace/api-server test:valo-customer-controls-db
       - name: Prove durable dispute intents against synthetic orders and controlled transport
         run: pnpm --filter @workspace/api-server test:valo-disputes-db
+      - name: Prove durable support workflow and content-role boundaries
+        run: pnpm --filter @workspace/api-server test:valo-support-db
       - name: Prove durable write limits and membership revocation races
         run: pnpm --filter @workspace/api-server test:valo-write-security
       - name: Prove export crash recovery with shared portable private files and real worker processes
@@ -304,3 +371,22 @@ jobs:
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce
           pnpm --filter @workspace/api-server test:valo-refunds
+      - name: Check that no transaction took a second pooled connection
+        run: node artifacts/api-server/src/test-support/nested-connection-report.mjs
+      - name: Retain nested-connection records
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: nested-connection-records
+          path: generated-artifacts/nested-connections
+          if-no-files-found: ignore
+  container-images:
+    name: Container images build and start safely
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Build the API and web images and prove PDF rendering, refusal without configuration and web headers
+        run: scripts/ops/check-container-images.sh

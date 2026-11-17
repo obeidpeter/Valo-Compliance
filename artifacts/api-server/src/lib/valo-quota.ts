@@ -1,19 +1,33 @@
 import { sql } from "drizzle-orm";
 import { db } from "@workspace/db";
+import { logger } from "./logger";
 import { quotaPolicy, type QuotaBucket, type QuotaDecision } from "./valo-quota-policy";
 export { quotaPolicy, quotaSubjectHash } from "./valo-quota-policy";
 
 /** One DB-clock window across processes; no per-process in-memory fallback. */
-export async function consumeQuota(bucket: QuotaBucket, subjectHash: string, limit: number = quotaPolicy[bucket],
-  window:"minute"|"day"="minute",executor:Pick<typeof db,"execute">=db): Promise<QuotaDecision> {
-  if (!Object.hasOwn(quotaPolicy, bucket) || !/^[a-f0-9]{64}$/.test(subjectHash) ||
-      !Number.isInteger(limit) || limit < 1 || limit > 10000)
+export async function consumeQuota(
+  bucket: QuotaBucket,
+  subjectHash: string,
+  limit: number = quotaPolicy[bucket],
+  window: "minute" | "day" = "minute",
+  executor: Pick<typeof db, "execute"> = db,
+): Promise<QuotaDecision> {
+  if (
+    !Object.hasOwn(quotaPolicy, bucket) ||
+    !/^[a-f0-9]{64}$/.test(subjectHash) ||
+    !Number.isInteger(limit) ||
+    limit < 1 ||
+    limit > 10000
+  )
     throw new Error("InvalidQuotaConfiguration");
-  if(!["minute","day"].includes(window))throw new Error("InvalidQuotaConfiguration");
-  const duration=window==="day"?sql`interval '1 day'`:sql`interval '1 minute'`;
-  const retention=window==="day"?sql`interval '2 days'`:sql`interval '2 minutes'`;
+  if (!["minute", "day"].includes(window)) throw new Error("InvalidQuotaConfiguration");
+  const duration = window === "day" ? sql`interval '1 day'` : sql`interval '1 minute'`;
+  const retention = window === "day" ? sql`interval '2 days'` : sql`interval '2 minutes'`;
   const result = await executor.execute<{
-    allowed: boolean; used: number; retryAfter: number; resetAt: Date;
+    allowed: boolean;
+    used: number;
+    retryAfter: number;
+    resetAt: Date;
   }>(sql`
     WITH stamp AS (SELECT date_trunc(${window}, statement_timestamp() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC' AS started),
     consumed AS (
@@ -37,4 +51,16 @@ export async function consumeQuota(bucket: QuotaBucket, subjectHash: string, lim
 /** Request-driven expiry only; not a claim of an independently running scheduler. */
 export async function purgeExpiredQuotaBuckets(): Promise<void> {
   await db.execute(sql`DELETE FROM valo_rate_buckets WHERE expires_at < CURRENT_TIMESTAMP`);
+}
+
+const PURGE_INTERVAL_MS = 30_000;
+let lastPurgeStartedAt = 0;
+/**
+ * Expired buckets never affect a decision (windows are keyed by their start), so
+ * cleanup runs at most every 30 seconds per process and never delays a request.
+ */
+export function schedulePurgeExpiredQuotaBuckets(now = Date.now()): void {
+  if (now - lastPurgeStartedAt < PURGE_INTERVAL_MS) return;
+  lastPurgeStartedAt = now;
+  void purgeExpiredQuotaBuckets().catch((error) => logger.warn({ event: "quota.purge_failed", err: error }));
 }

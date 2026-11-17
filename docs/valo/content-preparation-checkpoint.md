@@ -1,0 +1,13 @@
+# Content preparation checkpoint
+
+The canonical preparation route now supports 17 original blank operational forms: TPL-01–12, TPL-22, TPL-24, TPL-34, TPL-35 and TPL-38. A supported route still requires a real saved candidate, current provider-permission evidence, matching inspected exports, separate factual/challenge receipts and all publisher gates. No review, approval or publication is implied by this checkpoint.
+
+TPL-12 previously failed its unsupported numeric relationship. Its exact recorded-balance expression now has integer-minor-unit checks for partial payment, settlement, excess payment, signed adjustments and large values. TPL-24 has an exact weighted-score expression and scope check. Altered operators, missing/repeated formulas, changed scoring ranges/weights and added percentage rates fail. A commercial lease checklist cannot be classified as a general operational form to bypass its contract controls.
+
+`content:preparation-readiness` reconstructs the frozen 70 template/guidance bodies and 38 named guide/industry bodies. It preserves the existing identities and source/section hashes. The new named-body adapter separates customer prose from internal status, template-connection and source-lead metadata. It never invents template IDs to route named articles through the operational publisher.
+
+The generated [per-item report](evidence/content-preparation-readiness.json) contains 108 actual canonical draft hashes. It explicitly records 17 implemented review preparers and 91 incomplete review preparers. The latter are **engineering gaps**, alongside their separate evidence prerequisites. Successful extraction is not completed publication engineering. Native readiness is unqueried for every item; no new native prepared pair is claimed.
+
+The original disabled allocation package remains `finite-package:3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8`. None of its seven pinned source files or the original 60/80/60 case rosters changed. No inference call, approval row, entitlement, sales licence or publication action was created.
+
+Local validation: the 17-form mechanical/permission contract and arithmetic mutations, all 108 draft reconstructions, package identity/source pins, preparation/readiness calls under controlled storage/rendering, and existing intake/mechanical/rights regressions passed. Controlled terms, storage and render fixtures are identified as such. Real DOCX/Chromium PDF export inspection for the six additional forms is included in the existing CI renderer test; its executed result must be checked at the exact branch head before treating it as export evidence. This checkpoint is not R1/R2 acceptance.

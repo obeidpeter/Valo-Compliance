@@ -1,0 +1,20 @@
+# Weekly update proposals. The cooldown matches the 7-day minimum release age in
+# pnpm-workspace.yaml and .npmrc, so proposed versions pass the supply-chain checks.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7

@@ -1,7 +1,7 @@
-import {captureRequestScope,assertRequestScope,combineRequestSignals} from "./request-scope";
+import { captureRequestScope, assertRequestScope, combineRequestSignals } from "./request-scope";
 // Infer from each host's fetch declarations (browser or Node test runtime).
-type RequestInfo=Parameters<typeof fetch>[0];
-type HeadersInit=NonNullable<ConstructorParameters<typeof Headers>[0]>;
+type RequestInfo = Parameters<typeof fetch>[0];
+type HeadersInit = NonNullable<ConstructorParameters<typeof Headers>[0]>;
 export type CustomFetchOptions = RequestInit & {
   responseType?: "json" | "text" | "blob" | "auto";
 };
@@ -82,6 +82,23 @@ function resolveUrl(input: RequestInfo | URL): string {
   return input.url;
 }
 
+// Generated functions encode each path parameter, but an empty, "." or ".." parameter
+// still changes the endpoint: "/api/workspace/documents/" is the document list, and
+// browsers resolve "/api/workspace/documents/.." to "/api/workspace/". URL parsing also
+// treats "%2e" as a dot, drops tabs and newlines and reads "\" as "/".
+const DOT_SEGMENT = /^(?:\.|%2e){1,2}$/i;
+
+/** Refuses a request path with an empty or dot segment before anything is sent. */
+export function assertRequestPath(url: string): void {
+  const path = url
+    .replace(/[\t\n\r]/g, "")
+    .replace(/^[a-z][a-z\d+.-]*:\/\/[^/\\?#]*/i, "")
+    .split(/[?#]/, 1)[0]!;
+  const segments = path === "" ? [] : (/^[/\\]/.test(path) ? path.slice(1) : path).split(/[/\\]/);
+  if (segments.some((segment) => segment === "" || DOT_SEGMENT.test(segment)))
+    throw new TypeError("customFetch: a path parameter is empty or a dot segment.");
+}
+
 function mergeHeaders(...sources: Array<HeadersInit | undefined>): Headers {
   const headers = new Headers();
 
@@ -107,11 +124,11 @@ function isJsonMediaType(mediaType: string | null): boolean {
 function isTextMediaType(mediaType: string | null): boolean {
   return Boolean(
     mediaType &&
-      (mediaType.startsWith("text/") ||
-        mediaType === "application/xml" ||
-        mediaType === "text/xml" ||
-        mediaType.endsWith("+xml") ||
-        mediaType === "application/x-www-form-urlencoded"),
+    (mediaType.startsWith("text/") ||
+      mediaType === "application/xml" ||
+      mediaType === "text/xml" ||
+      mediaType.endsWith("+xml") ||
+      mediaType === "application/x-www-form-urlencoded"),
   );
 }
 
@@ -176,7 +193,7 @@ function buildErrorMessage(response: Response, data: unknown): string {
 }
 
 export class ApiError<T = unknown> extends Error {
-  readonly name = "ApiError";
+  override readonly name = "ApiError";
   readonly status: number;
   readonly statusText: string;
   readonly data: T | null;
@@ -185,11 +202,7 @@ export class ApiError<T = unknown> extends Error {
   readonly method: string;
   readonly url: string;
 
-  constructor(
-    response: Response,
-    data: T | null,
-    requestInfo: { method: string; url: string },
-  ) {
+  constructor(response: Response, data: T | null, requestInfo: { method: string; url: string }) {
     super(buildErrorMessage(response, data));
     Object.setPrototypeOf(this, new.target.prototype);
 
@@ -204,7 +217,7 @@ export class ApiError<T = unknown> extends Error {
 }
 
 export class ResponseParseError extends Error {
-  readonly name = "ResponseParseError";
+  override readonly name = "ResponseParseError";
   readonly status: number;
   readonly statusText: string;
   readonly headers: Headers;
@@ -212,7 +225,7 @@ export class ResponseParseError extends Error {
   readonly method: string;
   readonly url: string;
   readonly rawBody: string;
-  readonly cause: unknown;
+  override readonly cause: unknown;
 
   constructor(
     response: Response,
@@ -303,8 +316,7 @@ async function parseSuccessBody(
     return null;
   }
 
-  const effectiveType =
-    responseType === "auto" ? inferResponseType(response) : responseType;
+  const effectiveType = responseType === "auto" ? inferResponseType(response) : responseType;
 
   switch (effectiveType) {
     case "json":
@@ -318,8 +330,7 @@ async function parseSuccessBody(
     case "blob":
       if (typeof response.blob !== "function") {
         throw new TypeError(
-          "Blob responses are not supported in this runtime. " +
-            "Use responseType \"json\" or \"text\" instead.",
+          "Blob responses are not supported in this runtime. " + 'Use responseType "json" or "text" instead.',
         );
       }
       return response.blob();
@@ -330,7 +341,9 @@ export async function customFetch<T = unknown>(
   input: RequestInfo | URL,
   options: CustomFetchOptions = {},
 ): Promise<T> {
-  const accountScope=captureRequestScope();
+  // Before the base URL or any URL parsing, which would already have resolved dot segments.
+  assertRequestPath(resolveUrl(input));
+  const accountScope = captureRequestScope();
   input = applyBaseUrl(input);
   const { responseType = "auto", headers: headersInit, ...init } = options;
 
@@ -342,11 +355,7 @@ export async function customFetch<T = unknown>(
 
   const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
 
-  if (
-    typeof init.body === "string" &&
-    !headers.has("content-type") &&
-    looksLikeJson(init.body)
-  ) {
+  if (typeof init.body === "string" && !headers.has("content-type") && looksLikeJson(init.body)) {
     headers.set("content-type", "application/json");
   }
 
@@ -366,18 +375,24 @@ export async function customFetch<T = unknown>(
   const requestInfo = { method, url: resolveUrl(input) };
 
   assertRequestScope(accountScope);
-  const cancellation=combineRequestSignals(init.signal,isRequest(input)?input.signal:undefined,accountScope?.signal);
-  try{
-    const response = await fetch(input, { ...init, method, headers,signal:cancellation.signal });
+  const cancellation = combineRequestSignals(
+    init.signal,
+    isRequest(input) ? input.signal : undefined,
+    accountScope?.signal,
+  );
+  try {
+    const response = await fetch(input, { ...init, method, headers, signal: cancellation.signal });
     assertRequestScope(accountScope);
-    if(response.status===401)accountScope?.onUnauthorized?.();
+    if (response.status === 401) accountScope?.onUnauthorized?.();
     if (!response.ok) {
       const errorData = await parseErrorBody(response, method);
       assertRequestScope(accountScope);
       throw new ApiError(response, errorData, requestInfo);
     }
-    const result=await parseSuccessBody(response,responseType,requestInfo);
+    const result = await parseSuccessBody(response, responseType, requestInfo);
     assertRequestScope(accountScope);
     return result as T;
-  }finally{cancellation.dispose();}
+  } finally {
+    cancellation.dispose();
+  }
 }

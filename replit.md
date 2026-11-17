@@ -35,25 +35,16 @@ Valo is a Nigerian SME business-documentation and source-governed compliance app
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+See `docs/architecture/decisions/`.
 
 ## Product
 
 Visible brand: Valo. Required homepage copy: "The documents you need. The business rules you should know."
 
-The initial Next.js application now has a database-backed profile, canonical manual draft editor, revision history, conflict-aware saves, durable support tickets and a live development requirements/content/conflict register. All 127 formal requirements and the 27/79 inventories are retained. No P0/R1 gate is passed, no template is published and no private export or real editorial pipeline is implemented. See `docs/valo/README.md` and its evidence links.
+Current state is generated in `docs/status.md`. Architecture and the change plan are in `docs/architecture/`.
+Read `AGENTS.md` before changing code: it lists the approvals that must never be assumed and the files that must not change.
 
-The development register also shows original UAT-01–10, G0–G5 and non-waivable
-release controls. API read quotas use atomic PostgreSQL counters and HMAC
-pseudonyms; anonymous socket-address limits conservatively group proxied users
-until trusted client IP is proved. This is partial SEC-005, not production acceptance.
-
-The public coverage endpoint supplies all 20 source-taxonomy categories to industry
-discovery and library filters, with six held deeper-pack targets and no invented
-source-check dates. The development inventory exposes all 27/79 rows, five overlap
-notes and explicit evidence/coverage states; R2 expansion remains disabled.
-
-Run `pnpm --filter @workspace/scripts valo:readiness` for the current machine-readable register and `pnpm --filter @workspace/scripts test:valo` for foundation unit tests. Synthetic unit tests never count toward formal rule/customer-AI/editorial acceptance totals.
+Run `pnpm --filter @workspace/scripts valo:readiness` for the machine-readable register and `pnpm --filter @workspace/scripts test:valo` for foundation unit tests. Synthetic unit tests never count toward formal rule/customer-AI/editorial acceptance totals.
 
 ## User preferences
 
@@ -67,12 +58,12 @@ Run `pnpm --filter @workspace/scripts valo:readiness` for the current machine-re
 
 _Populate as you build — sharp edges, "always run X before Y" rules._
 
-- GitHub metadata most recently reported the intended private repository as public. Keep new source in Replit until private visibility is restored; do not change visibility, plans or protection automatically.
-- Browser auth uses Clerk cookies, never mobile-style explicit bearer-token handling. The signed-in UI has not yet been verified.
+- Recheck that the GitHub repository is private before pushing new source; do not change visibility, plans or protection automatically.
+- Browser auth uses Clerk cookies, never mobile-style explicit bearer-token handling.
 - A manual draft revision restore is not a backup/disaster-recovery drill.
 
 ## Pointers
 
-- Part 5 retains exact engineering/operations context in `docs/registers/engineering-context.json`. Development manual drafts now have real private DOCX/PDF exports using the native Replit App Storage SDK and a separate pg-boss worker. Production exports remain off; P0/R1, signed-in E2E and disaster recovery remain unaccepted. See `docs/valo/part5-architecture-and-exports.md`.
+- Exports: development drafts render to private DOCX/PDF through the pg-boss worker and Replit App Storage; production exports stay off. See `docs/valo/part5-architecture-and-exports.md`.
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details

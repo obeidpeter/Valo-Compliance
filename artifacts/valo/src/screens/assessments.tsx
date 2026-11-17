@@ -1,105 +1,209 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'wouter';
-import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, ClipboardCheck, GitCompare, ListPlus } from 'lucide-react';
+import { useMemo, useState } from "react";
+import { Link } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, ArrowRight, ClipboardCheck, GitCompare, ListPlus } from "lucide-react";
 import {
-  useListAssessments, useGetAssessment, useCompareAssessments, useCreateTask,
-  getListAssessmentsQueryKey, getGetAssessmentQueryKey, getCompareAssessmentsQueryKey, getListTasksQueryKey,
-  type AssessmentItem, type SavedAssessment,
-} from '@workspace/api-client-react';
-import { WorkspaceNav } from '@/components/workspace-nav';
-import { AssessmentResultView } from '@/components/assessment-result';
-import { TaskForm, emptyDraft, type TaskDraft } from '@/components/task-form';
-import { EmptyState, ErrorState, Notice, Skel } from '@/components/states';
-import { describeError, formatDate } from '@/lib/api';
-import { reviewFacts, displayFact, factLabel, live } from '@/lib/checker';
-import { RESULT_LABELS, RESULT_TONES, factAtPath, canCreateSourceTask } from '@/lib/rich-checker';
-import { useToast } from '@/hooks/use-toast';
+  useListAssessments,
+  useGetAssessment,
+  useCompareAssessments,
+  useCreateTask,
+  getListAssessmentsQueryKey,
+  getGetAssessmentQueryKey,
+  getCompareAssessmentsQueryKey,
+  getListTasksQueryKey,
+  type AssessmentItem,
+  type SavedAssessment,
+} from "@workspace/api-client-react";
+import { WorkspaceNav } from "@/components/workspace-nav";
+import { AssessmentResultView } from "@/components/assessment-result";
+import { TaskForm, emptyDraft, type TaskDraft } from "@/components/task-form";
+import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
+import { describeError, formatDate } from "@/lib/api";
+import { reviewFacts, displayFact, factLabel, live } from "@/lib/checker";
+import { RESULT_LABELS, RESULT_TONES, factAtPath, canCreateSourceTask } from "@/lib/rich-checker";
+import { useToast } from "@/hooks/use-toast";
 
 function counts(a: SavedAssessment) {
-  return RESULT_LABELS.map(label => ({ label, count: a.result.items.filter(item => item.label === label).length })).filter(item => item.count > 0);
+  return RESULT_LABELS.map((label) => ({
+    label,
+    count: a.result.items.filter((item) => item.label === label).length,
+  })).filter((item) => item.count > 0);
 }
 
 export function AssessmentsList() {
   const list = useListAssessments({ query: { queryKey: getListAssessmentsQueryKey(), ...live } });
-  const sorted = useMemo(() => [...(list.data ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [list.data]);
+  const sorted = useMemo(
+    () => [...(list.data ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [list.data],
+  );
   return (
     <div className="mx-auto max-w-5xl px-5 py-12 lg:px-8">
       <WorkspaceNav />
       <div className="reveal flex flex-wrap items-end justify-between gap-4">
-        <div><p className="eyebrow">Saved assessments</p><h1 className="font-display mt-2 text-4xl">History</h1></div>
-        <Link href="/checker" className="btn btn-primary" data-testid="link-new-assessment"><ClipboardCheck className="h-4 w-4" />New check</Link>
+        <div>
+          <p className="eyebrow">Saved assessments</p>
+          <h1 className="font-display mt-2 text-4xl">History</h1>
+        </div>
+        <Link href="/checker" className="btn btn-primary" data-testid="link-new-assessment">
+          <ClipboardCheck className="h-4 w-4" />
+          New check
+        </Link>
       </div>
-      <p className="mt-3 max-w-2xl text-muted-foreground">Each saved check keeps the answers and the ruleset it used, so you can see what changed later.</p>
+      <p className="mt-3 max-w-2xl text-muted-foreground">
+        Each saved check keeps the answers and the ruleset it used, so you can see what changed later.
+      </p>
       <div className="mt-8">
-        {list.isLoading ? <div className="grid gap-3">{[0, 1, 2].map((i) => <Skel key={i} className="h-24" />)}</div>
-          : list.isError ? <ErrorState error={list.error} onRetry={() => list.refetch()} />
-          : sorted.length === 0 ? (
-            <EmptyState mark={<ClipboardCheck className="h-5 w-5 text-muted-foreground" />} title="No saved checks yet" action={<Link href="/checker" className="btn btn-primary">Run the checker</Link>}>
-              Run the checker, then tick consent to keep a private copy here.
-            </EmptyState>
-          ) : (
-            <ol className="relative grid gap-3 border-l border-border pl-5 sm:pl-6">
-              {sorted.map((a) => {
-                const c = counts(a);
-                return (
-                  <li key={a.id} className="relative">
-                    <span aria-hidden className="absolute -left-[1.6rem] top-6 h-2.5 w-2.5 rounded-full border-2 border-background bg-primary sm:-left-[1.85rem]" />
-                    <Link href={'/workspace/assessments/' + a.id} className="surface group flex flex-wrap items-center gap-4 p-5 transition-shadow hover:shadow-[var(--shadow-md)]" data-testid={'link-assessment-' + a.id}>
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-medium">{formatDate(a.createdAt)}</span>
-                        <span className="mt-1 flex flex-wrap gap-x-3 font-mono text-xs text-muted-foreground">
-                          <span>as of {a.result.asOfDate}</span><span>ruleset {a.result.rulesetVersion}</span>
-                          <span>{a.profileRevision ? 'profile rev ' + a.profileRevision : 'questionnaire snapshot'}</span>
+        {list.isLoading ? (
+          <div className="grid gap-3">
+            {[0, 1, 2].map((i) => (
+              <Skel key={i} className="h-24" />
+            ))}
+          </div>
+        ) : list.isError ? (
+          <ErrorState error={list.error} onRetry={() => list.refetch()} />
+        ) : sorted.length === 0 ? (
+          <EmptyState
+            mark={<ClipboardCheck className="h-5 w-5 text-muted-foreground" />}
+            title="No saved checks yet"
+            action={
+              <Link href="/checker" className="btn btn-primary">
+                Run the checker
+              </Link>
+            }
+          >
+            Run the checker, then tick consent to keep a private copy here.
+          </EmptyState>
+        ) : (
+          <ol className="relative grid gap-3 border-l border-border pl-5 sm:pl-6">
+            {sorted.map((a) => {
+              const c = counts(a);
+              return (
+                <li key={a.id} className="relative">
+                  <span
+                    aria-hidden
+                    className="absolute -left-[1.6rem] top-6 h-2.5 w-2.5 rounded-full border-2 border-background bg-primary sm:-left-[1.85rem]"
+                  />
+                  <Link
+                    href={"/workspace/assessments/" + a.id}
+                    className="surface group flex flex-wrap items-center gap-4 p-5 transition-shadow hover:shadow-[var(--shadow-md)]"
+                    data-testid={"link-assessment-" + a.id}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-medium">{formatDate(a.createdAt)}</span>
+                      <span className="mt-1 flex flex-wrap gap-x-3 font-mono text-xs text-muted-foreground">
+                        <span>as of {a.result.asOfDate}</span>
+                        <span>ruleset {a.result.rulesetVersion}</span>
+                        <span>
+                          {a.profileRevision ? "profile rev " + a.profileRevision : "questionnaire snapshot"}
                         </span>
                       </span>
-                      {a.result.items.length === 0 ? <span className="pill pill-ink">Coverage unavailable</span> : (
-                        <span className="flex flex-wrap gap-1.5">{c.map(({ label, count }) => <span key={label} className={'pill ' + RESULT_TONES[label]}>{count} {label.toLowerCase()}</span>)}</span>
-                      )}
-                      <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ol>
-          )}
+                    </span>
+                    {a.result.items.length === 0 ? (
+                      <span className="pill pill-ink">Coverage unavailable</span>
+                    ) : (
+                      <span className="flex flex-wrap gap-1.5">
+                        {c.map(({ label, count }) => (
+                          <span key={label} className={"pill " + RESULT_TONES[label]}>
+                            {count} {label.toLowerCase()}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                    <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+        )}
       </div>
     </div>
   );
 }
 
 export function AssessmentDetail({ id }: { id: string }) {
-  const a = useGetAssessment(id, { query: { enabled: !!id, queryKey: getGetAssessmentQueryKey(id), ...live } });
+  const a = useGetAssessment(id, {
+    query: { enabled: !!id, queryKey: getGetAssessmentQueryKey(id), ...live },
+  });
   const list = useListAssessments({ query: { queryKey: getListAssessmentsQueryKey(), ...live } });
-  const [prevId, setPrevId] = useState('');
+  const [prevId, setPrevId] = useState("");
   const [taskFor, setTaskFor] = useState<string | null>(null);
-  const others = useMemo(() => (list.data ?? []).filter((x) => x.id !== id).sort((x, y) => y.createdAt.localeCompare(x.createdAt)), [list.data, id]);
+  const others = useMemo(
+    () => (list.data ?? []).filter((x) => x.id !== id).sort((x, y) => y.createdAt.localeCompare(x.createdAt)),
+    [list.data, id],
+  );
 
-  if (a.isLoading) return <div className="mx-auto max-w-5xl px-5 py-12"><Skel className="h-10 w-60" /><Skel className="mt-6 h-96" /></div>;
-  if (a.isError || !a.data) return <div className="mx-auto max-w-5xl px-5 py-12"><WorkspaceNav /><ErrorState error={a.error} onRetry={() => a.refetch()} /></div>;
+  if (a.isLoading)
+    return (
+      <div className="mx-auto max-w-5xl px-5 py-12">
+        <Skel className="h-10 w-60" />
+        <Skel className="mt-6 h-96" />
+      </div>
+    );
+  if (a.isError || !a.data)
+    return (
+      <div className="mx-auto max-w-5xl px-5 py-12">
+        <WorkspaceNav />
+        <ErrorState error={a.error} onRetry={() => a.refetch()} />
+      </div>
+    );
   const s = a.data;
   const facts = s.facts as unknown as Record<string, unknown>;
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-12 lg:px-8">
       <WorkspaceNav />
-      <Link href="/workspace/assessments" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" />All assessments</Link>
+      <Link
+        href="/workspace/assessments"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        All assessments
+      </Link>
       <h1 className="font-display mt-3 text-4xl">Assessment of {formatDate(s.createdAt)}</h1>
-      <p className="mt-2 font-mono text-xs text-muted-foreground">{s.profileRevision ? 'From saved profile revision ' + s.profileRevision : 'From a consented questionnaire snapshot'}</p>
+      <p className="mt-2 font-mono text-xs text-muted-foreground">
+        {s.profileRevision
+          ? "From saved profile revision " + s.profileRevision
+          : "From a consented questionnaire snapshot"}
+      </p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_18rem]">
         <div className="min-w-0">
-          <AssessmentResultView result={s.result} itemAction={(it) => canCreateSourceTask(it) ? (
-            <button type="button" className="btn btn-ghost btn-sm" aria-expanded={taskFor === it.ruleId} onClick={() => setTaskFor(taskFor === it.ruleId ? null : it.ruleId)} data-testid={'button-task-' + it.ruleId}><ListPlus className="h-4 w-4" />Add task</button>
-          ) : null} />
-          {taskFor && (() => { const it = s.result.items.find((i) => i.ruleId === taskFor); return it && canCreateSourceTask(it) ? <TaskFromItem key={it.ruleId} assessmentId={s.id} item={it} onDone={() => setTaskFor(null)} /> : null; })()}
+          <AssessmentResultView
+            result={s.result}
+            // oxlint-disable-next-line react/no-unstable-nested-components -- a render function the list calls, not a component
+            itemAction={(it) =>
+              canCreateSourceTask(it) ? (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  aria-expanded={taskFor === it.ruleId}
+                  onClick={() => setTaskFor(taskFor === it.ruleId ? null : it.ruleId)}
+                  data-testid={"button-task-" + it.ruleId}
+                >
+                  <ListPlus className="h-4 w-4" />
+                  Add task
+                </button>
+              ) : null
+            }
+          />
+          {taskFor &&
+            (() => {
+              const it = s.result.items.find((i) => i.ruleId === taskFor);
+              return it && canCreateSourceTask(it) ? (
+                <TaskFromItem key={it.ruleId} assessmentId={s.id} item={it} onDone={() => setTaskFor(null)} />
+              ) : null;
+            })()}
         </div>
         <aside className="grid h-fit gap-4">
           <details className="surface p-5" open>
             <summary className="eyebrow cursor-pointer">Answers used</summary>
             <dl className="mt-3 grid gap-2 text-sm">
               {reviewFacts(facts).map(([k, value]) => (
-                <div key={k} className="border-t border-border pt-2"><dt className="text-xs text-muted-foreground">{factLabel(k)}</dt><dd className="break-words">{displayFact(k, value)}</dd></div>
+                <div key={k} className="border-t border-border pt-2">
+                  <dt className="text-xs text-muted-foreground">{factLabel(k)}</dt>
+                  <dd className="break-words">{displayFact(k, value)}</dd>
+                </div>
               ))}
             </dl>
           </details>
@@ -108,42 +212,117 @@ export function AssessmentDetail({ id }: { id: string }) {
 
       <section className="surface mt-10 p-5 sm:p-7" aria-labelledby="cmp-h">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div><p className="eyebrow">Compare</p><h2 id="cmp-h" className="font-display mt-1 text-2xl">What changed since an earlier check</h2></div>
+          <div>
+            <p className="eyebrow">Compare</p>
+            <h2 id="cmp-h" className="font-display mt-1 text-2xl">
+              What changed since an earlier check
+            </h2>
+          </div>
           <div className="w-full sm:w-72">
-            <label className="label" htmlFor="prev">Earlier assessment</label>
-            <select id="prev" className="field" value={prevId} onChange={(e) => setPrevId(e.target.value)} disabled={list.isLoading || others.length === 0} data-testid="select-compare">
-              <option value="">{list.isLoading ? 'Loading...' : others.length ? 'Choose one' : 'No other assessments'}</option>
-              {others.map((o) => <option key={o.id} value={o.id}>{formatDate(o.createdAt)}</option>)}
+            <label className="label" htmlFor="prev">
+              Earlier assessment
+            </label>
+            <select
+              id="prev"
+              className="field"
+              value={prevId}
+              onChange={(e) => setPrevId(e.target.value)}
+              disabled={list.isLoading || others.length === 0}
+              data-testid="select-compare"
+            >
+              <option value="">
+                {list.isLoading ? "Loading..." : others.length ? "Choose one" : "No other assessments"}
+              </option>
+              {others.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {formatDate(o.createdAt)}
+                </option>
+              ))}
             </select>
           </div>
         </div>
-        {list.isError && <div className="mt-4"><ErrorState error={list.error} onRetry={() => list.refetch()} /></div>}
-        {prevId && <Comparison id={id} prevId={prevId} current={s} previous={others.find((o) => o.id === prevId)} />}
+        {list.isError && (
+          <div className="mt-4">
+            <ErrorState error={list.error} onRetry={() => list.refetch()} />
+          </div>
+        )}
+        {prevId && (
+          <Comparison id={id} prevId={prevId} current={s} previous={others.find((o) => o.id === prevId)} />
+        )}
       </section>
     </div>
   );
 }
 
-function Comparison({ id, prevId, current, previous }: { id: string; prevId: string; current: SavedAssessment; previous?: SavedAssessment }) {
-  const c = useCompareAssessments(id, prevId, { query: { enabled: !!id && !!prevId, queryKey: getCompareAssessmentsQueryKey(id, prevId), ...live } });
-  const title = (rid: string) => current.result.items.find((i) => i.ruleId === rid)?.title ?? previous?.result.items.find((i) => i.ruleId === rid)?.title ?? rid;
-  if (c.isLoading) return <div className="mt-5 grid gap-2"><Skel className="h-16" /><Skel className="h-16" /></div>;
-  if (c.isError || !c.data) return <div className="mt-5"><ErrorState error={c.error} onRetry={() => c.refetch()} /></div>;
+function Comparison({
+  id,
+  prevId,
+  current,
+  previous,
+}: {
+  id: string;
+  prevId: string;
+  current: SavedAssessment;
+  previous?: SavedAssessment | undefined;
+}) {
+  const c = useCompareAssessments(id, prevId, {
+    query: { enabled: !!id && !!prevId, queryKey: getCompareAssessmentsQueryKey(id, prevId), ...live },
+  });
+  const title = (rid: string) =>
+    current.result.items.find((i) => i.ruleId === rid)?.title ??
+    previous?.result.items.find((i) => i.ruleId === rid)?.title ??
+    rid;
+  if (c.isLoading)
+    return (
+      <div className="mt-5 grid gap-2">
+        <Skel className="h-16" />
+        <Skel className="h-16" />
+      </div>
+    );
+  if (c.isError || !c.data)
+    return (
+      <div className="mt-5">
+        <ErrorState error={c.error} onRetry={() => c.refetch()} />
+      </div>
+    );
   const d = c.data;
-  const none = !d.changedFacts.length && !d.addedRuleIds.length && !d.removedRuleIds.length && !d.changedRuleIds.length;
-  if (none) return <p className="mt-5 rounded-xl bg-secondary px-4 py-3 text-sm" data-testid="status-no-changes">No differences in answers or matched rules between these two assessments.</p>;
+  const none =
+    !d.changedFacts.length && !d.addedRuleIds.length && !d.removedRuleIds.length && !d.changedRuleIds.length;
+  if (none)
+    return (
+      <p className="mt-5 rounded-xl bg-secondary px-4 py-3 text-sm" data-testid="status-no-changes">
+        No differences in answers or matched rules between these two assessments.
+      </p>
+    );
   const pf = previous?.facts as unknown as Record<string, unknown> | undefined;
   const cf = current.facts as unknown as Record<string, unknown>;
   return (
     <div className="mt-6 grid gap-6 md:grid-cols-2" data-testid="comparison">
       <div>
-        <p className="text-sm font-medium"><GitCompare className="mr-1.5 inline h-4 w-4" />Changed answers ({d.changedFacts.length})</p>
+        <p className="text-sm font-medium">
+          <GitCompare className="mr-1.5 inline h-4 w-4" />
+          Changed answers ({d.changedFacts.length})
+        </p>
         <ul className="mt-2 grid gap-2 text-sm">
-          {d.changedFacts.length === 0 ? <li className="text-muted-foreground">None</li> : d.changedFacts.map((k) => (
-            <li key={k} className="rounded-xl border border-border p-3"><span className="block text-xs text-muted-foreground">{factLabel(k)}</span>
-              {pf ? <><span className="text-muted-foreground line-through">{displayFact(k, factAtPath(pf, k))}</span> <ArrowRight className="mx-1 inline h-3 w-3" /> {displayFact(k, factAtPath(cf, k))}</> : displayFact(k, factAtPath(cf, k))}
-            </li>
-          ))}
+          {d.changedFacts.length === 0 ? (
+            <li className="text-muted-foreground">None</li>
+          ) : (
+            d.changedFacts.map((k) => (
+              <li key={k} className="rounded-xl border border-border p-3">
+                <span className="block text-xs text-muted-foreground">{factLabel(k)}</span>
+                {pf ? (
+                  <>
+                    <span className="text-muted-foreground line-through">
+                      {displayFact(k, factAtPath(pf, k))}
+                    </span>{" "}
+                    <ArrowRight className="mx-1 inline h-3 w-3" /> {displayFact(k, factAtPath(cf, k))}
+                  </>
+                ) : (
+                  displayFact(k, factAtPath(cf, k))
+                )}
+              </li>
+            ))
+          )}
         </ul>
       </div>
       <div className="grid gap-4 text-sm">
@@ -155,36 +334,105 @@ function Comparison({ id, prevId, current, previous }: { id: string; prevId: str
   );
 }
 
-function RuleList({ label, tone, ids, title }: { label: string; tone: string; ids: string[]; title: (id: string) => string }) {
+function RuleList({
+  label,
+  tone,
+  ids,
+  title,
+}: {
+  label: string;
+  tone: string;
+  ids: string[];
+  title: (id: string) => string;
+}) {
   return (
     <div>
-      <span className={'pill ' + tone}>{label} · {ids.length}</span>
-      {ids.length > 0 && <ul className="mt-2 grid gap-1">{ids.map((r) => <li key={r} className="flex justify-between gap-3 border-t border-border pt-1.5"><span>{title(r)}</span><span className="font-mono text-xs text-muted-foreground">{r}</span></li>)}</ul>}
+      <span className={"pill " + tone}>
+        {label} · {ids.length}
+      </span>
+      {ids.length > 0 && (
+        <ul className="mt-2 grid gap-1">
+          {ids.map((r) => (
+            <li key={r} className="flex justify-between gap-3 border-t border-border pt-1.5">
+              <span>{title(r)}</span>
+              <span className="font-mono text-xs text-muted-foreground">{r}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
-function TaskFromItem({ assessmentId, item, onDone }: { assessmentId: string; item: AssessmentItem; onDone: () => void }) {
+function TaskFromItem({
+  assessmentId,
+  item,
+  onDone,
+}: {
+  assessmentId: string;
+  item: AssessmentItem;
+  onDone: () => void;
+}) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const [draft, setDraft] = useState<TaskDraft>(() => ({ ...emptyDraft(item.title.slice(0, 200)), notes: item.nextStep.slice(0, 6000) }));
+  const [draft, setDraft] = useState<TaskDraft>(() => ({
+    ...emptyDraft(item.title.slice(0, 200)),
+    notes: item.nextStep.slice(0, 6000),
+  }));
   const create = useCreateTask();
   function submit() {
-    create.mutate({ data: { title: draft.title.trim(), notes: draft.notes, dueDate: draft.dueDate || null, dateConfirmed: !!draft.dueDate && draft.dateConfirmed, assessmentId, ruleId: item.ruleId } }, {
-      onSuccess: () => { qc.invalidateQueries({ queryKey: getListTasksQueryKey() }); toast({ title: 'Task added', description: 'Find it under Tasks.' }); onDone(); },
-    });
+    create.mutate(
+      {
+        data: {
+          title: draft.title.trim(),
+          notes: draft.notes,
+          dueDate: draft.dueDate || null,
+          dateConfirmed: !!draft.dueDate && draft.dateConfirmed,
+          assessmentId,
+          ruleId: item.ruleId,
+        },
+      },
+      {
+        onSuccess: () => {
+          void qc.invalidateQueries({ queryKey: getListTasksQueryKey() });
+          toast({ title: "Task added", description: "Find it under Tasks." });
+          onDone();
+        },
+      },
+    );
   }
   return (
     <div className="surface mt-4 border-primary/40 p-5 sm:p-6" data-testid="panel-task-from-item">
       <p className="eyebrow">New task from this item</p>
-      <p className="mt-1 text-sm text-muted-foreground">Linked to rule <span className="font-mono">{item.ruleId}</span>. Marking it done later records your own progress, not regulator approval.</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Linked to rule <span className="font-mono">{item.ruleId}</span>. Marking it done later records your
+        own progress, not regulator approval.
+      </p>
       <div className="mt-4">
-        <TaskForm idPrefix="from-item" draft={draft} onChange={setDraft} onSubmit={submit} pending={create.isPending} submitLabel="Create task"
-          extra={create.error ? <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{describeError(create.error).message}</p> : undefined}
-          footer={<button type="button" className="btn btn-ghost btn-sm" onClick={onDone}>Cancel</button>} />
+        <TaskForm
+          idPrefix="from-item"
+          draft={draft}
+          onChange={setDraft}
+          onSubmit={submit}
+          pending={create.isPending}
+          submitLabel="Create task"
+          extra={
+            create.error ? (
+              <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {describeError(create.error).message}
+              </p>
+            ) : undefined
+          }
+          footer={
+            <button type="button" className="btn btn-ghost btn-sm" onClick={onDone}>
+              Cancel
+            </button>
+          }
+        />
       </div>
-      <Notice className="mt-4" tone="ink" title="Tasks are yours">Valo does not file anything or contact any agency on your behalf.</Notice>
+      <Notice className="mt-4" tone="ink" title="Tasks are yours">
+        Valo does not file anything or contact any agency on your behalf.
+      </Notice>
     </div>
   );
 }
-

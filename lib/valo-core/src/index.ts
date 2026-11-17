@@ -1,8 +1,8 @@
 export * from "./checker";
 export * from "./acceptance-work-items";
 export { finalSourceContext } from "./reference-leads.generated";
-export { coordinatingRefinement,additionalSourceLeads } from "./coordinating.generated";
-export {allSourceLeads,businessNameSourceLeads} from "./research-source-leads";
+export { coordinatingRefinement, additionalSourceLeads } from "./coordinating.generated";
+export { allSourceLeads, businessNameSourceLeads } from "./research-source-leads";
 export { handoverCheckpoint } from "./handover.generated";
 export * from "./catalogue";
 export * from "./traceability";

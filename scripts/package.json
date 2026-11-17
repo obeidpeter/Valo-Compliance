@@ -7,6 +7,9 @@
     "hello": "tsx ./src/hello.ts",
     "test:valo": "tsx --test ./src/valo/*.test.ts",
     "valo:readiness": "tsx ./src/valo/readiness.ts",
+    "valo:status": "tsx ./src/valo/status.ts",
+    "valo:architecture": "tsx ./src/valo/architecture-check.ts",
+    "valo:database-tests": "tsx ./src/valo/database-tests.ts",
     "valo:source-register": "tsx ./src/valo/source-register.ts",
     "valo:sync-specification": "tsx ./src/valo/sync-specification.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -16,6 +19,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "tsx": "catalog:"
+    "tsx": "catalog:",
+    "yaml": "2.9.1"
   }
 }

@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { PublicItemAccess } from './publicItemAccess';
 
 export interface PublicItem {
   id: string;
@@ -13,4 +14,10 @@ export interface PublicItem {
   type: string;
   summary: string;
   industry: string;
+  templateId?: string;
+  category?: string;
+  access?: PublicItemAccess;
+  reviewedAt?: string;
+  href?: string;
+  reason?: string;
 }

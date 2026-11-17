@@ -27,8 +27,9 @@ Next.js is the preferred frontend. The selected web artifact is React/Vite; do n
 
 **How to apply:** Retain Next.js when adapting the artifact bootstrap. Only a genuinely necessary alternative requires owner approval; selecting the bootstrap did not approve Vite as a replacement.
 
-The intended GitHub repository must be verified private and belong to this
-product before use. Do not infer creation, protection or synchronisation from
+The intended GitHub repository must belong to this product before use. Since
+16 November 2026 it is intentionally public (owner decision); see
+`github-write-permissions.md`. Do not infer creation, protection or synchronisation from
 coordinating reports. Check exact-name conflicts first. Do not buy/upgrade,
 transfer, make public, force-push, delete or overwrite another Valo product.
 

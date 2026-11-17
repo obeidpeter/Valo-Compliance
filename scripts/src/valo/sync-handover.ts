@@ -1,56 +1,100 @@
 import { execFileSync } from "node:child_process";
-import { readFile,writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-const root=new URL("../../../",import.meta.url);
-const baseline="871899483093363ec69d765e2d16fa1d88e0836e";
-const git=(args:string[])=>execFileSync("git",args,{cwd:root,encoding:"utf8"}).trim();
+const root = new URL("../../../", import.meta.url);
+const baseline = "871899483093363ec69d765e2d16fa1d88e0836e";
+const git = (args: string[]) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 // Requires real local ancestry; copying a checkpoint label is not incorporation.
-git(["merge-base","--is-ancestor",baseline,"HEAD"]);
-const paths=[
+git(["merge-base", "--is-ancestor", baseline, "HEAD"]);
+const paths = [
   "docs/specification/master-execution-prompt.txt",
   "docs/specification/VALO-TRD-001-v1.1.txt",
   "docs/specification/VALO-ROADMAP-001-v1.1.txt",
   "docs/specification/essential-business-documents.txt",
-  "docs/registers/requirements.json","docs/registers/requirements.csv",
-  "docs/registers/content-inventory.json","docs/registers/conflicts-and-assumptions.json",
-  "docs/registers/source-discovery.json","docs/registers/validation-summary.txt",
+  "docs/registers/requirements.json",
+  "docs/registers/requirements.csv",
+  "docs/registers/content-inventory.json",
+  "docs/registers/conflicts-and-assumptions.json",
+  "docs/registers/source-discovery.json",
+  "docs/registers/validation-summary.txt",
 ];
-const hash=(b:Buffer)=>createHash("sha256").update(b).digest("hex");
-const files=[];
-for(const path of paths){
-  const original=execFileSync("git",["show",`${baseline}:${path}`],{cwd:root,maxBuffer:4*1024*1024});
-  const current=await readFile(new URL(path,root));
-  if(!original.equals(current))throw Error("Baseline mismatch: "+path);
-  files.push({path,bytes:current.length,sha256:hash(current),baselineBlob:git(["rev-parse",`${baseline}:${path}`]),matched:true});
+const hash = (b: Buffer) => createHash("sha256").update(b).digest("hex");
+const files = [];
+for (const path of paths) {
+  const original = execFileSync("git", ["show", `${baseline}:${path}`], {
+    cwd: root,
+    maxBuffer: 4 * 1024 * 1024,
+  });
+  const current = await readFile(new URL(path, root));
+  if (!original.equals(current)) throw Error("Baseline mismatch: " + path);
+  files.push({
+    path,
+    bytes: current.length,
+    sha256: hash(current),
+    baselineBlob: git(["rev-parse", `${baseline}:${path}`]),
+    matched: true,
+  });
 }
-const inventory=JSON.parse(await readFile(new URL("docs/registers/content-inventory.json",root),"utf8"));
-const matrix=JSON.parse(await readFile(new URL("docs/registers/requirements.json",root),"utf8"));
-const requirementRows=Array.isArray(matrix)?matrix:matrix.requirements;
-if(!Array.isArray(requirementRows)||requirementRows.length!==127)
+const inventory = JSON.parse(await readFile(new URL("docs/registers/content-inventory.json", root), "utf8"));
+const matrix = JSON.parse(await readFile(new URL("docs/registers/requirements.json", root), "utf8"));
+const requirementRows = Array.isArray(matrix) ? matrix : matrix.requirements;
+if (!Array.isArray(requirementRows) || requirementRows.length !== 127)
   throw Error("Expected 127 retained formal requirement rows");
-const read=JSON.parse(await readFile(new URL("docs/valo/evidence/handover-checkpoint-read.json",root),"utf8"));
-if(read.observed.baselineCommit.sha!==baseline||read.observed.pullRequest.headSha!==baseline)
+const read = JSON.parse(
+  await readFile(new URL("docs/valo/evidence/handover-checkpoint-read.json", root), "utf8"),
+);
+if (read.observed.baselineCommit.sha !== baseline || read.observed.pullRequest.headSha !== baseline)
   throw Error("Remote commit/PR checkpoint differs");
-const record={
-  baselineCommit:baseline,branch:"docs/specification-baseline",
-  draftPr:"https://github.com/obeidpeter/Valo-Compliance/pull/1",
-  localHistoryIncorporated:true,
-  incorporatedAtCommit:git(["rev-list","--ancestry-path","--reverse",`${baseline}..HEAD`]).split("\n")[0]||baseline,
-  remoteApplicationSourceSyncVerified:false,remoteCiVerified:false,protectionEnforcementVerified:false,
-  ownerReportedPrivate:read.reported.private,observedPrivate:read.observed.repository.private,
-  files,counts:{exactRequirements:requirementRows.length,baselineTemplates:inventory.baseline_templates.length,
-    supplementaryMappings:inventory.essential_document_mapping.length,regulatoryRows:inventory.regulatory_inventory.length},
-  title:{requested:"Valo",reportedCurrent:"LovableYellowishCrash",applicationBrand:"Valo",
-    projectMetadataChanged:false,status:"browser_access_unavailable_manual_editor_action_required",
-    browserObservation:"The delegated browser could not access the workspace: the supplied Replit project URL showed Page not found and Log in/Sign up. No metadata was changed or read back.",
-    officialDocumentation:"https://docs.replit.com/features/editor/editor-and-tools",
-    instruction:"Select the current project name at the top left of the Replit editor, then set the display name to Valo. The project URL does not change."},
-  summary:`The documentation checkpoint ${baseline} on docs/specification-baseline (draft PR #1) is now an ancestor of the local application branch. All ten original specification/register files match byte for byte. This is local Git incorporation, not application-source upload, remote CI, protection or R1 acceptance. The owner reports private visibility; the latest authenticated check returned public.`,
-  approvals:{R1:false,R2:false,publicLaunch:false,livePayments:false,paidUpgrade:false},
+const record = {
+  baselineCommit: baseline,
+  branch: "docs/specification-baseline",
+  draftPr: "https://github.com/obeidpeter/Valo-Compliance/pull/1",
+  localHistoryIncorporated: true,
+  incorporatedAtCommit:
+    git(["rev-list", "--ancestry-path", "--reverse", `${baseline}..HEAD`]).split("\n")[0] || baseline,
+  remoteApplicationSourceSyncVerified: false,
+  remoteCiVerified: false,
+  protectionEnforcementVerified: false,
+  ownerReportedPrivate: read.reported.private,
+  observedPrivate: read.observed.repository.private,
+  files,
+  counts: {
+    exactRequirements: requirementRows.length,
+    baselineTemplates: inventory.baseline_templates.length,
+    supplementaryMappings: inventory.essential_document_mapping.length,
+    regulatoryRows: inventory.regulatory_inventory.length,
+  },
+  title: {
+    requested: "Valo",
+    reportedCurrent: "LovableYellowishCrash",
+    applicationBrand: "Valo",
+    projectMetadataChanged: false,
+    status: "browser_access_unavailable_manual_editor_action_required",
+    browserObservation:
+      "The delegated browser could not access the workspace: the supplied Replit project URL showed Page not found and Log in/Sign up. No metadata was changed or read back.",
+    officialDocumentation: "https://docs.replit.com/features/editor/editor-and-tools",
+    instruction:
+      "Select the current project name at the top left of the Replit editor, then set the display name to Valo. The project URL does not change.",
+  },
+  summary: `The documentation checkpoint ${baseline} on docs/specification-baseline (draft PR #1) is now an ancestor of the local application branch. All ten original specification/register files match byte for byte. This is local Git incorporation, not application-source upload, remote CI, protection or R1 acceptance. The owner reports private visibility; the latest authenticated check returned public.`,
+  approvals: { R1: false, R2: false, publicLaunch: false, livePayments: false, paidUpgrade: false },
 };
-if(record.counts.baselineTemplates!==40||record.counts.supplementaryMappings!==27||record.counts.regulatoryRows!==79)
+if (
+  record.counts.baselineTemplates !== 40 ||
+  record.counts.supplementaryMappings !== 27 ||
+  record.counts.regulatoryRows !== 79
+)
   throw Error("Baseline inventory count changed");
-await writeFile(new URL("docs/registers/handover-checkpoint.json",root),JSON.stringify(record,null,2)+"\n");
-await writeFile(new URL("lib/valo-core/src/handover.generated.ts",root),
-  "// Generated by sync-handover.ts from actual Git ancestry, remote observations and baseline bytes.\nexport const handoverCheckpoint="+JSON.stringify(record,null,2)+" as const;\n");
-console.log("Verified baseline ancestry and ten byte-identical specification/register files. No remote source synchronization or release acceptance.");
+await writeFile(
+  new URL("docs/registers/handover-checkpoint.json", root),
+  JSON.stringify(record, null, 2) + "\n",
+);
+await writeFile(
+  new URL("lib/valo-core/src/handover.generated.ts", root),
+  "// Generated by sync-handover.ts from actual Git ancestry, remote observations and baseline bytes.\nexport const handoverCheckpoint=" +
+    JSON.stringify(record, null, 2) +
+    " as const;\n",
+);
+console.log(
+  "Verified baseline ancestry and ten byte-identical specification/register files. No remote source synchronization or release acceptance.",
+);

@@ -1,4 +1,5 @@
 export * from "./valo-inference-budget";
+export * from "./valo-saved-templates";
 export * from "./valo-customer-access";
 export * from "./valo-privacy";
 // Export your models here. Add one export per file
@@ -33,6 +34,7 @@ export * from "./valo-export-objects";
 export * from "./valo-export-requests";
 export * from "./valo-file-assets";
 export * from "./valo-source-snapshots";
+export * from "./valo-source-controls";
 export * from "./valo-editorial-runs";
 export * from "./valo-assessments";
 export * from "./valo-tasks";
@@ -46,5 +48,5 @@ export * from "./valo-commerce";
 export * from "./valo-payment-concerns";
 export * from "./valo-workspace-exports";
 
-
 export * from "./valo-staff-role-audit";
+export * from "./valo-workspace-scope";

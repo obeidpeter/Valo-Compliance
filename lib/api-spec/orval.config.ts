@@ -27,10 +27,14 @@ export default defineConfig({
       client: "react-query",
       mode: "split",
       baseUrl: "/api",
+      // Encode every path parameter, so an identifier can never change which endpoint is called.
+      urlEncodeParameters: true,
       clean: true,
       prettier: true,
       override: {
-        query: { version: 5 },
+        // Keys name the operation and keep each identifier as its own element, so no
+        // identifier can make one operation's cache entry another's.
+        query: { version: 5, useOperationIdAsQueryKey: true },
         fetch: {
           includeHttpResponseReturnType: false,
         },
@@ -61,10 +65,10 @@ export default defineConfig({
           // Match the native patched runtime, including generated consumers.
           version: 4,
           coerce: {
-            query: ['boolean', 'number', 'string'],
-            param: ['boolean', 'number', 'string'],
-            body: ['bigint', 'date'],
-            response: ['bigint', 'date'],
+            query: ["boolean", "number", "string"],
+            param: ["boolean", "number", "string"],
+            body: ["bigint", "date"],
+            response: ["bigint", "date"],
           },
         },
         useDates: true,

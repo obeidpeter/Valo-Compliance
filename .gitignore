@@ -57,3 +57,8 @@ Thumbs.db
 .local/
 /generated-artifacts/
 /artifacts/api-server/generated-artifacts/
+
+# Local environment files may contain secrets; only the generated example is tracked.
+.env
+.env.*
+!.env.example
