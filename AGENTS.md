@@ -68,6 +68,11 @@ Rules that apply now:
 - Validate all request input with the generated Zod schemas.
 - An empty `catch` or `.catch(() => {})` needs a comment saying why the error is
   ignored. Prefer logging it. New import cycles fail CI.
+- oxlint checks the code with type information (`.oxlintrc.json`). A promise
+  nobody awaits is handled or marked with `void`. An exception names the rule
+  and says why: `// oxlint-disable-next-line <plugin>/<rule> -- <reason>`; one that
+  suppresses nothing fails the run. Change which rules run only in `.oxlintrc.json`,
+  with the reason beside the rule.
 - Run `pnpm run format` before committing; CI rejects unformatted code.
 - Domain failures throw `ValoProblem` with a safe customer message. Never put
   private data in error messages or logs.
@@ -106,7 +111,7 @@ Rules that apply now:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm test        # typecheck, lint (formatting and repository rules), fast unit suites
+pnpm test        # typecheck, lint (formatting, oxlint and repository rules), fast unit suites
 ```
 
 Database, browser and recovery groups are listed in

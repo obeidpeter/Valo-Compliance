@@ -91,7 +91,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck all source
         run: pnpm run typecheck
-      - name: Check formatting and repository rules
+      - name: Check formatting, lint rules and repository rules
         run: pnpm run lint
       - name: Check the generated API client matches the contract
         run: |

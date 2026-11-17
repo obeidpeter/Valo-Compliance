@@ -43,7 +43,7 @@ Measured on the integration branch at `14c8f38`:
 | --- | --- |
 | Prettier formatter, one mechanical reformat commit, CI format check | done |
 | Repository rules checker (empty catches need a reason; no new import cycles) in CI | done |
-| ESLint | not started. The lockfile can change again: `pino` 10.4.0, which has build provenance, replaced the 9.14.0 trust downgrade. Until 19 November, ten versions already locked are exempt from the 7-day release window, each pinned to its locked version (`pnpm-workspace.yaml`); remove the exemptions then. |
+| Linter | done with oxlint instead of ESLint, whose TypeScript parser and Next.js plugin depend on `picomatch` (decision 0009). It runs with type information in `pnpm run lint` and CI: correctness and suspicious rules, promises nobody awaits, the rules of hooks, Next.js and accessibility. Rules turned off and every inline exception give their reason. Until 19 November, ten versions already locked are exempt from the 7-day release window, each pinned to its locked version (`pnpm-workspace.yaml`); remove the exemptions then. |
 | TypeScript: strictFunctionTypes, noUnusedLocals/Parameters, noImplicitOverride | done |
 | TypeScript: exactOptionalPropertyTypes (91 errors), noUncheckedIndexedAccess (825) | not started |
 | Generated API client checked against the contract in CI | done |
@@ -52,7 +52,7 @@ Measured on the integration branch at `14c8f38`:
 | Delete unused UI kit, packages, `mockup-sandbox` | in progress (52 components and `mockup-sandbox` removed, and `mockup-sandbox`'s packages left the lockfile; the UI kit's unused packages can now be removed from `package.json`) |
 | Safe error logging; no silently discarded errors | done (errors are logged by class, code and stack frames, never by message; empty catches need a reason) |
 
-Exit: CI rejects unformatted code, stray environment reads and discarded errors.
+Exit: CI rejects unformatted code, lint findings, stray environment reads and discarded errors.
 
 ### Phase 2 — Modules
 
