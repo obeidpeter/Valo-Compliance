@@ -35,8 +35,8 @@ export type MerchantDecision = {
   resolution: "merchant-accepted" | "declined";
   amountKobo: number;
   message: string;
-  uploadedFilename?: string;
-  evidenceId?: string;
+  uploadedFilename?: string | undefined;
+  evidenceId?: string | undefined;
 };
 export type DisputeTransport = {
   configured(): boolean;

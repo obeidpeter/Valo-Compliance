@@ -15,7 +15,7 @@ export interface DescribedError {
   kind: ErrorKind;
   status?: number;
   message: string;
-  currentRevision?: number;
+  currentRevision?: number | undefined;
 }
 
 export function describeError(err: unknown): DescribedError {

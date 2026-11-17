@@ -14,7 +14,7 @@ export function AssessmentResultView({
 }: {
   result: AssessmentResult;
   itemAction?: (item: AssessmentItem) => ReactNode;
-  questionAction?: (field: string) => ReactNode;
+  questionAction?: ((field: string) => ReactNode) | undefined;
 }) {
   const labels = [
     ...RESULT_LABELS,
@@ -134,7 +134,7 @@ function Item({
 }: {
   item: AssessmentItem;
   action?: ReactNode;
-  questionAction?: (field: string) => ReactNode;
+  questionAction?: ((field: string) => ReactNode) | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const detail = item;

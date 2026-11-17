@@ -42,7 +42,7 @@ type Completion = {
   id: string;
   model: string;
   choices: { message: { content: string | null } }[];
-  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number } | undefined;
 };
 export type CustomerTransport = (
   payload: ReturnType<typeof customerProviderPayload>,

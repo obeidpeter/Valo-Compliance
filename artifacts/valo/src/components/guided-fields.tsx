@@ -37,7 +37,7 @@ type Props = {
   spec: GuidedSpec;
   value: GuidedData;
   onChange: (next: GuidedData) => void;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   onValidityChange?: (issues: Record<string, string>) => void;
 };
 
@@ -217,8 +217,8 @@ function FieldInput({
   field: GuidedField;
   id: string;
   value: string;
-  error?: string;
-  disabled?: boolean;
+  error?: string | undefined;
+  disabled?: boolean | undefined;
   onChange: (v: string) => void;
   label?: string;
 }) {
@@ -395,7 +395,7 @@ function TableEditor({
   rows: Record<string, string>[];
   values: Record<string, string>;
   issues: Record<string, string>;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   onRows: (rows: Record<string, string>[], focusSelector: string | null) => void;
 }) {
   const base = "gt-" + t.id;

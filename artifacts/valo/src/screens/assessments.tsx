@@ -263,7 +263,7 @@ function Comparison({
   id: string;
   prevId: string;
   current: SavedAssessment;
-  previous?: SavedAssessment;
+  previous?: SavedAssessment | undefined;
 }) {
   const c = useCompareAssessments(id, prevId, {
     query: { enabled: !!id && !!prevId, queryKey: getCompareAssessmentsQueryKey(id, prevId), ...live },

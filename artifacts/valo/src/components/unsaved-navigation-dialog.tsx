@@ -14,7 +14,7 @@ export function UnsavedNavigationDialog({
   onSave: () => void;
   onDiscard: () => void;
   onStay: () => void;
-  error?: string;
+  error?: string | undefined;
   saveLabel?: string;
   description?: string;
 }) {

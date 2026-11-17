@@ -95,7 +95,7 @@ export function dependencySummary(
       Number(raw.metadata!.vulnerabilities![k] ?? 0),
     ]),
   );
-  const findings: { id: string; package: string; severity?: string }[] = [];
+  const findings: { id: string; package: string; severity?: string | undefined }[] = [];
   const reviewed: { id: string; package: string; paths: string[] }[] = [];
   let reviewedBlocking = 0;
   for (const a of Object.values(raw.advisories ?? {})) {

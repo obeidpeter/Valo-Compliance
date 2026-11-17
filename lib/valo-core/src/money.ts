@@ -26,13 +26,23 @@ export type FinancialInput = {
     duplicatesConfirmed?: boolean;
   };
 };
+/**
+ * A value as parsed input gives it: an absent optional property may also be present as undefined,
+ * as Zod's optional fields are. Functions take this for what they read; the types they return stay
+ * exact, so a document they build matches the API contract.
+ */
+export type Parsed<T> = T extends readonly (infer U)[]
+  ? Parsed<U>[]
+  : T extends object
+    ? { [K in keyof T]: Parsed<T[K]> | ({} extends Pick<T, K> ? undefined : never) }
+    : T;
 export type FinancialBlock = { id: string; type: "table"; text: string; rows: string[][] };
 function amount(s: string) {
   if (!/^[0-9]{1,24}$/.test(s)) throw Error("INVALID_INTEGER_KOBO");
   return BigInt(s);
 }
 /** User-entered records only; this neither verifies payments nor authorises refunds. */
-export function recordedBalance(record: NonNullable<FinancialInput["paymentRecord"]>) {
+export function recordedBalance(record: NonNullable<Parsed<FinancialInput>["paymentRecord"]>) {
   if (record.payments.length > 40) throw Error("TOO_MANY_PAYMENT_RECORDS");
   const invoice = amount(record.invoiceAmountKobo),
     references = new Map<string, string>();
@@ -84,7 +94,7 @@ export function lineTotal(quantity: string, unitPriceKobo: string) {
   // Each positive line is rounded half-up to the nearest kobo, once.
   return (amount(unitPriceKobo) * numerator + denominator / 2n) / denominator;
 }
-export function financialBlocks(input: FinancialInput): FinancialBlock[] {
+export function financialBlocks(input: Parsed<FinancialInput>): FinancialBlock[] {
   if (
     (input.currency ?? "NGN") !== "NGN" ||
     [...input.lines, ...(input.optionalLines ?? [])].some(
@@ -241,7 +251,7 @@ export function financialBlocks(input: FinancialInput): FinancialBlock[] {
 }
 export function synchronizeFinancialBlocks<
   T extends {
-    financialInput?: FinancialInput;
+    financialInput?: Parsed<FinancialInput> | undefined;
     blocks: { id: string; type: string; text: string; rows: string[][] }[];
   },
 >(content: T): T {

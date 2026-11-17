@@ -5,7 +5,12 @@ import type { AddressInfo } from "node:net";
 import express from "express";
 import { CLERK_PROXY_PATH, clerkProxy } from "./clerkProxyMiddleware";
 
-type Seen = { method?: string; url?: string; headers: IncomingHttpHeaders; body: string };
+type Seen = {
+  method?: string | undefined;
+  url?: string | undefined;
+  headers: IncomingHttpHeaders;
+  body: string;
+};
 type Reply = { status: number; headers: IncomingHttpHeaders; body: string };
 
 const listen = async (server: Server) => {

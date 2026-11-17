@@ -1,6 +1,6 @@
 import { GUIDED_SPECS_V1 } from "./guided-specs-v1";
 import type { GuidedData, GuidedField, GuidedSpec, GuidedTemplateId } from "./guided";
-import { financialBlocks, formatKobo, recordedBalance, type FinancialInput } from "./money";
+import { financialBlocks, formatKobo, recordedBalance, type FinancialInput, type Parsed } from "./money";
 export const GUIDED_PREFIX = "valo-guided-v1:";
 export type GuidedBlock = {
   id: string;
@@ -22,6 +22,8 @@ type Content = {
   selectedClauses: string[];
   formatting: { font: "serif" | "sans"; accent: "forest" | "charcoal" };
 };
+/** Content as parsed input gives it, where an absent financial input may be present as undefined. */
+type ContentInput = Omit<Content, "financialInput"> & { financialInput?: Parsed<FinancialInput> | undefined };
 export const guidedVisible = (f: { when?: { field: string; equals: string } }, v: Record<string, string>) =>
   !f.when || v[f.when.field] === f.when.equals;
 export function guidedCalendarDate(v: string) {
@@ -258,7 +260,7 @@ export function guidedDataFromBlocks(blocks: readonly GuidedBlock[]): GuidedData
     if (!allowed.has(b.id) && !b.id.startsWith(prefix + "calc:")) throw Error("UNKNOWN_GUIDED_BLOCK");
   return data;
 }
-export function compileGuidedContent(data: GuidedData, previous?: Content): Content {
+export function compileGuidedContent(data: GuidedData, previous?: ContentInput): Content {
   if (!Object.hasOwn(GUIDED_SPECS_V1, data.templateId)) throw Error("UNSUPPORTED_GUIDED_VERSION");
   const spec = GUIDED_SPECS_V1[data.templateId];
   if (!spec || data.schemaVersion !== 1) throw Error("UNSUPPORTED_GUIDED_VERSION");
@@ -320,7 +322,7 @@ export function compileGuidedContent(data: GuidedData, previous?: Content): Cont
 }
 const blockDigest = (blocks: readonly GuidedBlock[]) =>
   JSON.stringify(blocks.map((b) => [b.id, b.type, b.text, b.rows]));
-export function guidedContentConsistent(content: Content) {
+export function guidedContentConsistent(content: ContentInput) {
   const data = guidedDataFromBlocks(content.blocks);
   if (!data) return true;
   if (content.financialInput) throw Error("GUIDED_RAW_AMOUNTS_MUST_USE_THE_BOUND_QUESTION_MODEL");
@@ -334,7 +336,7 @@ export function guidedContentConsistent(content: Content) {
   );
 }
 /** Shared preview/Word/PDF projection of the exact same saved answers. */
-export function guidedRenderableBlocks(content: Content): GuidedBlock[] {
+export function guidedRenderableBlocks(content: ContentInput): GuidedBlock[] {
   const data = guidedDataFromBlocks(content.blocks);
   if (!data) return content.blocks;
   if (!guidedContentConsistent(content)) throw Error("GUIDED_CONTENT_TAMPERED");

@@ -512,7 +512,7 @@ function UsageCard({
     isLoading: boolean;
     isError: boolean;
     error: unknown;
-    data?: CustomerAIUsage;
+    data?: CustomerAIUsage | undefined;
     refetch: () => unknown;
   };
 }) {

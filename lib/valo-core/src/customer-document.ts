@@ -1,4 +1,4 @@
-import { financialBlocks, recordedBalance, type FinancialInput } from "./money";
+import { financialBlocks, recordedBalance, type FinancialInput, type Parsed } from "./money";
 export function customerComposerNotes(
   lines: readonly { text: string; send: boolean }[],
   mode: "ai" | "manual",
@@ -19,7 +19,7 @@ export type CustomerDraftInput = {
   issueDate: string;
   dueDate: string;
   contextLines: string[];
-  financialInput: FinancialInput;
+  financialInput: Parsed<FinancialInput>;
 };
 export type CustomerPlan = {
   opening: "none" | "please_review" | "for_consideration" | "outstanding_record";

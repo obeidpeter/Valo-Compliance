@@ -609,7 +609,7 @@ function Cell({
 }: {
   id: string;
   label: string;
-  err?: string;
+  err?: string | undefined;
   children: ReactNode;
 }) {
   return (

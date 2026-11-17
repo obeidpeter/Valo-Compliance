@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ComponentProps, type ReactNode } from "react";
 import { ClerkProvider, SignIn, SignUp, Show, useAuth, useUser } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
@@ -56,8 +56,12 @@ if (!clerkPubKey) {
   throw new Error("Missing Clerk publishable key (VITE_CLERK_PUBLISHABLE_KEY / CLERK_PUBLISHABLE_KEY).");
 }
 
+/** The theme type @clerk/react accepts, which @clerk/themes' own type does not match exactly. */
+type ClerkTheme = NonNullable<NonNullable<ComponentProps<typeof ClerkProvider>["appearance"]>["theme"]>;
 const clerkAppearance = {
-  theme: shadcn,
+  // @clerk/themes types cssLayerName as string | undefined, which @clerk/react's theme type does
+  // not accept under exactOptionalPropertyTypes. It is the same object.
+  theme: shadcn as ClerkTheme,
   cssLayerName: "clerk",
   options: {
     logoPlacement: "inside" as const,
@@ -359,14 +363,14 @@ function ShellRoutes() {
   );
 }
 
-function ClerkProviderWithRoutes({ nonce }: { nonce?: string }) {
+function ClerkProviderWithRoutes({ nonce }: { nonce?: string | undefined }) {
   const [, setLocation] = useLocation();
 
   return (
     <ClerkProvider
-      nonce={nonce}
+      {...(nonce !== undefined ? { nonce } : {})}
       publishableKey={clerkPubKey}
-      proxyUrl={clerkProxyUrl}
+      {...(clerkProxyUrl !== undefined ? { proxyUrl: clerkProxyUrl } : {})}
       appearance={clerkAppearance}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
@@ -393,7 +397,7 @@ function ClerkProviderWithRoutes({ nonce }: { nonce?: string }) {
   );
 }
 
-function App({ nonce }: { nonce?: string } = {}) {
+function App({ nonce }: { nonce?: string | undefined } = {}) {
   return (
     <WouterRouter base={basePath}>
       <ClerkProviderWithRoutes nonce={nonce} />

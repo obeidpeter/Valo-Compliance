@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 
 /** One HTTP operation declared in lib/api-spec/openapi.yaml, e.g. "PATCH /workspace/tasks/{id}". */
-export type ContractOperation = { method: string; path: string; key: string; operationId?: string };
+export type ContractOperation = {
+  method: string;
+  path: string;
+  key: string;
+  operationId?: string | undefined;
+};
 
 const contractPath = new URL("../../../../lib/api-spec/openapi.yaml", import.meta.url);
 const METHODS = new Set(["get", "post", "put", "patch", "delete"]);

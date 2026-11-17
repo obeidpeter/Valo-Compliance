@@ -34,7 +34,7 @@ export function mergeWorkspaceExports(
     (a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id),
   );
 }
-export function workspaceExportError(error: unknown): { status?: number; message: string } {
+export function workspaceExportError(error: unknown): { status?: number | undefined; message: string } {
   const value = error as { status?: number; data?: { error?: string } } | null;
   const status = value?.status;
   return {

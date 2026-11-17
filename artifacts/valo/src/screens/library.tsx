@@ -41,7 +41,7 @@ export default function Library() {
   const params: ListPublicCatalogueParams = {
     type,
     page,
-    category: category || undefined,
+    ...(category ? { category } : {}),
     access,
     sort,
     ...(q ? { q } : {}),

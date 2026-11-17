@@ -21,7 +21,7 @@ export type ManagedCompletionResult = {
   created: number;
   _request_id?: string | null;
   choices: { finish_reason: string | null; message: { content: string | null } }[];
-  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+  usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number } | undefined;
 };
 export type FiniteWork = {
   key: string;
@@ -48,10 +48,15 @@ export type FiniteManifest = {
   policyVersion: string;
   preparedAt: string;
   allocation: typeof additionalInferenceAllocation;
-  packageId?: string;
+  packageId?: string | undefined;
   works: FiniteWork[];
 };
 export type CompletionTransport = (
   request: ManagedRequest,
-  options: { timeout: number; maxRetries: 0; beforeOutbound?: () => Promise<void>; onOutbound?: () => void },
+  options: {
+    timeout: number;
+    maxRetries: 0;
+    beforeOutbound?: (() => Promise<void>) | undefined;
+    onOutbound?: (() => void) | undefined;
+  },
 ) => Promise<ManagedCompletionResult>;

@@ -86,6 +86,8 @@ export const supportCaseKeys = {
 };
 // A successful status with an unreadable body stays uncertain instead of clearing a draft.
 const json = { responseType: "json" } as const;
+/** Request options with the abort signal only when there is one. */
+const request = (signal?: AbortSignal) => (signal ? { ...json, signal } : json);
 export function listSupportCases(
   staff: boolean,
   page: number,
@@ -93,8 +95,8 @@ export function listSupportCases(
   signal?: AbortSignal,
 ): Promise<SupportCaseList> {
   return staff
-    ? listStaffSupportCases({ page, status }, { ...json, signal })
-    : listCustomerSupportCases({ page }, { ...json, signal });
+    ? listStaffSupportCases({ page, status }, request(signal))
+    : listCustomerSupportCases({ page }, request(signal));
 }
 export function getSupportCase(
   staff: boolean,
@@ -103,11 +105,11 @@ export function getSupportCase(
   signal?: AbortSignal,
 ): Promise<SupportCaseDetail> {
   return staff
-    ? getStaffSupportCase(id, { messagesPage }, { ...json, signal })
-    : getCustomerSupportCase(id, { messagesPage }, { ...json, signal });
+    ? getStaffSupportCase(id, { messagesPage }, request(signal))
+    : getCustomerSupportCase(id, { messagesPage }, request(signal));
 }
 export function listSupportAssignees(signal?: AbortSignal) {
-  return getSupportAssignees({ ...json, signal });
+  return getSupportAssignees(request(signal));
 }
 function confirmedCaseDetail(result: SupportCaseDetail, id: string, expectedVersion: number) {
   if (
@@ -136,7 +138,7 @@ export async function actOnSupportCase(id: string, input: SupportStaffInput) {
   );
 }
 export function listContentEscalations(page: number, signal?: AbortSignal): Promise<ContentEscalationList> {
-  return getContentEscalations({ page }, { ...json, signal });
+  return getContentEscalations({ page }, request(signal));
 }
 export async function actOnContentEscalation(id: string, input: ContentEscalationInput) {
   const result: ContentEscalationResult = await postContentEscalationAction(id, input, json);

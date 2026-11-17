@@ -14,13 +14,13 @@ export type ReleasedLibraryItem = {
   href?: string;
 };
 export type CatalogueQuery = {
-  q?: string;
-  type?: string;
-  industry?: string;
-  category?: string;
-  access?: string;
-  sort?: string;
-  page?: number;
+  q?: string | undefined;
+  type?: string | undefined;
+  industry?: string | undefined;
+  category?: string | undefined;
+  access?: string | undefined;
+  sort?: string | undefined;
+  page?: number | undefined;
 };
 const normal = (s: string) =>
   s

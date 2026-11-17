@@ -76,7 +76,7 @@ function contentValid(input: {
   content: {
     fields: { issueDate: string; dueDate: string };
     blocks: { id: string }[];
-    financialInput?: { kind: string };
+    financialInput?: { kind: string } | undefined;
   };
 }) {
   const { issueDate, dueDate } = input.content.fields;

@@ -17,7 +17,7 @@ type Field = {
   label: string;
   kind?: "text" | "flag" | "date" | "list";
   choices?: readonly Choice[];
-  hint?: string;
+  hint?: string | undefined;
 };
 const flag = (key: string, label: string, hint?: string): Field => ({ key, label, kind: "flag", hint });
 const select = (key: string, label: string, choices: readonly Choice[], hint?: string): Field => ({

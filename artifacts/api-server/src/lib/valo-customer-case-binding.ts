@@ -170,6 +170,7 @@ export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<strin
       quantity: "1",
       unitPrice: x.price,
     }));
+  const delivery = money("deliveryAmount");
   const financial: FinancialInput = {
     kind: task as FinancialInput["kind"],
     lines: sourceLines.map(convert).filter((x) => x !== null),
@@ -178,7 +179,7 @@ export function bindCustomerCase(c: AuthoredCustomerCase, followup: Record<strin
     discountKobo: money("discountAmount") ?? null,
     amountDueKobo: null,
     ...(typeof f.currency === "string" ? { currency: f.currency } : {}),
-    ...(money("deliveryAmount") !== undefined ? { deliveryKobo: money("deliveryAmount") } : {}),
+    ...(delivery !== undefined ? { deliveryKobo: delivery } : {}),
   };
   if (typeof f.discountPercent === "string") financial.discountPercent = f.discountPercent;
   if (f.tax) {

@@ -1,6 +1,6 @@
 /** Only an explicitly configured development recipient can receive real email. */
 export type ReminderSender = {
-  replayWindowMs?: number;
+  replayWindowMs?: number | undefined;
   send(input: {
     idempotencyKey: string;
     ownerIdentityId: string;

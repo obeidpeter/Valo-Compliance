@@ -314,7 +314,8 @@ export async function saveDisputeInformation(
       disputeId: row.id,
       actorId: actor.identityId,
       requestKey: input.requestKey,
-      information,
+      // Built above from present values only, so no field is undefined; Zod's type allows it.
+      information: information as Record<string, string>,
       consentVersion: input.consentVersion,
     });
   });

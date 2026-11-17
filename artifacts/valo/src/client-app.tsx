@@ -17,7 +17,7 @@ const App = dynamic(() => import("./App"), {
   loading: LoadingApp,
 });
 
-export default function ClientApp({ nonce }: { nonce?: string }) {
+export default function ClientApp({ nonce }: { nonce?: string | undefined }) {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);

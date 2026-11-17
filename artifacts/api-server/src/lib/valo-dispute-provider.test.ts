@@ -146,7 +146,7 @@ test("dispute transport: official operations with controlled HTTP, not merchant 
     assert.equal(posts, 0);
   });
   await t.test("upload acknowledges empty 204 using a separate no-Authorization client", async () => {
-    const calls: { path: string; method?: string }[] = [],
+    const calls: { path: string; method?: string | undefined }[] = [],
       sent: RequestInit[] = [];
     const p = makeDisputeTransport(
       async (path, _body, method) => {

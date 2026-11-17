@@ -9,11 +9,11 @@ export type ImpactInput = {
   reason: string;
   actor: string;
   dedupe: string;
-  action?: "hold" | "withdraw";
-  causeKey?: string;
-  sourceId?: string;
-  oldSnapshotId?: string | null;
-  newSnapshotId?: string | null;
+  action?: "hold" | "withdraw" | undefined;
+  causeKey?: string | undefined;
+  sourceId?: string | undefined;
+  oldSnapshotId?: string | null | undefined;
+  newSnapshotId?: string | null | undefined;
 };
 /** Called under the exclusive source-state lock. The immutable impact itself
  * blocks reads immediately; bounded fan-out may then survive worker restarts. */

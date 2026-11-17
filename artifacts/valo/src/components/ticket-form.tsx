@@ -22,8 +22,8 @@ export function TicketForm({
   intro,
 }: {
   defaultCategory?: TicketInputCategory;
-  categories?: TicketInputCategory[];
-  intro?: string;
+  categories?: TicketInputCategory[] | undefined;
+  intro?: string | undefined;
 }) {
   return (
     <>
@@ -60,8 +60,8 @@ function TicketFormInner({
   intro,
 }: {
   defaultCategory: TicketInputCategory;
-  categories?: TicketInputCategory[];
-  intro?: string;
+  categories?: TicketInputCategory[] | undefined;
+  intro?: string | undefined;
 }) {
   const { user } = useUser();
   const mutation = useCreateSupportTicket();

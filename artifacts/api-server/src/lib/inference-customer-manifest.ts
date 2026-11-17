@@ -19,7 +19,7 @@ const path = "docs/evaluation-candidates/customer-ai.json";
  * hold this preparer; it cannot manufacture a follow-up or author new content. */
 export async function prepareCustomerFiniteManifest(
   caseId: string,
-  options: { retry?: boolean; now?: Date; packageId?: string } = {},
+  options: { retry?: boolean | undefined; now?: Date | undefined; packageId?: string | undefined } = {},
 ) {
   const bytes = await readFile(resolve(root, path));
   const row = (JSON.parse(bytes.toString()) as { cases: AuthoredCustomerCase[] }).cases.find(

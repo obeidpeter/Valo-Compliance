@@ -75,7 +75,7 @@ export const needsProducts = (f: CheckerFacts) => f.manufacturing === "yes" || f
 /** Normalise before sending: dependent questions become not_applicable / omitted. */
 export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
   const out: RichCheckerFacts = { ...f };
-  if (f.rich) out.rich = normaliseRichAnswers(f.rich) as RichCheckerFacts["rich"];
+  if (f.rich) out.rich = normaliseRichAnswers(f.rich) as NonNullable<RichCheckerFacts["rich"]>;
   if (Array.isArray(out.activities)) {
     const a = out.activities.map((x) => x.trim()).filter(Boolean);
     out.activities = a.length ? a : "unanswered";

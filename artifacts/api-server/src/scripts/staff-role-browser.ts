@@ -58,9 +58,10 @@ await once(server, "listening");
 const address = server.address();
 if (!address || typeof address === "string") throw Error("NO_PORT");
 const origin = "http://127.0.0.1:" + address.port;
+const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH;
 const browser = await chromium.launch({
     headless: true,
-    executablePath: process.env.CHROMIUM_EXECUTABLE_PATH,
+    ...(executablePath !== undefined ? { executablePath } : {}),
   }),
   context = await browser.newContext({ viewport: { width: 360, height: 800 } }),
   page = await context.newPage(),

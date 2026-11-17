@@ -83,7 +83,11 @@ try {
   checks.push(
     "Actual Next responses enforce unique server-generated nonces, reject supplied policy/nonce, disallow framing and prevent HTML caching",
   );
-  browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_EXECUTABLE_PATH });
+  const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH;
+  browser = await chromium.launch({
+    headless: true,
+    ...(executablePath !== undefined ? { executablePath } : {}),
+  });
   const context = await browser.newContext(),
     page = await context.newPage();
   await context.route("**/*", (route) =>
