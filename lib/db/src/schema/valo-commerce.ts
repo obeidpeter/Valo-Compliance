@@ -7,9 +7,11 @@ import {
   jsonb,
   boolean,
   uniqueIndex,
+  unique,
   index,
   foreignKey,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoContentVersions } from "./valo-publication";
@@ -212,6 +214,9 @@ export const valoPaymentDisputes = pgTable(
     category: text("category"),
   },
   (t) => [
+    // Dispute information and actions reference a dispute with its workspace and
+    // order, so a selected dispute cannot belong to another order.
+    unique("valo_dispute_exact_binding").on(t.workspaceId, t.orderId, t.id),
     foreignKey({
       name: "valo_dispute_order_tenant_fk",
       columns: [t.workspaceId, t.orderId],
@@ -238,11 +243,17 @@ export const valoDisputeInformation = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex("valo_dispute_information_request").on(t.workspaceId, t.requestKey),
+    unique("valo_dispute_information_request").on(t.workspaceId, t.requestKey),
+    unique("valo_dispute_info_exact_binding").on(t.workspaceId, t.orderId, t.disputeId, t.id),
     foreignKey({
       name: "valo_dispute_information_order_fk",
       columns: [t.workspaceId, t.orderId],
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
+    }),
+    foreignKey({
+      name: "valo_dispute_information_exact_dispute_fk",
+      columns: [t.workspaceId, t.orderId, t.disputeId],
+      foreignColumns: [valoPaymentDisputes.workspaceId, valoPaymentDisputes.orderId, valoPaymentDisputes.id],
     }),
   ],
 );
@@ -273,12 +284,31 @@ export const valoDisputeActions = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex("valo_dispute_action_request").on(t.disputeId, t.requestKey),
+    unique("valo_dispute_action_request").on(t.disputeId, t.requestKey),
+    // One live action of each kind per dispute; a cancelled one can be prepared again.
+    uniqueIndex("valo_dispute_one_intent")
+      .on(t.disputeId, t.kind)
+      .where(sql`${t.status} <> 'cancelled'`),
     index("valo_dispute_action_order").on(t.workspaceId, t.orderId),
     foreignKey({
       name: "valo_dispute_action_order_fk",
       columns: [t.workspaceId, t.orderId],
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
+    }),
+    foreignKey({
+      name: "valo_dispute_action_exact_dispute_fk",
+      columns: [t.workspaceId, t.orderId, t.disputeId],
+      foreignColumns: [valoPaymentDisputes.workspaceId, valoPaymentDisputes.orderId, valoPaymentDisputes.id],
+    }),
+    foreignKey({
+      name: "valo_dispute_action_exact_information_fk",
+      columns: [t.workspaceId, t.orderId, t.disputeId, t.informationId],
+      foreignColumns: [
+        valoDisputeInformation.workspaceId,
+        valoDisputeInformation.orderId,
+        valoDisputeInformation.disputeId,
+        valoDisputeInformation.id,
+      ],
     }),
   ],
 );

@@ -1,4 +1,14 @@
-import { pgTable, text, uuid, jsonb, integer, timestamp, uniqueIndex, bigserial } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  uuid,
+  jsonb,
+  integer,
+  timestamp,
+  uniqueIndex,
+  index,
+  bigserial,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 export const valoPublicationPolicies = pgTable("valo_publication_policies", {
   id: text("id").primaryKey(),
@@ -26,7 +36,10 @@ export const valoContentVersions = pgTable(
     withdrawnReason: text("withdrawn_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("valo_content_template_version_unique").on(t.templateId, t.version)],
+  (t) => [
+    uniqueIndex("valo_content_template_version_unique").on(t.templateId, t.version),
+    index("valo_content_discovery_idx").on(t.status, t.reviewBy, t.slug),
+  ],
 );
 export const valoPublicationAudit = pgTable("valo_publication_audit", {
   id: uuid("id").primaryKey(),
@@ -39,17 +52,21 @@ export const valoPublicationAudit = pgTable("valo_publication_audit", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 export const insertValoContentVersionSchema = createInsertSchema(valoContentVersions);
-export const valoPublicationAiAttempts = pgTable("valo_publication_ai_attempts", {
-  id: bigserial("id", { mode: "number" }).primaryKey(),
-  candidateHash: text("candidate_hash").notNull(),
-  role: text("role").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  requestHash: text("request_hash"),
-  requestMeter: jsonb("request_meter"),
-  outcome: text("outcome").notNull().default("legacy_unmetered"),
-  providerResponseId: text("provider_response_id"),
-  inputTokens: integer("input_tokens"),
-  outputTokens: integer("output_tokens"),
-  errorCode: text("error_code"),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-});
+export const valoPublicationAiAttempts = pgTable(
+  "valo_publication_ai_attempts",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    candidateHash: text("candidate_hash").notNull(),
+    role: text("role").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    requestHash: text("request_hash"),
+    requestMeter: jsonb("request_meter"),
+    outcome: text("outcome").notNull().default("legacy_unmetered"),
+    providerResponseId: text("provider_response_id"),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    errorCode: text("error_code"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [index("valo_publication_attempt_request_idx").on(t.candidateHash, t.role, t.requestHash)],
+);

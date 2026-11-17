@@ -8,8 +8,10 @@ import {
   timestamp,
   index,
   uniqueIndex,
+  unique,
   foreignKey,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
 export const valoWorkspaceExports = pgTable(
@@ -43,8 +45,14 @@ export const valoWorkspaceExports = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex("valo_workspace_export_identity").on(t.id, t.workspaceId),
-    uniqueIndex("valo_workspace_export_request").on(t.workspaceId, t.requesterId, t.requestKey),
+    unique("valo_workspace_export_identity").on(t.id, t.workspaceId),
+    unique("valo_workspace_export_request").on(t.workspaceId, t.requesterId, t.requestKey),
+    // A workspace has at most one export in progress.
+    uniqueIndex("valo_workspace_export_one_active")
+      .on(t.workspaceId)
+      .where(sql`${t.status} in ('queued', 'preparing', 'interrupted')`),
+    index("valo_workspace_export_expiry").on(t.expiresAt),
+    index("valo_workspace_export_dispatch").on(t.status, t.updatedAt),
   ],
 );
 export const valoWorkspaceExportAttempts = pgTable(
@@ -71,6 +79,8 @@ export const valoWorkspaceExportAttempts = pgTable(
       foreignColumns: [valoWorkspaceExports.id, valoWorkspaceExports.workspaceId],
     }),
     index("valo_workspace_cleanup_due").on(t.nextCleanupAt, t.id),
+    index("valo_workspace_export_cleanup").on(t.status, t.createdAt),
+    index("valo_workspace_export_cleanup_round_robin").on(t.cleanupCheckedAt),
   ],
 );
 export const insertWorkspaceExportSchema = createInsertSchema(valoWorkspaceExports);

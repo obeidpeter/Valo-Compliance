@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, jsonb, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, jsonb, timestamp, unique, index } from "drizzle-orm/pg-core";
 import { valoStaffAssignments } from "./valo-customer-access";
 export const valoStaffRoleChanges = pgTable(
   "valo_staff_role_changes",
@@ -24,7 +24,7 @@ export const valoStaffRoleChanges = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex("valo_staff_role_change_request").on(t.actorId, t.requestKey),
+    unique("valo_staff_role_change_request").on(t.actorId, t.requestKey),
     index("valo_staff_role_change_time").on(t.createdAt, t.id),
   ],
 );

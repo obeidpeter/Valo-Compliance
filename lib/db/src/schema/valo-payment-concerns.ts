@@ -1,13 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  text,
-  integer,
-  timestamp,
-  boolean,
-  uniqueIndex,
-  foreignKey,
-} from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp, boolean, unique, foreignKey } from "drizzle-orm/pg-core";
 import { valoOrders } from "./valo-commerce";
 const time = (name: string) => timestamp(name, { withTimezone: true });
 export const valoPaymentConcerns = pgTable(
@@ -26,7 +17,10 @@ export const valoPaymentConcerns = pgTable(
     updatedAt: time("updated_at").notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex("valo_concern_request_once").on(t.workspaceId, t.requestKey),
+    unique("valo_concern_request_once").on(t.workspaceId, t.requestKey),
+    // Events and messages reference a concern with its workspace and order, so they
+    // cannot attach to another order's concern.
+    unique("valo_concern_exact_binding").on(t.workspaceId, t.orderId, t.id),
     foreignKey({
       name: "valo_concern_order_scope",
       columns: [t.workspaceId, t.orderId],
@@ -41,9 +35,7 @@ export const valoPaymentConcernEvents = pgTable(
     id: uuid("id").primaryKey(),
     workspaceId: uuid("workspace_id").notNull(),
     orderId: uuid("order_id").notNull(),
-    concernId: uuid("concern_id")
-      .notNull()
-      .references(() => valoPaymentConcerns.id),
+    concernId: uuid("concern_id").notNull(),
     actorType: text("actor_type").notNull(),
     actorId: text("actor_id").notNull(),
     action: text("action").notNull(),
@@ -53,9 +45,9 @@ export const valoPaymentConcernEvents = pgTable(
   },
   (t) => [
     foreignKey({
-      name: "valo_concern_event_order_scope",
-      columns: [t.workspaceId, t.orderId],
-      foreignColumns: [valoOrders.workspaceId, valoOrders.id],
+      name: "valo_concern_event_exact_concern_fk",
+      columns: [t.workspaceId, t.orderId, t.concernId],
+      foreignColumns: [valoPaymentConcerns.workspaceId, valoPaymentConcerns.orderId, valoPaymentConcerns.id],
     }),
   ],
 );
@@ -67,17 +59,15 @@ export const valoConcernMessages = pgTable(
       .references(() => valoPaymentConcernEvents.id),
     workspaceId: uuid("workspace_id").notNull(),
     orderId: uuid("order_id").notNull(),
-    concernId: uuid("concern_id")
-      .notNull()
-      .references(() => valoPaymentConcerns.id),
+    concernId: uuid("concern_id").notNull(),
     body: text("body").notNull(),
     createdAt: time("created_at").notNull().defaultNow(),
   },
   (t) => [
     foreignKey({
-      name: "valo_concern_message_order_scope",
-      columns: [t.workspaceId, t.orderId],
-      foreignColumns: [valoOrders.workspaceId, valoOrders.id],
+      name: "valo_concern_message_exact_concern_fk",
+      columns: [t.workspaceId, t.orderId, t.concernId],
+      foreignColumns: [valoPaymentConcerns.workspaceId, valoPaymentConcerns.orderId, valoPaymentConcerns.id],
     }),
   ],
 );

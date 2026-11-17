@@ -109,6 +109,7 @@ export const valoPrivacyMessages = pgTable(
   (t) => [
     uniqueIndex("valo_privacy_message_reply").on(t.caseId, t.replyToVersion),
     foreignKey({
+      name: "valo_privacy_message_case",
       columns: [t.caseId, t.workspaceId],
       foreignColumns: [valoPrivacyCases.id, valoPrivacyCases.workspaceId],
     }),
