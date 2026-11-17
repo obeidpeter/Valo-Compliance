@@ -63,9 +63,17 @@ export async function assertSafetyActive(tx: SourceReader, key: "ai" | "checkout
       `${key === "ai" ? "AI assistance" : "Checkout"} is temporarily paused. Existing workspace records remain available.`,
     );
 }
+/**
+ * Admits one external operation (a managed AI provider call or a new checkout start),
+ * then runs it. A pause committed before admission refuses the operation. An admitted
+ * operation cannot be recalled, and a pause does not wait for it.
+ *
+ * Nothing is held while `run` waits on the provider: no transaction, advisory lock or
+ * pooled connection. Holding the shared source-state lock made every download that
+ * queued behind a publication or hold wait for the slowest provider call, and holding
+ * a connection let ten concurrent dispatches exhaust the pool and stop the API.
+ */
 export async function withSafetyDispatch<T>(key: "ai" | "checkout", run: () => Promise<T>) {
-  return db.transaction(async (tx) => {
-    await assertSafetyActive(tx, key);
-    return run();
-  });
+  await db.transaction((tx) => assertSafetyActive(tx, key));
+  return run();
 }

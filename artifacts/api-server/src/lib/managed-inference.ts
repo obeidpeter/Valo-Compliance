@@ -126,8 +126,10 @@ export async function managedCompletion(
   const d = active.getStore();
   if (!d?.current()) throw new InferenceHeld();
   requireDevelopment();
+  // The AI safety pause is checked before reservation; nothing is held during the call.
+  const { withSafetyDispatch } = await import("./valo-source-state");
   try {
-    return await d.complete(lane, request, options);
+    return await withSafetyDispatch("ai", () => d.complete(lane, request, options));
   } catch (error) {
     throw held(error);
   }

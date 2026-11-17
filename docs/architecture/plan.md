@@ -77,6 +77,7 @@ reach the 80% branch coverage NFR-011 requires.
 | Workspace context object required by every query | in progress: the actor is a server-issued type created only from a membership or a stored record; HTTP code cannot create, cast or redirect one (rule `workspace-actor`). Query-level enforcement (row-level security) not started. |
 | R2 membership design | done as a proposal ([r2-team-access.md](r2-team-access.md)); five owner decisions listed |
 | Adopt the migration ledger on the Replit development database | blocked (needs access to that database) |
+| No pooled connection taken inside a transaction | not started: the commerce product list runs on a second connection inside the purchases, order and checkout transactions, so ten concurrent requests can exhaust the pool. The pool also has no acquisition timeout, so exhaustion hangs instead of failing. |
 
 ### Phase 4 — Speed and capacity
 

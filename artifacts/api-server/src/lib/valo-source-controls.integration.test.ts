@@ -303,77 +303,85 @@ test(
         );
       },
     );
-    await t.test("pause and final dispatch are serialized; revoked/stale staff cannot resume", async () => {
-      let entered!: () => void, finish!: () => void;
-      const enteredPromise = new Promise<void>((r) => (entered = r)),
-        finishPromise = new Promise<void>((r) => (finish = r));
-      let calls = 0;
-      const dispatch = state.withSafetyDispatch("ai", async () => {
-        calls++;
-        entered();
-        await finishPromise;
-        return "controlled provider acknowledged";
-      });
-      await enteredPromise;
-      let pauseCompleted = false;
-      const pause = controls
-        .actOnSourceControls(fresh(system), {
+    await t.test("dispatches beyond the database pool size all finish", { timeout: 20000 }, async () => {
+      // Each stand-in provider call also uses the database, as the budget ledger does.
+      // Holding a pooled connection for every admitted call let ten of them exhaust the
+      // pool, after which no request could get a connection.
+      const n = 25;
+      assert.ok(n > (pool.options.max ?? 10));
+      const seen = await Promise.all(
+        Array.from({ length: n }, (_, i) =>
+          state.withSafetyDispatch("ai", async () => {
+            await new Promise((r) => setTimeout(r, 20));
+            return Number((await db.execute(sql`select ${i}::int as i`)).rows[0]!.i);
+          }),
+        ),
+      );
+      assert.deepEqual(
+        seen,
+        Array.from({ length: n }, (_, i) => i),
+      );
+    });
+    await t.test(
+      "a pause refuses later dispatch without waiting for admitted calls; revoked/stale staff cannot resume",
+      async () => {
+        let entered!: () => void, finish!: () => void;
+        const enteredPromise = new Promise<void>((r) => (entered = r)),
+          finishPromise = new Promise<void>((r) => (finish = r));
+        let calls = 0,
+          connectionsHeldDuringCall = -1;
+        const dispatch = state.withSafetyDispatch("ai", async () => {
+          calls++;
+          // No pooled connection is held while the provider works, so no transaction
+          // or source-state lock is held either.
+          connectionsHeldDuringCall = pool.totalCount - pool.idleCount;
+          entered();
+          await finishPromise;
+          return "controlled provider acknowledged";
+        });
+        await enteredPromise;
+        assert.equal(connectionsHeldDuringCall, 0);
+        // The pause commits while the admitted call is still in flight. If it waited for
+        // that call, this await would never finish.
+        await controls.actOnSourceControls(fresh(system), {
           action: "pause_service",
           service: "ai",
           requestKey: randomUUID(),
           reason,
-        })
-        .then((r) => {
-          pauseCompleted = true;
-          return r;
         });
-      // Observe the real lock wait via PostgreSQL, not a timing-only sleep assertion.
-      let waiting = false;
-      const until = Date.now() + 5000;
-      while (Date.now() < until) {
-        const r = await db.execute(
-          sql`select count(*) n from pg_locks where locktype='advisory' and objid=7502601 and granted=false`,
+        await assert.rejects(
+          state.withSafetyDispatch("ai", async () => {
+            calls++;
+          }),
+          /temporarily paused/,
         );
-        if (Number(r.rows[0]!.n) > 0) {
-          waiting = true;
-          break;
-        }
-        await new Promise((r) => setImmediate(r));
-      }
-      assert.equal(waiting, true);
-      assert.equal(pauseCompleted, false);
-      finish();
-      await dispatch;
-      await pause;
-      await assert.rejects(
-        state.withSafetyDispatch("ai", async () => {
-          calls++;
-        }),
-        /temporarily paused/,
-      );
-      assert.equal(calls, 1);
-      await db.execute(
-        sql`update valo_staff_assignments set active=false where identity_id=${system.identityId}`,
-      );
-      await assert.rejects(
-        controls.actOnSourceControls(fresh(system), {
+        // An admitted call cannot be recalled; it completes normally.
+        finish();
+        assert.equal(await dispatch, "controlled provider acknowledged");
+        assert.equal(calls, 1);
+        await db.execute(
+          sql`update valo_staff_assignments set active=false where identity_id=${system.identityId}`,
+        );
+        await assert.rejects(
+          controls.actOnSourceControls(fresh(system), {
+            action: "resume_service",
+            service: "ai",
+            requestKey: randomUUID(),
+            reason,
+          }),
+          /active role/,
+        );
+        await db.execute(
+          sql`update valo_staff_assignments set active=true where identity_id=${system.identityId}`,
+        );
+        await controls.actOnSourceControls(fresh(system), {
           action: "resume_service",
           service: "ai",
           requestKey: randomUUID(),
           reason,
-        }),
-        /active role/,
-      );
-      await db.execute(
-        sql`update valo_staff_assignments set active=true where identity_id=${system.identityId}`,
-      );
-      await controls.actOnSourceControls(fresh(system), {
-        action: "resume_service",
-        service: "ai",
-        requestKey: randomUUID(),
-        reason,
-      });
-    });
+        });
+      },
+    );
     await t.test("held versions cannot be manually restored or approved", async () => {
       await assert.rejects(
         controls.actOnSourceControls(fresh(staff), {

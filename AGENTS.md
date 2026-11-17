@@ -76,6 +76,10 @@ Rules that apply now:
   `WorkspaceActor`, which only `resolveWorkspace` and `workspaceActorFromRecord`
   (never in HTTP code) can create; the `workspace-actor` repository rule
   enforces this.
+- Never hold a transaction, lock or pooled database connection while waiting on
+  an AI model, payment provider or other external service. Check pauses and
+  holds just before the call, and recheck them in the transaction that saves its
+  result.
 
 ## 5. Checks
 

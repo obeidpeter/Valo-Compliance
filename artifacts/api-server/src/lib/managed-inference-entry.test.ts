@@ -306,10 +306,27 @@ test("default managed entry and customer organizer use actual finite dispatch an
       },
     },
   });
+  // The entry's AI safety pause check (valo-source-state.ts) runs in its own short
+  // transaction: the shared source-state lock, then the all_ai switch.
+  let aiPaused = false,
+    safetyChecks = 0;
+  const safetyTx = {
+    execute: async (query: SQL) => {
+      const { sql: text, params } = dialect.sqlToQuery(query);
+      if (text === "select pg_advisory_xact_lock_shared(7502601)") return { rows: [] };
+      if (text.startsWith("select key from valo_safety_switches")) {
+        assert.deepEqual(params, ["all_ai"]);
+        safetyChecks++;
+        return { rows: aiPaused ? [{ key: "all_ai" }] : [] };
+      }
+      throw Error("UNEXPECTED_SAFETY_SQL");
+    },
+  };
   t.mock.module("@workspace/db", {
     namedExports: {
       valoAIDrafts: drafts,
       valoSafetySwitches: switches,
+      db: { transaction: async <T>(fn: (t: typeof safetyTx) => Promise<T>) => fn(safetyTx) },
       pool: {
         connect: () => {
           throw Error("UNEXPECTED_REAL_LEDGER_CONNECTION");
@@ -438,6 +455,29 @@ test("default managed entry and customer organizer use actual finite dispatch an
     assert.equal(state.entries.find((e) => e.runKey === `${batch.id}:${batch.key}`)?.status, "settled");
     assert.deepEqual(received.at(-1), request);
     assert.equal(inferenceProposal.enabled, false);
+  });
+  await t.test("a committed AI pause refuses before reservation and makes zero SDK calls", async () => {
+    const batch = prepare(),
+      before = sdkCalls,
+      checks = safetyChecks;
+    aiPaused = true;
+    try {
+      await assert.rejects(
+        withApprovedInferenceWork(batch.id, batch.key, () =>
+          managedCompletion("customer", request, { timeout: 18000, maxRetries: 0 }),
+        ),
+        { status: 503, message: /AI assistance is temporarily paused/ },
+      );
+    } finally {
+      aiPaused = false;
+    }
+    assert.equal(safetyChecks - checks, 1);
+    assert.equal(sdkCalls, before);
+    assert.equal(
+      state.entries.some((e) => e.runKey === `${batch.id}:${batch.key}`),
+      false,
+      "a paused call reserves no budget",
+    );
   });
   await t.test(
     "request, actual source hash and actual case binding mismatches make zero SDK calls",

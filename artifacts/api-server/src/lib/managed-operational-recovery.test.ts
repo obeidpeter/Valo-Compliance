@@ -54,13 +54,20 @@ test("actual operational caller recovers an artifact failure from settled receip
   };
   let attempts: Attempt[] = [],
     attemptInserts = 0,
-    nextAttempt = 0;
+    nextAttempt = 0,
+    safetyChecks = 0;
   const dialect = new PgDialect();
   const execute = async (query: SQL) => {
     const converted = dialect.sqlToQuery(query),
       text = converted.sql.replace(/\s+/g, " ").trim(),
       p = converted.params;
     if (text.startsWith("select pg_advisory_xact_lock")) return { rows: [] };
+    if (text.startsWith("select key from valo_safety_switches")) {
+      // The managed entry checks the AI safety pause before each provider call.
+      assert.deepEqual(p, ["all_ai"]);
+      safetyChecks++;
+      return { rows: [] };
+    }
     if (text.startsWith("select count(*)")) throw Error("UNEXPECTED_LEGACY_DAILY_THROTTLE");
     if (text.startsWith("select id from valo_publication_ai_attempts"))
       return {
@@ -357,6 +364,7 @@ test("actual operational caller recovers an artifact failure from settled receip
     );
   const first = await run();
   assert.equal(sdkCalls, 2);
+  assert.equal(safetyChecks, 2, "each provider call checks the AI safety pause first");
   assert.equal(failedArtifactWrites, 1);
   assert.equal(first.length, 1);
   assert.equal(first[0]!.record.role, "challenge");
