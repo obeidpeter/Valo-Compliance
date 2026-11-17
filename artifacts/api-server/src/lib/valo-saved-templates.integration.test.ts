@@ -28,8 +28,9 @@ test(
       b = await resolveWorkspace("synthetic-saved-other-" + randomUUID());
     const held = await financeHeldFixture(),
       actual = await import("./valo-released-content");
+    const heldRelease = await actual.checkReleaseEvidence(held.id);
     await assert.rejects(
-      db.transaction((tx) => actual.lockedLiveVersion(tx, held.id)),
+      db.transaction((tx) => actual.lockedLiveVersion(tx, heldRelease)),
       { status: 404 },
     );
     // Only the eligibility adapter is controlled for positive storage mechanics.
@@ -93,9 +94,16 @@ test(
       namedExports: {
         ...actual,
         liveReleasedVersions: async () => (available ? [fixture] : []),
-        lockedLiveVersion: async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0], id: string) => {
-          await tx.select().from(valoContentVersions).where(eq(valoContentVersions.id, id)).for("share");
-          if (!available || id !== held.id) return actual.lockedLiveVersion(tx, id);
+        lockedLiveVersion: async (
+          tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+          release: Parameters<typeof actual.lockedLiveVersion>[1],
+        ) => {
+          await tx
+            .select()
+            .from(valoContentVersions)
+            .where(eq(valoContentVersions.id, release.id))
+            .for("share");
+          if (!available || release.id !== held.id) return actual.lockedLiveVersion(tx, release);
           return fixture;
         },
       },

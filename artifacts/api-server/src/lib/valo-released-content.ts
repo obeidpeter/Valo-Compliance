@@ -265,12 +265,57 @@ export async function releasedTemplate(slug: string) {
     formats: ["docx", "pdf"] as const,
   };
 }
-export async function lockedLiveVersion(tx: Parameters<Parameters<typeof db.transaction>[0]>[0], id: string) {
+declare const releaseChecked: unique symbol;
+/** Proof that a version's evidence was checked outside any transaction. Only
+ * `checkReleaseEvidence` creates one, and `lockedLiveVersion` requires it. */
+export type CheckedRelease = {
+  readonly id: string;
+  /** True only when the version was visible and its operational evidence passed. */
+  readonly operationalEvidence: boolean;
+  readonly [releaseChecked]: true;
+};
+const evidenceUnresolved = () =>
+  new ValoProblem(404, "Template unavailable while applicable rights or policy evidence is unresolved.");
+/**
+ * Checks the rights and policy evidence an original operational version needs. That
+ * evidence lives in the policy files and publication storage, so this runs before the
+ * caller's transaction: no source-state lock or pooled connection is held while storage
+ * answers. A version's bundle and attestations never change (a database trigger allows
+ * only its status to change), so evidence read here still applies under the lock.
+ */
+export async function checkReleaseEvidence(id: string): Promise<CheckedRelease> {
+  let operationalEvidence = false;
+  const [row] = await db.select().from(valoContentVersions).where(eq(valoContentVersions.id, id));
+  if (row) {
+    const [policy] = await db
+      .select({ hash: valoPublicationPolicies.hash })
+      .from(valoPublicationPolicies)
+      .where(eq(valoPublicationPolicies.id, row.policyId));
+    // A version that is not visible now is refused under the lock; skip its storage reads.
+    if (
+      policy &&
+      releaseVisible(row, policy.hash) &&
+      publicationSchema.parse(row.bundle).candidate.evidenceMode === "original_operational"
+    ) {
+      const current = await operationalPolicy();
+      if (policy.hash !== current.policy.hash || !(await currentOperationalPermission(row)))
+        throw evidenceUnresolved();
+      operationalEvidence = true;
+    }
+  }
+  return { id, operationalEvidence } as CheckedRelease;
+}
+/** The database checks for a released version, under the shared source-state lock so a
+ * hold or withdrawal committed first wins. Storage evidence comes from `release`. */
+export async function lockedLiveVersion(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  release: CheckedRelease,
+) {
   await lockSourceState(tx);
   const [row] = await tx
     .select()
     .from(valoContentVersions)
-    .where(eq(valoContentVersions.id, id))
+    .where(eq(valoContentVersions.id, release.id))
     .for("share");
   if (!row) throw new ValoProblem(404, "Template unavailable");
   const [policy] = await tx
@@ -283,15 +328,13 @@ export async function lockedLiveVersion(tx: Parameters<Parameters<typeof db.tran
     !(await sourceTargetAllowed(tx, "content", row.id, row.bundle))
   )
     throw new ValoProblem(404, "Template withdrawn, expired or unavailable");
-  const c = publicationSchema.parse(row.bundle).candidate;
-  if (c.evidenceMode === "original_operational") {
-    const current = await operationalPolicy();
-    if (policy.hash !== current.policy.hash || !(await currentOperationalPermission(row)))
-      throw new ValoProblem(
-        404,
-        "Template unavailable while applicable rights or policy evidence is unresolved.",
-      );
-  }
+  // If the version was published after its evidence check, the evidence was never read:
+  // refuse instead of reading storage under the lock. The next request checks it.
+  if (
+    publicationSchema.parse(row.bundle).candidate.evidenceMode === "original_operational" &&
+    !release.operationalEvidence
+  )
+    throw evidenceUnresolved();
   return row;
 }
 /** Exported for the entitlement isolation test. */
@@ -328,8 +371,9 @@ export async function requirePurchaseForPricedMaster(
 }
 export async function createReleasedTemplateDraft(actor: WorkspaceActor, id: string) {
   developmentPublicationOnly();
+  const release = await checkReleaseEvidence(id);
   const documentId = await db.transaction(async (tx) => {
-    const row = await lockedLiveVersion(tx, id);
+    const row = await lockedLiveVersion(tx, release);
     await authorizeWorkspaceWrite(tx, actor);
     await requirePurchaseForPricedMaster(tx, actor, row);
     const document = documentInput.parse(JSON.parse(publicationSchema.parse(row.bundle).candidate.body));
@@ -344,16 +388,21 @@ export async function createReleasedTemplateDraft(actor: WorkspaceActor, id: str
 }
 export async function readReleasedMaster(id: string, format: "docx" | "pdf", actor?: WorkspaceActor) {
   developmentPublicationOnly();
-  return db.transaction(async (tx) => {
-    const row = await lockedLiveVersion(tx, id);
+  const release = await checkReleaseEvidence(id);
+  const row = await db.transaction(async (tx) => {
+    const row = await lockedLiveVersion(tx, release);
     if (!actor) throw new ValoProblem(403, "Template unavailable without an authorised workspace.");
     await authorizeWorkspaceWrite(tx, actor);
     await requirePurchaseForPricedMaster(tx, actor, row);
-    const a = row.attestations as { exports: Record<"docx" | "pdf", ArtifactRef> };
-    return {
-      bytes: await getPublicationArtifact(a.exports[format]),
-      templateId: row.templateId,
-      version: row.version,
-    };
+    return row;
   });
+  // The download was admitted under the lock; a hold committed later cannot recall it.
+  // The bytes are read after the transaction, so no lock or connection is held while
+  // storage answers. Their reference and hash come from the immutable version row.
+  const a = row.attestations as { exports: Record<"docx" | "pdf", ArtifactRef> };
+  return {
+    bytes: await getPublicationArtifact(a.exports[format]),
+    templateId: row.templateId,
+    version: row.version,
+  };
 }

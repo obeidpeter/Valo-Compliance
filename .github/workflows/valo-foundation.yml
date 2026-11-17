@@ -137,6 +137,8 @@ jobs:
           echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Run API input-safety tests
         run: pnpm --filter @workspace/api-server test:valo
+      - name: Prove template downloads read storage outside the source-state lock
+        run: pnpm --filter @workspace/api-server test:valo-released-content
       - name: Prove catalogue filters and saved-item journeys
         run: pnpm --filter @workspace/api-server test:valo-catalogue-browser
       - name: Prove additional source freshness and strict staff command boundaries

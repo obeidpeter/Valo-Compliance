@@ -10,7 +10,12 @@ import {
 } from "@workspace/db";
 import { publicationSchema } from "@workspace/valo-core";
 import { authorizeWorkspaceWrite, limitWorkspaceWrite, ValoProblem, type WorkspaceActor } from "./valo-store";
-import { liveReleasedVersions, lockedLiveVersion, projectReleasedCatalogue } from "./valo-released-content";
+import {
+  checkReleaseEvidence,
+  liveReleasedVersions,
+  lockedLiveVersion,
+  projectReleasedCatalogue,
+} from "./valo-released-content";
 import { recommendTemplates } from "./valo-catalogue";
 import { developmentPublicationOnly } from "../editorial/operational-policy";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -79,8 +84,9 @@ export async function savedTemplateList(actor: WorkspaceActor) {
 }
 export async function saveTemplate(actor: WorkspaceActor, releaseId: string) {
   developmentPublicationOnly();
+  const release = await checkReleaseEvidence(releaseId);
   await db.transaction(async (tx) => {
-    const row = await lockedLiveVersion(tx, releaseId);
+    const row = await lockedLiveVersion(tx, release);
     if (publicationSchema.parse(row.bundle).candidate.contentClass !== "general_template")
       throw new ValoProblem(422, "Only released templates can be saved here.");
     await owner(tx, actor);
