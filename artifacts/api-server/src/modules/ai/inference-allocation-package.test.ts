@@ -110,7 +110,7 @@ test("package allocation, lane ceilings and allowed roles are immutable policy d
 test("historical disabled artifact retains exact source pins but cannot authorize the clarified allocation boundary", async () => {
   const frozen = JSON.parse(
     await readFile(
-      new URL("../../../../docs/valo/evidence/finite-allocation-package-disabled.json", import.meta.url),
+      new URL("../../../../../docs/valo/evidence/finite-allocation-package-disabled.json", import.meta.url),
       "utf8",
     ),
   );

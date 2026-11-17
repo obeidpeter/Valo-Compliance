@@ -173,8 +173,8 @@ try {
     "--import",
     "tsx",
     "--test",
-    "src/lib/inference-batch-dispatch.integration.test.ts",
-    "src/lib/inference-history-ledger.integration.test.ts",
+    "src/modules/ai/inference-batch-dispatch.integration.test.ts",
+    "src/modules/ai/inference-history-ledger.integration.test.ts",
   ]);
   await check("actual-managed-callers", ["test:valo-managed-callers-db"]);
   await check("portable-native-forbidden-ci", ["test:valo-erasure-portable-db"], 1);

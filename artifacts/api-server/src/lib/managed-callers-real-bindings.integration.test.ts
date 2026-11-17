@@ -7,12 +7,12 @@ import { join } from "node:path";
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as database from "@workspace/db";
-import { InferenceBudgetStore } from "./inference-budget-store";
-import { FiniteInferenceDispatcher, type FiniteManifest } from "./inference-batch-dispatch";
-import { inferenceProposal, requestDigest, emptyBudget } from "./inference-budget";
-import { createManagedSDKTransport } from "./managed-sdk-transport";
+import { InferenceBudgetStore } from "../modules/ai/inference-budget-store";
+import { FiniteInferenceDispatcher, type FiniteManifest } from "../modules/ai/inference-batch-dispatch";
+import { inferenceProposal, requestDigest, emptyBudget } from "../modules/ai/inference-budget";
+import { createManagedSDKTransport } from "../modules/ai/managed-sdk-transport";
 import type { ArtifactRef } from "../editorial/publication-artifacts";
-import type { ManagedRequest, ManagedCompletionResult } from "./managed-inference";
+import type { ManagedRequest, ManagedCompletionResult } from "../modules/ai/managed-inference";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
 import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
 
@@ -185,9 +185,9 @@ test(
       const { prepareOperationalCandidateRelease } = await import("../editorial/operational-preparation");
       const { saveOperationalReviewPlan, executeOperationalReviewPlan } =
         await import("../editorial/operational-review");
-      const { prepareOperationalFiniteManifest } = await import("./inference-manifest");
+      const { prepareOperationalFiniteManifest } = await import("../modules/ai/inference-manifest");
       const { withBoundInferenceDispatcher, withApprovedInferencePair, withApprovedInferenceWork } =
-        await import("./managed-inference");
+        await import("../modules/ai/managed-inference");
       const { organizeCustomerDraft } = await import("./valo-customer-ai-model");
       const store = new InferenceBudgetStore(scoped, schema, "additional-new");
       const state = () => store.mutate("controlled-state-observation", (s) => ({ state: s, value: s }));

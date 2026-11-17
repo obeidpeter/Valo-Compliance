@@ -8,10 +8,10 @@ import {
   budgetUsed,
   requestDigest,
   type PilotUsage,
-} from "../lib/inference-budget";
-import { InferenceBudgetStore } from "../lib/inference-budget-store";
+  InferenceBudgetStore,
+  verifiedPilotImports,
+} from "../modules/ai";
 import { loadInferenceHistory } from "../lib/inference-history-loader";
-import { verifiedPilotImports } from "../lib/inference-history-classification";
 async function main() {
   if (process.env.NODE_ENV !== "development" || process.env.REPLIT_DEPLOYMENT)
     throw Error("DEVELOPMENT_ONLY");
@@ -67,9 +67,9 @@ async function main() {
   const dir = resolve(root, "generated-artifacts/valo-completion/inference-budget");
   await mkdir(dir, { recursive: true });
   const bindings = [
-    "artifacts/api-server/src/lib/inference-budget.ts",
-    "artifacts/api-server/src/lib/managed-inference.ts",
-    "artifacts/api-server/src/lib/inference-budget-store.ts",
+    "artifacts/api-server/src/modules/ai/inference-budget.ts",
+    "artifacts/api-server/src/modules/ai/managed-inference.ts",
+    "artifacts/api-server/src/modules/ai/inference-budget-store.ts",
   ];
   const codeHashes = Object.fromEntries(
     await Promise.all(

@@ -4,8 +4,8 @@ import { randomUUID } from "node:crypto";
 import { pool } from "@workspace/db";
 import { InferenceBudgetStore } from "./inference-budget-store";
 import { emptyBudget, inferenceProposal, requestDigest } from "./inference-budget";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
-import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
+import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../../test-support/database-functions";
 
 test(
   "PostgreSQL inspection reads exact scoped state without initializing or mutating either ledger",

@@ -12,9 +12,9 @@ import {
   requestDigest,
   validateBudgetState,
   type BudgetState,
-} from "./inference-budget";
-import type { FiniteManifest, FiniteWork } from "./inference-batch-dispatch";
-import type { ManagedCompletionResult, ManagedRequest } from "./managed-inference";
+} from "../modules/ai/inference-budget";
+import type { FiniteManifest, FiniteWork } from "../modules/ai/inference-batch-dispatch";
+import type { ManagedCompletionResult, ManagedRequest } from "../modules/ai/managed-inference";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
 
 type Batch = {
@@ -70,7 +70,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
     }
   });
   await t.test("disabled default entry imports neither database configuration nor SDK", () => {
-    const url = new URL("./managed-inference.ts", import.meta.url).href;
+    const url = new URL("../modules/ai/managed-inference.ts", import.meta.url).href;
     const code = `import assert from 'node:assert/strict';
       const {managedCompletion}=await import(${JSON.stringify(url)});
       await assert.rejects(()=>managedCompletion('customer',{model:'gpt-5.4-mini',max_completion_tokens:8192,
@@ -101,7 +101,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
     () => {
       // The operator commands hand the dispatcher its checks (provideFiniteWorkBindings); a
       // process that did not is refused before anything loads.
-      const url = new URL("./managed-inference.ts", import.meta.url).href;
+      const url = new URL("../modules/ai/managed-inference.ts", import.meta.url).href;
       const code = `import assert from 'node:assert/strict';
       const {withApprovedInferenceWork,withApprovedInferencePair}=await import(${JSON.stringify(url)});
       await assert.rejects(()=>withApprovedInferenceWork('unused','unused',async()=>null),/INFERENCE_WORK_BINDINGS_UNAVAILABLE/);
@@ -134,8 +134,8 @@ test("default managed entry and customer organizer use actual finite dispatch an
       ["REPLIT_DEPLOYMENT_REGION", "false"],
       ["REPLIT_DEPLOYMENT_FUTURE_MARKER", " "],
     ]) {
-      const managed = new URL("./managed-inference.ts", import.meta.url).href;
-      const allocation = new URL("./inference-allocation-package.ts", import.meta.url).href;
+      const managed = new URL("../modules/ai/managed-inference.ts", import.meta.url).href;
+      const allocation = new URL("../modules/ai/inference-allocation-package.ts", import.meta.url).href;
       const code = `import assert from 'node:assert/strict';
         const {withApprovedInferenceWork}=await import(${JSON.stringify(managed)});
         await assert.rejects(()=>withApprovedInferenceWork('unused','unused',async()=>null),/INFERENCE_DEVELOPMENT_ONLY/);
@@ -402,7 +402,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
       },
     },
   });
-  t.mock.module(new URL("./inference-budget-store.ts", import.meta.url).href, {
+  t.mock.module(new URL("../modules/ai/inference-budget-store.ts", import.meta.url).href, {
     namedExports: { InferenceBudgetStore: MemoryBudgetStore },
   });
   t.mock.module("@workspace/integrations-openai-ai-server", {
@@ -435,7 +435,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
     withApprovedInferenceWork,
     withBoundInferenceDispatcher,
     provideFiniteWorkBindings,
-  } = await import("./managed-inference");
+  } = await import("../modules/ai/managed-inference");
   // As the operator commands do, the test composes the default dispatcher with the real checks.
   const { assertFiniteWorkBindings } = await import("./inference-work-bindings");
   provideFiniteWorkBindings(assertFiniteWorkBindings);
@@ -617,8 +617,8 @@ test("default managed entry and customer organizer use actual finite dispatch an
       assert.equal(state.entries.filter((e) => e.runKey.startsWith(`${batch.id}:`)).length, 1);
     },
   );
-  const { FiniteInferenceDispatcher } = await import("./inference-batch-dispatch");
-  const { createManagedSDKTransport } = await import("./managed-sdk-transport");
+  const { FiniteInferenceDispatcher } = await import("../modules/ai/inference-batch-dispatch");
+  const { createManagedSDKTransport } = await import("../modules/ai/managed-sdk-transport");
   for (const boundary of ["suspension", "unreconciled", "revocation", "expiry", "manifest-change"] as const) {
     await t.test(`actual entry rechecks ${boundary} after lazy SDK load, before outbound`, async () => {
       state = { ...emptyBudget(), priorUseReconciled: true };
@@ -648,7 +648,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
         };
       });
       const composed = new FiniteInferenceDispatcher(
-        new MemoryBudgetStore() as unknown as import("./inference-budget-store").InferenceBudgetStore,
+        new MemoryBudgetStore() as unknown as import("../modules/ai/inference-budget-store").InferenceBudgetStore,
         transport,
         assertFiniteWorkBindings,
       );
@@ -721,7 +721,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
       };
     });
     const composed = new FiniteInferenceDispatcher(
-      new MemoryBudgetStore() as unknown as import("./inference-budget-store").InferenceBudgetStore,
+      new MemoryBudgetStore() as unknown as import("../modules/ai/inference-budget-store").InferenceBudgetStore,
       transport,
       assertFiniteWorkBindings,
     );

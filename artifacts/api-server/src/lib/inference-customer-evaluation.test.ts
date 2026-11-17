@@ -11,8 +11,8 @@ import {
   prepareFiniteAllocationPackage,
   allocationPackageId,
   assertWorkPackageMembership,
-} from "./inference-allocation-package";
-import { requestDigest } from "./inference-budget";
+} from "../modules/ai/inference-allocation-package";
+import { requestDigest } from "../modules/ai/inference-budget";
 import { buildBusinessDraft } from "@workspace/valo-core/customer-document";
 const actor = {
   workspaceId: "11111111-1111-4111-8111-111111111111",

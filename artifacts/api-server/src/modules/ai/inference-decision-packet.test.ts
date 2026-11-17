@@ -8,9 +8,9 @@ import {
   type OperationalFiniteInput,
 } from "./inference-manifest";
 import { requestDigest } from "./inference-budget";
-import { prepareCustomerFiniteManifest } from "./inference-customer-manifest";
+import { prepareCustomerFiniteManifest } from "../../lib/inference-customer-manifest";
 import { prepareFiniteAllocationPackage, allocationPackageId } from "./inference-allocation-package";
-import { selectPreparedProposal, parseFinitePreparationOptions } from "./inference-prepared-report";
+import { selectPreparedProposal, parseFinitePreparationOptions } from "../../lib/inference-prepared-report";
 const now = new Date("2026-11-15T05:00:00Z"),
   expiry = "2026-11-15T06:00:00Z";
 function prepared() {

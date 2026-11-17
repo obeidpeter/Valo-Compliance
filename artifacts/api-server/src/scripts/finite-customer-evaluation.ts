@@ -1,7 +1,13 @@
 import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
 import { readFile } from "node:fs/promises";
-import { requestDigest } from "../lib/inference-budget";
-import { finiteManifestProposal } from "../lib/inference-manifest";
+import {
+  requestDigest,
+  finiteManifestProposal,
+  allocationPackageId,
+  prepareFiniteAllocationPackage,
+  readApprovedFiniteAllocationPackage,
+  registerPreparedInferenceSubmanifest,
+} from "../modules/ai";
 import {
   prepareCustomerEvaluationPlan,
   prepareCustomerFiniteManifest,
@@ -12,13 +18,7 @@ import {
   assertCustomerEvaluationActor,
   executePreparedCustomerCase,
 } from "../lib/inference-customer-runtime";
-import {
-  allocationPackageId,
-  prepareFiniteAllocationPackage,
-  readApprovedFiniteAllocationPackage,
-  registerPreparedInferenceSubmanifest,
-} from "../lib/inference-allocation-package";
-import type { FiniteManifest } from "../lib/inference-batch-dispatch";
+import type { FiniteManifest } from "../modules/ai";
 import type { ArtifactRef } from "../editorial/publication-artifacts";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
 
@@ -74,7 +74,7 @@ async function main() {
     import("@workspace/db"),
     import("../editorial/publication-artifacts"),
     import("../lib/inference-work-bindings"),
-    import("../lib/inference-budget-store"),
+    import("../modules/ai"),
   ]);
   try {
     if (mode === "--prepare") {
@@ -189,7 +189,7 @@ async function main() {
       { createCustomerAIDraft, customerAIUsage },
       { organizeCustomerDraft },
     ] = await Promise.all([
-      import("../lib/managed-inference"),
+      import("../modules/ai"),
       import("../lib/valo-customer-ai"),
       import("../lib/valo-customer-ai-model"),
     ]);

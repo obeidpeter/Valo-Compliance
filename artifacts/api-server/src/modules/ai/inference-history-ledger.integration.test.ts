@@ -11,7 +11,7 @@ import {
   type HistoryEvidence,
   type HistoryRow,
 } from "./inference-history-classification";
-import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
+import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../../test-support/database-functions";
 
 test(
   "locked historical classification is resumable and concurrent without deleting any usage or approving spending",
@@ -28,7 +28,7 @@ test(
       await c.query(
         (
           await readFile(
-            new URL("../../../../lib/db/drizzle/0018_inference_budget.sql", import.meta.url),
+            new URL("../../../../../lib/db/drizzle/0018_inference_budget.sql", import.meta.url),
             "utf8",
           )
         ).replaceAll("--> statement-breakpoint", ""),

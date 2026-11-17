@@ -20,7 +20,7 @@ import { organizeCustomerDraft } from "./valo-customer-ai-model";
 import { workspaceTransaction, workspaceEvent, type WorkspaceTx } from "./valo-assessments";
 import { createDocumentInTransaction, getDocument, ValoProblem, type WorkspaceActor } from "./valo-store";
 import { documentInput } from "./valo-validation";
-import { hasApprovedInferenceContext } from "./managed-inference";
+import { hasApprovedInferenceContext } from "../modules/ai";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
 const workspaceDailyLimit = 30;
 /** Customer AI reservations allowed per day across every workspace. */

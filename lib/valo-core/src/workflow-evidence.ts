@@ -679,7 +679,7 @@ export function partialWorkflowEvidence(id: string) {
         "artifacts/api-server/src/routes/valo-customer-access.ts",
         "artifacts/api-server/src/lib/valo-store.ts",
         "artifacts/api-server/src/lib/valo-privacy-erasure.ts",
-        "artifacts/api-server/src/lib/inference-batch-dispatch.ts",
+        "artifacts/api-server/src/modules/ai/inference-batch-dispatch.ts",
         "artifacts/api-server/src/lib/inference-work-bindings.ts",
         "artifacts/api-server/src/editorial/external-action-boundary.ts",
         "artifacts/api-server/src/scripts/editorial-source-suite.ts",
@@ -759,9 +759,9 @@ export function partialWorkflowEvidence(id: string) {
     {
       ids: ["AI-007", "AI-009", "SEC-005", "EDP-009", "NFR-010", "OPS-003"],
       paths: [
-        "artifacts/api-server/src/lib/inference-budget.ts",
-        "artifacts/api-server/src/lib/inference-budget-store.ts",
-        "artifacts/api-server/src/lib/managed-inference.ts",
+        "artifacts/api-server/src/modules/ai/inference-budget.ts",
+        "artifacts/api-server/src/modules/ai/inference-budget-store.ts",
+        "artifacts/api-server/src/modules/ai/managed-inference.ts",
         "artifacts/api-server/src/scripts/inference-budget-proposal.ts",
         "lib/db/drizzle/0018_inference_budget.sql",
         "docs/valo/setup-and-disabled-inference-budget.md",
@@ -863,7 +863,7 @@ export function partialWorkflowEvidence(id: string) {
     {
       ids: ["SEC-003", "SEC-007", "AI-002", "AI-009", "EDT-002", "EDT-006", "NFR-009", "NFR-011"],
       paths: [
-        "artifacts/api-server/src/lib/provider-output-budget.ts",
+        "artifacts/api-server/src/modules/ai/provider-output-budget.ts",
         "artifacts/api-server/src/lib/valo-revision-codec.ts",
         "artifacts/api-server/src/lib/valo-revision-codec.test.ts",
         "artifacts/api-server/src/scripts/zod-upgrade-proof.ts",
@@ -890,9 +890,9 @@ export function partialWorkflowEvidence(id: string) {
     {
       ids: ["AI-007", "SEC-005"],
       paths: [
-        "artifacts/api-server/src/lib/inference-budget.ts",
-        "artifacts/api-server/src/lib/inference-budget-store.ts",
-        "artifacts/api-server/src/lib/managed-inference.ts",
+        "artifacts/api-server/src/modules/ai/inference-budget.ts",
+        "artifacts/api-server/src/modules/ai/inference-budget-store.ts",
+        "artifacts/api-server/src/modules/ai/managed-inference.ts",
       ],
       record: {
         kind: "test" as const,

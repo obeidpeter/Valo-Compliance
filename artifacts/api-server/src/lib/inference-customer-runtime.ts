@@ -1,5 +1,5 @@
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
-import { acceptedInferenceModels, requestDigest } from "./inference-budget";
+import { acceptedInferenceModels, requestDigest } from "../modules/ai";
 import {
   customerPromptVersion,
   customerNoticeVersion,
@@ -11,7 +11,7 @@ import type {
   CustomerEvaluationPlan,
   CustomerCasePreparation,
 } from "./inference-customer-evaluation";
-import type { FiniteManifest } from "./inference-types";
+import type { FiniteManifest } from "../modules/ai";
 type Query = (text: string, values: unknown[]) => Promise<{ rows: Record<string, any>[] }>;
 async function query(text: string, values: unknown[]) {
   const { pool } = await import("@workspace/db");

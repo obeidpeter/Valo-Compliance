@@ -2,11 +2,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { digest, sha256 } from "@workspace/valo-core";
 import { documentInput } from "../lib/valo-validation";
-import {
-  allocationPackageId,
-  validatePackageScope,
-  type FiniteAllocationPackage,
-} from "../lib/inference-allocation-package";
+import { allocationPackageId, validatePackageScope, type FiniteAllocationPackage } from "../modules/ai";
 import { supportsOperationalInferenceTemplate } from "../lib/inference-operational-coverage";
 import { readTemplateIntake, readGuidanceIntake } from "./operational-intake";
 import { publicationWorkspaceRoot } from "./operational-policy";

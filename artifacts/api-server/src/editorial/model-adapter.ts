@@ -2,9 +2,9 @@ import {
   managedCompletion,
   managedInferenceLane,
   assertManagedInferenceAvailable,
-} from "../lib/managed-inference";
+  parseBoundedProviderJSON,
+} from "../modules/ai";
 import { z } from "zod";
-import { parseBoundedProviderJSON } from "../lib/provider-output-budget";
 import {
   candidateSchema,
   reviewSchema,

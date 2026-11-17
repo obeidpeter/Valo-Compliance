@@ -21,7 +21,7 @@ test(
     // quota/kill-switch failures cannot pass because spending is already disabled.
     // Real approval/admission/settlement are tested independently; never write an
     // enabled approval row, and fail if the default transport is attempted.
-    t.mock.module(new URL("./managed-inference.ts", import.meta.url).href, {
+    t.mock.module(new URL("../modules/ai/managed-inference.ts", import.meta.url).href, {
       namedExports: {
         hasApprovedInferenceContext: () => true,
         managedCompletion: forbidden,

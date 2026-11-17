@@ -13,7 +13,7 @@ import {
   transitionBudget,
   settleBudget,
 } from "./inference-budget";
-import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
+import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../../test-support/database-functions";
 test(
   "isolated PostgreSQL global ledger serializes races and preserves unknown/retry liability",
   {
@@ -26,7 +26,7 @@ test(
       await c.query(`CREATE SCHEMA "${schema}"`);
       await c.query(`SET search_path TO "${schema}"`);
       const ddl = await readFile(
-        new URL("../../../../lib/db/drizzle/0018_inference_budget.sql", import.meta.url),
+        new URL("../../../../../lib/db/drizzle/0018_inference_budget.sql", import.meta.url),
         "utf8",
       );
       await c.query(ddl.replaceAll("--> statement-breakpoint", ""));

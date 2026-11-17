@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { inferenceProposal, type BudgetLane } from "./inference-budget";
 import type { FiniteInferenceDispatcher } from "./inference-batch-dispatch";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
 import type { ManagedSDKClient } from "./managed-sdk-transport";
 import type { ManagedCompletionResult, ManagedRequest } from "./inference-types";
 export type { ManagedCompletionResult, ManagedRequest } from "./inference-types";
@@ -137,7 +137,7 @@ export async function managedCompletion(
   if (!d?.current()) throw new InferenceHeld();
   requireDevelopment();
   // The AI safety pause is checked before reservation; nothing is held during the call.
-  const { withSafetyDispatch } = await import("./valo-source-state");
+  const { withSafetyDispatch } = await import("../../lib/valo-source-state");
   try {
     return await withSafetyDispatch("ai", () => d.complete(lane, request, options));
   } catch (error) {

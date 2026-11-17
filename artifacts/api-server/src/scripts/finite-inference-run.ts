@@ -9,16 +9,17 @@ import {
   supportsOperationalInferenceTemplate,
 } from "../lib/inference-operational-coverage";
 import { selectPreparedProposal, parseFinitePreparationOptions } from "../lib/inference-prepared-report";
-import { requestDigest } from "../lib/inference-budget";
-import { prepareOperationalFiniteManifest, finiteManifestProposal } from "../lib/inference-manifest";
-import type { FiniteManifest } from "../lib/inference-batch-dispatch";
-import { buildFiniteDecisionPacket } from "../lib/inference-decision-packet";
 import {
+  requestDigest,
+  prepareOperationalFiniteManifest,
+  finiteManifestProposal,
+  buildFiniteDecisionPacket,
   prepareFiniteAllocationPackage,
   allocationPackageId,
   registerPreparedInferenceSubmanifest,
   readApprovedFiniteAllocationPackage,
-} from "../lib/inference-allocation-package";
+} from "../modules/ai";
+import type { FiniteManifest } from "../modules/ai";
 
 /** No approval/enable operation exists in this command. Preparation creates
  * exact, disabled private artifacts; execution can only use an existing owner
@@ -61,20 +62,18 @@ async function main() {
     { db, pool, valoContentVersions },
     { readOperationalInferenceReadiness },
     { assertFiniteWorkBindings },
-    { withApprovedInferencePair, provideFiniteWorkBindings },
+    { withApprovedInferencePair, provideFiniteWorkBindings, InferenceBudgetStore },
     { saveOperationalReviewPlan, executeOperationalReviewPlan },
     { getPublicationArtifact, putPublicationArtifact },
     { publicationWorkspaceRoot },
-    { InferenceBudgetStore },
   ] = await Promise.all([
     import("@workspace/db"),
     import("../lib/inference-operational-ready"),
     import("../lib/inference-work-bindings"),
-    import("../lib/managed-inference"),
+    import("../modules/ai"),
     import("../editorial/operational-review"),
     import("../editorial/publication-artifacts"),
     import("../editorial/operational-policy"),
-    import("../lib/inference-budget-store"),
   ]);
   // This command is the composition root: the dispatcher checks approved work with these.
   provideFiniteWorkBindings(assertFiniteWorkBindings);

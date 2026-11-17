@@ -270,7 +270,7 @@ export const FINITE_WORK_BINDING_ENTRIES = [
 export function inferenceBindingViolations(path: string, text: string): string[] {
   if (!/\.tsx?$/.test(path) || /\.test\.tsx?$/.test(path) || !text.includes("provideFiniteWorkBindings"))
     return [];
-  if (path === "artifacts/api-server/src/lib/managed-inference.ts") return [];
+  if (path === "artifacts/api-server/src/modules/ai/managed-inference.ts") return [];
   const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const violations: string[] = [];
   const report = (node: ts.Node, message: string) =>

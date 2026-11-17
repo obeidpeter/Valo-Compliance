@@ -9,14 +9,12 @@ import {
   requestDigest,
   budgetUsed,
   type BudgetState,
-} from "../lib/inference-budget";
-import { getPublicationArtifact, type ArtifactRef } from "../editorial/publication-artifacts";
-import {
   proposeHistoricalReceiptResolutions,
   projectHistoricalExposure,
   type HistoricalArtifactInput,
   type HistoricalPublicationAttempt,
-} from "../lib/inference-history-reconciliation";
+} from "../modules/ai";
+import { getPublicationArtifact, type ArtifactRef } from "../editorial/publication-artifacts";
 const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
 /** Read-only history preparation. This command never creates migrations,

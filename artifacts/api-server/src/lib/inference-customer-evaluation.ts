@@ -14,8 +14,8 @@ import {
   type CustomerAIInput,
 } from "./valo-customer-ai-domain";
 import { customerCompletionRequest } from "./valo-customer-ai-model";
-import { additionalInferenceAllocation, inferenceProposal, requestDigest } from "./inference-budget";
-import type { FiniteManifest, FiniteWork } from "./inference-types";
+import { additionalInferenceAllocation, inferenceProposal, requestDigest } from "../modules/ai";
+import type { FiniteManifest, FiniteWork } from "../modules/ai";
 import type { ArtifactRef } from "../editorial/publication-artifacts";
 
 const root = resolve(import.meta.dirname, "../../../.."),

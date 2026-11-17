@@ -6,8 +6,12 @@ import {
   customerProviderPayload,
 } from "./valo-customer-ai-domain";
 import { buildBusinessDraft } from "@workspace/valo-core/customer-document";
-import { parseBoundedProviderJSON } from "./provider-output-budget";
-import { managedCompletion, InferenceHeld, withApprovedInferenceAttempt } from "./managed-inference";
+import {
+  parseBoundedProviderJSON,
+  managedCompletion,
+  InferenceHeld,
+  withApprovedInferenceAttempt,
+} from "../modules/ai";
 export type CustomerProviderRun = {
   attempt: number;
   outboundAttempted: boolean;

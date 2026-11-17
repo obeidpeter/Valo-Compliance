@@ -151,9 +151,9 @@ test("failed snapshot rolls back and releases instead of falling back to an inve
   assert.ok(released);
 });
 test("standard database CI invokes the non-skipped HTTP privacy suite and keeps storage lanes separate", async () => {
-  const pkg = JSON.parse(await readFile(new URL("../../package.json", import.meta.url), "utf8"));
+  const pkg = JSON.parse(await readFile(new URL("../../../package.json", import.meta.url), "utf8"));
   const workflow = await readFile(
-    new URL("../../../../.github/workflows/valo-foundation.yml", import.meta.url),
+    new URL("../../../../../.github/workflows/valo-foundation.yml", import.meta.url),
     "utf8",
   );
   assert.match(pkg.scripts["test:valo-db"], /test:valo-db-core && pnpm run test:valo-privacy-http-db/);

@@ -6,9 +6,12 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { candidateDigest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import type { ArtifactRef } from "../editorial/publication-artifacts";
-import { prepareFiniteAllocationPackage, allocationPackageId } from "./inference-allocation-package";
+import {
+  prepareFiniteAllocationPackage,
+  allocationPackageId,
+} from "../modules/ai/inference-allocation-package";
 import { selectPreparedProposal } from "./inference-prepared-report";
-import type { finiteManifestProposal } from "./inference-manifest";
+import type { finiteManifestProposal } from "../modules/ai/inference-manifest";
 
 test("actual preparation and saved-readiness callers bind another form without authoring, review, approval or publication", async (t) => {
   // Native storage, DB and rendering are controlled. Source extraction,

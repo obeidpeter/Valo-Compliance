@@ -5,10 +5,10 @@ import {
   withApprovedInferenceRole,
   hasApprovedInferenceContext,
   hasApprovedInferencePairContext,
-} from "../lib/managed-inference";
+  parseBoundedProviderJSON,
+} from "../modules/ai";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
 import { z } from "zod";
-import { parseBoundedProviderJSON } from "../lib/provider-output-budget";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { digest, sha256, type PublicationBundle } from "@workspace/valo-core";

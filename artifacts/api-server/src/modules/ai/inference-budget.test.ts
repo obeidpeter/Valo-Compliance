@@ -78,10 +78,10 @@ test("real dispatch is disabled with no switch or SDK access", async () => {
 });
 test("all four current application dispatch sites use the shared held transport", async () => {
   const paths = [
-    "../editorial/model-adapter.ts",
-    "../editorial/operational-review.ts",
-    "../editorial/operational-authoring.ts",
-    "./valo-customer-ai-model.ts",
+    "../../editorial/model-adapter.ts",
+    "../../editorial/operational-review.ts",
+    "../../editorial/operational-authoring.ts",
+    "../../lib/valo-customer-ai-model.ts",
   ];
   for (const path of paths) {
     const source = await readFile(new URL(path, import.meta.url), "utf8");

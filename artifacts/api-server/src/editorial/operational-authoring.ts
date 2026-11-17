@@ -1,8 +1,7 @@
-import { managedCompletion, assertManagedInferenceAvailable } from "../lib/managed-inference";
+import { managedCompletion, assertManagedInferenceAvailable, parseBoundedProviderJSON } from "../modules/ai";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
-import { parseBoundedProviderJSON } from "../lib/provider-output-budget";
 import { digest } from "@workspace/valo-core";
 import { putPublicationArtifact } from "./publication-artifacts";
 import { originalFormSchema, formMarkdown } from "./operational-authoring-contract";

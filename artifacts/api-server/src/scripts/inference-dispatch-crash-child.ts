@@ -1,6 +1,5 @@
 import { pool } from "@workspace/db";
-import { InferenceBudgetStore } from "../lib/inference-budget-store";
-import { FiniteInferenceDispatcher, type FiniteManifest } from "../lib/inference-batch-dispatch";
+import { InferenceBudgetStore, FiniteInferenceDispatcher, type FiniteManifest } from "../modules/ai";
 import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
 assertDevelopmentRuntime();
 const [schema, id, key] = process.argv.slice(2);

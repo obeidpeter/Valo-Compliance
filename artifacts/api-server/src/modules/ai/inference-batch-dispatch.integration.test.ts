@@ -28,7 +28,7 @@ import {
   withBoundInferenceDispatcher,
   withApprovedInferenceRole,
 } from "./managed-inference";
-import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
+import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../../test-support/database-functions";
 
 test(
   "durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls",
@@ -43,7 +43,7 @@ test(
       await c.query(`CREATE SCHEMA "${schema}"`);
       await c.query(`SET search_path TO "${schema}"`);
       for (const file of ["0018_inference_budget.sql", "0020_inference_batch_authorization.sql"]) {
-        const ddl = await readFile(new URL(`../../../../lib/db/drizzle/${file}`, import.meta.url), "utf8");
+        const ddl = await readFile(new URL(`../../../../../lib/db/drizzle/${file}`, import.meta.url), "utf8");
         await c.query(ddl.replaceAll("--> statement-breakpoint", ""));
       }
       await copyDatabaseFunctions(c, schema, INFERENCE_LEDGER_FUNCTIONS);

@@ -3,13 +3,16 @@ import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { pool } from "@workspace/db";
 import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
-import { InferenceBudgetStore } from "../lib/inference-budget-store";
-import { inferenceProposal, requestDigest, budgetUsed, type BudgetState } from "../lib/inference-budget";
-import { loadInferenceHistory } from "../lib/inference-history-loader";
 import {
+  InferenceBudgetStore,
+  inferenceProposal,
+  requestDigest,
+  budgetUsed,
+  type BudgetState,
   classifyHistoricalInference,
   applyHistoricalClassifications,
-} from "../lib/inference-history-classification";
+} from "../modules/ai";
+import { loadInferenceHistory } from "../lib/inference-history-loader";
 
 async function main() {
   assertDevelopmentRuntime();

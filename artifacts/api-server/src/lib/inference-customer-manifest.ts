@@ -9,9 +9,13 @@ import {
 } from "./valo-customer-case-binding";
 import { customerProviderPayload } from "./valo-customer-ai-domain";
 import { customerCompletionRequest } from "./valo-customer-ai-model";
-import { withApprovedInferenceWork } from "./managed-inference";
-import { requestDigest, inferenceProposal, additionalInferenceAllocation } from "./inference-budget";
-import type { FiniteManifest, FiniteWork } from "./inference-types";
+import {
+  withApprovedInferenceWork,
+  requestDigest,
+  inferenceProposal,
+  additionalInferenceAllocation,
+} from "../modules/ai";
+import type { FiniteManifest, FiniteWork } from "../modules/ai";
 
 const root = resolve(import.meta.dirname, "../../../..");
 const path = "docs/evaluation-candidates/customer-ai.json";

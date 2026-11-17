@@ -103,7 +103,7 @@ test("only the reviewed operator commands provide the dispatcher's binding check
   const [entry] = FINITE_WORK_BINDING_ENTRIES;
   const flagged = (path: string, text: string) => inferenceBindingViolations(path, text);
   const real =
-    "const { provideFiniteWorkBindings } = await import('../lib/managed-inference');\nprovideFiniteWorkBindings(assertFiniteWorkBindings);\n";
+    "const { provideFiniteWorkBindings } = await import('../modules/ai');\nprovideFiniteWorkBindings(assertFiniteWorkBindings);\n";
   assert.deepEqual(flagged(entry!, real), []);
   assert.match(
     flagged("artifacts/api-server/src/lib/example.ts", real)[0]!,
@@ -132,7 +132,7 @@ test("only the reviewed operator commands provide the dispatcher's binding check
   );
   assert.deepEqual(
     flagged(
-      "artifacts/api-server/src/lib/managed-inference.ts",
+      "artifacts/api-server/src/modules/ai/managed-inference.ts",
       "export function provideFiniteWorkBindings() {}\n",
     ),
     [],

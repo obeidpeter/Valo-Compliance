@@ -1,6 +1,6 @@
 import { organizeCustomerDraft, type CustomerTransport } from "./valo-customer-ai-model";
 import { customerPreview, hashAI } from "./valo-customer-ai-domain";
-import { requestDigest } from "./inference-budget";
+import { requestDigest } from "../modules/ai";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
 import type { CustomerEvaluationPlan, CustomerCasePreparation } from "./inference-customer-evaluation";
 

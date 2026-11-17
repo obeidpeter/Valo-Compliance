@@ -7,7 +7,7 @@ import { managedPriceEvidence, assertManagedRatePolicy } from "./inference-price
 import { inferenceProposal, tokenCost, additionalInferenceAllocation } from "./inference-budget";
 test("official retained model and managed-route evidence support exact policy, not actual billing", async () => {
   for (const ref of managedPriceEvidence.sources) {
-    const b = await readFile(resolve(import.meta.dirname, "../../../..", ref.path));
+    const b = await readFile(resolve(import.meta.dirname, "../../../../..", ref.path));
     assert.equal(createHash("sha256").update(b).digest("hex"), ref.sha256);
     for (const text of ref.locators) assert.ok(b.toString().includes(text));
   }

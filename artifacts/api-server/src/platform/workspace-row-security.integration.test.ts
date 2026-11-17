@@ -210,7 +210,7 @@ test(
 
     await t.test("customer requests change the inference ledger only through its functions", async () => {
       const { additionalInferenceAllocation, inferenceProposal, requestDigest } =
-        await import("../lib/inference-budget");
+        await import("../modules/ai/inference-budget");
       const batchId = `synthetic-rls-batch-${tag}`,
         manifestHash = "f".repeat(64),
         policyHash = requestDigest(inferenceProposal);
