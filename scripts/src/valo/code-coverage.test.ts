@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
+import { parse } from "yaml";
 import { repositoryRoot } from "./architecture-check";
 import { COVERAGE_AREAS } from "./code-coverage-areas";
 import { coverageProblems, percent, runCoverage, summarize } from "./code-coverage";
+import { WORKFLOW } from "./database-tests";
 
 test("every area lists existing product files and tests, and owns every file named like it", () => {
   const tracked = execFileSync("git", ["ls-files"], { cwd: repositoryRoot, encoding: "utf8" }).split("\n");
@@ -32,6 +34,18 @@ test("every area lists existing product files and tests, and owns every file nam
       `${name}: these files belong to the area but are neither measured nor excluded with a reason`,
     );
   }
+});
+
+test("CI's database job measures every area and fails one below 80% branch coverage", () => {
+  const workflow = parse(readFileSync(join(repositoryRoot, WORKFLOW), "utf8")) as {
+    jobs: Record<string, { steps: { run?: string }[] }>;
+  };
+  const runs = workflow.jobs.postgres!.steps.map((step) => step.run?.trim() ?? "");
+  for (const area of Object.keys(COVERAGE_AREAS))
+    assert.ok(
+      runs.includes(`pnpm --filter @workspace/scripts valo:code-coverage ${area} --minimum`),
+      `the postgres job does not measure ${area} with --minimum`,
+    );
 });
 
 test("an area's totals come from its own files, and a file no test loaded is a problem", () => {

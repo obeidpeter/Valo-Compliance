@@ -270,7 +270,8 @@ jobs:
   postgres:
     name: Synthetic PostgreSQL isolation and concurrency
     runs-on: ubuntu-24.04
-    # The NFR-011 coverage steps run the payment, auth and rules tests a second time.
+    # The NFR-011 coverage steps run the payment, auth and rules tests a second time and fail an
+    # area below 80% branch coverage.
     timeout-minutes: 15
     services:
       postgres:
@@ -402,12 +403,12 @@ jobs:
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce
           pnpm --filter @workspace/api-server test:valo-refunds
-      - name: Measure branch coverage of the payment code (NFR-011)
-        run: pnpm --filter @workspace/scripts valo:code-coverage payment
-      - name: Measure branch coverage of the sign-in and access code (NFR-011)
-        run: pnpm --filter @workspace/scripts valo:code-coverage auth
-      - name: Measure branch coverage of the rules engine (NFR-011)
-        run: pnpm --filter @workspace/scripts valo:code-coverage rules
+      - name: Measure branch coverage of the payment code and require 80% (NFR-011)
+        run: pnpm --filter @workspace/scripts valo:code-coverage payment --minimum
+      - name: Measure branch coverage of the sign-in and access code and require 80% (NFR-011)
+        run: pnpm --filter @workspace/scripts valo:code-coverage auth --minimum
+      - name: Measure branch coverage of the rules engine and require 80% (NFR-011)
+        run: pnpm --filter @workspace/scripts valo:code-coverage rules --minimum
       - name: Check that no transaction took a second pooled connection
         run: node artifacts/api-server/src/test-support/nested-connection-report.mjs
       - name: Check every test the evidence register cites for this job passed

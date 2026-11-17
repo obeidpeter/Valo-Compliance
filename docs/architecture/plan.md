@@ -65,6 +65,7 @@ Exit: CI rejects unformatted code, lint findings, stray environment reads and di
 | Split the API contract per module | not started |
 | Worker loop becomes scheduled queue jobs | not started |
 | Separate product logic from requirement/evidence bookkeeping in `valo-core` | not started |
+| Branch coverage of payments, sign-in and rules (NFR-011) | done as Node measures it: the database job runs each area's tests with Node's coverage and fails an area below 80% of branches; each run's figures are in its run summary and readiness report. The first hosted run (639db48) measured payment 84.79%, sign-in 91.45% and rules 88.41%. Node counts V8 blocks, so a function no test calls is one uncovered branch, and its figures can be higher than those of a tool that counts every branch. NFR-011 also asks for scenario tests, and a percentage never stands in for negative security cases |
 
 Exit: CI forbids reaching inside another module; payments, sign-in and rules
 reach the 80% branch coverage NFR-011 requires.

@@ -13,8 +13,9 @@ import { COVERAGE_AREAS, NFR_011_MINIMUM_BRANCH_PERCENT, type CoverageAreaName }
  * test file covered, and reports branch, line and function coverage as Node measures them. That
  * is V8 block coverage: a branch V8 never saw counts once, so a function no test calls is one
  * uncovered branch however many branches it has. A source file no test loads cannot be measured
- * and fails the run. In CI the database job runs each area, and the summary goes to the job's
- * test results for the evidence job.
+ * and fails the run. In CI the database job runs each area with `--minimum`, which also fails an
+ * area whose branch coverage is under NFR-011's 80%, and the summary goes to the job's test results
+ * for the evidence job.
  */
 export const RUNNER_PACKAGE = "artifacts/api-server";
 export const MEASURED_BY =
