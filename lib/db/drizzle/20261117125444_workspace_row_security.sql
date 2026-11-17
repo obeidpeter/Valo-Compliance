@@ -134,8 +134,6 @@ GRANT SELECT, UPDATE ON valo_export_objects TO valo_workspace_scope;
 GRANT SELECT, INSERT ON valo_export_requests TO valo_workspace_scope;
 GRANT SELECT, DELETE, UPDATE ON valo_file_assets TO valo_workspace_scope;
 GRANT SELECT, UPDATE ON valo_inference_batches TO valo_workspace_scope;
-GRANT INSERT ON valo_inference_budget_events TO valo_workspace_scope;
-GRANT SELECT, INSERT, UPDATE ON valo_inference_budgets TO valo_workspace_scope;
 GRANT SELECT, UPDATE ON valo_memberships TO valo_workspace_scope;
 GRANT SELECT, INSERT, UPDATE ON valo_orders TO valo_workspace_scope;
 GRANT SELECT, INSERT ON valo_payment_concern_events TO valo_workspace_scope;
@@ -175,9 +173,6 @@ GRANT SELECT, UPDATE ON valo_workspace_export_attempts TO valo_workspace_scope;
 GRANT SELECT, INSERT, UPDATE ON valo_workspace_exports TO valo_workspace_scope;
 GRANT SELECT, UPDATE (profile_revision) ON valo_workspaces TO valo_workspace_scope;
 --> statement-breakpoint
--- Customer AI requests write the shared inference budget ledger.
-GRANT USAGE ON SEQUENCE valo_inference_budget_events_id_seq TO valo_workspace_scope;
---> statement-breakpoint
 -- PostgreSQL lets a role lock rows (SELECT ... FOR SHARE or FOR UPDATE) only if it may update
 -- them. Customer requests lock rows of these tables but never change them, so this trigger
 -- refuses every update the scoped role attempts, and its UPDATE grant permits only the locks.
@@ -192,6 +187,7 @@ END $$;
 --> statement-breakpoint
 CREATE TRIGGER valo_workspace_scope_lock_only BEFORE UPDATE ON valo_content_versions FOR EACH ROW EXECUTE FUNCTION valo_refuse_scoped_update();
 CREATE TRIGGER valo_workspace_scope_lock_only BEFORE UPDATE ON valo_file_assets FOR EACH ROW EXECUTE FUNCTION valo_refuse_scoped_update();
+CREATE TRIGGER valo_workspace_scope_lock_only BEFORE UPDATE ON valo_inference_batches FOR EACH ROW EXECUTE FUNCTION valo_refuse_scoped_update();
 CREATE TRIGGER valo_workspace_scope_lock_only BEFORE UPDATE ON valo_memberships FOR EACH ROW EXECUTE FUNCTION valo_refuse_scoped_update();
 CREATE TRIGGER valo_workspace_scope_lock_only BEFORE UPDATE ON valo_prices FOR EACH ROW EXECUTE FUNCTION valo_refuse_scoped_update();
 CREATE TRIGGER valo_workspace_scope_lock_only BEFORE UPDATE ON valo_support_tickets FOR EACH ROW EXECUTE FUNCTION valo_refuse_scoped_update();
@@ -211,3 +207,219 @@ $$;
 REVOKE ALL ON FUNCTION valo_customer_ai_reservations(timestamptz, timestamptz, text) FROM PUBLIC;
 --> statement-breakpoint
 GRANT EXECUTE ON FUNCTION valo_customer_ai_reservations(timestamptz, timestamptz, text) TO valo_workspace_scope;
+--> statement-breakpoint
+-- The shared inference ledger is written only through the next four functions, which run as
+-- their owner, so the scoped role needs no write privilege on it. A customer request may make
+-- only the changes a customer AI attempt makes; other callers keep their own checks.
+CREATE FUNCTION public.valo_inference_customer_change_refusal(p_id text, p_old jsonb, p_new jsonb)
+RETURNS text LANGUAGE plpgsql IMMUTABLE SET search_path = pg_catalog, pg_temp AS $$
+DECLARE
+  o jsonb;
+  n jsonb;
+  receipt text[] := ARRAY['status', 'charged', 'responseId', 'resultRef', 'freshUntil', 'usageHash'];
+  input_bound numeric;
+  spent_before numeric;
+  spent_after numeric;
+BEGIN
+  -- Customer AI uses only the additional allocation, and the cap and prices below are its own.
+  IF p_id IS DISTINCT FROM 'valo-additional-inference-30-20261114-v1' THEN
+    RETURN 'another allocation';
+  END IF;
+  IF p_new - ARRAY['version', 'entries', 'priorUseReconciled', 'unboundedPrior', 'suspended',
+      'historyResolutions'] <> '{}'::jsonb THEN
+    RETURN 'an unknown state field';
+  END IF;
+  -- Holds only tighten.
+  IF (p_old->>'suspended')::boolean AND NOT (p_new->>'suspended')::boolean THEN
+    RETURN 'lifting the suspension';
+  END IF;
+  IF NOT (p_old->>'priorUseReconciled')::boolean AND (p_new->>'priorUseReconciled')::boolean THEN
+    RETURN 'marking prior use reconciled';
+  END IF;
+  IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_old->'unboundedPrior') x
+      WHERE NOT (p_new->'unboundedPrior') @> jsonb_build_array(x)) THEN
+    RETURN 'removing an unbounded liability';
+  END IF;
+  IF p_old->'historyResolutions' IS DISTINCT FROM p_new->'historyResolutions' THEN
+    RETURN 'changing history resolutions';
+  END IF;
+  IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_new->'entries') e
+      WHERE jsonb_typeof(e) IS DISTINCT FROM 'object' OR jsonb_typeof(e->'runKey') IS DISTINCT FROM 'string'
+        OR e->>'runKey' = '' OR coalesce(e->>'reserved', '') !~ '^[0-9]{1,30}$'
+        OR coalesce(e->>'charged', '') !~ '^[0-9]{1,30}$'
+        OR coalesce(e->>'status', '') NOT IN ('reserved', 'dispatched', 'unknown', 'settled', 'cancelled')) THEN
+    RETURN 'an invalid entry';
+  END IF;
+  IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_new->'entries') e
+      GROUP BY e->>'runKey' HAVING count(*) > 1) THEN
+    RETURN 'a repeated run key';
+  END IF;
+  -- Every existing entry stays with its identity, and its status only moves forward.
+  FOR o IN SELECT x FROM jsonb_array_elements(p_old->'entries') x LOOP
+    n := (SELECT e FROM jsonb_array_elements(p_new->'entries') e WHERE e->>'runKey' = o->>'runKey');
+    IF n IS NULL THEN
+      RETURN 'removing an entry';
+    END IF;
+    CONTINUE WHEN n = o;
+    IF (n - receipt - 'reserved') IS DISTINCT FROM (o - receipt - 'reserved') THEN
+      RETURN 'changing an entry''s identity or bounds';
+    END IF;
+    IF o->>'status' = 'reserved' AND n->>'status' = 'dispatched' THEN
+      IF (n - 'status') IS DISTINCT FROM (o - 'status') THEN
+        RETURN 'changing more than the status on dispatch';
+      END IF;
+    ELSIF o->>'status' IN ('reserved', 'dispatched', 'unknown') AND n->>'status' = 'unknown' THEN
+      IF (n - 'status' - 'reserved') IS DISTINCT FROM (o - 'status' - 'reserved')
+          OR (n->>'reserved')::numeric < (o->>'reserved')::numeric THEN
+        RETURN 'changing more than the status and a raised reservation';
+      END IF;
+    ELSIF o->>'status' IN ('dispatched', 'unknown') AND n->>'status' = 'settled' THEN
+      IF (n - receipt) IS DISTINCT FROM (o - receipt) OR coalesce((o->>'charged')::numeric, -1) <> 0
+          OR (n->>'charged')::numeric > (n->>'reserved')::numeric
+          OR coalesce(n->>'responseId', '') = '' OR coalesce(n->>'resultRef', '') = ''
+          OR coalesce(n->>'usageHash', '') = '' THEN
+        RETURN 'a settlement outside its reservation or without a receipt';
+      END IF;
+      IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_new->'entries') x
+          WHERE x->>'runKey' <> n->>'runKey' AND x->>'responseId' = n->>'responseId') THEN
+        RETURN 'using a provider receipt twice';
+      END IF;
+    ELSE
+      RETURN format('moving an entry from %s to %s', o->>'status', n->>'status');
+    END IF;
+  END LOOP;
+  -- New entries are customer reservations, funded for their worst case at the current prices.
+  FOR n IN SELECT e FROM jsonb_array_elements(p_new->'entries') e
+      WHERE NOT EXISTS (SELECT 1 FROM jsonb_array_elements(p_old->'entries') x
+        WHERE x->>'runKey' = e->>'runKey') LOOP
+    IF (SELECT array_agg(k ORDER BY k) FROM jsonb_object_keys(n) k) IS DISTINCT FROM
+        ARRAY['bindingHash', 'charged', 'inputBound', 'lane', 'outputBound', 'requestHash', 'reserved',
+          'runKey', 'scopeHash', 'status']
+        OR n->>'lane' IS DISTINCT FROM 'customer' OR n->>'status' NOT IN ('reserved', 'dispatched')
+        OR n->>'charged' <> '0' OR n->'outputBound' IS DISTINCT FROM '8192'::jsonb
+        OR jsonb_typeof(n->'inputBound') IS DISTINCT FROM 'number'
+        OR coalesce(n->>'requestHash', '') !~ '^[a-f0-9]{64}$'
+        OR coalesce(n->>'bindingHash', '') !~ '^[a-f0-9]{64}$'
+        OR coalesce(n->>'scopeHash', '') !~ '^[a-f0-9]{64}$' THEN
+      RETURN 'a new entry that is not a customer reservation';
+    END IF;
+    input_bound := (n->>'inputBound')::numeric;
+    IF input_bound <> trunc(input_bound) OR input_bound < 4096 OR input_bound > 400000
+        OR (n->>'reserved')::numeric < ceil((input_bound * 750 + 8192 * 4500) * 11000 / 10000) THEN
+      RETURN 'an underfunded reservation';
+    END IF;
+  END LOOP;
+  IF (SELECT count(*) FROM jsonb_array_elements(p_new->'entries') e
+        WHERE e->>'lane' = 'customer' AND e->>'status' <> 'cancelled')
+      > greatest(94, (SELECT count(*) FROM jsonb_array_elements(p_old->'entries') e
+        WHERE e->>'lane' = 'customer' AND e->>'status' <> 'cancelled')) THEN
+    RETURN 'exceeding the customer lane''s slots';
+  END IF;
+  -- Committed spend never rises above the allocation's cap.
+  SELECT coalesce(sum(CASE e->>'status' WHEN 'settled' THEN (e->>'charged')::numeric
+      WHEN 'cancelled' THEN 0 ELSE (e->>'reserved')::numeric END), 0)
+    INTO spent_before FROM jsonb_array_elements(p_old->'entries') e;
+  SELECT coalesce(sum(CASE e->>'status' WHEN 'settled' THEN (e->>'charged')::numeric
+      WHEN 'cancelled' THEN 0 ELSE (e->>'reserved')::numeric END), 0)
+    INTO spent_after FROM jsonb_array_elements(p_new->'entries') e;
+  IF spent_after > spent_before AND spent_after > 30000000000 THEN
+    RETURN 'exceeding the allocation cap';
+  END IF;
+  -- At most two attempts are with the provider or unresolved when another is sent.
+  IF EXISTS (SELECT 1 FROM jsonb_array_elements(p_new->'entries') e
+        WHERE e->>'status' = 'dispatched' AND NOT EXISTS (SELECT 1 FROM jsonb_array_elements(p_old->'entries') x
+          WHERE x->>'runKey' = e->>'runKey' AND x->>'status' = 'dispatched'))
+      AND (SELECT count(*) FROM jsonb_array_elements(p_new->'entries') e
+        WHERE NOT coalesce((e->>'legacy')::boolean, false) AND e->>'status' IN ('dispatched', 'unknown')) > 2 THEN
+    RETURN 'exceeding the dispatch concurrency';
+  END IF;
+  RETURN NULL;
+END $$;
+--> statement-breakpoint
+CREATE FUNCTION public.valo_inference_budget_lock(p_id text, p_policy_hash text)
+RETURNS TABLE (state jsonb, version integer, policy_hash text)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+#variable_conflict use_column
+DECLARE
+  initial jsonb := CASE p_id
+    WHEN 'valo-additional-inference-30-20261114-v1' THEN
+      '{"version":1,"entries":[],"priorUseReconciled":true,"unboundedPrior":[],"suspended":false}'::jsonb
+    WHEN 'valo-managed-inference-30-v1' THEN
+      '{"version":1,"entries":[],"priorUseReconciled":false,"unboundedPrior":[],"suspended":false}'::jsonb
+  END;
+BEGIN
+  IF coalesce(current_setting('role', true) = 'valo_workspace_scope', false)
+      AND p_id IS DISTINCT FROM 'valo-additional-inference-30-20261114-v1' THEN
+    RAISE EXCEPTION 'valo_workspace_scope may use only the customer inference allocation'
+      USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  IF initial IS NULL OR coalesce(p_policy_hash, '') !~ '^[a-f0-9]{64}$' THEN
+    RAISE EXCEPTION 'INFERENCE_ALLOCATION_UNKNOWN' USING ERRCODE = 'invalid_parameter_value';
+  END IF;
+  INSERT INTO public.valo_inference_budgets AS b (id, policy_hash, state)
+    VALUES (p_id, p_policy_hash, initial) ON CONFLICT (id) DO NOTHING;
+  RETURN QUERY SELECT b.state, b.version, b.policy_hash
+    FROM public.valo_inference_budgets b WHERE b.id = p_id FOR UPDATE;
+END $$;
+--> statement-breakpoint
+CREATE FUNCTION public.valo_inference_budget_commit(p_id text, p_version integer, p_state jsonb,
+  p_action text, p_before_hash text, p_after_hash text)
+RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+DECLARE
+  old_state jsonb;
+  old_version integer;
+  refusal text;
+BEGIN
+  IF coalesce(length(p_action), 0) NOT BETWEEN 1 AND 300
+      OR coalesce(p_before_hash, '') !~ '^[a-f0-9]{64}$' OR coalesce(p_after_hash, '') !~ '^[a-f0-9]{64}$'
+      OR jsonb_typeof(p_state) IS DISTINCT FROM 'object'
+      OR p_state->'version' IS DISTINCT FROM '1'::jsonb
+      OR jsonb_typeof(p_state->'entries') IS DISTINCT FROM 'array'
+      OR jsonb_typeof(p_state->'unboundedPrior') IS DISTINCT FROM 'array'
+      OR jsonb_typeof(p_state->'priorUseReconciled') IS DISTINCT FROM 'boolean'
+      OR jsonb_typeof(p_state->'suspended') IS DISTINCT FROM 'boolean' THEN
+    RAISE EXCEPTION 'INVALID_BUDGET_COMMIT' USING ERRCODE = 'invalid_parameter_value';
+  END IF;
+  SELECT b.state, b.version INTO old_state, old_version
+    FROM public.valo_inference_budgets b WHERE b.id = p_id FOR UPDATE;
+  IF NOT FOUND OR old_version IS DISTINCT FROM p_version THEN
+    RAISE EXCEPTION 'INFERENCE_LEDGER_VERSION_CONFLICT';
+  END IF;
+  IF coalesce(current_setting('role', true) = 'valo_workspace_scope', false) THEN
+    refusal := public.valo_inference_customer_change_refusal(p_id, old_state, p_state);
+    IF refusal IS NOT NULL THEN
+      RAISE EXCEPTION 'valo_workspace_scope may not commit an inference ledger change %', refusal
+        USING ERRCODE = 'insufficient_privilege';
+    END IF;
+  END IF;
+  UPDATE public.valo_inference_budgets
+    SET state = p_state, version = p_version + 1, updated_at = now() WHERE id = p_id;
+  INSERT INTO public.valo_inference_budget_events (budget_id, version, action, before_hash, after_hash)
+    VALUES (p_id, p_version + 1, p_action, p_before_hash, p_after_hash);
+  RETURN p_version + 1;
+END $$;
+--> statement-breakpoint
+-- A provider result is recorded once, for a work key of the batch's approved manifest; a
+-- customer request may record only customer work.
+CREATE FUNCTION public.valo_inference_batch_record_result(p_id text, p_key text, p_result jsonb,
+  p_manifest_hash text)
+RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+DECLARE
+  customer_only boolean := coalesce(current_setting('role', true) = 'valo_workspace_scope', false);
+BEGIN
+  UPDATE public.valo_inference_batches b SET results = jsonb_set(b.results, ARRAY[p_key], p_result)
+    WHERE b.id = p_id AND b.manifest_hash = p_manifest_hash
+      AND EXISTS (SELECT 1 FROM jsonb_array_elements(b.manifest->'works') w
+        WHERE w->>'key' = p_key AND (NOT customer_only OR w->>'lane' = 'customer'))
+      AND (NOT b.results ? p_key OR b.results->p_key = p_result);
+  RETURN FOUND;
+END $$;
+--> statement-breakpoint
+REVOKE ALL ON FUNCTION public.valo_inference_customer_change_refusal(text, jsonb, jsonb),
+  public.valo_inference_budget_lock(text, text),
+  public.valo_inference_budget_commit(text, integer, jsonb, text, text, text),
+  public.valo_inference_batch_record_result(text, text, jsonb, text) FROM PUBLIC;
+--> statement-breakpoint
+GRANT EXECUTE ON FUNCTION public.valo_inference_budget_lock(text, text),
+  public.valo_inference_budget_commit(text, integer, jsonb, text, text, text),
+  public.valo_inference_batch_record_result(text, text, jsonb, text) TO valo_workspace_scope;

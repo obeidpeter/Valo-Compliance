@@ -13,6 +13,7 @@ import {
   transitionBudget,
   settleBudget,
 } from "./inference-budget";
+import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
 test(
   "isolated PostgreSQL global ledger serializes races and preserves unknown/retry liability",
   {
@@ -29,6 +30,7 @@ test(
         "utf8",
       );
       await c.query(ddl.replaceAll("--> statement-breakpoint", ""));
+      await copyDatabaseFunctions(c, schema, INFERENCE_LEDGER_FUNCTIONS);
     } finally {
       await c.query("RESET search_path");
       c.release();

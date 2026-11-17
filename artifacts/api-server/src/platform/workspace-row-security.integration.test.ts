@@ -206,6 +206,95 @@ test(
       }
     });
 
+    await t.test("customer requests change the inference ledger only through its functions", async () => {
+      const { additionalInferenceAllocation, inferenceProposal, requestDigest } =
+        await import("../lib/inference-budget");
+      const batchId = `synthetic-rls-batch-${tag}`,
+        manifestHash = "f".repeat(64),
+        policyHash = requestDigest(inferenceProposal);
+      await pool.query(
+        `INSERT INTO valo_inference_batches(id,policy_hash,manifest_hash,manifest,expires_at)
+        VALUES($1,$2,$3,$4,now()+interval '1 day')`,
+        [batchId, policyHash, manifestHash, JSON.stringify({ works: [{ key: "k1", lane: "customer" }] })],
+      );
+      try {
+        await runInWorkspaceScope(a!.workspaceId, async () => {
+          const client = await pool.connect();
+          try {
+            await client.query("BEGIN");
+            const refused = async (statement: string, values: unknown[], pattern: RegExp) => {
+              await client.query("SAVEPOINT probe");
+              await assert.rejects(client.query(statement, values), pattern);
+              await client.query("ROLLBACK TO SAVEPOINT probe");
+            };
+            // No direct access to the ledger, and the approved batch rows can only be locked.
+            await refused("SELECT * FROM valo_inference_budgets", [], /permission denied for table/);
+            await refused(
+              "INSERT INTO valo_inference_budget_events(budget_id,version,action,before_hash,after_hash) VALUES('x',1,'x','x','x')",
+              [],
+              /permission denied for table/,
+            );
+            await refused(
+              "UPDATE valo_inference_batches SET results = '{}' WHERE id = $1",
+              [batchId],
+              /may lock rows of valo_inference_batches but not change them/,
+            );
+            await refused(
+              "SELECT * FROM valo_inference_budget_lock($1, $2)",
+              [inferenceProposal.id, policyHash],
+              /only the customer inference allocation/,
+            );
+            // Through the functions it may commit a customer change, but not erase or widen one.
+            const {
+              rows: [row],
+            } = await client.query("SELECT state, version FROM valo_inference_budget_lock($1, $2)", [
+              additionalInferenceAllocation.id,
+              policyHash,
+            ]);
+            const commit = (state: object) =>
+              client.query("SELECT valo_inference_budget_commit($1,$2,$3,$4,$5,$6) AS version", [
+                additionalInferenceAllocation.id,
+                row.version,
+                JSON.stringify(state),
+                "synthetic-row-security",
+                "a".repeat(64),
+                "b".repeat(64),
+              ]);
+            await client.query("SAVEPOINT probe");
+            await assert.rejects(
+              commit({
+                ...row.state,
+                priorUseReconciled: true,
+                suspended: false,
+                unboundedPrior: [],
+                extra: 1,
+              }),
+              /may not commit an inference ledger change an unknown state field/,
+            );
+            await client.query("ROLLBACK TO SAVEPOINT probe");
+            assert.equal((await commit(row.state)).rows[0].version, row.version + 1);
+            const record = (key: string, result: object) =>
+              client
+                .query("SELECT valo_inference_batch_record_result($1,$2,$3,$4) AS saved", [
+                  batchId,
+                  key,
+                  JSON.stringify(result),
+                  manifestHash,
+                ])
+                .then((r) => r.rows[0].saved);
+            assert.equal(await record("k1", { id: "synthetic-result" }), true);
+            assert.equal(await record("k1", { id: "another-result" }), false, "a recorded result is kept");
+            assert.equal(await record("not-in-manifest", { id: "x" }), false);
+            await client.query("ROLLBACK");
+          } finally {
+            client.release();
+          }
+        });
+      } finally {
+        await pool.query("DELETE FROM valo_inference_batches WHERE id = $1", [batchId]);
+      }
+    });
+
     await t.test(
       "concurrent scopes, including a pool callback run from another scope, stay apart",
       async () => {

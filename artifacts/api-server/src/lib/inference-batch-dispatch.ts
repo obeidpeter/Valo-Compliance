@@ -381,12 +381,12 @@ export class FiniteInferenceDispatcher {
         // Settlement accounts for already admitted exposure, not fresh spending.
         // Revocation/expiry (including parent-package revocation) cannot erase it.
         // The immutable admitted manifest identity fences the retained result.
+        // Recorded once, for a key of the admitted manifest (database function).
         const saved = await c.query(
-          `UPDATE "${this.store.schemaName()}".valo_inference_batches
-          SET results=jsonb_set(results,ARRAY[$2],$3::jsonb) WHERE id=$1 AND manifest_hash=$4`,
+          `SELECT "${this.store.schemaName()}".valo_inference_batch_record_result($1,$2,$3,$4) AS saved`,
           [ctx.batchId, ctx.key, JSON.stringify(result), admission.manifestHash],
         );
-        if (saved.rowCount !== 1) return { state, value: false };
+        if (saved.rows[0]?.saved !== true) return { state, value: false };
         return { state, value: true };
       });
       if (!accepted) throw Error("PROVIDER_RECEIPT_INVALID_OR_BOUND_EXCEEDED");

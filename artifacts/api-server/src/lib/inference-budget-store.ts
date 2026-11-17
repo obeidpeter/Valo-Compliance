@@ -1,5 +1,4 @@
 import {
-  emptyBudget,
   inferenceProposal,
   additionalInferenceAllocation,
   requestDigest,
@@ -51,6 +50,11 @@ export class InferenceBudgetStore {
       c.release();
     }
   }
+  /**
+   * The ledger is changed only through its database functions, which run as their owner:
+   * customer requests hold no write privilege on it, and the commit refuses any change a
+   * customer AI attempt does not make (migration 20261117125444_workspace_row_security).
+   */
   async mutate<T>(
     action: string,
     fn: (
@@ -59,25 +63,13 @@ export class InferenceBudgetStore {
     ) => { state: BudgetState; value: T } | Promise<{ state: BudgetState; value: T }>,
   ) {
     const c = await this.pool.connect();
-    const table = `"${this.schema}".valo_inference_budgets`,
-      events = `"${this.schema}".valo_inference_budget_events`;
     try {
       await c.query("BEGIN");
-      await c.query(
-        `INSERT INTO ${table}(id,policy_hash,state) VALUES($1,$2,$3) ON CONFLICT(id) DO NOTHING`,
-        [
-          this.allocationId(),
-          requestDigest(inferenceProposal),
-          JSON.stringify(
-            this.scope === "additional-new" ? { ...emptyBudget(), priorUseReconciled: true } : emptyBudget(),
-          ),
-        ],
-      );
-      // Only this newly scoped allocation starts empty. The legacy row and its
-      // events/unknown liabilities are never overwritten or marked reconciled.
+      // Creates the allocation the first time. Only the newly scoped allocation starts
+      // reconciled; the legacy row and its events/unknown liabilities are never overwritten.
       const selected = await c.query(
-        `SELECT state,version,policy_hash FROM ${table} WHERE id=$1 FOR UPDATE`,
-        [this.allocationId()],
+        `SELECT state,version,policy_hash FROM "${this.schema}".valo_inference_budget_lock($1,$2)`,
+        [this.allocationId(), requestDigest(inferenceProposal)],
       );
       const row = selected.rows[0];
       if (row.policy_hash !== requestDigest(inferenceProposal))
@@ -86,18 +78,14 @@ export class InferenceBudgetStore {
       validateBudgetState(before);
       const result = await fn(structuredClone(before), c);
       validateBudgetState(result.state);
-      const version = row.version + 1,
-        beforeHash = requestDigest(before),
-        afterHash = requestDigest(result.state);
-      await c.query(`UPDATE ${table} SET state=$2,version=$3,updated_at=now() WHERE id=$1`, [
+      await c.query(`SELECT "${this.schema}".valo_inference_budget_commit($1,$2,$3,$4,$5,$6)`, [
         this.allocationId(),
+        row.version,
         JSON.stringify(result.state),
-        version,
+        action,
+        requestDigest(before),
+        requestDigest(result.state),
       ]);
-      await c.query(
-        `INSERT INTO ${events}(budget_id,version,action,before_hash,after_hash) VALUES($1,$2,$3,$4,$5)`,
-        [this.allocationId(), version, action, beforeHash, afterHash],
-      );
       await c.query("COMMIT");
       return result.value;
     } catch (e) {

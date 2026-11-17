@@ -9,11 +9,15 @@ database yet.
   continue.
 - It grants that role only the commands customer requests use, table by table, and
   makes the role running the migration a member, so the application can switch to
-  it. 14 tables, among them every staff table, give it nothing. Tables created later
-  give it nothing until a migration grants it.
-- On the five tables whose rows customer requests lock but never change
-  (memberships, prices, content versions, support tickets and file records) a
-  trigger refuses every update the role attempts.
+  it. 16 tables, among them every staff table and the inference budget, give it
+  nothing. Tables created later give it nothing until a migration grants it.
+- On the six tables whose rows customer requests lock but never change
+  (memberships, prices, content versions, support tickets, file records and
+  inference batches) a trigger refuses every update the role attempts.
+- It adds the functions that now write the shared inference ledger for every caller:
+  `valo_inference_budget_lock`, `valo_inference_budget_commit` (with its check,
+  `valo_inference_customer_change_refusal`) and `valo_inference_batch_record_result`.
+  For the scoped role, the commit allows only what a customer AI attempt does.
 - It adds `valo_customer_ai_reservations`, which returns only the shared AI usage
   totals, so the shared daily ceiling and the per-person limit still count every
   workspace. Only `valo_workspace_scope` and its owner may call it.
@@ -27,7 +31,9 @@ database yet.
 
 Apply it before running code that includes it. That code runs every customer request
 as `valo_workspace_scope`, so without the migration every customer request fails with
-`DB_WORKSPACE_SCOPE_UNAVAILABLE`, though no connection is leaked.
+`DB_WORKSPACE_SCOPE_UNAVAILABLE`, though no connection is leaked. Operator inference
+commands also write the ledger through its functions, so they fail until it is
+applied.
 
 The Replit development database has no Drizzle ledger. Follow the existing
 procedure in [phase1-migration-plan.md](phase1-migration-plan.md):
@@ -50,8 +56,12 @@ procedure in [phase1-migration-plan.md](phase1-migration-plan.md):
 
 To undo it, roll the code back first. Then drop each `valo_workspace_scope` policy
 and `valo_workspace_scope_lock_only` trigger, disable row-level security on those
-tables, drop the functions `valo_customer_ai_reservations` and
-`valo_refuse_scoped_update`, revoke the grants, and drop the role.
+tables, drop the functions `valo_customer_ai_reservations`,
+`valo_refuse_scoped_update`, `valo_inference_budget_lock`,
+`valo_inference_budget_commit`, `valo_inference_customer_change_refusal` and
+`valo_inference_batch_record_result`, revoke the grants, and drop the role. Code
+from before this migration writes the ledger tables directly, so it keeps working
+once the code is rolled back.
 
 Never run the full migrator against this database and never write ledger rows.
 `lib/db/scripts/phase1-migrations.test.mjs` checks the upgrade on tracked and

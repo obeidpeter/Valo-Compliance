@@ -169,11 +169,11 @@ test("default managed entry and customer organizer use actual finite dispatch an
             const row = copies.get(String(values[0]));
             return { rows: row ? [row] : [] };
           }
-          if (sql.startsWith('UPDATE "public".valo_inference_batches') && sql.includes("jsonb_set")) {
+          if (sql.startsWith('SELECT "public".valo_inference_batch_record_result(')) {
             const row = copies.get(String(values[0]));
             assert.ok(row);
             row.results[String(values[1])] = JSON.parse(String(values[2]));
-            return { rows: [], rowCount: 1 };
+            return { rows: [{ saved: true }], rowCount: 1 };
           }
           throw Error("UNEXPECTED_TEST_SQL");
         },

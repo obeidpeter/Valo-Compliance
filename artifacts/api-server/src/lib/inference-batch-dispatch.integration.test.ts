@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { readFile } from "node:fs/promises";
-import { pool } from "@workspace/db";
+import { pool, runInWorkspaceScope } from "@workspace/db";
 import { InferenceBudgetStore } from "./inference-budget-store";
 import { FiniteInferenceDispatcher, type FiniteWork, type FiniteManifest } from "./inference-batch-dispatch";
 import {
@@ -28,6 +28,7 @@ import {
   withBoundInferenceDispatcher,
   withApprovedInferenceRole,
 } from "./managed-inference";
+import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
 
 test(
   "durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls",
@@ -45,6 +46,7 @@ test(
         const ddl = await readFile(new URL(`../../../../lib/db/drizzle/${file}`, import.meta.url), "utf8");
         await c.query(ddl.replaceAll("--> statement-breakpoint", ""));
       }
+      await copyDatabaseFunctions(c, schema, INFERENCE_LEDGER_FUNCTIONS);
     } finally {
       await c.query("RESET search_path");
       c.release();
@@ -875,6 +877,42 @@ test(
           }));
           await assert.rejects(() => run(dispatcher, id, w), /ALLOCATION_EXHAUSTED/);
           assert.equal(sends, before);
+        },
+      );
+      await t.test(
+        "a customer attempt commits every ledger change as the scoped role, through the functions only",
+        async () => {
+          await reset();
+          // The scoped role reaches this schema as it reaches public: it reads and locks the
+          // batches and calls the ledger functions, which allow it only customer changes.
+          await pool.query(`GRANT USAGE ON SCHEMA "${schema}" TO valo_workspace_scope`);
+          await pool.query(
+            `GRANT SELECT, UPDATE ON "${schema}".valo_inference_batches TO valo_workspace_scope`,
+          );
+          await pool.query(
+            `GRANT EXECUTE ON FUNCTION "${schema}".valo_inference_budget_lock(text,text),
+            "${schema}".valo_inference_budget_commit(text,integer,jsonb,text,text,text),
+            "${schema}".valo_inference_batch_record_result(text,text,jsonb,text) TO valo_workspace_scope`,
+          );
+          const w = work("scoped-customer"),
+            id = await seed([w]),
+            before = sends;
+          const result = await runInWorkspaceScope(randomUUID(), () => run(dispatcher, id, w));
+          assert.equal(result.usage?.total_tokens, 160);
+          assert.equal(sends, before + 1);
+          const entry = (await state()).entries.find((e) => e.runKey === `${id}:${w.key}`);
+          assert.equal(entry?.status, "settled");
+          const recorded = await pool.query(
+            `SELECT results->$2 AS result FROM "${schema}".valo_inference_batches WHERE id=$1`,
+            [id, w.key],
+          );
+          assert.equal(recorded.rows[0].result.id, result.id);
+          await assert.rejects(
+            runInWorkspaceScope(randomUUID(), () =>
+              pool.query(`UPDATE "${schema}".valo_inference_budgets SET version = version`),
+            ),
+            /permission denied/,
+          );
         },
       );
     } finally {

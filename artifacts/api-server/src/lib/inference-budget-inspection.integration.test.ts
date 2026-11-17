@@ -5,6 +5,7 @@ import { pool } from "@workspace/db";
 import { InferenceBudgetStore } from "./inference-budget-store";
 import { emptyBudget, inferenceProposal, requestDigest } from "./inference-budget";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
 
 test(
   "PostgreSQL inspection reads exact scoped state without initializing or mutating either ledger",
@@ -18,6 +19,7 @@ test(
       await pool.query(`CREATE SCHEMA "${schema}"`);
       for (const table of ["valo_inference_budgets", "valo_inference_budget_events"])
         await pool.query(`CREATE TABLE "${schema}".${table} (LIKE public.${table} INCLUDING ALL)`);
+      await copyDatabaseFunctions(pool, schema, INFERENCE_LEDGER_FUNCTIONS);
       const fresh = new InferenceBudgetStore(pool, schema, "additional-new");
       const absent = await fresh.inspect();
       assert.equal(absent.accountingBasis, "uninitialized-policy-default");

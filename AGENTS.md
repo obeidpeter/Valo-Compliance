@@ -90,7 +90,9 @@ Rules that apply now:
   never reset the role or `valo.workspace_id` in customer code. A customer
   request cannot see other workspaces' rows, so a total it needs across
   workspaces (such as a shared limit) comes from a reviewed database function
-  that returns only that total, like `valo_customer_ai_reservations`.
+  that returns only that total, like `valo_customer_ai_reservations`. The shared
+  inference ledger is written only through its functions
+  (`valo_inference_budget_commit` and the others in decision 0008).
 
 ## 5. Checks
 

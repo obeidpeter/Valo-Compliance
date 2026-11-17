@@ -11,6 +11,7 @@ import {
   type HistoryEvidence,
   type HistoryRow,
 } from "./inference-history-classification";
+import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
 
 test(
   "locked historical classification is resumable and concurrent without deleting any usage or approving spending",
@@ -32,6 +33,7 @@ test(
           )
         ).replaceAll("--> statement-breakpoint", ""),
       );
+      await copyDatabaseFunctions(c, schema, INFERENCE_LEDGER_FUNCTIONS);
     } finally {
       await c.query("RESET search_path");
       c.release();

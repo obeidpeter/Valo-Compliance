@@ -14,6 +14,7 @@ import { createManagedSDKTransport } from "./managed-sdk-transport";
 import type { ArtifactRef } from "../editorial/publication-artifacts";
 import type { ManagedRequest, ManagedCompletionResult } from "./managed-inference";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
 
 test(
   "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
@@ -110,12 +111,11 @@ test(
           `CREATE TABLE IF NOT EXISTS "${schema}"."${table}" (LIKE public."${table}" INCLUDING ALL)`,
         );
       }
-      // Customer AI limits read their totals across workspaces through this function. The
-      // copy is the real definition, counting the fixture schema's drafts instead.
-      const reservations = await database.pool.query(
-        "SELECT pg_get_functiondef('public.valo_customer_ai_reservations(timestamptz,timestamptz,text)'::regprocedure) AS definition",
-      );
-      await scoped.query(String(reservations.rows[0].definition).replaceAll("public.", `"${schema}".`));
+      // Customer AI limits read their totals across workspaces through this function; the copy
+      // counts the fixture schema's drafts.
+      await copyDatabaseFunctions(scoped, schema, [
+        "valo_customer_ai_reservations(timestamptz,timestamptz,text)",
+      ]);
       const serials = await scoped.query(
         "SELECT table_name,column_name FROM information_schema.columns WHERE table_schema=$1 AND column_default LIKE 'nextval(%'",
         [schema],
@@ -173,6 +173,7 @@ test(
             "",
           ),
         );
+      await copyDatabaseFunctions(scoped, schema, INFERENCE_LEDGER_FUNCTIONS);
       t.mock.module("@workspace/db", { namedExports: { ...database, db: drizzle(scoped), pool: scoped } });
       t.mock.module(new URL("../editorial/publication-artifacts.ts", import.meta.url).href, {
         namedExports: { getPublicationArtifact: get, putPublicationArtifact: put },
