@@ -135,13 +135,23 @@ artifacts/api-server/src/
 
 Rules:
 
-- A module may import another module only through its `index.ts`.
+- Code outside a module, another module included, imports it only through its
+  `index.ts`. The repository rules checker enforces this (`module-boundary`);
+  tests may import a module's files directly.
 - Only `platform/` reads environment variables or creates clients.
 - HTTP handlers and jobs call module services; only a module's own data layer
   touches its tables.
 
-These rules are enforced by tooling as each phase lands. See [plan.md](plan.md)
+The other rules are enforced by tooling as each phase lands. See [plan.md](plan.md)
 for the order of work and what is already done.
+
+`modules/ai` is the first module. It holds the finite inference core: the budget
+and its ledger, history reconciliation, approved manifests and allocation packages,
+and the dispatcher with its provider transport. `index.ts` does not export the
+transport, so disabled inference never loads it. The customer AI and operational
+review lanes, the history loader and the work-binding checks stay in `src/lib` for
+now: they depend on customer documents, the editorial pipeline or the database,
+and move with the modules that own those.
 
 The proposed R2 team access model (roles, grants, invitations and the migration path)
 is in [r2-team-access.md](r2-team-access.md).

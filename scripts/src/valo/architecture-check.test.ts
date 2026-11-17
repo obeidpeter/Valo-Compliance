@@ -7,6 +7,7 @@ import {
   importCycles,
   inferenceBindingReport,
   inferenceBindingViolations,
+  moduleBoundaryViolations,
   silentCatchReport,
   silentCatchViolations,
   WORKSPACE_SCOPE_ENTRIES,
@@ -139,6 +140,21 @@ test("only the reviewed operator commands provide the dispatcher's binding check
   );
 });
 
+test("code outside a module reaches it only through its index", () => {
+  const m = "artifacts/api-server/src/modules/";
+  const graph = new Map([
+    ["artifacts/api-server/src/routes/a.ts", new Set([`${m}ai/index.ts`])],
+    ["artifacts/api-server/src/lib/b.ts", new Set([`${m}ai/managed-inference.ts`])],
+    [`${m}ai/index.ts`, new Set([`${m}ai/managed-inference.ts`])],
+    [`${m}ai/managed-inference.ts`, new Set(["artifacts/api-server/src/lib/c.ts"])],
+    [`${m}docs/index.ts`, new Set([`${m}ai/inference-budget.ts`])],
+  ]);
+  const flagged = moduleBoundaryViolations(graph);
+  assert.equal(flagged.length, 2, flagged.join("\n"));
+  assert.match(flagged[0]!, /lib\/b\.ts:1 module-boundary imports ai\/managed-inference\.ts/);
+  assert.match(flagged[1]!, /modules\/docs\/index\.ts:1 module-boundary imports ai\/inference-budget\.ts/);
+});
+
 test("the repository has no silent catches, no import cycles and no unreviewed binding checks", () => {
   assert.deepEqual(silentCatchReport(), []);
   assert.deepEqual(workspaceActorReport(), []);
@@ -147,4 +163,9 @@ test("the repository has no silent catches, no import cycles and no unreviewed b
   assert.ok(graph.size > 100, "the API import graph was actually read");
   assert.deepEqual(importCycles(graph), []);
   assert.deepEqual(cycleViolations(graph), []);
+  assert.deepEqual(moduleBoundaryViolations(graph), []);
+  assert.ok(
+    [...graph.keys()].some((file) => file.includes("/modules/ai/")),
+    "the ai module was read",
+  );
 });

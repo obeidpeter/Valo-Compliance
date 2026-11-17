@@ -14,6 +14,7 @@ import ts from "typescript";
  *   and lazy imports.
  * - workspace-actor: see workspaceActorViolations.
  * - inference-bindings: see inferenceBindingViolations.
+ * - module-boundary: see moduleBoundaryViolations.
  */
 
 export const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -310,6 +311,28 @@ export function inferenceBindingReport(root = repositoryRoot): string[] {
   );
 }
 
+const MODULES = "artifacts/api-server/src/modules/";
+
+/**
+ * module-boundary (decision 0001): product code outside a module imports it only through the
+ * module's index.ts, so a module's other files can change without breaking callers. Imports
+ * within a module are free; tests may reach a module's files directly.
+ */
+export function moduleBoundaryViolations(graph = apiImportGraph()): string[] {
+  const moduleOf = (path: string) =>
+    path.startsWith(MODULES) ? path.slice(MODULES.length).split("/")[0] : undefined;
+  const violations: string[] = [];
+  for (const [file, edges] of graph)
+    for (const target of edges) {
+      const owner = moduleOf(target);
+      if (!owner || moduleOf(file) === owner || target === `${MODULES}${owner}/index.ts`) continue;
+      violations.push(
+        `${file}:1 module-boundary imports ${target.slice(MODULES.length)}; import modules/${owner} through its index.ts`,
+      );
+    }
+  return violations.sort();
+}
+
 export function silentCatchReport(root = repositoryRoot): string[] {
   const roots = [
     "artifacts/api-server/src",
@@ -332,6 +355,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     ...cycleViolations(),
     ...workspaceActorReport(),
     ...inferenceBindingReport(),
+    ...moduleBoundaryViolations(),
   ];
   for (const violation of violations) process.stdout.write(`${violation}\n`);
   process.stdout.write(`architecture check: ${violations.length} violation(s)\n`);

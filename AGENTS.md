@@ -110,6 +110,10 @@ Rules that apply now:
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.
+- API code is moving into one folder per capability under
+  `artifacts/api-server/src/modules/`. Code outside a module imports it only through
+  its `index.ts`; the `module-boundary` repository rule enforces this, and tests may
+  import a module's files directly.
 
 ## 5. Checks
 

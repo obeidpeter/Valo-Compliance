@@ -58,7 +58,7 @@ Exit: CI rejects unformatted code, lint findings, stray environment reads and di
 
 | Item | Status |
 | --- | --- |
-| Move API code into `platform/` and `modules/` with public entry files | not started |
+| Move API code into `platform/` and `modules/` with public entry files | in progress: `modules/ai` holds the finite inference core behind its `index.ts`, and the repository rules checker rejects product code that imports a module's other files (`module-boundary`). The inference lanes, the history loader and the work-binding checks stay in `src/lib` until the modules that own their dependencies exist; the other modules are not started |
 | Remove the three import cycles | done: the last ran through the inference dispatcher, which loaded its work-binding checks and through them the callers that call it. The operator commands that run approved work now hand the dispatcher those checks (`provideFiniteWorkBindings`), and the repository rules checker rejects any import cycle and any unreviewed caller of that function (`inference-bindings`) |
 | Every client-facing route in the API contract | done (the staff MFA check was the last one missing; the Paystack webhook faces the provider and stays outside the client contract) |
 | Split the API contract per module | not started |
