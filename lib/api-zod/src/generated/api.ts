@@ -6902,3 +6902,430 @@ export const GetCorrectionNoticesResponse = zod.object({
 })
 
 
+/**
+ * @summary Saved support cases for the current workspace
+ */
+export const listCustomerSupportCasesQueryPageDefault = 1;
+export const listCustomerSupportCasesQueryPageMax = 10000;
+
+
+
+export const ListCustomerSupportCasesQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).max(listCustomerSupportCasesQueryPageMax).default(listCustomerSupportCasesQueryPageDefault)
+})
+
+
+
+
+export const ListCustomerSupportCasesResponse = zod.object({
+  "cases": zod.array(zod.object({
+  "id": zod.uuid(),
+  "sourceKind": zod.enum(['workspace', 'access']),
+  "reference": zod.string(),
+  "category": zod.string(),
+  "status": zod.enum(['open', 'in_progress', 'awaiting_customer', 'resolved']),
+  "version": zod.int().min(1),
+  "updatedAt": zod.coerce.date()
+})),
+  "page": zod.int(),
+  "pageSize": zod.int(),
+  "hasMore": zod.boolean(),
+  "notice": zod.string()
+})
+
+
+/**
+ * @summary One support case and its customer-visible conversation
+ */
+export const GetCustomerSupportCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const getCustomerSupportCaseQueryMessagesPageDefault = 1;
+export const getCustomerSupportCaseQueryMessagesPageMax = 10000;
+
+
+
+export const GetCustomerSupportCaseQueryParams = zod.object({
+  "messagesPage": zod.coerce.number().int().min(1).max(getCustomerSupportCaseQueryMessagesPageMax).default(getCustomerSupportCaseQueryMessagesPageDefault)
+})
+
+
+
+
+export const GetCustomerSupportCaseResponse = zod.object({
+  "case": zod.object({
+  "id": zod.uuid(),
+  "sourceKind": zod.enum(['workspace', 'access']),
+  "reference": zod.string(),
+  "category": zod.string(),
+  "scope": zod.string(),
+  "contactEmail": zod.string(),
+  "sharingConsent": zod.boolean(),
+  "status": zod.enum(['open', 'in_progress', 'awaiting_customer', 'resolved']),
+  "version": zod.int().min(1),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "body": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "authorKind": zod.enum(['customer', 'staff']),
+  "visibility": zod.enum(['customer', 'internal'])
+})),
+  "messagesPage": zod.int(),
+  "messagePageSize": zod.int(),
+  "moreMessages": zod.boolean(),
+  "notice": zod.string()
+})
+
+
+/**
+ * Saves the reply to the private portal. Nothing is emailed or sent elsewhere.
+ * @summary Add information to a support case
+ */
+export const ReplyToSupportCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const replyToSupportCaseBodyBodyMin = 8;
+export const replyToSupportCaseBodyBodyMax = 4000;
+
+
+
+export const ReplyToSupportCaseBody = zod.object({
+  "idempotencyKey": zod.uuid(),
+  "expectedVersion": zod.int().min(1),
+  "body": zod.string().min(replyToSupportCaseBodyBodyMin).max(replyToSupportCaseBodyBodyMax)
+})
+
+
+
+
+export const ReplyToSupportCaseResponse = zod.object({
+  "case": zod.object({
+  "id": zod.uuid(),
+  "sourceKind": zod.enum(['workspace', 'access']),
+  "reference": zod.string(),
+  "category": zod.string(),
+  "scope": zod.string(),
+  "contactEmail": zod.string(),
+  "sharingConsent": zod.boolean(),
+  "status": zod.enum(['open', 'in_progress', 'awaiting_customer', 'resolved']),
+  "version": zod.int().min(1),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "body": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "authorKind": zod.enum(['customer', 'staff']),
+  "visibility": zod.enum(['customer', 'internal'])
+})),
+  "messagesPage": zod.int(),
+  "messagePageSize": zod.int(),
+  "moreMessages": zod.boolean(),
+  "notice": zod.string()
+})
+
+
+/**
+ * @summary Support case queue
+ */
+export const listStaffSupportCasesQueryStatusDefault = `all`;
+export const listStaffSupportCasesQueryPageDefault = 1;
+export const listStaffSupportCasesQueryPageMax = 10000;
+
+
+
+export const ListStaffSupportCasesQueryParams = zod.object({
+  "status": zod.enum(['all', 'open', 'in_progress', 'awaiting_customer', 'resolved']).default(listStaffSupportCasesQueryStatusDefault),
+  "page": zod.coerce.number().int().min(1).max(listStaffSupportCasesQueryPageMax).default(listStaffSupportCasesQueryPageDefault)
+})
+
+
+
+
+export const ListStaffSupportCasesResponse = zod.object({
+  "cases": zod.array(zod.object({
+  "id": zod.uuid(),
+  "sourceKind": zod.enum(['workspace', 'access']),
+  "reference": zod.string(),
+  "category": zod.string(),
+  "status": zod.enum(['open', 'in_progress', 'awaiting_customer', 'resolved']),
+  "version": zod.int().min(1),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "assignedTo": zod.string().nullable()
+}))),
+  "page": zod.int(),
+  "pageSize": zod.int(),
+  "hasMore": zod.boolean(),
+  "notice": zod.string()
+})
+
+
+/**
+ * @summary Active support staff who can be assigned a case
+ */
+export const ListSupportAssigneesResponse = zod.object({
+  "assignees": zod.array(zod.object({
+  "identityId": zod.string()
+}))
+})
+
+
+/**
+ * @summary One support case with its full history
+ */
+export const GetStaffSupportCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const getStaffSupportCaseQueryMessagesPageDefault = 1;
+export const getStaffSupportCaseQueryMessagesPageMax = 10000;
+
+
+
+export const GetStaffSupportCaseQueryParams = zod.object({
+  "messagesPage": zod.coerce.number().int().min(1).max(getStaffSupportCaseQueryMessagesPageMax).default(getStaffSupportCaseQueryMessagesPageDefault)
+})
+
+
+
+
+
+export const GetStaffSupportCaseResponse = zod.object({
+  "case": zod.object({
+  "id": zod.uuid(),
+  "sourceKind": zod.enum(['workspace', 'access']),
+  "reference": zod.string(),
+  "category": zod.string(),
+  "scope": zod.string(),
+  "contactEmail": zod.string(),
+  "sharingConsent": zod.boolean(),
+  "status": zod.enum(['open', 'in_progress', 'awaiting_customer', 'resolved']),
+  "version": zod.int().min(1),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "assignedTo": zod.string().nullable()
+})),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "body": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "authorKind": zod.enum(['customer', 'staff']),
+  "visibility": zod.enum(['customer', 'internal'])
+})),
+  "messagesPage": zod.int(),
+  "messagePageSize": zod.int(),
+  "moreMessages": zod.boolean(),
+  "events": zod.array(zod.object({
+  "id": zod.uuid(),
+  "caseId": zod.uuid(),
+  "actorId": zod.string(),
+  "action": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "eventsTruncated": zod.boolean(),
+  "escalations": zod.array(zod.object({
+  "id": zod.uuid(),
+  "caseId": zod.uuid(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetId": zod.uuid(),
+  "targetHash": zod.string(),
+  "targetVersion": zod.int().min(1),
+  "reason": zod.string(),
+  "status": zod.enum(['queued', 'acknowledged', 'resolved']),
+  "sourceImpactId": zod.uuid().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "escalationsTruncated": zod.boolean(),
+  "notice": zod.string()
+})
+
+
+/**
+ * Replies are saved to the portal or kept internal. Nothing is emailed. A content referral grants no hold or publication authority.
+ * @summary Assign, reply to, resolve, reopen or refer a support case
+ */
+export const ActOnSupportCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const actOnSupportCaseBodyOneAssigneeIdMax = 200;
+
+
+export const actOnSupportCaseBodyTwoBodyMin = 8;
+export const actOnSupportCaseBodyTwoBodyMax = 4000;
+
+
+export const actOnSupportCaseBodyThreeBodyMin = 8;
+export const actOnSupportCaseBodyThreeBodyMax = 4000;
+
+
+
+export const ActOnSupportCaseBody = zod.union([zod.object({
+  "idempotencyKey": zod.uuid(),
+  "expectedVersion": zod.int().min(1),
+  "action": zod.enum(['assign']),
+  "assigneeId": zod.string().min(1).max(actOnSupportCaseBodyOneAssigneeIdMax)
+}),zod.object({
+  "idempotencyKey": zod.uuid(),
+  "expectedVersion": zod.int().min(1),
+  "action": zod.enum(['reply', 'resolve', 'reopen']),
+  "body": zod.string().min(actOnSupportCaseBodyTwoBodyMin).max(actOnSupportCaseBodyTwoBodyMax)
+}),zod.object({
+  "idempotencyKey": zod.uuid(),
+  "expectedVersion": zod.int().min(1),
+  "action": zod.enum(['escalate_content']),
+  "body": zod.string().min(actOnSupportCaseBodyThreeBodyMin).max(actOnSupportCaseBodyThreeBodyMax),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetId": zod.uuid()
+})])
+
+
+
+
+
+export const ActOnSupportCaseResponse = zod.object({
+  "case": zod.object({
+  "id": zod.uuid(),
+  "sourceKind": zod.enum(['workspace', 'access']),
+  "reference": zod.string(),
+  "category": zod.string(),
+  "scope": zod.string(),
+  "contactEmail": zod.string(),
+  "sharingConsent": zod.boolean(),
+  "status": zod.enum(['open', 'in_progress', 'awaiting_customer', 'resolved']),
+  "version": zod.int().min(1),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "assignedTo": zod.string().nullable()
+})),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "body": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "authorKind": zod.enum(['customer', 'staff']),
+  "visibility": zod.enum(['customer', 'internal'])
+})),
+  "messagesPage": zod.int(),
+  "messagePageSize": zod.int(),
+  "moreMessages": zod.boolean(),
+  "events": zod.array(zod.object({
+  "id": zod.uuid(),
+  "caseId": zod.uuid(),
+  "actorId": zod.string(),
+  "action": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "eventsTruncated": zod.boolean(),
+  "escalations": zod.array(zod.object({
+  "id": zod.uuid(),
+  "caseId": zod.uuid(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetId": zod.uuid(),
+  "targetHash": zod.string(),
+  "targetVersion": zod.int().min(1),
+  "reason": zod.string(),
+  "status": zod.enum(['queued', 'acknowledged', 'resolved']),
+  "sourceImpactId": zod.uuid().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "escalationsTruncated": zod.boolean(),
+  "notice": zod.string()
+})
+
+
+/**
+ * @summary Content referrals from support
+ */
+export const listContentEscalationsQueryPageDefault = 1;
+export const listContentEscalationsQueryPageMax = 10000;
+
+
+
+export const ListContentEscalationsQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).max(listContentEscalationsQueryPageMax).default(listContentEscalationsQueryPageDefault)
+})
+
+
+
+
+
+export const ListContentEscalationsResponse = zod.object({
+  "escalations": zod.array(zod.object({
+  "id": zod.uuid(),
+  "caseId": zod.uuid(),
+  "reference": zod.string(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetId": zod.uuid(),
+  "targetVersion": zod.int().min(1),
+  "targetHash": zod.string(),
+  "status": zod.enum(['queued', 'acknowledged', 'resolved']),
+  "reason": zod.string(),
+  "sourceImpactId": zod.uuid().nullable(),
+  "caseVersion": zod.int().min(1),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "page": zod.int(),
+  "pageSize": zod.int(),
+  "hasMore": zod.boolean(),
+  "notice": zod.string()
+})
+
+
+/**
+ * Closing a referral never approves publication or releases a hold. A hold uses the source control authority and queues reassessment; no AI call or message is sent.
+ * @summary Acknowledge or close a content referral, or hold the referred version
+ */
+export const ActOnContentEscalationParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const actOnContentEscalationBodyBodyMin = 8;
+export const actOnContentEscalationBodyBodyMax = 4000;
+
+
+
+export const ActOnContentEscalationBody = zod.object({
+  "idempotencyKey": zod.uuid(),
+  "expectedVersion": zod.int().min(1),
+  "action": zod.enum(['acknowledge', 'resolve', 'hold_and_reassess']),
+  "body": zod.string().min(actOnContentEscalationBodyBodyMin).max(actOnContentEscalationBodyBodyMax)
+})
+
+
+
+
+
+export const ActOnContentEscalationResponse = zod.object({
+  "escalation": zod.object({
+  "id": zod.uuid(),
+  "caseId": zod.uuid(),
+  "targetKind": zod.enum(['content', 'rule']),
+  "targetId": zod.uuid(),
+  "targetHash": zod.string(),
+  "targetVersion": zod.int().min(1),
+  "reason": zod.string(),
+  "status": zod.enum(['queued', 'acknowledged', 'resolved']),
+  "sourceImpactId": zod.uuid().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),
+  "caseVersion": zod.int().min(1),
+  "notice": zod.string()
+})
+
+

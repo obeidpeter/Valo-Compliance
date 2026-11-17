@@ -73,6 +73,8 @@ const CASE_KEYS = [
   "POST /workspace/privacy-cases/{id}/respond",
   "GET /workspace/privacy-cases/{id}/result",
   "POST /workspace/privacy-cases/{id}/verify",
+  "GET /workspace/support-cases/{id}",
+  "POST /workspace/support-cases/{id}/reply",
   "PATCH /workspace/tasks/{id}",
   "DELETE /workspace/tasks/{id}",
 ] as const;
@@ -285,6 +287,18 @@ test(
         promptVersion: "synthetic-substitution",
         preview: {},
       });
+      // Saving a support request opens its case in the same transaction.
+      const createdTicket = await call(owner, "POST", "/workspace/support", {
+        category: "support",
+        scope: "Synthetic owner support request for the substitution proof.",
+        contactEmail: "synthetic@example.invalid",
+        sharingConsent: false,
+      });
+      assert.equal(createdTicket.status, 201, createdTicket.text);
+      const supportCases = await call(owner, "GET", "/workspace/support-cases");
+      assert.equal(supportCases.status, 200, supportCases.text);
+      const supportCase = (json(supportCases).cases as { id: string; version: number }[])[0]!;
+      assert.ok(supportCase);
 
       const content = syntheticDocument.content;
       const cases: Record<(typeof CASE_KEYS)[number], Case> = {
@@ -373,6 +387,15 @@ test(
         "POST /workspace/privacy-cases/{id}/verify": {
           params: { id: privacyCaseId },
           body: { expectedVersion: privacyVersion, acknowledgement: true },
+        },
+        "GET /workspace/support-cases/{id}": { params: { id: supportCase.id }, ownerStatus: 200 },
+        "POST /workspace/support-cases/{id}/reply": {
+          params: { id: supportCase.id },
+          body: {
+            idempotencyKey: randomUUID(),
+            expectedVersion: supportCase.version,
+            body: "Synthetic reply from another business.",
+          },
         },
         "PATCH /workspace/tasks/{id}": {
           params: { id: task.id },

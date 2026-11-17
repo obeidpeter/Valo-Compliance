@@ -239,6 +239,21 @@ export async function eraseSupportContentBatch(tx: Tx, workspaceId: string) {
   (SELECT ctid FROM valo_concern_messages WHERE workspace_id=${workspaceId}::uuid LIMIT ${100 - count})`);
     count += messages.rowCount ?? 0;
   }
+  // Support case conversations and content referrals keep their case and audit
+  // references; only the private text is replaced, within the same row budget.
+  if (count < 100) {
+    const replies = await tx.execute(sql`UPDATE valo_support_messages SET body=${removedMessage},
+  author_id=CASE WHEN author_kind='customer' THEN 'erased' ELSE author_id END
+  WHERE id IN (SELECT id FROM valo_support_messages WHERE workspace_id=${workspaceId}::uuid
+    AND (body<>${removedMessage} OR (author_kind='customer' AND author_id<>'erased')) LIMIT ${100 - count})`);
+    count += replies.rowCount ?? 0;
+  }
+  if (count < 100) {
+    const referrals = await tx.execute(sql`UPDATE valo_support_escalations SET reason=${removedMessage}
+  WHERE id IN (SELECT e.id FROM valo_support_escalations e JOIN valo_support_cases c ON c.id=e.case_id
+    WHERE c.workspace_id=${workspaceId}::uuid AND e.reason<>${removedMessage} LIMIT ${100 - count})`);
+    count += referrals.rowCount ?? 0;
+  }
   return { rowCount: count };
 }
 async function eraseSection(

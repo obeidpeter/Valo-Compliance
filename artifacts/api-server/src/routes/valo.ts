@@ -34,6 +34,7 @@ import { commerceRouter } from "./valo-commerce";
 import { savedTemplateList, saveTemplate, unsaveTemplate } from "../lib/valo-saved-templates";
 import { publicDiscovery } from "../lib/valo-public-discovery";
 import { setting } from "../platform/settings";
+import { supportCustomerRouter, supportOperationsRouter } from "./valo-support-lifecycle";
 
 import { customerPaymentConcernsRouter, financePaymentConcernsRouter } from "./valo-payment-concerns";
 import { createSessionVerificationRouter } from "./valo-session-verification";
@@ -46,6 +47,7 @@ router.use(publicAccessRouter);
 router.use("/admin", makeStaffGate());
 router.use(staffOperationsRouter);
 router.use(sourceControlsRouter);
+router.use(supportOperationsRouter);
 router.get("/public/discovery", async (_req, res) => {
   res.set("Cache-Control", "no-store");
   res.json(await publicDiscovery());
@@ -149,6 +151,7 @@ router.get("/development/content", async (_req, res) => {
 router.use("/workspace", sameOriginMutation, verifiedWorkspace);
 router.use(customerAccessRouter);
 router.use(correctionNoticesRouter);
+router.use(supportCustomerRouter);
 router.use(commerceRouter);
 router.get("/workspace/saved-templates", async (_req, res) => {
   res.set("Cache-Control", "private, no-store");

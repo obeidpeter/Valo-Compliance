@@ -230,6 +230,20 @@ jobs:
         with:
           name: controlled-dispute-workflow-browser
           path: generated-artifacts/valo-completion/dispute-*
+      - name: Prove protected support transport and private conversation rendering
+        run: pnpm --filter @workspace/api-server test:valo-support-ui
+      - name: Exercise actual support components with controlled local responses
+        env:
+          VALO_SUPPORT_BROWSER_EVIDENCE_PATH: ${{ github.workspace }}/generated-artifacts/valo-support/browser.json
+        run: |
+          mkdir -p generated-artifacts/valo-support
+          pnpm --filter @workspace/api-server test:valo-support-browser
+      - name: Retain controlled support browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: controlled-support-browser
+          path: generated-artifacts/valo-support/browser.json
       - name: Print factual readiness
         run: pnpm --filter @workspace/scripts valo:readiness
   postgres:
@@ -331,6 +345,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-customer-controls-db
       - name: Prove durable dispute intents against synthetic orders and controlled transport
         run: pnpm --filter @workspace/api-server test:valo-disputes-db
+      - name: Prove durable support workflow and content-role boundaries
+        run: pnpm --filter @workspace/api-server test:valo-support-db
       - name: Prove durable write limits and membership revocation races
         run: pnpm --filter @workspace/api-server test:valo-write-security
       - name: Prove export crash recovery with shared portable private files and real worker processes

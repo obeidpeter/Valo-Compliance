@@ -1,6 +1,8 @@
 import { Link } from "wouter";
 import { PageHeader } from "@/components/states";
 import { TicketForm } from "@/components/ticket-form";
+import { Show } from "@clerk/react";
+import { CustomerSupportCases } from "@/components/support-cases";
 
 export default function Support() {
   return (
@@ -14,6 +16,9 @@ export default function Support() {
         .
       </PageHeader>
       <TicketForm defaultCategory="support" />
+      <Show when="signed-in">
+        <CustomerSupportCases />
+      </Show>
     </div>
   );
 }

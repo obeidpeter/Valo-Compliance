@@ -40,6 +40,9 @@ import type {
   CommerceOrderInput,
   CommerceRefundInput,
   ConflictErrorResponse,
+  ContentEscalationActionInput,
+  ContentEscalationList,
+  ContentEscalationResult,
   ContentRegister,
   CorrectionNotices,
   CustomerAIInput,
@@ -48,6 +51,8 @@ import type {
   CustomerAIUsage,
   CustomerAccount,
   CustomerPurchases,
+  CustomerSupportCaseDetail,
+  CustomerSupportCaseList,
   DisputeControlInput,
   DisputeHoldInput,
   DisputeInformationInput,
@@ -65,14 +70,19 @@ import type {
   FinanceRefunds,
   GetCommerceReceipt200,
   GetCorrectionNoticesParams,
+  GetCustomerSupportCaseParams,
   GetPublicDiscovery200,
   GetSourceControlsParams,
   GetStaffOperationsParams,
   GetStaffRoleAdministrationParams,
+  GetStaffSupportCaseParams,
   HealthStatus,
+  ListContentEscalationsParams,
+  ListCustomerSupportCasesParams,
   ListPublicCatalogueParams,
   ListStaffPrivacyCases200,
   ListStaffPrivacyCasesParams,
+  ListStaffSupportCasesParams,
   ListTasksPageParams,
   ListWorkspaceDataExportsParams,
   PaymentConcern,
@@ -110,7 +120,12 @@ import type {
   StaffRoleAdministration,
   StaffRoleChangeInput,
   StaffRoleChangeReceipt,
+  StaffSupportCaseDetail,
+  StaffSupportCaseList,
   StartCommerceCheckout200,
+  SupportAssignees,
+  SupportCaseAction,
+  SupportReplyInput,
   TaskArchiveInput,
   TaskInput,
   TaskPage,
@@ -8748,4 +8763,934 @@ export function useGetCorrectionNotices<TData = Awaited<ReturnType<typeof getCor
 
 
 
+
+export const getListCustomerSupportCasesUrl = (params?: ListCustomerSupportCasesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/workspace/support-cases?${stringifiedParams}` : `/api/workspace/support-cases`
+}
+
+/**
+ * @summary Saved support cases for the current workspace
+ */
+export const listCustomerSupportCases = async (params?: ListCustomerSupportCasesParams, options?: Parameters<typeof customFetch>[1]): Promise<CustomerSupportCaseList> => {
+
+  return customFetch<CustomerSupportCaseList>(getListCustomerSupportCasesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCustomerSupportCasesQueryKey = (params?: ListCustomerSupportCasesParams,) => {
+    return [
+    `/api/workspace/support-cases`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCustomerSupportCasesQueryOptions = <TData = Awaited<ReturnType<typeof listCustomerSupportCases>>, TError = ErrorType<AuthErrorResponse>>(params?: ListCustomerSupportCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCustomerSupportCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCustomerSupportCasesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCustomerSupportCases>>> = ({ signal }) => listCustomerSupportCases(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCustomerSupportCases>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListCustomerSupportCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listCustomerSupportCases>>>
+export type ListCustomerSupportCasesQueryError = ErrorType<AuthErrorResponse>
+
+
+/** @summary Saved support cases for the current workspace */
+export function useListCustomerSupportCases<TData = Awaited<ReturnType<typeof listCustomerSupportCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params: undefined |  ListCustomerSupportCasesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCustomerSupportCases>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCustomerSupportCases>>,
+          TError,
+          Awaited<ReturnType<typeof listCustomerSupportCases>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Saved support cases for the current workspace */
+export function useListCustomerSupportCases<TData = Awaited<ReturnType<typeof listCustomerSupportCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListCustomerSupportCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCustomerSupportCases>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCustomerSupportCases>>,
+          TError,
+          Awaited<ReturnType<typeof listCustomerSupportCases>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Saved support cases for the current workspace */
+export function useListCustomerSupportCases<TData = Awaited<ReturnType<typeof listCustomerSupportCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListCustomerSupportCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCustomerSupportCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Saved support cases for the current workspace */
+export function useListCustomerSupportCases<TData = Awaited<ReturnType<typeof listCustomerSupportCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListCustomerSupportCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCustomerSupportCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListCustomerSupportCasesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetCustomerSupportCaseUrl = (id: string,
+    params?: GetCustomerSupportCaseParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/workspace/support-cases/${id}?${stringifiedParams}` : `/api/workspace/support-cases/${id}`
+}
+
+/**
+ * @summary One support case and its customer-visible conversation
+ */
+export const getCustomerSupportCase = async (id: string,
+    params?: GetCustomerSupportCaseParams, options?: Parameters<typeof customFetch>[1]): Promise<CustomerSupportCaseDetail> => {
+
+  return customFetch<CustomerSupportCaseDetail>(getGetCustomerSupportCaseUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCustomerSupportCaseQueryKey = (id: string,
+    params?: GetCustomerSupportCaseParams,) => {
+    return [
+    `/api/workspace/support-cases/${id}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetCustomerSupportCaseQueryOptions = <TData = Awaited<ReturnType<typeof getCustomerSupportCase>>, TError = ErrorType<AuthErrorResponse>>(id: string,
+    params?: GetCustomerSupportCaseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerSupportCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCustomerSupportCaseQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCustomerSupportCase>>> = ({ signal }) => getCustomerSupportCase(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCustomerSupportCase>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCustomerSupportCaseQueryResult = NonNullable<Awaited<ReturnType<typeof getCustomerSupportCase>>>
+export type GetCustomerSupportCaseQueryError = ErrorType<AuthErrorResponse>
+
+
+/** @summary One support case and its customer-visible conversation */
+export function useGetCustomerSupportCase<TData = Awaited<ReturnType<typeof getCustomerSupportCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    params: undefined |  GetCustomerSupportCaseParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerSupportCase>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCustomerSupportCase>>,
+          TError,
+          Awaited<ReturnType<typeof getCustomerSupportCase>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary One support case and its customer-visible conversation */
+export function useGetCustomerSupportCase<TData = Awaited<ReturnType<typeof getCustomerSupportCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    params?: GetCustomerSupportCaseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerSupportCase>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCustomerSupportCase>>,
+          TError,
+          Awaited<ReturnType<typeof getCustomerSupportCase>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary One support case and its customer-visible conversation */
+export function useGetCustomerSupportCase<TData = Awaited<ReturnType<typeof getCustomerSupportCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    params?: GetCustomerSupportCaseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerSupportCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary One support case and its customer-visible conversation */
+export function useGetCustomerSupportCase<TData = Awaited<ReturnType<typeof getCustomerSupportCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    params?: GetCustomerSupportCaseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomerSupportCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCustomerSupportCaseQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getReplyToSupportCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/support-cases/${id}/reply`
+}
+
+/**
+ * Saves the reply to the private portal. Nothing is emailed or sent elsewhere.
+ * @summary Add information to a support case
+ */
+export const replyToSupportCase = async (id: string,
+    supportReplyInput: SupportReplyInput, options?: Parameters<typeof customFetch>[1]): Promise<CustomerSupportCaseDetail> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<CustomerSupportCaseDetail>(getReplyToSupportCaseUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(supportReplyInput)
+  }
+);}
+
+
+
+
+
+export const getReplyToSupportCaseMutationKey = () => ['replyToSupportCase'] as const;
+
+export const getReplyToSupportCaseMutationOptions = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse | WriteLimitResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replyToSupportCase>>, TError,ReplyToSupportCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof replyToSupportCase>>, TError,ReplyToSupportCaseMutationVariables, TContext> => {
+
+const mutationKey = getReplyToSupportCaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replyToSupportCase>>, ReplyToSupportCaseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  replyToSupportCase(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplyToSupportCaseMutationResult = NonNullable<Awaited<ReturnType<typeof replyToSupportCase>>>
+    export type ReplyToSupportCaseMutationBody = BodyType<SupportReplyInput>
+    export type ReplyToSupportCaseMutationError = ErrorType<AuthErrorResponse | ConflictErrorResponse | WriteLimitResponse>
+    export type ReplyToSupportCaseMutationVariables = {id: string;data: BodyType<SupportReplyInput>}
+
+    /**
+ * Saves the reply to the private portal. Nothing is emailed or sent elsewhere.
+ * @summary Add information to a support case
+ */
+export const useReplyToSupportCase = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse | WriteLimitResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replyToSupportCase>>, TError,ReplyToSupportCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replyToSupportCase>>,
+        TError,
+        ReplyToSupportCaseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplyToSupportCaseMutationOptions(options), queryClient);
+    }
+
+export const getListStaffSupportCasesUrl = (params?: ListStaffSupportCasesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/support-cases?${stringifiedParams}` : `/api/admin/support-cases`
+}
+
+/**
+ * @summary Support case queue
+ */
+export const listStaffSupportCases = async (params?: ListStaffSupportCasesParams, options?: Parameters<typeof customFetch>[1]): Promise<StaffSupportCaseList> => {
+
+  return customFetch<StaffSupportCaseList>(getListStaffSupportCasesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListStaffSupportCasesQueryKey = (params?: ListStaffSupportCasesParams,) => {
+    return [
+    `/api/admin/support-cases`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListStaffSupportCasesQueryOptions = <TData = Awaited<ReturnType<typeof listStaffSupportCases>>, TError = ErrorType<AuthErrorResponse>>(params?: ListStaffSupportCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStaffSupportCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStaffSupportCasesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStaffSupportCases>>> = ({ signal }) => listStaffSupportCases(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStaffSupportCases>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListStaffSupportCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listStaffSupportCases>>>
+export type ListStaffSupportCasesQueryError = ErrorType<AuthErrorResponse>
+
+
+/** @summary Support case queue */
+export function useListStaffSupportCases<TData = Awaited<ReturnType<typeof listStaffSupportCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params: undefined |  ListStaffSupportCasesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStaffSupportCases>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStaffSupportCases>>,
+          TError,
+          Awaited<ReturnType<typeof listStaffSupportCases>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Support case queue */
+export function useListStaffSupportCases<TData = Awaited<ReturnType<typeof listStaffSupportCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListStaffSupportCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStaffSupportCases>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStaffSupportCases>>,
+          TError,
+          Awaited<ReturnType<typeof listStaffSupportCases>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Support case queue */
+export function useListStaffSupportCases<TData = Awaited<ReturnType<typeof listStaffSupportCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListStaffSupportCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStaffSupportCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Support case queue */
+export function useListStaffSupportCases<TData = Awaited<ReturnType<typeof listStaffSupportCases>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListStaffSupportCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStaffSupportCases>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListStaffSupportCasesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListSupportAssigneesUrl = () => {
+
+
+
+
+  return `/api/admin/support-cases/assignees`
+}
+
+/**
+ * @summary Active support staff who can be assigned a case
+ */
+export const listSupportAssignees = async ( options?: Parameters<typeof customFetch>[1]): Promise<SupportAssignees> => {
+
+  return customFetch<SupportAssignees>(getListSupportAssigneesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSupportAssigneesQueryKey = () => {
+    return [
+    `/api/admin/support-cases/assignees`
+    ] as const;
+    }
+
+
+export const getListSupportAssigneesQueryOptions = <TData = Awaited<ReturnType<typeof listSupportAssignees>>, TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSupportAssignees>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSupportAssigneesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSupportAssignees>>> = ({ signal }) => listSupportAssignees({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSupportAssignees>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListSupportAssigneesQueryResult = NonNullable<Awaited<ReturnType<typeof listSupportAssignees>>>
+export type ListSupportAssigneesQueryError = ErrorType<AuthErrorResponse | ConflictErrorResponse>
+
+
+/** @summary Active support staff who can be assigned a case */
+export function useListSupportAssignees<TData = Awaited<ReturnType<typeof listSupportAssignees>>, TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSupportAssignees>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSupportAssignees>>,
+          TError,
+          Awaited<ReturnType<typeof listSupportAssignees>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Active support staff who can be assigned a case */
+export function useListSupportAssignees<TData = Awaited<ReturnType<typeof listSupportAssignees>>, TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSupportAssignees>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSupportAssignees>>,
+          TError,
+          Awaited<ReturnType<typeof listSupportAssignees>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Active support staff who can be assigned a case */
+export function useListSupportAssignees<TData = Awaited<ReturnType<typeof listSupportAssignees>>, TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSupportAssignees>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Active support staff who can be assigned a case */
+export function useListSupportAssignees<TData = Awaited<ReturnType<typeof listSupportAssignees>>, TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSupportAssignees>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListSupportAssigneesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetStaffSupportCaseUrl = (id: string,
+    params?: GetStaffSupportCaseParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/support-cases/${id}?${stringifiedParams}` : `/api/admin/support-cases/${id}`
+}
+
+/**
+ * @summary One support case with its full history
+ */
+export const getStaffSupportCase = async (id: string,
+    params?: GetStaffSupportCaseParams, options?: Parameters<typeof customFetch>[1]): Promise<StaffSupportCaseDetail> => {
+
+  return customFetch<StaffSupportCaseDetail>(getGetStaffSupportCaseUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStaffSupportCaseQueryKey = (id: string,
+    params?: GetStaffSupportCaseParams,) => {
+    return [
+    `/api/admin/support-cases/${id}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetStaffSupportCaseQueryOptions = <TData = Awaited<ReturnType<typeof getStaffSupportCase>>, TError = ErrorType<AuthErrorResponse>>(id: string,
+    params?: GetStaffSupportCaseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffSupportCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStaffSupportCaseQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStaffSupportCase>>> = ({ signal }) => getStaffSupportCase(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStaffSupportCase>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetStaffSupportCaseQueryResult = NonNullable<Awaited<ReturnType<typeof getStaffSupportCase>>>
+export type GetStaffSupportCaseQueryError = ErrorType<AuthErrorResponse>
+
+
+/** @summary One support case with its full history */
+export function useGetStaffSupportCase<TData = Awaited<ReturnType<typeof getStaffSupportCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    params: undefined |  GetStaffSupportCaseParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffSupportCase>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStaffSupportCase>>,
+          TError,
+          Awaited<ReturnType<typeof getStaffSupportCase>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary One support case with its full history */
+export function useGetStaffSupportCase<TData = Awaited<ReturnType<typeof getStaffSupportCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    params?: GetStaffSupportCaseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffSupportCase>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getStaffSupportCase>>,
+          TError,
+          Awaited<ReturnType<typeof getStaffSupportCase>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary One support case with its full history */
+export function useGetStaffSupportCase<TData = Awaited<ReturnType<typeof getStaffSupportCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    params?: GetStaffSupportCaseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffSupportCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary One support case with its full history */
+export function useGetStaffSupportCase<TData = Awaited<ReturnType<typeof getStaffSupportCase>>, TError = ErrorType<AuthErrorResponse>>(
+ id: string,
+    params?: GetStaffSupportCaseParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getStaffSupportCase>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetStaffSupportCaseQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getActOnSupportCaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/support-cases/${id}/action`
+}
+
+/**
+ * Replies are saved to the portal or kept internal. Nothing is emailed. A content referral grants no hold or publication authority.
+ * @summary Assign, reply to, resolve, reopen or refer a support case
+ */
+export const actOnSupportCase = async (id: string,
+    supportCaseAction: SupportCaseAction, options?: Parameters<typeof customFetch>[1]): Promise<StaffSupportCaseDetail> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<StaffSupportCaseDetail>(getActOnSupportCaseUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(supportCaseAction)
+  }
+);}
+
+
+
+
+
+export const getActOnSupportCaseMutationKey = () => ['actOnSupportCase'] as const;
+
+export const getActOnSupportCaseMutationOptions = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse | QuotaErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnSupportCase>>, TError,ActOnSupportCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actOnSupportCase>>, TError,ActOnSupportCaseMutationVariables, TContext> => {
+
+const mutationKey = getActOnSupportCaseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actOnSupportCase>>, ActOnSupportCaseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  actOnSupportCase(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActOnSupportCaseMutationResult = NonNullable<Awaited<ReturnType<typeof actOnSupportCase>>>
+    export type ActOnSupportCaseMutationBody = BodyType<SupportCaseAction>
+    export type ActOnSupportCaseMutationError = ErrorType<AuthErrorResponse | ConflictErrorResponse | QuotaErrorResponse>
+    export type ActOnSupportCaseMutationVariables = {id: string;data: BodyType<SupportCaseAction>}
+
+    /**
+ * Replies are saved to the portal or kept internal. Nothing is emailed. A content referral grants no hold or publication authority.
+ * @summary Assign, reply to, resolve, reopen or refer a support case
+ */
+export const useActOnSupportCase = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse | QuotaErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnSupportCase>>, TError,ActOnSupportCaseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actOnSupportCase>>,
+        TError,
+        ActOnSupportCaseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getActOnSupportCaseMutationOptions(options), queryClient);
+    }
+
+export const getListContentEscalationsUrl = (params?: ListContentEscalationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/support-escalations?${stringifiedParams}` : `/api/admin/support-escalations`
+}
+
+/**
+ * @summary Content referrals from support
+ */
+export const listContentEscalations = async (params?: ListContentEscalationsParams, options?: Parameters<typeof customFetch>[1]): Promise<ContentEscalationList> => {
+
+  return customFetch<ContentEscalationList>(getListContentEscalationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListContentEscalationsQueryKey = (params?: ListContentEscalationsParams,) => {
+    return [
+    `/api/admin/support-escalations`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListContentEscalationsQueryOptions = <TData = Awaited<ReturnType<typeof listContentEscalations>>, TError = ErrorType<AuthErrorResponse>>(params?: ListContentEscalationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentEscalations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListContentEscalationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listContentEscalations>>> = ({ signal }) => listContentEscalations(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listContentEscalations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListContentEscalationsQueryResult = NonNullable<Awaited<ReturnType<typeof listContentEscalations>>>
+export type ListContentEscalationsQueryError = ErrorType<AuthErrorResponse>
+
+
+/** @summary Content referrals from support */
+export function useListContentEscalations<TData = Awaited<ReturnType<typeof listContentEscalations>>, TError = ErrorType<AuthErrorResponse>>(
+ params: undefined |  ListContentEscalationsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentEscalations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listContentEscalations>>,
+          TError,
+          Awaited<ReturnType<typeof listContentEscalations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Content referrals from support */
+export function useListContentEscalations<TData = Awaited<ReturnType<typeof listContentEscalations>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListContentEscalationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentEscalations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listContentEscalations>>,
+          TError,
+          Awaited<ReturnType<typeof listContentEscalations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Content referrals from support */
+export function useListContentEscalations<TData = Awaited<ReturnType<typeof listContentEscalations>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListContentEscalationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentEscalations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Content referrals from support */
+export function useListContentEscalations<TData = Awaited<ReturnType<typeof listContentEscalations>>, TError = ErrorType<AuthErrorResponse>>(
+ params?: ListContentEscalationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listContentEscalations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListContentEscalationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getActOnContentEscalationUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/support-escalations/${id}/action`
+}
+
+/**
+ * Closing a referral never approves publication or releases a hold. A hold uses the source control authority and queues reassessment; no AI call or message is sent.
+ * @summary Acknowledge or close a content referral, or hold the referred version
+ */
+export const actOnContentEscalation = async (id: string,
+    contentEscalationActionInput: ContentEscalationActionInput, options?: Parameters<typeof customFetch>[1]): Promise<ContentEscalationResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ContentEscalationResult>(getActOnContentEscalationUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(contentEscalationActionInput)
+  }
+);}
+
+
+
+
+
+export const getActOnContentEscalationMutationKey = () => ['actOnContentEscalation'] as const;
+
+export const getActOnContentEscalationMutationOptions = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnContentEscalation>>, TError,ActOnContentEscalationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actOnContentEscalation>>, TError,ActOnContentEscalationMutationVariables, TContext> => {
+
+const mutationKey = getActOnContentEscalationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actOnContentEscalation>>, ActOnContentEscalationMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  actOnContentEscalation(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActOnContentEscalationMutationResult = NonNullable<Awaited<ReturnType<typeof actOnContentEscalation>>>
+    export type ActOnContentEscalationMutationBody = BodyType<ContentEscalationActionInput>
+    export type ActOnContentEscalationMutationError = ErrorType<AuthErrorResponse | ConflictErrorResponse>
+    export type ActOnContentEscalationMutationVariables = {id: string;data: BodyType<ContentEscalationActionInput>}
+
+    /**
+ * Closing a referral never approves publication or releases a hold. A hold uses the source control authority and queues reassessment; no AI call or message is sent.
+ * @summary Acknowledge or close a content referral, or hold the referred version
+ */
+export const useActOnContentEscalation = <TError = ErrorType<AuthErrorResponse | ConflictErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actOnContentEscalation>>, TError,ActOnContentEscalationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actOnContentEscalation>>,
+        TError,
+        ActOnContentEscalationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getActOnContentEscalationMutationOptions(options), queryClient);
+    }
 

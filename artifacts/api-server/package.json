@@ -90,7 +90,10 @@
     "test:valo-source-controls": "node --import tsx --test src/lib/valo-source-controls.test.ts",
     "test:valo-source-controls-db": "NODE_ENV=development node --import tsx --test src/lib/valo-source-controls.integration.test.ts",
     "test:valo-editorial-lifecycle": "NODE_ENV=development node --import tsx --test src/editorial/editorial-lifecycle-controls.test.ts src/editorial/publication-final-check.test.ts",
-    "test:valo-editorial-lifecycle-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/editorial/editorial-lifecycle.integration.test.ts"
+    "test:valo-editorial-lifecycle-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/editorial/editorial-lifecycle.integration.test.ts",
+    "test:valo-support-ui": "node --import tsx --test src/lib/valo-support-ui.test.ts",
+    "test:valo-support-browser": "node src/scripts/support-case-browser.mjs",
+    "test:valo-support-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-support-lifecycle.integration.test.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",

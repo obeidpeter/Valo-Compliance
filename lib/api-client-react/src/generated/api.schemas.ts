@@ -2852,6 +2852,296 @@ export interface CorrectionNotices {
   notices: CorrectionNotice[];
 }
 
+export type SupportCaseStatus = typeof SupportCaseStatus[keyof typeof SupportCaseStatus];
+
+
+export const SupportCaseStatus = {
+  open: 'open',
+  in_progress: 'in_progress',
+  awaiting_customer: 'awaiting_customer',
+  resolved: 'resolved',
+} as const;
+
+export type CustomerSupportCaseSummarySourceKind = typeof CustomerSupportCaseSummarySourceKind[keyof typeof CustomerSupportCaseSummarySourceKind];
+
+
+export const CustomerSupportCaseSummarySourceKind = {
+  workspace: 'workspace',
+  access: 'access',
+} as const;
+
+export interface CustomerSupportCaseSummary {
+  id: string;
+  sourceKind: CustomerSupportCaseSummarySourceKind;
+  reference: string;
+  category: string;
+  status: SupportCaseStatus;
+  /** @minimum 1 */
+  version: number;
+  updatedAt: string;
+}
+
+export type StaffSupportCaseSummary = CustomerSupportCaseSummary & ({
+  /** @nullable */
+  assignedTo: string | null;
+});
+
+export interface CustomerSupportCaseList {
+  cases: CustomerSupportCaseSummary[];
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+  notice: string;
+}
+
+export interface StaffSupportCaseList {
+  cases: StaffSupportCaseSummary[];
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+  notice: string;
+}
+
+export type CustomerSupportCaseSourceKind = typeof CustomerSupportCaseSourceKind[keyof typeof CustomerSupportCaseSourceKind];
+
+
+export const CustomerSupportCaseSourceKind = {
+  workspace: 'workspace',
+  access: 'access',
+} as const;
+
+export interface CustomerSupportCase {
+  id: string;
+  sourceKind: CustomerSupportCaseSourceKind;
+  reference: string;
+  category: string;
+  scope: string;
+  contactEmail: string;
+  sharingConsent: boolean;
+  status: SupportCaseStatus;
+  /** @minimum 1 */
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type StaffSupportCase = CustomerSupportCase & ({
+  /** @nullable */
+  assignedTo: string | null;
+});
+
+export type SupportMessageAuthorKind = typeof SupportMessageAuthorKind[keyof typeof SupportMessageAuthorKind];
+
+
+export const SupportMessageAuthorKind = {
+  customer: 'customer',
+  staff: 'staff',
+} as const;
+
+export type SupportMessageVisibility = typeof SupportMessageVisibility[keyof typeof SupportMessageVisibility];
+
+
+export const SupportMessageVisibility = {
+  customer: 'customer',
+  internal: 'internal',
+} as const;
+
+export interface SupportMessage {
+  id: string;
+  body: string;
+  createdAt: string;
+  authorKind: SupportMessageAuthorKind;
+  visibility: SupportMessageVisibility;
+}
+
+export interface SupportEvent {
+  id: string;
+  caseId: string;
+  actorId: string;
+  action: string;
+  createdAt: string;
+}
+
+export type SupportCaseEscalationTargetKind = typeof SupportCaseEscalationTargetKind[keyof typeof SupportCaseEscalationTargetKind];
+
+
+export const SupportCaseEscalationTargetKind = {
+  content: 'content',
+  rule: 'rule',
+} as const;
+
+export type SupportCaseEscalationStatus = typeof SupportCaseEscalationStatus[keyof typeof SupportCaseEscalationStatus];
+
+
+export const SupportCaseEscalationStatus = {
+  queued: 'queued',
+  acknowledged: 'acknowledged',
+  resolved: 'resolved',
+} as const;
+
+export interface SupportCaseEscalation {
+  id: string;
+  caseId: string;
+  targetKind: SupportCaseEscalationTargetKind;
+  targetId: string;
+  targetHash: string;
+  /** @minimum 1 */
+  targetVersion: number;
+  reason: string;
+  status: SupportCaseEscalationStatus;
+  /** @nullable */
+  sourceImpactId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomerSupportCaseDetail {
+  case: CustomerSupportCase;
+  messages: SupportMessage[];
+  messagesPage: number;
+  messagePageSize: number;
+  moreMessages: boolean;
+  notice: string;
+}
+
+export interface StaffSupportCaseDetail {
+  case: StaffSupportCase;
+  messages: SupportMessage[];
+  messagesPage: number;
+  messagePageSize: number;
+  moreMessages: boolean;
+  events: SupportEvent[];
+  eventsTruncated: boolean;
+  escalations: SupportCaseEscalation[];
+  escalationsTruncated: boolean;
+  notice: string;
+}
+
+export type SupportAssigneesAssigneesItem = {
+  identityId: string;
+};
+
+export interface SupportAssignees {
+  assignees: SupportAssigneesAssigneesItem[];
+}
+
+export interface SupportReplyInput {
+  idempotencyKey: string;
+  /** @minimum 1 */
+  expectedVersion: number;
+  /**
+     * @minLength 8
+     * @maxLength 4000
+     */
+  body: string;
+}
+
+export type SupportCaseAction = {
+  idempotencyKey: string;
+  /** @minimum 1 */
+  expectedVersion: number;
+  action: 'assign';
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  assigneeId: string;
+} | {
+  idempotencyKey: string;
+  /** @minimum 1 */
+  expectedVersion: number;
+  action: 'reply' | 'resolve' | 'reopen';
+  /**
+     * @minLength 8
+     * @maxLength 4000
+     */
+  body: string;
+} | {
+  idempotencyKey: string;
+  /** @minimum 1 */
+  expectedVersion: number;
+  action: 'escalate_content';
+  /**
+     * @minLength 8
+     * @maxLength 4000
+     */
+  body: string;
+  targetKind: 'content' | 'rule';
+  targetId: string;
+};
+
+export type ContentEscalationTargetKind = typeof ContentEscalationTargetKind[keyof typeof ContentEscalationTargetKind];
+
+
+export const ContentEscalationTargetKind = {
+  content: 'content',
+  rule: 'rule',
+} as const;
+
+export type ContentEscalationStatus = typeof ContentEscalationStatus[keyof typeof ContentEscalationStatus];
+
+
+export const ContentEscalationStatus = {
+  queued: 'queued',
+  acknowledged: 'acknowledged',
+  resolved: 'resolved',
+} as const;
+
+export interface ContentEscalation {
+  id: string;
+  caseId: string;
+  reference: string;
+  targetKind: ContentEscalationTargetKind;
+  targetId: string;
+  /** @minimum 1 */
+  targetVersion: number;
+  targetHash: string;
+  status: ContentEscalationStatus;
+  reason: string;
+  /** @nullable */
+  sourceImpactId: string | null;
+  /** @minimum 1 */
+  caseVersion: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContentEscalationList {
+  escalations: ContentEscalation[];
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+  notice: string;
+}
+
+export type ContentEscalationActionInputAction = typeof ContentEscalationActionInputAction[keyof typeof ContentEscalationActionInputAction];
+
+
+export const ContentEscalationActionInputAction = {
+  acknowledge: 'acknowledge',
+  resolve: 'resolve',
+  hold_and_reassess: 'hold_and_reassess',
+} as const;
+
+export interface ContentEscalationActionInput {
+  idempotencyKey: string;
+  /** @minimum 1 */
+  expectedVersion: number;
+  action: ContentEscalationActionInputAction;
+  /**
+     * @minLength 8
+     * @maxLength 4000
+     */
+  body: string;
+}
+
+export interface ContentEscalationResult {
+  escalation: SupportCaseEscalation;
+  /** @minimum 1 */
+  caseVersion: number;
+  notice: string;
+}
+
 export type WriteLimitResponseCode = typeof WriteLimitResponseCode[keyof typeof WriteLimitResponseCode];
 
 
@@ -3034,6 +3324,58 @@ export const GetSourceControlsArea = {
 } as const;
 
 export type GetCorrectionNoticesParams = {
+  /**
+   * @minimum 1
+   * @maximum 10000
+   */
+  page?: number;
+};
+
+export type ListCustomerSupportCasesParams = {
+  /**
+   * @minimum 1
+   * @maximum 10000
+   */
+  page?: number;
+};
+
+export type GetCustomerSupportCaseParams = {
+  /**
+   * @minimum 1
+   * @maximum 10000
+   */
+  messagesPage?: number;
+};
+
+export type ListStaffSupportCasesParams = {
+  status?: ListStaffSupportCasesStatus;
+  /**
+   * @minimum 1
+   * @maximum 10000
+   */
+  page?: number;
+};
+
+export type ListStaffSupportCasesStatus = typeof ListStaffSupportCasesStatus[keyof typeof ListStaffSupportCasesStatus];
+
+
+export const ListStaffSupportCasesStatus = {
+  all: 'all',
+  open: 'open',
+  in_progress: 'in_progress',
+  awaiting_customer: 'awaiting_customer',
+  resolved: 'resolved',
+} as const;
+
+export type GetStaffSupportCaseParams = {
+  /**
+   * @minimum 1
+   * @maximum 10000
+   */
+  messagesPage?: number;
+};
+
+export type ListContentEscalationsParams = {
   /**
    * @minimum 1
    * @maximum 10000

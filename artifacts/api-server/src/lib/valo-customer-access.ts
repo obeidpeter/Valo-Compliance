@@ -30,6 +30,8 @@ import {
   valoFileAssets,
   valoEvents,
   valoSavedTemplates,
+  valoSupportCases,
+  valoSupportMessages,
 } from "@workspace/db";
 import { RequestAccessSupportBody } from "@workspace/api-zod";
 import { consumeQuota, quotaSubjectHash } from "./valo-quota";
@@ -114,6 +116,8 @@ export async function saveAccessSupport(raw: unknown, remoteAddress: string) {
           );
       }
     }
+    const { openSupportCase } = await import("./valo-support-intake");
+    await openSupportCase(tx, "access", id, null);
     return ack(id);
   });
 }
@@ -383,6 +387,44 @@ export async function workspaceDataExport(
             ),
           )
           .orderBy(valoWorkspaceExports.id)
+          .limit(sink ? 500 : 5001)
+          .offset(offset),
+      );
+      await collect("supportCases", (offset) =>
+        tx
+          .select({
+            id: valoSupportCases.id,
+            workspaceId: valoSupportCases.workspaceId,
+            ticketId: valoSupportCases.ticketId,
+            status: valoSupportCases.status,
+            version: valoSupportCases.version,
+            createdAt: valoSupportCases.createdAt,
+            updatedAt: valoSupportCases.updatedAt,
+          })
+          .from(valoSupportCases)
+          .where(eq(valoSupportCases.workspaceId, actor.workspaceId))
+          .orderBy(valoSupportCases.id)
+          .limit(sink ? 500 : 5001)
+          .offset(offset),
+      );
+      await collect("supportReplies", (offset) =>
+        tx
+          .select({
+            id: valoSupportMessages.id,
+            workspaceId: valoSupportMessages.workspaceId,
+            caseId: valoSupportMessages.caseId,
+            authorKind: valoSupportMessages.authorKind,
+            body: valoSupportMessages.body,
+            createdAt: valoSupportMessages.createdAt,
+          })
+          .from(valoSupportMessages)
+          .where(
+            and(
+              eq(valoSupportMessages.workspaceId, actor.workspaceId),
+              eq(valoSupportMessages.visibility, "customer"),
+            ),
+          )
+          .orderBy(valoSupportMessages.id)
           .limit(sink ? 500 : 5001)
           .offset(offset),
       );

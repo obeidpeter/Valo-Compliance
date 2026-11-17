@@ -31,7 +31,7 @@ Measured on the integration branch at `14c8f38`:
 | Item | Status |
 | --- | --- |
 | Merge open PRs 27, 24 and 26 (migration renumbered to 0035) | done |
-| Port PRs 29 and 31 into the new module layout | not started (Phase 6) |
+| Port PRs 29 and 31 | done by merge (decision 0007); migrations renumbered to 0037–0039 |
 | Fix `finite-inference-run` command mismatch, drill route probes, licence field | done |
 | Run CI on agent branches; align CI Node version with the Replit runtime (24) | done |
 | Architecture overview, this plan, decision records, `AGENTS.md` | done |
@@ -78,6 +78,8 @@ reach the 80% branch coverage NFR-011 requires.
 | R2 membership design | done as a proposal ([r2-team-access.md](r2-team-access.md)); five owner decisions listed |
 | Adopt the migration ledger on the Replit development database | blocked (needs access to that database) |
 | No pooled connection taken inside a transaction | not started: the commerce product list runs on a second connection inside the purchases, order and checkout transactions, so ten concurrent requests can exhaust the pool. The pool also has no acquisition timeout, so exhaustion hangs instead of failing. |
+| Constraint names in hand-written migrations match the Drizzle snapshot | not started: most hand-written migrations, including 0037, let PostgreSQL name their keys and foreign keys, while the snapshot uses Drizzle's names. A generated migration that drops or alters one of those constraints must be checked by hand. 0039 uses the snapshot's names. |
+| Generated web client encodes path parameters | not started: generated functions insert identifiers into paths as given. The support client encodes them itself. |
 
 ### Phase 4 — Speed and capacity
 
