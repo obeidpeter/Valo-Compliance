@@ -7,7 +7,12 @@ import { join, resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 import { withoutVerifiedSourceHashFindings } from "./security-evidence-exceptions";
-import { dependencySummary, secretSummary } from "./security-reports";
+import {
+  REVIEWED_DEPENDENCY_ADVISORIES,
+  dependencySummary,
+  installedDependencyPaths,
+  secretSummary,
+} from "./security-reports";
 import { verifyHistoricalDigestDispositions } from "./merge-security-dispositions";
 const exec = promisify(execFile),
   root = resolve(import.meta.dirname, "../../../");
@@ -79,7 +84,17 @@ try {
   };
   report.detectorCanaries = true;
   const audit = await run("pnpm", ["audit", "--json"]);
-  report.dependencies = dependencySummary(JSON.parse(audit.stdout));
+  // The audit names one path per vulnerable version, so a reviewed advisory is also checked
+  // against every installed path to its package.
+  const installedPaths: Record<string, string[]> = {};
+  for (const { package: name } of REVIEWED_DEPENDENCY_ADVISORIES) {
+    const why = await run("pnpm", ["why", name, "-r", "--json"]);
+    if (why.code === 0) installedPaths[name] = installedDependencyPaths(JSON.parse(why.stdout), name, root);
+  }
+  report.dependencies = dependencySummary(JSON.parse(audit.stdout), {
+    advisories: REVIEWED_DEPENDENCY_ADVISORIES,
+    installedPaths,
+  });
   const secretPath = join(dir, "git.json");
   const secrets = await run("gitleaks", [
     "git",
