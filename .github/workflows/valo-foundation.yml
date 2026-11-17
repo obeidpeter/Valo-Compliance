@@ -233,11 +233,9 @@ jobs:
       - name: Prove protected support transport and private conversation rendering
         run: pnpm --filter @workspace/api-server test:valo-support-ui
       - name: Exercise actual support components with controlled local responses
-        env:
-          VALO_SUPPORT_BROWSER_EVIDENCE_PATH: ${{ github.workspace }}/generated-artifacts/valo-support/browser.json
         run: |
           mkdir -p generated-artifacts/valo-support
-          pnpm --filter @workspace/api-server test:valo-support-browser
+          VALO_SUPPORT_BROWSER_EVIDENCE_PATH="$PWD/generated-artifacts/valo-support/browser.json" pnpm --filter @workspace/api-server test:valo-support-browser
       - name: Retain controlled support browser evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

@@ -30,6 +30,11 @@ import {
   valoStaffAssignments,
   valoStaffAccessAudit,
   valoSupportTickets,
+  valoSupportCases,
+  valoSupportMessages,
+  valoSupportActions,
+  valoSupportEvents,
+  valoSupportEscalations,
 } from "@workspace/db";
 import { resolveWorkspace, createDocument, ValoProblem } from "./valo-store";
 import {
@@ -840,6 +845,14 @@ test(
       for (const child of children) if (child.exitCode === null && !child.signalCode) child.kill("SIGKILL");
       await db.transaction(async (tx) => {
         await tx.execute(sql`SET LOCAL session_replication_role=replica`);
+        // Replica mode skips foreign key cascades, so remove a ticket's support case and
+        // its history explicitly; case history is reached through its case.
+        const cases = tx
+          .select({ id: valoSupportCases.id })
+          .from(valoSupportCases)
+          .where(inArray(valoSupportCases.workspaceId, owners));
+        for (const table of [valoSupportActions, valoSupportEvents, valoSupportEscalations])
+          await tx.delete(table).where(inArray(table.caseId, cases));
         for (const table of [
           valoPrivacyErasureObjects,
           valoPrivacyEvents,
@@ -853,6 +866,8 @@ test(
           valoExportJobs,
           valoDocumentRevisions,
           valoDocuments,
+          valoSupportMessages,
+          valoSupportCases,
           valoSupportTickets,
           valoEvents,
           valoMemberships,
