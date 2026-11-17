@@ -7,14 +7,22 @@ database yet.
 - It creates the role `valo_workspace_scope` (no login, no row-security bypass). If
   the role already exists with any of those privileges, the migration refuses to
   continue.
-- It grants that role the application's table privileges without DDL, `TRUNCATE`,
-  `REFERENCES` or `TRIGGER`, and makes the role running the migration a member, so
-  the application can switch to it. Tables created later by the same role get the
-  same grants.
-- It turns on row-level security on the 44 tables that hold workspace rows. Each
-  gets one policy limiting `valo_workspace_scope` to the rows of the workspace in
-  `valo.workspace_id`. The application role owns the tables, so its own queries,
-  and with them workers, staff routes and operator commands, are not affected.
+- It grants that role only the commands customer requests use, table by table, and
+  makes the role running the migration a member, so the application can switch to
+  it. 14 tables, among them every staff table, give it nothing. Tables created later
+  give it nothing until a migration grants it.
+- On the five tables whose rows customer requests lock but never change
+  (memberships, prices, content versions, support tickets and file records) a
+  trigger refuses every update the role attempts.
+- It adds `valo_customer_ai_reservations`, which returns only the shared AI usage
+  totals, so the shared daily ceiling and the per-person limit still count every
+  workspace. Only `valo_workspace_scope` and its owner may call it.
+- It turns on row-level security on the 45 tables that hold workspace rows,
+  including payment events, which belong to the workspace whose order, refund or
+  dispute they reference. Each gets one policy limiting `valo_workspace_scope` to the
+  rows of the workspace in `valo.workspace_id`. The application role owns the
+  tables, so its own queries, and with them workers, staff routes and operator
+  commands, are not affected.
 - No row is read or written.
 
 Apply it before running code that includes it. That code runs every customer request
@@ -32,18 +40,21 @@ procedure in [phase1-migration-plan.md](phase1-migration-plan.md):
 3. Apply the file on its own inside a transaction with
    `SET LOCAL lock_timeout = '5s'` and `SET LOCAL statement_timeout = '60s'`.
 4. Check that `SELECT count(*) FROM pg_policies WHERE policyname='valo_workspace_scope'`
-   returns 44. As the application role, check that
+   returns 45, and that `node lib/db/scripts/workspace-row-security.mjs`, run from the
+   repository root with the database's `DATABASE_URL`, prints `no gaps`. As the
+   application role, check that
    `BEGIN; SELECT set_config('valo.workspace_id', gen_random_uuid()::text, true),
    set_config('role', 'valo_workspace_scope', true); SELECT count(*) FROM
    valo_documents; ROLLBACK;` counts 0. Then deploy the code, restart the API and
    worker, and run the usual smoke checks.
 
-To undo it, roll the code back first. Then drop each `valo_workspace_scope` policy,
-disable row-level security on those tables, revoke the grants and default privileges,
-and drop the role.
+To undo it, roll the code back first. Then drop each `valo_workspace_scope` policy
+and `valo_workspace_scope_lock_only` trigger, disable row-level security on those
+tables, drop the functions `valo_customer_ai_reservations` and
+`valo_refuse_scoped_update`, revoke the grants, and drop the role.
 
 Never run the full migrator against this database and never write ledger rows.
 `lib/db/scripts/phase1-migrations.test.mjs` checks the upgrade on tracked and
 unjournalled databases. It also checks every table with workspace rows, the role's
-privileges and the absence of any other policy, using
-`lib/db/scripts/workspace-row-security.mjs`.
+exact privileges, the lock-only triggers, the functions it may call and the absence
+of any other policy, using `lib/db/scripts/workspace-row-security.mjs`.

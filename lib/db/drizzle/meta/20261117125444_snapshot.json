@@ -7425,7 +7425,18 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "policies": {},
+      "policies": {
+        "valo_workspace_scope": {
+          "name": "valo_workspace_scope",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "valo_workspace_scope"
+          ],
+          "using": "\"valo_payment_events\".\"reference\" in (select reference from valo_orders where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_transaction_id from valo_orders where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select reference from valo_refund_requests where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_id from valo_refund_requests where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_id from valo_payment_disputes where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid)",
+          "withCheck": "\"valo_payment_events\".\"reference\" in (select reference from valo_orders where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_transaction_id from valo_orders where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select reference from valo_refund_requests where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_id from valo_refund_requests where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_id from valo_payment_disputes where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid)"
+        }
+      },
       "checkConstraints": {
         "valo_payment_events_attempts_check": {
           "name": "valo_payment_events_attempts_check",

@@ -48,12 +48,13 @@ test(
       },
     });
     const { default: express } = await import("express");
-    const { sql } = await import("drizzle-orm");
+    const { inArray, sql } = await import("drizzle-orm");
     const {
       db,
       pool,
       createPool,
       runInWorkspaceScope,
+      valoAIDrafts,
       valoDocuments,
       valoWorkspaces,
       WORKSPACE_SCOPE_UNAVAILABLE_CODE,
@@ -118,8 +119,11 @@ test(
           sql`update valo_documents set id = id where id in (${documents[a!.workspaceId]}, ${documents[b!.workspaceId]})`,
         );
         assert.equal(changed.rowCount, 1, "only the workspace's own document");
-        const removed = await db.delete(valoWorkspaces).where(sql`id = ${b!.workspaceId}`);
-        assert.equal(removed.rowCount, 0);
+        const touched = await db
+          .update(valoWorkspaces)
+          .set({ profileRevision: sql`profile_revision` })
+          .where(sql`id = ${b!.workspaceId}`);
+        assert.equal(touched.rowCount, 0, "another workspace's row is invisible to the update");
         await assert.rejects(
           db.execute(
             sql`update valo_documents set workspace_id = ${b!.workspaceId} where id = ${documents[a!.workspaceId]}`,
@@ -128,6 +132,78 @@ test(
             /row-level security/.test(String((error as { cause?: Error }).cause?.message ?? error.message)),
         );
       });
+    });
+
+    const refusal = (pattern: RegExp) => (error: Error) =>
+      pattern.test(String((error as { cause?: Error }).cause?.message ?? error.message));
+
+    await t.test("the scoped role can do only what customer requests do", async () => {
+      await runInWorkspaceScope(a!.workspaceId, async () => {
+        // A table customer requests never use, a command they never run on a table they do
+        // use, and a column they never change.
+        await assert.rejects(
+          db.execute(sql`select count(*) from valo_staff_assignments`),
+          refusal(/permission denied for table valo_staff_assignments/),
+        );
+        await assert.rejects(
+          db.execute(sql`delete from valo_documents where id = ${documents[a!.workspaceId]}`),
+          refusal(/permission denied for table valo_documents/),
+        );
+        await assert.rejects(
+          db.execute(
+            sql`update valo_workspaces set owner_identity_id = owner_identity_id where id = ${a!.workspaceId}`,
+          ),
+          refusal(/permission denied for table valo_workspaces/),
+        );
+        // Rows customer requests lock can still be locked, but not changed.
+        const locked = await db.execute(
+          sql`select id from valo_memberships where workspace_id = ${a!.workspaceId} for share`,
+        );
+        assert.equal(locked.rows.length, 1);
+        await assert.rejects(
+          db.execute(sql`update valo_memberships set active = active where workspace_id = ${a!.workspaceId}`),
+          refusal(/may lock rows of valo_memberships but not change them/),
+        );
+      });
+    });
+
+    await t.test("limits shared by every workspace still count every workspace", async () => {
+      const { customerAIUsage, globalDailyLimit } = await import("../lib/valo-customer-ai");
+      // Another workspace has used the whole shared daily ceiling, partly for this person.
+      const drafts = Array.from({ length: globalDailyLimit }, () => ({
+        id: randomUUID(),
+        workspaceId: b!.workspaceId,
+        actorId: identities[0]!,
+        idempotencyKey: randomUUID(),
+        inputHash: "0".repeat(64),
+        task: "invoice",
+        status: "manual_fallback",
+        promptVersion: "synthetic-row-security",
+        budgetReserved: true,
+        preview: {},
+      }));
+      await db.insert(valoAIDrafts).values(drafts);
+      try {
+        const usage = await runInWorkspaceScope(a!.workspaceId, () => customerAIUsage(a!));
+        assert.equal(usage.workspaceUsed, 0, "the workspace's own count is its own");
+        assert.equal(usage.globalAvailable, false, "another workspace's reservations use the shared ceiling");
+        const totals = await runInWorkspaceScope(a!.workspaceId, () =>
+          db.execute<{ identity_last_minute: number }>(
+            sql`select identity_last_minute from valo_customer_ai_reservations(now() - interval '1 day', now() - interval '1 minute', ${identities[0]!})`,
+          ),
+        );
+        assert.ok(
+          totals.rows[0]!.identity_last_minute >= globalDailyLimit,
+          "this person's reservations in another workspace count against their own limit",
+        );
+      } finally {
+        await db.delete(valoAIDrafts).where(
+          inArray(
+            valoAIDrafts.id,
+            drafts.map((draft) => draft.id),
+          ),
+        );
+      }
     });
 
     await t.test(

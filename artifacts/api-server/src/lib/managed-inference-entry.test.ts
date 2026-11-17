@@ -235,7 +235,13 @@ test("default managed entry and customer organizer use actual finite dispatch an
       .params.every((p) => p === row.workspaceId || p === row.idempotencyKey || p === row.id);
   const tx = {
     execute: async (query: SQL) => {
-      assert.match(dialect.sqlToQuery(query).sql, /pg_advisory_xact_lock/);
+      const text = dialect.sqlToQuery(query).sql;
+      // The AI limits' totals across workspaces; every reservation here is this workspace's.
+      if (text.includes("valo_customer_ai_reservations")) {
+        const reserved = customerRows.filter((r) => r.budgetReserved).length;
+        return { rows: [{ global_today: reserved, identity_last_minute: reserved }] };
+      }
+      assert.match(text, /pg_advisory_xact_lock/);
       return { rows: [] };
     },
     select: (selection?: unknown) => ({

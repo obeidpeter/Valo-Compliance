@@ -1,11 +1,12 @@
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 import { pgPolicy, pgRole, type PgColumn } from "drizzle-orm/pg-core";
 
 /**
- * The role customer requests act as (`runInWorkspaceScope` in ../index.ts). It has the
- * application's table privileges without DDL or TRUNCATE, and row-level security limits it
- * to the rows of the workspace in `valo.workspace_id`. The migration that creates it also
- * grants its privileges; drizzle-kit manages neither.
+ * The role customer requests act as (`runInWorkspaceScope` in ../index.ts). It holds only the
+ * table privileges customer requests use (WORKSPACE_SCOPE_PRIVILEGES in
+ * lib/db/scripts/workspace-row-security.mjs), and row-level security limits it to the rows of
+ * the workspace in `valo.workspace_id`. Migrations grant its privileges; drizzle-kit manages
+ * neither the role nor its grants.
  */
 export const workspaceScopeRole = pgRole("valo_workspace_scope").existing();
 
@@ -30,4 +31,14 @@ export const supportCaseRowPolicy = (caseId: PgColumn) =>
     to: workspaceScopeRole,
     using: sql`exists (select 1 from valo_support_cases c where c.id = ${caseId} and c.workspace_id = ${currentWorkspace})`,
     withCheck: sql`exists (select 1 from valo_support_cases c where c.id = ${caseId} and c.workspace_id = ${currentWorkspace})`,
+  });
+
+/** Limits the scoped role to rows that `owned` ties to the current workspace. */
+export const linkedRowPolicy = (owned: SQL) =>
+  pgPolicy("valo_workspace_scope", {
+    as: "permissive",
+    for: "all",
+    to: workspaceScopeRole,
+    using: owned,
+    withCheck: owned,
   });

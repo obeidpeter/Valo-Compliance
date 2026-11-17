@@ -12,7 +12,7 @@ import {
   foreignKey,
   check,
 } from "drizzle-orm/pg-core";
-import { workspaceRowPolicy } from "./valo-workspace-scope";
+import { currentWorkspace, linkedRowPolicy, workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
@@ -109,6 +109,20 @@ export const valoPaymentEvents = pgTable(
     check(
       "valo_payment_events_status_check",
       sql`${t.status} IN ('pending', 'processed', 'needs_review', 'ignored')`,
+    ),
+    // An event carries no workspace of its own: it belongs to the workspace whose order,
+    // refund or dispute it references (ownedPaymentEvent in the API).
+    linkedRowPolicy(
+      sql`${t.reference} in (${sql.join(
+        [
+          sql`select reference from valo_orders where workspace_id = ${currentWorkspace}`,
+          sql`select provider_transaction_id from valo_orders where workspace_id = ${currentWorkspace}`,
+          sql`select reference from valo_refund_requests where workspace_id = ${currentWorkspace}`,
+          sql`select provider_id from valo_refund_requests where workspace_id = ${currentWorkspace}`,
+          sql`select provider_id from valo_payment_disputes where workspace_id = ${currentWorkspace}`,
+        ],
+        sql` union `,
+      )})`,
     ),
   ],
 );

@@ -87,7 +87,10 @@ Rules that apply now:
   middleware calls `runInWorkspaceScope`, and row-level security limits every
   query to the workspace's rows. Keep the workspace filters too. Never call
   `runInWorkspaceScope` with a workspace not resolved from a membership, and
-  never reset the role or `valo.workspace_id` in customer code.
+  never reset the role or `valo.workspace_id` in customer code. A customer
+  request cannot see other workspaces' rows, so a total it needs across
+  workspaces (such as a shared limit) comes from a reviewed database function
+  that returns only that total, like `valo_customer_ai_reservations`.
 
 ## 5. Checks
 
@@ -120,6 +123,11 @@ workflow run for the exact commit before reporting CI status.
 - A table that holds workspace rows needs `workspaceRowPolicy` (or a policy
   through its parent row) in the schema, created in the same migration. The
   migration tests fail on any `workspace_id` table without it.
+- The scoped role holds only the privileges in `WORKSPACE_SCOPE_PRIVILEGES`
+  (`lib/db/scripts/workspace-row-security.mjs`), and new tables give it nothing.
+  When customer requests start using a table, command or column, grant exactly
+  that in the migration and add it to the list. Until then those requests fail
+  with `permission denied`; the migration tests fail on any other difference.
 - Extend `lib/db/scripts/phase1-migrations.test.mjs` with an upgrade check for
   every new migration. When two branches both add migrations, renumber the
   journal `idx` values on merge so they stay contiguous.

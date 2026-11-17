@@ -613,6 +613,136 @@ test(
           assert.equal(await staffRows(), staffBefore, "no staff role, assignment or audit row was written");
         },
       );
+
+      await t.test("every private operation answers its owner without a server error", async () => {
+        // Customer requests act as a database role that may run only the commands they use
+        // (decision 0008), so a missing grant would answer here as a server error. Read from
+        // the contract, so a new private operation fails until it has a request below.
+        const { customerAICases } = await import("../lib/valo-customer-ai-fixtures");
+        const today = new Date().toISOString().slice(0, 10);
+        const profileRevision = async () =>
+          Number(
+            (
+              await pool.query<{ profile_revision: number }>(
+                "SELECT profile_revision FROM valo_workspaces WHERE id = $1",
+                [ownerActor.workspaceId],
+              )
+            ).rows[0]!.profile_revision,
+          );
+        const { businessName: _name, marketingConsent: _consent, ...facts } = syntheticProfile;
+        const withoutIdentifier: Record<string, { query?: string; body?: () => Promise<unknown> | unknown }> =
+          {
+            "GET /workspace": {},
+            "GET /workspace/account": {},
+            "GET /workspace/ai-usage": {},
+            "GET /workspace/assessments": {},
+            "GET /workspace/correction-notices": { query: "?page=1" },
+            "GET /workspace/data-export": {},
+            "GET /workspace/data-exports": {},
+            "GET /workspace/disputes": {},
+            "GET /workspace/documents": {},
+            "GET /workspace/privacy-cases": {},
+            "GET /workspace/purchases": {},
+            "GET /workspace/reminder-preferences": {},
+            "GET /workspace/reminders": {},
+            "GET /workspace/saved-templates": {},
+            "GET /workspace/support-cases": { query: "?page=1" },
+            "GET /workspace/tasks": {},
+            "GET /workspace/tasks/page": { query: "?page=1&filter=all" },
+            "POST /workspace/ai-drafts": {
+              body: () => ({ ...structuredClone(customerAICases[0]!.input), idempotencyKey: randomUUID() }),
+            },
+            "POST /workspace/assessments": {
+              body: async () => ({ ...assessmentInput, expectedProfileRevision: await profileRevision() }),
+            },
+            "POST /workspace/checker/preview": { body: () => ({ facts, asOfDate: today }) },
+            "POST /workspace/data-exports": { body: () => ({ requestKey: randomUUID() }) },
+            "POST /workspace/documents": { body: () => syntheticDocument },
+            "POST /workspace/orders": {
+              body: () => ({ priceId, acceptedLicenceVersion: "test-only", requestKey: randomUUID() }),
+            },
+            "POST /workspace/privacy-requests": {
+              body: () => ({
+                kind: "correction",
+                message: "Synthetic correction request from the owner check.",
+                acknowledgement: true,
+                idempotencyKey: randomUUID(),
+              }),
+            },
+            "POST /workspace/support": {
+              body: () => ({
+                category: "support",
+                scope: "Synthetic owner support request for the owner check.",
+                contactEmail: "synthetic@example.invalid",
+                sharingConsent: false,
+              }),
+            },
+            "POST /workspace/tasks": {
+              body: () => ({
+                title: "Synthetic owner check task",
+                notes: "",
+                dueDate: null,
+                dateConfirmed: false,
+                assessmentId: null,
+                ruleId: null,
+              }),
+            },
+            "PUT /workspace/profile": {
+              body: async () => ({ expectedRevision: await profileRevision(), profile: syntheticProfile }),
+            },
+            "PUT /workspace/reminder-preferences": {
+              body: async () => ({
+                enabled: false,
+                offsets: [],
+                expectedRevision: Number(
+                  json(await call(owner, "GET", "/workspace/reminder-preferences")).revision,
+                ),
+              }),
+            },
+          };
+        // Catalogue identifiers that are not the workspace's own; none of them is released here.
+        const catalogue: Record<string, Record<string, string>> = {
+          "POST /workspace/templates/{id}/draft": { id: randomUUID() },
+          "GET /workspace/templates/{id}/files/{format}": { id: randomUUID(), format: "pdf" },
+          "PUT /workspace/saved-templates/{id}": { id: randomUUID() },
+          "DELETE /workspace/saved-templates/by-template/{templateId}": { templateId: "SYNTHETIC-ABSENT" },
+        };
+        // Unexpected errors are logged and answered with this generic message; a deliberate
+        // refusal names its reason.
+        const serverError = (reply: Reply) =>
+          reply.status === 500 || reply.text.includes("A required service is unavailable");
+        // Each request starts with the owner's rate limits unused, so it reaches its writes.
+        const { quotaSubjectHash } = await import("../lib/valo-quota-policy");
+        const ownerQuota = quotaSubjectHash(process.env.SESSION_SECRET, "user", owner);
+        const all = contractOperations().filter(
+          (o) => o.path === "/workspace" || o.path.startsWith("/workspace/") || o.path.startsWith("/v1/"),
+        );
+        assert.ok(all.length >= 60, "private operations were read from the contract");
+        for (const operation of all) {
+          const key = operation.key;
+          let path: string, body: unknown, headers: Record<string, string> | undefined;
+          if (key in cases) {
+            const c = cases[key as (typeof CASE_KEYS)[number]];
+            [path, body, headers] = [pathFor(operation, c.params), c.body, c.headers?.()];
+          } else if (key in catalogue) {
+            [path, body] = [pathFor(operation, catalogue[key]!), operation.method === "GET" ? undefined : {}];
+          } else {
+            const request = withoutIdentifier[key];
+            assert.ok(request, `${key}: add an owner request to this check`);
+            [path, body] = [operation.path + (request.query ?? ""), await request.body?.()];
+          }
+          await pool.query("DELETE FROM valo_rate_buckets WHERE subject_hash = $1", [ownerQuota]);
+          let reply = await call(owner, operation.method, path, body, headers);
+          // An earlier request may have changed the row; repeat once at its current revision.
+          const current = reply.status === 409 ? json(reply).currentRevision : undefined;
+          if (typeof current === "number" && body && typeof body === "object") {
+            const field = "expectedRevision" in body ? "expectedRevision" : "expectedVersion";
+            if (field in body)
+              reply = await call(owner, operation.method, path, { ...body, [field]: current }, headers);
+          }
+          assert.ok(!serverError(reply), `${key} answered ${reply.status}: ${reply.text.slice(0, 300)}`);
+        }
+      });
     } finally {
       if (previousOrigin === undefined) delete process.env.VALO_TRUSTED_ORIGIN;
       else process.env.VALO_TRUSTED_ORIGIN = previousOrigin;

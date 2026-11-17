@@ -22,8 +22,9 @@ import { createDocumentInTransaction, getDocument, ValoProblem, type WorkspaceAc
 import { documentInput } from "./valo-validation";
 import { hasApprovedInferenceContext } from "./managed-inference";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
-const workspaceDailyLimit = 30,
-  globalDailyLimit = 120;
+const workspaceDailyLimit = 30;
+/** Customer AI reservations allowed per day across every workspace. */
+export const globalDailyLimit = 120;
 async function enabled(tx: WorkspaceTx, workspaceId: string) {
   if (!hasApprovedInferenceContext("customer")) return false;
   // No customer or model input can enable this; production remains off even if a development switch is copied.
@@ -45,10 +46,13 @@ async function enabled(tx: WorkspaceTx, workspaceId: string) {
 async function budget(tx: WorkspaceTx, workspaceId: string, identityId: string, now = new Date()) {
   const start = new Date(now);
   start.setUTCHours(0, 0, 0, 0);
-  const [global] = await tx
-    .select({ n: count() })
-    .from(valoAIDrafts)
-    .where(and(eq(valoAIDrafts.budgetReserved, true), gte(valoAIDrafts.createdAt, start)));
+  // The shared daily ceiling and each person's per-minute limit count every workspace's
+  // reservations. A customer request sees only its own workspace's drafts, so those two
+  // totals come from a database function that returns nothing else.
+  const shared = await tx.execute<{ global_today: number; identity_last_minute: number }>(
+    sql`select global_today, identity_last_minute
+      from valo_customer_ai_reservations(${start}, ${new Date(now.getTime() - 60000)}, ${identityId})`,
+  );
   const [own] = await tx
     .select({ n: count() })
     .from(valoAIDrafts)
@@ -59,17 +63,12 @@ async function budget(tx: WorkspaceTx, workspaceId: string, identityId: string, 
         gte(valoAIDrafts.createdAt, start),
       ),
     );
-  const [minute] = await tx
-    .select({ n: count() })
-    .from(valoAIDrafts)
-    .where(
-      and(
-        eq(valoAIDrafts.budgetReserved, true),
-        eq(valoAIDrafts.actorId, identityId),
-        gte(valoAIDrafts.createdAt, new Date(now.getTime() - 60000)),
-      ),
-    );
-  return { workspaceUsed: own!.n, globalUsed: global!.n, userMinuteUsed: minute!.n };
+  const totals = shared.rows[0]!;
+  return {
+    workspaceUsed: own!.n,
+    globalUsed: totals.global_today,
+    userMinuteUsed: totals.identity_last_minute,
+  };
 }
 export function serializeAIPreview(row: typeof valoAIDrafts.$inferSelect) {
   const p = CreateCustomerAIDraftResponse.parse(row.preview);
