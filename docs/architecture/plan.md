@@ -48,7 +48,7 @@ Measured on the integration branch at `14c8f38`:
 | TypeScript: exactOptionalPropertyTypes (91 errors), noUncheckedIndexedAccess (825) | not started |
 | Generated API client checked against the contract in CI | done |
 | Typed settings registry and generated `.env.example`; reading an unregistered variable fails a test | done |
-| One test command with lanes and its own database | in progress (`pnpm test` runs typecheck, lint and the fast suites; a test fails when a test file is run by no script; database groups still run as separate CI steps) |
+| One test command with lanes and its own database | done: `pnpm test` runs typecheck, lint and the fast suites, and `pnpm test:db` runs CI's database job against a PostgreSQL cluster it starts and removes. It reads the steps from the workflow, so the groups are listed once, and refuses any step it cannot run as CI does; a test keeps it reading the current workflow. A test fails when a test file is run by no script |
 | Delete unused UI kit, packages, `mockup-sandbox` | done: 52 components, `mockup-sandbox` and its packages, the 40 web app packages nothing imports (99 fewer locked packages), and the 12 version catalog entries no package used |
 | Safe error logging; no silently discarded errors | done (errors are logged by class, code and stack frames, never by message; empty catches need a reason) |
 

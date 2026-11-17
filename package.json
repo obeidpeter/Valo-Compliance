@@ -11,7 +11,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,cjs,mts,cts}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,mts,cts}\"",
     "lint": "pnpm run format:check && oxlint && pnpm --filter @workspace/scripts valo:architecture",
-    "test": "pnpm run typecheck && pnpm run lint && pnpm --filter @workspace/scripts test:valo && pnpm --filter @workspace/api-server test:valo && pnpm --filter @workspace/api-server test:valo-operations"
+    "test": "pnpm run typecheck && pnpm run lint && pnpm --filter @workspace/scripts test:valo && pnpm --filter @workspace/api-server test:valo && pnpm --filter @workspace/api-server test:valo-operations",
+    "test:db": "pnpm --filter @workspace/scripts valo:database-tests"
   },
   "private": true,
   "dependencies": {

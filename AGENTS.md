@@ -116,10 +116,16 @@ Rules that apply now:
 ```sh
 pnpm install --frozen-lockfile
 pnpm test        # typecheck, lint (formatting, oxlint and repository rules), fast unit suites
+pnpm test:db     # CI's database job, against a PostgreSQL cluster of its own
 ```
 
 Database, browser and recovery groups are listed in
-`.github/workflows/valo-foundation.yml`. Every test file must be run by a package
+`.github/workflows/valo-foundation.yml`. `pnpm test:db` runs every step of the
+`postgres` job from that file, in order, against a cluster it starts in a temporary
+folder and removes afterwards (it needs PostgreSQL 16 installed and an ordinary,
+non-root user). It never uses a database from your environment and passes the steps
+none of your credentials. Add a database group to the workflow and it runs there too;
+`--keep-going` reports every failing step. Every test file must be run by a package
 script that CI calls; `scripts/src/valo/test-inventory.test.ts` fails otherwise,
 unless the exception and its reason are recorded there. Tests create only
 synthetic records and never call real providers. A green local run is not hosted CI; check the actual
