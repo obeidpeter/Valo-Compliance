@@ -166,3 +166,10 @@ application role is not a member of `valo_workspace_scope`. Every customer reque
 fails until it is fixed; no connection is leaked. Apply the migration (see
 `docs/valo/migration-workspace-row-security.md`) before releasing code that
 expects it.
+
+A customer request that answers the generic 503 with error code `42501` in its log
+ran a command `valo_workspace_scope` does not hold: the code started using a table,
+command or column before a migration granted it (`WORKSPACE_SCOPE_PRIVILEGES` in
+`lib/db/scripts/workspace-row-security.mjs`). The log's frames name the query. Roll
+the code back, or release the migration that grants exactly that; do not grant it
+by hand.
