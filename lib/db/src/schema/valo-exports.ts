@@ -1,4 +1,15 @@
-import { pgTable, uuid, text, integer, timestamp, uniqueIndex, index, foreignKey } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  integer,
+  timestamp,
+  uniqueIndex,
+  index,
+  foreignKey,
+  check,
+} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { valoDocumentRevisions } from "./valo-document-revisions";
 
 export const valoExportJobs = pgTable(
@@ -42,5 +53,6 @@ export const valoExportJobs = pgTable(
         valoDocumentRevisions.workspaceId,
       ],
     }),
+    check("valo_export_jobs_lease_recoveries_check", sql`${t.leaseRecoveries} >= 0`),
   ],
 );

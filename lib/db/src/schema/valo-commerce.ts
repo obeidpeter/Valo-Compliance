@@ -10,6 +10,7 @@ import {
   unique,
   index,
   foreignKey,
+  check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -17,22 +18,31 @@ import { valoWorkspaces } from "./valo-workspaces";
 import { valoContentVersions } from "./valo-publication";
 
 /** No seed price book: customer-facing prices require explicit commercial approval. */
-export const valoPrices = pgTable("valo_prices", {
-  id: uuid("id").primaryKey(),
-  contentVersionId: uuid("content_version_id")
-    .notNull()
-    .references(() => valoContentVersions.id),
-  title: text("title").notNull(),
-  amountKobo: integer("amount_kobo").notNull(),
-  currency: text("currency").notNull().default("NGN"),
-  licenceVersion: text("licence_version").notNull(),
-  licenceText: text("licence_text").notNull(),
-  taxTreatment: text("tax_treatment").notNull(),
-  approvalReference: text("approval_reference").notNull(),
-  effectiveFrom: timestamp("effective_from", { withTimezone: true }).notNull(),
-  effectiveTo: timestamp("effective_to", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const valoPrices = pgTable(
+  "valo_prices",
+  {
+    id: uuid("id").primaryKey(),
+    contentVersionId: uuid("content_version_id")
+      .notNull()
+      .references(() => valoContentVersions.id),
+    title: text("title").notNull(),
+    amountKobo: integer("amount_kobo").notNull(),
+    currency: text("currency").notNull().default("NGN"),
+    licenceVersion: text("licence_version").notNull(),
+    licenceText: text("licence_text").notNull(),
+    taxTreatment: text("tax_treatment").notNull(),
+    approvalReference: text("approval_reference").notNull(),
+    effectiveFrom: timestamp("effective_from", { withTimezone: true }).notNull(),
+    effectiveTo: timestamp("effective_to", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("valo_prices_amount_kobo_check", sql`${t.amountKobo} > 0`),
+    check("valo_prices_approval_reference_check", sql`length(${t.approvalReference}) > 0`),
+    check("valo_prices_check", sql`${t.effectiveTo} IS NULL OR ${t.effectiveTo} > ${t.effectiveFrom}`),
+    check("valo_prices_currency_check", sql`${t.currency} = 'NGN'`),
+  ],
+);
 export const valoOrders = pgTable(
   "valo_orders",
   {
@@ -69,6 +79,12 @@ export const valoOrders = pgTable(
     uniqueIndex("valo_order_tenant_id_unique").on(t.workspaceId, t.id),
     uniqueIndex("valo_order_provider_transaction_unique").on(t.providerTransactionId),
     index("valo_orders_workspace_created_idx").on(t.workspaceId, t.createdAt),
+    check("valo_orders_amount_kobo_check", sql`${t.amountKobo} > 0`),
+    check("valo_orders_currency_check", sql`${t.currency} = 'NGN'`),
+    check(
+      "valo_orders_status_check",
+      sql`${t.status} IN ('created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed')`,
+    ),
   ],
 );
 export const valoPaymentEvents = pgTable(
@@ -87,6 +103,11 @@ export const valoPaymentEvents = pgTable(
   (t) => [
     uniqueIndex("valo_payment_event_key_unique").on(t.eventKey),
     index("valo_payment_event_status_idx").on(t.status),
+    check("valo_payment_events_attempts_check", sql`${t.attempts} BETWEEN 0 AND 5`),
+    check(
+      "valo_payment_events_status_check",
+      sql`${t.status} IN ('pending', 'processed', 'needs_review', 'ignored')`,
+    ),
   ],
 );
 export const valoEntitlements = pgTable(
@@ -111,6 +132,7 @@ export const valoEntitlements = pgTable(
       columns: [t.workspaceId, t.orderId],
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
+    check("valo_entitlements_status_check", sql`${t.status} IN ('active', 'suspended')`),
   ],
 );
 export const valoPurchaseOutbox = pgTable(
@@ -172,6 +194,13 @@ export const valoRefundRequests = pgTable(
       columns: [t.workspaceId, t.orderId],
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
+    check("valo_refund_requests_amount_kobo_check", sql`${t.amountKobo} > 0`),
+    check("valo_refund_requests_attempts_check", sql`${t.attempts} BETWEEN 0 AND 5`),
+    check(
+      "valo_refund_requests_status_check",
+      sql`${t.status} IN ('requested', 'authorised', 'provider_pending', 'approved', 'rejected', 'submitting', 'unknown', 'pending', 'processing', 'needs_attention', 'needs_review', 'failed', 'processed')`,
+    ),
+    check("valo_refund_requests_version_check", sql`${t.version} > 0`),
   ],
 );
 export const valoRefundTransitions = pgTable(
@@ -222,6 +251,7 @@ export const valoPaymentDisputes = pgTable(
       columns: [t.workspaceId, t.orderId],
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
+    check("valo_payment_disputes_amount_kobo_check", sql`${t.amountKobo} >= 0`),
   ],
 );
 export const insertValoOrderSchema = createInsertSchema(valoOrders);
@@ -310,6 +340,15 @@ export const valoDisputeActions = pgTable(
         valoDisputeInformation.id,
       ],
     }),
+    check("valo_dispute_actions_attempts_check", sql`${t.attempts} BETWEEN 0 AND 1`),
+    check(
+      "valo_dispute_actions_kind_check",
+      sql`${t.kind} IN ('upload_receipt', 'submit_evidence', 'merchant_decision')`,
+    ),
+    check(
+      "valo_dispute_actions_status_check",
+      sql`${t.status} IN ('prepared', 'dispatching', 'acknowledged', 'observed', 'unknown', 'cancelled')`,
+    ),
   ],
 );
 export const insertValoDisputeActionSchema = createInsertSchema(valoDisputeActions);
@@ -355,5 +394,10 @@ export const valoPaymentReconciliations = pgTable(
       columns: [t.workspaceId, t.orderId],
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
+    check("valo_payment_reconciliations_attempts_check", sql`${t.attempts} BETWEEN 0 AND 3`),
+    check(
+      "valo_payment_reconciliations_status_check",
+      sql`${t.status} IN ('pending', 'matched', 'needs_review')`,
+    ),
   ],
 );

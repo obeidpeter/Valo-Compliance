@@ -1,4 +1,5 @@
-import { pgTable, text, uuid, integer, timestamp, index, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, integer, timestamp, index, foreignKey, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { valoExportJobs } from "./valo-exports";
 
 /** Reservation precedes network I/O; cleanup tombstones survive unsuccessful uploads. */
@@ -20,5 +21,7 @@ export const valoExportObjects = pgTable(
       foreignColumns: [valoExportJobs.id, valoExportJobs.workspaceId],
     }),
     index("valo_export_object_cleanup_idx").on(t.state, t.nextCleanupAt),
+    check("valo_export_objects_cleanup_attempts_check", sql`${t.cleanupAttempts} >= 0`),
+    check("valo_export_objects_state_check", sql`${t.state} IN ('pending', 'retained', 'cleanup')`),
   ],
 );

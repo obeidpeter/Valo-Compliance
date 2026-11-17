@@ -9,22 +9,27 @@ import {
   uniqueIndex,
   index,
   primaryKey,
+  check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { valoSourceSnapshots } from "./valo-source-snapshots";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoStaffAssignments } from "./valo-customer-access";
-export const valoSourceWatches = pgTable("valo_source_watches", {
-  sourceId: text("source_id").primaryKey(),
-  url: text("url").notNull(),
-  risk: text("risk").notNull(),
-  lastSnapshotId: uuid("last_snapshot_id").references(() => valoSourceSnapshots.id),
-  lastRawHash: text("last_raw_hash"),
-  checkedAt: timestamp("checked_at", { withTimezone: true }),
-  failureCode: text("failure_code"),
-  nextCheckAt: timestamp("next_check_at", { withTimezone: true }).notNull().defaultNow(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const valoSourceWatches = pgTable(
+  "valo_source_watches",
+  {
+    sourceId: text("source_id").primaryKey(),
+    url: text("url").notNull(),
+    risk: text("risk").notNull(),
+    lastSnapshotId: uuid("last_snapshot_id").references(() => valoSourceSnapshots.id),
+    lastRawHash: text("last_raw_hash"),
+    checkedAt: timestamp("checked_at", { withTimezone: true }),
+    failureCode: text("failure_code"),
+    nextCheckAt: timestamp("next_check_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("valo_source_watches_risk_check", sql`${t.risk} IN ('high', 'standard')`)],
+);
 export const valoSourceCheckJobs = pgTable(
   "valo_source_check_jobs",
   {
@@ -44,6 +49,8 @@ export const valoSourceCheckJobs = pgTable(
   (t) => [
     uniqueIndex("valo_source_check_jobs_source_id_day_key").on(t.sourceId, t.day),
     index("valo_source_check_due").on(t.status, t.leaseUntil),
+    check("valo_source_check_jobs_attempts_check", sql`${t.attempts} BETWEEN 0 AND 3`),
+    check("valo_source_check_jobs_status_check", sql`${t.status} IN ('pending', 'running', 'complete')`),
   ],
 );
 export const valoSourceReleaseBindings = pgTable(
@@ -62,7 +69,10 @@ export const valoSourceReleaseBindings = pgTable(
     rawHash: text("raw_hash").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.targetKind, t.targetId, t.bundleSourceId] })],
+  (t) => [
+    primaryKey({ columns: [t.targetKind, t.targetId, t.bundleSourceId] }),
+    check("valo_source_release_bindings_target_kind_check", sql`${t.targetKind} IN ('content', 'rule')`),
+  ],
 );
 export const valoSourceImpacts = pgTable(
   "valo_source_impacts",
@@ -87,20 +97,35 @@ export const valoSourceImpacts = pgTable(
   (t) => [
     index("valo_source_impact_queue").on(t.phase, t.createdAt),
     index("valo_source_impact_target").on(t.targetKind, t.targetId),
+    check("valo_source_impacts_action_check", sql`${t.action} IN ('hold', 'withdraw')`),
+    check(
+      "valo_source_impacts_phase_check",
+      sql`${t.phase} IN ('derived', 'tasks', 'assessments', 'documents', 'purchases', 'complete')`,
+    ),
+    check("valo_source_impacts_target_kind_check", sql`${t.targetKind} IN ('content', 'rule')`),
   ],
 );
-export const valoSourceReviewWork = pgTable("valo_source_review_work", {
-  id: uuid("id").primaryKey(),
-  impactId: uuid("impact_id")
-    .notNull()
-    .unique()
-    .references(() => valoSourceImpacts.id),
-  status: text("status").notNull().default("awaiting_authorized_review"),
-  replacementKind: text("replacement_kind"),
-  replacementId: uuid("replacement_id"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-});
+export const valoSourceReviewWork = pgTable(
+  "valo_source_review_work",
+  {
+    id: uuid("id").primaryKey(),
+    impactId: uuid("impact_id")
+      .notNull()
+      .unique()
+      .references(() => valoSourceImpacts.id),
+    status: text("status").notNull().default("awaiting_authorized_review"),
+    replacementKind: text("replacement_kind"),
+    replacementId: uuid("replacement_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      "valo_source_review_work_status_check",
+      sql`${t.status} IN ('awaiting_authorized_review', 'superseded_by_eligible_version')`,
+    ),
+  ],
+);
 export const valoSourceDependencyJobs = pgTable(
   "valo_source_dependency_jobs",
   {
@@ -120,7 +145,10 @@ export const valoSourceDependencyJobs = pgTable(
       .default(sql`clock_timestamp()`),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
-  (t) => [index("valo_source_dependency_pending").on(t.status, t.createdAt)],
+  (t) => [
+    index("valo_source_dependency_pending").on(t.status, t.createdAt),
+    check("valo_source_dependency_jobs_status_check", sql`${t.status} IN ('pending', 'complete')`),
+  ],
 );
 export const valoCorrectionNotices = pgTable(
   "valo_correction_notices",

@@ -8,7 +8,9 @@ import {
   uniqueIndex,
   index,
   bigserial,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 export const valoPublicationPolicies = pgTable("valo_publication_policies", {
   id: text("id").primaryKey(),
@@ -39,6 +41,11 @@ export const valoContentVersions = pgTable(
   (t) => [
     uniqueIndex("valo_content_template_version_unique").on(t.templateId, t.version),
     index("valo_content_discovery_idx").on(t.status, t.reviewBy, t.slug),
+    check(
+      "valo_content_versions_status_check",
+      sql`${t.status} IN ('candidate', 'held', 'published', 'withdrawn')`,
+    ),
+    check("valo_content_versions_version_check", sql`${t.version} > 0`),
   ],
 );
 export const valoPublicationAudit = pgTable("valo_publication_audit", {
@@ -68,5 +75,10 @@ export const valoPublicationAiAttempts = pgTable(
     errorCode: text("error_code"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
-  (t) => [index("valo_publication_attempt_request_idx").on(t.candidateHash, t.role, t.requestHash)],
+  (t) => [
+    index("valo_publication_attempt_request_idx").on(t.candidateHash, t.role, t.requestHash),
+    check("valo_publication_ai_attempts_input_tokens_check", sql`${t.inputTokens} >= 0`),
+    check("valo_publication_ai_attempts_output_tokens_check", sql`${t.outputTokens} >= 0`),
+    check("valo_publication_ai_attempts_role_check", sql`${t.role} IN ('draft', 'factual', 'challenge')`),
+  ],
 );

@@ -101,8 +101,9 @@ Every change must keep these true. Each has tests; none may be weakened.
     connection taken inside a transaction, apart from the reviewed exceptions in
     `nested-connection-report.mjs`.
 11. **The schema describes the database.** Every primary key, unique constraint,
-    foreign key and index on a table in the Drizzle schema exists in a migrated
-    database with the name and shape the latest snapshot records, so a generated
+    foreign key, check constraint and index on a table in the Drizzle schema
+    exists in a migrated database with the name and shape the latest snapshot
+    records (check expressions as PostgreSQL normalizes them), so a generated
     migration can name what it changes. The migration tests fail on any
     difference (`lib/db/scripts/snapshot-parity.mjs`).
 

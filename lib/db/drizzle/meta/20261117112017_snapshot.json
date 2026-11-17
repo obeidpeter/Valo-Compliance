@@ -332,7 +332,28 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_access_support_contact_email_check": {
+          "name": "valo_access_support_contact_email_check",
+          "value": "length(\"valo_access_support\".\"contact_email\") <= 254"
+        },
+        "valo_access_support_message_check": {
+          "name": "valo_access_support_message_check",
+          "value": "length(\"valo_access_support\".\"message\") BETWEEN 20 AND 2000"
+        },
+        "valo_access_support_payload_hash_check": {
+          "name": "valo_access_support_payload_hash_check",
+          "value": "length(\"valo_access_support\".\"payload_hash\") = 64"
+        },
+        "valo_access_support_status_check": {
+          "name": "valo_access_support_status_check",
+          "value": "\"valo_access_support\".\"status\" = 'awaiting_staff'"
+        },
+        "valo_access_support_topic_check": {
+          "name": "valo_access_support_topic_check",
+          "value": "\"valo_access_support\".\"topic\" IN ('account_access', 'general', 'content_issue')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_staff_access_audit": {
@@ -502,7 +523,32 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_staff_assignments_grant_mode_check": {
+          "name": "valo_staff_assignments_grant_mode_check",
+          "value": "\"valo_staff_assignments\".\"grant_mode\" IN ('permanent', 'break_glass')"
+        },
+        "valo_staff_assignments_granted_by_check": {
+          "name": "valo_staff_assignments_granted_by_check",
+          "value": "length(\"valo_staff_assignments\".\"granted_by\") > 0"
+        },
+        "valo_staff_assignments_reason_check": {
+          "name": "valo_staff_assignments_reason_check",
+          "value": "length(\"valo_staff_assignments\".\"reason\") > 0"
+        },
+        "valo_staff_assignments_role_check": {
+          "name": "valo_staff_assignments_role_check",
+          "value": "\"valo_staff_assignments\".\"role\" IN ('content', 'support', 'finance', 'system', 'privacy')"
+        },
+        "valo_staff_assignments_version_check": {
+          "name": "valo_staff_assignments_version_check",
+          "value": "\"valo_staff_assignments\".\"version\" > 0"
+        },
+        "valo_staff_expiry_shape": {
+          "name": "valo_staff_expiry_shape",
+          "value": "(\"valo_staff_assignments\".\"grant_mode\" = 'permanent' AND \"valo_staff_assignments\".\"expires_at\" IS NULL) OR (\"valo_staff_assignments\".\"grant_mode\" = 'break_glass' AND \"valo_staff_assignments\".\"expires_at\" IS NOT NULL AND \"valo_staff_assignments\".\"expires_at\" >= \"valo_staff_assignments\".\"granted_at\" + interval '5 minutes' AND \"valo_staff_assignments\".\"expires_at\" <= \"valo_staff_assignments\".\"granted_at\" + interval '60 minutes')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_privacy_cases": {
@@ -723,7 +769,36 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_privacy_cases_kind_check": {
+          "name": "valo_privacy_cases_kind_check",
+          "value": "\"valo_privacy_cases\".\"kind\" IN ('correction', 'export', 'deletion')"
+        },
+        "valo_privacy_cases_last_event_hash_check": {
+          "name": "valo_privacy_cases_last_event_hash_check",
+          "value": "length(\"valo_privacy_cases\".\"last_event_hash\") = 64"
+        },
+        "valo_privacy_cases_message_check": {
+          "name": "valo_privacy_cases_message_check",
+          "value": "length(\"valo_privacy_cases\".\"message\") BETWEEN 10 AND 1500"
+        },
+        "valo_privacy_cases_payload_hash_check": {
+          "name": "valo_privacy_cases_payload_hash_check",
+          "value": "length(\"valo_privacy_cases\".\"payload_hash\") = 64"
+        },
+        "valo_privacy_cases_status_check": {
+          "name": "valo_privacy_cases_status_check",
+          "value": "\"valo_privacy_cases\".\"status\" IN ('awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed')"
+        },
+        "valo_privacy_cases_steps_check": {
+          "name": "valo_privacy_cases_steps_check",
+          "value": "jsonb_typeof(\"valo_privacy_cases\".\"steps\") = 'array'"
+        },
+        "valo_privacy_cases_version_check": {
+          "name": "valo_privacy_cases_version_check",
+          "value": "\"valo_privacy_cases\".\"version\" > 0"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_privacy_erasure_objects": {
@@ -799,7 +874,12 @@
       },
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_privacy_erasure_objects_status_check": {
+          "name": "valo_privacy_erasure_objects_status_check",
+          "value": "\"valo_privacy_erasure_objects\".\"status\" IN ('pending', 'deleted', 'failed')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_privacy_events": {
@@ -928,7 +1008,32 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_privacy_events_actor_hash_check": {
+          "name": "valo_privacy_events_actor_hash_check",
+          "value": "length(\"valo_privacy_events\".\"actor_hash\") = 64"
+        },
+        "valo_privacy_events_actor_type_check": {
+          "name": "valo_privacy_events_actor_type_check",
+          "value": "\"valo_privacy_events\".\"actor_type\" IN ('customer', 'staff', 'worker')"
+        },
+        "valo_privacy_events_event_hash_check": {
+          "name": "valo_privacy_events_event_hash_check",
+          "value": "length(\"valo_privacy_events\".\"event_hash\") = 64"
+        },
+        "valo_privacy_events_previous_hash_check": {
+          "name": "valo_privacy_events_previous_hash_check",
+          "value": "length(\"valo_privacy_events\".\"previous_hash\") = 64"
+        },
+        "valo_privacy_events_sequence_check": {
+          "name": "valo_privacy_events_sequence_check",
+          "value": "\"valo_privacy_events\".\"sequence\" > 0"
+        },
+        "valo_privacy_events_state_hash_check": {
+          "name": "valo_privacy_events_state_hash_check",
+          "value": "length(\"valo_privacy_events\".\"state_hash\") = 64"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_privacy_messages": {
@@ -1016,7 +1121,16 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_privacy_messages_body_check": {
+          "name": "valo_privacy_messages_body_check",
+          "value": "length(\"valo_privacy_messages\".\"body\") BETWEEN 1 AND 4000"
+        },
+        "valo_privacy_messages_reply_to_version_check": {
+          "name": "valo_privacy_messages_reply_to_version_check",
+          "value": "\"valo_privacy_messages\".\"reply_to_version\" > 0"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_privacy_tombstones": {
@@ -1165,7 +1279,16 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_privacy_tombstones_checksum_check": {
+          "name": "valo_privacy_tombstones_checksum_check",
+          "value": "\"valo_privacy_tombstones\".\"checksum\" IS NULL OR length(\"valo_privacy_tombstones\".\"checksum\") = 64"
+        },
+        "valo_privacy_tombstones_identity_hash_check": {
+          "name": "valo_privacy_tombstones_identity_hash_check",
+          "value": "length(\"valo_privacy_tombstones\".\"identity_hash\") = 64"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_workspaces": {
@@ -2775,7 +2898,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_export_jobs_lease_recoveries_check": {
+          "name": "valo_export_jobs_lease_recoveries_check",
+          "value": "\"valo_export_jobs\".\"lease_recoveries\" >= 0"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_export_objects": {
@@ -2877,7 +3005,16 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_export_objects_cleanup_attempts_check": {
+          "name": "valo_export_objects_cleanup_attempts_check",
+          "value": "\"valo_export_objects\".\"cleanup_attempts\" >= 0"
+        },
+        "valo_export_objects_state_check": {
+          "name": "valo_export_objects_state_check",
+          "value": "\"valo_export_objects\".\"state\" IN ('pending', 'retained', 'cleanup')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_export_requests": {
@@ -3580,7 +3717,16 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_source_check_jobs_attempts_check": {
+          "name": "valo_source_check_jobs_attempts_check",
+          "value": "\"valo_source_check_jobs\".\"attempts\" BETWEEN 0 AND 3"
+        },
+        "valo_source_check_jobs_status_check": {
+          "name": "valo_source_check_jobs_status_check",
+          "value": "\"valo_source_check_jobs\".\"status\" IN ('pending', 'running', 'complete')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_source_dependency_jobs": {
@@ -3705,7 +3851,12 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_source_dependency_jobs_status_check": {
+          "name": "valo_source_dependency_jobs_status_check",
+          "value": "\"valo_source_dependency_jobs\".\"status\" IN ('pending', 'complete')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_source_impacts": {
@@ -3881,7 +4032,20 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_source_impacts_action_check": {
+          "name": "valo_source_impacts_action_check",
+          "value": "\"valo_source_impacts\".\"action\" IN ('hold', 'withdraw')"
+        },
+        "valo_source_impacts_phase_check": {
+          "name": "valo_source_impacts_phase_check",
+          "value": "\"valo_source_impacts\".\"phase\" IN ('derived', 'tasks', 'assessments', 'documents', 'purchases', 'complete')"
+        },
+        "valo_source_impacts_target_kind_check": {
+          "name": "valo_source_impacts_target_kind_check",
+          "value": "\"valo_source_impacts\".\"target_kind\" IN ('content', 'rule')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_source_release_bindings": {
@@ -3979,7 +4143,12 @@
       },
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_source_release_bindings_target_kind_check": {
+          "name": "valo_source_release_bindings_target_kind_check",
+          "value": "\"valo_source_release_bindings\".\"target_kind\" IN ('content', 'rule')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_source_review_work": {
@@ -4058,7 +4227,12 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_source_review_work_status_check": {
+          "name": "valo_source_review_work_status_check",
+          "value": "\"valo_source_review_work\".\"status\" IN ('awaiting_authorized_review', 'superseded_by_eligible_version')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_source_watches": {
@@ -4141,7 +4315,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_source_watches_risk_check": {
+          "name": "valo_source_watches_risk_check",
+          "value": "\"valo_source_watches\".\"risk\" IN ('high', 'standard')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_editorial_runs": {
@@ -5526,7 +5705,16 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_content_versions_status_check": {
+          "name": "valo_content_versions_status_check",
+          "value": "\"valo_content_versions\".\"status\" IN ('candidate', 'held', 'published', 'withdrawn')"
+        },
+        "valo_content_versions_version_check": {
+          "name": "valo_content_versions_version_check",
+          "value": "\"valo_content_versions\".\"version\" > 0"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_publication_ai_attempts": {
@@ -5641,7 +5829,20 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_publication_ai_attempts_input_tokens_check": {
+          "name": "valo_publication_ai_attempts_input_tokens_check",
+          "value": "\"valo_publication_ai_attempts\".\"input_tokens\" >= 0"
+        },
+        "valo_publication_ai_attempts_output_tokens_check": {
+          "name": "valo_publication_ai_attempts_output_tokens_check",
+          "value": "\"valo_publication_ai_attempts\".\"output_tokens\" >= 0"
+        },
+        "valo_publication_ai_attempts_role_check": {
+          "name": "valo_publication_ai_attempts_role_check",
+          "value": "\"valo_publication_ai_attempts\".\"role\" IN ('draft', 'factual', 'challenge')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_publication_audit": {
@@ -6018,7 +6219,20 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_dispute_actions_attempts_check": {
+          "name": "valo_dispute_actions_attempts_check",
+          "value": "\"valo_dispute_actions\".\"attempts\" BETWEEN 0 AND 1"
+        },
+        "valo_dispute_actions_kind_check": {
+          "name": "valo_dispute_actions_kind_check",
+          "value": "\"valo_dispute_actions\".\"kind\" IN ('upload_receipt', 'submit_evidence', 'merchant_decision')"
+        },
+        "valo_dispute_actions_status_check": {
+          "name": "valo_dispute_actions_status_check",
+          "value": "\"valo_dispute_actions\".\"status\" IN ('prepared', 'dispatching', 'acknowledged', 'observed', 'unknown', 'cancelled')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_dispute_information": {
@@ -6366,7 +6580,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_entitlements_status_check": {
+          "name": "valo_entitlements_status_check",
+          "value": "\"valo_entitlements\".\"status\" IN ('active', 'suspended')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_orders": {
@@ -6587,7 +6806,20 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_orders_amount_kobo_check": {
+          "name": "valo_orders_amount_kobo_check",
+          "value": "\"valo_orders\".\"amount_kobo\" > 0"
+        },
+        "valo_orders_currency_check": {
+          "name": "valo_orders_currency_check",
+          "value": "\"valo_orders\".\"currency\" = 'NGN'"
+        },
+        "valo_orders_status_check": {
+          "name": "valo_orders_status_check",
+          "value": "\"valo_orders\".\"status\" IN ('created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_payment_disputes": {
@@ -6714,7 +6946,12 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_payment_disputes_amount_kobo_check": {
+          "name": "valo_payment_disputes_amount_kobo_check",
+          "value": "\"valo_payment_disputes\".\"amount_kobo\" >= 0"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_payment_events": {
@@ -6815,7 +7052,16 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_payment_events_attempts_check": {
+          "name": "valo_payment_events_attempts_check",
+          "value": "\"valo_payment_events\".\"attempts\" BETWEEN 0 AND 5"
+        },
+        "valo_payment_events_status_check": {
+          "name": "valo_payment_events_status_check",
+          "value": "\"valo_payment_events\".\"status\" IN ('pending', 'processed', 'needs_review', 'ignored')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_payment_reconciliations": {
@@ -6930,7 +7176,16 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_payment_reconciliations_attempts_check": {
+          "name": "valo_payment_reconciliations_attempts_check",
+          "value": "\"valo_payment_reconciliations\".\"attempts\" BETWEEN 0 AND 3"
+        },
+        "valo_payment_reconciliations_status_check": {
+          "name": "valo_payment_reconciliations_status_check",
+          "value": "\"valo_payment_reconciliations\".\"status\" IN ('pending', 'matched', 'needs_review')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_prices": {
@@ -7031,7 +7286,24 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_prices_amount_kobo_check": {
+          "name": "valo_prices_amount_kobo_check",
+          "value": "\"valo_prices\".\"amount_kobo\" > 0"
+        },
+        "valo_prices_approval_reference_check": {
+          "name": "valo_prices_approval_reference_check",
+          "value": "length(\"valo_prices\".\"approval_reference\") > 0"
+        },
+        "valo_prices_check": {
+          "name": "valo_prices_check",
+          "value": "\"valo_prices\".\"effective_to\" IS NULL OR \"valo_prices\".\"effective_to\" > \"valo_prices\".\"effective_from\""
+        },
+        "valo_prices_currency_check": {
+          "name": "valo_prices_currency_check",
+          "value": "\"valo_prices\".\"currency\" = 'NGN'"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_purchase_outbox": {
@@ -7387,7 +7659,24 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_refund_requests_amount_kobo_check": {
+          "name": "valo_refund_requests_amount_kobo_check",
+          "value": "\"valo_refund_requests\".\"amount_kobo\" > 0"
+        },
+        "valo_refund_requests_attempts_check": {
+          "name": "valo_refund_requests_attempts_check",
+          "value": "\"valo_refund_requests\".\"attempts\" BETWEEN 0 AND 5"
+        },
+        "valo_refund_requests_status_check": {
+          "name": "valo_refund_requests_status_check",
+          "value": "\"valo_refund_requests\".\"status\" IN ('requested', 'authorised', 'provider_pending', 'approved', 'rejected', 'submitting', 'unknown', 'pending', 'processing', 'needs_attention', 'needs_review', 'failed', 'processed')"
+        },
+        "valo_refund_requests_version_check": {
+          "name": "valo_refund_requests_version_check",
+          "value": "\"valo_refund_requests\".\"version\" > 0"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_refund_transitions": {
@@ -7559,7 +7848,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_concern_messages_body_check": {
+          "name": "valo_concern_messages_body_check",
+          "value": "length(\"valo_concern_messages\".\"body\") BETWEEN 10 AND 2000"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_payment_concern_events": {
@@ -7652,7 +7946,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_payment_concern_events_actor_type_check": {
+          "name": "valo_payment_concern_events_actor_type_check",
+          "value": "\"valo_payment_concern_events\".\"actor_type\" IN ('customer', 'finance', 'worker')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_payment_concerns": {
@@ -7769,7 +8068,16 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_payment_concerns_input_hash_check": {
+          "name": "valo_payment_concerns_input_hash_check",
+          "value": "length(\"valo_payment_concerns\".\"input_hash\") = 64"
+        },
+        "valo_payment_concerns_status_check": {
+          "name": "valo_payment_concerns_status_check",
+          "value": "\"valo_payment_concerns\".\"status\" IN ('open', 'needs_information', 'responded', 'closed')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_workspace_export_attempts": {
@@ -7928,7 +8236,20 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_workspace_export_attempts_cleanup_attempts_check": {
+          "name": "valo_workspace_export_attempts_cleanup_attempts_check",
+          "value": "\"valo_workspace_export_attempts\".\"cleanup_attempts\" >= 0"
+        },
+        "valo_workspace_export_attempts_cleanup_error_code_check": {
+          "name": "valo_workspace_export_attempts_cleanup_error_code_check",
+          "value": "\"valo_workspace_export_attempts\".\"cleanup_error_code\" IN ('INVALID_PRIVATE_KEY', 'PRIVACY_HOLD', 'PRIVACY_REPLAY_OWNED', 'STORAGE_DELETE_FAILED')"
+        },
+        "valo_workspace_export_attempts_status_check": {
+          "name": "valo_workspace_export_attempts_status_check",
+          "value": "\"valo_workspace_export_attempts\".\"status\" IN ('reserved', 'uploading', 'ready', 'cleanup')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_workspace_exports": {
@@ -8166,7 +8487,36 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_workspace_exports_attempts_check": {
+          "name": "valo_workspace_exports_attempts_check",
+          "value": "\"valo_workspace_exports\".\"attempts\" BETWEEN 0 AND 5"
+        },
+        "valo_workspace_exports_bytes_prepared_check": {
+          "name": "valo_workspace_exports_bytes_prepared_check",
+          "value": "\"valo_workspace_exports\".\"bytes_prepared\" >= 0"
+        },
+        "valo_workspace_exports_check": {
+          "name": "valo_workspace_exports_check",
+          "value": "\"valo_workspace_exports\".\"status\" <> 'ready' OR (\"valo_workspace_exports\".\"checksum\" IS NOT NULL AND \"valo_workspace_exports\".\"size\" IS NOT NULL AND \"valo_workspace_exports\".\"current_attempt_id\" IS NOT NULL AND \"valo_workspace_exports\".\"counts\" IS NOT NULL)"
+        },
+        "valo_workspace_exports_rows_processed_check": {
+          "name": "valo_workspace_exports_rows_processed_check",
+          "value": "\"valo_workspace_exports\".\"rows_processed\" >= 0"
+        },
+        "valo_workspace_exports_size_check": {
+          "name": "valo_workspace_exports_size_check",
+          "value": "\"valo_workspace_exports\".\"size\" >= 0"
+        },
+        "valo_workspace_exports_status_check": {
+          "name": "valo_workspace_exports_status_check",
+          "value": "\"valo_workspace_exports\".\"status\" IN ('queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired')"
+        },
+        "valo_workspace_exports_version_check": {
+          "name": "valo_workspace_exports_version_check",
+          "value": "\"valo_workspace_exports\".\"version\" > 0"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.valo_staff_role_changes": {
@@ -8328,7 +8678,20 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "valo_staff_role_changes_action_check": {
+          "name": "valo_staff_role_changes_action_check",
+          "value": "\"valo_staff_role_changes\".\"action\" IN ('grant', 'revoke')"
+        },
+        "valo_staff_role_changes_input_hash_check": {
+          "name": "valo_staff_role_changes_input_hash_check",
+          "value": "length(\"valo_staff_role_changes\".\"input_hash\") = 64"
+        },
+        "valo_staff_role_changes_reason_check": {
+          "name": "valo_staff_role_changes_reason_check",
+          "value": "length(\"valo_staff_role_changes\".\"reason\") BETWEEN 20 AND 1000"
+        }
+      },
       "isRLSEnabled": false
     }
   },

@@ -17,12 +17,12 @@ development database yet.
 - Names longer than 63 bytes are written in full, as Drizzle generates them.
   PostgreSQL keeps the first 63 bytes and prints a notice for each.
 
-The same change makes the Drizzle schema describe keys and indexes the database
-already had: the bindings that tie dispute information, dispute actions and
-payment-concern messages to one dispute or concern of the same order, nine
-indexes, and unique constraints the schema had described as unique indexes. The
-schema no longer declares four payment-concern foreign keys that no migration
-created. None of this changes the database.
+The same change makes the Drizzle schema describe keys, checks and indexes the
+database already had: the bindings that tie dispute information, dispute actions
+and payment-concern messages to one dispute or concern of the same order, nine
+indexes, 83 check constraints, and unique constraints the schema had described
+as unique indexes. The schema no longer declares four payment-concern foreign
+keys that no migration created. None of this changes the database.
 
 `0035_saved_templates` and `0037_source_correction_controls` now name their keys
 as the snapshot does. Neither had been applied to the development database, and

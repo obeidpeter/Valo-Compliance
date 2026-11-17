@@ -10,6 +10,7 @@ import {
   uniqueIndex,
   unique,
   foreignKey,
+  check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -53,6 +54,19 @@ export const valoWorkspaceExports = pgTable(
       .where(sql`${t.status} in ('queued', 'preparing', 'interrupted')`),
     index("valo_workspace_export_expiry").on(t.expiresAt),
     index("valo_workspace_export_dispatch").on(t.status, t.updatedAt),
+    check("valo_workspace_exports_attempts_check", sql`${t.attempts} BETWEEN 0 AND 5`),
+    check("valo_workspace_exports_bytes_prepared_check", sql`${t.bytesPrepared} >= 0`),
+    check(
+      "valo_workspace_exports_check",
+      sql`${t.status} <> 'ready' OR (${t.checksum} IS NOT NULL AND ${t.size} IS NOT NULL AND ${t.currentAttemptId} IS NOT NULL AND ${t.counts} IS NOT NULL)`,
+    ),
+    check("valo_workspace_exports_rows_processed_check", sql`${t.rowsProcessed} >= 0`),
+    check("valo_workspace_exports_size_check", sql`${t.size} >= 0`),
+    check(
+      "valo_workspace_exports_status_check",
+      sql`${t.status} IN ('queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired')`,
+    ),
+    check("valo_workspace_exports_version_check", sql`${t.version} > 0`),
   ],
 );
 export const valoWorkspaceExportAttempts = pgTable(
@@ -81,6 +95,15 @@ export const valoWorkspaceExportAttempts = pgTable(
     index("valo_workspace_cleanup_due").on(t.nextCleanupAt, t.id),
     index("valo_workspace_export_cleanup").on(t.status, t.createdAt),
     index("valo_workspace_export_cleanup_round_robin").on(t.cleanupCheckedAt),
+    check("valo_workspace_export_attempts_cleanup_attempts_check", sql`${t.cleanupAttempts} >= 0`),
+    check(
+      "valo_workspace_export_attempts_cleanup_error_code_check",
+      sql`${t.cleanupErrorCode} IN ('INVALID_PRIVATE_KEY', 'PRIVACY_HOLD', 'PRIVACY_REPLAY_OWNED', 'STORAGE_DELETE_FAILED')`,
+    ),
+    check(
+      "valo_workspace_export_attempts_status_check",
+      sql`${t.status} IN ('reserved', 'uploading', 'ready', 'cleanup')`,
+    ),
   ],
 );
 export const insertWorkspaceExportSchema = createInsertSchema(valoWorkspaceExports);

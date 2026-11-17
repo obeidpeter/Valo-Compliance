@@ -1,4 +1,15 @@
-import { pgTable, uuid, text, integer, timestamp, boolean, unique, foreignKey } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  integer,
+  timestamp,
+  boolean,
+  unique,
+  foreignKey,
+  check,
+} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { valoOrders } from "./valo-commerce";
 const time = (name: string) => timestamp(name, { withTimezone: true });
 export const valoPaymentConcerns = pgTable(
@@ -26,6 +37,11 @@ export const valoPaymentConcerns = pgTable(
       columns: [t.workspaceId, t.orderId],
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
+    check("valo_payment_concerns_input_hash_check", sql`length(${t.inputHash}) = 64`),
+    check(
+      "valo_payment_concerns_status_check",
+      sql`${t.status} IN ('open', 'needs_information', 'responded', 'closed')`,
+    ),
   ],
 );
 
@@ -49,6 +65,10 @@ export const valoPaymentConcernEvents = pgTable(
       columns: [t.workspaceId, t.orderId, t.concernId],
       foreignColumns: [valoPaymentConcerns.workspaceId, valoPaymentConcerns.orderId, valoPaymentConcerns.id],
     }),
+    check(
+      "valo_payment_concern_events_actor_type_check",
+      sql`${t.actorType} IN ('customer', 'finance', 'worker')`,
+    ),
   ],
 );
 export const valoConcernMessages = pgTable(
@@ -69,5 +89,6 @@ export const valoConcernMessages = pgTable(
       columns: [t.workspaceId, t.orderId, t.concernId],
       foreignColumns: [valoPaymentConcerns.workspaceId, valoPaymentConcerns.orderId, valoPaymentConcerns.id],
     }),
+    check("valo_concern_messages_body_check", sql`length(${t.body}) BETWEEN 10 AND 2000`),
   ],
 );
