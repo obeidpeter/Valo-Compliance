@@ -227,8 +227,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_saved_templates\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_saved_templates\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_saved_templates\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_saved_templates\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -787,8 +787,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_privacy_cases\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_privacy_cases\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_privacy_cases\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_privacy_cases\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -903,8 +903,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_privacy_erasure_objects\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_privacy_erasure_objects\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_privacy_erasure_objects\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_privacy_erasure_objects\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -1048,8 +1048,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_privacy_events\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_privacy_events\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_privacy_events\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_privacy_events\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -1172,8 +1172,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_privacy_messages\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_privacy_messages\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_privacy_messages\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_privacy_messages\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -1341,8 +1341,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_privacy_tombstones\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_privacy_tombstones\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_privacy_tombstones\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_privacy_tombstones\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -1416,8 +1416,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_workspaces\".\"id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_workspaces\".\"id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_workspaces\".\"id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_workspaces\".\"id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -1508,8 +1508,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_memberships\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_memberships\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_memberships\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_memberships\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -1638,8 +1638,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_profile_versions\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_profile_versions\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_profile_versions\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_profile_versions\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -1765,8 +1765,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_documents\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_documents\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_documents\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_documents\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -1957,8 +1957,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_document_revisions\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_document_revisions\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_document_revisions\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_document_revisions\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -2060,8 +2060,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_actions\".\"case_id\" and c.workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid)",
-          "withCheck": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_actions\".\"case_id\" and c.workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid)"
+          "using": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_actions\".\"case_id\" and c.workspace_id = (select valo_scope_workspace()))",
+          "withCheck": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_actions\".\"case_id\" and c.workspace_id = (select valo_scope_workspace()))"
         }
       },
       "checkConstraints": {},
@@ -2240,8 +2240,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_support_cases\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_support_cases\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_support_cases\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_support_cases\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -2386,8 +2386,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_escalations\".\"case_id\" and c.workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid)",
-          "withCheck": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_escalations\".\"case_id\" and c.workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid)"
+          "using": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_escalations\".\"case_id\" and c.workspace_id = (select valo_scope_workspace()))",
+          "withCheck": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_escalations\".\"case_id\" and c.workspace_id = (select valo_scope_workspace()))"
         }
       },
       "checkConstraints": {
@@ -2472,8 +2472,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_events\".\"case_id\" and c.workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid)",
-          "withCheck": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_events\".\"case_id\" and c.workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid)"
+          "using": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_events\".\"case_id\" and c.workspace_id = (select valo_scope_workspace()))",
+          "withCheck": "exists (select 1 from valo_support_cases c where c.id = \"valo_support_events\".\"case_id\" and c.workspace_id = (select valo_scope_workspace()))"
         }
       },
       "checkConstraints": {},
@@ -2594,8 +2594,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_support_messages\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_support_messages\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_support_messages\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_support_messages\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -2723,8 +2723,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_support_tickets\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_support_tickets\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_support_tickets\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_support_tickets\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -2804,8 +2804,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_events\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_events\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_events\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_events\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -3103,8 +3103,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_export_jobs\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_export_jobs\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_export_jobs\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_export_jobs\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -3221,8 +3221,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_export_objects\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_export_objects\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_export_objects\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_export_objects\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -3316,8 +3316,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_export_requests\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_export_requests\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_export_requests\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_export_requests\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -3427,8 +3427,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_file_assets\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_file_assets\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_file_assets\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_file_assets\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -3713,8 +3713,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_correction_notices\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_correction_notices\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_correction_notices\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_correction_notices\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -4943,8 +4943,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_assessments\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_assessments\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_assessments\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_assessments\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -5141,8 +5141,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_tasks\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_tasks\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_tasks\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_tasks\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -5223,8 +5223,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_reminder_preferences\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_reminder_preferences\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_reminder_preferences\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_reminder_preferences\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -5459,8 +5459,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_reminder_outbox\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_reminder_outbox\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_reminder_outbox\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_reminder_outbox\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -5808,8 +5808,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_ai_drafts\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_ai_drafts\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_ai_drafts\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_ai_drafts\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -6534,8 +6534,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_dispute_actions\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_dispute_actions\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_dispute_actions\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_dispute_actions\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -6691,8 +6691,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_dispute_information\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_dispute_information\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_dispute_information\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_dispute_information\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -6787,8 +6787,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_dispute_transitions\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_dispute_transitions\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_dispute_transitions\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_dispute_transitions\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -6928,8 +6928,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_entitlements\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_entitlements\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_entitlements\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_entitlements\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -7165,8 +7165,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_orders\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_orders\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_orders\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_orders\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -7316,8 +7316,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_payment_disputes\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_payment_disputes\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_payment_disputes\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_payment_disputes\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -7433,8 +7433,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_payment_events\".\"reference\" in (select reference from valo_orders where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_transaction_id from valo_orders where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select reference from valo_refund_requests where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_id from valo_refund_requests where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_id from valo_payment_disputes where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid)",
-          "withCheck": "\"valo_payment_events\".\"reference\" in (select reference from valo_orders where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_transaction_id from valo_orders where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select reference from valo_refund_requests where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_id from valo_refund_requests where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid union select provider_id from valo_payment_disputes where workspace_id = nullif(current_setting('valo.workspace_id', true), '')::uuid)"
+          "using": "\"valo_payment_events\".\"reference\" in (select reference from valo_orders where workspace_id = (select valo_scope_workspace()) union select provider_transaction_id from valo_orders where workspace_id = (select valo_scope_workspace()) union select reference from valo_refund_requests where workspace_id = (select valo_scope_workspace()) union select provider_id from valo_refund_requests where workspace_id = (select valo_scope_workspace()) union select provider_id from valo_payment_disputes where workspace_id = (select valo_scope_workspace()))",
+          "withCheck": "\"valo_payment_events\".\"reference\" in (select reference from valo_orders where workspace_id = (select valo_scope_workspace()) union select provider_transaction_id from valo_orders where workspace_id = (select valo_scope_workspace()) union select reference from valo_refund_requests where workspace_id = (select valo_scope_workspace()) union select provider_id from valo_refund_requests where workspace_id = (select valo_scope_workspace()) union select provider_id from valo_payment_disputes where workspace_id = (select valo_scope_workspace()))"
         }
       },
       "checkConstraints": {
@@ -7568,8 +7568,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_payment_reconciliations\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_payment_reconciliations\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_payment_reconciliations\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_payment_reconciliations\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -7809,8 +7809,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_purchase_outbox\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_purchase_outbox\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_purchase_outbox\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_purchase_outbox\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -8073,8 +8073,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_refund_requests\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_refund_requests\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_refund_requests\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_refund_requests\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -8192,8 +8192,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_refund_transitions\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_refund_transitions\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_refund_transitions\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_refund_transitions\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {},
@@ -8284,8 +8284,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_concern_messages\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_concern_messages\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_concern_messages\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_concern_messages\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -8393,8 +8393,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_payment_concern_events\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_payment_concern_events\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_payment_concern_events\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_payment_concern_events\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -8526,8 +8526,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_payment_concerns\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_payment_concerns\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_payment_concerns\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_payment_concerns\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -8705,8 +8705,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_workspace_export_attempts\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_workspace_export_attempts\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_workspace_export_attempts\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_workspace_export_attempts\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -8967,8 +8967,8 @@
           "to": [
             "valo_workspace_scope"
           ],
-          "using": "\"valo_workspace_exports\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid",
-          "withCheck": "\"valo_workspace_exports\".\"workspace_id\" = nullif(current_setting('valo.workspace_id', true), '')::uuid"
+          "using": "\"valo_workspace_exports\".\"workspace_id\" = (select valo_scope_workspace())",
+          "withCheck": "\"valo_workspace_exports\".\"workspace_id\" = (select valo_scope_workspace())"
         }
       },
       "checkConstraints": {
@@ -9174,6 +9174,59 @@
         "valo_staff_role_changes_reason_check": {
           "name": "valo_staff_role_changes_reason_check",
           "value": "length(\"valo_staff_role_changes\".\"reason\") BETWEEN 20 AND 1000"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.valo_scope_keys": {
+      "name": "valo_scope_keys",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "inner_pad": {
+          "name": "inner_pad",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "outer_pad": {
+          "name": "outer_pad",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "valo_scope_keys_pads_check": {
+          "name": "valo_scope_keys_pads_check",
+          "value": "\"valo_scope_keys\".\"inner_pad\" ~ '^[0-9a-f]{128}$' AND \"valo_scope_keys\".\"outer_pad\" ~ '^[0-9a-f]{128}$'"
+        },
+        "valo_scope_keys_expiry_check": {
+          "name": "valo_scope_keys_expiry_check",
+          "value": "\"valo_scope_keys\".\"expires_at\" > \"valo_scope_keys\".\"created_at\""
         }
       },
       "isRLSEnabled": false

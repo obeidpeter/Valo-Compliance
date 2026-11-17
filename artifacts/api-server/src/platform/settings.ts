@@ -301,6 +301,18 @@ export const OTHER_PACKAGE_SETTINGS: Record<string, SettingDefinition> = {
     description: "Clerk proxy URL for the web app.",
   },
   BASE_PATH: { group: "Runtime", description: "Path prefix the web app is served under.", example: "/" },
+  VALO_CUSTOMER_DATABASE_URL: {
+    group: "Database",
+    description:
+      "The same database, logged in as valo_workspace_login, for customer requests (read by lib/db; lib/db/scripts/workspace-login.mjs prints it). Direct or through a session pooler, not a transaction pooler. Customer requests fail while it is unset.",
+    secret: true,
+  },
+  VALO_WORKSPACE_LOGIN_PASSWORD: {
+    group: "Database",
+    description:
+      "Password lib/db/scripts/workspace-login.mjs gives valo_workspace_login when an operator enables it; at least 24 printable ASCII characters. The application never reads it.",
+    secret: true,
+  },
 };
 
 export function renderEnvExample(): string {

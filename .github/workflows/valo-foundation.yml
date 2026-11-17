@@ -288,6 +288,14 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Apply tracked migrations to empty synthetic database
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
+      - name: Let customer requests connect as the workspace login, and check nothing widens it
+        env:
+          # Ephemeral synthetic CI service only; not a production secret.
+          VALO_WORKSPACE_LOGIN_PASSWORD: synthetic_ci_only_workspace_login
+        run: |
+          url=$(node lib/db/scripts/workspace-login.mjs --print-url)
+          echo "VALO_CUSTOMER_DATABASE_URL=$url" >> "$GITHUB_ENV"
+          node lib/db/scripts/workspace-row-security.mjs
       - name: Record pooled connections taken inside transactions in every later step
         run: |
           echo "NODE_OPTIONS=--import $PWD/artifacts/api-server/src/test-support/nested-connection-preload.mjs" >> "$GITHUB_ENV"

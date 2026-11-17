@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:net";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import assert from "node:assert/strict";
 const exec = promisify(execFile),
   root = fileURLToPath(new URL("../../../", import.meta.url));
@@ -144,6 +144,16 @@ try {
     "--config",
     "./drizzle.config.ts",
   ]);
+  // Customer requests connect as the workspace login, as in database CI. The password is
+  // random, used once and never logged.
+  const loginPassword = randomBytes(18).toString("base64url"),
+    customerUrl = new URL(env.DATABASE_URL);
+  env.VALO_WORKSPACE_LOGIN_PASSWORD = loginPassword;
+  await command("workspace-login", "node", ["lib/db/scripts/workspace-login.mjs"]);
+  delete env.VALO_WORKSPACE_LOGIN_PASSWORD;
+  customerUrl.username = "valo_workspace_login";
+  customerUrl.password = loginPassword;
+  env.VALO_CUSTOMER_DATABASE_URL = customerUrl.toString();
   // Match ordinary database CI: the reviewed queue owns a separate schema
   // migration path. Drizzle alone does not install its job tables/functions.
   env.VALO_DEV_QUEUE_MIGRATION = "reviewed-synthetic-development";

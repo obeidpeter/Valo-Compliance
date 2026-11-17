@@ -4,9 +4,11 @@ import { randomUUID } from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 
 /**
- * Customer requests act as the workspace's scoped database role (runInWorkspaceScope), and
- * row-level security limits that role to the workspace's rows. These checks run queries with
- * no workspace filter at all, so only the database can be keeping workspaces apart.
+ * Customer requests connect as the workspace login and act as the scoped database role with a
+ * credential for their workspace (runInWorkspaceScope), and row-level security limits that role
+ * to the workspace's rows. These checks run queries with no workspace filter at all, so only
+ * the database can be keeping workspaces apart, and run the SQL an attacker on a customer
+ * connection could, so only the credential can be naming the workspace.
  */
 test(
   "row-level security limits customer requests to their own workspace",
@@ -98,10 +100,10 @@ test(
             ids((await client.query("select id from valo_documents")).rows),
             mine(a!.workspaceId),
           );
-          assert.equal(
-            (await client.query("select current_user as role")).rows[0].role,
-            "valo_workspace_scope",
-          );
+          assert.deepEqual((await client.query("select current_user, session_user")).rows[0], {
+            current_user: "valo_workspace_scope",
+            session_user: "valo_workspace_login",
+          });
         } finally {
           client.release();
         }
@@ -332,16 +334,19 @@ test(
           client.release();
           return pid;
         });
-        const after = (await single.query("select pg_backend_pid() as pid, current_user as role")).rows[0];
-        assert.notEqual(after.pid, before, "the leaked transaction's connection was destroyed");
-        assert.notEqual(after.role, "valo_workspace_scope");
+        const after = await runInWorkspaceScope(
+          a!.workspaceId,
+          async () => (await single.query("select pg_backend_pid() as pid")).rows[0].pid,
+        );
+        assert.notEqual(after, before, "the leaked transaction's connection was destroyed");
+        assert.equal(single.scopedTotalCount, 1);
       } finally {
         await single.end();
       }
     });
 
     await t.test(
-      "a database without the scoped role refuses scoped work and keeps no connection",
+      "customer requests refuse any login but the workspace login and keep no connection",
       async () => {
         const outsider = `synthetic_rls_outsider_${tag.replaceAll("-", "").slice(0, 12)}`,
           password = randomUUID();
@@ -349,19 +354,176 @@ test(
         const url = new URL(process.env.DATABASE_URL!);
         url.username = outsider;
         url.password = password;
-        const outside = createPool({ connectionString: url.toString(), max: 1 });
         try {
-          await assert.rejects(
-            runInWorkspaceScope(a!.workspaceId, () => outside.query("select 1")),
-            { code: WORKSPACE_SCOPE_UNAVAILABLE_CODE },
-          );
-          assert.equal(outside.totalCount, 0, "the probed connection was destroyed, not leaked");
+          for (const [connectionString, cause] of [
+            [url.toString(), /permission denied to set role/],
+            // The application's own login could leave the scoped role for the application role.
+            [process.env.DATABASE_URL!, /NOT_THE_WORKSPACE_LOGIN/],
+            [undefined, undefined],
+          ] as const) {
+            const misconfigured = createPool({}, { connectionString, max: 1 });
+            try {
+              await assert.rejects(
+                runInWorkspaceScope(a!.workspaceId, () => misconfigured.query("select 1")),
+                (error: Error & { code?: string; cause?: Error }) =>
+                  error.code === WORKSPACE_SCOPE_UNAVAILABLE_CODE &&
+                  (!cause || cause.test(String(error.cause?.message))),
+              );
+              assert.equal(misconfigured.scopedTotalCount, 0, "the probed connection was destroyed");
+            } finally {
+              await misconfigured.end();
+            }
+          }
         } finally {
-          await outside.end();
           await pool.query(`DROP ROLE ${outsider}`);
         }
       },
     );
+
+    await t.test(
+      "SQL on a customer connection can neither leave the scope nor name another workspace",
+      async () => {
+        const {
+          rows: [application],
+        } = await pool.query("select current_user as role");
+        await runInWorkspaceScope(a!.workspaceId, async () => {
+          const client = await pool.connect();
+          const statement = async (text: string, values: unknown[] = []) => {
+            await client.query("SAVEPOINT probe");
+            try {
+              return await client.query(text, values);
+            } finally {
+              await client.query("ROLLBACK TO SAVEPOINT probe");
+            }
+          };
+          const seen = async () => ids((await statement("select id from valo_documents")).rows);
+          try {
+            await client.query("BEGIN");
+            const own = (await client.query("select current_setting('valo.workspace_credential') as c"))
+              .rows[0].c;
+            assert.deepEqual(await seen(), mine(a!.workspaceId));
+            // Resetting the role leaves the login, which holds nothing and cannot become the
+            // application role.
+            await client.query("RESET ROLE");
+            assert.equal(
+              (await client.query("select current_user as role")).rows[0].role,
+              "valo_workspace_login",
+            );
+            await assert.rejects(statement("select id from valo_documents"), /permission denied for table/);
+            await assert.rejects(
+              statement(`SET ROLE "${application.role}"`),
+              /permission denied to set role/,
+            );
+            await client.query("SET LOCAL ROLE valo_workspace_scope");
+            // Naming another workspace takes a credential only the application can sign.
+            const forged = `${b!.workspaceId}:${own.split(":")[1]}:${"0".repeat(64)}`;
+            await client.query("select set_config('valo.workspace_credential', $1, true)", [forged]);
+            assert.deepEqual(await seen(), [], "a forged credential names no workspace");
+            await client.query("select set_config('valo.workspace_credential', $1, true)", [b!.workspaceId]);
+            assert.deepEqual(await seen(), [], "a bare workspace id names no workspace");
+            await client.query("select set_config('valo.workspace_credential', $1, true)", [own]);
+            assert.deepEqual(await seen(), mine(a!.workspaceId));
+            await client.query("COMMIT");
+            // A genuine credential is refused in every transaction but its own.
+            await client.query("BEGIN");
+            await client.query("select set_config('valo.workspace_credential', $1, true)", [own]);
+            assert.deepEqual(await seen(), [], "a credential from an earlier transaction names no workspace");
+            await client.query("ROLLBACK");
+          } finally {
+            client.release();
+          }
+        });
+        // Another workspace's request cannot use A's credential either, even on A's connection.
+        const single = createPool({ max: 1 });
+        try {
+          const own = await runInWorkspaceScope(
+            a!.workspaceId,
+            async () =>
+              (await single.query("select current_setting('valo.workspace_credential') as c")).rows[0].c,
+          );
+          await runInWorkspaceScope(b!.workspaceId, async () => {
+            const client = await single.connect();
+            try {
+              await client.query("BEGIN");
+              await client.query("select set_config('valo.workspace_credential', $1, true)", [own]);
+              assert.deepEqual(
+                ids((await client.query("select id from valo_documents")).rows),
+                [],
+                "A's credential names no workspace in B's request",
+              );
+              await client.query("ROLLBACK");
+            } finally {
+              client.release();
+            }
+          });
+        } finally {
+          await single.end();
+        }
+      },
+    );
+
+    await t.test("each scoped transaction starts from the session's defaults", async () => {
+      await runInWorkspaceScope(a!.workspaceId, async () => {
+        const client = await pool.connect();
+        try {
+          // Session state that outlives a transaction: a temporary table that would be found
+          // before the real one, and session settings.
+          await client.query("create temp table valo_documents (id text)");
+          await client.query("insert into pg_temp.valo_documents values ('synthetic-planted')");
+          await client.query("set search_path = pg_temp, public");
+          await client.query("set statement_timeout = '1234ms'");
+          const seen = (await client.query("select id from valo_documents")).rows.map((row) => row.id);
+          assert.deepEqual(ids(seen.map((id: string) => ({ id }))), mine(a!.workspaceId));
+          assert.ok(
+            !seen.includes("synthetic-planted"),
+            "the temporary table does not stand in for the real one",
+          );
+          assert.deepEqual(
+            (
+              await client.query(
+                "select current_setting('search_path') as path, current_setting('statement_timeout') as timeout",
+              )
+            ).rows[0],
+            { path: "public, pg_temp", timeout: "0" },
+          );
+        } finally {
+          client.release();
+        }
+      });
+    });
+
+    await t.test("nothing a request leaves on its connection reaches the next request", async () => {
+      const single = createPool({ max: 1 });
+      try {
+        const before = await runInWorkspaceScope(a!.workspaceId, async () => {
+          const client = await single.connect();
+          try {
+            await client.query("create temp table synthetic_planted (id text)");
+            await client.query("prepare synthetic_planted as select 1");
+            await client.query("select pg_advisory_lock(4242)");
+            return (await client.query("select pg_backend_pid() as pid")).rows[0].pid;
+          } finally {
+            client.release();
+          }
+        });
+        const after = await runInWorkspaceScope(b!.workspaceId, async () => {
+          const client = await single.connect();
+          try {
+            return (
+              await client.query(`select pg_backend_pid() as pid,
+                (select count(*)::int from pg_class where relpersistence = 't') as temporary,
+                (select count(*)::int from pg_prepared_statements) as prepared,
+                (select count(*)::int from pg_locks where pid = pg_backend_pid() and locktype = 'advisory') as locks`)
+            ).rows[0];
+          } finally {
+            client.release();
+          }
+        });
+        assert.deepEqual(after, { pid: before, temporary: 0, prepared: 0, locks: 0 }, "reused after a reset");
+      } finally {
+        await single.end();
+      }
+    });
 
     await t.test("the identity middleware scopes the rest of each request", async () => {
       const app = express();

@@ -1,7 +1,16 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
-import { currentWorkspaceScope, scopeClient, verifyWorkspaceScope } from "./workspace-scope";
+import {
+  currentWorkspaceScope,
+  newScopeKey,
+  scopeClient,
+  scopeKeyPads,
+  verifyWorkspaceScope,
+  workspaceCredential,
+  workspaceScopeUnavailable,
+  type ScopeKey,
+} from "./workspace-scope";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
@@ -35,20 +44,36 @@ type ConnectCallback = (
   done: (release?: unknown) => void,
 ) => void;
 
+/** How long a process's credential key is accepted, and when it is replaced before that. */
+const SCOPE_KEY_VALIDITY = "7 days";
+const SCOPE_KEY_RENEW_MS = 24 * 60 * 60 * 1000;
+
 class ValoPool extends pg.Pool {
-  #scopeVerified = false;
+  #customerOptions: pg.PoolConfig;
+  #customer: pg.Pool | undefined;
+  #key: ScopeKey | undefined;
+  #registering: Promise<ScopeKey> | undefined;
+  #verified = new WeakSet<pg.PoolClient>();
+
+  constructor(options: pg.PoolConfig, customerOptions: pg.PoolConfig) {
+    super(options);
+    this.#customerOptions = customerOptions;
+  }
 
   // pg's own query() takes its connection through connect(callback), so both forms are
-  // covered. A connection taken inside runInWorkspaceScope is scoped until it is released.
+  // covered. A connection asked for inside runInWorkspaceScope comes from the workspace
+  // login's own pool and is scoped until it is released.
   override connect(): Promise<pg.PoolClient>;
   override connect(callback: ConnectCallback): void;
   override connect(callback?: ConnectCallback): Promise<pg.PoolClient> | void {
     // Read when the caller asks: a pool callback can run in another request's context.
     const workspaceId = currentWorkspaceScope();
-    const acquired = super.connect().catch((error: Error) => {
-      throw withTimeoutCode(error);
-    });
-    const ready = workspaceId === undefined ? acquired : acquired.then((c) => this.#scope(c, workspaceId));
+    const ready =
+      workspaceId === undefined
+        ? super.connect().catch((error: Error) => {
+            throw withTimeoutCode(error);
+          })
+        : this.#scoped(workspaceId);
     if (!callback) return ready;
     ready.then(
       (client) => callback(undefined, client, (release) => client.release(release as Error | boolean)),
@@ -56,26 +81,85 @@ class ValoPool extends pg.Pool {
     );
   }
 
-  async #scope(client: pg.PoolClient, workspaceId: string) {
-    if (!this.#scopeVerified) {
-      await verifyWorkspaceScope(client);
-      this.#scopeVerified = true;
+  /** Connections of the workspace login, open now, for tests and diagnostics. */
+  get scopedTotalCount() {
+    return this.#customer?.totalCount ?? 0;
+  }
+
+  override async end(): Promise<void> {
+    await this.#customer?.end();
+    return super.end();
+  }
+
+  async #scoped(workspaceId: string) {
+    if (!this.#customerOptions.connectionString)
+      throw workspaceScopeUnavailable("VALO_CUSTOMER_DATABASE_URL is not set");
+    if (!this.#customer) {
+      this.#customer = new pg.Pool(this.#customerOptions);
+      // An idle customer connection's failure is reported like an application connection's.
+      this.#customer.on("error", (error, client) => this.emit("error", error, client));
     }
-    scopeClient(client, workspaceId);
+    const key = await this.#scopeKey();
+    const client = await this.#customer.connect().catch((error: Error) => {
+      throw withTimeoutCode(error);
+    });
+    if (!this.#verified.has(client)) {
+      await verifyWorkspaceScope(client, key);
+      this.#verified.add(client);
+    }
+    scopeClient(client, ({ pid, started }) => workspaceCredential(key, workspaceId, pid, started));
     return client;
+  }
+
+  /** This process's credential key, registered through an application connection. */
+  async #scopeKey(): Promise<ScopeKey> {
+    const current = this.#key;
+    if (current && current.expiresAt - Date.now() > SCOPE_KEY_RENEW_MS) return current;
+    this.#registering ??= this.#registerScopeKey()
+      .then((key) => (this.#key = key))
+      .finally(() => (this.#registering = undefined));
+    try {
+      return await this.#registering;
+    } catch (cause) {
+      // Until it expires, the current key still works while its replacement cannot be stored.
+      if (current && current.expiresAt - Date.now() > 60_000) return current;
+      throw workspaceScopeUnavailable("this process's credential key could not be registered", cause);
+    }
+  }
+
+  async #registerScopeKey(): Promise<ScopeKey> {
+    const key = newScopeKey(),
+      pads = scopeKeyPads(key.key);
+    const client = await super.connect();
+    try {
+      const { rows } = await client.query<{ expires_at: Date }>(
+        `INSERT INTO valo_scope_keys(id,inner_pad,outer_pad,expires_at)
+        VALUES($1,$2,$3,now() + interval '${SCOPE_KEY_VALIDITY}') RETURNING expires_at`,
+        [key.id, pads.inner, pads.outer],
+      );
+      // Keys of processes that stopped expire; remove them a day later.
+      await client.query("DELETE FROM valo_scope_keys WHERE expires_at < now() - interval '1 day'");
+      return { ...key, expiresAt: new Date(rows[0]!.expires_at).getTime() };
+    } finally {
+      client.release();
+    }
   }
 }
 
-/** A pool configured like the shared one; tests may override options. */
-export function createPool(options: pg.PoolConfig = {}) {
+/** A pool configured like the shared one; tests may override options for either login. */
+export function createPool(options: pg.PoolConfig = {}, customerOptions: pg.PoolConfig = {}) {
   // Signed privacy projections include PostgreSQL JSON timestamps. Pin every app
   // session to UTC so restores on hosts with another timezone verify identically.
-  return new ValoPool({
-    connectionString: process.env.DATABASE_URL,
+  const shared: pg.PoolConfig = {
     options: "-c timezone=UTC",
     connectionTimeoutMillis: POOL_ACQUIRE_TIMEOUT_MS,
     ...options,
-  });
+  };
+  return new ValoPool(
+    { connectionString: process.env.DATABASE_URL, ...shared },
+    // Customer requests connect as the workspace login, which can only become the scoped role.
+    { ...shared, connectionString: process.env.VALO_CUSTOMER_DATABASE_URL, ...customerOptions },
+  );
 }
 
 export const pool = createPool();
@@ -84,6 +168,7 @@ export { schema };
 export {
   runInWorkspaceScope,
   currentWorkspaceScope,
+  WORKSPACE_LOGIN_ROLE,
   WORKSPACE_SCOPE_ROLE,
   WORKSPACE_SCOPE_UNAVAILABLE_CODE,
 } from "./workspace-scope";

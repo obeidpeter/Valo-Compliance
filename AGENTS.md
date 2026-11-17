@@ -84,10 +84,15 @@ Rules that apply now:
   transaction; the reviewed exceptions are listed in
   `artifacts/api-server/src/test-support/nested-connection-report.mjs`.
 - Customer requests run in their workspace's database scope: the identity
-  middleware calls `runInWorkspaceScope`, and row-level security limits every
-  query to the workspace's rows. Keep the workspace filters too. Never call
-  `runInWorkspaceScope` with a workspace not resolved from a membership, and
-  never reset the role or `valo.workspace_id` in customer code. A customer
+  middleware calls `runInWorkspaceScope`, their connections log in as
+  `valo_workspace_login` (`VALO_CUSTOMER_DATABASE_URL`), each transaction carries
+  a credential the application signs for that transaction alone, and row-level
+  security limits every query to the workspace's rows. Keep the workspace filters
+  too. Never call `runInWorkspaceScope` with a workspace not resolved from a
+  membership, never give the login or the scoped role another privilege or
+  membership outside a reviewed migration, and in customer code never change the
+  role, `search_path` or `valo.workspace_credential`, or use session-level `SET`
+  (use `SET LOCAL`). A customer
   request cannot see other workspaces' rows, so a total it needs across
   workspaces (such as a shared limit) comes from a reviewed database function
   that returns only that total, like `valo_customer_ai_reservations`. The shared

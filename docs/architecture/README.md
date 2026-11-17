@@ -76,7 +76,11 @@ Every change must keep these true. Each has tests; none may be weakened.
    takes an identifier with another workspace's identifiers. Below the application,
    every customer request acts as `valo_workspace_scope`, and row-level security
    limits it to the workspace's rows even if a query forgets its filter. That role
-   holds only the table privileges customer requests use (decision 0008).
+   holds only the table privileges customer requests use. Customer connections log
+   in as `valo_workspace_login`, which holds nothing else, and name their workspace
+   with a credential the application signs for each transaction, so SQL on a
+   customer connection can neither act as the application role nor reach another
+   workspace (decision 0008).
 2. **Identity.** Private requests require an active Clerk session and a verified
    primary email. Payments, downloads, privacy and AI drafts check Clerk live on
    every request; listed everyday routes re-check at least once a minute
