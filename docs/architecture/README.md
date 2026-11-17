@@ -95,6 +95,11 @@ Every change must keep these true. Each has tests; none may be weakened.
    synthetic identities until a reviewed production procedure exists.
 9. **Development guards.** Development-only features refuse to run when
    `NODE_ENV` is not `development` or a Replit deployment marker is present.
+10. **One connection per transaction.** Code inside a transaction uses only that
+    transaction's connection, so concurrent requests cannot exhaust the pool while
+    each waits for a second one. The CI database job fails on any other pooled
+    connection taken inside a transaction, apart from the reviewed exceptions in
+    `nested-connection-report.mjs`.
 
 ## Target structure
 

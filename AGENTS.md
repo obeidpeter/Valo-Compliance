@@ -79,8 +79,10 @@ Rules that apply now:
 - Never hold a transaction, lock or pooled database connection while waiting on
   an AI model, payment provider or other external service. Check pauses and
   holds just before the call, and recheck them in the transaction that saves its
-  result. Inside a transaction, use only that transaction's connection;
-  `guardNestedConnections` in `src/test-support` catches violations in tests.
+  result. Inside a transaction, use only that transaction's connection. The CI
+  database job fails when any test takes a second pooled connection inside a
+  transaction; the reviewed exceptions are listed in
+  `artifacts/api-server/src/test-support/nested-connection-report.mjs`.
 
 ## 5. Checks
 
