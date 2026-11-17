@@ -266,6 +266,13 @@
       "file": "artifacts/valo/src/lib/discoverability.test.ts",
       "test": "the web app shows no testimonials, customer counts, ratings or regulator endorsements",
       "proves": "No sentence in the web app's source shows a testimonial, customer count, rating or regulator or government endorsement unless it denies one, and every page's footer says no regulator endorses Valo."
+    },
+    {
+      "requirement": "ADM-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "An order keeps the amount and licence text it was created with after its price row is later edited, and its receipt shows them; a checkout request that brings its own amount or currency is refused."
     }
   ]
 }
