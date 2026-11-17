@@ -161,6 +161,69 @@
       "file": "artifacts/api-server/src/lib/valo-catalogue-discovery.test.ts",
       "test": "recommendations use supplied activity/category and omit saved or absent releases",
       "proves": "Recommendations follow the workspace's activity and category, leave out templates already saved and templates that are not released, and are empty when nothing is released."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
+      "proves": "Support and content work are kept apart by role: content staff cannot use the support queue and support staff cannot act on content referrals; a content hold from a referral records a review-work item and claims no AI review."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-disputes-http.integration.test.ts",
+      "test": "actual dispute HTTP routers enforce managed finance authority, tenant binding and same-origin writes",
+      "proves": "Payment concerns and disputes are handled under the finance role: support staff, anonymous callers and stale, revoked or mismatched sessions are refused before anything is disclosed."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts",
+      "test": "actual HTTP privacy routes apply an independent privacy role and fresh MFA",
+      "proves": "Privacy requests are handled under their own privacy role with fresh MFA: a privacy-only identity can read and claim them and a finance-only identity cannot."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-customer-access.integration.test.ts",
+      "test": "real development access intake, privacy isolation and staff boundaries",
+      "proves": "Anyone can send a request to staff without signing in or paying; it is saved for staff and never dispatched anywhere else."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
+      "proves": "A changed source capture blocks the affected rule at once, then flags the affected tasks, cancels their pending reminders and sends correction notices only to affected workspaces, leaving past assessments unchanged."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.test.ts",
+      "test": "source safety adds freshness, binding and sticky-hold checks without manufacturing eligibility",
+      "proves": "Content is refused when it is held, its source changed or failed checking, its source check is more than a day old or its high-impact review is more than 30 days old."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-task-source-guard.integration.test.ts",
+      "test": "new source-linked tasks recheck current eligibility before any insert",
+      "proves": "New tasks and reminders for a withdrawn or expired rule are refused, and the assessment they came from is unchanged."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "A source withdrawal flags a historical task for review without changing what the customer completed."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-checker-rich.test.ts",
+      "test": "source-family implementation, publication, period and freshness gates fail closed",
+      "proves": "The checker leaves out a rule that is withdrawn or whose review has expired."
     }
   ]
 }
