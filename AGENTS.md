@@ -88,8 +88,11 @@ Rules that apply now:
   `valo_workspace_login` (`VALO_CUSTOMER_DATABASE_URL`), each transaction carries
   a credential the application signs for that transaction alone, and row-level
   security limits every query to the workspace's rows. Keep the workspace filters
-  too. Never call `runInWorkspaceScope` with a workspace not resolved from a
-  membership, never give the login or the scoped role another privilege or
+  too. Only the identity middleware and the reviewed jobs in `WORKSPACE_SCOPE_ENTRIES`
+  may call `runInWorkspaceScope`: the middleware with the workspace it resolved from
+  the membership, a background job for one workspace with the workspace of the stored
+  record it processes, reading that workspace's data in the scope and keeping its
+  bookkeeping outside. Never give the login or the scoped role another privilege or
   membership outside a reviewed migration, and in customer code never change the
   role, `search_path` or `valo.workspace_credential`, or use session-level `SET`
   (use `SET LOCAL`). A customer

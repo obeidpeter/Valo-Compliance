@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { db, valoProfileVersions, valoWorkspaces } from "@workspace/db";
+import { db, runInWorkspaceScope, valoProfileVersions, valoWorkspaces } from "@workspace/db";
 import { ActOnStaffPrivacyCaseBody } from "@workspace/api-zod";
 import { authorizeWorkspaceWrite } from "./valo-store";
 import { workspaceDataExport } from "./valo-customer-access";
@@ -63,11 +63,15 @@ async function preparePrivacyExport(
       return privacyDetail(tx, await readPrivacyCase(tx, id));
     });
   try {
-    const result = await workspaceDataExport(
-      workspaceActorFromRecord({
-        identityId: start.row.requesterIdentityId,
-        workspaceId: start.row.workspaceId,
-      }),
+    // The requester's workspace data is gathered in that workspace's database scope, so
+    // row-level security also keeps the result to its rows. The case itself stays with staff.
+    const result = await runInWorkspaceScope(start.row.workspaceId, () =>
+      workspaceDataExport(
+        workspaceActorFromRecord({
+          identityId: start.row.requesterIdentityId,
+          workspaceId: start.row.workspaceId,
+        }),
+      ),
     );
     return await db.transaction(async (tx) => {
       await requirePrivacyStaff(tx, actor);

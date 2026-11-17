@@ -186,11 +186,25 @@ export const isHttpSource = (path: string) =>
   path === "artifacts/api-server/src/app.ts";
 
 /**
+ * The only code that may enter a workspace's database scope (runInWorkspaceScope): the
+ * identity middleware, for the workspace it resolved from the membership, and background
+ * work for the workspace of the stored record it processes. A new caller needs review.
+ */
+export const WORKSPACE_SCOPE_ENTRIES = [
+  "artifacts/api-server/src/middlewares/valo-identity.ts",
+  "artifacts/api-server/src/lib/valo-exports.ts",
+  "artifacts/api-server/src/lib/valo-privacy-processing.ts",
+  "artifacts/api-server/src/lib/valo-reminder-worker.ts",
+  "artifacts/api-server/src/lib/valo-workspace-export-jobs.ts",
+];
+
+/**
  * workspace-actor: a workspace named by the browser must never become the workspace a
  * request acts in (see platform/workspace-context.ts). HTTP code may not create an
  * actor, cast to WorkspaceActor, or write a `workspaceId` in an object literal. No
  * code may copy an actor while changing its workspace or identity.
- * `workspaceActorFromMembership` belongs to resolveWorkspace alone.
+ * `workspaceActorFromMembership` belongs to resolveWorkspace alone, and only the files in
+ * WORKSPACE_SCOPE_ENTRIES may enter a workspace scope.
  */
 export function workspaceActorViolations(path: string, text: string): string[] {
   if (!/\.tsx?$/.test(path) || /\.test\.tsx?$/.test(path)) return [];
@@ -209,6 +223,8 @@ export function workspaceActorViolations(path: string, text: string): string[] {
         path !== "artifacts/api-server/src/platform/workspace-context.ts"
       )
         report(node, "only resolveWorkspace may issue an actor from a membership");
+      if (node.text === "runInWorkspaceScope" && !WORKSPACE_SCOPE_ENTRIES.includes(path))
+        report(node, "only the reviewed entries in WORKSPACE_SCOPE_ENTRIES may enter a workspace scope");
     }
     if (
       http &&

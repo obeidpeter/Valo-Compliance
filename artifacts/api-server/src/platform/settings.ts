@@ -304,7 +304,7 @@ export const OTHER_PACKAGE_SETTINGS: Record<string, SettingDefinition> = {
   VALO_CUSTOMER_DATABASE_URL: {
     group: "Database",
     description:
-      "The same database, logged in as valo_workspace_login, for customer requests (read by lib/db; lib/db/scripts/workspace-login.mjs prints it). Direct or through a session pooler, not a transaction pooler. Customer requests fail while it is unset.",
+      "The same database, logged in as valo_workspace_login, for customer requests and the worker's jobs for one workspace (read by lib/db; lib/db/scripts/workspace-login.mjs prints it). Direct or through a session pooler, not a transaction pooler. Both fail while it is unset.",
     secret: true,
   },
   VALO_WORKSPACE_LOGIN_PASSWORD: {

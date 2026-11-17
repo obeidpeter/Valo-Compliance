@@ -2,8 +2,9 @@
 
 Date: 2026-11-17. Status: accepted (owner instructions "add row-level security for
 workspace scoping", "narrow the scoped role's privileges", "move the inference
-ledger writes behind a function" and "make the scope a credential boundary"). The
-design choices below are the implementer's; review them in the pull request.
+ledger writes behind a function", "make the scope a credential boundary" and "run the
+worker's per-workspace jobs in the workspace scope"). The design choices below are the
+implementer's; review them in the pull request.
 
 ## Context
 
@@ -83,8 +84,19 @@ application would stop it.
     `valo_workspace_login` and that the database accepts this process's key.
     Otherwise it is destroyed and the request fails with
     `DB_WORKSPACE_SCOPE_UNAVAILABLE`.
+- Background work done for one workspace reads that workspace's data in its scope,
+  entered with the workspace of the stored record it processes. A document export
+  reads its document there, and the workspace data export and a staff member's privacy
+  export gather their data there, as the customer download does. Reminder delivery
+  runs entirely in the scope: every table it touches is one customer requests use. An
+  export's claim, lease, storage records and result stay with the application role,
+  because granting them to the scoped role would let SQL on a customer connection
+  forge file records.
+- Only the identity middleware and those jobs may enter a scope
+  (`WORKSPACE_SCOPE_ENTRIES`, enforced by the `workspace-actor` repository rule), and
+  work in one workspace's scope cannot enter another's.
 - The application role owns the tables and is not subject to row security. Staff
-  routes, background workers, operator commands and migrations keep working across
+  routes, other background work, operator commands and migrations keep working across
   workspaces as before. The scope is a second line behind the workspace filters,
   which stay.
 
@@ -167,3 +179,9 @@ application would stop it.
   connection is leaked.
 - Routes registered before the identity middleware, such as the privacy requester
   routes, are not scoped. They keep their own checks.
+- The worker enters scopes too, so it needs `VALO_CUSTOMER_DATABASE_URL` as the API
+  does. A job that starts reading another table, or writing in its scope, needs the
+  grant first; until then it fails with `permission denied`, and its tests show it.
+- Reminder delivery still waits for the email provider inside its transaction,
+  against the rule in `AGENTS.md`. Changing that changes how a reminder cancelled
+  during a send is recorded, so it is left for its own change.

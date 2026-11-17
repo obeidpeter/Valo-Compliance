@@ -7,6 +7,7 @@ import {
   importCycles,
   silentCatchReport,
   silentCatchViolations,
+  WORKSPACE_SCOPE_ENTRIES,
   workspaceActorReport,
   workspaceActorViolations,
 } from "./architecture-check";
@@ -86,6 +87,14 @@ test("only resolveWorkspace issues actors from memberships, and no code redirect
     1,
   );
   assert.equal(workspaceActorViolations(lib, "const copy = { ...res.locals.valoActor };").length, 0);
+});
+
+test("only the reviewed entries may enter a workspace scope", () => {
+  const scoped = "runInWorkspaceScope(job.workspaceId, () => read(job));";
+  assert.equal(workspaceActorViolations("artifacts/api-server/src/lib/valo-tasks.ts", scoped).length, 1);
+  assert.equal(workspaceActorViolations("artifacts/api-server/src/routes/valo.ts", scoped).length, 1);
+  for (const entry of WORKSPACE_SCOPE_ENTRIES)
+    assert.equal(workspaceActorViolations(entry, scoped).length, 0);
 });
 
 test("the repository has no silent catches and no new import cycles", () => {

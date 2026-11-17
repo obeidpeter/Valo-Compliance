@@ -2,6 +2,7 @@ import { and, eq, inArray, lte, lt, or, isNull, isNotNull, sql } from "drizzle-o
 import { randomUUID } from "node:crypto";
 import {
   db,
+  runInWorkspaceScope,
   valoWorkspaces,
   valoTasks,
   valoReminderOutbox,
@@ -75,12 +76,20 @@ async function eligibleReminder(tx: Tx, workspaceId: string, row: ValoReminderOu
   }
   return { reason, status, task };
 }
-export async function processReminder(
+/**
+ * Delivers one due reminder of `workspaceId`. It runs in that workspace's database scope: every
+ * table it reads or writes is one customer requests use, and row-level security keeps the
+ * message, its recipient and its bookkeeping to the workspace's own rows.
+ */
+export function processReminder(
   workspaceId: string,
   id: string,
   sender: ReminderSender | null = null,
   now = new Date(),
 ) {
+  return runInWorkspaceScope(workspaceId, () => deliverReminder(workspaceId, id, sender, now));
+}
+async function deliverReminder(workspaceId: string, id: string, sender: ReminderSender | null, now: Date) {
   const [workspace] = await db.select().from(valoWorkspaces).where(eq(valoWorkspaces.id, workspaceId));
   if (!workspace) throw new ValoProblem(404, "Workspace not found");
   const actor = workspaceActorFromRecord({ workspaceId, identityId: workspace.ownerIdentityId });

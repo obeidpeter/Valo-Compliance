@@ -160,13 +160,13 @@ carries `DB_POOL_ACQUIRE_TIMEOUT` when every pooled connection was busy, or
 pool timeouts mean connections are held too long: look for long transactions or
 a transaction that waits on a second connection.
 
-`DB_WORKSPACE_SCOPE_UNAVAILABLE` means customer requests cannot enter their
-workspace scope. Check, in order: the row security migration is applied;
+`DB_WORKSPACE_SCOPE_UNAVAILABLE` means customer requests, or the worker's jobs for one
+workspace, cannot enter a workspace scope. Check, in order: the row security migration is applied;
 `VALO_CUSTOMER_DATABASE_URL` is set, names the same database as `DATABASE_URL`, and
 logs in as `valo_workspace_login` with its current password; the login can log in
 (`lib/db/scripts/workspace-login.mjs` enables it); and the application role can
 insert into `valo_scope_keys`, where each process registers its signing key. Every
-customer request fails until it is fixed; no connection is leaked. Apply the
+customer request, export and reminder fails until it is fixed; no connection is leaked. Apply the
 migration and enable the login (see `docs/valo/migration-workspace-row-security.md`)
 before releasing code that expects them.
 

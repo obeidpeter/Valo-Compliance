@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq, ne, desc } from "drizzle-orm";
 import {
   db,
+  runInWorkspaceScope,
   valoMemberships,
   valoDocuments,
   valoDocumentRevisions,
@@ -405,17 +406,23 @@ export async function executeExport(
   };
   try {
     await onStage?.("claimed");
-    await assertExportActor(actor);
-    const [revision] = await db
-      .select()
-      .from(valoDocumentRevisions)
-      .where(
-        and(
-          eq(valoDocumentRevisions.id, job.revisionId),
-          eq(valoDocumentRevisions.workspaceId, workspaceId),
-          eq(valoDocumentRevisions.documentId, job.documentId),
-        ),
-      );
+    // The document is read in the workspace's database scope, so row-level security also keeps
+    // the file to this workspace's rows. The job's claim, storage and result stay with the
+    // application role.
+    const revision = await runInWorkspaceScope(workspaceId, async () => {
+      await assertExportActor(actor);
+      const [row] = await db
+        .select()
+        .from(valoDocumentRevisions)
+        .where(
+          and(
+            eq(valoDocumentRevisions.id, job.revisionId),
+            eq(valoDocumentRevisions.workspaceId, workspaceId),
+            eq(valoDocumentRevisions.documentId, job.documentId),
+          ),
+        );
+      return row;
+    });
     // PostgreSQL JSONB reorders object keys. Reconstruct the same validated v1 input
     // used at save time; never hash raw JSONB serialisation or rewrite historic hashes.
     const savedInput = revision

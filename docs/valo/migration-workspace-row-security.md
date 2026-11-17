@@ -36,9 +36,9 @@ not been applied to the Replit development database yet.
 - No row is read or written.
 
 Apply it, and enable the login, before running code that includes it. That code
-connects every customer request as `valo_workspace_login` through
-`VALO_CUSTOMER_DATABASE_URL`, so until both are done every customer request fails with
-`DB_WORKSPACE_SCOPE_UNAVAILABLE`, though no connection is leaked. Operator inference
+connects every customer request, and the worker's jobs for one workspace, as
+`valo_workspace_login` through `VALO_CUSTOMER_DATABASE_URL`, so until both are done
+they fail with `DB_WORKSPACE_SCOPE_UNAVAILABLE`, though no connection is leaked. Operator inference
 commands also write the ledger through its functions, so they fail until it is
 applied.
 
@@ -57,9 +57,10 @@ procedure in [phase1-migration-plan.md](phase1-migration-plan.md):
    the database's `DATABASE_URL`, run
    `node lib/db/scripts/workspace-login.mjs --print-url`. It enables the login with
    that password, sending the server only its SCRAM verifier, and prints the
-   connection string. Store that in the secret store as `VALO_CUSTOMER_DATABASE_URL`
-   and nowhere else. It must reach the database directly or through a session
-   pooler, never a transaction pooler.
+   connection string. Store that in the secret store as `VALO_CUSTOMER_DATABASE_URL`,
+   for both the API and the worker, and nowhere else. The worker uses it for document
+   and data exports and reminders. It must reach the database directly or through a
+   session pooler, never a transaction pooler.
 5. Check that `SELECT count(*) FROM pg_policies WHERE policyname='valo_workspace_scope'`
    returns 45, and that `node lib/db/scripts/workspace-row-security.mjs`, run the same
    way, prints `no gaps`. Connected with `VALO_CUSTOMER_DATABASE_URL`, check that

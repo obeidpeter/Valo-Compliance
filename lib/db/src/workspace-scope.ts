@@ -20,11 +20,16 @@ const scope = new AsyncLocalStorage<string>();
  * starts, connects as WORKSPACE_LOGIN_ROLE and acts as WORKSPACE_SCOPE_ROLE with a credential
  * for `workspaceId`. The workspace tables' row-level security policies then hide and refuse
  * every other workspace's rows, even for a query that forgets its workspace filter. Only
- * server code that has resolved the workspace from a membership may call this.
+ * server code that has resolved the workspace from a membership, or background work acting
+ * for the workspace of the stored record it processes, may call this. Work already scoped to
+ * one workspace cannot enter another's.
  */
 export function runInWorkspaceScope<T>(workspaceId: string, run: () => T): T {
   const id = workspaceId.toLowerCase();
   if (!UUID.test(id)) throw new TypeError("A workspace scope needs the workspace's UUID");
+  const current = scope.getStore();
+  if (current !== undefined && current !== id)
+    throw new TypeError("Work in one workspace's scope cannot enter another workspace's scope");
   return scope.run(id, run);
 }
 

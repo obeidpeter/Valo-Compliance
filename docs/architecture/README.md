@@ -80,7 +80,8 @@ Every change must keep these true. Each has tests; none may be weakened.
    in as `valo_workspace_login`, which holds nothing else, and name their workspace
    with a credential the application signs for each transaction, so SQL on a
    customer connection can neither act as the application role nor reach another
-   workspace (decision 0008).
+   workspace. Background work for one workspace (exports, reminders, a staff privacy
+   export) reads that workspace's data in its scope too (decision 0008).
 2. **Identity.** Private requests require an active Clerk session and a verified
    primary email. Payments, downloads, privacy and AI drafts check Clerk live on
    every request; listed everyday routes re-check at least once a minute

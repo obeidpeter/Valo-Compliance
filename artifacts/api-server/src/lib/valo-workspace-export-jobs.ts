@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { and, or, eq, desc, lt, sql, inArray } from "drizzle-orm";
 import {
   db,
+  runInWorkspaceScope,
   valoWorkspaceExports as jobs,
   valoWorkspaceExportAttempts as attempts,
   valoPrivacyTombstones,
@@ -379,24 +380,29 @@ export async function executeWorkspaceExport(
     const file = await open(path, "wx", 0o600);
     let snapshot: Awaited<ReturnType<typeof workspaceDataExport>>;
     try {
-      snapshot = await workspaceDataExport(
-        actor,
-        async (chunk) => {
-          signal.throwIfAborted();
-          bytes += Buffer.byteLength(chunk);
-          if (bytes > WORKSPACE_EXPORT_MAX_BYTES) throw Error("WORKSPACE_EXPORT_SIZE_LIMIT");
-          await file.writeFile(chunk, "utf8");
-        },
-        signal,
-        async (name, count) => {
-          section = name;
-          sections.set(name, count);
-          rows = [...sections.values()].reduce((a, b) => a + b, 0);
-          await options.onStage?.("collecting");
-          await options.onPage?.(name, count);
-          await heartbeat();
-          signal.throwIfAborted();
-        },
+      // The data is gathered in the workspace's database scope, as the customer download is, so
+      // row-level security also keeps the file to this workspace's rows. The claim, the upload
+      // and the result stay with the application role.
+      snapshot = await runInWorkspaceScope(workspaceId, () =>
+        workspaceDataExport(
+          actor,
+          async (chunk) => {
+            signal.throwIfAborted();
+            bytes += Buffer.byteLength(chunk);
+            if (bytes > WORKSPACE_EXPORT_MAX_BYTES) throw Error("WORKSPACE_EXPORT_SIZE_LIMIT");
+            await file.writeFile(chunk, "utf8");
+          },
+          signal,
+          async (name, count) => {
+            section = name;
+            sections.set(name, count);
+            rows = [...sections.values()].reduce((a, b) => a + b, 0);
+            await options.onStage?.("collecting");
+            await options.onPage?.(name, count);
+            await heartbeat();
+            signal.throwIfAborted();
+          },
+        ),
       );
     } finally {
       await file.close();
