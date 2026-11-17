@@ -10,6 +10,7 @@ import {
   valoEvents,
   valoMemberships,
   valoProfileVersions,
+  valoSupportCases,
   valoSupportTickets,
   valoWorkspaces,
 } from "@workspace/db";
@@ -122,6 +123,40 @@ test(
           assert.equal(ticket.sharingConsent, false);
           const events = await db.select().from(valoEvents).where(eq(valoEvents.workspaceId, a.workspaceId));
           assert.ok(events.every((e) => !("content" in e) && !("scope" in e) && !("profile" in e)));
+        },
+      );
+      await t.test(
+        "a service enquiry needs consent, keeps what it captured, reaches the support queue and is received, not booked",
+        async () => {
+          const enquiry = {
+            category: "tax",
+            scope: "Synthetic service enquiry about filing dates",
+            contactEmail: "synthetic-enquiry@example.test",
+          };
+          await assert.rejects(
+            store.createTicket(a, { ...enquiry, sharingConsent: false }),
+            /explicit contact-sharing consent/,
+          );
+          const receipt = await store.createTicket(a, { ...enquiry, sharingConsent: true });
+          assert.match(receipt.message, /^Enquiry received and saved\./);
+          assert.doesNotMatch(
+            receipt.message,
+            /\bbooked\b|booking confirmed|appointment (is )?(set|confirmed)/i,
+          );
+          const id = receipt.reference.slice(5);
+          const [ticket] = await db
+            .select()
+            .from(valoSupportTickets)
+            .where(and(eq(valoSupportTickets.id, id), eq(valoSupportTickets.workspaceId, a.workspaceId)));
+          assert.equal(ticket.category, "tax");
+          assert.equal(ticket.scope, enquiry.scope);
+          assert.equal(ticket.contactEmail, enquiry.contactEmail);
+          assert.equal(ticket.sharingConsent, true);
+          assert.equal(ticket.dispatchStatus, "awaiting_staff");
+          const cases = await db.select().from(valoSupportCases).where(eq(valoSupportCases.ticketId, id));
+          assert.equal(cases.length, 1, "the enquiry opened exactly one support case for staff");
+          assert.equal(cases[0]!.status, "open");
+          assert.equal(cases[0]!.workspaceId, a.workspaceId);
         },
       );
       await t.test("suspended membership is not automatically restored", async () => {

@@ -98,6 +98,34 @@
       "file": "artifacts/api-server/src/lib/valo-paystack-contract.test.ts",
       "test": "only one-time charge, refund and dispute events are processed; subscription, invoice and transfer events are not",
       "proves": "The webhook processes only charge, refund and dispute events; subscription, invoice, transfer, payment request and dedicated account events are classed as not processed."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+      "test": "the enquiry form asks for consent exactly when the API requires it",
+      "proves": "For every enquiry topic in the API contract, the web form asks for sharing consent exactly when the API refuses the enquiry without it: for every service topic, and not for product support."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/enquiry.test.ts",
+      "test": "the enquiry form asks for sharing consent before a service enquiry and not for product support",
+      "proves": "The enquiry form does not send a service enquiry without explicit sharing consent and tells the person why; product support needs none."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
+      "proves": "A service enquiry without consent is refused; with consent, its topic, scope, reply email and consent are saved, exactly one open support case is created for staff, and the receipt says “Enquiry received”, never that anything is booked."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
+      "proves": "A saved request opens exactly one support case with the same reference and full scope, which its own workspace can read and another workspace cannot."
     }
   ]
 }
