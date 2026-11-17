@@ -15,13 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { describeError } from "@/lib/api";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { SaveTemplateButton } from "@/components/saved-templates";
-
-function fmtDay(iso: string) {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? iso
-    : d.toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });
-}
+import { ReleaseNotices } from "@/components/release-notices";
 
 function Unavailable() {
   return (
@@ -173,41 +167,13 @@ export default function TemplateDetail({ slug }: { slug: string }) {
               </h1>
               <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{t.summary}</p>
 
-              <dl className="mt-8 grid gap-4 border-y border-border py-5 text-sm sm:grid-cols-2">
-                <div>
-                  <dt className="eyebrow">Reviewed</dt>
-                  <dd className="mt-1" data-testid="text-reviewed">
-                    {fmtDay(t.reviewedAt)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="eyebrow">Next review due</dt>
-                  <dd className="mt-1" data-testid="text-review-by">
-                    {fmtDay(t.reviewBy)}
-                  </dd>
-                </div>
-              </dl>
-
-              <section className="mt-8 grid gap-6 text-sm leading-relaxed">
-                <div>
-                  <h2 className="eyebrow">Disclosure</h2>
-                  <p className="mt-2 whitespace-pre-line" data-testid="text-disclosure">
-                    {t.disclosure}
-                  </p>
-                </div>
-                <div>
-                  <h2 className="eyebrow">Scope</h2>
-                  <p className="mt-2 whitespace-pre-line" data-testid="text-scope">
-                    {t.scope}
-                  </p>
-                </div>
-                <div>
-                  <h2 className="eyebrow">Limitations</h2>
-                  <p className="mt-2 whitespace-pre-line" data-testid="text-limitations">
-                    {t.limitations}
-                  </p>
-                </div>
-              </section>
+              <ReleaseNotices
+                reviewedAt={t.reviewedAt}
+                reviewBy={t.reviewBy}
+                disclosure={t.disclosure}
+                scope={t.scope}
+                limitations={t.limitations}
+              />
 
               <section className="mt-10" aria-labelledby="preview-heading">
                 <h2 id="preview-heading" className="eyebrow">

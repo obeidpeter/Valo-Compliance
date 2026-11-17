@@ -224,6 +224,27 @@
       "file": "artifacts/api-server/src/lib/valo-checker-rich.test.ts",
       "test": "source-family implementation, publication, period and freshness gates fail closed",
       "proves": "The checker leaves out a rule that is withdrawn or whose review has expired."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
+      "test": "actual DOCX and Chromium PDF preserve the complete exact candidate and required notices",
+      "proves": "A template's DOCX and PDF exports keep its complete text together with the AI-review disclosure, scope, limitations and source-check date, checked against the text read back from both files."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/release-notices.test.tsx",
+      "test": "a template's detail page shows its source-check and review dates, the AI-review disclosure, scope and limitations",
+      "proves": "The notices on a template's detail page show the exact disclosure text, the date the sources were checked, the next review date, the scope and the limitations, and the page fills them from each released template's own values."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/release-notices.test.tsx",
+      "test": "the web app never claims lawyer approval, professional verification or guaranteed compliance",
+      "proves": "No sentence in the web app's source claims lawyer approval, legal or professional verification or guaranteed compliance unless it denies the claim."
     }
   ]
 }
