@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { BellOff, BellRing, Clock, Loader2 } from "lucide-react";
+import { Link } from "wouter";
 import {
   useGetReminderPreferences,
   useSaveReminderPreferences,
@@ -343,12 +344,12 @@ export default function RemindersPage() {
                               : s.desc}
                       </p>
                       {r.reason === "EMAIL_ATTEMPT_LIMIT_REACHED" && (
-                        <a
+                        <Link
                           href="/help"
                           className="mt-1 inline-block text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
                         >
                           Contact support
-                        </a>
+                        </Link>
                       )}
                       {r.lastAttemptAt && (
                         <p className="mt-1 text-xs text-muted-foreground">
