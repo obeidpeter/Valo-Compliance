@@ -3,7 +3,6 @@ import { and, desc, eq } from "drizzle-orm";
 import {
   db,
   valoAssessments,
-  valoMemberships,
   valoWorkspaces,
   valoProfileVersions,
   valoRuleReleases,
@@ -29,8 +28,9 @@ import {
   type CheckerFacts,
 } from "@workspace/valo-core";
 import { z } from "zod";
-import { ValoProblem, type WorkspaceActor } from "./valo-store";
+import { ValoProblem, authorizeWorkspaceWrite, type WorkspaceActor } from "./valo-store";
 
+import { lockSourceState, sourceTargetAllowed } from "./valo-source-state";
 export type WorkspaceTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /** Repository methods recheck membership, including worker and direct-service callers. */
 export async function workspaceTransaction<T>(
@@ -38,23 +38,14 @@ export async function workspaceTransaction<T>(
   fn: (tx: WorkspaceTx) => Promise<T>,
 ): Promise<T> {
   return db.transaction(async (tx) => {
+    await lockSourceState(tx);
     const [workspace] = await tx
       .select()
       .from(valoWorkspaces)
       .where(eq(valoWorkspaces.id, actor.workspaceId))
       .for("update");
     if (!workspace) throw new ValoProblem(404, "Workspace not found");
-    const [member] = await tx
-      .select()
-      .from(valoMemberships)
-      .where(
-        and(
-          eq(valoMemberships.workspaceId, actor.workspaceId),
-          eq(valoMemberships.identityId, actor.identityId),
-          eq(valoMemberships.active, "yes"),
-        ),
-      );
-    if (!member) throw new ValoProblem(403, "Active workspace membership is required");
+    await authorizeWorkspaceWrite(tx, actor);
     return fn(tx);
   });
 }
@@ -94,6 +85,7 @@ export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
       eligible =
         r.id === row.ruleId &&
         r.version === row.version &&
+        b.candidate.version === r.version &&
         r.status === "published" &&
         r.provenance === "editorial_release" &&
         (!r.evaluator || sourceFamilyBindingMatches(r.evaluator)) &&
@@ -113,6 +105,7 @@ export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
               (c) => c.sourceId === s.id && c.locator === s.locator && c.quote === s.quote,
             ),
         );
+      if (eligible) eligible = await sourceTargetAllowed(tx, "rule", row.id, b, now);
       if (eligible) {
         rules.push(r);
         trusted.add(r.manifestHash);

@@ -12,6 +12,7 @@ import {
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { blankContent, describeError, formatDate, missingFields } from "@/lib/api";
+import { CorrectionNotices } from "@/components/correction-notices";
 import { GuidedDraftStarter } from "@/components/guided-draft-starter";
 import { SavedTemplates } from "@/components/saved-templates";
 
@@ -43,6 +44,7 @@ export default function WorkspaceHome() {
     <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
       <WorkspaceNav />
       <GuidedDraftStarter />
+      {ws.isSuccess && <CorrectionNotices />}
       <header className="reveal flex flex-wrap items-end justify-between gap-6">
         <div>
           <p className="eyebrow">Your workspace</p>

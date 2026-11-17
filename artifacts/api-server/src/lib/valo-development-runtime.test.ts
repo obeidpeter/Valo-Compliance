@@ -100,6 +100,10 @@ test("actual export entries and worker startup reject before database, queue or 
       "export const dispatchOperationalJobs=async()=>{globalThis.guardEffects.services++};",
     ],
     [
+      "valo-source-monitor",
+      "export const reconcileSourceMonitoring=async()=>{globalThis.guardEffects.services++};",
+    ],
+    [
       "valo-operations",
       `const hit=async()=>{globalThis.guardEffects.services++;};
       export const recordWorkerHeartbeat=hit,collectOperationalSample=hit,recordOperationalAlerts=hit;`,

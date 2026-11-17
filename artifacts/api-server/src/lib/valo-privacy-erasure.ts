@@ -67,6 +67,7 @@ const legacyPhases = [
   "privacy_messages",
   "privacy_content",
   "dispute_work",
+  "valo_correction_notices", // append only: preserve all historical phase indexes
 ] as const;
 const phases = [...legacyPhases, ...copyPhases] as const;
 const phasesFor = (seal: ErasureSeal) =>

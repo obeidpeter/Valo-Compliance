@@ -12,6 +12,7 @@ import {
 import { EmptyState, ErrorState, Skel } from "@/components/states";
 import { cn } from "@/lib/utils";
 import { FinanceRefunds } from "./finance-refunds";
+import { SourceSafetyControls } from "@/components/source-safety-controls";
 import { SupportRecords } from "@/components/support-records";
 
 const AREAS: { v: Area; l: string }[] = [
@@ -120,6 +121,7 @@ export default function StaffPage() {
             </p>
             {area === "finance" && <FinanceRefunds />}
             {area === "system" && <StaffRoleAdministration />}
+            {(area === "content" || area === "system") && <SourceSafetyControls key={area} area={area} />}
             {records.length === 0 ? (
               <p className="mt-6 text-sm text-muted-foreground">No records in this area.</p>
             ) : area === "support" ? (

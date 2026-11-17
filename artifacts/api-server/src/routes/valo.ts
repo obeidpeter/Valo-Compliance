@@ -38,12 +38,14 @@ import { setting } from "../platform/settings";
 import { customerPaymentConcernsRouter, financePaymentConcernsRouter } from "./valo-payment-concerns";
 import { createSessionVerificationRouter } from "./valo-session-verification";
 import { makeStaffGate } from "../middlewares/valo-staff-gate";
+import { sourceControlsRouter, correctionNoticesRouter } from "./valo-source-controls";
 const router = Router();
 router.use(createSessionVerificationRouter());
 router.use(publicAccessRouter);
 // Refuse accounts without any active staff assignment before staff routes read input.
 router.use("/admin", makeStaffGate());
 router.use(staffOperationsRouter);
+router.use(sourceControlsRouter);
 router.get("/public/discovery", async (_req, res) => {
   res.set("Cache-Control", "no-store");
   res.json(await publicDiscovery());
@@ -146,6 +148,7 @@ router.get("/development/content", async (_req, res) => {
 });
 router.use("/workspace", sameOriginMutation, verifiedWorkspace);
 router.use(customerAccessRouter);
+router.use(correctionNoticesRouter);
 router.use(commerceRouter);
 router.get("/workspace/saved-templates", async (_req, res) => {
   res.set("Cache-Control", "private, no-store");

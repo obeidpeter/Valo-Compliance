@@ -37,7 +37,9 @@ async function enabled(tx: WorkspaceTx, workspaceId: string) {
   const flags = await tx
     .select()
     .from(valoSafetySwitches)
-    .where(inArray(valoSafetySwitches.key, ["customer_ai", `customer_ai_workspace:${workspaceId}`]));
+    .where(
+      inArray(valoSafetySwitches.key, ["all_ai", "customer_ai", `customer_ai_workspace:${workspaceId}`]),
+    );
   return flags.every((flag) => flag.enabled);
 }
 async function budget(tx: WorkspaceTx, workspaceId: string, identityId: string, now = new Date()) {

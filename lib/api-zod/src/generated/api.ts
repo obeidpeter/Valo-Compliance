@@ -6767,3 +6767,138 @@ export const HoldFinanceDisputeResponse = zod.object({
 })
 
 
+export const getSourceControlsQueryPageDefault = 1;
+export const getSourceControlsQueryPageMax = 10000;
+
+
+
+export const GetSourceControlsQueryParams = zod.object({
+  "area": zod.enum(['content', 'system']),
+  "page": zod.coerce.number().int().min(1).max(getSourceControlsQueryPageMax).default(getSourceControlsQueryPageDefault)
+})
+
+export const GetSourceControlsResponse = zod.object({
+  "area": zod.enum(['content', 'system']),
+  "page": zod.int(),
+  "hasMore": zod.boolean(),
+  "notice": zod.string(),
+  "versions": zod.array(zod.object({
+  "kind": zod.enum(['content', 'rule']),
+  "id": zod.uuid(),
+  "key": zod.string(),
+  "version": zod.int(),
+  "status": zod.string(),
+  "reviewBy": zod.string().nullable(),
+  "safetyHeld": zod.boolean()
+})),
+  "sources": zod.array(zod.object({
+  "sourceId": zod.string(),
+  "url": zod.string(),
+  "risk": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "failureCode": zod.string().nullable(),
+  "nextCheckAt": zod.coerce.date()
+})),
+  "review": zod.array(zod.object({
+  "id": zod.uuid(),
+  "status": zod.string(),
+  "targetKind": zod.string(),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "services": zod.array(zod.object({
+  "key": zod.string(),
+  "enabled": zod.boolean(),
+  "reason": zod.string(),
+  "updatedAt": zod.coerce.date()
+})),
+  "sourceChoices": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string()
+}))
+})
+
+
+export const actOnSourceControlsBodyOneReasonMin = 20;
+export const actOnSourceControlsBodyOneReasonMax = 1000;
+
+export const actOnSourceControlsBodyOneSourceIdMax = 100;
+
+export const actOnSourceControlsBodyTwoReasonMin = 20;
+export const actOnSourceControlsBodyTwoReasonMax = 1000;
+
+
+export const actOnSourceControlsBodyThreeReasonMin = 20;
+export const actOnSourceControlsBodyThreeReasonMax = 1000;
+
+
+export const actOnSourceControlsBodyFourReasonMin = 20;
+export const actOnSourceControlsBodyFourReasonMax = 1000;
+
+export const actOnSourceControlsBodyFiveReasonMin = 20;
+export const actOnSourceControlsBodyFiveReasonMax = 1000;
+
+
+
+export const ActOnSourceControlsBody = zod.union([zod.object({
+  "requestKey": zod.uuid(),
+  "reason": zod.string().min(actOnSourceControlsBodyOneReasonMin).max(actOnSourceControlsBodyOneReasonMax),
+  "action": zod.enum(['watch_source']),
+  "sourceId": zod.string().min(1).max(actOnSourceControlsBodyOneSourceIdMax)
+}),zod.object({
+  "requestKey": zod.uuid(),
+  "reason": zod.string().min(actOnSourceControlsBodyTwoReasonMin).max(actOnSourceControlsBodyTwoReasonMax),
+  "action": zod.enum(['hold_version']),
+  "kind": zod.enum(['content', 'rule']),
+  "id": zod.uuid(),
+  "version": zod.int().min(1)
+}),zod.object({
+  "requestKey": zod.uuid(),
+  "reason": zod.string().min(actOnSourceControlsBodyThreeReasonMin).max(actOnSourceControlsBodyThreeReasonMax),
+  "action": zod.enum(['withdraw_version']),
+  "kind": zod.enum(['content', 'rule']),
+  "id": zod.uuid(),
+  "version": zod.int().min(1)
+}),zod.object({
+  "requestKey": zod.uuid(),
+  "reason": zod.string().min(actOnSourceControlsBodyFourReasonMin).max(actOnSourceControlsBodyFourReasonMax),
+  "action": zod.enum(['pause_service']),
+  "service": zod.enum(['ai', 'checkout'])
+}),zod.object({
+  "requestKey": zod.uuid(),
+  "reason": zod.string().min(actOnSourceControlsBodyFiveReasonMin).max(actOnSourceControlsBodyFiveReasonMax),
+  "action": zod.enum(['resume_service']),
+  "service": zod.enum(['ai', 'checkout'])
+})])
+
+export const ActOnSourceControlsResponse = zod.object({
+  "auditId": zod.uuid(),
+  "replayed": zod.boolean(),
+  "result": zod.record(zod.string(), zod.unknown())
+})
+
+
+export const getCorrectionNoticesQueryPageDefault = 1;
+export const getCorrectionNoticesQueryPageMax = 10000;
+
+
+
+export const GetCorrectionNoticesQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).max(getCorrectionNoticesQueryPageMax).default(getCorrectionNoticesQueryPageDefault)
+})
+
+export const GetCorrectionNoticesResponse = zod.object({
+  "page": zod.int(),
+  "hasMore": zod.boolean(),
+  "notices": zod.array(zod.object({
+  "id": zod.uuid(),
+  "entityKind": zod.string(),
+  "entityId": zod.uuid(),
+  "message": zod.string(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+

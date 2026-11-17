@@ -226,6 +226,12 @@ export const SETTINGS = {
     group: "Editorial",
     description: "`recorded` reuses the recorded original authoring run instead of new drafting.",
   },
+  VALO_EDITORIAL_LIFECYCLE_DATABASE_URL: {
+    group: "Editorial",
+    description:
+      "Separately prepared genuine-evidence seed database that editorial lifecycle cases clone into a disposable database (development only).",
+    secret: true,
+  },
   VALO_RUN_EDITORIAL_PROOF: {
     group: "Editorial",
     description: "`official-development-only` to run the development editorial proof.",

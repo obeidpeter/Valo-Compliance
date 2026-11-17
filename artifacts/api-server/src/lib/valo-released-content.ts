@@ -27,6 +27,7 @@ import {
 } from "./valo-catalogue";
 import { currentOperationalPermission } from "../editorial/operational-read-permission";
 import { setting } from "../platform/settings";
+import { lockSourceState, sourceTargetAllowed } from "./valo-source-state";
 export function releaseVisible(
   row: typeof valoContentVersions.$inferSelect,
   policyHash: string,
@@ -52,7 +53,11 @@ export async function liveReleasedVersions() {
     .where(eq(valoContentVersions.status, "published"));
   const allowed = [];
   for (const r of rows) {
-    if (!releaseVisible(r.content, r.policy.hash)) continue;
+    if (
+      !releaseVisible(r.content, r.policy.hash) ||
+      !(await sourceTargetAllowed(db, "content", r.content.id, r.content.bundle))
+    )
+      continue;
     if (
       publicationSchema.parse(r.content.bundle).candidate.evidenceMode === "original_operational" &&
       (r.policy.hash !== currentPolicy.policy.hash || !(await currentOperationalPermission(r.content)))
@@ -261,6 +266,7 @@ export async function releasedTemplate(slug: string) {
   };
 }
 export async function lockedLiveVersion(tx: Parameters<Parameters<typeof db.transaction>[0]>[0], id: string) {
+  await lockSourceState(tx);
   const [row] = await tx
     .select()
     .from(valoContentVersions)
@@ -271,7 +277,11 @@ export async function lockedLiveVersion(tx: Parameters<Parameters<typeof db.tran
     .select()
     .from(valoPublicationPolicies)
     .where(eq(valoPublicationPolicies.id, row.policyId));
-  if (!policy || !releaseVisible(row, policy.hash))
+  if (
+    !policy ||
+    !releaseVisible(row, policy.hash) ||
+    !(await sourceTargetAllowed(tx, "content", row.id, row.bundle))
+  )
     throw new ValoProblem(404, "Template withdrawn, expired or unavailable");
   const c = publicationSchema.parse(row.bundle).candidate;
   if (c.evidenceMode === "original_operational") {

@@ -23,6 +23,8 @@ import { assertBlindReviewInputs } from "../editorial/operational-review-contrac
 import { renderDocument } from "../lib/valo-render";
 import { inspectOperationalExports } from "../editorial/operational-export-inspection";
 import { dispatchEditorialExternalAction } from "../editorial/external-action-boundary";
+import { evaluateEditorialPermissionDenials } from "../editorial/editorial-permission-evaluation";
+import { dispatchEditorialLifecycle } from "../editorial/editorial-lifecycle-dispatch";
 import {
   reviewedBaselineEvidence,
   publicationHoldTransition,
@@ -411,8 +413,15 @@ async function main() {
         case "EVAL-EDP-C056":
         case "EVAL-EDP-C057":
         case "EVAL-EDP-C058":
-        case "EVAL-EDP-C059":
-          throw new Blocked("lifecycle_requires_matching_genuine_eligible_or_released_baseline");
+        case "EVAL-EDP-C059": {
+          const lifecycle = await dispatchEditorialLifecycle(c.id, evaluationRunId);
+          Object.assign(record, lifecycle);
+          if (lifecycle.status === "blocked")
+            throw new Blocked(lifecycle.reason ?? "GENUINE_LIFECYCLE_PREREQUISITE_MISSING");
+          if (lifecycle.status !== "control_pass") throw Error("LIFECYCLE_TARGET_CONTROL_FAILED");
+          observations = lifecycle.boundaryEvidence;
+          break;
+        }
         case "EVAL-EDP-C044": {
           const intake = await readTemplateIntake("TPL-07", 1),
             content = await templateCandidate("TPL-07", 1, new Date(), {
@@ -448,32 +457,9 @@ async function main() {
           break;
         }
         case "EVAL-EDP-C052": {
-          let denied = 0;
-          for (const statement of [
-            sql`UPDATE valo_content_versions SET status='published' WHERE false`,
-            sql`UPDATE valo_publication_policies SET hash=hash WHERE false`,
-          ]) {
-            let code = "";
-            try {
-              await db.transaction(async (tx) => {
-                await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
-                await tx.execute(statement);
-              });
-            } catch (e) {
-              let p: unknown = e;
-              for (let i = 0; i < 4 && p; i++) {
-                const x = p as { code?: string; cause?: unknown };
-                if (x.code) code = x.code;
-                p = x.cause;
-              }
-            }
-            assert.equal(code, "42501");
-            denied++;
-          }
-          record.targetControl = { nativeDrafterDenials: denied };
-          throw new Blocked(
-            "native_drafter_denials_proved_but_separate_reviewer_role_and_durable_denial_log_not_proved",
-          );
+          if (!row) throw new Blocked("retained_candidate_needed_for_durable_role_denial");
+          observations = await evaluateEditorialPermissionDenials(row.id, evaluationRunId);
+          break;
         }
         default:
           throw new Blocked("exact_case_boundary_not_implemented");

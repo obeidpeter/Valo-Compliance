@@ -86,7 +86,9 @@ test(
         },
       );
     } finally {
-      await db.delete(valoSourceSnapshots).where(inArray(valoSourceSnapshots.id, ids));
+      // Retained source snapshots are append-only (migration 0038), so these synthetic
+      // rows stay. They are marked held_test_fixture and dated 2000, so they can never
+      // supersede a current real retrieval.
       await pool.end();
     }
   },

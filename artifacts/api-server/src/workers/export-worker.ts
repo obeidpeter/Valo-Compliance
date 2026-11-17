@@ -1,4 +1,5 @@
 import { initializeApplicationRuntime, verifyRehearsalDatabase } from "../lib/valo-runtime-activation";
+import { reconcileSourceMonitoring } from "../lib/valo-source-monitor";
 import { z } from "zod";
 import { closePrivacyErasureLocks } from "../lib/valo-privacy-erasure";
 import { db, pool, valoExportJobs } from "@workspace/db";
@@ -207,6 +208,7 @@ async function dispatch() {
     if (setting("NODE_ENV") !== "production" && !stopping && Date.now() - reminderCheckedAt >= 60000) {
       reminderCheckedAt = Date.now();
       const failures = await dispatchOperationalJobs({
+        sources: reconcileSourceMonitoring,
         reminders: () => reconcileDueReminders(),
         paymentEvents: () => processPaymentEvents(),
         refunds: () => processRefundQueue(),

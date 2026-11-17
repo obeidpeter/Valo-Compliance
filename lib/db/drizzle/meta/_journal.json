@@ -253,6 +253,20 @@
       "when": 1794705000007,
       "tag": "0036_audit_append_only",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794705001007,
+      "tag": "0037_source_correction_controls",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794705002007,
+      "tag": "0038_editorial_lifecycle_integrity",
+      "breakpoints": true
     }
   ]
 }

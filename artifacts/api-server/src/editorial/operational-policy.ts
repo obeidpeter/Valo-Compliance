@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { digest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import { setting } from "../platform/settings";
+import { narrowOperationalPolicy } from "./operational-restrictions";
 export function publicationWorkspaceRoot() {
   let dir = process.cwd();
   for (let i = 0; i < 6; i++, dir = dirname(dir))
@@ -78,5 +79,22 @@ export async function operationalPolicy() {
     ],
     developmentOnly: true,
   };
-  return { policy: { ...body, hash: digest(body) } as PublicationBundle["policy"], authority };
+  const policy = await applyOperationalRestrictions({
+    ...body,
+    hash: digest(body),
+  } as PublicationBundle["policy"]);
+  return { policy, authority };
+}
+export async function applyOperationalRestrictions(base: PublicationBundle["policy"]) {
+  let policy = base;
+  const restrictionPath = resolve(
+    publicationWorkspaceRoot(),
+    "docs/valo/policies/operational-publication-restrictions.json",
+  );
+  try {
+    policy = narrowOperationalPolicy(policy, JSON.parse(await readFile(restrictionPath, "utf8")));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  return policy;
 }

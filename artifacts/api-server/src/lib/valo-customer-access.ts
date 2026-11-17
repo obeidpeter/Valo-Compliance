@@ -476,7 +476,7 @@ export async function staffOperations(actor: StaffActor, area: StaffArea) {
     });
     let records: Record<string, unknown>[] = [];
     let notice =
-      "Read-only operational records. No publish, payment, role or customer-document mutation is available here.";
+      "Operational overview. Source/version safety controls are separate, require recent MFA and an active role, and cannot approve publication, spending or customer-document changes.";
     if (area === "content")
       records = await tx
         .select({

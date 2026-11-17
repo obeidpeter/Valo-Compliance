@@ -32,6 +32,7 @@ import { requestOrderRefund, refundView, handleRefundEvent } from "./valo-refund
 import { syncDispute } from "./valo-payment-disputes";
 import { refundBalance, TEST_REFUND_POLICY } from "./valo-refund-provider";
 import { setting } from "../platform/settings";
+import { assertSafetyActive, withSafetyDispatch } from "./valo-source-state";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const originalReceiptActions = ["payment.verified_success", "payment.synthetic_receipt_recovered"];
 function audit(tx: Tx, workspaceId: string, actorId: string, action: string, id: string) {
@@ -185,6 +186,7 @@ export async function purchases(actor: WorkspaceActor) {
 export async function createOrder(actor: WorkspaceActor, raw: unknown) {
   const input = CreateCommerceOrderBody.strict().parse(raw);
   return db.transaction(async (tx) => {
+    await assertSafetyActive(tx, "checkout");
     // Serialize one tenant's idempotency/price selection without trusting browser prices.
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${actor.workspaceId}))`);
     const [old] = await tx
@@ -253,6 +255,7 @@ async function ownedOrder(tx: Tx, actor: WorkspaceActor, id: string) {
 }
 export async function startCheckout(actor: WorkspaceActor, id: string, email: string) {
   const order = await db.transaction(async (tx) => {
+    await assertSafetyActive(tx, "checkout");
     const order = await ownedOrder(tx, actor, id);
     if (order.status === "verified_success")
       throw new ValoProblem(409, "This purchase is already verified. Do not pay again.");
@@ -271,8 +274,13 @@ export async function startCheckout(actor: WorkspaceActor, id: string, email: st
   if (!origin) throw new ValoProblem(503, "The trusted checkout return address is not configured.");
   // No membership lock across provider I/O. Stable provider reference prevents
   // a retry from becoming a different order; never mint another reference on error.
-  const url = await paystack.initialise(order, email, `${origin}/workspace/purchases`);
+  const url = await withSafetyDispatch("checkout", async () => {
+    if (!(await commerceProducts()).some((p) => p.id === order.priceId))
+      throw new ValoProblem(409, "This product is no longer available for new checkout.");
+    return paystack.initialise(order, email, `${origin}/workspace/purchases`);
+  });
   return db.transaction(async (tx) => {
+    await assertSafetyActive(tx, "checkout");
     const current = await ownedOrder(tx, actor, id);
     if (["verified_success", "reversed", "needs_review"].includes(current.status))
       throw new ValoProblem(
