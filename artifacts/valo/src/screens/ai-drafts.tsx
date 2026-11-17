@@ -154,11 +154,11 @@ export function AIDraftCompose() {
       {
         onSuccess: (p) => {
           qc.setQueryData(getGetCustomerAIDraftQueryKey(p.id), p);
-          qc.invalidateQueries({ queryKey: getGetCustomerAIUsageQueryKey() });
+          void qc.invalidateQueries({ queryKey: getGetCustomerAIUsageQueryKey() });
           setKey(uuid());
           setLocation("/workspace/ai/" + p.id);
         },
-        onSettled: () => qc.invalidateQueries({ queryKey: getGetCustomerAIUsageQueryKey() }),
+        onSettled: () => void qc.invalidateQueries({ queryKey: getGetCustomerAIUsageQueryKey() }),
       },
     );
   }
@@ -179,8 +179,8 @@ export function AIDraftCompose() {
       { data: { title: draft.title || TASK_LABEL[task], content: draft.content as CanonicalDocument } },
       {
         onSuccess: (doc) => {
-          qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-          qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
           setLocation("/workspace/documents/" + doc.id);
         },
       },
@@ -625,9 +625,9 @@ export function AIDraftPreview({ id }: { id: string }) {
       { id, data: { title: title.trim().slice(0, 160), content, confirmBusinessDraft: true } },
       {
         onSuccess: (doc) => {
-          qc.invalidateQueries({ queryKey: getGetCustomerAIDraftQueryKey(id) });
-          qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-          qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+          void qc.invalidateQueries({ queryKey: getGetCustomerAIDraftQueryKey(id) });
+          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
           setLocation("/workspace/documents/" + doc.id);
         },
       },

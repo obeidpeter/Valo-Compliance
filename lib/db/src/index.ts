@@ -75,10 +75,13 @@ class ValoPool extends pg.Pool {
           })
         : this.#scoped(workspaceId);
     if (!callback) return ready;
+    // Serves pg's callback API: the callback runs once, from whichever handler settles.
+    /* oxlint-disable promise/no-callback-in-promise */
     ready.then(
       (client) => callback(undefined, client, (release) => client.release(release as Error | boolean)),
       (error: Error) => callback(error, undefined, () => undefined),
     );
+    /* oxlint-enable promise/no-callback-in-promise */
   }
 
   /** Connections of the workspace login, open now, for tests and diagnostics. */

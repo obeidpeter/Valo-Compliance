@@ -103,7 +103,7 @@ export function WorkspaceExportJobs({ pollMs = 2000 }: { pollMs?: number }) {
     .join(",");
   useEffect(() => {
     if (!activeIds || accessDenied) return;
-    const timer = setInterval(async () => {
+    const poll = async () => {
       const request = controller.current;
       if (!request || polling.current) return;
       polling.current = true;
@@ -127,7 +127,9 @@ export function WorkspaceExportJobs({ pollMs = 2000 }: { pollMs?: number }) {
       } finally {
         if (current(request)) polling.current = false;
       }
-    }, pollMs);
+    };
+    // poll handles its own failures, so the interval ignores its promise.
+    const timer = setInterval(() => void poll(), pollMs);
     return () => clearInterval(timer);
   }, [activeIds, accessDenied, pollMs, report]);
   useEffect(() => {

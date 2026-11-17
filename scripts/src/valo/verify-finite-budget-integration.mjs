@@ -62,7 +62,7 @@ async function command(name, file, args) {
   try {
     const r = await pending;
     return { log: r.stdout + r.stderr, elapsedMs: Date.now() - begin };
-  } catch (e) {
+  } catch {
     throw Error(`${name}_FAILED`);
   } finally {
     output.end();

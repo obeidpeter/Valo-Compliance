@@ -171,6 +171,7 @@ export function AssessmentDetail({ id }: { id: string }) {
         <div className="min-w-0">
           <AssessmentResultView
             result={s.result}
+            // oxlint-disable-next-line react/no-unstable-nested-components -- a render function the list calls, not a component
             itemAction={(it) =>
               canCreateSourceTask(it) ? (
                 <button
@@ -393,7 +394,7 @@ function TaskFromItem({
       },
       {
         onSuccess: () => {
-          qc.invalidateQueries({ queryKey: getListTasksQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListTasksQueryKey() });
           toast({ title: "Task added", description: "Find it under Tasks." });
           onDone();
         },

@@ -111,9 +111,11 @@ async function main() {
     }),
   );
 }
-main()
-  .catch(() => {
-    console.error("Budget preparation held; no activation or billing reconciliation inferred.");
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch {
+  console.error("Budget preparation held; no activation or billing reconciliation inferred.");
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

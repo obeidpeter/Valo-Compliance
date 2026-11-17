@@ -60,7 +60,9 @@ async function recorded(run: () => Promise<unknown>): Promise<Checkout[]> {
   const connect = target.connect;
   const watch = (client: PoolClient, checkout: Checkout) => {
     const own = Object.prototype.hasOwnProperty.call(client, "query"),
+      // oxlint-disable-next-line typescript/unbound-method -- the recorder calls it with the client
       query = client.query,
+      // oxlint-disable-next-line typescript/unbound-method -- the recorder calls it with the client
       release = client.release;
     client.query = function (this: PoolClient, config: unknown, ...rest: unknown[]) {
       const text = typeof config === "string" ? config : (config as { text?: unknown } | null)?.text;

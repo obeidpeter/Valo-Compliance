@@ -64,6 +64,7 @@ export async function erasureProofStorage(workspaceId: string, mode: "portable" 
     remove,
     async close() {
       // Keep DB locators if native cleanup cannot be confirmed by the caller.
+      // oxlint-disable-next-line unicorn/no-useless-spread -- a copy, because remove() deletes from owned
       for (const key of [...owned]) await remove(key);
       if (dir) await rm(dir, { recursive: true, force: true });
     },

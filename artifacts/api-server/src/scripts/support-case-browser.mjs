@@ -100,7 +100,7 @@ function result(row, page = 1) {
     notice: "Saved case history. Portal only; no external delivery.",
   };
 }
-const server = http.createServer(async (req, res) => {
+const handle = async (req, res) => {
   const url = new URL(req.url, "http://localhost");
   const json = (status, data) => {
     res.writeHead(status, { "Content-Type": "application/json" });
@@ -213,8 +213,11 @@ const server = http.createServer(async (req, res) => {
     createdAt: "2026-11-15T00:01:00Z",
   });
   json(200, result(row));
-});
-(async () => {
+};
+// A failure ends this harness with an unhandled rejection, as it did when createServer called
+// the async handler directly.
+const server = http.createServer((req, res) => void handle(req, res));
+const run = async () => {
   await build({
     stdin: {
       contents: `import React,{useState} from 'react';import {createRoot} from 'react-dom/client';import {QueryClient,QueryClientProvider} from '@tanstack/react-query';import {CustomerSupportCases} from '${base}/artifacts/valo/src/components/support-cases';import {StaffSupportCases} from '${base}/artifacts/valo/src/components/staff-support-cases';import {ContentEscalations} from '${base}/artifacts/valo/src/components/content-escalations';const client=new QueryClient({defaultOptions:{queries:{retry:false,refetchOnWindowFocus:false},mutations:{retry:false}}});function App(){const[dirty,setDirty]=useState(false);return <QueryClientProvider client={client}>{location.pathname==='/content'?<><button disabled={dirty}>Other staff area</button><ContentEscalations onDirtyChange={setDirty}/></>:location.pathname==='/staff'?<><button disabled={dirty}>Other staff area</button><StaffSupportCases onDirtyChange={setDirty}/></>:<CustomerSupportCases/>}</QueryClientProvider>}createRoot(document.getElementById('root')).render(<App/>);`,
@@ -481,10 +484,13 @@ const server = http.createServer(async (req, res) => {
     await browser.close();
     await new Promise((resolve) => server.close(resolve));
   }
-})()
-  .catch((e) => {
-    console.error(e);
-    server.close();
-    process.exitCode = 1;
-  })
-  .finally(() => fs.rm(dir, { recursive: true, force: true }));
+};
+try {
+  await run();
+} catch (e) {
+  console.error(e);
+  server.close();
+  process.exitCode = 1;
+} finally {
+  await fs.rm(dir, { recursive: true, force: true });
+}

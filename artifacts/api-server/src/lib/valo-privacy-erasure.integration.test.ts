@@ -708,6 +708,7 @@ test(
       } catch {
         await closePrivacyErasureLocks();
         await pool.end();
+        // oxlint-disable-next-line eslint/no-unsafe-finally -- a failed cleanup fails the test, whatever its body did
         throw Error("ERASURE_PROOF_CLEANUP_PENDING_SYNTHETIC_ROWS_RETAINED");
       }
       for (const table of [valoFileAssets, valoExportObjects, valoExportJobs])

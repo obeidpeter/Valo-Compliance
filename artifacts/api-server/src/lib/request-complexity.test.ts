@@ -146,7 +146,7 @@ test(
         });
       }
       await t.test("structural collection limit remains enforced", async () => {
-        const response = await request(JSON.stringify(Array(257).fill({ a: 1 })));
+        const response = await request(JSON.stringify(Array.from({ length: 257 }, () => ({ a: 1 }))));
         assert.equal(response.status, 413);
         const errorBody: unknown = await response.json();
         assert.ok(errorBody !== null && typeof errorBody === "object" && "code" in errorBody);

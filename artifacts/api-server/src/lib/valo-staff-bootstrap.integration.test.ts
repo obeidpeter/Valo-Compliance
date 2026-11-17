@@ -17,6 +17,7 @@ async function inRollback(fn: (tx: Tx) => Promise<void>) {
   try {
     await db.transaction(async (tx) => {
       await fn(tx);
+      // oxlint-disable-next-line typescript/only-throw-error -- a sentinel that rolls the transaction back; caught just below
       throw rollback;
     });
   } catch (error) {

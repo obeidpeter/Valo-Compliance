@@ -178,9 +178,11 @@ async function main() {
   });
   if (failed) process.exitCode = 1;
 }
-main()
-  .catch(() => {
-    logger.error({ event: "customer_ai.evaluation_failed_before_report" });
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch {
+  logger.error({ event: "customer_ai.evaluation_failed_before_report" });
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

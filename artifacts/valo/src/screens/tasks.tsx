@@ -101,9 +101,9 @@ export default function TasksPage() {
       },
       {
         onSuccess: () => {
-          qc.invalidateQueries({ queryKey: getListTasksQueryKey() });
-          qc.invalidateQueries({ queryKey: getListTasksPageQueryKey() });
-          qc.invalidateQueries({ queryKey: getListRemindersQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListTasksQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListTasksPageQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListRemindersQueryKey() });
           setNewDraft(emptyDraft());
           setNewOpen(false);
           create.reset();
@@ -343,6 +343,7 @@ function TaskRow({
   useEffect(() => {
     onEditing(editing, task);
     return () => onEditing(false, task);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- keyed on the task's id, so a refetched task does not report editing stopping and starting
   }, [editing, task.id, onEditing]);
   const [draft, setDraft] = useState<TaskDraft | null>(null);
   const [baseRev, setBaseRev] = useState(task.revision);
@@ -381,7 +382,7 @@ function TaskRow({
           const d = describeError(e);
           if (d.kind === "conflict") {
             setConflict(d.currentRevision ?? -1);
-            refresh();
+            void refresh();
           }
         },
       },
@@ -403,7 +404,7 @@ function TaskRow({
       },
       {
         onError: (e) => {
-          if (describeError(e).kind === "conflict") refresh();
+          if (describeError(e).kind === "conflict") void refresh();
         },
       },
     );
@@ -414,7 +415,7 @@ function TaskRow({
       { id: task.id, data: { expectedRevision: task.revision } },
       {
         onError: (e) => {
-          if (describeError(e).kind === "conflict") refresh();
+          if (describeError(e).kind === "conflict") void refresh();
           setConfirmArchive(false);
         },
       },

@@ -26,8 +26,8 @@ export function GuidedDraftStarter() {
       },
       {
         onSuccess: (doc) => {
-          qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
-          qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
           navigate("/workspace/documents/" + doc.id);
         },
       },

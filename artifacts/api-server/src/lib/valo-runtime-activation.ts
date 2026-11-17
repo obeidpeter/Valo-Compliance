@@ -16,6 +16,7 @@ function binding(env: Environment) {
   return createHash("sha256")
     .update(
       JSON.stringify(
+        // oxlint-disable-next-line typescript/require-array-sort-compare -- entries sort by their unique keys; this order is part of the fingerprint
         Object.entries(env)
           .filter(([k]) => /^(NODE_ENV|DATABASE_URL|PRIVATE_OBJECT_DIR|VALO_|REPLIT_DEPLOYMENT)/.test(k))
           .sort(),

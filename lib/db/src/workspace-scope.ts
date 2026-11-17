@@ -163,7 +163,9 @@ type Query = (config: unknown, values?: unknown, callback?: unknown) => unknown;
  */
 export function scopeClient(client: pg.PoolClient, sign: ScopeSigner): void {
   const own = Object.getOwnPropertyDescriptor(client, "query"),
+    // oxlint-disable-next-line typescript/unbound-method -- always called with the client
     original = client.query as unknown as Query,
+    // oxlint-disable-next-line typescript/unbound-method -- always called with the client
     release = client.release;
   const send = (config: unknown, values?: unknown) =>
     original.call(client, config, values) as Promise<pg.QueryResult>;
@@ -225,10 +227,13 @@ export function scopeClient(client: pg.PoolClient, sign: ScopeSigner): void {
     }
     const result = scoped(text, config, values);
     if (typeof callback !== "function") return result;
+    // Serves pg's callback API: the callback runs once, from whichever handler settles.
+    /* oxlint-disable promise/no-callback-in-promise */
     result.then(
       (value) => (callback as (error: unknown, value?: unknown) => void)(null, value),
       (error) => (callback as (error: unknown) => void)(error),
     );
+    /* oxlint-enable promise/no-callback-in-promise */
     return undefined;
   } as typeof client.query;
 

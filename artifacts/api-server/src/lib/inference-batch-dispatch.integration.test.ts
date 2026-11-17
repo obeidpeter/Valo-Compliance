@@ -361,9 +361,11 @@ test(
           const works = [work("a"), work("b", "checker_challenge", null, "challenge"), work("c")],
             id = await seed(works);
           const first = run(d, id, works[0]!);
+          // oxlint-disable-next-line eslint/no-unmodified-loop-condition -- the stubbed provider increments calls while this waits
           while (calls < 1) await new Promise((r) => setTimeout(r, 5));
           await assert.rejects(() => run(d, id, works[0]!), /ALREADY_DISPATCHED_OR_UNKNOWN/);
           const second = run(d, id, works[1]!);
+          // oxlint-disable-next-line eslint/no-unmodified-loop-condition -- the stubbed provider increments calls while this waits
           while (calls < 2) await new Promise((r) => setTimeout(r, 5));
           await assert.rejects(() => run(d, id, works[2]!), /CONCURRENCY_EXHAUSTED/);
           release();

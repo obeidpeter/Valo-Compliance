@@ -19,7 +19,7 @@ export const providerRefund = z.object({
 export type RefundObservation = z.infer<typeof providerRefund>;
 export type RefundProvider = {
   configured(): boolean;
-  find(reference: string): Promise<unknown | null>;
+  find(reference: string): Promise<unknown>;
   create(input: {
     reference: string;
     transaction: string;

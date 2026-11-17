@@ -67,6 +67,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <span className="mx-2 opacity-40">/</span>
         Not launched. Use synthetic test details only — no real customer or confidential data.
       </div>
+      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- Escape from any control in the header closes the menu; the header takes no focus */}
       <header
         className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md"
         onKeyDown={(e) => {

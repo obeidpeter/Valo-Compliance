@@ -6,7 +6,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { captureExportRetention } from "./export_retention_contract.mjs";
 import { signJournal, privacyTable } from "./recovery_contract.mjs";
 import { replayExportRetention, assertRetentionRestoreTarget } from "./retention_restore.mjs";

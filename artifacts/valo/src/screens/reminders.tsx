@@ -116,13 +116,13 @@ export default function RemindersPage() {
           setConflict(false);
           setSavedNote(true);
           qc.setQueryData(getGetReminderPreferencesQueryKey(), p);
-          qc.invalidateQueries({ queryKey: getListRemindersQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListRemindersQueryKey() });
         },
         onError: (er) => {
           const d = describeError(er);
           if (d.kind === "conflict") {
             setConflict(true);
-            qc.invalidateQueries({ queryKey: getGetReminderPreferencesQueryKey() });
+            void qc.invalidateQueries({ queryKey: getGetReminderPreferencesQueryKey() });
           } else setErr(d.message);
         },
       },
@@ -203,6 +203,7 @@ export default function RemindersPage() {
                 <span className="relative inline-flex">
                   <input
                     type="checkbox"
+                    // oxlint-disable-next-line jsx-a11y/role-has-required-aria-props -- the native checkbox exposes its checked state to the switch role
                     role="switch"
                     className="peer sr-only"
                     checked={enabled}

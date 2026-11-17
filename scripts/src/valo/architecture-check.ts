@@ -100,7 +100,7 @@ function sourceFiles(directory: string, include: (path: string) => boolean): str
 }
 
 const isSource = (path: string) =>
-  /\.(ts|tsx)$/.test(path) && !/\.d\.ts$/.test(path) && !/\.generated\.ts$/.test(path);
+  /\.(ts|tsx)$/.test(path) && !path.endsWith(".d.ts") && !path.endsWith(".generated.ts");
 const isProductSource = (path: string) =>
   isSource(path) && !/\.test\.tsx?$/.test(path) && !path.includes("/test-support/");
 

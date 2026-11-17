@@ -1,6 +1,6 @@
 /** Real React/account-boundary/native-download journey with controlled HTTP
  * jobs and synthetic cookies. No real identity, database, worker or provider. */
-import { createServer, type ServerResponse } from "node:http";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { once } from "node:events";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -77,7 +77,7 @@ function change(job: FixtureJob, status: WorkspaceDataExportJob["status"], expir
     job.progress.bytes = status === "ready" ? 9_500_000 : 8_000_000;
   }
 }
-const server = createServer(async (req, res) => {
+const handle = async (req: IncomingMessage, res: ServerResponse) => {
   const url = new URL(req.url ?? "/", "http://fixture");
   res.setHeader("Cache-Control", "private, no-store");
   const json = (value: unknown, status = 200) => {
@@ -262,7 +262,10 @@ const server = createServer(async (req, res) => {
     return;
   }
   json(publicJob(job));
-});
+};
+// A failure ends this harness with an unhandled rejection, as it did when createServer called
+// the async handler directly.
+const server = createServer((req, res) => void handle(req, res));
 server.listen(0, "127.0.0.1");
 await once(server, "listening");
 const address = server.address();

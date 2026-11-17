@@ -142,6 +142,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
   const received: ManagedRequest[] = [];
   const responses: string[] = [];
   class MemoryBudgetStore {
+    // oxlint-disable-next-line eslint/no-useless-constructor -- accepts the arguments the real store's constructor takes
     constructor(..._args: unknown[]) {}
     schemaName() {
       return "public";

@@ -371,7 +371,7 @@ try {
     expect(own.profileRevision).toBe(0);
     const spoof = GetWorkspaceResponse.parse(
       await (
-        await other.request.get(`/api/workspace?workspaceId=${report.workspaceId}`, {
+        await other.request.get(`/api/workspace?workspaceId=${String(report.workspaceId)}`, {
           headers: { "X-Workspace-Id": String(report.workspaceId) },
         })
       ).json(),

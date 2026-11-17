@@ -75,13 +75,15 @@ async function main() {
     if (scratch) await rm(scratch, { recursive: true, force: true });
   }
 }
-main()
-  .catch((e) => {
-    console.error(
-      e instanceof Error && /^[A-Z_]{3,100}$/.test(e.message)
-        ? e.message
-        : "OPERATIONAL_SET_PREPARATION_FAILED",
-    );
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch (e) {
+  console.error(
+    e instanceof Error && /^[A-Z_]{3,100}$/.test(e.message)
+      ? e.message
+      : "OPERATIONAL_SET_PREPARATION_FAILED",
+  );
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

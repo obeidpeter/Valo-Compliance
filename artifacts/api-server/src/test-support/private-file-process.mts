@@ -24,7 +24,7 @@ const denied = async () => {
   throw Error("NATIVE_OPERATION_NOT_PART_OF_PORTABLE_WORKER_PROOF");
 };
 const url = new URL("../lib/valo-private-storage.ts", import.meta.url).href;
-await mock.module(url, {
+mock.module(url, {
   namedExports: {
     fileChecksum: checksum,
     writePrivateFile: async (key: string, bytes: Buffer, onUploading?: () => Promise<void>) => {

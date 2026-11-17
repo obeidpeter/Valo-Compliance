@@ -94,9 +94,11 @@ async function main() {
     }) + "\n",
   );
 }
-main()
-  .catch(() => {
-    process.stderr.write("CHECKPOINT_COLLECTION_FAILED\n");
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch {
+  process.stderr.write("CHECKPOINT_COLLECTION_FAILED\n");
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

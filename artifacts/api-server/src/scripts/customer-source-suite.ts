@@ -375,9 +375,11 @@ async function main() {
   );
   if (report.failed) process.exitCode = 1;
 }
-main()
-  .catch(() => {
-    console.error("Customer source suite stopped; no success inferred.");
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch {
+  console.error("Customer source suite stopped; no success inferred.");
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

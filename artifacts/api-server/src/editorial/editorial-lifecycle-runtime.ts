@@ -48,6 +48,7 @@ async function validate(id: string, time?: Date) {
   try {
     await db.transaction(async (tx) => {
       result = await validateOperationalVersionInTransaction(tx, id, time);
+      // oxlint-disable-next-line typescript/only-throw-error -- a sentinel that rolls the transaction back; caught just below
       throw ROLLBACK;
     });
   } catch (error) {

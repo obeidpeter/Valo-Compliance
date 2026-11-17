@@ -171,13 +171,15 @@ async function main() {
     }),
   );
 }
-main()
-  .catch((error) => {
-    console.error(
-      error instanceof Error && /^[A-Z_]{3,100}$/.test(error.message)
-        ? error.message
-        : "FINITE_HISTORY_PREPARATION_FAILED",
-    );
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch (error) {
+  console.error(
+    error instanceof Error && /^[A-Z_]{3,100}$/.test(error.message)
+      ? error.message
+      : "FINITE_HISTORY_PREPARATION_FAILED",
+  );
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

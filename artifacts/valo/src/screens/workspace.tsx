@@ -29,8 +29,8 @@ export default function WorkspaceHome() {
       { data: { title: "Untitled business draft", content: blankContent() } },
       {
         onSuccess: (doc) => {
-          qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-          qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
           setLocation("/workspace/documents/" + doc.id);
         },
       },

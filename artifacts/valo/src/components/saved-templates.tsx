@@ -26,8 +26,8 @@ export function SaveTemplateButton({ releaseId, templateId }: { releaseId: strin
         disabled={pending || !list.isSuccess}
         onClick={() =>
           saved
-            ? remove.mutate({ templateId }, { onSuccess: refresh })
-            : save.mutate({ id: releaseId }, { onSuccess: refresh })
+            ? remove.mutate({ templateId }, { onSuccess: () => void refresh() })
+            : save.mutate({ id: releaseId }, { onSuccess: () => void refresh() })
         }
         data-testid="button-save-template"
       >

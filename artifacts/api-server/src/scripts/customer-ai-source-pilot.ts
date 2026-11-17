@@ -315,9 +315,11 @@ async function main() {
   );
   if (report.failed) process.exitCode = 1;
 }
-main()
-  .catch(() => {
-    console.error("Source pilot stopped safely; do not infer provider, identity or export success");
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch {
+  console.error("Source pilot stopped safely; do not infer provider, identity or export success");
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

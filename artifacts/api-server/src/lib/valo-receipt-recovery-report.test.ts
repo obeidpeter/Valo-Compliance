@@ -47,6 +47,7 @@ test("awaits a successful peer and retains its receipt when another call fails",
 });
 test("preserves order IDs and safe database reason codes for failed repairs", async () => {
   const outcome = await recoverReceiptWithEvidence("order-d", async () => {
+    // oxlint-disable-next-line typescript/only-throw-error -- imitates a database driver error's shape
     throw { cause: { code: "23503", detail: "PRIVATE ROW" } };
   });
   assert.equal(outcome.orderId, "order-d");

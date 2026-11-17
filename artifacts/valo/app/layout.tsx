@@ -17,6 +17,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* oxlint-disable-next-line nextjs/no-page-custom-font -- fonts move to next/font with the plan's self-hosted fonts item */}
         <link
           rel="stylesheet"
           precedence="default"

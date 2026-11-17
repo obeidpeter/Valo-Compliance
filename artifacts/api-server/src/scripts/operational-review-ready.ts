@@ -123,6 +123,7 @@ async function main() {
   if (process.env.VALO_PROVE_REVIEW_PLAN_GUARDS === "synthetic-development-only") {
     // Hard-disable this CLI process's SDK transport. Never inject a success,
     // fabricate provider findings, or risk a charge while testing a guard.
+    // oxlint-disable-next-line typescript/unbound-method -- kept only to restore the property afterwards
     const originalCreate = openai.chat.completions.create;
     Object.defineProperty(openai.chat.completions, "create", {
       configurable: true,
@@ -232,13 +233,15 @@ async function main() {
     }),
   );
 }
-main()
-  .catch((error) => {
-    console.error(
-      error instanceof Error && /^[A-Z_]+$/.test(error.message)
-        ? error.message
-        : "OPERATIONAL_REVIEW_PLAN_FAILED",
-    );
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch (error) {
+  console.error(
+    error instanceof Error && /^[A-Z_]+$/.test(error.message)
+      ? error.message
+      : "OPERATIONAL_REVIEW_PLAN_FAILED",
+  );
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

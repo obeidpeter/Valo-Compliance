@@ -281,9 +281,11 @@ async function main() {
   });
   if (report.failed || report.blocked) process.exitCode = 1;
 }
-main()
-  .catch(() => {
-    logger.error({ event: "reminder.evaluation_failed_before_report" });
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch {
+  logger.error({ event: "reminder.evaluation_failed_before_report" });
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

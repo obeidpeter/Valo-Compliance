@@ -112,11 +112,13 @@ async function main() {
     }),
   );
 }
-main()
-  .catch((e) => {
-    console.error(
-      e instanceof Error && /^[A-Z_]{3,100}$/.test(e.message) ? e.message : "HISTORY_RECONCILIATION_FAILED",
-    );
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch (e) {
+  console.error(
+    e instanceof Error && /^[A-Z_]{3,100}$/.test(e.message) ? e.message : "HISTORY_RECONCILIATION_FAILED",
+  );
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

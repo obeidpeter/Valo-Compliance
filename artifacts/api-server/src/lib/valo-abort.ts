@@ -5,6 +5,7 @@ export async function abortable<T>(signal: AbortSignal | undefined, run: () => P
   if (!signal) return run();
   let stop!: () => void;
   const cancelled = new Promise<never>((_resolve, reject) => {
+    // oxlint-disable-next-line typescript/prefer-promise-reject-errors -- rejects with the signal's own reason, as fetch does
     stop = () => reject(signal.reason ?? new DOMException("Cancelled", "AbortError"));
     signal.addEventListener("abort", stop, { once: true });
   });

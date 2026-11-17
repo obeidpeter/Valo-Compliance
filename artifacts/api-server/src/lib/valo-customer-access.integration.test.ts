@@ -226,6 +226,7 @@ test(
             await paused;
           }),
         );
+        // oxlint-disable-next-line eslint/no-unmodified-loop-condition -- the held exports increment started while this waits
         while (started < MAX_CONCURRENT_WORKSPACE_EXPORTS) await new Promise((r) => setTimeout(r, 10));
         await assert.rejects(workspaceDataExport(a), { status: 503, retryAfter: 30, message: /busy/ });
         release();

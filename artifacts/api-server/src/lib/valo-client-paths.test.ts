@@ -82,6 +82,7 @@ test("the generated web client keeps every identifier inside its own path segmen
           [name, ...elements] = (key as (...v: string[]) => unknown[])(...values);
         // orval fixes the order of the identifiers per operation, not always in path order.
         assert.equal(name, operation.operationId, operation.key);
+        // oxlint-disable-next-line typescript/require-array-sort-compare -- compares the same strings in any order
         assert.deepEqual([...elements].sort(), [...values].sort(), operation.key);
       }
     });

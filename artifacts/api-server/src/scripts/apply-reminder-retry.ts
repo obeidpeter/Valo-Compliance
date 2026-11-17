@@ -50,9 +50,11 @@ async function main() {
     JSON.stringify({ developmentAdditiveMigrationApplied: true, existingRowsAndAttemptsPreserved: true }),
   );
 }
-main()
-  .catch(() => {
-    console.error("REMINDER_RETRY_MIGRATION_FAILED");
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch {
+  console.error("REMINDER_RETRY_MIGRATION_FAILED");
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

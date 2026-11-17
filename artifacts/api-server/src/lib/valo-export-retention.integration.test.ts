@@ -39,7 +39,7 @@ import { readinessQueries } from "./valo-operations";
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const files = new Map<string, Buffer>();
 let onRead: (() => Promise<void>) | undefined;
-await mock.module(new URL("./valo-private-storage.ts", import.meta.url).href, {
+mock.module(new URL("./valo-private-storage.ts", import.meta.url).href, {
   namedExports: {
     fileChecksum: digest,
     anonymousPrivateFileStatus: async () => 404,

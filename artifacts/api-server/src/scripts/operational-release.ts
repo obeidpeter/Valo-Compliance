@@ -54,13 +54,16 @@ async function main() {
     );
   } else throw Error("Use prepare or withdraw VERSION_ID");
 }
-main()
-  .catch((e) => {
-    const safe =
-      typeof e.message === "string" && /^[A-Z_]+(?::[a-z_:,]+)?$/.test(e.message)
-        ? e.message
-        : "OPERATIONAL_PUBLICATION_FAILED";
-    process.stderr.write(`${safe}\n`);
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch (e) {
+  const message = (e as { message?: unknown }).message;
+  const safe =
+    typeof message === "string" && /^[A-Z_]+(?::[a-z_:,]+)?$/.test(message)
+      ? message
+      : "OPERATIONAL_PUBLICATION_FAILED";
+  process.stderr.write(`${safe}\n`);
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

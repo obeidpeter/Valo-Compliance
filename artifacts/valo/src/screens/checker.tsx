@@ -579,6 +579,7 @@ export default function Checker() {
               </div>
               <AssessmentResultView
                 result={result.r}
+                // oxlint-disable-next-line react/no-unstable-nested-components -- a render function the result calls, not a component
                 questionAction={(field) => {
                   const target = richQuestionTarget(field);
                   return target && (target.section !== "businessName" || isSignedIn) ? (
@@ -889,12 +890,12 @@ function SavePanel({
       { data },
       {
         onSuccess: (a) => {
-          qc.invalidateQueries({ queryKey: getListAssessmentsQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListAssessmentsQueryKey() });
           setLocation("/workspace/assessments/" + a.id);
         },
         onError: (er) => {
           if (describeError(er).kind === "conflict")
-            qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
+            void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
         },
       },
     );

@@ -376,7 +376,7 @@ export function guidedRenderableBlocks(content: Content): GuidedBlock[] {
                 return c.type === "money_kobo"
                   ? value.replace(/whole kobo/g, "NGN displayed from supplied kobo")
                   : value;
-              const context = { ...data.values, ...(data.tables[table.id]?.[index - 1] ?? {}) };
+              const context = { ...data.values, ...data.tables[table.id]?.[index - 1] };
               if (!guidedVisible(c, context)) return "";
               if (c.type === "money_kobo" && !guidedFieldIssue(c, value)) return formatKobo(value.trim());
               return c.type === "select"

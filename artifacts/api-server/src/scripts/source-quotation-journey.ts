@@ -137,24 +137,23 @@ async function main() {
     }),
   );
 }
-main()
-  .catch(async (error) => {
-    const code =
-      error instanceof Error && /^[A-Z_]{3,100}$/.test(error.message)
-        ? error.message
-        : error instanceof assert.AssertionError
-          ? "ASSERTION_FAILED"
-          : "JOURNEY_ERROR";
-    const out = resolve(
-      import.meta.dirname,
-      "../../../../generated-artifacts/valo-completion/quote-followup",
-    );
-    await mkdir(out, { recursive: true });
-    await writeFile(
-      resolve(out, "failure.json"),
-      JSON.stringify({ stage, code, executedAt: new Date().toISOString(), completed: false }) + "\n",
-    );
-    console.error(JSON.stringify({ stage, code, completed: false }));
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch (error) {
+  const code =
+    error instanceof Error && /^[A-Z_]{3,100}$/.test(error.message)
+      ? error.message
+      : error instanceof assert.AssertionError
+        ? "ASSERTION_FAILED"
+        : "JOURNEY_ERROR";
+  const out = resolve(import.meta.dirname, "../../../../generated-artifacts/valo-completion/quote-followup");
+  await mkdir(out, { recursive: true });
+  await writeFile(
+    resolve(out, "failure.json"),
+    JSON.stringify({ stage, code, executedAt: new Date().toISOString(), completed: false }) + "\n",
+  );
+  console.error(JSON.stringify({ stage, code, completed: false }));
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

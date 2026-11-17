@@ -98,6 +98,7 @@ export function parsePublicMetadata(raw: unknown): PublicMetadataItem[] {
         return [];
       try {
         const segment = decodeURIComponent(r.path.split("/")[2]!);
+        // oxlint-disable-next-line eslint/no-control-regex -- refuses control characters and spaces in a path segment
         if (segment === "." || segment === ".." || /[/?#\\\u0000-\u0020]/.test(segment)) return [];
       } catch {
         return [];

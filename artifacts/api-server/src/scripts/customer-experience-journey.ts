@@ -1109,6 +1109,7 @@ try {
     for (const row of assets.rows) {
       try {
         if (!row.object_key.startsWith(`valo/development/${workspaceId}/`))
+          // oxlint-disable-next-line eslint/no-unsafe-finally -- caught just below, which counts the failed cleanup
           throw Error("OWN_PRIVATE_OBJECT_REQUIRED");
         await deletePrivateFile(row.object_key);
       } catch {

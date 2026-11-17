@@ -10,7 +10,7 @@ assertDevelopmentRuntime();
 if (process.env.VALO_ERASURE_BATCH_CHILD !== "new-synthetic-fixture-only" || !process.send)
   throw Error("ISOLATED_REPLAY_CHILD_REQUIRED");
 let busy = false;
-process.on("message", async (raw) => {
+const onMessage = async (raw: unknown) => {
   if (raw === "stop") {
     await closePrivacyErasureLocks();
     await pool.end();
@@ -34,5 +34,7 @@ process.on("message", async (raw) => {
   } finally {
     busy = false;
   }
-});
+};
+// A failure ends this child with an unhandled rejection, as it did when the listener was async.
+process.on("message", (raw) => void onMessage(raw));
 process.send({ type: "ready" });

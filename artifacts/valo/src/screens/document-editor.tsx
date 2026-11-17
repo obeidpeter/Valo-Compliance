@@ -148,8 +148,8 @@ export default function DocumentEditor({ id }: { id: string }) {
           baseRev.current = d.revision;
           lastSaved.current = sent;
           qc.setQueryData(getGetDocumentQueryKey(id), d);
-          qc.invalidateQueries({ queryKey: getListDocumentRevisionsQueryKey(id) });
-          qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListDocumentRevisionsQueryKey(id) });
+          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
           if (latest.current && ser(latest.current) !== sent) {
             setState("dirty");
             timer.current = setTimeout(doSaveRef.current, AUTOSAVE_MS);
@@ -293,7 +293,7 @@ export default function DocumentEditor({ id }: { id: string }) {
   async function takeTheirs() {
     const r = await doc.refetch();
     if (r.data) adopt(r.data);
-    revs.refetch();
+    void revs.refetch();
   }
 
   function restore(r: BusinessDocument) {
@@ -317,8 +317,8 @@ export default function DocumentEditor({ id }: { id: string }) {
           inFlight.current = false;
           setRestoring(null);
           qc.setQueryData(getGetDocumentQueryKey(id), d);
-          qc.invalidateQueries({ queryKey: getListDocumentRevisionsQueryKey(id) });
-          qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
+          void qc.invalidateQueries({ queryKey: getListDocumentRevisionsQueryKey(id) });
+          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
           adopt(d);
         },
         onError: (e) => {
@@ -459,7 +459,7 @@ export default function DocumentEditor({ id }: { id: string }) {
               className="btn btn-ghost btn-sm"
               onClick={() => {
                 if (window.confirm("Discard your unsaved text and load the latest saved version?"))
-                  takeTheirs();
+                  void takeTheirs();
               }}
               data-testid="button-load-theirs"
             >

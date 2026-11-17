@@ -8,7 +8,9 @@ export function useUnsavedNavigation(dirty: () => boolean) {
     bypass = useRef(false);
   const [blocked, setBlocked] = useState(false);
   useEffect(() => {
+    // oxlint-disable-next-line typescript/unbound-method -- called with history, and restored on cleanup
     const originalPush = history.pushState,
+      // oxlint-disable-next-line typescript/unbound-method -- called with history, and restored on cleanup
       originalReplace = history.replaceState;
     let current = location.href;
     const changesRoute = (url: string | URL | null | undefined) => {
@@ -87,11 +89,11 @@ export function useUnsavedNavigation(dirty: () => boolean) {
   }, []);
   return {
     blocked,
-    stay() {
+    stay: () => {
       pending.current = null;
       setBlocked(false);
     },
-    proceed() {
+    proceed: () => {
       const operation = pending.current;
       pending.current = null;
       bypass.current = true;

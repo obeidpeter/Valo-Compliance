@@ -135,6 +135,7 @@ test("actual operational caller recovers an artifact failure from settled receip
   let batch: Batch,
     tail = Promise.resolve();
   class MemoryBudgetStore {
+    // oxlint-disable-next-line eslint/no-useless-constructor -- accepts the arguments the real store's constructor takes
     constructor(..._args: unknown[]) {}
     schemaName() {
       return "public";

@@ -1,6 +1,6 @@
 /** Actual React/download/browser behavior with a controlled API and identities.
  * Not managed sign-in, full privacy fulfilment or production acceptance. */
-import { createServer, type ServerResponse } from "node:http";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { once } from "node:events";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -88,7 +88,7 @@ function sendExport(actor: string, res: ServerResponse) {
   res.end(JSON.stringify(data));
   transport.delivered.push(actor);
 }
-const server = createServer(async (req, res) => {
+const handle = async (req: IncomingMessage, res: ServerResponse) => {
   res.setHeader("Cache-Control", "no-store");
   if (req.url === "/__fixture/status") {
     res.setHeader("Content-Type", "application/json");
@@ -135,7 +135,10 @@ const server = createServer(async (req, res) => {
       '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>',
     );
   }
-});
+};
+// A failure ends this harness with an unhandled rejection, as it did when createServer called
+// the async handler directly.
+const server = createServer((req, res) => void handle(req, res));
 server.listen(0, "127.0.0.1");
 await once(server, "listening");
 const address = server.address();

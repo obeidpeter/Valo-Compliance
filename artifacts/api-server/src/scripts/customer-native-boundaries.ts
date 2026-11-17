@@ -306,9 +306,11 @@ async function main() {
     }),
   );
 }
-main()
-  .catch(() => {
-    console.error("Native customer boundary proof stopped; no pass inferred.");
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch {
+  console.error("Native customer boundary proof stopped; no pass inferred.");
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

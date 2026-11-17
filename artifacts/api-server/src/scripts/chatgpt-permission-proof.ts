@@ -124,9 +124,11 @@ async function main() {
     }),
   );
 }
-main()
-  .catch((error) => {
-    console.error(error instanceof Error ? error.message : "PERMISSION_PROOF_FAILED");
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+try {
+  await main();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : "PERMISSION_PROOF_FAILED");
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

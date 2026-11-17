@@ -630,76 +630,75 @@ test(
             ).rows[0]!.profile_revision,
           );
         const { businessName: _name, marketingConsent: _consent, ...facts } = syntheticProfile;
-        const withoutIdentifier: Record<string, { query?: string; body?: () => Promise<unknown> | unknown }> =
-          {
-            "GET /workspace": {},
-            "GET /workspace/account": {},
-            "GET /workspace/ai-usage": {},
-            "GET /workspace/assessments": {},
-            "GET /workspace/correction-notices": { query: "?page=1" },
-            "GET /workspace/data-export": {},
-            "GET /workspace/data-exports": {},
-            "GET /workspace/disputes": {},
-            "GET /workspace/documents": {},
-            "GET /workspace/privacy-cases": {},
-            "GET /workspace/purchases": {},
-            "GET /workspace/reminder-preferences": {},
-            "GET /workspace/reminders": {},
-            "GET /workspace/saved-templates": {},
-            "GET /workspace/support-cases": { query: "?page=1" },
-            "GET /workspace/tasks": {},
-            "GET /workspace/tasks/page": { query: "?page=1&filter=all" },
-            "POST /workspace/ai-drafts": {
-              body: () => ({ ...structuredClone(customerAICases[0]!.input), idempotencyKey: randomUUID() }),
-            },
-            "POST /workspace/assessments": {
-              body: async () => ({ ...assessmentInput, expectedProfileRevision: await profileRevision() }),
-            },
-            "POST /workspace/checker/preview": { body: () => ({ facts, asOfDate: today }) },
-            "POST /workspace/data-exports": { body: () => ({ requestKey: randomUUID() }) },
-            "POST /workspace/documents": { body: () => syntheticDocument },
-            "POST /workspace/orders": {
-              body: () => ({ priceId, acceptedLicenceVersion: "test-only", requestKey: randomUUID() }),
-            },
-            "POST /workspace/privacy-requests": {
-              body: () => ({
-                kind: "correction",
-                message: "Synthetic correction request from the owner check.",
-                acknowledgement: true,
-                idempotencyKey: randomUUID(),
-              }),
-            },
-            "POST /workspace/support": {
-              body: () => ({
-                category: "support",
-                scope: "Synthetic owner support request for the owner check.",
-                contactEmail: "synthetic@example.invalid",
-                sharingConsent: false,
-              }),
-            },
-            "POST /workspace/tasks": {
-              body: () => ({
-                title: "Synthetic owner check task",
-                notes: "",
-                dueDate: null,
-                dateConfirmed: false,
-                assessmentId: null,
-                ruleId: null,
-              }),
-            },
-            "PUT /workspace/profile": {
-              body: async () => ({ expectedRevision: await profileRevision(), profile: syntheticProfile }),
-            },
-            "PUT /workspace/reminder-preferences": {
-              body: async () => ({
-                enabled: false,
-                offsets: [],
-                expectedRevision: Number(
-                  json(await call(owner, "GET", "/workspace/reminder-preferences")).revision,
-                ),
-              }),
-            },
-          };
+        const withoutIdentifier: Record<string, { query?: string; body?: () => unknown }> = {
+          "GET /workspace": {},
+          "GET /workspace/account": {},
+          "GET /workspace/ai-usage": {},
+          "GET /workspace/assessments": {},
+          "GET /workspace/correction-notices": { query: "?page=1" },
+          "GET /workspace/data-export": {},
+          "GET /workspace/data-exports": {},
+          "GET /workspace/disputes": {},
+          "GET /workspace/documents": {},
+          "GET /workspace/privacy-cases": {},
+          "GET /workspace/purchases": {},
+          "GET /workspace/reminder-preferences": {},
+          "GET /workspace/reminders": {},
+          "GET /workspace/saved-templates": {},
+          "GET /workspace/support-cases": { query: "?page=1" },
+          "GET /workspace/tasks": {},
+          "GET /workspace/tasks/page": { query: "?page=1&filter=all" },
+          "POST /workspace/ai-drafts": {
+            body: () => ({ ...structuredClone(customerAICases[0]!.input), idempotencyKey: randomUUID() }),
+          },
+          "POST /workspace/assessments": {
+            body: async () => ({ ...assessmentInput, expectedProfileRevision: await profileRevision() }),
+          },
+          "POST /workspace/checker/preview": { body: () => ({ facts, asOfDate: today }) },
+          "POST /workspace/data-exports": { body: () => ({ requestKey: randomUUID() }) },
+          "POST /workspace/documents": { body: () => syntheticDocument },
+          "POST /workspace/orders": {
+            body: () => ({ priceId, acceptedLicenceVersion: "test-only", requestKey: randomUUID() }),
+          },
+          "POST /workspace/privacy-requests": {
+            body: () => ({
+              kind: "correction",
+              message: "Synthetic correction request from the owner check.",
+              acknowledgement: true,
+              idempotencyKey: randomUUID(),
+            }),
+          },
+          "POST /workspace/support": {
+            body: () => ({
+              category: "support",
+              scope: "Synthetic owner support request for the owner check.",
+              contactEmail: "synthetic@example.invalid",
+              sharingConsent: false,
+            }),
+          },
+          "POST /workspace/tasks": {
+            body: () => ({
+              title: "Synthetic owner check task",
+              notes: "",
+              dueDate: null,
+              dateConfirmed: false,
+              assessmentId: null,
+              ruleId: null,
+            }),
+          },
+          "PUT /workspace/profile": {
+            body: async () => ({ expectedRevision: await profileRevision(), profile: syntheticProfile }),
+          },
+          "PUT /workspace/reminder-preferences": {
+            body: async () => ({
+              enabled: false,
+              offsets: [],
+              expectedRevision: Number(
+                json(await call(owner, "GET", "/workspace/reminder-preferences")).revision,
+              ),
+            }),
+          },
+        };
         // Catalogue identifiers that are not the workspace's own; none of them is released here.
         const catalogue: Record<string, Record<string, string>> = {
           "POST /workspace/templates/{id}/draft": { id: randomUUID() },

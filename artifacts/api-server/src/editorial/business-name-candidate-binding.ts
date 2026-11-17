@@ -77,6 +77,7 @@ export function bindBusinessNameCandidate(
     requireEvidence(
       s.httpStatus === 200 &&
         s.bytes > 0 &&
+        // oxlint-disable-next-line unicorn/prefer-string-starts-ends-with -- the record is parsed JSON, so this also fails a non-string url
         /^https:\/\//u.test(s.url) &&
         /^[a-f0-9]{64}$/u.test(s.rawSHA256) &&
         /^[a-f0-9]{64}$/u.test(s.textSHA256) &&
