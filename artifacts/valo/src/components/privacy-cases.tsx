@@ -5,6 +5,7 @@ import {
   useVerifyPrivacyCase,
   useCancelPrivacyCase,
   useRespondPrivacyCase,
+  getDownloadPrivacyCaseResultUrl,
   type PrivacyCase,
 } from "@workspace/api-client-react";
 import { ErrorState } from "./states";
@@ -275,11 +276,7 @@ function PrivacyCaseCard({
               </button>
             )}
             {row.resultAvailable && (
-              <a
-                className="btn btn-ghost btn-sm"
-                href={`/api/workspace/privacy-cases/${row.id}/result`}
-                download
-              >
+              <a className="btn btn-ghost btn-sm" href={getDownloadPrivacyCaseResultUrl(row.id)} download>
                 Download prepared result
               </a>
             )}
