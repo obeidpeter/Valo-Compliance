@@ -152,3 +152,10 @@ the operator through the external check.
 Errors are logged as structured events without messages or customer data
 (`safe-error.ts`). An external error tracker would be a new dependency and a new
 processor of operational data, so it needs owner approval.
+
+A caller that waits more than 10 seconds for a database connection fails instead
+of waiting forever; an API request then gets the generic 503. Its log entry
+carries `DB_POOL_ACQUIRE_TIMEOUT` when every pooled connection was busy, or
+`DB_CONNECT_TIMEOUT` when the database did not answer a new connection. Repeated
+pool timeouts mean connections are held too long: look for long transactions or
+a transaction that waits on a second connection.
