@@ -149,6 +149,14 @@ export async function customerAccount(actor: WorkspaceActor) {
 export async function requestPrivacy(actor: WorkspaceActor, email: string, raw: unknown) {
   return createPrivacyCase(actor, email, raw);
 }
+/**
+ * An export pins a snapshot transaction for its whole run, and checks access on separate
+ * short transactions so a revocation is seen at once. It therefore needs two pooled
+ * connections at a time. Capping concurrent exports in each process keeps them from
+ * taking the connections every other request needs. The worker runs one at a time.
+ */
+export const MAX_CONCURRENT_WORKSPACE_EXPORTS = 2;
+let activeWorkspaceExports = 0;
 export async function workspaceDataExport(
   actor: WorkspaceActor,
   sink?: (chunk: string) => Promise<void>,
@@ -156,6 +164,26 @@ export async function workspaceDataExport(
   onPage?: (section: string, rows: number) => Promise<void>,
 ) {
   signal?.throwIfAborted();
+  if (activeWorkspaceExports >= MAX_CONCURRENT_WORKSPACE_EXPORTS)
+    throw new ValoProblem(
+      503,
+      "Workspace data exports are busy. Nothing was changed; try again in a minute.",
+      undefined,
+      30,
+    );
+  activeWorkspaceExports++;
+  try {
+    return await snapshotExport(actor, sink, signal, onPage);
+  } finally {
+    activeWorkspaceExports--;
+  }
+}
+async function snapshotExport(
+  actor: WorkspaceActor,
+  sink?: (chunk: string) => Promise<void>,
+  signal?: AbortSignal,
+  onPage?: (section: string, rows: number) => Promise<void>,
+) {
   const currentAccess = () =>
     abortable(signal, () => db.transaction((tx) => authorizeWorkspaceRead(tx, actor)));
   await currentAccess();

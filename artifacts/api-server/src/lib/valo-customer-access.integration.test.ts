@@ -27,6 +27,7 @@ import {
   requestPrivacy,
   workspaceDataExport,
   staffOperations,
+  MAX_CONCURRENT_WORKSPACE_EXPORTS,
 } from "./valo-customer-access";
 import { resolveWorkspace, createDocument, ValoProblem } from "./valo-store";
 import { syntheticDocument } from "./valo-test-fixtures";
@@ -214,6 +215,23 @@ test(
           assert.match(own.scope, /Previously prepared full workspace snapshots are deliberately not nested/);
         },
       );
+      await t.test("exports beyond the per-process limit are refused until one finishes", async () => {
+        // Each running export holds a snapshot connection; the sink below pauses them mid-run.
+        let release!: () => void;
+        const paused = new Promise<void>((resolve) => (release = resolve));
+        let started = 0;
+        const held = Array.from({ length: MAX_CONCURRENT_WORKSPACE_EXPORTS }, () =>
+          workspaceDataExport(a, async () => {
+            started++;
+            await paused;
+          }),
+        );
+        while (started < MAX_CONCURRENT_WORKSPACE_EXPORTS) await new Promise((r) => setTimeout(r, 10));
+        await assert.rejects(workspaceDataExport(a), { status: 503, retryAfter: 30, message: /busy/ });
+        release();
+        await Promise.all(held);
+        assert.ok((await workspaceDataExport(a)).data, "a slot is free again");
+      });
       await t.test("activity export is restricted to this requester and workspace", async () => {
         const otherActor = `synthetic-other-actor-${run}`,
           eventId = randomUUID();
