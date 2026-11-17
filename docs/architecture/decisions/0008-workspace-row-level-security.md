@@ -128,9 +128,11 @@ application would stop it.
 - A table that holds workspace rows needs the workspace policy in the same
   migration that creates it. The migration tests fail on any table with a
   `workspace_id` column that lacks it, on any other policy (which could only widen
-  access), on any grant that differs from the list, on default privileges for new
-  tables, and on any function the role may call that runs as its owner, except the
-  listed ones.
+  access), on any grant that differs from the list, on any grant outside `public`,
+  on default privileges for new tables, and on any function the role may call that
+  runs as its owner, except the listed ones. They also fail if the login inherits
+  privileges, holds any of its own, belongs to another role or can create objects
+  or schemas, or if any other role may become the scoped role.
 - Customer code that starts using a table, command or column fails with
   `permission denied` until a migration grants it. That fails closed, and the
   database tests show it.

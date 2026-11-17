@@ -402,6 +402,8 @@ test(
             const own = (await client.query("select current_setting('valo.workspace_credential') as c"))
               .rows[0].c;
             assert.deepEqual(await seen(), mine(a!.workspaceId));
+            // The keys credentials are signed with are out of reach.
+            await assert.rejects(statement("select * from valo_scope_keys"), /permission denied for table/);
             // Resetting the role leaves the login, which holds nothing and cannot become the
             // application role.
             await client.query("RESET ROLE");
@@ -410,6 +412,7 @@ test(
               "valo_workspace_login",
             );
             await assert.rejects(statement("select id from valo_documents"), /permission denied for table/);
+            await assert.rejects(statement("select * from valo_scope_keys"), /permission denied for table/);
             await assert.rejects(
               statement(`SET ROLE "${application.role}"`),
               /permission denied to set role/,
