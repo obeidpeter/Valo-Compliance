@@ -27,6 +27,9 @@ test("production denies injected scripts, frames, objects and unconfigured origi
   assert.ok(!policy.includes("https: "));
   assert.ok(!policy.includes("http:"));
   assert.ok(!policy.includes("replit.com"));
+  // Fonts are self-hosted: neither fonts nor styles may load from another origin.
+  assert.deepEqual(directives["font-src"], ["'self'"]);
+  assert.deepEqual(directives["style-src"], ["'self'", "'unsafe-inline'"]);
 });
 test("development allowances cannot leak through deployment markers or malformed configuration", () => {
   assert.match(contentSecurityPolicy(nonce, { NODE_ENV: "development" }), /unsafe-eval/);

@@ -37,7 +37,8 @@ export function contentSecurityPolicy(nonce: string, env: Environment = process.
       "https://*.protect.clerk.com",
       ...(development ? ["'unsafe-eval'"] : []),
     ],
-    "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+    // Fonts and styles come from this origin only (src/fonts.css); no visitor request goes to a font host.
+    "style-src": ["'self'", "'unsafe-inline'"],
     "connect-src": [
       "'self'",
       ...sources,
@@ -48,7 +49,7 @@ export function contentSecurityPolicy(nonce: string, env: Environment = process.
       ...(development ? ["ws:", "wss:"] : []),
     ],
     "img-src": ["'self'", "data:", "blob:", "https://img.clerk.com"],
-    "font-src": ["'self'", "https://fonts.gstatic.com"],
+    "font-src": ["'self'"],
     "frame-src": ["'self'", ...sources, "https://challenges.cloudflare.com", "https://*.protect.clerk.com"],
     "worker-src": ["'self'", "blob:"],
     "object-src": ["'none'"],

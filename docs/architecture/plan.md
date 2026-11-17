@@ -89,7 +89,7 @@ reach the 80% branch coverage NFR-011 requires.
 | Rate-limit cleanup off the request path | done |
 | Published-content cache with invalidation | not started |
 | Reuse one browser for PDFs, five in parallel | done |
-| Server-rendered public pages, split bundle, self-hosted fonts | not started |
+| Server-rendered public pages, split bundle, self-hosted fonts | in progress: the three fonts are served from the app (`src/fonts.css`, OFL files from Fontsource), so no visitor request goes to Google, and the content security policy allows fonts and styles from the app's own origin only; server-rendered public pages and a split bundle are not started |
 
 ### Phase 5 — Environments and operations
 

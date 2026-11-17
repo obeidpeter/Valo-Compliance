@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import "../src/fonts.css";
 import "../src/index.css";
 
 export const metadata: Metadata = {
@@ -14,16 +15,6 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en-NG">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* oxlint-disable-next-line nextjs/no-page-custom-font -- fonts move to next/font with the plan's self-hosted fonts item */}
-        <link
-          rel="stylesheet"
-          precedence="default"
-          href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-        />
-      </head>
       <body>{children}</body>
     </html>
   );
