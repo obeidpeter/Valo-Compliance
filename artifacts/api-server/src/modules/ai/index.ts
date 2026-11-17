@@ -3,11 +3,11 @@
  * manifests and allocation packages, and the dispatcher. Code outside
  * artifacts/api-server/src/modules/ai imports only this file (repository rule `module-boundary`).
  *
- * Every file re-exported here loads only Node built-ins when imported. The provider transport
- * (managed-sdk-transport.ts) is deliberately not re-exported: managed-inference.ts loads it, with
- * the database and the SDK, only when approved work runs, so disabled inference never resolves
- * it (inference-no-database.test.ts). The customer AI and operational review lanes, which call
- * the dispatcher, live outside the module, and so do the work-binding checks, which the
+ * Importing this file must not load @workspace/db, the model SDK or the provider transport, and
+ * inference-no-database.test.ts fails if it does. So the provider transport
+ * (managed-sdk-transport.ts) is not re-exported: managed-inference.ts loads it, with the database
+ * and the SDK, only when approved work runs. The customer AI and operational review lanes, which
+ * call the dispatcher, live outside the module, and so do the work-binding checks, which the
  * operator commands hand to the dispatcher (provideFiniteWorkBindings).
  */
 export * from "./inference-allocation-package";
