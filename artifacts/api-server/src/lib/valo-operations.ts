@@ -116,7 +116,34 @@ export async function collectOperationalSample(
     limits: { exports: 100, cleanup: 0, exportRetention: 0, workspaceCleanup: 0, workerAgeMs: 90000 },
   } as OperationalSample;
 }
-type Alert = { id: string; at: string; code: string; state: "active" | "resolved" };
+/**
+ * NFR-010: every alert names its accountable roles and the runbook to follow, as
+ * docs/valo/operating-runbooks.md names them. They are role assignments, not named or staffed
+ * responders. Keyed by what the alert is about; a test drives every alert this module raises.
+ */
+export const ALERT_RUNBOOKS = {
+  DATABASE: { runbook: "Site/database unavailable", accountable: "Engineering lead" },
+  WORKER: { runbook: "Broken export / AI outage", accountable: "Engineering" },
+  EXPORTS: { runbook: "Broken export / AI outage", accountable: "Engineering" },
+  CLEANUP: { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" },
+  EXPORT_RETENTION: { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" },
+  WORKSPACE_CLEANUP: { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" },
+  PAYMENTS: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
+} as const;
+export function alertRunbook(code: string) {
+  const subject = code.replace(/_(BACKLOG|PROBE_UNAVAILABLE|UNAVAILABLE)$/, "");
+  return Object.hasOwn(ALERT_RUNBOOKS, subject)
+    ? ALERT_RUNBOOKS[subject as keyof typeof ALERT_RUNBOOKS]
+    : null;
+}
+type Alert = {
+  id: string;
+  at: string;
+  code: string;
+  state: "active" | "resolved";
+  runbook?: string | null;
+  accountable?: string | null;
+};
 type AlertState = { sequence: number; active: string[]; events: Alert[]; sample?: OperationalSample };
 /** Internal only. Atomic bounded project-local journal, not a production monitor/audit archive. */
 const pendingAlertWrites = new Map<string, Promise<void>>();
@@ -197,11 +224,14 @@ async function recordOperationalAlertsLocked(sample: OperationalSample, director
     const events: Alert[] = [];
     for (const code of new Set([...state.active, ...active])) {
       if (state.active.includes(code) === active.includes(code)) continue;
+      const owner = alertRunbook(code);
       events.push({
         id: randomUUID(),
         at: sample.checkedAt,
         code,
         state: active.includes(code) ? "active" : "resolved",
+        runbook: owner?.runbook ?? null,
+        accountable: owner?.accountable ?? null,
       });
     }
     state = {
@@ -211,7 +241,16 @@ async function recordOperationalAlertsLocked(sample: OperationalSample, director
       sample,
     };
     await atomicJson(file, state);
-    return { active: state.active, emitted: events.length, sequence: state.sequence };
+    return {
+      active: state.active,
+      owners: state.active.map((code) => ({
+        code,
+        runbook: alertRunbook(code)?.runbook ?? null,
+        accountable: alertRunbook(code)?.accountable ?? null,
+      })),
+      emitted: events.length,
+      sequence: state.sequence,
+    };
   } finally {
     await unlink(lock);
   }

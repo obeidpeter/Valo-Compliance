@@ -3,11 +3,14 @@
 Exact owner/action contracts remain in CTX-24/25 of the engineering register.
 These are role assignments, **not named staffed responders or exercised drills**.
 Business-hours support is proposed; no 24/7 human-support claim is authorised.
+Each internal operational alert names its runbook and accountable roles from this table
+(`ALERT_RUNBOOKS` in `artifacts/api-server/src/lib/valo-operations.ts`); a test fails when
+they differ.
 
 | Runbook | Accountable roles | Minimum response and proof still required |
 |---|---|---|
 | Site/database unavailable | Engineering lead | Confirm impact via health and request logs; freeze risky changes; communicate through a real configured channel; restore/rollback only through the approved platform path; verify identity, saved drafts and unaffected guidance. No live drill passed. |
-| Payment/entitlement failure | Finance + engineering | Disable checkout, preserve events, verify PSP server-side, reconcile reference/NGN integer-kobo amounts, repair exactly once through audited compensation, notify the buyer without collecting twice. Commerce is unimplemented/disabled; no finance drill passed. |
+| Payment/entitlement failure | Finance + engineering | Disable checkout, preserve events, verify PSP server-side, reconcile reference/NGN integer-kobo amounts, repair exactly once through audited compensation, notify the buyer without collecting twice. Live payments are disabled: commerce runs only in the development test mode, and no finance drill passed. |
 | Broken export / AI outage | Engineering | Preserve saved revision; inspect safe job/error state; retry only failed exports within quota/cycle limits. Restart the separate development worker if necessary. Never mark file ready before private write/read/checksum succeeds. AI remains unavailable, with manual editor access retained. |
 | Incorrect compliance content | Content owner + pipeline | Suspend affected versions/search/downloads/rules, preserve historical evidence, identify affected assessments/tasks, retrieve sources, rerun all EDP gates, publish corrections and notify when material. No released content exists; no correction drill is claimed. |
 | Security/privacy incident | Incident lead + privacy owner | Contain/isolate feature, revoke credentials through provider controls, preserve metadata/audit evidence, assess actual source-backed notice obligations, record decisions/remediation. Do not invent a statutory deadline or claim tested rotation/MFA. |

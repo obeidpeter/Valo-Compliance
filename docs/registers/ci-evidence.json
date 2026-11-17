@@ -273,6 +273,27 @@
       "file": "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
       "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
       "proves": "An order keeps the amount and licence text it was created with after its price row is later edited, and its receipt shows them; a checkout request that brings its own amount or currency is refused."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "test": "every alert names its accountable roles and a runbook from the operating runbooks",
+      "proves": "Every internal operational alert the probes can raise names its runbook and accountable roles exactly as the operating runbooks list them, and the alert journal records both with each alert."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "test": "internal probes measure failures independently and persist/deduplicate/recover alerts without transports",
+      "proves": "Synthetic probe failures raise alerts once however many writers race, the alerts resolve when the condition clears, a corrupt journal does not poison later writes, and no private error text or outside message leaves the process."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/http-logging.test.ts",
+      "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status",
+      "proves": "A private marker sent in a request's path, query, authorization and cookie headers and body, and in an application error's message, name and cause, never reaches the HTTP logs, which keep each request's correlation ID and status."
     }
   ]
 }

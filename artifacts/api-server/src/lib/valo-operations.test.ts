@@ -1,9 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
+  ALERT_RUNBOOKS,
+  alertRunbook,
   collectOperationalSample,
   recordOperationalAlerts,
   recordWorkerHeartbeat,
@@ -115,6 +119,68 @@ test("internal probes measure failures independently and persist/deduplicate/rec
       "a fresh timestamp cannot hide a failed dispatch",
     );
     assert.equal(externalCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+test("every alert names its accountable roles and a runbook from the operating runbooks", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-owners-"));
+  try {
+    // Every probe failing, then every metric over its limit: between them, every alert this
+    // module can raise. No worker heartbeat exists, so the worker alert is active in both.
+    const failing = await collectOperationalSample(async () => {
+      throw Error("SYNTHETIC_PROBE_FAILURE");
+    }, dir);
+    const over = await collectOperationalSample(
+      async (sql) => ({ rows: [{ value: sql === readinessQueries.database ? 1 : 10000 }] }),
+      dir,
+    );
+    const codes = new Set<string>();
+    for (const sample of [failing, over])
+      for (const owner of (await recordOperationalAlerts(sample, dir)).owners) {
+        codes.add(owner.code);
+        assert.ok(owner.runbook && owner.accountable, `${owner.code} has no runbook or accountable roles`);
+      }
+    const metrics = Object.keys(readinessQueries).length - 1;
+    assert.equal(codes.size, 2 + 2 * metrics, [...codes].join(", "));
+
+    // Each runbook is a row of the operating runbooks, with the same accountable roles.
+    const runbooks = readFileSync(
+      fileURLToPath(new URL("../../../../docs/valo/operating-runbooks.md", import.meta.url)),
+      "utf8",
+    );
+    const rows = new Map(
+      [...runbooks.matchAll(/^\| ([^|]+?) \| ([^|]+?) \|/gm)].map((row) => [row[1]!, row[2]!]),
+    );
+    for (const code of codes) {
+      const owner = alertRunbook(code)!;
+      assert.equal(rows.get(owner.runbook), owner.accountable, `${code}: ${owner.runbook}`);
+    }
+    for (const owner of Object.values(ALERT_RUNBOOKS))
+      assert.equal(rows.get(owner.runbook), owner.accountable, owner.runbook);
+    assert.equal(alertRunbook("SOMETHING_ELSE_BACKLOG"), null);
+    assert.equal(alertRunbook("toString"), null);
+
+    // The journal records them with each alert, for whoever reads it.
+    const history = JSON.parse(await readFile(join(dir, "alerts.json"), "utf8")) as {
+      events: { code: string; runbook: string; accountable: string }[];
+    };
+    for (const event of history.events)
+      assert.deepEqual(
+        { runbook: event.runbook, accountable: event.accountable },
+        { ...alertRunbook(event.code) },
+      );
+    assert.ok(!JSON.stringify(history).includes("SYNTHETIC_PROBE_FAILURE"));
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });
