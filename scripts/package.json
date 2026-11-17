@@ -13,7 +13,8 @@
     "valo:source-register": "tsx ./src/valo/source-register.ts",
     "valo:sync-specification": "tsx ./src/valo/sync-specification.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "valo:ci-evidence": "tsx ./src/valo/ci-evidence.ts"
+    "valo:ci-evidence": "tsx ./src/valo/ci-evidence.ts",
+    "valo:code-coverage": "tsx ./src/valo/code-coverage.ts"
   },
   "dependencies": {
     "@workspace/valo-core": "workspace:*"

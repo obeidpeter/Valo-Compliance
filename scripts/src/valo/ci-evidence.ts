@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import { requirements } from "@workspace/valo-core";
 import { repositoryRoot } from "./architecture-check";
+import { coverageTable, MEASURED_BY, readAreaCoverage } from "./code-coverage";
 import { WORKFLOW } from "./database-tests";
 
 /**
@@ -207,7 +208,16 @@ function main(args: string[]) {
   } else if (args.includes("--all")) {
     records = readTestRecords(process.env.VALO_EVIDENCE_RESULTS_DIR ?? "");
     for (const name of workflowJobs()) problems.push(...jobProblems(name, citations, records));
-    const summary = `## Requirement evidence from this run\n\n${summaryTable(citations, records)}\n`;
+    const coverage = readAreaCoverage(process.env.VALO_EVIDENCE_RESULTS_DIR ?? "");
+    const summary = [
+      `## Requirement evidence from this run\n\n${summaryTable(citations, records)}\n`,
+      ...(coverage.length
+        ? [
+            `## NFR-011 coverage from this run\n\nMeasured by ${MEASURED_BY}.\n`,
+            ...coverage.map(coverageTable),
+          ]
+        : []),
+    ].join("\n");
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
     process.stdout.write(summary);
   } else throw Error("usage: ci-evidence.ts --job <job> | --all");

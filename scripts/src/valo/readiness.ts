@@ -1,5 +1,6 @@
 import { readiness, baselineTemplates, additionalCandidates, catalogueSummary } from "@workspace/valo-core";
 import { CI_EVIDENCE_REGISTER, evidenceByRequirement, readCitations, readTestRecords } from "./ci-evidence";
+import { coverageReport, readAreaCoverage } from "./code-coverage";
 
 // VALO_EVIDENCE_RESULTS_DIR names the test results CI's jobs recorded in this run (the evidence
 // job sets it). Without it the register's citations are listed as not run. Evidence never
@@ -27,6 +28,8 @@ process.stdout.write(
         failed: results.filter((r) => r.result === "fail").length,
         notRun: results.filter((r) => r.result === "not_run").length,
       },
+      // NFR-011's coverage report from the database job of this run, when there is one.
+      codeCoverage: resultsDirectory ? coverageReport(readAreaCoverage(resultsDirectory)) : null,
       catalogueSummary,
       baselineTemplates,
       additionalCandidates,

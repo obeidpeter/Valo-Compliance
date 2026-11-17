@@ -11,8 +11,11 @@
  * in (outermost first), and whether it passed, failed, was skipped or is a todo. Without it the
  * reporter records nothing. It passes nothing on, so its destination stays empty. Writing is
  * synchronous and a failed write fails the run: a missing record must not look like a pass.
+ *
+ * A run with Node's coverage on (code-coverage.ts, for NFR-011) also writes its merged coverage per
+ * source file to a .coverage.json file, labelled with VALO_COVERAGE_AREA and VALO_COVERAGE_RUN.
  */
-import { appendFileSync, mkdirSync } from "node:fs";
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { Transform } from "node:stream";
@@ -28,7 +31,24 @@ let output;
 // The names of the tests now running in each file, by nesting level.
 const running = new Map();
 
+function recordCoverage(summary) {
+  mkdirSync(directory, { recursive: true });
+  const files = summary.files.map((f) => ({
+    path: f.path,
+    lines: [f.coveredLineCount, f.totalLineCount],
+    branches: [f.coveredBranchCount, f.totalBranchCount],
+    functions: [f.coveredFunctionCount, f.totalFunctionCount],
+  }));
+  const area = process.env.VALO_COVERAGE_AREA ?? null;
+  const run = process.env.VALO_COVERAGE_RUN ?? null;
+  writeFileSync(
+    join(directory, `${Date.now()}-${process.pid}-${randomUUID()}.coverage.json`),
+    `${JSON.stringify({ area, run, files })}\n`,
+  );
+}
+
 function record({ type, data }) {
+  if (directory && type === "test:coverage") return recordCoverage(data.summary);
   if (!directory || (type !== "test:start" && type !== "test:pass" && type !== "test:fail")) return;
   const file = data.file ?? "";
   const names = running.get(file) ?? [];
