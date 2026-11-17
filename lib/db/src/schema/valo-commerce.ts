@@ -12,6 +12,7 @@ import {
   foreignKey,
   check,
 } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
@@ -85,6 +86,7 @@ export const valoOrders = pgTable(
       "valo_orders_status_check",
       sql`${t.status} IN ('created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed')`,
     ),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoPaymentEvents = pgTable(
@@ -133,6 +135,7 @@ export const valoEntitlements = pgTable(
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
     check("valo_entitlements_status_check", sql`${t.status} IN ('active', 'suspended')`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoPurchaseOutbox = pgTable(
@@ -154,6 +157,7 @@ export const valoPurchaseOutbox = pgTable(
       columns: [t.workspaceId, t.orderId],
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoRefundRequests = pgTable(
@@ -201,6 +205,7 @@ export const valoRefundRequests = pgTable(
       sql`${t.status} IN ('requested', 'authorised', 'provider_pending', 'approved', 'rejected', 'submitting', 'unknown', 'pending', 'processing', 'needs_attention', 'needs_review', 'failed', 'processed')`,
     ),
     check("valo_refund_requests_version_check", sql`${t.version} > 0`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoRefundTransitions = pgTable(
@@ -223,6 +228,7 @@ export const valoRefundTransitions = pgTable(
       columns: [t.workspaceId, t.orderId],
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoPaymentDisputes = pgTable(
@@ -252,6 +258,7 @@ export const valoPaymentDisputes = pgTable(
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
     check("valo_payment_disputes_amount_kobo_check", sql`${t.amountKobo} >= 0`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const insertValoOrderSchema = createInsertSchema(valoOrders);
@@ -285,6 +292,7 @@ export const valoDisputeInformation = pgTable(
       columns: [t.workspaceId, t.orderId, t.disputeId],
       foreignColumns: [valoPaymentDisputes.workspaceId, valoPaymentDisputes.orderId, valoPaymentDisputes.id],
     }),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoDisputeActions = pgTable(
@@ -349,6 +357,7 @@ export const valoDisputeActions = pgTable(
       "valo_dispute_actions_status_check",
       sql`${t.status} IN ('prepared', 'dispatching', 'acknowledged', 'observed', 'unknown', 'cancelled')`,
     ),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const insertValoDisputeActionSchema = createInsertSchema(valoDisputeActions);
@@ -371,6 +380,7 @@ export const valoDisputeTransitions = pgTable(
       columns: [t.workspaceId, t.orderId],
       foreignColumns: [valoOrders.workspaceId, valoOrders.id],
     }),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoPaymentReconciliations = pgTable(
@@ -399,5 +409,6 @@ export const valoPaymentReconciliations = pgTable(
       "valo_payment_reconciliations_status_check",
       sql`${t.status} IN ('pending', 'matched', 'needs_review')`,
     ),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );

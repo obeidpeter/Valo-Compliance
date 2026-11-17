@@ -49,3 +49,4 @@ export * from "./valo-payment-concerns";
 export * from "./valo-workspace-exports";
 
 export * from "./valo-staff-role-audit";
+export * from "./valo-workspace-scope";

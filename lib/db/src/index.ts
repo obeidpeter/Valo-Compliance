@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
+import { currentWorkspaceScope, scopeClient, verifyWorkspaceScope } from "./workspace-scope";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
@@ -35,16 +36,33 @@ type ConnectCallback = (
 ) => void;
 
 class ValoPool extends pg.Pool {
-  // pg's own query() takes its connection through connect(callback), so both forms
-  // are covered.
+  #scopeVerified = false;
+
+  // pg's own query() takes its connection through connect(callback), so both forms are
+  // covered. A connection taken inside runInWorkspaceScope is scoped until it is released.
   override connect(): Promise<pg.PoolClient>;
   override connect(callback: ConnectCallback): void;
   override connect(callback?: ConnectCallback): Promise<pg.PoolClient> | void {
-    if (!callback)
-      return super.connect().catch((error: Error) => {
-        throw withTimeoutCode(error);
-      });
-    super.connect((error, client, done) => callback(error && withTimeoutCode(error), client, done));
+    // Read when the caller asks: a pool callback can run in another request's context.
+    const workspaceId = currentWorkspaceScope();
+    const acquired = super.connect().catch((error: Error) => {
+      throw withTimeoutCode(error);
+    });
+    const ready = workspaceId === undefined ? acquired : acquired.then((c) => this.#scope(c, workspaceId));
+    if (!callback) return ready;
+    ready.then(
+      (client) => callback(undefined, client, (release) => client.release(release as Error | boolean)),
+      (error: Error) => callback(error, undefined, () => undefined),
+    );
+  }
+
+  async #scope(client: pg.PoolClient, workspaceId: string) {
+    if (!this.#scopeVerified) {
+      await verifyWorkspaceScope(client);
+      this.#scopeVerified = true;
+    }
+    scopeClient(client, workspaceId);
+    return client;
   }
 }
 
@@ -63,5 +81,11 @@ export function createPool(options: pg.PoolConfig = {}) {
 export const pool = createPool();
 export const db = drizzle(pool, { schema });
 export { schema };
+export {
+  runInWorkspaceScope,
+  currentWorkspaceScope,
+  WORKSPACE_SCOPE_ROLE,
+  WORKSPACE_SCOPE_UNAVAILABLE_CODE,
+} from "./workspace-scope";
 
 export * from "./schema";

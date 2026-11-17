@@ -1,4 +1,5 @@
 import { pgTable, uuid, text, timestamp, integer, index, uniqueIndex, foreignKey } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoTasks } from "./valo-tasks";
@@ -34,6 +35,7 @@ export const valoReminderOutbox = pgTable(
       columns: [t.workspaceId, t.taskId],
       foreignColumns: [valoTasks.workspaceId, valoTasks.id],
     }),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const insertValoReminderOutboxSchema = createInsertSchema(valoReminderOutbox);

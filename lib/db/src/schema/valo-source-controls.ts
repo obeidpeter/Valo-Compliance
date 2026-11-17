@@ -11,6 +11,7 @@ import {
   primaryKey,
   check,
 } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
 import { valoSourceSnapshots } from "./valo-source-snapshots";
 import { valoWorkspaces } from "./valo-workspaces";
@@ -173,6 +174,7 @@ export const valoCorrectionNotices = pgTable(
       t.entityId,
     ),
     index("valo_correction_notice_workspace").on(t.workspaceId, t.createdAt),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoSafetyControlAudit = pgTable("valo_safety_control_audit", {

@@ -12,6 +12,7 @@ import {
   foreignKey,
   check,
 } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
@@ -67,6 +68,7 @@ export const valoWorkspaceExports = pgTable(
       sql`${t.status} IN ('queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired')`,
     ),
     check("valo_workspace_exports_version_check", sql`${t.version} > 0`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoWorkspaceExportAttempts = pgTable(
@@ -104,6 +106,7 @@ export const valoWorkspaceExportAttempts = pgTable(
       "valo_workspace_export_attempts_status_check",
       sql`${t.status} IN ('reserved', 'uploading', 'ready', 'cleanup')`,
     ),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const insertWorkspaceExportSchema = createInsertSchema(valoWorkspaceExports);

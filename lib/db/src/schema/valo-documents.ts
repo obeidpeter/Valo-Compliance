@@ -1,4 +1,5 @@
 import { pgTable, uuid, integer, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoContentVersions } from "./valo-publication";
@@ -18,6 +19,7 @@ export const valoDocuments = pgTable(
   (t) => [
     index("valo_documents_workspace_idx").on(t.workspaceId),
     uniqueIndex("valo_document_workspace_unique").on(t.id, t.workspaceId),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const insertValoDocumentSchema = createInsertSchema(valoDocuments);

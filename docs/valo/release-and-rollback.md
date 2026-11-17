@@ -159,3 +159,10 @@ carries `DB_POOL_ACQUIRE_TIMEOUT` when every pooled connection was busy, or
 `DB_CONNECT_TIMEOUT` when the database did not answer a new connection. Repeated
 pool timeouts mean connections are held too long: look for long transactions or
 a transaction that waits on a second connection.
+
+`DB_WORKSPACE_SCOPE_UNAVAILABLE` means the database cannot enter a customer
+request's workspace scope: the row security migration is not applied, or the
+application role is not a member of `valo_workspace_scope`. Every customer request
+fails until it is fixed; no connection is leaked. Apply the migration (see
+`docs/valo/migration-workspace-row-security.md`) before releasing code that
+expects it.

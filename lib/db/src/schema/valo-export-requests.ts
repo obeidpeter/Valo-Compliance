@@ -1,4 +1,5 @@
 import { pgTable, uuid, text, uniqueIndex, foreignKey } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { createInsertSchema } from "drizzle-zod";
 import { valoExportJobs } from "./valo-exports";
 export const valoExportRequests = pgTable(
@@ -15,6 +16,7 @@ export const valoExportRequests = pgTable(
       columns: [t.jobId, t.workspaceId],
       foreignColumns: [valoExportJobs.id, valoExportJobs.workspaceId],
     }),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const insertValoExportRequestSchema = createInsertSchema(valoExportRequests);

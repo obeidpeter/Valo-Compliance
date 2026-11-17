@@ -73,7 +73,10 @@ Every change must keep these true. Each has tests; none may be weakened.
    server resolves from the verified session. Writes re-check membership inside
    the transaction, so a revocation that commits first wins.
    `valo-tenant-substitution.integration.test.ts` tries every private route that
-   takes an identifier with another workspace's identifiers.
+   takes an identifier with another workspace's identifiers. Below the application,
+   every customer request acts as `valo_workspace_scope`, and row-level security
+   limits it to the workspace's rows even if a query forgets its filter
+   (decision 0008).
 2. **Identity.** Private requests require an active Clerk session and a verified
    primary email. Payments, downloads, privacy and AI drafts check Clerk live on
    every request; listed everyday routes re-check at least once a minute

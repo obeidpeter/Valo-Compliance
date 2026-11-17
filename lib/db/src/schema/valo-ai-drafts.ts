@@ -10,6 +10,7 @@ import {
   index,
   foreignKey,
 } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoDocuments } from "./valo-documents";
 export const valoAIDrafts = pgTable(
@@ -46,6 +47,7 @@ export const valoAIDrafts = pgTable(
       columns: [t.acceptedDocumentId, t.workspaceId],
       foreignColumns: [valoDocuments.id, valoDocuments.workspaceId],
     }),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoSafetySwitches = pgTable("valo_safety_switches", {

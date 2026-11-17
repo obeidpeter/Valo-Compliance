@@ -10,6 +10,7 @@ import {
   check,
   foreignKey,
 } from "drizzle-orm/pg-core";
+import { supportCaseRowPolicy, workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
@@ -32,7 +33,10 @@ export const valoSupportTickets = pgTable(
       .default("awaiting_staff"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("valo_support_ticket_workspace").on(t.id, t.workspaceId)],
+  (t) => [
+    uniqueIndex("valo_support_ticket_workspace").on(t.id, t.workspaceId),
+    workspaceRowPolicy(t.workspaceId),
+  ],
 );
 export const insertValoTicketSchema = createInsertSchema(valoSupportTickets);
 export type ValoTicket = typeof valoSupportTickets.$inferSelect;
@@ -75,6 +79,7 @@ export const valoSupportCases = pgTable(
       sql`(${t.sourceKind}='workspace' AND ${t.ticketId} IS NOT NULL AND ${t.accessId} IS NULL AND ${t.workspaceId} IS NOT NULL)
     OR (${t.sourceKind}='access' AND ${t.accessId} IS NOT NULL AND ${t.ticketId} IS NULL AND ${t.workspaceId} IS NULL)`,
     ),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoSupportMessages = pgTable(
@@ -96,6 +101,7 @@ export const valoSupportMessages = pgTable(
     check("valo_support_message_body", sql`char_length(${t.body}) BETWEEN 8 AND 4000`),
     check("valo_support_messages_author_kind_check", sql`${t.authorKind} IN ('customer','staff')`),
     check("valo_support_messages_visibility_check", sql`${t.visibility} IN ('customer','internal')`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoSupportActions = pgTable(
@@ -110,17 +116,24 @@ export const valoSupportActions = pgTable(
     payloadHash: text("payload_hash").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("valo_support_action_request").on(t.caseId, t.actorId, t.idempotencyKey)],
+  (t) => [
+    uniqueIndex("valo_support_action_request").on(t.caseId, t.actorId, t.idempotencyKey),
+    supportCaseRowPolicy(t.caseId),
+  ],
 );
-export const valoSupportEvents = pgTable("valo_support_events", {
-  id: uuid("id").primaryKey(),
-  caseId: uuid("case_id")
-    .notNull()
-    .references(() => valoSupportCases.id, { onDelete: "cascade" }),
-  actorId: text("actor_id").notNull(),
-  action: text("action").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const valoSupportEvents = pgTable(
+  "valo_support_events",
+  {
+    id: uuid("id").primaryKey(),
+    caseId: uuid("case_id")
+      .notNull()
+      .references(() => valoSupportCases.id, { onDelete: "cascade" }),
+    actorId: text("actor_id").notNull(),
+    action: text("action").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [supportCaseRowPolicy(t.caseId)],
+);
 export const valoSupportEscalations = pgTable(
   "valo_support_escalations",
   {
@@ -146,5 +159,6 @@ export const valoSupportEscalations = pgTable(
     check("valo_support_escalations_target_version_check", sql`${t.targetVersion} > 0`),
     check("valo_support_escalations_reason_check", sql`char_length(${t.reason}) BETWEEN 8 AND 4000`),
     check("valo_support_escalations_status_check", sql`${t.status} IN ('queued','acknowledged','resolved')`),
+    supportCaseRowPolicy(t.caseId),
   ],
 );

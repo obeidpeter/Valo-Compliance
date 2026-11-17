@@ -1,5 +1,6 @@
 import { clerkClient, getAuth } from "@clerk/express";
 import type { RequestHandler } from "express";
+import { runInWorkspaceScope } from "@workspace/db";
 import { resolveWorkspace, type WorkspaceActor } from "../lib/valo-store";
 import { trustedSiteOrigin, permittedMutationOrigin } from "../lib/valo-site-origin";
 import { makeSessionVerifier, routeUsesCachedCheck } from "../platform/session-verification";
@@ -21,7 +22,9 @@ const sessions = makeSessionVerifier({
  * email, then resolves the workspace from the server-side membership on every request.
  * Payments, downloads, privacy, the account page and AI drafts check the provider live;
  * listed everyday routes reuse a passing check for at most a minute (decision 0003).
- * No browser-supplied tenant or role is used. Provider failure fails closed.
+ * No browser-supplied tenant or role is used. Provider failure fails closed. The rest of
+ * the request runs in the workspace's database scope: row-level security then limits every
+ * query to this workspace's rows, even one that forgets its workspace filter.
  */
 export const verifiedWorkspace: RequestHandler = async (req, res, next) => {
   res.setHeader("Cache-Control", "private, no-store, max-age=0");
@@ -42,7 +45,7 @@ export const verifiedWorkspace: RequestHandler = async (req, res, next) => {
     }
     res.locals.valoActor = await resolveWorkspace(check.account.identityId);
     res.locals.valoContactEmail = check.account.contactEmail;
-    next();
+    runInWorkspaceScope(res.locals.valoActor.workspaceId, next);
   } catch (error) {
     next(error);
   }

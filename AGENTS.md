@@ -83,6 +83,11 @@ Rules that apply now:
   database job fails when any test takes a second pooled connection inside a
   transaction; the reviewed exceptions are listed in
   `artifacts/api-server/src/test-support/nested-connection-report.mjs`.
+- Customer requests run in their workspace's database scope: the identity
+  middleware calls `runInWorkspaceScope`, and row-level security limits every
+  query to the workspace's rows. Keep the workspace filters too. Never call
+  `runInWorkspaceScope` with a workspace not resolved from a membership, and
+  never reset the role or `valo.workspace_id` in customer code.
 
 ## 5. Checks
 
@@ -112,6 +117,9 @@ workflow run for the exact commit before reporting CI status.
   records, and declare each one in the Drizzle schema. Only a single-column primary key may
   keep PostgreSQL's own name (`<table>_pkey`), which is also Drizzle's. The
   migration tests fail on any difference.
+- A table that holds workspace rows needs `workspaceRowPolicy` (or a policy
+  through its parent row) in the schema, created in the same migration. The
+  migration tests fail on any `workspace_id` table without it.
 - Extend `lib/db/scripts/phase1-migrations.test.mjs` with an upgrade check for
   every new migration. When two branches both add migrations, renumber the
   journal `idx` values on merge so they stay contiguous.

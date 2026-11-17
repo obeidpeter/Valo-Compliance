@@ -328,6 +328,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-checker-http-db
       - name: Prove another workspace's identifiers are refused like unknown ones on every private route (SEC-001)
         run: pnpm --filter @workspace/api-server test:valo-tenant-substitution
+      - name: Prove row-level security keeps customer requests inside their own workspace
+        run: pnpm --filter @workspace/api-server test:valo-row-security
       - name: Prove premium template files need the workspace's own active purchase
         run: pnpm --filter @workspace/api-server test:valo-template-entitlement
       - name: Prove synthetic erasure holds, late-upload races and bounded recovery

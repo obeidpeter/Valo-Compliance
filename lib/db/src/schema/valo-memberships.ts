@@ -1,4 +1,5 @@
 import { pgTable, text, uuid, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
 
@@ -16,7 +17,7 @@ export const valoMemberships = pgTable(
       .default("yes"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("valo_membership_identity_unique").on(t.identityId)],
+  (t) => [uniqueIndex("valo_membership_identity_unique").on(t.identityId), workspaceRowPolicy(t.workspaceId)],
 );
 export const insertValoMembershipSchema = createInsertSchema(valoMemberships);
 export type ValoMembership = typeof valoMemberships.$inferSelect;

@@ -11,6 +11,7 @@ import {
   primaryKey,
   check,
 } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoSupportTickets } from "./valo-support";
@@ -81,6 +82,7 @@ export const valoPrivacyCases = pgTable(
     ),
     check("valo_privacy_cases_steps_check", sql`jsonb_typeof(${t.steps}) = 'array'`),
     check("valo_privacy_cases_version_check", sql`${t.version} > 0`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoPrivacyEvents = pgTable(
@@ -112,6 +114,7 @@ export const valoPrivacyEvents = pgTable(
     check("valo_privacy_events_previous_hash_check", sql`length(${t.previousHash}) = 64`),
     check("valo_privacy_events_sequence_check", sql`${t.sequence} > 0`),
     check("valo_privacy_events_state_hash_check", sql`length(${t.stateHash}) = 64`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoPrivacyMessages = pgTable(
@@ -133,6 +136,7 @@ export const valoPrivacyMessages = pgTable(
     }),
     check("valo_privacy_messages_body_check", sql`length(${t.body}) BETWEEN 1 AND 4000`),
     check("valo_privacy_messages_reply_to_version_check", sql`${t.replyToVersion} > 0`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoPrivacyTombstones = pgTable(
@@ -158,6 +162,7 @@ export const valoPrivacyTombstones = pgTable(
     index("valo_privacy_tombstone_replay").on(t.nextReplayAt),
     check("valo_privacy_tombstones_checksum_check", sql`${t.checksum} IS NULL OR length(${t.checksum}) = 64`),
     check("valo_privacy_tombstones_identity_hash_check", sql`length(${t.identityHash}) = 64`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 // Intentionally independent of export-job/file FKs: deletion instructions must
@@ -178,5 +183,6 @@ export const valoPrivacyErasureObjects = pgTable(
     primaryKey({ columns: [t.caseId, t.objectKey] }),
     index("valo_privacy_erasure_workspace").on(t.workspaceId),
     check("valo_privacy_erasure_objects_status_check", sql`${t.status} IN ('pending', 'deleted', 'failed')`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );

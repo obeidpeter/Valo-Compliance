@@ -1,4 +1,5 @@
 import { pgTable, uuid, text, integer, jsonb, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
 
@@ -19,6 +20,7 @@ export const valoProfileVersions = pgTable(
   (t) => [
     uniqueIndex("valo_profile_revision_unique").on(t.workspaceId, t.revision),
     uniqueIndex("valo_profile_workspace_id_unique").on(t.workspaceId, t.id),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const insertValoProfileSchema = createInsertSchema(valoProfileVersions);

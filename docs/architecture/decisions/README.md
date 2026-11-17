@@ -12,3 +12,4 @@ never edited after acceptance; a later record supersedes an earlier one.
 | [0005](0005-hosting-without-spend.md) | Prepare hosting in code; provision nothing without approval | Accepted |
 | [0006](0006-public-repository.md) | The repository is public | Accepted |
 | [0007](0007-port-prs-29-and-31-by-merge.md) | Port PRs 29 and 31 by merging them | Accepted |
+| [0008](0008-workspace-row-level-security.md) | Enforce workspace scoping with PostgreSQL row-level security | Accepted |

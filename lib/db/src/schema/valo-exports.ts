@@ -9,6 +9,7 @@ import {
   foreignKey,
   check,
 } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
 import { valoDocumentRevisions } from "./valo-document-revisions";
 
@@ -54,5 +55,6 @@ export const valoExportJobs = pgTable(
       ],
     }),
     check("valo_export_jobs_lease_recoveries_check", sql`${t.leaseRecoveries} >= 0`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );

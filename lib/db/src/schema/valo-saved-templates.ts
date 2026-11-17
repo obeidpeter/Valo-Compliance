@@ -1,4 +1,5 @@
 import { pgTable, uuid, text, integer, timestamp, uniqueIndex, check } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
 import { valoWorkspaces } from "./valo-workspaces";
 /** Public title snapshot permits a useful unavailable state after withdrawal.
@@ -20,5 +21,6 @@ export const valoSavedTemplates = pgTable(
     check("valo_saved_template_identity", sql`length(${t.templateId}) BETWEEN 1 AND 80`),
     check("valo_saved_template_title", sql`length(${t.savedTitle}) BETWEEN 1 AND 300`),
     check("valo_saved_template_version", sql`${t.savedVersion}>0`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );

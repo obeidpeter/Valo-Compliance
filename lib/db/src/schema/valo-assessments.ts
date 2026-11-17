@@ -10,6 +10,7 @@ import {
   foreignKey,
   index,
 } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoProfileVersions } from "./valo-profiles";
@@ -41,6 +42,7 @@ export const valoAssessments = pgTable(
       columns: [t.workspaceId, t.profileVersionId],
       foreignColumns: [valoProfileVersions.workspaceId, valoProfileVersions.id],
     }),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const insertValoAssessmentSchema = createInsertSchema(valoAssessments);

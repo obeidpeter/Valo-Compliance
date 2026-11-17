@@ -9,6 +9,7 @@ import {
   foreignKey,
   check,
 } from "drizzle-orm/pg-core";
+import { workspaceRowPolicy } from "./valo-workspace-scope";
 import { sql } from "drizzle-orm";
 import { valoOrders } from "./valo-commerce";
 const time = (name: string) => timestamp(name, { withTimezone: true });
@@ -42,6 +43,7 @@ export const valoPaymentConcerns = pgTable(
       "valo_payment_concerns_status_check",
       sql`${t.status} IN ('open', 'needs_information', 'responded', 'closed')`,
     ),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 
@@ -69,6 +71,7 @@ export const valoPaymentConcernEvents = pgTable(
       "valo_payment_concern_events_actor_type_check",
       sql`${t.actorType} IN ('customer', 'finance', 'worker')`,
     ),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
 export const valoConcernMessages = pgTable(
@@ -90,5 +93,6 @@ export const valoConcernMessages = pgTable(
       foreignColumns: [valoPaymentConcerns.workspaceId, valoPaymentConcerns.orderId, valoPaymentConcerns.id],
     }),
     check("valo_concern_messages_body_check", sql`length(${t.body}) BETWEEN 10 AND 2000`),
+    workspaceRowPolicy(t.workspaceId),
   ],
 );
