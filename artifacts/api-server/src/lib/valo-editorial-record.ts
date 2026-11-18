@@ -4,7 +4,7 @@ import { db } from "@workspace/db";
 import { evaluatePublication, publicationSchema } from "@workspace/valo-core";
 import { ValoProblem } from "./valo-problem";
 import { requireSourceStaff, type SourceStaffActor } from "./valo-source-controls";
-import { sourceTime } from "./valo-source-state";
+import { sourceTime } from "../modules/sources";
 
 type Checks = { result: "pass" | "fail" | "not_run" }[];
 const counts = (checks: Checks) => ({

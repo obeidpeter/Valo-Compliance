@@ -99,7 +99,8 @@ test("template downloads read storage outside the transaction that holds the sou
       },
     },
   });
-  t.mock.module(new URL("../../lib/valo-source-state.ts", import.meta.url).href, {
+  // The released content reaches the source state through the sources module's index.
+  t.mock.module(new URL("../sources/index.ts", import.meta.url).href, {
     namedExports: {
       lockSourceState: async () => record("source lock"),
       sourceTargetAllowed: async () => true,

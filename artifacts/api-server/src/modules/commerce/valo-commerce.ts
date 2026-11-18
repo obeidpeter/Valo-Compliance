@@ -33,7 +33,7 @@ import { requestOrderRefund, refundView, handleRefundEvent } from "./valo-refund
 import { syncDispute } from "./valo-payment-disputes";
 import { refundBalance, TEST_REFUND_POLICY } from "./valo-refund-provider";
 import { setting } from "../../platform/settings";
-import { assertSafetyActive, withSafetyDispatch } from "../../lib/valo-source-state";
+import { assertSafetyActive, withSafetyDispatch } from "../sources";
 import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const originalReceiptActions = ["payment.verified_success", "payment.synthetic_receipt_recovered"];

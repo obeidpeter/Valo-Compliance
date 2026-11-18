@@ -35,8 +35,8 @@ test(
     const { db, pool } = await import("@workspace/db");
     const controls = await import("./valo-source-controls"),
       monitor = await import("./valo-source-monitor");
-    const state = await import("./valo-source-state"),
-      corrections = await import("./valo-source-corrections");
+    const state = await import("../modules/sources/valo-source-state"),
+      corrections = await import("../modules/sources/valo-source-corrections");
     const now = new Date(),
       prefix = `synthetic-source-${randomUUID()}`,
       contentId = randomUUID(),

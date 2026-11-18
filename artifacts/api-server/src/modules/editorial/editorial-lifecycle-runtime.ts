@@ -25,14 +25,15 @@ import {
   createReleasedTemplateDraft,
 } from "../catalogue";
 import { getDocument } from "../../lib/valo-store";
-import { lockSourceState, sourceTargetAllowed } from "../../lib/valo-source-state";
 import {
+  lockSourceState,
+  sourceTargetAllowed,
   recordSourceImpact,
   processSourceDependencyJob,
   processSourceImpact,
-} from "../../lib/valo-source-corrections";
+  readSourceText,
+} from "../sources";
 import { scheduleSourceChecks, claimSourceCheck, completeSourceCheck } from "../../lib/valo-source-monitor";
-import { readSourceText } from "../sources";
 import { readEditorialRun } from "./run-storage";
 import { releasedRegistry } from "../rules";
 import { assertLifecycleRunDatabase } from "./editorial-lifecycle-sandbox";
