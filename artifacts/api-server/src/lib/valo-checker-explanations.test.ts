@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { assess, checkerFactsSchema, factNames, ruleSchema, type ReleasedRule } from "@workspace/valo-core";
+import {
+  assess,
+  checkerFactsSchema,
+  explainAssessmentChanges,
+  factNames,
+  ruleSchema,
+  type ReleasedRule,
+} from "@workspace/valo-core";
 
 const now = new Date("2026-11-14T12:00:00Z");
 const asOfDate = "2026-11-14";
@@ -98,4 +105,58 @@ test("each checker result says why it may matter, what to do next and what is mi
     const label = web.factLabel(name);
     assert.ok(label && label !== name && /^[A-Z][a-z]/.test(label), `${name}: ${label}`);
   }
+});
+
+// CMP-005: "running the same profile under two rule versions remains reproducible and explains
+// changed recommendations".
+test("the same profile under two rule versions is reproducible and the comparison explains what changed", () => {
+  const first = rule("synthetic-premises", "premises", "yes");
+  const second = ruleSchema.parse({
+    ...first,
+    version: 2,
+    condition: { mode: "all", predicates: [{ field: "legalForm", op: "eq", value: "company" }] },
+  });
+  const run = (rules: ReleasedRule[], answers = facts) =>
+    assess(answers, rules, asOfDate, now, { fixtureMode: true });
+  // Each version gives the same result every time it runs.
+  assert.equal(run([first]).resultHash, run([first]).resultHash);
+  assert.equal(run([second]).resultHash, run([second]).resultHash);
+  const before = run([first]),
+    after = run([second]);
+  assert.notEqual(before.rulesetVersion, after.rulesetVersion);
+
+  // Same answers, new rule version: the comparison names the version and the result that changed.
+  assert.deepEqual(explainAssessmentChanges(before.items, after.items, []), [
+    {
+      ruleId: "synthetic-premises",
+      title: first.title,
+      change: "changed",
+      previousVersion: 1,
+      currentVersion: 2,
+      previousLabel: "More information needed",
+      currentLabel: "Likely relevant",
+      changedFacts: [],
+    },
+  ]);
+  // Same rule, a changed answer it uses: the comparison names that answer.
+  const answered = run([first], checkerFactsSchema.parse({ ...facts, premises: "yes" }));
+  assert.deepEqual(
+    explainAssessmentChanges(before.items, answered.items, ["premises", "employees"]).map((c) => [
+      c.change,
+      c.previousLabel,
+      c.currentLabel,
+      c.changedFacts,
+    ]),
+    [["changed", "More information needed", "Likely relevant", ["premises"]]],
+  );
+  // Nothing is reported for an unchanged result; rules that appear or disappear are.
+  assert.deepEqual(explainAssessmentChanges(before.items, run([first]).items, []), []);
+  const other = run([rule("synthetic-company", "legalForm", "company")]);
+  assert.deepEqual(
+    explainAssessmentChanges(before.items, other.items, []).map((c) => [c.ruleId, c.change]),
+    [
+      ["synthetic-company", "added"],
+      ["synthetic-premises", "removed"],
+    ],
+  );
 });

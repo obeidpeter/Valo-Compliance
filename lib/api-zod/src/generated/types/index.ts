@@ -12,6 +12,8 @@ export * from './accessSupportInput';
 export * from './accessSupportInputTopic';
 export * from './answer';
 export * from './apiProblem';
+export * from './assessmentChange';
+export * from './assessmentChangeChange';
 export * from './assessmentComparison';
 export * from './assessmentInput';
 export * from './assessmentItem';

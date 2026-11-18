@@ -5996,7 +5996,17 @@ export const CompareAssessmentsResponse = zod.object({
   "changedFacts": zod.array(zod.string()),
   "addedRuleIds": zod.array(zod.string()),
   "removedRuleIds": zod.array(zod.string()),
-  "changedRuleIds": zod.array(zod.string())
+  "changedRuleIds": zod.array(zod.string()),
+  "explanations": zod.array(zod.object({
+  "ruleId": zod.string(),
+  "title": zod.string(),
+  "change": zod.enum(['added', 'removed', 'changed']),
+  "previousVersion": zod.int().nullable(),
+  "currentVersion": zod.int().nullable(),
+  "previousLabel": zod.string().nullable(),
+  "currentLabel": zod.string().nullable(),
+  "changedFacts": zod.array(zod.string()).describe('The changed answers this rule\'s result used or still needs.')
+})).describe('Why each added, removed or changed rule differs between the two assessments (CMP-005).')
 })
 
 

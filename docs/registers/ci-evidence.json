@@ -406,6 +406,20 @@
       "file": "artifacts/valo/src/components/release-notices.test.tsx",
       "test": "the web app never claims lawyer approval, professional verification or guaranteed compliance",
       "proves": "No sentence in the web app's source claims lawyer approval, legal or professional verification or guaranteed compliance unless it denies it, so guidance is never presented as a professional endorsement."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-checker-explanations.test.ts",
+      "test": "the same profile under two rule versions is reproducible and the comparison explains what changed",
+      "proves": "The same answers under each of two versions of a rule give the same result every time; comparing them names the rule's old and new version and result, a changed answer the rule used is named, an unchanged result is not reported, and rules that appear or disappear are."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/assessment-changes.test.ts",
+      "test": "a comparison explains each changed recommendation in words, naming the rule version and answers",
+      "proves": "The saved-assessments page explains each changed recommendation in sentences: a changed result, a rule updated from one version to another, the changed answers by their question labels, a rule that is new or no longer in the result, or updated wording or sources."
     }
   ]
 }

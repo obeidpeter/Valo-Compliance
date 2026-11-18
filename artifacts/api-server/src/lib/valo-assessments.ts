@@ -24,6 +24,7 @@ import {
   ruleSchema,
   publicationSchema,
   changedCheckerFactPaths,
+  explainAssessmentChanges,
   sourceFamilyBindingMatches,
   type CheckerFacts,
 } from "@workspace/valo-core";
@@ -288,15 +289,17 @@ export async function compareAssessments(actor: WorkspaceActor, id: string, prev
     const previous = serializeAssessment(await assessmentRow(tx, actor, previousId));
     const before = new Map(previous.result.items.map((i) => [i.ruleId, i]));
     const after = new Map(current.result.items.map((i) => [i.ruleId, i]));
+    const changedFacts = changedCheckerFactPaths(previous.facts, current.facts);
     return CompareAssessmentsResponse.parse({
       previousId,
       currentId: id,
-      changedFacts: changedCheckerFactPaths(previous.facts, current.facts),
+      changedFacts,
       addedRuleIds: [...after.keys()].filter((k) => !before.has(k)),
       removedRuleIds: [...before.keys()].filter((k) => !after.has(k)),
       changedRuleIds: [...after.keys()].filter(
         (k) => before.has(k) && digest(before.get(k)) !== digest(after.get(k)),
       ),
+      explanations: explainAssessmentChanges(previous.result.items, current.result.items, changedFacts),
     });
   });
 }

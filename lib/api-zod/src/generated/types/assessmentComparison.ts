@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { AssessmentChange } from './assessmentChange';
 
 export interface AssessmentComparison {
   previousId: string;
@@ -13,4 +14,6 @@ export interface AssessmentComparison {
   addedRuleIds: string[];
   removedRuleIds: string[];
   changedRuleIds: string[];
+  /** Why each added, removed or changed rule differs between the two assessments (CMP-005). */
+  explanations: AssessmentChange[];
 }

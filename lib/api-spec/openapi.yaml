@@ -3508,7 +3508,7 @@ components:
         createdAt: { type: string }
     AssessmentComparison:
       type: object
-      required: [previousId, currentId, changedFacts, addedRuleIds, removedRuleIds, changedRuleIds]
+      required: [previousId, currentId, changedFacts, addedRuleIds, removedRuleIds, changedRuleIds, explanations]
       properties:
         previousId: { type: string }
         currentId: { type: string }
@@ -3516,6 +3516,25 @@ components:
         addedRuleIds: { type: array, items: { type: string } }
         removedRuleIds: { type: array, items: { type: string } }
         changedRuleIds: { type: array, items: { type: string } }
+        explanations:
+          description: Why each added, removed or changed rule differs between the two assessments (CMP-005).
+          type: array
+          items: { $ref: "#/components/schemas/AssessmentChange" }
+    AssessmentChange:
+      type: object
+      required: [ruleId, title, change, previousVersion, currentVersion, previousLabel, currentLabel, changedFacts]
+      properties:
+        ruleId: { type: string }
+        title: { type: string }
+        change: { type: string, enum: [added, removed, changed] }
+        previousVersion: { type: [integer, "null"] }
+        currentVersion: { type: [integer, "null"] }
+        previousLabel: { type: [string, "null"] }
+        currentLabel: { type: [string, "null"] }
+        changedFacts:
+          description: The changed answers this rule's result used or still needs.
+          type: array
+          items: { type: string }
     TaskState:
       type: string
       enum: [not_started, in_progress, completed_by_user, needs_review]

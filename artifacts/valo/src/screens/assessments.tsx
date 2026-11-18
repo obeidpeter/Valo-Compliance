@@ -19,6 +19,7 @@ import { AssessmentResultView } from "@/components/assessment-result";
 import { TaskForm, emptyDraft, type TaskDraft } from "@/components/task-form";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { describeError, formatDate } from "@/lib/api";
+import { describeAssessmentChange } from "@/lib/assessment-changes";
 import { reviewFacts, displayFact, factLabel, live } from "@/lib/checker";
 import { RESULT_LABELS, RESULT_TONES, factAtPath, canCreateSourceTask } from "@/lib/rich-checker";
 import { useToast } from "@/hooks/use-toast";
@@ -330,6 +331,23 @@ function Comparison({
         <RuleList label="No longer matched" tone="pill-ink" ids={d.removedRuleIds} title={title} />
         <RuleList label="Result changed" tone="pill-ochre" ids={d.changedRuleIds} title={title} />
       </div>
+      {d.explanations.length > 0 && (
+        <section className="md:col-span-2" data-testid="comparison-explanations">
+          <p className="text-sm font-medium">Why results changed</p>
+          <ul className="mt-2 grid gap-2 text-sm">
+            {d.explanations.map((change) => (
+              <li key={change.ruleId} className="rounded-xl border border-border p-3">
+                <span className="font-medium">{change.title}</span>
+                {describeAssessmentChange(change, factLabel).map((line) => (
+                  <span key={line} className="mt-1 block text-muted-foreground">
+                    {line}
+                  </span>
+                ))}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
