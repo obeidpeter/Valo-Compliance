@@ -123,7 +123,7 @@
     {
       "requirement": "SRV-002",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/support/valo-support-lifecycle.integration.test.ts",
       "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
       "proves": "A saved request opens exactly one support case with the same reference and full scope, which its own workspace can read and another workspace cannot."
     },
@@ -144,7 +144,7 @@
     {
       "requirement": "ADM-007",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/support/valo-support-lifecycle.integration.test.ts",
       "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
       "proves": "A hold placed by content staff from a support referral records one source impact and one audit row, and staff without the content role are refused."
     },
@@ -165,7 +165,7 @@
     {
       "requirement": "ADM-008",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/support/valo-support-lifecycle.integration.test.ts",
       "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
       "proves": "Support and content work are kept apart by role: content staff cannot use the support queue and support staff cannot act on content referrals; a content hold from a referral records a review-work item and claims no AI review."
     },
@@ -207,14 +207,14 @@
     {
       "requirement": "EDP-011",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-task-source-guard.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/tasks/valo-task-source-guard.integration.test.ts",
       "test": "new source-linked tasks recheck current eligibility before any insert",
       "proves": "New tasks and reminders for a withdrawn or expired rule are refused, and the assessment they came from is unchanged."
     },
     {
       "requirement": "EDP-011",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
       "test": "development saved assessments, task isolation, concurrency and reminder outbox",
       "proves": "A source withdrawal flags a historical task for review without changing what the customer completed."
     },

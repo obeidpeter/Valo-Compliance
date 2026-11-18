@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { inArray } from "drizzle-orm";
 import { db, pool, valoTasks, valoWorkspaces, valoMemberships, valoEvents } from "@workspace/db";
-import { resolveWorkspace } from "./valo-store";
+import { resolveWorkspace } from "../../lib/valo-store";
 import { listTasksPage } from "./valo-tasks";
 test(
   "actual task pages exceed 200 without losing totals, filters or tenant scope",

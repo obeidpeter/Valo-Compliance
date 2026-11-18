@@ -8,7 +8,7 @@ import { exportQueue, EXPORT_QUEUE } from "../lib/valo-export-queue";
 import { executeExport, developmentExportsOnly } from "../lib/valo-exports";
 import { closeRenderer } from "../lib/valo-render";
 import { logger } from "../lib/logger";
-import { reconcileDueReminders } from "../lib/valo-reminder-worker";
+import { reconcileDueReminders } from "../modules/tasks";
 import { recoverAbandonedExports, reconcileExportOrphans } from "../lib/valo-export-recovery";
 import { expireGeneratedExports } from "../lib/valo-export-retention";
 import {

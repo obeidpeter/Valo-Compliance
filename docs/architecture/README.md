@@ -185,5 +185,12 @@ correction files in `src/lib` that the publisher uses do the same). Code and tes
 editorial function therefore load no database client, and tests that stand in for a dependency
 mock the module's index, the boundary the code imports it through.
 
+`modules/tasks` holds customer tasks and their pages, reminder preferences, the reminder worker and
+the development reminder email. `modules/support` holds the support lifecycle: cases, their
+messages, staff assignment and escalations. The intake that opens a support case from an access
+or privacy request stays in `src/lib/valo-support-intake.ts`: the store opens cases through it and
+the support lifecycle reads the store, so reaching it through the support module's index would make
+an import cycle.
+
 The proposed R2 team access model (roles, grants, invitations and the migration path)
 is in [r2-team-access.md](r2-team-access.md).

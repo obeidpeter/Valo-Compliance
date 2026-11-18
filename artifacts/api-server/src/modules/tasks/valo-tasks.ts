@@ -11,7 +11,7 @@ import {
   ListRemindersResponse,
 } from "@workspace/api-zod";
 import { z } from "zod";
-import { ValoProblem, type WorkspaceActor } from "./valo-store";
+import { ValoProblem, type WorkspaceActor } from "../../lib/valo-store";
 import {
   assessmentRow,
   serializeAssessment,
@@ -20,9 +20,9 @@ import {
   releasedRegistry,
   currentSourceTaskRecommendation,
   type WorkspaceTx,
-} from "../modules/rules";
+} from "../rules";
 import { reminderEmailConfiguration, automaticReminderDeliveryReady } from "./valo-reminder-resend";
-import { singleRow } from "../platform/rows";
+import { singleRow } from "../../platform/rows";
 
 const emailBlocker =
   "Development email needs an approved sender and an owner-controlled test recipient. Preferences are saved; inbox delivery has not been verified.";

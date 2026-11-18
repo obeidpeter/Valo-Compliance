@@ -515,7 +515,7 @@ test(
     await t.test(
       "actual task and assessment mutations recheck queued revocation and privacy tombstones",
       async () => {
-        const { createTask } = await import("./valo-tasks"),
+        const { createTask } = await import("../modules/tasks/valo-tasks"),
           { createAssessment } = await import("../modules/rules/valo-assessments");
         const actor = actors[2]!,
           task = {

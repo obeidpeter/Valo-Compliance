@@ -75,7 +75,7 @@ test("HTTP code cannot create, cast or redirect a workspace actor", () => {
 });
 
 test("only resolveWorkspace issues actors from memberships, and no code redirects an actor", () => {
-  const lib = "artifacts/api-server/src/lib/valo-tasks.ts";
+  const lib = "artifacts/api-server/src/modules/tasks/valo-tasks.ts";
   assert.equal(workspaceActorViolations(lib, "workspaceActorFromMembership(row);").length, 1);
   assert.equal(
     workspaceActorViolations(
@@ -94,7 +94,10 @@ test("only resolveWorkspace issues actors from memberships, and no code redirect
 
 test("only the reviewed entries may enter a workspace scope", () => {
   const scoped = "runInWorkspaceScope(job.workspaceId, () => read(job));";
-  assert.equal(workspaceActorViolations("artifacts/api-server/src/lib/valo-tasks.ts", scoped).length, 1);
+  assert.equal(
+    workspaceActorViolations("artifacts/api-server/src/modules/tasks/valo-tasks.ts", scoped).length,
+    1,
+  );
   assert.equal(workspaceActorViolations("artifacts/api-server/src/routes/valo.ts", scoped).length, 1);
   for (const entry of WORKSPACE_SCOPE_ENTRIES)
     assert.equal(workspaceActorViolations(entry, scoped).length, 0);

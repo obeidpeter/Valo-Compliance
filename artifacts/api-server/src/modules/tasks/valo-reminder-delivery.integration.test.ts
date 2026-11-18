@@ -14,7 +14,7 @@ import {
   valoMemberships,
   valoWorkspaces,
 } from "@workspace/db";
-import { resolveWorkspace } from "./valo-store";
+import { resolveWorkspace } from "../../lib/valo-store";
 import { createTask, saveReminderPreferences, reminderInstant } from "./valo-tasks";
 import { processReminder, reminderRetryAt, reconcileDueReminders } from "./valo-reminder-worker";
 test(
@@ -194,7 +194,7 @@ test(
         "SIGKILL during dispatch preserves the claim; expiry recovers without losing the attempt",
         async () => {
           const r = await fresh();
-          const source = `import {processReminder} from './src/lib/valo-reminder-worker.ts';
+          const source = `import {processReminder} from './src/modules/tasks/valo-reminder-worker.ts';
         await processReminder(${JSON.stringify(actor.workspaceId)},${JSON.stringify(r.id)},
           {send:async()=>{process.send({phase:'controlled_adapter_entered'});return new Promise(()=>{});}},
           new Date(${JSON.stringify(now.toISOString())}));`;

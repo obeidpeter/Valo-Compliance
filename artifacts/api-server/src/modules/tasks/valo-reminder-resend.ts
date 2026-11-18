@@ -1,12 +1,12 @@
-import { assertRecoveryEffectsAllowed } from "./valo-recovery-effects";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
+import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
 import { ReplitConnectors } from "@replit/connectors-sdk";
 import { clerkClient } from "@clerk/express";
 import { z } from "zod";
 import { sha256 } from "@workspace/valo-core";
-import { trustedSiteOrigin } from "./valo-site-origin";
+import { trustedSiteOrigin } from "../../lib/valo-site-origin";
 import type { ReminderSender } from "./valo-reminder-sender";
-import { environment } from "../platform/settings";
+import { environment } from "../../platform/settings";
 
 const envelope = z.email().max(254);
 type Config = { from: string; recipient: string; origin: string };

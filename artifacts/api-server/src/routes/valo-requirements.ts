@@ -15,7 +15,7 @@ import {
   CompareAssessmentsResponse,
 } from "@workspace/api-zod";
 import * as assessments from "../modules/rules";
-import * as tasks from "../lib/valo-tasks";
+import * as tasks from "../modules/tasks";
 import { consumeQuota } from "../lib/valo-quota";
 import { quotaSubjectHash } from "../lib/valo-quota-policy";
 import { clientAddress } from "../lib/valo-proxy-boundary";
