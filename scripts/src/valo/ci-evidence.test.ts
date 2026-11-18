@@ -9,6 +9,7 @@ import {
   citationProblems,
   citationResult,
   evidenceByRequirement,
+  generatedTestNames,
   jobProblems,
   readCitations,
   readTestRecords,
@@ -140,6 +141,32 @@ test("a citation must name a known requirement, job, test file and exact test na
   const twice = citationProblems([good, good]);
   assert.equal(twice.length, 1);
   assert.match(twice[0]!, /cited twice/);
+});
+
+test("a test name built from a template is accepted only when it fits the template", () => {
+  const names = generatedTestNames(
+    [
+      "for (const fixture of fixtures) test(`${fixture.id}: ${fixture.name}`, () => {});",
+      "test(`holds ${name}`, () => {});",
+      'test("a fixed name", () => {});',
+    ].join("\n"),
+  );
+  assert.equal(names.length, 2);
+  const fits = (name: string) => names.some((pattern) => pattern.test(name));
+  assert.ok(fits("RULE-EVAL-026: unknown workforce cannot imply exemption"));
+  assert.ok(fits("holds no commercial-use rights"));
+  for (const name of ["a fixed name", "holds", "RULE-EVAL-026 unknown workforce"])
+    assert.ok(!fits(name), name);
+  // In this repository: a generated rule scenario's name fits its file's template, a changed one does not.
+  const scenario = cite(
+    "scripts/src/valo/rule-evaluation.test.ts",
+    "RULE-EVAL-026: unknown workforce cannot imply exemption",
+  );
+  assert.deepEqual(citationProblems([scenario]), []);
+  assert.match(
+    citationProblems([{ ...scenario, test: "RULE-EVAL-026 unknown workforce" }])[0]!,
+    /names no test exactly like this/,
+  );
 });
 
 test("the register accepts only citations with exactly their five fields", () => {
