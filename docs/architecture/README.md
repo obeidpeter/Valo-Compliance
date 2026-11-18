@@ -151,8 +151,8 @@ and its ledger, history reconciliation, approved manifests and allocation packag
 and the dispatcher with its provider transport. `index.ts` does not export the
 transport, so disabled inference never loads it. The customer AI and operational
 review lanes, the history loader and the work-binding checks stay in `src/lib` for
-now: they depend on customer documents, the editorial pipeline or the database,
-and move with the modules that own those.
+now: they depend on customer documents, the editorial pipeline or the database.
+[Decision 0013](decisions/0013-move-the-ai-lanes.md) proposes where they go.
 
 `modules/commerce` is the second. It holds one-time purchases, payment events and their
 reconciliation, receipts and their recovery, refunds, payment concerns, disputes and the Paystack
