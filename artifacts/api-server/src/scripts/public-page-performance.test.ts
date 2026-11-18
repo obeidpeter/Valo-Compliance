@@ -361,7 +361,7 @@ test("public pages answer a tap within NFR-002's INP target and keep CLS within 
 test(
   "public pages reach NFR-002's LCP target on an emulated mid-range phone",
   {
-    todo: "Every public page renders in the browser after the whole app downloads; server-rendered public pages (plan Phase 4) come next.",
+    todo: "Every public page renders in the browser after the app shell and its screen download; server-rendered public pages (plan Phase 4) come next.",
   },
   () => {
     assert.equal(rows.length, PAGES.length, "every page was measured");

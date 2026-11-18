@@ -1,4 +1,4 @@
-import { type ComponentProps, type ReactNode } from "react";
+import { lazy, Suspense, type ComponentProps, type ReactNode } from "react";
 import { ClerkProvider, SignIn, SignUp, Show, useAuth, useUser } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
@@ -12,32 +12,48 @@ import { RequireAuth } from "@/components/require-auth";
 import { Wordmark } from "@/components/brand";
 import { basePath } from "@/lib/env";
 import NotFound from "@/screens/not-found";
-import Home from "@/screens/home";
-import Library from "@/screens/library";
-import TemplateDetail from "@/screens/template-detail";
-import Compliance from "@/screens/compliance";
-import Industries, { IndustryDetail } from "@/screens/industries";
-import Resources, { ResourceDetail } from "@/screens/resources";
-import About from "@/screens/about";
-import { Contact, AccountAccess } from "@/screens/contact";
-import { AccountPage, PrivacyPage, PurchasesPage } from "@/screens/account";
-import StaffPage from "@/screens/staff";
-import PrivacyOperations from "@/screens/privacy-operations";
-import Services from "@/screens/services";
-import Pricing from "@/screens/pricing";
-import Help from "@/screens/help";
-import Support from "@/screens/support";
-import Privacy from "@/screens/privacy";
-import Terms from "@/screens/terms";
-import Development from "@/screens/development";
-import WorkspaceHome from "@/screens/workspace";
-import ProfilePage from "@/screens/profile";
-import DocumentEditor from "@/screens/document-editor";
-import Checker from "@/screens/checker";
-import { AssessmentsList, AssessmentDetail } from "@/screens/assessments";
-import TasksPage from "@/screens/tasks";
-import RemindersPage from "@/screens/reminders";
-import { AIDraftCompose, AIDraftPreview } from "@/screens/ai-drafts";
+
+// Each screen is its own chunk, so a page downloads only the screens it shows, not the whole
+// workspace and staff app (NFR-002).
+const Home = lazy(() => import("@/screens/home"));
+const Library = lazy(() => import("@/screens/library"));
+const TemplateDetail = lazy(() => import("@/screens/template-detail"));
+const Compliance = lazy(() => import("@/screens/compliance"));
+const Industries = lazy(() => import("@/screens/industries"));
+const IndustryDetail = lazy(() =>
+  import("@/screens/industries").then((m) => ({ default: m.IndustryDetail })),
+);
+const Resources = lazy(() => import("@/screens/resources"));
+const ResourceDetail = lazy(() => import("@/screens/resources").then((m) => ({ default: m.ResourceDetail })));
+const About = lazy(() => import("@/screens/about"));
+const Contact = lazy(() => import("@/screens/contact").then((m) => ({ default: m.Contact })));
+const AccountAccess = lazy(() => import("@/screens/contact").then((m) => ({ default: m.AccountAccess })));
+const AccountPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.AccountPage })));
+const PrivacyPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.PrivacyPage })));
+const PurchasesPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.PurchasesPage })));
+const StaffPage = lazy(() => import("@/screens/staff"));
+const PrivacyOperations = lazy(() => import("@/screens/privacy-operations"));
+const Services = lazy(() => import("@/screens/services"));
+const Pricing = lazy(() => import("@/screens/pricing"));
+const Help = lazy(() => import("@/screens/help"));
+const Support = lazy(() => import("@/screens/support"));
+const Privacy = lazy(() => import("@/screens/privacy"));
+const Terms = lazy(() => import("@/screens/terms"));
+const Development = lazy(() => import("@/screens/development"));
+const WorkspaceHome = lazy(() => import("@/screens/workspace"));
+const ProfilePage = lazy(() => import("@/screens/profile"));
+const DocumentEditor = lazy(() => import("@/screens/document-editor"));
+const Checker = lazy(() => import("@/screens/checker"));
+const AssessmentsList = lazy(() =>
+  import("@/screens/assessments").then((m) => ({ default: m.AssessmentsList })),
+);
+const AssessmentDetail = lazy(() =>
+  import("@/screens/assessments").then((m) => ({ default: m.AssessmentDetail })),
+);
+const TasksPage = lazy(() => import("@/screens/tasks"));
+const RemindersPage = lazy(() => import("@/screens/reminders"));
+const AIDraftCompose = lazy(() => import("@/screens/ai-drafts").then((m) => ({ default: m.AIDraftCompose })));
+const AIDraftPreview = lazy(() => import("@/screens/ai-drafts").then((m) => ({ default: m.AIDraftPreview })));
 
 // Canonical Clerk wiring; only the env adapter differs (Next exposes NEXT_PUBLIC_*).
 const clerkPubKey = publishableKeyFromHost(
@@ -213,11 +229,18 @@ function HomeRedirect() {
   );
 }
 
+/** Holds a screen's place while its chunk loads: a full screen tall, so nothing below it moves. */
+function ScreenLoading() {
+  return <div className="min-h-screen" aria-busy="true" aria-label="Loading" />;
+}
+
 function Shell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   return (
     <SiteShell>
-      <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>
+      <ErrorBoundary resetKey={location}>
+        <Suspense fallback={<ScreenLoading />}>{children}</Suspense>
+      </ErrorBoundary>
     </SiteShell>
   );
 }
