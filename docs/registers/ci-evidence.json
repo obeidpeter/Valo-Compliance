@@ -254,6 +254,20 @@
       "proves": "No sentence in the web app's source claims lawyer approval, legal or professional verification or guaranteed compliance unless it denies the claim."
     },
     {
+      "requirement": "WEB-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",
+      "test": "on a phone, the home page's hero links to both journeys, and one tap on either opens it",
+      "proves": "On an emulated phone, the real home screen's hero links “Start a business draft” to /sign-up and “Check what may apply” to /checker, and one tap on either opens that page; the screen is bundled with a stand-in identity library that reports a signed-out visitor."
+    },
+    {
+      "requirement": "WEB-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",
+      "test": "on a phone, the opened mobile menu and the bottom dock each link to both journeys, and one tap on any of them opens it",
+      "proves": "On an emulated phone, with the header's own links hidden, one tap on Library, Checker or “Open a workspace” in the opened mobile menu opens /library, /checker or /sign-up, and the bottom dock stays on screen after scrolling, with “Start a draft” opening /sign-up and “Check rules” opening /checker."
+    },
+    {
       "requirement": "WEB-004",
       "job": "foundation",
       "file": "artifacts/valo/src/lib/discoverability.test.ts",
@@ -905,6 +919,13 @@
       "proves": "A drafting candidate that adds professionally-reviewed, policy-approved and rights-approved flags together fails the candidate schema, and a review result with a “published” verdict fails the review schema."
     },
     {
+      "requirement": "CMP-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/source-evidence.test.tsx",
+      "test": "the source register labels each date Source checked or AI reviewed, and never claims a professional review",
+      "proves": "The source register, rendered on the server from a synthetic register, labels each reference's dates “Source checked” and “AI reviewed”, shows “Not recorded” for dates never recorded, and contains no professionally reviewed, lawyer, legal review or specialist review wording."
+    },
+    {
       "requirement": "CMP-006",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
@@ -1465,6 +1486,13 @@
       "proves": "Rendered on the server, the web app's loading shell carries aria-busy=\"true\" and aria-label=\"Loading Valo\"."
     },
     {
+      "requirement": "NFR-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",
+      "test": "on a phone, the home page's hero links to both journeys, and one tap on either opens it",
+      "proves": "On an emulated Moto G4 phone 360 pixels wide with touch, the home screen does not scroll sideways and a tap on either hero link opens its page; no real device or other browser is tested."
+    },
+    {
       "requirement": "NFR-008",
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
@@ -1682,6 +1710,13 @@
       "proves": "The DOCX and PDF of each of the twelve guided templates, the invoice among them, contain the label INCOMPLETE BUSINESS DRAFT when their text is read back from the files."
     },
     {
+      "requirement": "PAY-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "every page of a generated invoice and of a purchase receipt says it is not proof of payment or a government tax invoice",
+      "proves": "The invoice template (TPL-01) with 40 synthetic line items and a synthetic purchase receipt, each rendered as DOCX and PDF, carry their notices, which say the invoice is not verified payment proof or a government tax invoice and the receipt is not a government tax invoice, in the DOCX body and page header and on every PDF page, and nothing else in either file mentions a tax invoice or proof of payment."
+    },
+    {
       "requirement": "PRO-001",
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
@@ -1850,6 +1885,13 @@
       "proves": "For each of the four result labels, a source-family result run in fixture mode states the proposition it assessed and that the stated facts have not been independently verified, and passes through the API's response schema unchanged."
     },
     {
+      "requirement": "RUL-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/assessment-result.test.tsx",
+      "test": "every result explains in plain words why it is shown, with its rule, version, place and sources",
+      "proves": "On the checker's result page, rendered on the server from a synthetic result, each likely, unknown and not-indicated result shows its reason under “Why am I seeing this?” with its rule and version, place, next step and source button, names the answers it is based on by their question labels, and an unknown result names its missing answer in plain words."
+    },
+    {
       "requirement": "RUL-005",
       "job": "foundation",
       "file": "scripts/src/valo/rule-evaluation.test.ts",
@@ -1890,6 +1932,20 @@
       "file": "scripts/src/valo/rule-evaluation.test.ts",
       "test": "RULE-EVAL-078: No released rules is a gap, never compliance",
       "proves": "With no released rules, the checker result labels no item, makes no source-backed recommendation and has no compliance score."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/assessment-result.test.tsx",
+      "test": "the result page shows every coverage gap and the excluded sectors, and no score",
+      "proves": "The checker's result page, rendered on the server from a synthetic result, lists every coverage gap, including the excluded high-impact healthcare, financial services and energy activities, shows the not-legal-certification notice, and contains no “score”, “percent” or percent sign after a number."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "scripts/src/valo/checker-coverage-gaps.test.ts",
+      "test": "every checker result names its coverage gaps and the excluded high-impact sectors, and has no score",
+      "proves": "For each rule-evaluation scenario that produces a result, at least 70 of them, the checker's result names the State/FCT and LGA coverage gap and the excluded high-impact healthcare, financial services and energy activities, says it is not legal certification, and has no field named for a score, percentage or compliance."
     },
     {
       "requirement": "RUL-007",
@@ -2072,6 +2128,20 @@
       "file": "artifacts/api-server/src/routes/valo-checker-http.integration.test.ts",
       "test": "rich checker HTTP preview, consented save, history and isolation",
       "proves": "An assessment saved over HTTP reads back in a later request with the same answers and result hash and appears in the workspace's assessment list."
+    },
+    {
+      "requirement": "WRK-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/screens/tasks.test.tsx",
+      "test": "a task the user marks done says it was recorded by them, not approved by a regulator",
+      "proves": "The task page, rendered on the server from a synthetic task list, shows a task the user marked done as “Done (by you)” with “Recorded as done by you. Not regulator approval.”, and shows neither on a task not started."
+    },
+    {
+      "requirement": "WRK-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/screens/tasks.test.tsx",
+      "test": "the web app never says a task or result was accepted or approved by a regulator",
+      "proves": "No sentence in the web app's non-test TypeScript files under src and app says something was accepted, approved, confirmed, certified, verified or signed off by a regulator, authority, government, agency or commission, or calls it regulator- or government-approved, accepted or verified, unless the sentence also contains a negating word such as “not” or “never”."
     },
     {
       "requirement": "WRK-003",

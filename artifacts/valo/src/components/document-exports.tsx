@@ -88,7 +88,8 @@ export function DocumentExports({
       </h2>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         Both formats use the same saved revision. These manual drafts are not released Valo templates,
-        verified payment proof or professionally reviewed content. A draft notice appears in each file.
+        verified payment proof, a government tax invoice or professionally reviewed content. A draft notice
+        appears on every page of each file.
       </p>
       <label htmlFor={checkbox} className="my-4 flex items-start gap-3 text-sm">
         <input

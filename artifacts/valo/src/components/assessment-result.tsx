@@ -168,7 +168,15 @@ function Item({
             {detail.factsNotice}
           </p>
         )}
-        <p className="mt-3 text-sm leading-relaxed text-foreground/85">{item.reason}</p>
+        <div className="mt-3 text-sm leading-relaxed" data-testid={"why-" + item.ruleId}>
+          <p className="font-medium">Why am I seeing this?</p>
+          <p className="mt-1 text-foreground/85">{item.reason}</p>
+          {item.matchedFacts.length > 0 && (
+            <p className="mt-1 text-muted-foreground">
+              Answers this is based on: {item.matchedFacts.map((field) => factLabel(field)).join(", ")}
+            </p>
+          )}
+        </div>
         {item.missingFacts.length > 0 && (
           <ul className="mt-3 grid gap-2 text-sm" aria-label="Answers to provide or review">
             {item.missingFacts.map((field) => (

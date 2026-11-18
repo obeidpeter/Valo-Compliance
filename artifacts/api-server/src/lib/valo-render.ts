@@ -16,9 +16,9 @@ import { documentInput } from "./valo-validation";
 import { GUIDED_PREFIX, guidedRenderableBlocks } from "@workspace/valo-core/guided-runtime";
 import { setting } from "../platform/settings";
 
-export const RENDER_VERSION = "manual-draft-2";
+export const RENDER_VERSION = "manual-draft-3";
 export const DRAFT_NOTICE =
-  "INCOMPLETE BUSINESS DRAFT — user-provided information. Not verified payment proof, official approval or legal advice.";
+  "INCOMPLETE BUSINESS DRAFT — user-provided information. Not verified payment proof, a government tax invoice, official approval or legal advice.";
 export const TEMPLATE_NOTICE =
   "BLANK DEVELOPMENT TEMPLATE — complete with your own business information. Not regulatory guidance or verified business facts.";
 export const PURCHASE_NOTICE =
