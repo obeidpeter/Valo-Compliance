@@ -28,52 +28,136 @@ No recorded implementation evidence: WEB-003, WEB-004, DOC-008, DOC-009, EDT-010
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 85 citations of 76 tests for 36 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 297 citations of 172 tests for 120 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
 | Requirement | Cited tests | CI jobs |
 | --- | ---: | --- |
+| ADM-001 | 2 | postgres |
+| ADM-002 | 4 | foundation, postgres |
+| ADM-003 | 2 | postgres |
 | ADM-004 | 3 | foundation, postgres |
+| ADM-005 | 3 | foundation, postgres |
 | ADM-006 | 1 | postgres |
 | ADM-007 | 3 | foundation, postgres |
 | ADM-008 | 4 | postgres |
+| ADM-009 | 3 | foundation, postgres |
+| AI-001 | 1 | foundation |
+| AI-002 | 3 | foundation |
+| AI-003 | 2 | foundation |
+| AI-004 | 3 | foundation, postgres |
+| AI-005 | 3 | foundation, postgres |
+| AI-006 | 3 | foundation |
+| AI-007 | 2 | postgres |
+| AI-008 | 1 | foundation |
+| AI-009 | 3 | foundation, postgres |
 | CMP-001 | 3 | foundation |
+| CMP-002 | 3 | foundation, postgres |
+| CMP-003 | 3 | foundation |
+| CMP-004 | 3 | foundation |
 | CMP-005 | 2 | foundation |
+| CMP-006 | 2 | foundation, postgres |
+| CMP-007 | 3 | foundation, postgres |
 | CMP-008 | 3 | foundation, postgres |
 | CMP-009 | 3 | foundation, postgres |
+| DOC-001 | 3 | foundation, postgres |
+| DOC-002 | 2 | foundation |
+| DOC-003 | 2 | foundation |
+| DOC-004 | 2 | postgres |
+| DOC-006 | 3 | foundation, postgres |
+| DOC-007 | 2 | postgres |
 | DOC-008 | 1 | foundation |
 | DOC-009 | 2 | foundation, postgres |
+| EDP-001 | 3 | foundation |
+| EDP-002 | 3 | foundation |
+| EDP-003 | 3 | foundation |
+| EDP-004 | 2 | foundation |
+| EDP-005 | 3 | foundation |
+| EDP-006 | 3 | foundation |
+| EDP-007 | 4 | foundation, postgres |
 | EDP-008 | 3 | foundation |
+| EDP-009 | 4 | foundation, postgres |
 | EDP-011 | 5 | foundation, postgres |
+| EDP-012 | 3 | foundation, postgres |
+| EDT-001 | 2 | foundation |
+| EDT-002 | 2 | foundation, postgres |
+| EDT-003 | 1 | postgres |
+| EDT-004 | 2 | foundation, postgres |
+| EDT-005 | 3 | foundation |
+| EDT-006 | 3 | foundation |
+| EDT-007 | 2 | postgres |
+| EDT-008 | 2 | postgres |
+| EDT-009 | 3 | foundation |
 | EDT-010 | 2 | foundation, postgres |
+| IAM-001 | 3 | foundation |
 | IAM-002 | 1 | foundation |
 | IAM-003 | 3 | postgres |
 | NFR-001 | 3 | foundation |
 | NFR-002 | 1 | web-performance |
 | NFR-003 | 1 | postgres |
 | NFR-004 | 5 | foundation, postgres |
+| NFR-005 | 3 | foundation |
+| NFR-006 | 1 | foundation |
+| NFR-008 | 3 | foundation |
+| NFR-009 | 4 | postgres |
 | NFR-010 | 3 | foundation |
 | NFR-011 | 2 | foundation |
 | OPS-001 | 4 | foundation |
+| OPS-002 | 2 | postgres |
 | OPS-003 | 1 | foundation |
+| OPS-004 | 3 | foundation, postgres |
 | OPS-006 | 1 | foundation |
+| OPS-008 | 2 | foundation |
+| PAY-001 | 2 | foundation, postgres |
+| PAY-002 | 2 | foundation, postgres |
+| PAY-003 | 3 | foundation, postgres |
+| PAY-004 | 2 | foundation, postgres |
+| PAY-005 | 1 | postgres |
+| PAY-006 | 1 | postgres |
+| PAY-007 | 1 | postgres |
+| PAY-008 | 3 | foundation, postgres |
+| PAY-009 | 2 | foundation |
 | PAY-010 | 3 | foundation |
+| PRO-001 | 3 | foundation |
+| PRO-002 | 2 | foundation, postgres |
+| PRO-003 | 2 | foundation, postgres |
+| PRV-001 | 3 | foundation, postgres |
 | PRV-002 | 1 | foundation |
+| PRV-003 | 3 | foundation, postgres |
+| RUL-001 | 3 | foundation |
+| RUL-002 | 3 | foundation |
+| RUL-003 | 3 | foundation |
+| RUL-004 | 2 | foundation |
+| RUL-005 | 3 | foundation |
+| RUL-006 | 3 | foundation, postgres |
+| RUL-007 | 3 | foundation, postgres |
+| RUL-008 | 3 | foundation |
+| RUL-009 | 2 | postgres |
 | SEC-001 | 3 | postgres |
+| SEC-002 | 3 | foundation, postgres |
 | SEC-003 | 1 | foundation |
+| SEC-004 | 2 | foundation |
+| SEC-005 | 3 | foundation, postgres |
+| SEC-006 | 3 | postgres |
+| SEC-007 | 3 | foundation |
 | SEC-008 | 3 | foundation, postgres |
 | SRV-001 | 1 | foundation |
 | SRV-002 | 4 | foundation, postgres |
 | SRV-003 | 1 | foundation |
 | SRV-004 | 1 | foundation |
+| WEB-002 | 1 | foundation |
 | WEB-003 | 3 | foundation, postgres |
 | WEB-004 | 3 | foundation |
+| WRK-001 | 3 | postgres |
+| WRK-003 | 2 | postgres |
+| WRK-004 | 2 | postgres |
 | WRK-005 | 1 | foundation |
+| WRK-006 | 3 | foundation, postgres |
 
 Neither recorded implementation evidence nor a cited test: none.
 
-No test is cited yet for 91 of the 126 R1 requirements: WEB-001, WEB-002, IAM-001, PRO-001, PRO-002, PRO-003, DOC-001, DOC-002, DOC-003, DOC-004, DOC-005, DOC-006, DOC-007, EDT-001, EDT-002, EDT-003, EDT-004, EDT-005, EDT-006, EDT-007, EDT-008, EDT-009, AI-001, AI-002, AI-003, AI-004, AI-005, AI-006, AI-007, AI-008, AI-009, CMP-002, CMP-003, CMP-004, CMP-006, CMP-007, RUL-001, RUL-002, RUL-003, RUL-004, RUL-005, RUL-006, RUL-007, RUL-008, RUL-009, WRK-001, WRK-002, WRK-003, WRK-004, WRK-006, PAY-001, PAY-002, PAY-003, PAY-004, PAY-005, PAY-006, PAY-007, PAY-008, PAY-009, ADM-001, ADM-002, ADM-003, ADM-005, ADM-009, EDP-001, EDP-002, EDP-003, EDP-004, EDP-005, EDP-006, EDP-007, EDP-009, EDP-010, EDP-012, OPS-002, OPS-004, OPS-005, OPS-007, OPS-008, SEC-002, SEC-004, SEC-005, SEC-006, SEC-007, PRV-001, PRV-003, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009.
+No test is cited yet for 7 of the 126 R1 requirements: WEB-001, DOC-005, WRK-002, EDP-010, OPS-005, OPS-007, NFR-007.
 
 ## Release gates
 

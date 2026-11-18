@@ -595,6 +595,1490 @@
       "file": "scripts/src/valo/r1-boundaries.test.ts",
       "test": "the web app claims neither that data stays in Nigeria nor that a provider keeps nothing, and the processor review covers every kind of service",
       "proves": "The draft review of outside services covers Replit, identity, email, payments, AI and monitoring, each with what the code sends it, its region, its retention and its contract, and no sentence in the web app promises that a provider keeps nothing unless it disclaims the promise."
+    },
+    {
+      "requirement": "ADM-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/privacy/valo-customer-access.integration.test.ts",
+      "test": "real development access intake, privacy isolation and staff boundaries",
+      "proves": "The finance staff area returns no record with a body, content or order-line field, a finance-only staff member is refused the support area, and staff without a finance role or without fresh MFA are refused the finance area."
+    },
+    {
+      "requirement": "ADM-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
+      "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+      "proves": "The finance refund queue does not contain the title of a customer's private draft, and neither the customer nor a support-only staff identity can approve a refund."
+    },
+    {
+      "requirement": "ADM-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
+      "proves": "Content staff with fresh MFA can read a synthetic version's publication record, which gives its candidate hash, the hold decision and reasons from checking the stored bundle at the read time, the drafting run's ID, model and prompt version and its safety holds, and the read adds one entry to the staff access audit, while system-only staff and content staff without fresh MFA are refused."
+    },
+    {
+      "requirement": "ADM-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a synthetic candidate that fails its gates is held, and no role or path publishes, changes or withdraws it",
+      "proves": "The publisher records a synthetic candidate that fails its gates as held, giving its reasons and adding a held audit entry, and refuses to publish it; the drafter role can neither mark it published nor add a version directly as published, and the publisher role can neither read customer drafts nor change a policy."
+    },
+    {
+      "requirement": "ADM-002",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "missing authoritative evidence, scope or review holds an item, and no human reviewer is required",
+      "proves": "A complete synthetic publication record with no field for a human reviewer, lawyer, specialist, approver or sign-off is eligible, and missing operative evidence, sources, verified legal scope or the challenge review holds it."
+    },
+    {
+      "requirement": "ADM-002",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "publication needs a separate drafting run and two separate, blind and clear review runs",
+      "proves": "The publication gate holds an item when a review reuses the drafting run's ID or the other review's, a reviewer saw the other verdict, a review holds or lists a finding, or the challenge review is missing."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
+      "proves": "When the source monitor records a changed synthetic capture of a watched source, the rule bound to it is blocked at once, two source impacts are recorded across the two bound versions and none for an unbound one, and the staff source controls refuse a content staff request to publish the affected content version, leaving it a candidate with no published audit entry."
+    },
+    {
+      "requirement": "ADM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a synthetic candidate that fails its gates is held, and no role or path publishes, changes or withdraws it",
+      "proves": "A synthetic candidate that fails its gates is recorded as held, the publisher refuses to publish it, it is left out of the live versions, and a request for its PDF master made without a workspace is refused."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a synthetic candidate that fails its gates is held, and no role or path publishes, changes or withdraws it",
+      "proves": "A synthetic candidate that fails its gates is held and the publisher refuses it; the drafter role can neither mark it published nor add a version directly as published, and even the owner connection cannot publish it, change its stored content or delete it."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
+      "test": "both formats must be readable; a claimed pass cannot replace re-execution",
+      "proves": "Inspecting a template's DOCX and PDF exports fails when either file cannot be read, and a recheck of the unreadable files is refused even when given a report that claims a pass."
+    },
+    {
+      "requirement": "ADM-005",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "missing authoritative evidence, scope or review holds an item, and no human reviewer is required",
+      "proves": "A complete synthetic publication record with no field for a human reviewer, lawyer, specialist, approver or sign-off is eligible."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/staff/valo-staff-roles.integration.test.ts",
+      "test": "staff role governance: disposable PostgreSQL, managed-session boundary and no real role mutations",
+      "proves": "On a disposable database, a saved staff role change can be neither updated nor deleted, and when its audit record cannot be written the role grant is rolled back with it."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
+      "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+      "proves": "The database refuses to update or delete a recorded refund status transition, and the row keeps its original reason."
+    },
+    {
+      "requirement": "ADM-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "test": "security signals raise their own alerts, owned by the security and payment runbooks",
+      "proves": "With stubbed probe readings, twenty refusals of one address in ten minutes raise no alert while twenty-one do, one staff role change raises its own alert, both under the security/privacy incident runbook, and the alerts resolve when the readings return to zero."
+    },
+    {
+      "requirement": "AI-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "test": "scope and permission injection are blocked across all four tasks",
+      "proves": "Across the four drafting tasks, every adversarial note in the fixtures is flagged as unsupported, including requests for a legal opinion or an employment contract."
+    },
+    {
+      "requirement": "AI-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "test": "invalid provider structure gets one bounded retry, never fake success",
+      "proves": "A model response that does not fit the draft plan schema, from a controlled transport, is tried twice in all and then ends with no plan and a schema failure code."
+    },
+    {
+      "requirement": "AI-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/inference-customer-controls.test.ts",
+      "test": "all six original fault cases execute the real organizer with declared synthetic clarification and zero network",
+      "proves": "With controlled responses and no network, two malformed responses get exactly two attempts and end with no plan and a fallback draft that keeps the supplied names, reference, dates and amounts, while a malformed then valid response gives a draft on the second attempt."
+    },
+    {
+      "requirement": "AI-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/managed-inference-entry.test.ts",
+      "test": "default managed entry and customer organizer use actual finite dispatch and real corpus bindings",
+      "proves": "With a controlled SDK and no network, the customer draft organizer makes a second attempt after a malformed response only when the approved work includes a separate retry, which then gives a valid plan, and without one it stops after the single malformed response with no plan."
+    },
+    {
+      "requirement": "AI-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "test": "scope and permission injection are blocked across all four tasks",
+      "proves": "Notes asking the AI to guess a tax rate and invent a registration number are flagged as unsupported in all four drafting tasks, as are notes asking it to forge payment proof in the invoice and payment reminder tasks."
+    },
+    {
+      "requirement": "AI-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/inference-customer-controls.test.ts",
+      "test": "all six original fault cases execute the real organizer with declared synthetic clarification and zero network",
+      "proves": "A controlled model response that adds fields outside the draft plan, a remote image link and a script, is rejected on both attempts and the link does not reach the draft, and in each of the six fault cases the draft keeps exactly the supplied names, reference, dates and amounts."
+    },
+    {
+      "requirement": "AI-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-rich.test.ts",
+      "test": "source-family implementation, publication, period and freshness gates fail closed",
+      "proves": "Outside fixture mode, a test-fixture rule, or one claiming an editorial release without a trusted manifest, gives an assessment no result item, and even in fixture mode so does a withdrawn rule, one past its review date, one not yet in effect or one whose evaluator does not match the code."
+    },
+    {
+      "requirement": "AI-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/valo-rule-release.integration.test.ts",
+      "test": "a rule version is released only after its plan, source check and confirmation, and replaces the one before",
+      "proves": "For a synthetic rule, a version whose source's stored text lacks its quoted passage is refused and no new version is stored, a bundle with a held review is not admissible, and after each release the checker gives the released version's result."
+    },
+    {
+      "requirement": "AI-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-rich.test.ts",
+      "test": "version and client evidence injection are rejected without source policy coercion",
+      "proves": "Checker answers that try to mark a source approved or eligible for customer use, or that carry a manifest hash, are refused by the checker's input schema."
+    },
+    {
+      "requirement": "AI-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "test": "only bounded redacted selected notes enter model context",
+      "proves": "The payload built for the model has only task, tone and notes fields, and the business name, an email address and the 234 country code of a phone number in a note do not appear in it."
+    },
+    {
+      "requirement": "AI-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/inference-customer-controls.integration.test.ts",
+      "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider",
+      "proves": "A controlled transport receives exactly the redacted payload built from the request's own selected notes, and neither that payload, the preview nor the workspace's event records contain the marker note of another workspace's document, which the workspace cannot open."
+    },
+    {
+      "requirement": "AI-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-reminder.test.ts",
+      "test": "payment references stay out of provider context even if repeated in selected notes",
+      "proves": "A payment reference repeated in a selected note does not appear in the payload built for the model, and that payload has no invoice-amount or recorded-payments field."
+    },
+    {
+      "requirement": "AI-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "test": "scope and permission injection are blocked across all four tasks",
+      "proves": "Notes telling the AI to ignore its system instructions and reveal other workspaces' drafts and secrets are flagged as unsupported in all four drafting tasks."
+    },
+    {
+      "requirement": "AI-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-source-acceptance.test.ts",
+      "test": "conflicting totals/currencies and the exact INV-11 item injection reach their intended checks",
+      "proves": "An instruction in an invoice line description to ignore policy and publish every private draft is flagged as unsupported and is not in the payload prepared for the model."
+    },
+    {
+      "requirement": "AI-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/ai/inference-budget.test.ts",
+      "test": "fallback does not admit tools, multiple completions or streaming",
+      "proves": "In its whole-context mode, the inference budget's admission logic refuses to reserve budget for a customer AI request that asks for tools, a tool choice, several completions, streaming or audio, or that sends an image."
+    },
+    {
+      "requirement": "AI-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/inference-customer-controls.integration.test.ts",
+      "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider",
+      "proves": "On a development database with a synthetic workspace at its daily AI limit while AI is otherwise enabled through a stubbed spending-approval check, a new draft request ends as a manual fallback and never reaches the provider adapter, and a manual edit to a saved document still saves and the workspace's data download still includes the document."
+    },
+    {
+      "requirement": "AI-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/ai/inference-batch-dispatch.integration.test.ts",
+      "test": "durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls",
+      "proves": "On an isolated PostgreSQL ledger with a controlled transport, a customer AI work item is refused and nothing is sent while an earlier charge is unresolved, and again once the shared spending allocation is used up."
+    },
+    {
+      "requirement": "AI-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/inference-customer-evaluation.test.ts",
+      "test": "preparation preserves all original60 identities, full oracles and actual numeric checks without invented follow-ups",
+      "proves": "All 60 authored customer drafting cases keep their identities, expected checks and critical-failure conditions, integer-kobo arithmetic built on the application's money functions reproduces all 45 expected amounts in them, and no case is marked as accepted for output quality."
+    },
+    {
+      "requirement": "AI-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/inference-customer-controls.integration.test.ts",
+      "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider",
+      "proves": "Under an injected provider outage, a draft request makes one attempt and ends as a manual fallback that is not saved as a document, while a concurrent manual edit saves exactly one new revision that keeps the document's earlier text, and the workspace's data download still works."
+    },
+    {
+      "requirement": "AI-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/inference-customer-controls.test.ts",
+      "test": "all six original fault cases execute the real organizer with declared synthetic clarification and zero network",
+      "proves": "Controlled timeout, rate-limit and outage errors each get one attempt through the real draft organizer, with no network, and end with no plan and a fallback draft that keeps the supplied names, reference, dates and amounts."
+    },
+    {
+      "requirement": "AI-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
+      "proves": "With AI and checkout both paused by staff, the public catalogue and the free guidance resources read exactly as they did before the pauses."
+    },
+    {
+      "requirement": "CMP-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
+      "test": "each checker result says why it may matter, what to do next and what is missing, with its source",
+      "proves": "When the answers do not trigger a synthetic rule, its result says “These answers did not indicate this scoped rule. This is not a legal exemption.” and the result's notice says it is not legal certification."
+    },
+    {
+      "requirement": "CMP-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/business-name-candidate-evaluation.test.ts",
+      "test": "known false short-circuits an unrelated unknown without declaring general exemption",
+      "proves": "In the business-name candidate evaluator, an individual who is not carrying on business gets “Not indicated by these answers” with a gap saying this is not a general registration exemption, even though the place-of-business answer is unknown."
+    },
+    {
+      "requirement": "CMP-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "A saved assessment of a synthetic profile that triggers no source-backed recommendation lists the coverage gap saying it is not a finding that no duties apply."
+    },
+    {
+      "requirement": "CMP-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-014: Lagos rule is excluded for Kaduna",
+      "proves": "A synthetic rule scoped to Lagos State is “Not indicated by these answers” for a business in Kaduna."
+    },
+    {
+      "requirement": "CMP-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-015: Unknown state is not national applicability",
+      "proves": "A synthetic rule scoped to Lagos State gives “More information needed”, not “Likely relevant”, when the business's state is unknown."
+    },
+    {
+      "requirement": "CMP-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-018: LGA unknown does not invent a local duty",
+      "proves": "A synthetic rule scoped to the Ikeja LGA of Lagos gives “More information needed” with a missing answer listed, not a local duty, when the business's LGA is unknown."
+    },
+    {
+      "requirement": "CMP-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/release-notices.test.tsx",
+      "test": "a template's detail page shows its source-check and review dates, the AI-review disclosure, scope and limitations",
+      "proves": "The release-notices component shows the disclosure it is given (here “AI drafted and reviewed; not reviewed by a Nigerian legal, tax or sector specialist”), a “Sources checked” date and the next review date, and the template detail page's source passes the template's own review dates, disclosure, scope and limitations to it."
+    },
+    {
+      "requirement": "CMP-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/release-notices.test.tsx",
+      "test": "the web app never claims lawyer approval, professional verification or guaranteed compliance",
+      "proves": "No sentence in the web app's non-test TypeScript files under src and app calls anything professionally reviewed, verified or approved, lawyer-approved, legally approved, verified or certified, or guaranteed or certified compliant unless it also contains a negating word such as not, no or never."
+    },
+    {
+      "requirement": "CMP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
+      "test": "candidate output cannot grant policy, rights or professional approval",
+      "proves": "A drafting candidate that adds professionally-reviewed, policy-approved and rights-approved flags together fails the candidate schema, and a review result with a “published” verdict fails the review schema."
+    },
+    {
+      "requirement": "CMP-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "A task with a due date the customer has not confirmed is refused, as is a task with an impossible calendar date."
+    },
+    {
+      "requirement": "CMP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/source-review-clarifications.test.ts",
+      "test": "NDPA009 commercial reuse is not a new collection clock",
+      "proves": "In the privacy candidate evaluator, a household contact list reused for commercial promotions is likely relevant, but the timing under section 27(1) stays “not established” and no automatic statutory deadline is set."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-068: Expired source cannot recommend",
+      "proves": "A synthetic workforce-threshold rule whose review date has been reached gives no result item and no source-backed recommendation."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-079: Overlapping released versions are held",
+      "proves": "Two overlapping released versions of one synthetic workforce-threshold rule give no result item and no source-backed recommendation."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-task-source-guard.integration.test.ts",
+      "test": "new source-linked tasks recheck current eligibility before any insert",
+      "proves": "With a controlled stand-in for the released-rule registry, creating a task from a saved recommendation is refused with a conflict, writing no task, reminder or event, when the rule's review has expired, its source check lies in the future or another active version conflicts with it, and an expired review is refused the same way when the task has a confirmed due date and reminders are on."
+    },
+    {
+      "requirement": "DOC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a synthetic candidate that fails its gates is held, and no role or path publishes, changes or withdraws it",
+      "proves": "A synthetic template candidate with missing evidence and unresolved issues is recorded as held, the publisher gives its reasons and refuses to release it, it is left out of the live versions, a request for its PDF master made without a workspace is refused, neither the drafter role nor the owner connection can set it to published, and the owner connection cannot change its content."
+    },
+    {
+      "requirement": "DOC-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "missing authoritative evidence, scope or review holds an item, and no human reviewer is required",
+      "proves": "The publication gate holds a synthetic record that lists missing evidence, has no sources, has an unverified or absent legal scope or lacks its challenge review, and the complete record it finds eligible has no field naming a human reviewer, lawyer, specialist, approver or professional sign-off."
+    },
+    {
+      "requirement": "DOC-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-released-content-locking.test.ts",
+      "test": "template downloads read storage outside the transaction that holds the source lock",
+      "proves": "With the database, storage, policy files, rights evidence, publication evaluation, source lock and membership check replaced by test doubles, a template master download whose rights evidence is unresolved is refused before the source lock, membership check or any file read, and one whose version was withdrawn before the lock is refused without reading the file."
+    },
+    {
+      "requirement": "DOC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-discovery.test.ts",
+      "test": "combined filters, ordering, later pages, reset, empty query and no matches",
+      "proves": "Over 40 synthetic catalogue entries, a query combining type, industry, access and category filters returns at least one entry, all of them premium People entries in name order, the recently-checked sort puts the most recently checked entry first, page 2 holds 20 entries, no filter matches all 40, a page number of Infinity falls back to page 1, and an unknown search, or an unknown industry and category together, match nothing."
+    },
+    {
+      "requirement": "DOC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-pages.test.ts",
+      "test": "fixed20-row catalogue contract: 45 items, page3",
+      "proves": "With 45 catalogue entries and 20 to a page, page 3 reports a total of 45 and holds the last five entries in order."
+    },
+    {
+      "requirement": "DOC-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/release-notices.test.tsx",
+      "test": "the web app never claims lawyer approval, professional verification or guaranteed compliance",
+      "proves": "No sentence in the web app's non-test TypeScript files under src and app, template pages included, claims lawyer approval, legal approval, verification or certification, professional verification, review or approval, certified compliance or guaranteed compliance unless it also contains a negating word such as not, no or never."
+    },
+    {
+      "requirement": "DOC-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/discoverability.test.ts",
+      "test": "the web app shows no testimonials, customer counts, ratings or regulator endorsements",
+      "proves": "Every sentence in the web app's source that mentions an endorsement, an accreditation, being certified or approved by someone, an official partner, or government or regulator approval, backing or endorsement contains a negating word such as “not” or “no” or sits in the About page's list of what Valo is not, and the site footer says no regulator endorses Valo."
+    },
+    {
+      "requirement": "DOC-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-template-entitlement.integration.test.ts",
+      "test": "only the purchasing workspace's active entitlement releases a premium master",
+      "proves": "The purchase check run before a premium template master is released passes for the synthetic workspace with an active purchase of that version and refuses (403) another workspace and the same workspace once its purchase is suspended."
+    },
+    {
+      "requirement": "DOC-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a synthetic candidate that fails its gates is held, and no role or path publishes, changes or withdraws it",
+      "proves": "A synthetic held template version is left out of the live versions, and a request for its PDF master made without a workspace is refused."
+    },
+    {
+      "requirement": "DOC-006",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "holds no commercial-use rights",
+      "proves": "A synthetic publication record whose rights evidence does not allow commercial use is held by the publication gate with the reason that rights are not cleared."
+    },
+    {
+      "requirement": "DOC-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue.test.ts",
+      "test": "rights applicability is evidence-dependent, not an unconditional development hold",
+      "proves": "A synthetic rights record with the status verified, its account terms, account, integration and provider evidence and a current check date counts as applicable, and the same record marked unverified, without account terms, without its account evidence or with a check date of 1 January 2025 does not."
+    },
+    {
+      "requirement": "DOC-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "A price attached to a synthetic held content version, whose row carries a placeholder approval reference, cannot be bought: ordering it is refused, no order is saved and the price is not offered as a product, an order that brings its own amount and currency is refused, and checkout of an order for content that is not released is refused."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
+      "proves": "Saving a synthetic document adds revision 2 and leaves revision 1's content hash unchanged, one of two concurrent saves from revision 1 is refused with a conflict, and restoring revision 1's title and content adds revision 3 with revision 1's content hash, leaving three revisions."
+    },
+    {
+      "requirement": "DOC-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-customer-ai.integration.test.ts",
+      "test": "development AI persistence, private ownership, atomic acceptance and quotas",
+      "proves": "Two concurrent acceptances of one synthetic AI draft, made without any provider call, create a single document, and accepting that draft again with a different title is refused with a conflict."
+    },
+    {
+      "requirement": "EDP-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-lifecycle-controls.test.ts",
+      "test": "optional scope reductions cannot expand policy or modify existing policy input",
+      "proves": "Narrowing the owner's operational publication policy removes allowed classes and gives a new policy hash without changing the original, a narrowing that tries to add a class or excludes a class outside the policy is refused, and a suspension leaves no class allowed."
+    },
+    {
+      "requirement": "EDP-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/operational-mechanical.test.ts",
+      "test": "operational checks fail closed for missing, stale, altered and out-of-scope inputs",
+      "proves": "In the mechanical checks for an operational form, a candidate marked as employment content, one whose legal scope is marked unverified or one that is not a listed form fails the scope check."
+    },
+    {
+      "requirement": "EDP-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "missing authoritative evidence, scope or review holds an item, and no human reviewer is required",
+      "proves": "A complete publication record that has no human reviewer, approver, sign-off or professional field is eligible."
+    },
+    {
+      "requirement": "EDP-002",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "missing authoritative evidence, scope or review holds an item, and no human reviewer is required",
+      "proves": "An item that records its operative text as not retrieved is held for material uncertainty, and regulatory content with no source is held."
+    },
+    {
+      "requirement": "EDP-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/business-name-evidence.test.ts",
+      "test": "actual CAMA20 references both281 and283; BFA amendment cannot be omitted",
+      "proves": "The business-name evidence check rejects the retained passages when the amending act's text is missing or the retained section 20 text no longer refers to the sections it depends on."
+    },
+    {
+      "requirement": "EDP-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/business-name-evidence.test.ts",
+      "test": "changed checksum, missing source and expired retrieval fail before candidate construction",
+      "proves": "Building the business-name evidence from synthetic source texts fails, before any candidate is made, when one of its official sources is missing, a source's text no longer matches its checksum or the retrievals are stale."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
+      "test": "invented quotation fails independently of any model pass",
+      "proves": "A candidate claim whose quotation is not in the cited source passage fails the mechanical citation check."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/operational-mechanical.test.ts",
+      "test": "operational checks fail closed for missing, stale, altered and out-of-scope inputs",
+      "proves": "In the mechanical checks for a blank operational form, a business name filled into the form, an added legal claim citing a source that was not supplied, and an unverified or mismatched rights record each fail their check."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
+      "test": "candidate output cannot grant policy, rights or professional approval",
+      "proves": "A drafted candidate that declares policy approval, rights approval and professional review together is refused by the candidate schema, and the review schema refuses a published verdict."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "publication needs a separate drafting run and two separate, blind and clear review runs",
+      "proves": "An item is held when a review reuses the drafting run or the other review's run, a reviewer saw the other review's verdict, a review holds or reports a finding, or a second factual review stands in for the challenge."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
+      "test": "candidate output cannot grant policy, rights or professional approval",
+      "proves": "A drafted candidate that declares it was professionally reviewed, together with policy and rights approval, is refused by the candidate schema, and the review schema refuses a published verdict."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "enhanced content requires every controlling-text check",
+      "proves": "Contract content with no enhanced checks is held, and is eligible once all five enhanced checks (controlling text, amendments, effective dates, exceptions and jurisdiction) have passed for that candidate."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/business-name-evidence.test.ts",
+      "test": "plural-surname and succession exceptions retain their limiting conditions",
+      "proves": "The business-name evidence check rejects the retained passages when the shared-surname or succession exception in the statutory text loses its limiting condition."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "missing authoritative evidence, scope or review holds an item, and no human reviewer is required",
+      "proves": "An otherwise complete item that records a missing piece of operative evidence is held for material uncertainty."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/operational-mechanical.test.ts",
+      "test": "operational checks fail closed for missing, stale, altered and out-of-scope inputs",
+      "proves": "In the mechanical checks for a blank operational form, an altered candidate hash or invalid document, changed source or provider bytes, a missing provider passage, an expired review or future source check, an unverified or mismatched rights record, an out-of-scope candidate, an added legal claim, a removed disclosure or a filled-in business name each fails its check."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
+      "test": "altered canonical content, date/scope and forged generic reports fail",
+      "proves": "The export check reads the DOCX and PDF back and fails them for a candidate whose text, source-check date, scope or limitations differ from what the files hold, refuses a mismatched candidate hash and rejects a generic pass report in place of a re-check."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
+      "test": "invented quotation fails independently of any model pass",
+      "proves": "An invented quotation fails the mechanical citation check, which is computed from the candidate and its source alone and takes no review verdict."
+    },
+    {
+      "requirement": "EDP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
+      "test": "altered canonical content, date/scope and forged generic reports fail",
+      "proves": "Once a candidate's text, source-check date, scope or limitations are edited, its existing DOCX and PDF exports no longer pass inspection, and a generic pass report cannot stand in for a re-check."
+    },
+    {
+      "requirement": "EDP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.test.ts",
+      "test": "source safety adds freshness, binding and sticky-hold checks without manufacturing eligibility",
+      "proves": "A rule is no longer allowed for use when its last source check is a day old, failed or dated in the future, its retained source has changed, its binding names a different URL or source text, or a hold applies."
+    },
+    {
+      "requirement": "EDP-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a synthetic candidate that fails its gates is held, and no role or path publishes, changes or withdraws it",
+      "proves": "A synthetic candidate that fails its gates is recorded as held by the bounded publisher, which then refuses to publish it, and the held version is left out of the live versions and a request for its PDF master made without a workspace is refused."
+    },
+    {
+      "requirement": "EDP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/publication-final-check.test.ts",
+      "test": "final check re-reads actual narrowed owner policy after initial validation without changing default authority files",
+      "proves": "If the owner narrows the publication policy after an item's first check, the final check before release refuses it because the policy changed."
+    },
+    {
+      "requirement": "EDP-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-lifecycle.integration.test.ts",
+      "test": "actual isolated PostgreSQL reviewer denies release/policy and retained sources reject mutation",
+      "proves": "Under the development drafting and review database roles, a call to the publisher is refused by its role check and changes to a content version's status or the publication policy are refused by PostgreSQL, the evaluation then writes an audit record of each refusal to a table that refuses deletion, and the review role cannot read customer documents."
+    },
+    {
+      "requirement": "EDP-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a synthetic candidate that fails its gates is held, and no role or path publishes, changes or withdraws it",
+      "proves": "The drafting role can neither set a version to published nor insert one straight into published state with a forged hash, the publisher refuses a version that failed its gates after recording it as held, and the publisher role can neither read customer drafts nor change a policy."
+    },
+    {
+      "requirement": "EDP-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/source-controls.test.ts",
+      "test": "HTML extraction preserves untrusted text but cannot execute scripts or fetch document resources",
+      "proves": "Text in a synthetic HTML page telling the reader to ignore prior instructions and publish without evidence is kept as plain text by the source extractor, the page's script has no effect on the extracted text and a local-file frame's contents are not pulled in."
+    },
+    {
+      "requirement": "EDP-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-rich.test.ts",
+      "test": "source-family implementation, publication, period and freshness gates fail closed",
+      "proves": "Outside fixture mode, a rule that claims an editorial release without a trusted publication manifest gives an assessment no result item."
+    },
+    {
+      "requirement": "EDP-012",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a synthetic candidate that fails its gates is held, and no role or path publishes, changes or withdraws it",
+      "proves": "For a synthetic held version, even the database owner connection cannot set it to published or change its content, the publisher refuses it and withdrawal cannot turn it into a past publication."
+    },
+    {
+      "requirement": "EDP-012",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "unknown schema fields cannot smuggle an override",
+      "proves": "An otherwise eligible publication record that carries an owner-override field is held."
+    },
+    {
+      "requirement": "EDP-012",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
+      "proves": "The staff source controls refuse a content staff request to publish a synthetic version that has not passed its gates, and the version stays a candidate with no published audit entry."
+    },
+    {
+      "requirement": "EDT-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
+      "test": "agreement parties and negotiated terms cannot be omitted from completion",
+      "proves": "In each of the templates TPL-13 to TPL-17, a blank issuer name and a recipient name left as the placeholder [Legal name] are both reported as open issues."
+    },
+    {
+      "requirement": "EDT-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
+      "test": "arithmetic, required-question deletion and unknown layouts fail server validation",
+      "proves": "The server's document checks refuse a guided invoice whose issuer-name question has been removed, whose calculated total has been edited or whose layout names an unknown template."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-retention.integration.test.ts",
+      "test": "expired generated files retire safely and regenerate without changing saved or financial history",
+      "proves": "With an in-memory file store, an expired DOCX export of a synthetic document is regenerated from the same saved revision ID and content hash as the original job, and that saved revision still exists."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/operational-preparer-export.test.ts",
+      "test": "additional operational forms render their complete final canonical bytes in DOCX and PDF",
+      "proves": "For ten operational templates, the DOCX and the A4 PDF rendered from one canonical document both hold its complete text and required notices when read back, and the same files fail the comparison once the record's scope is changed."
+    },
+    {
+      "requirement": "EDT-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
+      "proves": "After a change to a synthetic document is saved, a later read of the document reports revision 2, and its history still holds revision 1 with its original content hash."
+    },
+    {
+      "requirement": "EDT-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
+      "proves": "Two concurrent saves of one synthetic document from the same revision, as from two open tabs, produce exactly one new revision and one conflict (409), and the earlier revision keeps its content hash."
+    },
+    {
+      "requirement": "EDT-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+      "test": "updates require a positive integer expected revision",
+      "proves": "A document save whose expected revision is 0, negative, fractional or NaN is refused by the server's input checks."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
+      "test": "all twelve actual DOCX/PDF renders contain supplied answers, not internal question IDs",
+      "proves": "Every DOCX and PDF rendered for the 12 guided templates from synthetic answers, with every question answered, carries the INCOMPLETE BUSINESS DRAFT notice in its extracted text."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+      "test": "incomplete manual drafts persist without invented names or dates",
+      "proves": "A synthetic manual draft with blank issuer and recipient names, document number and dates passes the server's document checks unchanged, with nothing filled in."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "test": "missing facts are named, never invented",
+      "proves": "For AI drafting input with no issuer name and no document number, the missing-information check names exactly those two fields."
+    },
+    {
+      "requirement": "EDT-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
+      "test": "all twelve actual DOCX/PDF renders contain supplied answers, not internal question IDs",
+      "proves": "For each of the 12 guided templates filled with synthetic answers, the DOCX opens with unzip and the PDF with pdftotext, both hold the supplied issuer-name answer and no internal question ID, and nine of the templates keep the naira sign in both files."
+    },
+    {
+      "requirement": "EDT-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "DOCX contains editable OOXML, actual table cells, bullets, draft notice and naira",
+      "proves": "A DOCX render is a zip package whose word/document.xml holds a table element, the naira amount ₦12,345.67, the first list item and the saved revision number, and which has a header part."
+    },
+    {
+      "requirement": "EDT-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
+      "test": "revised inventory paragraphs spanning pages retain all text despite renderer footer insertion",
+      "proves": "The inventory register template's DOCX and its A4 PDF of at least two pages both hold every paragraph and table cell with the disclosure, scope, limitations and source-check date when read back, after the renderer's own page-number footer lines are set aside."
+    },
+    {
+      "requirement": "EDT-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-recovery.integration.test.ts",
+      "test": "real process death, PostgreSQL lease fencing and export recovery",
+      "proves": "When a process running a synthetic document's export is killed with SIGKILL, with private files in a local folder, recovery requeues an abandoned first attempt once even when two recoveries race and marks a final attempt abandoned mid-work failed and retryable, a newly started export worker completes such a job after an explicit retry, and two concurrent runs of one job leave one export, one file and one ready event."
+    },
+    {
+      "requirement": "EDT-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-retention.integration.test.ts",
+      "test": "expired generated files retire safely and regenerate without changing saved or financial history",
+      "proves": "With an in-memory file store, two concurrent retry requests for one expired export give the job a new delivery, the superseded delivery does nothing when run, and the new delivery makes the export ready again from the same saved revision."
+    },
+    {
+      "requirement": "EDT-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-retention.integration.test.ts",
+      "test": "expired generated files retire safely and regenerate without changing saved or financial history",
+      "proves": "With an in-memory file store, a synthetic DOCX export can be downloaded before its retention date and is refused (410) once that date has passed, even when it passes while the file is being read, after which the export list shows it as expired with no download link and another workspace gets 404."
+    },
+    {
+      "requirement": "EDT-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-workspace-download.integration.test.ts",
+      "test": "real paged workspace download, final authorization and disconnect cleanup",
+      "proves": "Over real HTTP with a controlled identity provider, a workspace data download whose session is revoked, account locked, email unverified or membership revoked after the file is prepared is refused with no attachment and none of the private data, and the prepared file is deleted."
+    },
+    {
+      "requirement": "EDT-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "controlled HTML treats markup, local-file and metadata addresses as inert text",
+      "proves": "In the HTML that PDFs are printed from, script and image tags in a document's title and text, including ones aimed at a cloud metadata address and an outside URL, do not appear as tags, a script tag appears escaped, and the page's content security policy includes default-src 'none'."
+    },
+    {
+      "requirement": "EDT-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "renderer rejects unknown formatting, arbitrary clause inputs and invalid dates",
+      "proves": "The renderer refuses a document whose font setting is a CSS url() aimed at a cloud metadata address, one that names a selected clause and one with an impossible date."
+    },
+    {
+      "requirement": "EDT-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+      "test": "arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted",
+      "proves": "The server's document checks refuse a section of type html holding a script tag, a selected clause, two sections with the same ID and an extra workspace field."
+    },
+    {
+      "requirement": "IAM-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+      "test": "refusals are never cached, so a newly verified email works at once",
+      "proves": "With a controlled identity provider, an account whose primary email is unverified is refused with 403 and is let in as soon as the email is verified, and a locked account is refused as suspended or locked."
+    },
+    {
+      "requirement": "IAM-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+      "test": "everyday routes recheck the provider at least once a minute",
+      "proves": "With a controlled identity provider, a session the provider reports as revoked still passes the cached session check until the cache lifetime ends and is then refused with 401 and a message to sign in again."
+    },
+    {
+      "requirement": "IAM-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/session-verification.test.ts",
+      "test": "sensitive routes always check live, and a refusal ends cached access",
+      "proves": "With a controlled identity provider, the live session check calls the provider on every request, so a banned account is refused at once, and that refusal also removes the session's cached pass, so the next cached check is refused too."
+    },
+    {
+      "requirement": "NFR-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-recovery-effects.test.ts",
+      "test": "recovery blocks actual charge/refund provider boundaries before transport or credential lookup",
+      "proves": "With the isolated-recovery marker set to any of five values, including “1”, “true”, an arbitrary word and a single space, Paystack transaction-initialisation and refund calls are refused with no request sent."
+    },
+    {
+      "requirement": "NFR-005",
+      "job": "foundation",
+      "file": "scripts/ops/recovery_contract.test.mjs",
+      "test": "independent key authenticates current controls and rejects tamper, wrong source, stale and pre-snapshot journals",
+      "proves": "The journal of current controls, such as workspace memberships, that a restore replays is accepted only when signed with the independent recovery key, from the same source database and cut between the snapshot and the present, and a changed, wrongly keyed, wrong-source, stale, pre-snapshot or future journal is refused."
+    },
+    {
+      "requirement": "NFR-005",
+      "job": "foundation",
+      "file": "scripts/ops/export_retention_contract.test.mjs",
+      "test": "missing, replaced, unresolved and nonreadable generations require quarantine",
+      "proves": "When a restore is planned, an export file from the backup that is missing from the current inventory, was replaced by a different file, still has no deadline or is not readable is planned for quarantine rather than given a deadline."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "foundation",
+      "file": "artifacts/valo/src/client-app.test.tsx",
+      "test": "browser-only app server-renders a deterministic accessible loading shell",
+      "proves": "Rendered on the server, the web app's loading shell carries aria-busy=\"true\" and aria-label=\"Loading Valo\"."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
+      "test": "all twelve actual DOCX/PDF renders contain supplied answers, not internal question IDs",
+      "proves": "Each of the twelve guided templates rendered to DOCX and PDF from synthetic answers reads back with the supplied issuer name, the incomplete-draft notice and no internal question IDs, and nine of them keep the naira sign (₦) in the text read from both formats."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-070: Offset timestamp is compared as an instant",
+      "proves": "A rule whose review deadline is 13:00 at UTC+02:00 on the evaluation day, which is 11:00 UTC, is held as expired when assessed at 12:00 UTC."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "test": "organisation instructions remain bounded and cannot populate missing fields",
+      "proves": "When a customer's AI draft request leaves the issue date blank, the issue date is reported missing and the draft built from the request leaves it blank, even though the drafting instruction names a date."
+    },
+    {
+      "requirement": "NFR-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "Eight concurrent settlements of the same successful synthetic payment create exactly one entitlement, one receipt outbox row and one settlement event, and a settlement for a synthetic order whose line names a content version that does not exist fails and leaves the order unsettled with no receipt queued."
+    },
+    {
+      "requirement": "NFR-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
+      "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+      "proves": "When a controlled refund provider accepts a refund but the call then fails as if timed out, the refund is recorded as unknown and the next attempt finds it pending without sending a second one; six parallel workers send one refund between them; and a refund whose worker is killed with SIGKILL after claiming it is picked up again once its lease expires, going to review at the attempt limit."
+    },
+    {
+      "requirement": "NFR-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-recovery.integration.test.ts",
+      "test": "real process death, PostgreSQL lease fencing and export recovery",
+      "proves": "When the process running a synthetic export is killed with SIGKILL at any of the seven stages of its final attempt, the export ends with exactly one file and one ready event, an attempt interrupted mid-work is marked failed and retryable rather than left running, only one of two concurrent recoveries wins, a live lease is not taken over, and retries are refused once the allowed cycles are used."
+    },
+    {
+      "requirement": "NFR-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/database-pool.integration.test.ts",
+      "test": "the shared pool fails a connection wait after its timeout instead of hanging",
+      "proves": "The shared pool has a connection timeout set, a pool from the same factory scaled down to one connection and a 200 ms timeout refuses a caller waiting on it while full with a timeout code and serves again once the connection is freed, and a stand-in server that accepts connections but never answers makes the connection attempt fail with a timeout code instead of hanging."
+    },
+    {
+      "requirement": "OPS-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-recovery.integration.test.ts",
+      "test": "real process death, PostgreSQL lease fencing and export recovery",
+      "proves": "When the process running a synthetic export is killed with SIGKILL, recovery after its PostgreSQL lease expires returns an interrupted first attempt to the queue and marks an interrupted final attempt failed and retryable rather than left running, the export then completes with exactly one file, and after an explicit retry a newly started export worker process completes a job whose final attempt was abandoned."
+    },
+    {
+      "requirement": "OPS-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-delivery.integration.test.ts",
+      "test": "durable reminder delivery controls; controlled transport, not real email",
+      "proves": "When the process sending a synthetic reminder through a controlled sender is killed mid-send, the reminder keeps its claim and attempt count, is not sent again while its lease is live, and after the lease expires is sent once with the reminder's stored idempotency key."
+    },
+    {
+      "requirement": "OPS-004",
+      "job": "foundation",
+      "file": "scripts/src/valo/security-reports.test.ts",
+      "test": "secret detector strips matches, secrets and source lines",
+      "proves": "A single secret-scanner finding makes the secret-scan summary blocked with a count of one and none of the matched text, secret or source line, and a missing scanner report is an error rather than a pass."
+    },
+    {
+      "requirement": "OPS-004",
+      "job": "foundation",
+      "file": "scripts/src/valo/security-evidence-exceptions.test.ts",
+      "test": "only three immutable reviewed source-hash findings are excluded",
+      "proves": "The secret-scan filter sets aside three reviewed findings, and copies of two of them with the rule, file, start or end line or commit changed, or with no commit, still count."
+    },
+    {
+      "requirement": "OPS-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-privacy-keys.integration.test.ts",
+      "test": "isolated privacy signing-key rotation — no real secret rotation",
+      "proves": "In an isolated schema with synthetic keys, the privacy signing key is rotated from version 1 to version 2, new audit events are signed with version 2 and events signed with the old key still match; with a key set that drops the old key, fetching that key version or matching identities is refused, and a key set that reuses a pinned version name with another key is refused; no real secret is rotated."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "scripts/ops/export_retention_contract.test.mjs",
+      "test": "restore plan retains exact later-assigned deadlines and never extends existing expiry",
+      "proves": "Planning a restore from an older backup gives an export file the retention deadline assigned since the backup, keeps an earlier deadline rather than extending it, and refuses a current inventory from a different database."
+    },
+    {
+      "requirement": "OPS-008",
+      "job": "foundation",
+      "file": "scripts/ops/recovery_contract.test.mjs",
+      "test": "independent key authenticates current controls and rejects tamper, wrong source, stale and pre-snapshot journals",
+      "proves": "A restore's replay journal is accepted only when signed with the independent recovery key, from the expected source database and cut between the snapshot and the present, and a tampered, wrongly keyed, wrong-source, stale, pre-snapshot or future journal is refused."
+    },
+    {
+      "requirement": "PAY-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "Order requests for a held product are refused, including one that adds its own amount and currency, and no order is saved; a payment result one kobo above a synthetic order's amount does not settle it; and after a new price version the order's receipt still shows the amount and licence text it was created with."
+    },
+    {
+      "requirement": "PAY-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+      "test": "checkout asks Paystack only for a one-time charge, with no plan, split, subaccount or saved card",
+      "proves": "Checkout's request to Paystack, captured by a controlled transport, has exactly the fields for a reference, amount, currency, email, return address and metadata, with only order-ID and workspace-ID keys in the metadata, the order's amount in kobo and naira as the currency, so no discount, plan or other price field reaches the charge."
+    },
+    {
+      "requirement": "PAY-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "A synthetic charge event's card details are not kept in its saved row, and settling a synthetic order with a transaction result whose domain field is live rather than test is refused."
+    },
+    {
+      "requirement": "PAY-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+      "test": "no merchant call is made with a live key, in production, in a deployment or in a recovery run",
+      "proves": "Checkout with a live secret key, no key, production mode, a deployment, sandbox checkout switched off or an isolated recovery run is refused before any request reaches Paystack, while the same call with a test key in the development sandbox reaches the controlled transport."
+    },
+    {
+      "requirement": "PAY-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "A saved synthetic order has no receipt and no entitlement before the server settles a payment result for it; pending, abandoned and failed results grant nothing; and a successful result whose amount or workspace differs from the order, or whose domain field is live rather than test, is refused."
+    },
+    {
+      "requirement": "PAY-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+      "test": "server verification rejects live domain, unsafe amounts and mismatched immutable order facts",
+      "proves": "The Paystack transaction schema refuses data that carries the live domain, a fractional, zero or out-of-range amount, US dollars, an unrecognised status or no order metadata, and the order check refuses a successful transaction whose amount, reference, workspace or order ID differs from the order with a conflict."
+    },
+    {
+      "requirement": "PAY-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-template-entitlement.integration.test.ts",
+      "test": "only the purchasing workspace's active entitlement releases a premium master",
+      "proves": "The purchase check for a synthetic priced template's master file passes for the workspace whose order holds an active entitlement and refuses another workspace, and the same workspace once that entitlement is suspended."
+    },
+    {
+      "requirement": "PAY-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-http.integration.test.ts",
+      "test": "isolated real HTTP signature/durability controls — synthetic signing key, NOT Paystack delivery",
+      "proves": "Over real HTTP with a synthetic signing key, a webhook with no signature, an altered body, a timestamp 301 seconds old, a malformed signature or only a legacy-style signature header is refused with 401 and nothing is saved, while a correctly signed event is acknowledged as new, the same event re-sent with different whitespace is acknowledged as a duplicate, and one row is saved without the body's customer details."
+    },
+    {
+      "requirement": "PAY-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+      "test": "timestamped raw-body authentication, replay bounds and rotation",
+      "proves": "A webhook signature over the exact raw body with a timestamp within 300 seconds passes, while an altered body, a timestamp 301 seconds off either way, a second timestamp, another scheme or key label, no configured secret or a legacy signature in timestamped mode fails, and with two secrets configured a signature made with the newer one passes."
+    },
+    {
+      "requirement": "PAY-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "Eight concurrent settlements of one synthetic successful payment all report success and leave exactly one entitlement, one queued receipt and one settlement audit event, and for another synthetic order whose entitlement and receipt were removed after settlement, two concurrent retries restore one of each with one repair event, while a later retry leaves a suspended entitlement suspended."
+    },
+    {
+      "requirement": "PAY-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "A synthetic order given a pending, abandoned or failed payment result is left in that state with no entitlement, and a later successful result for the same order settles it; another workspace's refresh of the order is refused as not found, and without a configured merchant a refresh is refused as unavailable."
+    },
+    {
+      "requirement": "PAY-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
+      "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+      "proves": "The database refuses to update or delete a recorded refund status transition, and the row keeps its original reason."
+    },
+    {
+      "requirement": "PAY-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
+      "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+      "proves": "A finance-approved refund stays pending with no completion time while the controlled provider reports it pending, a needs-attention result is not completed either, and the refund is marked processed, with a completion time, when the provider reports it processed; a partial refund keeps the template entitlement active, a full refund suspends it, and the customer's saved draft still exists afterwards."
+    },
+    {
+      "requirement": "PAY-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "A refund request repeated with the same key returns the same request, with status requested, and the template entitlement stays active."
+    },
+    {
+      "requirement": "PAY-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/customer-wording.test.ts",
+      "test": "losing access is never described as taking back a downloaded copy, and saved work is said to stay",
+      "proves": "The development test refund policy says a confirmed full refund suspends future template reuse and that saved drafts, revisions and already downloaded files are never deleted, the purchase history screen says saved drafts and previously downloaded files are not deleted, and every scanned web app and API source sentence that pairs a downloaded copy with a word such as removed, revoked or locked also contains a negating or keeping word."
+    },
+    {
+      "requirement": "PAY-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
+      "test": "invalid dates, units and money remain raw draft answers and never become complete",
+      "proves": "An invoice draft with an impossible date, an unknown unit and a fractional kobo price is reported as incomplete but can still be saved, and its rendered HTML carries the notice that it is an incomplete business draft of user-provided information, not verified payment proof, official approval or legal advice."
+    },
+    {
+      "requirement": "PAY-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
+      "test": "all twelve actual DOCX/PDF renders contain supplied answers, not internal question IDs",
+      "proves": "The DOCX and PDF of each of the twelve guided templates, the invoice among them, contain the label INCOMPLETE BUSINESS DRAFT when their text is read back from the files."
+    },
+    {
+      "requirement": "PRO-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+      "test": "profile unknown, unanswered and false remain distinct; marketing is optional",
+      "proves": "A synthetic profile with every business fact unknown except its name and a blank local government area passes the server's profile checks, and an employee count of unknown, unanswered, not applicable or 0 is each kept exactly as given."
+    },
+    {
+      "requirement": "PRO-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-026: unknown workforce cannot imply exemption",
+      "proves": "Against a synthetic rule for businesses with five or more employees, an unknown employee count gives “More information needed” with a missing answer listed, not “Not indicated by these answers”, and running it again gives the same result hash."
+    },
+    {
+      "requirement": "PRO-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
+      "test": "each checker result says why it may matter, what to do next and what is missing, with its source",
+      "proves": "With synthetic rules, an unknown premises answer gives “More information needed”, names premises as the missing answer and gives the next step of answering the missing questions or checking with the named authority, while a known “no” to manufacturing gives “Not indicated by these answers” with a reason saying it is not a legal exemption."
+    },
+    {
+      "requirement": "PRO-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
+      "proves": "A synthetic workspace's first profile save with marketing declined succeeds and returns marketing declined, a correction is stored as a second profile version while the first version still shows the original state, and a save from a stale profile revision is refused with a conflict."
+    },
+    {
+      "requirement": "PRO-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+      "test": "profile unknown, unanswered and false remain distinct; marketing is optional",
+      "proves": "A profile with marketing consent declined passes the server's profile checks and keeps it declined."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "After a synthetic profile's state and employee count change, an assessment against the old profile revision is refused with a conflict, a new assessment is saved, its comparison with the first names state and employees as changed answers, and the first assessment's result hash is unchanged."
+    },
+    {
+      "requirement": "PRO-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/assessment-changes.test.ts",
+      "test": "a comparison explains each changed recommendation in words, naming the rule version and answers",
+      "proves": "The assessment comparison helper explains a changed recommendation in sentences that name the changed answers by their question labels (Operates from premises and Employees in the test) and the rule's version change, and explains a rule that is new or no longer in the result; the saved-assessments page's source calls it under “Why results changed”."
+    },
+    {
+      "requirement": "PRV-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "test": "AI requires separate notice acceptance; manual drafting remains independent",
+      "proves": "An AI drafting request without its separate processing consent is refused, while a manual draft is still built from the same details without that consent."
+    },
+    {
+      "requirement": "PRV-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
+      "proves": "A synthetic business profile with marketing consent declined is saved as the workspace's first profile version, and the save's response still shows marketing declined."
+    },
+    {
+      "requirement": "PRV-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+      "test": "service enquiry consent cannot be assumed; support does not require sharing",
+      "proves": "A service enquiry is refused without sharing consent and accepted with it, while a product support request is accepted without sharing consent."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
+      "test": "resumable physical development erasure with retained exclusions and replay",
+      "proves": "A synthetic deletion request, run by privacy staff with fresh MFA and an acknowledgement, quarantines the workspace while its document still exists, then removes its documents, revisions, profile versions, saved templates and its private files in a controlled local file store, redacts its support and privacy-case text and clears its AI draft content, while another workspace's document stays and the request ends partially fulfilled with the outside-processors step held."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/privacy/valo-private-copy-inventory.integration.test.ts",
+      "test": "new synthetic private-copy inventory: scoped export, physical redaction, signed proof and crash scratch replay",
+      "proves": "A synthetic workspace's data export lists its own four payment events and none of another workspace's, with its refund history, disputes and privacy requests, and its deletion request removes a private marker from its orders, refunds, refund history, dispute records, privacy records, support tickets and AI drafts while order and dispute amounts stay, ending partially fulfilled with a held step."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-privacy-state.test.ts",
+      "test": "all six exact privacy systems need genuine complete dispositions",
+      "proves": "A deletion request is accepted as complete when all six of its systems have an outcome marked \"confirmed\" with a written detail, and refused while its steps are still pending, when the outside-processors step is running, held or failed, when a step is missing or repeated, when a detail is blank, or when identity verification is marked not applicable."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/business-name-candidate-evaluation.test.ts",
+      "test": "corporate exact-name result skips inapplicable surname and unresolved immaterial exception",
+      "proves": "In the business-name candidate evaluator, a company trading under its exact corporate name gets “Not indicated by these answers” with no missing answers listed, although its personal surname answer is marked not applicable and its court-appointment answer is unknown."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/rich-checker.test.ts",
+      "test": "rich question targets cover every declared customer control, including support facts",
+      "proves": "Each question control the test finds in the rich checker form's field lists, including the supporting-facts question, has a jump target named after that control with the step the test expects for its section, though the test's pattern misses controls whose declaration wraps onto a second line."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/rich-checker.test.ts",
+      "test": "changing the operator preserves partner and name answers, and editing a field preserves other groups",
+      "proves": "In the rich checker, changing the operator answer keeps the partners, the business name and another question group's answers, and clearing that answer removes it."
+    },
+    {
+      "requirement": "RUL-002",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-026: unknown workforce cannot imply exemption",
+      "proves": "For a synthetic rule that needs five or more employees, a workforce answer of “unknown” gives “More information needed” with a missing answer listed, not a negative result."
+    },
+    {
+      "requirement": "RUL-002",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-040: Missing exact amount and unknown band request a value",
+      "proves": "For a synthetic annual-turnover threshold rule, a missing exact turnover with an unknown turnover band gives “More information needed” with a missing answer listed."
+    },
+    {
+      "requirement": "RUL-002",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-015: Unknown state is not national applicability",
+      "proves": "For a synthetic Lagos State rule, an unknown state gives “More information needed” with a missing answer listed, not a likely or negative result."
+    },
+    {
+      "requirement": "RUL-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-073: Arbitrary operator rejected",
+      "proves": "A synthetic rule whose condition uses an “eval” operator with the value “process.env” is rejected: the checker throws instead of returning a result."
+    },
+    {
+      "requirement": "RUL-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-075: Unsupported condition property rejected",
+      "proves": "A synthetic rule whose condition carries an extra “script” property is rejected: the checker throws instead of returning a result."
+    },
+    {
+      "requirement": "RUL-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-rich.test.ts",
+      "test": "old v1 result/hash and generated saved response remain unchanged",
+      "proves": "The checker run on fixed answers and a fixed assessment date with no released rules gives exactly a result hash recorded in the test, and the saved-assessment response schema returns that saved record unchanged."
+    },
+    {
+      "requirement": "RUL-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
+      "test": "each checker result says why it may matter, what to do next and what is missing, with its source",
+      "proves": "In a synthetic fixture run, a likely result carries its rule's reason, next step and source passage, a result needing more information names the missing answer and its next step, a not-indicated result says it is not a legal exemption, the engine's own sentences contain no camel-case or underscore-joined names, and the web app gives each basic checker answer field a capitalised label different from its field name."
+    },
+    {
+      "requirement": "RUL-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-rich.test.ts",
+      "test": "four outcomes traverse the real engine and generated response contract in private fixture mode",
+      "proves": "For each of the four result labels, a source-family result run in fixture mode states the proposition it assessed and that the stated facts have not been independently verified, and passes through the API's response schema unchanged."
+    },
+    {
+      "requirement": "RUL-005",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-047: Band straddles a threshold",
+      "proves": "With no exact turnover and a ₦25m to ₦100m band, a synthetic rule for turnover of at least ₦50m gives “More information needed” with a missing answer listed instead of a likely or negative result."
+    },
+    {
+      "requirement": "RUL-005",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-048: Equality inside a band is unknown",
+      "proves": "With no exact turnover and a ₦5m to ₦25m band, a synthetic rule for turnover of exactly ₦10m gives “More information needed” with a missing answer listed."
+    },
+    {
+      "requirement": "RUL-005",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-050: Open upper band cannot prove an arbitrary high threshold",
+      "proves": "With no exact turnover and the open “over ₦100m” band, a synthetic rule for turnover above a far higher threshold gives “More information needed” with a missing answer listed."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-checker-http.integration.test.ts",
+      "test": "rich checker HTTP preview, consented save, history and isolation",
+      "proves": "Over HTTP, a visitor who has not signed in gets a basic checker result with a non-empty list of coverage gaps and a notice saying it is not legal certification."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "A saved assessment of a synthetic profile makes no source-backed recommendation and lists the coverage gap saying it is not a finding that no duties apply."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "foundation",
+      "file": "scripts/src/valo/rule-evaluation.test.ts",
+      "test": "RULE-EVAL-078: No released rules is a gap, never compliance",
+      "proves": "With no released rules, the checker result labels no item, makes no source-backed recommendation and has no compliance score."
+    },
+    {
+      "requirement": "RUL-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-checker-http.integration.test.ts",
+      "test": "rich checker HTTP preview, consented save, history and isolation",
+      "proves": "Over HTTP, a signed-in preview saves no assessment, saving one without explicit consent is refused, a saved assessment reads back with the same answers and result hash, and comparing two saved assessments names the changed business-name answer."
+    },
+    {
+      "requirement": "RUL-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "Saving an assessment needs explicit consent, and after a profile change, comparing a new saved assessment with the earlier one names the changed state and workforce answers while the earlier one keeps its result hash and another workspace can neither read nor compare it."
+    },
+    {
+      "requirement": "RUL-007",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/assessment-changes.test.ts",
+      "test": "a comparison explains each changed recommendation in words, naming the rule version and answers",
+      "proves": "The assessment comparison helper explains a changed recommendation in sentences giving the changed result, the rule's update from one version to another and the changed answers by their question labels, and explains a rule that is new or no longer in the result; the saved-assessments page's source calls it under “Why results changed”."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/valo-rule-release.test.ts",
+      "test": "a rule version is ready only with a valid condition, the next version and passing critical scenarios",
+      "proves": "Planning a synthetic rule release is blocked when a critical scenario fails, including one that expects “Not indicated by these answers”, or when no scenario is critical, while a failed non-critical scenario is reported without blocking."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/business-name-candidate-evaluation.test.ts",
+      "test": "actual retained CAMA corpus: rich facts and exact sources, isolated from customer release",
+      "proves": "Each of the 20 authored business-name scenarios gives the label its authored expected outcome names and the same result when run again, and none is eligible for customer use, has a released manifest, or creates a registration task, automatic reminder or statutory deadline."
+    },
+    {
+      "requirement": "RUL-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/sources/source-review-clarifications.test.ts",
+      "test": "NTAA009 records an unresolved extended Company definition, not a return obligation",
+      "proves": "In the tax candidate evaluator, an unincorporated partnership that claims it is confirmed not to be a company under the extended definition still gets “More information needed”, with no company-return obligation determined and no registration task."
+    },
+    {
+      "requirement": "RUL-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
+      "proves": "When the captured source behind a synthetic rule changes, the rule is blocked at once and all 202 tasks linked to it in two workspaces are kept and flagged for review with no reminder left pending, while a task for an unaffected rule is not flagged, saved assessments are unchanged, the workspace holding 201 of those tasks gets correction notices and the workspace holding only the unaffected task gets none."
+    },
+    {
+      "requirement": "RUL-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "A task whose stored rule is switched to a synthetic rule absent from the released rules, and whose state is stored as completed by the user, is still listed, now flagged for review, with that completed state unchanged."
+    },
+    {
+      "requirement": "SEC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-production-storage.test.ts",
+      "test": "production canary verifies exact bytes, anonymous denial and confirmed deletion, never customer keys",
+      "proves": "Run against a controlled storage client and a stubbed anonymous request, the storage canary probe passes when the anonymous read of its canary object returns 403, fails with an anonymous-read error when it returns 200, and deletes the canary in both cases."
+    },
+    {
+      "requirement": "SEC-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-privacy-keys.integration.test.ts",
+      "test": "isolated privacy signing-key rotation — no real secret rotation",
+      "proves": "In an isolated schema with synthetic keys, after the privacy signing key is rotated from version 1 to version 2, new audit events are signed with version 2 and events signed with the old key still match; with a key set that drops the old key, fetching that key version or matching identities is refused, and a key set that reuses a pinned version name with a different key is refused."
+    },
+    {
+      "requirement": "SEC-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+      "test": "timestamped raw-body authentication, replay bounds and rotation",
+      "proves": "With an old and a rotated synthetic webhook signing secret both configured, a payment webhook signed with the rotated secret passes the signature check, while against a single configured secret a webhook whose body changed after signing or whose timestamp is 301 seconds off fails, and a correctly signed one fails when no secret is configured."
+    },
+    {
+      "requirement": "SEC-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "controlled HTML treats markup, local-file and metadata addresses as inert text",
+      "proves": "In the HTML the renderer builds for PDFs, script tags and an image tag pointing at the cloud metadata address in a document's title and text leave no <script> or <img markup, a script tag appears escaped, and the content security policy includes default-src 'none'."
+    },
+    {
+      "requirement": "SEC-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "renderer rejects unknown formatting, arbitrary clause inputs and invalid dates",
+      "proves": "The renderer refuses a document whose font setting is a URL to the cloud metadata address instead of one of its fixed fonts, and one that selects an unreleased clause."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
+      "test": "durable customer write ceilings preserve saved data",
+      "proves": "Once a synthetic customer has used up the per-minute or daily allowance for profile, document or support writes, the next write is refused with status 429, a retry-after time between one second and one day and a message that saved work is unchanged, and after a per-minute refusal the saved profile, document revisions and tickets stay as they were."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "test": "security signals raise their own alerts, owned by the security and payment runbooks",
+      "proves": "With stubbed payment-activity and AI-activity readings at zero no alert is raised; a reading of one raises its own alert, under the payment/entitlement failure runbook and the security/privacy incident runbook respectively, with its accountable roles; and the alert resolves when the reading returns to zero."
+    },
+    {
+      "requirement": "SEC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
+      "test": "refusals and signature failures are counted by hashed address, outside any workspace scope, for the security alerts",
+      "proves": "In PostgreSQL, a rate-limit bucket written directly at the checkout or AI quota limit for a synthetic caller adds one to the operations probe's payment-activity or AI-activity security reading."
+    },
+    {
+      "requirement": "SEC-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a synthetic candidate that fails its gates is held, and no role or path publishes, changes or withdraws it",
+      "proves": "A synthetic candidate that fails its gates is recorded as held, cannot be published or withdrawn and is left out of the live versions, and a request for its PDF master made without a workspace is refused; the drafter role cannot mark it published or add a published version, even the owner connection cannot publish it or change its payload, the publisher role can neither read customer documents nor change a policy, and a policy cannot be edited nor publication audit rows or content versions deleted."
+    },
+    {
+      "requirement": "SEC-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-lifecycle.integration.test.ts",
+      "test": "actual isolated PostgreSQL reviewer denies release/policy and retained sources reject mutation",
+      "proves": "The development drafting and review database roles are each refused when they call the publisher, change a content version's status or change a publication policy, the review role cannot read customer documents, the version stays a candidate, and the evaluation's six audit records of those refusals are distinct and deleting one of them is refused."
+    },
+    {
+      "requirement": "SEC-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/staff/valo-staff-roles.integration.test.ts",
+      "test": "staff role governance: disposable PostgreSQL, managed-session boundary and no real role mutations",
+      "proves": "A customer, an administrator without fresh MFA and an administrator granting a role to themselves cannot grant roles, emergency system access is refused the role administration list, a grant whose audit record fails to save is rolled back, and saved role-change records cannot be edited or deleted."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/security-reports.test.ts",
+      "test": "dependency detector fails on a harmless high canary and strips raw descriptions",
+      "proves": "A dependency audit report with one high-severity advisory makes the dependency summary blocked without repeating the advisory's title, and an empty audit report is an error rather than a pass."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/security-reports.test.ts",
+      "test": "a reviewed advisory passes only within its reviewed subtree",
+      "proves": "A reviewed high-severity advisory is set aside only while every installed path to the package stays inside the reviewed build-time tool's subtree; reached through a production dependency or another tool, or without the installed paths, the review or a matching total, it keeps the dependency summary blocked."
+    },
+    {
+      "requirement": "SEC-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/merge-static.test.ts",
+      "test": "static driver keeps an honest sanitized outcome: finding",
+      "proves": "With a stand-in scanner that detects its canary and reports one finding in the repository, the static security check fails with a non-zero exit and records the finding's rule, file, line and severity, while the scanner's message and matched code appear in neither its result file nor its output."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/client-app.test.tsx",
+      "test": "browser-only app server-renders a deterministic accessible loading shell",
+      "proves": "Rendered on the server, the web app is exactly a loading shell with aria-busy=\"true\" and aria-label=\"Loading Valo\", with no client-side rendering bailout, template element or window.location reference."
+    },
+    {
+      "requirement": "WRK-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
+      "proves": "A synthetic workspace's profile and document edits are kept in PostgreSQL with their history: each profile save adds a version, a stale save is refused, two concurrent saves of one document from the same revision give one new revision and one conflict instead of a silent overwrite, and restoring an old revision adds a new one."
+    },
+    {
+      "requirement": "WRK-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-saved-templates.integration.test.ts",
+      "test": "actual PostgreSQL saved-template ownership, durable state and blocked-release boundaries",
+      "proves": "Six simultaneous saves of one controlled template by a synthetic workspace store it once with one event, and later reads of the saved list and of the workspace data export both show it."
+    },
+    {
+      "requirement": "WRK-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-checker-http.integration.test.ts",
+      "test": "rich checker HTTP preview, consented save, history and isolation",
+      "proves": "An assessment saved over HTTP reads back in a later request with the same answers and result hash and appears in the workspace's assessment list."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-delivery.integration.test.ts",
+      "test": "durable reminder delivery controls; controlled transport, not real email",
+      "proves": "Two scheduler runs processing the same due reminder at once call the controlled sender once and record one attempt, a retry after a failed send reuses that send's idempotency key, and a retry after a killed worker sends with the reminder's stored idempotency key."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "Saving the same reminder offsets again in a different order keeps the same reminder records instead of adding new ones, and a task due date the customer has not confirmed is refused."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-delivery.integration.test.ts",
+      "test": "durable reminder delivery controls; controlled transport, not real email",
+      "proves": "A queued reminder whose first send failed is cancelled without calling the controlled sender when the workspace turns reminders off before the next attempt, and turning reminders off while a send is failing leaves the reminder cancelled."
+    },
+    {
+      "requirement": "WRK-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "After reminders are scheduled, turning them off makes the next dispatch of a due reminder end as cancelled without calling the controlled sender, and every reminder of the workspace is cancelled."
+    },
+    {
+      "requirement": "WRK-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
+      "proves": "The reference in a support receipt names a ticket saved in the workspace and awaiting staff, and the workspace's activity event records read after its profile, document and support saves have no content, scope or profile field."
+    },
+    {
+      "requirement": "WRK-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
+      "test": "durable customer write ceilings preserve saved data",
+      "proves": "Of 20 simultaneous support requests from one synthetic workspace, exactly three get a receipt and exactly three tickets are saved, and the rest are refused with a rate-limit error saying saved work is unchanged."
+    },
+    {
+      "requirement": "WRK-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/platform/http-logging.test.ts",
+      "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status",
+      "proves": "A synthetic private marker sent in a request's body, path, query, authorization and cookie headers, or carried in an application error's message, name and cause, never appears in the HTTP logs, which keep each request's ID and status."
     }
   ]
 }
