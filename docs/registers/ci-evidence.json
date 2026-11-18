@@ -294,6 +294,48 @@
       "file": "artifacts/api-server/src/lib/http-logging.test.ts",
       "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status",
       "proves": "A private marker sent in a request's path, query, authorization and cookie headers and body, and in an application error's message, name and cause, never reaches the HTTP logs, which keep each request's correlation ID and status."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "missing authoritative evidence, scope or review holds an item, and no human reviewer is required",
+      "proves": "A complete publication record that names no human reviewer, approver or professional sign-off is eligible, and the gate holds the item when operative evidence or every authoritative source is missing, the legal scope is unverified or absent, a review is missing or the manifest is not eligible."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "regulatory content cannot use the operational no-citation path",
+      "proves": "Regulatory content with no sources and no verified legal scope is held: it cannot use the no-citation path operational templates use."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "unknown schema fields cannot smuggle an override",
+      "proves": "A publication record carrying a field the schema does not define, such as an owner override, is held."
+    },
+    {
+      "requirement": "CMP-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "publication needs a separate drafting run and two separate, blind and clear review runs",
+      "proves": "The gate holds an item when a review reuses the drafting run or the other review's run, a reviewer saw the other verdict, a review holds or has findings, or either review is missing."
+    },
+    {
+      "requirement": "CMP-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "enhanced content requires every controlling-text check",
+      "proves": "High-impact content (contracts in this test) is held until every enhanced controlling-text check has passed for that exact candidate, and is eligible once they have."
+    },
+    {
+      "requirement": "CMP-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/editorial/editorial-lifecycle.integration.test.ts",
+      "test": "actual isolated PostgreSQL reviewer denies release/policy and retained sources reject mutation",
+      "proves": "The drafting and review database roles are each refused when they call the publisher, change a content version's status or change the publication policy; the version stays a candidate and all six refusals are kept in an append-only audit."
     }
   ]
 }

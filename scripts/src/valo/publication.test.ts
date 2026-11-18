@@ -576,3 +576,65 @@ test("unknown schema fields cannot smuggle an override", () => {
 test("invalid server clock holds", () => {
   assert.equal(evaluatePublication(fixture(), new Date("invalid")).decision, "hold");
 });
+
+// CMP-001: "missing authoritative evidence, scope or review manifest blocks publication of the
+// affected claim; a human reviewer is not a required field."
+test("missing authoritative evidence, scope or review holds an item, and no human reviewer is required", () => {
+  const complete = fixture();
+  assert.deepEqual(evaluatePublication(complete, now), { decision: "eligible", reasons: [] });
+  // The complete record names no human reviewer, approver or professional sign-off.
+  const keys: string[] = [];
+  const walk = (value: unknown) => {
+    if (Array.isArray(value)) value.forEach(walk);
+    else if (value && typeof value === "object")
+      for (const [key, inner] of Object.entries(value)) {
+        keys.push(key);
+        walk(inner);
+      }
+  };
+  walk(complete);
+  assert.ok(keys.length > 50, "the record's fields were read");
+  assert.deepEqual(
+    keys.filter((key) => /human|lawyer|specialist|approver|approvedBy|signOff|professional/i.test(key)),
+    [],
+  );
+  const holds = (change: (b: PublicationBundle) => void, reason: string) => {
+    const b = fixture();
+    change(b);
+    rebind(b);
+    const result = evaluatePublication(b, now);
+    assert.equal(result.decision, "hold", reason);
+    assert.ok(result.reasons.includes(reason), `${reason}: ${result.reasons.join(", ")}`);
+  };
+  holds(
+    (b) => (b.candidate.missingEvidence = ["Synthetic operative text not retrieved"]),
+    "material_uncertainty",
+  );
+  holds((b) => (b.sources = []), "regulatory_sources_required");
+  holds((b) => (b.candidate.legalScopeStatus = "unverified"), "legal_scope_unverified");
+  holds((b) => delete b.candidate.legalScopeStatus, "legal_scope_unverified");
+  holds((b) => (b.reviews = b.reviews.filter((r) => r.role !== "challenge")), "review_required:challenge");
+  const unreviewed = fixture();
+  unreviewed.manifest.status = "review";
+  assert.deepEqual(evaluatePublication(unreviewed, now).reasons, ["manifest_not_eligible"]);
+});
+
+// CMP-008: "separate drafting and review runs plus deterministic gates control automated
+// publication. No Nigerian specialist or second human approval is required."
+test("publication needs a separate drafting run and two separate, blind and clear review runs", () => {
+  assert.equal(evaluatePublication(fixture(), now).decision, "eligible");
+  const holds = (change: (b: PublicationBundle) => void, reason: string) => {
+    const b = fixture();
+    change(b);
+    rebind(b);
+    const result = evaluatePublication(b, now);
+    assert.equal(result.decision, "hold", reason);
+    assert.ok(result.reasons.includes(reason), `${reason}: ${result.reasons.join(", ")}`);
+  };
+  holds((b) => (b.reviews[0]!.runId = b.draftRun.runId), "runs_not_separate");
+  holds((b) => (b.reviews[1]!.runId = b.reviews[0]!.runId), "runs_not_separate");
+  holds((b) => (b.reviews[0]!.receivedOtherVerdict = true), "review_not_blind:factual");
+  holds((b) => (b.reviews[1]!.verdict = "hold"), "review_not_clear:challenge");
+  holds((b) => (b.reviews[0]!.findings = ["Synthetic unresolved finding"]), "review_not_clear:factual");
+  holds((b) => (b.reviews = [b.reviews[0]!, { ...b.reviews[0]! }]), "review_required:challenge");
+});
