@@ -31,9 +31,12 @@ function seedingFiles() {
   );
 }
 
-/** Text that looks like an address but is a URL's credentials, fed to a check that must refuse it. */
+/**
+ * Files where text at a domain that is not reserved is a URL's credentials, not an address, keyed
+ * by file and domain. This file names the domain alone, so the scan never matches itself.
+ */
 const NOT_ADDRESSES: Record<string, string> = {
-  "artifacts/api-server/src/lib/valo-external-monitor.test.ts private@hc-ping.com":
+  "artifacts/api-server/src/lib/valo-external-monitor.test.ts hc-ping.com":
     "a monitor URL carrying credentials, which the external monitor check must refuse",
 };
 
@@ -49,14 +52,14 @@ test("development data is synthetic: every address in tests, fixtures, operator 
   for (const file of files)
     for (const match of read(file).matchAll(address)) {
       addresses++;
-      if (!reserved.test(match[1]!) && !(`${file} ${match[0]}` in NOT_ADDRESSES))
+      if (!reserved.test(match[1]!) && !(`${file} ${match[1]!.toLowerCase()}` in NOT_ADDRESSES))
         real.push(`${file}: ${match[0]}`);
     }
   assert.ok(addresses > 50, "addresses were found");
   assert.deepEqual(real, [], "use an address at example.invalid, example.test or example.com");
   for (const key of Object.keys(NOT_ADDRESSES)) {
-    const [file, text] = key.split(" ");
-    assert.ok(read(file!).includes(text!), `remove the stale exception: ${key}`);
+    const [file, domain] = key.split(" ");
+    assert.ok(read(file!).includes(`@${domain!}`), `remove the stale exception: ${key}`);
   }
 });
 
