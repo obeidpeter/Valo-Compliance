@@ -67,6 +67,42 @@ export function workspaceEvent(
   });
 }
 
+type StoredRuleRelease = Pick<
+  typeof valoRuleReleases.$inferSelect,
+  "ruleId" | "version" | "status" | "rule" | "publicationBundle" | "manifestHash"
+>;
+/** Whether the registry admits one stored rule release, apart from its sources' current state
+ * (sourceTargetAllowed, which needs the database). */
+export function ruleReleaseEligible(row: StoredRuleRelease, now: Date) {
+  const rule = ruleSchema.safeParse(row.rule),
+    bundle = publicationSchema.safeParse(row.publicationBundle);
+  if (!rule.success || !bundle.success || row.status !== "published") return false;
+  const r = rule.data,
+    b = bundle.data,
+    { manifestHash: _, ...reviewedRule } = r;
+  return (
+    r.id === row.ruleId &&
+    r.version === row.version &&
+    b.candidate.version === r.version &&
+    r.status === "published" &&
+    r.provenance === "editorial_release" &&
+    (!r.evaluator || sourceFamilyBindingMatches(r.evaluator)) &&
+    r.requirementVersionId === b.candidate.id &&
+    b.candidate.contentClass === "sourced_guidance" &&
+    b.candidate.body === canonical(reviewedRule) &&
+    r.manifestHash === row.manifestHash &&
+    row.manifestHash === digest(b.manifest) &&
+    evaluatePublication(b, now).decision === "eligible" &&
+    r.sources.every(
+      (s) =>
+        b.sources.some(
+          (bs) =>
+            bs.id === s.id && bs.hash === s.snapshotHash && bs.url === s.url && bs.text.includes(s.quote),
+        ) &&
+        b.candidate.claims.some((c) => c.sourceId === s.id && c.locator === s.locator && c.quote === s.quote),
+    )
+  );
+}
 /** No customer endpoint writes this registry or supplies a publication manifest. */
 export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
   const rows = await tx.select().from(valoRuleReleases).limit(501);
@@ -76,41 +112,12 @@ export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
     states: unknown[] = [];
   let excluded = 0;
   for (const row of rows) {
-    const rule = ruleSchema.safeParse(row.rule),
-      bundle = publicationSchema.safeParse(row.publicationBundle);
-    let eligible = false;
-    if (rule.success && bundle.success && row.status === "published") {
-      const r = rule.data,
-        b = bundle.data,
-        { manifestHash: _, ...reviewedRule } = r;
-      eligible =
-        r.id === row.ruleId &&
-        r.version === row.version &&
-        b.candidate.version === r.version &&
-        r.status === "published" &&
-        r.provenance === "editorial_release" &&
-        (!r.evaluator || sourceFamilyBindingMatches(r.evaluator)) &&
-        r.requirementVersionId === b.candidate.id &&
-        b.candidate.contentClass === "sourced_guidance" &&
-        b.candidate.body === canonical(reviewedRule) &&
-        r.manifestHash === row.manifestHash &&
-        row.manifestHash === digest(b.manifest) &&
-        evaluatePublication(b, now).decision === "eligible" &&
-        r.sources.every(
-          (s) =>
-            b.sources.some(
-              (bs) =>
-                bs.id === s.id && bs.hash === s.snapshotHash && bs.url === s.url && bs.text.includes(s.quote),
-            ) &&
-            b.candidate.claims.some(
-              (c) => c.sourceId === s.id && c.locator === s.locator && c.quote === s.quote,
-            ),
-        );
-      if (eligible) eligible = await sourceTargetAllowed(tx, "rule", row.id, b, now);
-      if (eligible) {
-        rules.push(r);
-        trusted.add(r.manifestHash);
-      }
+    let eligible = ruleReleaseEligible(row, now);
+    if (eligible) eligible = await sourceTargetAllowed(tx, "rule", row.id, row.publicationBundle, now);
+    if (eligible) {
+      const r = ruleSchema.parse(row.rule);
+      rules.push(r);
+      trusted.add(r.manifestHash);
     }
     states.push({
       id: row.ruleId,
