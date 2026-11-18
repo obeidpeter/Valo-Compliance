@@ -187,7 +187,7 @@ function OrderCard({ order, changed }: { order: CommerceOrder; changed: () => Pr
             void run(async () => {
               const match = /^(0|[1-9][0-9]{0,7})(?:\.([0-9]{1,2}))?$/.exec(amount);
               if (!match) throw Error("Enter a positive NGN amount with at most two decimal places.");
-              const kobo = BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
+              const kobo = BigInt(match[1]!) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
               if (kobo <= 0n || kobo > BigInt(order.refundableKobo))
                 throw Error("The amount must fit within the unreserved balance.");
               const fingerprint = JSON.stringify([reason, String(kobo)]);

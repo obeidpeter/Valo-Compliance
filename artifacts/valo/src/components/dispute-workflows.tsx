@@ -422,7 +422,7 @@ export function FinanceDisputeCard({ id }: { id: string }) {
                 setError("Enter a positive NGN amount with at most two decimal places.");
                 return;
               }
-              const value = BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
+              const value = BigInt(match[1]!) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
               if (value <= 0n || value > BigInt(d.amountKobo)) {
                 setError(
                   "The amount must be positive and cannot exceed the original payment. Existing reservations are also checked by the server.",

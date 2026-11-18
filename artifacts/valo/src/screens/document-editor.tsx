@@ -210,7 +210,7 @@ export default function DocumentEditor({ id }: { id: string }) {
       return;
     setHistory((h) => {
       if (!h.length) return h;
-      const prev = h[h.length - 1];
+      const prev = h[h.length - 1]!;
       latest.current = prev;
       setTitle(prev.title);
       setContent(prev.content);
@@ -690,7 +690,7 @@ export default function DocumentEditor({ id }: { id: string }) {
                       const from = a.findIndex((x) => x.id === b.id),
                         j = a.findIndex((x) => x.id === manualBlocks[i + dir]?.id);
                       if (from >= 0 && j >= 0) {
-                        [a[from], a[j]] = [a[j], a[from]];
+                        [a[from], a[j]] = [a[j]!, a[from]!];
                         setBlocks(a);
                       }
                     }}

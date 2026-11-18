@@ -92,7 +92,7 @@ export default function Compliance() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-start justify-between gap-4 py-3.5"
-                  data-testid={"link-source-" + s.name.split(" ")[0].toLowerCase()}
+                  data-testid={"link-source-" + s.name.split(" ")[0]!.toLowerCase()}
                 >
                   <span>
                     <span className="block font-medium group-hover:underline">{s.name}</span>
