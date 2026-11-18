@@ -26,6 +26,44 @@ Implementation evidence register dated 2026-11-15T01:03:00.000Z at `c6bca11`.
 
 No recorded implementation evidence: WEB-003, WEB-004, DOC-008, DOC-009, EDT-010, CMP-001, CMP-005, CMP-008, CMP-009, WRK-005, SRV-001, SRV-002, SRV-003, SRV-004, PAY-010, ADM-004, ADM-006, ADM-007, ADM-008, EDP-008, EDP-011, OPS-001, OPS-006, PRV-002, NFR-001, NFR-002, NFR-003, NFR-004.
 
+## Tests cited as evidence
+
+`docs/registers/ci-evidence.json` holds 66 citations of 59 tests for 27 requirements (decision 0010).
+A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
+A citation is partial evidence: it never accepts a requirement.
+
+| Requirement | Cited tests | CI jobs |
+| --- | ---: | --- |
+| ADM-004 | 3 | foundation, postgres |
+| ADM-006 | 1 | postgres |
+| ADM-007 | 3 | foundation, postgres |
+| ADM-008 | 4 | postgres |
+| CMP-001 | 3 | foundation |
+| CMP-005 | 2 | foundation |
+| CMP-008 | 3 | foundation, postgres |
+| CMP-009 | 3 | foundation, postgres |
+| DOC-008 | 1 | foundation |
+| DOC-009 | 2 | foundation, postgres |
+| EDP-008 | 3 | foundation |
+| EDP-011 | 5 | foundation, postgres |
+| EDT-010 | 2 | foundation, postgres |
+| IAM-002 | 1 | foundation |
+| IAM-003 | 3 | postgres |
+| NFR-010 | 3 | foundation |
+| NFR-011 | 2 | foundation |
+| OPS-003 | 1 | foundation |
+| PAY-010 | 3 | foundation |
+| SEC-001 | 2 | postgres |
+| SEC-003 | 1 | foundation |
+| SEC-008 | 3 | foundation, postgres |
+| SRV-001 | 1 | foundation |
+| SRV-002 | 4 | foundation, postgres |
+| WEB-003 | 3 | foundation, postgres |
+| WEB-004 | 3 | foundation |
+| WRK-005 | 1 | foundation |
+
+Neither recorded implementation evidence nor a cited test: SRV-003, SRV-004, OPS-001, OPS-006, PRV-002, NFR-001, NFR-002, NFR-003, NFR-004.
+
 ## Release gates
 
 | Gate | Planned window | Status |
