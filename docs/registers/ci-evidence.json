@@ -272,7 +272,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
       "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
-      "proves": "An order keeps the amount and licence text it was created with after its price row is later edited, and its receipt shows them; a checkout request that brings its own amount or currency is refused."
+      "proves": "A price's terms cannot be edited in place: a change of price closes the current row and adds a new one, and the price change log records both. An order keeps the amount and licence text it was created with after that change, and its receipt shows them; a checkout request that brings its own amount or currency is refused."
     },
     {
       "requirement": "NFR-010",

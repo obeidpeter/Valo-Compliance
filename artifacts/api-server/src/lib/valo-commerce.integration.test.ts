@@ -1,11 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import {
   db,
   pool,
   valoPrices,
+  valoPriceChanges,
   valoOrders,
   valoEntitlements,
   valoPurchaseOutbox,
@@ -240,18 +241,72 @@ test(
           );
         },
       );
-      await t.test("receipt/licence history is private and independent of a later price edit", async () => {
-        await db
-          .update(valoPrices)
-          .set({ amountKobo: 99999, licenceText: "A later test price" })
-          .where(eq(valoPrices.id, priceId));
-        const receipt = await commerce.purchaseReceipt(a, order.id);
-        assert.equal(receipt.amountKobo, 12345);
-        assert.equal(receipt.licenceText, fixtureLine.licenceText);
-        assert.match(receipt.notice, /test-mode/);
-        assert.equal(receipt.deliveryStatus, "awaiting_email_configuration");
-        assert.equal(receipt.receiptReference, `VALO-TEST-${order.reference}`);
-      });
+      await t.test(
+        "receipt/licence history is private and independent of a later price version",
+        async () => {
+          // ADM-006: a price's terms never change in place. A change of price closes the current
+          // row and adds a new one with its own effective dates, and the log records both.
+          const databaseMessage = (pattern: RegExp) => (error: unknown) => {
+            for (let e: unknown = error, depth = 0; e && depth < 5; depth++) {
+              const item = e as { message?: unknown; cause?: unknown };
+              if (pattern.test(String(item.message ?? ""))) return true;
+              e = item.cause;
+            }
+            return false;
+          };
+          await assert.rejects(
+            db
+              .update(valoPrices)
+              .set({ amountKobo: 99999, licenceText: "A later test price" })
+              .where(eq(valoPrices.id, priceId)),
+            databaseMessage(/Price terms never change in place/),
+          );
+          const laterPriceId = randomUUID();
+          await db.transaction(async (tx) => {
+            await tx
+              .update(valoPrices)
+              .set({ effectiveTo: sql`now()` })
+              .where(eq(valoPrices.id, priceId));
+            await tx.insert(valoPrices).values({
+              id: laterPriceId,
+              contentVersionId: version,
+              title: fixtureLine.title,
+              amountKobo: 99999,
+              licenceVersion: "controlled-not-approved-v2",
+              licenceText: "A later test price",
+              taxTreatment: fixtureLine.taxTreatment,
+              approvalReference: "CONTROLLED_FIXTURE_NOT_APPROVAL",
+              effectiveFrom: sql`now()`,
+            });
+          });
+          // The close and the new price share one transaction, so they share one time.
+          const changes = (
+            await db
+              .select()
+              .from(valoPriceChanges)
+              .where(inArray(valoPriceChanges.priceId, [priceId, laterPriceId]))
+              .orderBy(valoPriceChanges.changedAt)
+          ).map((c) => ({
+            change: `${c.priceId === priceId ? "first" : "later"}:${c.action}`,
+            amount: c.price.amount_kobo,
+            closed: c.price.effective_to !== null,
+          }));
+          assert.deepEqual(changes[0], { change: "first:created", amount: 12345, closed: false });
+          assert.deepEqual(
+            changes.slice(1).sort((x, y) => x.change.localeCompare(y.change)),
+            [
+              { change: "first:closed", amount: 12345, closed: true },
+              { change: "later:created", amount: 99999, closed: false },
+            ],
+          );
+          const receipt = await commerce.purchaseReceipt(a, order.id);
+          assert.equal(receipt.amountKobo, 12345);
+          assert.equal(receipt.licenceText, fixtureLine.licenceText);
+          assert.match(receipt.notice, /test-mode/);
+          assert.equal(receipt.deliveryStatus, "awaiting_email_configuration");
+          assert.equal(receipt.receiptReference, `VALO-TEST-${order.reference}`);
+        },
+      );
       await t.test(
         "duplicate refund requests persist once without completing a refund or deleting owned work",
         async () => {

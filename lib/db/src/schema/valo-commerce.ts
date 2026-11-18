@@ -44,6 +44,31 @@ export const valoPrices = pgTable(
     check("valo_prices_currency_check", sql`${t.currency} = 'NGN'`),
   ],
 );
+/**
+ * ADM-006: every change to a price row, written by the triggers on valo_prices (migration
+ * price_change_log). A price's terms never change in place: a new price is a new row with its
+ * own effective dates, and closing one sets its end once. Rows here are never updated or deleted.
+ */
+export const valoPriceChanges = pgTable(
+  "valo_price_changes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    priceId: uuid("price_id").notNull(),
+    action: text("action").notNull(),
+    price: jsonb("price").notNull().$type<Record<string, unknown>>(),
+    changedBy: text("changed_by")
+      .notNull()
+      .default(sql`current_user`),
+    changedAt: timestamp("changed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("valo_price_changes_price_idx").on(t.priceId, t.changedAt),
+    check(
+      "valo_price_changes_action_check",
+      sql`${t.action} IN ('existing', 'created', 'closed', 'deleted')`,
+    ),
+  ],
+);
 export const valoOrders = pgTable(
   "valo_orders",
   {
