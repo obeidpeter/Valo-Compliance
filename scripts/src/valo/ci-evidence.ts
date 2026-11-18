@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { appendFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
@@ -7,6 +7,7 @@ import { requirements } from "@workspace/valo-records";
 import { repositoryRoot } from "./architecture-check";
 import { coverageTable, MEASURED_BY, readAreaCoverage } from "./code-coverage";
 import { WORKFLOW } from "./database-tests";
+import { currentResultFiles, resultArtifactName } from "./result-attempts";
 
 /**
  * Requirement evidence recorded in CI (decision 0010). The register cites a test by its file
@@ -118,7 +119,8 @@ export function workflowProblems(citations: Citation[], root = repositoryRoot): 
       );
     if (!runs(job).some((run) => run.includes(`valo:ci-evidence --job ${job}`)))
       problems.push(`job ${job} does not check the tests cited for it (valo:ci-evidence --job ${job})`);
-    if (!uploads(job, `test-results-${job}`)) problems.push(`job ${job} does not upload test-results-${job}`);
+    if (!uploads(job, resultArtifactName(job)))
+      problems.push(`job ${job} does not upload ${resultArtifactName(job)}`);
   }
   const needs = [jobs[EVIDENCE_JOB]?.needs ?? []].flat();
   for (const job of cited)
@@ -133,18 +135,12 @@ export function workflowProblems(citations: Citation[], root = repositoryRoot): 
   return problems;
 }
 
+/** The test records under `directory`, from each job's latest attempt (result-attempts.ts). */
 export function readTestRecords(directory: string): TestRecord[] {
   const records: TestRecord[] = [];
-  const walk = (folder: string) => {
-    for (const entry of readdirSync(folder, { withFileTypes: true })) {
-      const path = join(folder, entry.name);
-      if (entry.isDirectory()) walk(path);
-      else if (entry.name.endsWith(".jsonl"))
-        for (const line of readFileSync(path, "utf8").split("\n"))
-          if (line) records.push(JSON.parse(line) as TestRecord);
-    }
-  };
-  if (existsSync(directory)) walk(directory);
+  for (const path of currentResultFiles(directory, (name) => name.endsWith(".jsonl")))
+    for (const line of readFileSync(path, "utf8").split("\n"))
+      if (line) records.push(JSON.parse(line) as TestRecord);
   return records;
 }
 
