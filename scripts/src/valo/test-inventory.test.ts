@@ -28,7 +28,7 @@ const NOT_IN_CI: Record<string, string> = {
   "@workspace/api-server test:valo-editorial-proof":
     "needs retained official sources (VALO_RUN_EDITORIAL_TESTS)",
   "@workspace/api-server test:valo-publication":
-    "needs held development candidates (VALO_PUBLICATION_DB_TESTS)",
+    "needs held development candidates (VALO_PUBLICATION_DB_TESTS); test:valo-publication-guards-db runs the same refusals on a synthetic candidate in CI",
   "@workspace/api-server test:valo-export-recovery":
     "runs in CI through test-support/run-private-file-tests.mjs",
   "@workspace/api-server test:valo-inference-budget": "same file runs in test:valo",

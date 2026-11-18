@@ -367,6 +367,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-source-controls-db
       - name: Prove concrete editorial reviewer denial, retained snapshots and isolated lifecycle copies
         run: pnpm --filter @workspace/api-server test:valo-editorial-lifecycle-db
+      - name: Prove a candidate that fails its gates stays held on every publication path
+        run: pnpm --filter @workspace/api-server test:valo-publication-guards-db
       - name: Prove current-rule task guards against synthetic PostgreSQL
         run: pnpm --filter @workspace/api-server test:valo-task-source-guard
       - name: Prove rich checker HTTP preview, consent, history and tenant boundaries
