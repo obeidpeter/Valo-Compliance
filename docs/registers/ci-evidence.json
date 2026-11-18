@@ -546,6 +546,13 @@
       "file": "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
       "test": "both formats must be readable; a claimed pass cannot replace re-execution",
       "proves": "An export inspection fails when either file cannot be read, and a recorded pass does not replace reading the files again."
+    },
+    {
+      "requirement": "NFR-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-performance.test.ts",
+      "test": "public pages answer a tap within NFR-002's INP target and keep CLS within 0.1 on an emulated mid-range phone",
+      "proves": "On an emulated Moto G4 with a four times slower processor over slow 4G, five fresh loads of each public page but the home page keep p75 INP for a tap on the menu within 200 ms and p75 CLS within 0.1, with every API call answered by contract-checked synthetic data. LCP is measured too but misses 2.5 s on every page, so it is a todo test, not evidence; the home page and real-user measurements need a deployed instance."
     }
   ]
 }
