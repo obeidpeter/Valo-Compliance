@@ -59,7 +59,7 @@ export const COVERAGE_AREAS = {
       api("modules/commerce/valo-receipt-recovery-report.test.ts"),
       api("modules/commerce/valo-receipt-recovery.integration.test.ts"),
       api("lib/valo-recovery-effects.test.ts"),
-      api("lib/valo-template-entitlement.integration.test.ts"),
+      api("modules/catalogue/valo-template-entitlement.integration.test.ts"),
     ],
     notRerun: {},
   },

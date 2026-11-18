@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { createRequire } from "node:module";
-import { paginateReleasedItems } from "../lib/valo-catalogue";
+import { paginateReleasedItems } from "../modules/catalogue";
 assert.equal(process.env.NODE_ENV, "development");
 assert.equal(process.env.VALO_RUN_CATALOGUE_BROWSER, "synthetic-development-only");
 const require = createRequire(import.meta.url),

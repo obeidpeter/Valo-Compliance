@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import { and, eq, desc, sql } from "drizzle-orm";
 import type { db } from "@workspace/db";
 import { publicationSchema } from "@workspace/valo-core";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, ValoProblem, type WorkspaceActor } from "./valo-store";
+import {
+  authorizeWorkspaceWrite,
+  limitWorkspaceWrite,
+  ValoProblem,
+  type WorkspaceActor,
+} from "../../lib/valo-store";
 import {
   checkReleaseEvidence,
   liveReleasedVersions,
@@ -10,8 +15,8 @@ import {
   projectReleasedCatalogue,
 } from "./valo-released-content";
 import { recommendTemplates } from "./valo-catalogue";
-import { developmentPublicationOnly } from "../modules/publication";
-import { singleRow } from "../platform/rows";
+import { developmentPublicationOnly } from "../publication";
+import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 async function owner(tx: Tx, actor: WorkspaceActor) {
   const { valoMemberships, valoWorkspaces } = await import("@workspace/db");

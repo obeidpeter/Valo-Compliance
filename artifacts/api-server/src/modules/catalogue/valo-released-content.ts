@@ -7,15 +7,15 @@ import {
   getPublicationArtifact,
   type ArtifactRef,
   currentOperationalPermission,
-} from "../modules/publication";
+} from "../publication";
 import {
   createDocumentInTransaction,
   getDocument,
   ValoProblem,
   authorizeWorkspaceWrite,
   type WorkspaceActor,
-} from "./valo-store";
-import { documentInput } from "./valo-validation";
+} from "../../lib/valo-store";
+import { documentInput } from "../../lib/valo-validation";
 import {
   paginateReleasedItems,
   templateCategory,
@@ -23,8 +23,8 @@ import {
   type CatalogueQuery,
   type ReleasedLibraryItem,
 } from "./valo-catalogue";
-import { setting } from "../platform/settings";
-import { lockSourceState, sourceTargetAllowed } from "./valo-source-state";
+import { setting } from "../../platform/settings";
+import { lockSourceState, sourceTargetAllowed } from "../../lib/valo-source-state";
 export function releaseVisible(
   row: typeof valoContentVersions.$inferSelect,
   policyHash: string,

@@ -385,7 +385,7 @@ test(
     await t.test(
       "a checkout pause stops checkout but not AI or free guidance, and records its reason, actor and customer impact",
       async () => {
-        const released = await import("./valo-released-content");
+        const released = await import("../modules/catalogue/valo-released-content");
         const catalogue = await released.releasedCatalogue(),
           resources = await released.releasedResources();
         const paused = await controls.actOnSourceControls(fresh(system), {

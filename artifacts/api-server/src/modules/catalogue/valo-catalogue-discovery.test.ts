@@ -7,7 +7,7 @@ import {
   templateCategory,
   type ReleasedLibraryItem,
 } from "./valo-catalogue";
-import { baselineTemplates } from "../../../../lib/valo-core/src/catalogue";
+import { baselineTemplates } from "../../../../../lib/valo-core/src/catalogue";
 
 // Controlled metadata benchmark only. These rows are not released documents,
 // and the product-owner relevance threshold has not been agreed or accepted.

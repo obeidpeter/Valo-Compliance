@@ -405,7 +405,7 @@ const groups = [
       "artifacts/api-server/src/lib/valo-exports.ts",
       "artifacts/api-server/src/workers/export-worker.ts",
       "artifacts/api-server/src/lib/valo-export-recovery.integration.test.ts",
-      "artifacts/api-server/src/lib/valo-catalogue-pages.test.ts",
+      "artifacts/api-server/src/modules/catalogue/valo-catalogue-pages.test.ts",
       "artifacts/valo/src/screens/library.tsx",
       "artifacts/valo/src/screens/document-editor.tsx",
       "artifacts/valo/src/screens/profile.tsx",
@@ -457,7 +457,7 @@ const groups = [
   {
     ids: ["DOC-001", "DOC-002", "DOC-006", "CMP-004", "EDP-007"],
     paths: [
-      "artifacts/api-server/src/lib/valo-released-content.ts",
+      "artifacts/api-server/src/modules/catalogue/valo-released-content.ts",
       "artifacts/api-server/src/modules/publication/rights-applicability.ts",
       "lib/valo-core/src/coverage.ts",
     ],

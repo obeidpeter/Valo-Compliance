@@ -23,7 +23,7 @@ import {
   releasedTemplate,
   readReleasedMaster,
   createReleasedTemplateDraft,
-} from "../../lib/valo-released-content";
+} from "../catalogue";
 import { getDocument } from "../../lib/valo-store";
 import { lockSourceState, sourceTargetAllowed } from "../../lib/valo-source-state";
 import {

@@ -12,9 +12,9 @@ import {
   valoContentVersions,
 } from "@workspace/db";
 import { disclosure, publicationSchema } from "@workspace/valo-core";
-import { resolveWorkspace } from "./valo-store";
-import { syntheticDocument } from "./valo-test-fixtures";
-import { financeHeldFixture } from "../modules/commerce/valo-finance-test-fixture";
+import { resolveWorkspace } from "../../lib/valo-store";
+import { syntheticDocument } from "../../lib/valo-test-fixtures";
+import { financeHeldFixture } from "../commerce/valo-finance-test-fixture";
 
 test(
   "actual PostgreSQL saved-template ownership, durable state and blocked-release boundaries",
@@ -109,7 +109,7 @@ test(
       },
     });
     const service = await import("./valo-saved-templates"),
-      { workspaceDataExport } = await import("./valo-customer-access");
+      { workspaceDataExport } = await import("../../lib/valo-customer-access");
     try {
       await t.test("concurrent tabs persist one save and one event; new reads see it", async () => {
         await Promise.all(Array.from({ length: 6 }, () => service.saveTemplate(a, held.id)));
