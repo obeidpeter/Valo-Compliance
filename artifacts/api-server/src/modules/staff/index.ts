@@ -6,3 +6,4 @@
  */
 export * from "./valo-staff-authority";
 export * from "./valo-staff-roles";
+export * from "./valo-staff-operations";

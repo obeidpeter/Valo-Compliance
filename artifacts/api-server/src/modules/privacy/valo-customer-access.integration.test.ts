@@ -26,9 +26,9 @@ import {
   customerAccount,
   requestPrivacy,
   workspaceDataExport,
-  staffOperations,
   MAX_CONCURRENT_WORKSPACE_EXPORTS,
 } from "./valo-customer-access";
+import { staffOperations } from "../staff/valo-staff-operations";
 import { resolveWorkspace, createDocument, ValoProblem } from "../../lib/valo-store";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 import { withWorkspaceDataFile } from "./valo-data-download";

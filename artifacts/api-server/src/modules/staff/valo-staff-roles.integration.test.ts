@@ -7,7 +7,7 @@ import { db, pool, valoStaffAssignments, valoStaffRoleChanges } from "@workspace
 import { makeStaffRoleService, type StaffTarget } from "./valo-staff-roles";
 import { requireFinance, assertFinanceActor } from "../commerce/valo-refunds";
 import { requirePrivacyStaff } from "../privacy/valo-privacy";
-import { staffOperations } from "../privacy/valo-customer-access";
+import { staffOperations } from "./valo-staff-operations";
 import { createStaffRoleRouter } from "../../routes/valo-staff-roles";
 import { makeVerifiedStaffSession } from "../../routes/valo-customer-access";
 import { activeStaffAssignment } from "./valo-staff-authority";
