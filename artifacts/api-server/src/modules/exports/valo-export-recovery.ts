@@ -10,7 +10,7 @@ import {
 } from "@workspace/db";
 import { assertRuntimeObjectScope } from "../../lib/valo-runtime-activation";
 import { deletePrivateFile } from "../../lib/valo-private-storage";
-import { privateCleanupAuthority } from "../../lib/valo-private-cleanup-authority";
+import { privateCleanupAuthority } from "../privacy";
 import { assertApplicationRuntime } from "../../lib/valo-runtime-activation";
 import { setting } from "../../platform/settings";
 
@@ -177,7 +177,7 @@ export async function reconcileExportOrphans(
   // Completed privacy journals outlive the export-job FK chain. They must be
   // revisited by the same running worker, including after a killed uploader.
   if (!jobId && setting("NODE_ENV") !== "production") {
-    const { reconcileErasedObjects } = await import("../../lib/valo-privacy-erasure");
+    const { reconcileErasedObjects } = await import("../privacy");
     const erased = await reconcileErasedObjects(remove, scope?.caseId);
     return {
       cleaned: cleaned + erased.cleaned,

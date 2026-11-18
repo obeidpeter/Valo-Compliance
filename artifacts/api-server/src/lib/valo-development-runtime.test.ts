@@ -33,7 +33,7 @@ test("actual export entries and worker startup reject before database, queue or 
       export const db=new Proxy({},{get:()=>hit});export const pool={end:hit};export const runInWorkspaceScope=hit;
       export const valoMemberships={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
       valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={},
-      valoWorkspaceExports={},valoWorkspaceExportAttempts={},valoWorkspaces={},valoPrivacyCases={},valoPrivacyEvents={};`,
+      valoWorkspaceExports={},valoWorkspaceExportAttempts={},valoWorkspaces={},valoPrivacyCases={},valoPrivacyEvents={},valoProfileVersions={};`,
     ],
     [
       "drizzle-orm",
@@ -46,7 +46,7 @@ test("actual export entries and worker startup reject before database, queue or 
     ],
     [
       "@workspace/api-zod",
-      "export const CreateDocumentExportBody={strict(){return this},parse(x){return x}},CreateDocumentExportResponse={parse:x=>x},RequestWorkspaceDataExportBody=CreateDocumentExportBody,CancelWorkspaceDataExportBody=CreateDocumentExportBody;",
+      "export const CreateDocumentExportBody={strict(){return this},parse(x){return x}},CreateDocumentExportResponse={parse:x=>x},RequestWorkspaceDataExportBody=CreateDocumentExportBody,CancelWorkspaceDataExportBody=CreateDocumentExportBody,ActOnStaffPrivacyCaseBody=CreateDocumentExportBody;",
     ],
     ["@workspace/valo-core", "export const sha256=x=>x;"],
     [
@@ -67,9 +67,11 @@ test("actual export entries and worker startup reject before database, queue or 
       "valo-customer-access",
       "export const workspaceDataExport=async()=>{globalThis.guardEffects.services++;throw Error('COLLECTION_EFFECT')};",
     ],
+    // The export code reaches privacy through the privacy module's index, which loads every file it
+    // re-exports, so this stub and the erasure stub below give those files the names they import.
     [
       "valo-privacy",
-      "export const readPrivacyCase=async()=>{globalThis.guardEffects.services++;throw Error('PRIVACY_EFFECT')};",
+      "export const readPrivacyCase=async()=>{globalThis.guardEffects.services++;throw Error('PRIVACY_EFFECT')},privacyChange=readPrivacyCase,privacyDetail=readPrivacyCase,requirePrivacyStaff=readPrivacyCase,checkPrivacyAudit=readPrivacyCase,privacyCaseRecord=readPrivacyCase,respondPrivacyCase=readPrivacyCase,simpleStaffPrivacyAction=readPrivacyCase;",
     ],
     [
       "valo-render",
@@ -99,7 +101,7 @@ test("actual export entries and worker startup reject before database, queue or 
     [
       "valo-privacy-erasure",
       `const hit=async()=>{globalThis.guardEffects.services++;throw Error("PRIVACY_SERVICE_EFFECT")};
-      export const reconcileErasedObjects=hit,closePrivacyErasureLocks=hit;`,
+      export const reconcileErasedObjects=hit,closePrivacyErasureLocks=hit,processPrivacyErasure=hit;`,
     ],
   ]);
   const plugin: Plugin = {
@@ -124,7 +126,7 @@ test("actual export entries and worker startup reject before database, queue or 
   const entry = resolve("src/workers/export-worker.ts");
   const source = `import{requestExport,getExport,listExports,retryExport,downloadExport,executeExport}from${JSON.stringify(resolve("src/modules/exports/valo-exports.ts"))};
     import{recoverAbandonedExports,reconcileExportOrphans}from${JSON.stringify(resolve("src/modules/exports/valo-export-recovery.ts"))};
-    import{createWorkspaceExport,listWorkspaceExports,getWorkspaceExport,cancelWorkspaceExport,retryWorkspaceExport,executeWorkspaceExport,recoverWorkspaceExports,cleanupWorkspaceExports,pendingWorkspaceExports,withPreparedWorkspaceExport}from${JSON.stringify(resolve("src/lib/valo-workspace-export-jobs.ts"))};
+    import{createWorkspaceExport,listWorkspaceExports,getWorkspaceExport,cancelWorkspaceExport,retryWorkspaceExport,executeWorkspaceExport,recoverWorkspaceExports,cleanupWorkspaceExports,pendingWorkspaceExports,withPreparedWorkspaceExport}from${JSON.stringify(resolve("src/modules/privacy/valo-workspace-export-jobs.ts"))};
     import{exportQueue}from${JSON.stringify(resolve("src/modules/exports/valo-export-queue.ts"))};
     const actor={workspaceId:"not-accessed",identityId:"not-accessed"};
     const ops=[()=>requestExport(actor,"id","key",{}),()=>getExport(actor,"id"),()=>listExports(actor,"id"),

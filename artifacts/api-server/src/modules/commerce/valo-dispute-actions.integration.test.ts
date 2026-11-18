@@ -44,8 +44,8 @@ import {
   actOnPaymentConcern,
   getWorkspaceDisputes,
 } from "./valo-payment-concerns";
-import { eraseSupportContentBatch, closePrivacyErasureLocks } from "../../lib/valo-privacy-erasure";
-import { workspaceDataExport } from "../../lib/valo-customer-access";
+import { eraseSupportContentBatch, closePrivacyErasureLocks } from "../privacy/valo-privacy-erasure";
+import { workspaceDataExport } from "../privacy/valo-customer-access";
 import { makeDisputeOperationsRouter } from "../../routes/valo-customer-access";
 
 test(

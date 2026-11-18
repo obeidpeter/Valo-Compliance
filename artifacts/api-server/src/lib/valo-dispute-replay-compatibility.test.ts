@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { signErasureSeal, signReplayState, verifyReplayState, erasureSealHash } from "./valo-erasure-seal";
+import {
+  signErasureSeal,
+  signReplayState,
+  verifyReplayState,
+  erasureSealHash,
+} from "../modules/privacy/valo-erasure-seal";
 test("signed historical phase15 and literal done retain meaning after native appended dispute phase", () => {
   const signer = { version: "controlled", key: "controlled-test-signing-key-".repeat(3) };
   const seal = signErasureSeal(

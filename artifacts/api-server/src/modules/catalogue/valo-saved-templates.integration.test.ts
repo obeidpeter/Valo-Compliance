@@ -109,7 +109,7 @@ test(
       },
     });
     const service = await import("./valo-saved-templates"),
-      { workspaceDataExport } = await import("../../lib/valo-customer-access");
+      { workspaceDataExport } = await import("../privacy/valo-customer-access");
     try {
       await t.test("concurrent tabs persist one save and one event; new reads see it", async () => {
         await Promise.all(Array.from({ length: 6 }, () => service.saveTemplate(a, held.id)));

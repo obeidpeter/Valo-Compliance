@@ -1,10 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { db, runInWorkspaceScope, valoProfileVersions, valoWorkspaces } from "@workspace/db";
 import { ActOnStaffPrivacyCaseBody } from "@workspace/api-zod";
-import { authorizeWorkspaceWrite } from "./valo-store";
+import { authorizeWorkspaceWrite } from "../../lib/valo-store";
 import { workspaceDataExport } from "./valo-customer-access";
-import { ValoProblem } from "./valo-problem";
-import { assertPrivacyVersion } from "./valo-privacy-state";
+import { ValoProblem } from "../../lib/valo-problem";
+import { assertPrivacyVersion } from "../../lib/valo-privacy-state";
 import {
   requirePrivacyStaff,
   readPrivacyCase,
@@ -14,7 +14,7 @@ import {
   type PrivacyStaffActor,
 } from "./valo-privacy";
 import { processPrivacyErasure } from "./valo-privacy-erasure";
-import { workspaceActorFromRecord, type WorkspaceActor } from "../platform/workspace-context";
+import { workspaceActorFromRecord, type WorkspaceActor } from "../../platform/workspace-context";
 export async function processPrivacyAction(actor: PrivacyStaffActor, id: string, raw: unknown) {
   const input = ActOnStaffPrivacyCaseBody.strict().parse(raw);
   if (input.action === "prepare_export") return preparePrivacyExport(actor, id, input);

@@ -2,7 +2,7 @@ import { getConstructionPlans } from "pg-boss";
 import { readFile, writeFile } from "node:fs/promises";
 import { pool } from "@workspace/db";
 import { exportQueue, EXPORT_QUEUE } from "../modules/exports";
-import { WORKSPACE_EXPORT_QUEUE } from "../lib/valo-workspace-export-jobs";
+import { WORKSPACE_EXPORT_QUEUE } from "../modules/privacy";
 import { installOperationsQueue } from "../lib/valo-operations-queue";
 import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
 const sqlPath = new URL("../../../../lib/db/drizzle/pg-boss-development.sql", import.meta.url);

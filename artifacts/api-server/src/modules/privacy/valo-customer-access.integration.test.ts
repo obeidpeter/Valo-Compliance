@@ -29,8 +29,8 @@ import {
   staffOperations,
   MAX_CONCURRENT_WORKSPACE_EXPORTS,
 } from "./valo-customer-access";
-import { resolveWorkspace, createDocument, ValoProblem } from "./valo-store";
-import { syntheticDocument } from "./valo-test-fixtures";
+import { resolveWorkspace, createDocument, ValoProblem } from "../../lib/valo-store";
+import { syntheticDocument } from "../../lib/valo-test-fixtures";
 import { withWorkspaceDataFile } from "./valo-data-download";
 import { readFile, stat } from "node:fs/promises";
 test(

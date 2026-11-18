@@ -93,7 +93,7 @@ async function fixtureSeed() {
         [randomUUID(), actor.workspaceId, jobId, objectKey, hash(bytes), bytes.length],
       );
       if (name === "a") {
-        const { createPrivacyCase } = await import("../lib/valo-privacy");
+        const { createPrivacyCase } = await import("../modules/privacy");
         await createPrivacyCase(actor, "synthetic-old-copy@example.invalid", {
           kind: "export",
           idempotencyKey: randomUUID(),
@@ -117,8 +117,8 @@ async function fixtureSeed() {
 async function captureErasure() {
   const { db, pool, valoStaffAssignments } = await import("@workspace/db");
   const { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } =
-    await import("../lib/valo-privacy");
-  const { processPrivacyErasure, closePrivacyErasureLocks } = await import("../lib/valo-privacy-erasure");
+    await import("../modules/privacy");
+  const { processPrivacyErasure, closePrivacyErasureLocks } = await import("../modules/privacy");
   const { captureRecoveryErasureReceipt } = await import("../lib/valo-recovery-erasure");
   const [fixture] = JSON.parse(await readFile(process.argv[3]!, "utf8")) as Fixture[];
   assert.ok(fixture);
@@ -158,7 +158,7 @@ async function captureErasure() {
       reason,
     });
     const remove = async (key: string) => {
-      const { assertErasureObjectScope } = await import("../lib/valo-erasure-seal");
+      const { assertErasureObjectScope } = await import("../modules/privacy");
       assertErasureObjectScope(fixture.workspaceId, key);
       await rm(join(objects, ...key.split("/").slice(2)), { force: true });
     };
@@ -195,8 +195,8 @@ async function captureErasure() {
 async function purgeRestored() {
   assertFixtureTargetEnvironment();
   const { pool } = await import("@workspace/db");
-  const { replayErasedApplication, closePrivacyErasureLocks } = await import("../lib/valo-privacy-erasure");
-  const { assertErasureObjectScope } = await import("../lib/valo-erasure-seal");
+  const { replayErasedApplication, closePrivacyErasureLocks } = await import("../modules/privacy");
+  const { assertErasureObjectScope } = await import("../modules/privacy");
   const saved = JSON.parse(await readFile(process.argv[3]!, "utf8")) as {
     controls: RecoveryControls;
     signature: string;

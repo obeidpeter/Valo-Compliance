@@ -2,7 +2,7 @@ import {
   activeStaffAssignment,
   assertStaffAssignmentCurrent,
   requireFreshStaffSession,
-} from "./valo-staff-authority";
+} from "../../lib/valo-staff-authority";
 import { randomUUID, createHash } from "node:crypto";
 import { and, eq, desc, asc, sql } from "drizzle-orm";
 import {
@@ -27,11 +27,11 @@ import {
   createTicketInTransaction,
   limitWorkspaceWrite,
   type WorkspaceActor,
-} from "./valo-store";
-import { quotaSubjectHash } from "./valo-quota";
-import { ValoProblem } from "./valo-problem";
-import { privacyKey, privacySigner } from "./valo-privacy-keys";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+} from "../../lib/valo-store";
+import { quotaSubjectHash } from "../../lib/valo-quota";
+import { ValoProblem } from "../../lib/valo-problem";
+import { privacyKey, privacySigner } from "../../lib/valo-privacy-keys";
+import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
 import { removedPrivateText, verifiedPrivacyRedaction } from "./valo-privacy-redactions";
 import {
   assertPrivacyVersion,
@@ -43,7 +43,7 @@ import {
   privacySnapshotHash,
   type PrivacyAuditInput,
   type PrivacyStatus,
-} from "./valo-privacy-state";
+} from "../../lib/valo-privacy-state";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type PrivacyRow = typeof valoPrivacyCases.$inferSelect;
 export type PrivacyStaffActor = { identityId: string; recentMfa: boolean; verifiedAt: number };

@@ -5,7 +5,7 @@ import {
   replayErasedApplication,
   erasureReplayVerificationCounts,
   closePrivacyErasureLocks,
-} from "../lib/valo-privacy-erasure";
+} from "../modules/privacy";
 assertDevelopmentRuntime();
 if (process.env.VALO_ERASURE_BATCH_CHILD !== "new-synthetic-fixture-only" || !process.send)
   throw Error("ISOLATED_REPLAY_CHILD_REQUIRED");

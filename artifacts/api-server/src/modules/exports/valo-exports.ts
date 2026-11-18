@@ -29,7 +29,7 @@ import {
   exportRetentionAt,
   retireExpiredExport,
 } from "./valo-export-retention";
-import { privateCleanupAuthority } from "../../lib/valo-private-cleanup-authority";
+import { privateCleanupAuthority } from "../privacy";
 import { workspaceActorFromRecord } from "../../platform/workspace-context";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];

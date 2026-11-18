@@ -7,8 +7,8 @@ import {
   readPrivacyCase,
   respondPrivacyCase,
 } from "./valo-privacy";
-import { ValoProblem } from "./valo-problem";
-import { workspaceActorFromRecord } from "../platform/workspace-context";
+import { ValoProblem } from "../../lib/valo-problem";
+import { workspaceActorFromRecord } from "../../platform/workspace-context";
 
 /** Case-only identity scope. Never provisions a workspace or revives membership.
  * Callers supply the server-verified identity, not an email or browser tenant. */

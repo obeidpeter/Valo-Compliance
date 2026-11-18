@@ -63,7 +63,7 @@ if (process.argv[2] === "--probe") {
     const { resolveWorkspace, createDocument } = await import(app("lib/valo-store.ts"));
     const { syntheticDocument } = await import(app("lib/valo-test-fixtures.ts"));
     const { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } = await import(
-      app("lib/valo-privacy.ts")
+      app("modules/privacy/valo-privacy.ts")
     );
     const { pool: applicationPool } = await import(pathToFileURL(join(root, "lib/db/src/index.ts")).href);
     const fixtures = [],

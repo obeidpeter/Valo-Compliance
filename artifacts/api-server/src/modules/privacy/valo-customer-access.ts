@@ -3,12 +3,12 @@ import {
   assertStaffAssignmentCurrent,
   requireFreshStaffSession,
   type StaffActor,
-} from "./valo-staff-authority";
+} from "../../lib/valo-staff-authority";
 import { randomUUID, createHash } from "node:crypto";
 import { createPrivacyCase } from "./valo-privacy";
 import { and, eq, desc, like, sql } from "drizzle-orm";
 import { setImmediate as yieldPreparation } from "node:timers/promises";
-import { abortable } from "./valo-abort";
+import { abortable } from "../../lib/valo-abort";
 import {
   db,
   valoAccessSupport,
@@ -34,13 +34,13 @@ import {
   valoSupportMessages,
 } from "@workspace/db";
 import { RequestAccessSupportBody } from "@workspace/api-zod";
-import { consumeQuota, quotaSubjectHash } from "./valo-quota";
+import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
 import {
   authorizeWorkspaceWrite,
   authorizeWorkspaceRead,
   ValoProblem,
   type WorkspaceActor,
-} from "./valo-store";
+} from "../../lib/valo-store";
 import {
   valoOrders,
   valoEntitlements,
@@ -57,7 +57,7 @@ import {
 import { valoDisputeInformation, valoDisputeActions } from "@workspace/db";
 import { ownedPaymentEvent } from "./valo-private-copy-inventory";
 import { valoPaymentConcerns, valoConcernMessages, valoPaymentConcernEvents } from "@workspace/db";
-import { setting } from "../platform/settings";
+import { setting } from "../../platform/settings";
 export const accessMessage =
   "Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build.";
 const ack = (id: string) => ({
@@ -116,7 +116,7 @@ export async function saveAccessSupport(raw: unknown, remoteAddress: string) {
           );
       }
     }
-    const { openSupportCase } = await import("./valo-support-intake");
+    const { openSupportCase } = await import("../../lib/valo-support-intake");
     await openSupportCase(tx, "access", id, null);
     return ack(id);
   });

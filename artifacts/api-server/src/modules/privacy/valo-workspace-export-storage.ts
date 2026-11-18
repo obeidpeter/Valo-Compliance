@@ -2,8 +2,8 @@ import { createReadStream, createWriteStream } from "node:fs";
 import { createHash } from "node:crypto";
 import { Transform, type Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { privateWorkspaceObject, deletePrivateFile } from "./valo-private-storage";
-import { abortable } from "./valo-abort";
+import { privateWorkspaceObject, deletePrivateFile } from "../../lib/valo-private-storage";
+import { abortable } from "../../lib/valo-abort";
 export const WORKSPACE_EXPORT_MAX_BYTES = 128 * 1024 * 1024;
 export const WORKSPACE_EXPORT_ATTEMPT_MS = 5 * 60_000;
 export async function workspaceFileDigest(path: string, signal?: AbortSignal) {

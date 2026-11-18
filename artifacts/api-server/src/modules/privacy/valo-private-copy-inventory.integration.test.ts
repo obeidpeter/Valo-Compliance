@@ -23,8 +23,8 @@ import {
   valoAIDrafts,
   valoDocumentRevisions,
 } from "@workspace/db";
-import { resolveWorkspace, saveProfile, createDocument } from "./valo-store";
-import { syntheticProfile, syntheticDocument } from "./valo-test-fixtures";
+import { resolveWorkspace, saveProfile, createDocument } from "../../lib/valo-store";
+import { syntheticProfile, syntheticDocument } from "../../lib/valo-test-fixtures";
 import {
   createPrivacyCase,
   confirmPrivacyCase,
@@ -37,7 +37,7 @@ import {
   replayErasureObjects,
   closePrivacyErasureLocks,
 } from "./valo-privacy-erasure";
-import { financeHeldFixture } from "../modules/commerce/valo-finance-test-fixture";
+import { financeHeldFixture } from "../commerce/valo-finance-test-fixture";
 import { workspaceDataExport } from "./valo-customer-access";
 import { workspaceExportScratch } from "./valo-workspace-export-jobs";
 test(

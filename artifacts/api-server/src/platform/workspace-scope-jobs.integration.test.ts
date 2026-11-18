@@ -40,12 +40,16 @@ import {
 import { resolveWorkspace, saveProfile, createDocument } from "../lib/valo-store";
 import { syntheticDocument, syntheticProfile } from "../lib/valo-test-fixtures";
 import { requestExport, getExport, executeExport } from "../modules/exports/valo-exports";
-import { createWorkspaceExport, executeWorkspaceExport } from "../lib/valo-workspace-export-jobs";
+import { createWorkspaceExport, executeWorkspaceExport } from "../modules/privacy/valo-workspace-export-jobs";
 import { fixtureWorkspaceStorage } from "../lib/test-support/workspace-export-storage";
 import { createTask, saveReminderPreferences, reminderInstant } from "../modules/tasks/valo-tasks";
 import { processReminder } from "../modules/tasks/valo-reminder-worker";
-import { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } from "../lib/valo-privacy";
-import { processPrivacyAction } from "../lib/valo-privacy-processing";
+import {
+  createPrivacyCase,
+  confirmPrivacyCase,
+  simpleStaffPrivacyAction,
+} from "../modules/privacy/valo-privacy";
+import { processPrivacyAction } from "../modules/privacy/valo-privacy-processing";
 
 type Checkout = { scope: string | undefined; statements: string[] };
 

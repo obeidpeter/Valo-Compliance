@@ -34,7 +34,7 @@ assert.equal(hash(await readFile(join(bundle, "synthetic.dump"))), saved.snapsho
 const fixtures = JSON.parse(await readFile(join(bundle, "fixtures.json"), "utf8"));
 assert.equal(fixtures.length, 3);
 const { pool } = await import("@workspace/db");
-const { replayErasedApplication, closePrivacyErasureLocks } = await import("../lib/valo-privacy-erasure");
+const { replayErasedApplication, closePrivacyErasureLocks } = await import("../modules/privacy");
 const client = await pool.connect();
 try {
   await assertIsolatedRecoveryTarget(client);
@@ -92,7 +92,7 @@ try {
   } else if (["fail-object", "crash-after-object", "complete"].includes(mode)) {
     await replayRecoveryControls(client, saved.controls, saved.signature, key, saved.snapshotHash);
     const entry = saved.controls.entries.find((e) => e.kind === "deletion")!;
-    const { assertErasureObjectScope } = await import("../lib/valo-erasure-seal");
+    const { assertErasureObjectScope } = await import("../modules/privacy");
     let remaining = true,
       failed = 0,
       deleted = 0;

@@ -9,7 +9,7 @@ import express from "express";
 import { eq, inArray } from "drizzle-orm";
 import { db, pool, valoEvents, valoMemberships, valoWorkspaces } from "@workspace/db";
 import { resolveWorkspace, ValoProblem } from "./valo-store";
-import { workspaceDataExport } from "./valo-customer-access";
+import { workspaceDataExport } from "../modules/privacy/valo-customer-access";
 import { makeWorkspaceDataDownloadHandler } from "./valo-data-download-http";
 import { assertWorkspaceDownloadSession } from "./valo-download-session";
 

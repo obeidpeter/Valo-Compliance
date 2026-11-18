@@ -197,6 +197,23 @@ render documents too. The read-only retention inventory (`src/lib/valo-export-re
 stays outside the module: its operator command must refuse its arguments before it opens a
 database connection, and the module's index loads the export code and its database client.
 
+`modules/privacy` holds privacy requests and their processing, erasure with its seal, lock and
+inventory, redaction, private copies and the authority that clears them for cleanup, the customer's
+account and access requests, the data download, and the workspace data export with its jobs and
+storage. `valo-customer-access.ts` also holds the staff operations summaries, which belong with the
+staff code and move when it becomes a module. Five files stay outside:
+
+- The privacy keys and their audit state (`src/lib/valo-privacy-keys.ts`, `valo-privacy-state.ts`).
+  The store hashes identities with the keys, and the privacy code reads the store, so reaching the
+  keys through the module's index would make an import cycle.
+- The recovery erasure (`src/lib/valo-recovery-erasure.ts`) stays with the other recovery tools.
+  Only the guarded recovery child loads it, and it brings its own database driver.
+- The HTTP side of the data download and the workspace export (`src/lib/valo-data-download-http.ts`,
+  `valo-workspace-export-http.ts`). Only the customer-access routes use them. They load Express and
+  the identity SDK, which the export worker, reaching privacy through the index, does not need. And
+  the repository rules treat a `src/lib/*-http.ts` file as HTTP code, which may not create a
+  workspace actor (`workspace-actor`).
+
 `modules/tasks` holds customer tasks and their pages, reminder preferences, the reminder worker and
 the development reminder email. `modules/support` holds the support lifecycle: cases, their
 messages, staff assignment and escalations. The intake that opens a support case from an access

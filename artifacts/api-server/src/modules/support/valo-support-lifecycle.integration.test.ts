@@ -43,7 +43,7 @@ test(
       valoEvents,
     } = await import("@workspace/db");
     const { resolveWorkspace, createTicket, ValoProblem } = await import("../../lib/valo-store");
-    const { saveAccessSupport, workspaceDataExport } = await import("../../lib/valo-customer-access");
+    const { saveAccessSupport, workspaceDataExport } = await import("../privacy/valo-customer-access");
     const api = await import("./valo-support-lifecycle");
     const { digest } = await import("@workspace/valo-core");
     const { heldSourceBundle } = await import("../../lib/valo-source-controls.fixtures");

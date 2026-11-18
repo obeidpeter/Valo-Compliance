@@ -15,7 +15,7 @@ const preload = join(here, "nested-connection-preload.mjs");
 /** Reviewed exceptions, matched on the frame that opened the transaction. */
 const ALLOWED = [
   {
-    opener: /^at snapshotExport \(.*\/src\/lib\/valo-customer-access\.ts:/,
+    opener: /^at snapshotExport \(.*\/src\/modules\/privacy\/valo-customer-access\.ts:/,
     reason:
       "A workspace export pins a snapshot and checks access on separate short transactions, so a " +
       "revocation is seen at once. MAX_CONCURRENT_WORKSPACE_EXPORTS caps exports per process.",

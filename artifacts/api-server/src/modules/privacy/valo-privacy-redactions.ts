@@ -1,7 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { privacyKey, privacySigner } from "./valo-privacy-keys";
+import { privacyKey, privacySigner } from "../../lib/valo-privacy-keys";
 export const removedPrivateText = "[Private content removed by verified workspace erasure]";
 export const erasureProgressReason =
   "Verified synthetic workspace erasure; per-system exclusions remain recorded.";

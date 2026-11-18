@@ -36,7 +36,7 @@ import {
   valoSupportEvents,
   valoSupportEscalations,
 } from "@workspace/db";
-import { resolveWorkspace, createDocument, ValoProblem } from "./valo-store";
+import { resolveWorkspace, createDocument, ValoProblem } from "../../lib/valo-store";
 import {
   createWorkspaceExport,
   getWorkspaceExport,
@@ -51,12 +51,12 @@ import {
   pendingWorkspaceExports,
   WORKSPACE_EXPORT_QUEUE,
 } from "./valo-workspace-export-jobs";
-import { fixtureWorkspaceStorage } from "./test-support/workspace-export-storage";
-import { exportQueue } from "../modules/exports/valo-export-queue";
-import { makeWorkspaceExportRouter } from "./valo-workspace-export-http";
-import { syntheticDocument } from "./valo-test-fixtures";
-import { requestExport } from "../modules/exports/valo-exports";
-import { reconcileExportOrphans } from "../modules/exports/valo-export-recovery";
+import { fixtureWorkspaceStorage } from "../../lib/test-support/workspace-export-storage";
+import { exportQueue } from "../exports/valo-export-queue";
+import { makeWorkspaceExportRouter } from "../../lib/valo-workspace-export-http";
+import { syntheticDocument } from "../../lib/valo-test-fixtures";
+import { requestExport } from "../exports/valo-exports";
+import { reconcileExportOrphans } from "../exports/valo-export-recovery";
 import { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } from "./valo-privacy";
 import { processPrivacyErasure, closePrivacyErasureLocks } from "./valo-privacy-erasure";
 const reason = "Controlled synthetic canonical export lifecycle proof; no customer/provider data.";
@@ -172,7 +172,7 @@ test(
           if (!installed.rows[0].installed)
             await pool.query(
               await readFile(
-                new URL("../../../../lib/db/drizzle/pg-boss-development.sql", import.meta.url),
+                new URL("../../../../../lib/db/drizzle/pg-boss-development.sql", import.meta.url),
                 "utf8",
               ),
             );
@@ -501,7 +501,7 @@ test(
               j = await createWorkspaceExport(actor, randomUUID()),
               row = await raw(j.id);
             const child = fork(
-              fileURLToPath(new URL("../scripts/workspace-export-crash-child.ts", import.meta.url)),
+              fileURLToPath(new URL("../../scripts/workspace-export-crash-child.ts", import.meta.url)),
               [row.id, actor.workspaceId, row.queueId, stage, directory],
               { execArgv: ["--import", "tsx"], env: process.env, stdio: ["ignore", "ignore", "pipe", "ipc"] },
             );

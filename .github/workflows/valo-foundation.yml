@@ -168,7 +168,7 @@ jobs:
       - name: Prove the generated web client keeps every identifier inside its path segment
         run: pnpm --filter @workspace/api-server test:valo-client-paths
       - name: Prove scratch replay cursors preserve tenant and legacy scope
-        run: pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-erasure-replay-cursor.test.ts
+        run: pnpm --filter @workspace/api-server exec node --import tsx --test src/modules/privacy/valo-erasure-replay-cursor.test.ts
       - name: Check HTTP log privacy, internal alerts and recovery effects
         run: pnpm --filter @workspace/api-server test:valo-operations
       - name: Prove production storage isolation and worker readiness failures
@@ -352,13 +352,13 @@ jobs:
       - name: Prove canonical background exports, restart, holds and final byte release
         run: pnpm --filter @workspace/api-server test:valo-workspace-export-convergence-db
       - name: Prove cleanup retry fairness, privacy holds and outage recovery
-        run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-workspace-cleanup.integration.test.ts
+        run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/modules/privacy/valo-workspace-cleanup.integration.test.ts
       - name: Prove export retention, hold safety, regeneration and final-byte expiry
         run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --experimental-test-module-mocks --import tsx --test src/modules/exports/valo-export-retention.integration.test.ts
       - name: Prove read-only legacy retention inventory, privacy exclusions and proposal drift
         run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-export-retention-inventory.integration.test.ts
       - name: Prove dispute immutability and authenticated privacy-copy redaction coexist
-        run: VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-private-copy-inventory.integration.test.ts
+        run: VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/modules/privacy/valo-private-copy-inventory.integration.test.ts
       - name: Prove paged workspace attachment, final authorization and disconnect cleanup
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-db
       - name: Prove saved-template ownership, concurrency and withdrawal

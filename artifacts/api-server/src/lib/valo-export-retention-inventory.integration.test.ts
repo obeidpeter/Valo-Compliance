@@ -21,7 +21,7 @@ import {
 } from "@workspace/db";
 import { resolveWorkspace, createDocument } from "./valo-store";
 import { syntheticDocument } from "./valo-test-fixtures";
-import { createPrivacyCase } from "./valo-privacy";
+import { createPrivacyCase } from "../modules/privacy/valo-privacy";
 import { inspectExportRetention, proposeExportRetention } from "./valo-export-retention-inventory";
 
 test(

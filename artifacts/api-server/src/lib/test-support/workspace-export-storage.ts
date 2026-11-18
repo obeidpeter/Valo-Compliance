@@ -2,8 +2,8 @@
 import { copyFile, mkdir, rm } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { constants } from "node:fs";
-import type { WorkspaceExportStorage } from "../valo-workspace-export-storage";
-import { assertErasureObjectScope } from "../valo-erasure-seal";
+import type { WorkspaceExportStorage } from "../../modules/privacy/valo-workspace-export-storage";
+import { assertErasureObjectScope } from "../../modules/privacy/valo-erasure-seal";
 export function fixtureWorkspaceStorage(directory: string): WorkspaceExportStorage {
   const target = (key: string) => {
     assertErasureObjectScope(key.split("/")[2]!, key);
