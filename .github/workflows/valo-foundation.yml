@@ -371,6 +371,10 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-task-source-guard
       - name: Prove rich checker HTTP preview, consent, history and tenant boundaries
         run: pnpm --filter @workspace/api-server test:valo-checker-http-db
+      # The foundation job runs these tests without a database, so the one that starts the real API
+      # skips there; here it runs.
+      - name: Prove the real API refuses compressed and oversized JSON and keeps serving
+        run: pnpm --filter @workspace/api-server test:valo-request-budget
       - name: Prove another workspace's identifiers are refused like unknown ones on every private route (SEC-001)
         run: pnpm --filter @workspace/api-server test:valo-tenant-substitution
       - name: Prove row-level security keeps customer requests inside their own workspace
