@@ -5,7 +5,7 @@ if (
   !process.send
 )
   throw Error("OWNED_SYNTHETIC_PROCESS_HARNESS_REQUIRED");
-await processRefund(process.argv[2], {
+await processRefund(process.argv[2]!, {
   configured: () => true,
   async find() {
     process.send!({ stage: "refund_lookup_after_durable_claim" });

@@ -145,6 +145,7 @@ test(
         .select()
         .from(valoPrivacyTombstones)
         .where(eq(valoPrivacyTombstones.caseId, caseId));
+      assert.ok(before);
       let calls = 0;
       try {
         process.env.VALO_PRIVACY_KEYRING = JSON.stringify({
@@ -175,6 +176,7 @@ test(
           .select()
           .from(valoPrivacyTombstones)
           .where(eq(valoPrivacyTombstones.caseId, caseId));
+        assert.ok(after);
         assert.deepEqual(after.replayState, before.replayState);
       } finally {
         if (original === undefined) delete process.env.VALO_PRIVACY_KEYRING;
@@ -190,7 +192,7 @@ test(
           const f = await setup(),
             job = await exportJob(f),
             objects = new Map<string, Buffer>();
-          await executeExport(job.id, f.owner.workspaceId, job.queueId!, undefined, {
+          await executeExport(job!.id, f.owner.workspaceId, job!.queueId!, undefined, {
             write: async (key, bytes) => {
               objects.set(key, bytes);
               return { checksum: createHash("sha256").update(bytes).digest("hex"), size: bytes.length };
@@ -202,15 +204,17 @@ test(
           const [tracked] = await db
             .select()
             .from(valoExportObjects)
-            .where(eq(valoExportObjects.jobId, job.id));
+            .where(eq(valoExportObjects.jobId, job!.id));
+          assert.ok(tracked);
           const [originalDocument] = await db
             .select()
             .from(valoDocuments)
-            .where(eq(valoDocuments.id, job.documentId));
+            .where(eq(valoDocuments.id, job!.documentId));
+          assert.ok(originalDocument);
           const originalRevisions = await db
             .select()
             .from(valoDocumentRevisions)
-            .where(eq(valoDocumentRevisions.documentId, job.documentId));
+            .where(eq(valoDocumentRevisions.documentId, job!.documentId));
           const exportId = randomUUID(),
             attemptId = randomUUID(),
             tempKey = `valo/development/${f.owner.workspaceId}/${randomUUID()}.json`;
@@ -225,6 +229,7 @@ test(
               expiresAt: new Date(0),
             })
             .returning();
+          assert.ok(workspaceJob);
           const [attempt] = await db
             .insert(valoWorkspaceExportAttempts)
             .values({
@@ -235,6 +240,7 @@ test(
               status: "cleanup",
             })
             .returning();
+          assert.ok(attempt);
           const scratch = workspaceExportScratch(attemptId);
           ownedScratch.push(scratch);
           await mkdir(scratch, { recursive: true });
@@ -263,7 +269,7 @@ test(
               .update(valoExportObjects)
               .set({ state: "cleanup", nextCleanupAt: new Date(0) })
               .where(eq(valoExportObjects.objectKey, tracked.objectKey));
-            const orphan = await reconcileExportOrphans(job.id, remove);
+            const orphan = await reconcileExportOrphans(job!.id, remove);
             const temporary = await cleanupWorkspaceExports(storage, f.owner.workspaceId);
             assert.equal(orphan.privacyHeld, 1, label);
             assert.equal(temporary.privacyHeld, 1, label);
@@ -282,7 +288,7 @@ test(
           // retained signed privacy authority after a database restore.
           await db.insert(valoDocuments).values(originalDocument);
           await db.insert(valoDocumentRevisions).values(originalRevisions);
-          await db.insert(valoExportJobs).values(job);
+          await db.insert(valoExportJobs).values(job!);
           await db.insert(valoExportObjects).values(tracked);
           assert.equal(
             (await db.select().from(valoWorkspaceExports).where(eq(valoWorkspaceExports.id, workspaceJob.id)))
@@ -305,10 +311,12 @@ test(
           await mkdir(scratch, { recursive: true });
           await writeFile(join(scratch, "owned-synthetic.txt"), "OWNED_SYNTHETIC_SCRATCH");
           const [c] = await db.select().from(valoPrivacyCases).where(eq(valoPrivacyCases.id, f.id));
+          assert.ok(c);
           const [tomb] = await db
             .select()
             .from(valoPrivacyTombstones)
             .where(eq(valoPrivacyTombstones.caseId, f.id));
+          assert.ok(tomb);
           await blocked("completed-owned-scope");
           await db.update(valoPrivacyCases).set({ status: "held" }).where(eq(valoPrivacyCases.id, f.id));
           try {
@@ -386,6 +394,7 @@ test(
             .select()
             .from(valoProfileVersions)
             .where(eq(valoProfileVersions.workspaceId, f.owner.workspaceId));
+          assert.ok(profile);
           const keys = Array.from(
             { length: 13 },
             () => `valo/development/${f.owner.workspaceId}/${randomUUID()}.docx`,
@@ -515,6 +524,7 @@ test(
             .select()
             .from(valoProfileVersions)
             .where(eq(valoProfileVersions.workspaceId, f.owner.workspaceId));
+          assert.ok(profile);
           await db
             .insert(valoPrivacyErasureObjects)
             .values({ workspaceId: f.owner.workspaceId, caseId: f.id, objectKey: key });
@@ -524,6 +534,7 @@ test(
               .select()
               .from(valoPrivacyTombstones)
               .where(eq(valoPrivacyTombstones.caseId, f.id));
+            assert.ok(tomb);
             if ((tomb.replayState as { phase?: unknown } | null)?.phase === 10) break;
             await replayErasedApplication(f.id, async () => {});
           }
@@ -531,6 +542,7 @@ test(
             .select()
             .from(valoPrivacyTombstones)
             .where(eq(valoPrivacyTombstones.caseId, f.id));
+          assert.ok(tomb);
           assert.equal((tomb.replayState as { phase: unknown }).phase, 10); // v3 profile-deletion phase.
           await db.insert(valoProfileVersions).values(profile);
           await db
@@ -562,6 +574,7 @@ test(
               .select()
               .from(valoMemberships)
               .where(eq(valoMemberships.workspaceId, f.owner.workspaceId));
+            assert.ok(m);
             assert.equal(m.active, "yes");
             assert.equal(calls, 0);
           };
@@ -604,6 +617,7 @@ test(
             await emptyKey(false);
           }
           const [original] = await db.select().from(valoPrivacyCases).where(eq(valoPrivacyCases.id, f.id));
+          assert.ok(original);
           await db
             .update(valoPrivacyCases)
             .set({ message: "Corrupted synthetic restored case." })
@@ -798,7 +812,7 @@ test(
             ready = new Promise<string>((r) => {
               accepted = r;
             });
-          const running = executeExport(job.id, f.owner.workspaceId, job.queueId!, undefined, {
+          const running = executeExport(job!.id, f.owner.workspaceId, job!.queueId!, undefined, {
             write: async (key, bytes, onUploading) => {
               await onUploading?.();
               accepted(key);
@@ -826,7 +840,7 @@ test(
               objects.delete(object);
             });
             let orphanCalls = 0;
-            const incomplete = await reconcileExportOrphans(job.id, async () => {
+            const incomplete = await reconcileExportOrphans(job!.id, async () => {
               orphanCalls++;
             });
             assert.equal(orphanCalls, 0);
@@ -834,17 +848,18 @@ test(
             await db
               .update(valoExportObjects)
               .set({ nextCleanupAt: new Date(0) })
-              .where(eq(valoExportObjects.jobId, job.id));
+              .where(eq(valoExportObjects.jobId, job!.id));
             const [before] = await db
               .select()
               .from(valoPrivacyTombstones)
               .where(eq(valoPrivacyTombstones.caseId, f.id));
+            assert.ok(before);
             try {
               await db
                 .update(valoPrivacyTombstones)
                 .set({ erasureSeal: { ...before.erasureSeal, mac: "0".repeat(64) } })
                 .where(eq(valoPrivacyTombstones.caseId, f.id));
-              const corrupt = await reconcileExportOrphans(job.id, async () => {
+              const corrupt = await reconcileExportOrphans(job!.id, async () => {
                 orphanCalls++;
               });
               assert.equal(orphanCalls, 0);
@@ -858,14 +873,14 @@ test(
             await db
               .update(valoExportObjects)
               .set({ nextCleanupAt: new Date(0) })
-              .where(eq(valoExportObjects.jobId, job.id));
+              .where(eq(valoExportObjects.jobId, job!.id));
             const held = await simpleStaffPrivacyAction(fresh(f), f.id, {
               action: "hold",
               expectedVersion: f.version,
               reason,
             });
             f.version = held.request.version;
-            const heldCleanup = await reconcileExportOrphans(job.id, async () => {
+            const heldCleanup = await reconcileExportOrphans(job!.id, async () => {
               orphanCalls++;
             });
             assert.equal(orphanCalls, 0);
@@ -880,7 +895,7 @@ test(
               objects.delete(object);
             });
             assert.equal(
-              (await db.select().from(valoExportJobs).where(eq(valoExportJobs.id, job.id))).length,
+              (await db.select().from(valoExportJobs).where(eq(valoExportJobs.id, job!.id))).length,
               0,
             );
             assert.equal(
@@ -933,7 +948,7 @@ test(
             reached = new Promise<string>((r) => {
               accepted = r;
             });
-          const running = executeExport(job.id, f.owner.workspaceId, job.queueId, undefined, {
+          const running = executeExport(job!.id, f.owner.workspaceId, job!.queueId, undefined, {
             write: async (k, bytes, beforeWrite) => {
               key = k;
               await beforeWrite?.();
@@ -957,7 +972,7 @@ test(
             ]);
             await finish(f, deletePrivateFile);
             assert.equal(
-              (await db.select().from(valoExportJobs).where(eq(valoExportJobs.id, job.id))).length,
+              (await db.select().from(valoExportJobs).where(eq(valoExportJobs.id, job!.id))).length,
               0,
             );
             release();
@@ -987,6 +1002,7 @@ test(
             .select()
             .from(valoDocumentRevisions)
             .where(eq(valoDocumentRevisions.id, f.document.revisionId));
+          assert.ok(revision);
           // Isolate the subprocess fixture from the always-on development queued
           // dispatcher. This valid retry state still uses unmodified executeExport;
           // customer queue creation is exercised by the other export tests.
@@ -1066,6 +1082,7 @@ test(
               .select()
               .from(valoPrivacyTombstones)
               .where(eq(valoPrivacyTombstones.caseId, f.id));
+            assert.ok(scheduled);
             assert.ok(scheduled.nextReplayAt.getTime() <= Date.now() + 3_600_000);
             // Advance only this new fixture's persisted scheduler clock. An
             // unknown upload's hourly rescan is not an immediate completion signal.

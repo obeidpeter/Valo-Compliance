@@ -34,6 +34,7 @@ import { syncDispute } from "./valo-payment-disputes";
 import { refundBalance, TEST_REFUND_POLICY } from "./valo-refund-provider";
 import { setting } from "../../platform/settings";
 import { assertSafetyActive, withSafetyDispatch } from "../../lib/valo-source-state";
+import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const originalReceiptActions = ["payment.verified_success", "payment.synthetic_receipt_recovered"];
 function audit(tx: Tx, workspaceId: string, actorId: string, action: string, id: string) {
@@ -226,26 +227,28 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
     if (input.acceptedLicenceVersion !== price.licenceVersion)
       throw new ValoProblem(409, "The licence changed. Review the current licence before continuing.");
     const id = randomUUID();
-    const [order] = await tx
-      .insert(valoOrders)
-      .values({
-        id,
-        workspaceId: actor.workspaceId,
-        requestedBy: actor.identityId,
-        requestKey: input.requestKey,
-        reference: `valo-test-${id}`,
-        priceId: price.id,
-        amountKobo: price.amountKobo,
-        currency: price.currency,
-        line: {
-          title: price.title,
-          contentVersionId: price.contentVersionId,
-          licenceVersion: price.licenceVersion,
-          licenceText: price.licenceText,
-          taxTreatment: price.taxTreatment,
-        },
-      })
-      .returning();
+    const order = singleRow(
+      await tx
+        .insert(valoOrders)
+        .values({
+          id,
+          workspaceId: actor.workspaceId,
+          requestedBy: actor.identityId,
+          requestKey: input.requestKey,
+          reference: `valo-test-${id}`,
+          priceId: price.id,
+          amountKobo: price.amountKobo,
+          currency: price.currency,
+          line: {
+            title: price.title,
+            contentVersionId: price.contentVersionId,
+            licenceVersion: price.licenceVersion,
+            licenceText: price.licenceText,
+            taxTreatment: price.taxTreatment,
+          },
+        })
+        .returning(),
+    );
     await audit(tx, actor.workspaceId, actor.identityId, "order.created", id);
     return presentOrder(tx, order);
   });
@@ -340,11 +343,13 @@ export async function settleVerifiedOrder(id: string, data: VerifiedTransaction,
             : "pending";
     // Never silently downgrade a completed purchase on a transient/pending response.
     if (order.status === "verified_success" && status !== "reversed") return presentOrder(tx, order);
-    const [updated] = await tx
-      .update(valoOrders)
-      .set({ status, lastCheckedAt: new Date(), providerTransactionId: data.id })
-      .where(eq(valoOrders.id, id))
-      .returning();
+    const updated = singleRow(
+      await tx
+        .update(valoOrders)
+        .set({ status, lastCheckedAt: new Date(), providerTransactionId: data.id })
+        .where(eq(valoOrders.id, id))
+        .returning(),
+    );
     if (status === "verified_success") {
       await tx
         .insert(valoEntitlements)
@@ -655,7 +660,7 @@ export async function reconcilePayments() {
         .where(
           and(eq(valoPurchaseOutbox.orderId, order.id), eq(valoPurchaseOutbox.kind, "purchase_receipt")),
         );
-      const [current] = await db.select().from(valoOrders).where(eq(valoOrders.id, order.id));
+      const current = singleRow(await db.select().from(valoOrders).where(eq(valoOrders.id, order.id)));
       const gaps =
         current.status === "verified_success"
           ? [

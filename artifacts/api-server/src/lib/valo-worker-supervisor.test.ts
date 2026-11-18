@@ -181,8 +181,8 @@ test(
         },
       });
       assert.equal(code, 0);
-      assert.equal(h.children[0].exitCode, 0);
-      assert.equal(h.children[0].signalCode, null);
+      assert.equal(h.children[0]!.exitCode, 0);
+      assert.equal(h.children[0]!.signalCode, null);
     } finally {
       h.cleanup();
     }

@@ -13,6 +13,7 @@ import { financeHeldFixture } from "./valo-finance-test-fixture";
 import { type FinanceActor } from "./valo-refunds";
 import { makeDisputeTransport } from "./valo-dispute-provider";
 import { setting } from "../../platform/settings";
+import { singleRow } from "../../platform/rows";
 export async function disputeFixture() {
   if (
     setting("NODE_ENV") !== "development" ||
@@ -52,27 +53,29 @@ export async function disputeFixture() {
   });
   const transactionId = String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16)),
     providerId = String(Number.parseInt(randomUUID().replaceAll("-", "").slice(0, 12), 16));
-  const [order] = await db
-    .insert(valoOrders)
-    .values({
-      id,
-      workspaceId: owner.workspaceId,
-      requestedBy: owner.identityId,
-      requestKey: randomUUID(),
-      priceId,
-      reference: `valo-test-${id}`,
-      providerTransactionId: transactionId,
-      amountKobo: 10000,
-      status: "verified_success",
-      line: {
-        title: "Controlled dispute order",
-        contentVersionId: held.id,
-        licenceVersion: "test-only",
-        licenceText: "Synthetic fixture",
-        taxTreatment: "No tax assertion",
-      },
-    })
-    .returning();
+  const order = singleRow(
+    await db
+      .insert(valoOrders)
+      .values({
+        id,
+        workspaceId: owner.workspaceId,
+        requestedBy: owner.identityId,
+        requestKey: randomUUID(),
+        priceId,
+        reference: `valo-test-${id}`,
+        providerTransactionId: transactionId,
+        amountKobo: 10000,
+        status: "verified_success",
+        line: {
+          title: "Controlled dispute order",
+          contentVersionId: held.id,
+          licenceVersion: "test-only",
+          licenceText: "Synthetic fixture",
+          taxTreatment: "No tax assertion",
+        },
+      })
+      .returning(),
+  );
   await db
     .insert(valoEntitlements)
     .values({ id: randomUUID(), workspaceId: owner.workspaceId, orderId: id, contentVersionId: held.id });

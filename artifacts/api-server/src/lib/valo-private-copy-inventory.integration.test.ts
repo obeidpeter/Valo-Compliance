@@ -105,6 +105,7 @@ test(
         .select()
         .from(valoDocumentRevisions)
         .where(eq(valoDocumentRevisions.workspaceId, a.workspaceId));
+      assert.ok(revision);
       await db.insert(valoAIDrafts).values({
         id: randomUUID(),
         workspaceId: a.workspaceId,
@@ -372,10 +373,12 @@ test(
             assert.ok(!JSON.stringify(rows.rows).includes(marker), table + " retained private text");
           }
           const [o] = await db.select().from(valoOrders).where(eq(valoOrders.id, order));
+          assert.ok(o);
           assert.equal(o.amountKobo, 100);
           assert.equal(o.checkoutUrl, null);
           assert.equal(o.requestedBy, "privacy-erased");
           const [di] = await db.select().from(valoDisputeActions).where(eq(valoDisputeActions.id, action));
+          assert.ok(di);
           assert.deepEqual(di.payload, { amountKobo: 50 });
           assert.equal(di.result, null);
           assert.equal(di.sourceHash, "a".repeat(64));

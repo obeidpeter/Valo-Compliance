@@ -18,6 +18,7 @@ import {
 } from "./valo-released-content";
 import { recommendTemplates } from "./valo-catalogue";
 import { developmentPublicationOnly } from "../editorial/operational-policy";
+import { singleRow } from "../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 async function owner(tx: Tx, actor: WorkspaceActor) {
   // Workspace lock serializes capacity/idempotency; membership lock is taken
@@ -100,10 +101,12 @@ export async function saveTemplate(actor: WorkspaceActor, releaseId: string) {
         ),
       );
     if (old) return;
-    const [count] = await tx
-      .select({ total: sql<number>`count(*)::int` })
-      .from(valoSavedTemplates)
-      .where(eq(valoSavedTemplates.workspaceId, actor.workspaceId));
+    const count = singleRow(
+      await tx
+        .select({ total: sql<number>`count(*)::int` })
+        .from(valoSavedTemplates)
+        .where(eq(valoSavedTemplates.workspaceId, actor.workspaceId)),
+    );
     if (count.total >= 200)
       throw new ValoProblem(409, "Your workspace has 200 saved templates. Remove one before saving another.");
     await limitWorkspaceWrite(tx, actor, "document");

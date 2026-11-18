@@ -192,7 +192,7 @@ try {
     ["/api/webhooks/paystack", "POST"],
     ["/api/public/catalogue", "GET"],
     ["/", "GET"],
-  ]) {
+  ] as const) {
     const r = await fetch("http://127.0.0.1:8095" + path, { method });
     assert.equal(r.status, 503);
     assert.equal(((await r.json()) as { code: string }).code, "PRODUCTION_REHEARSAL_ONLY");

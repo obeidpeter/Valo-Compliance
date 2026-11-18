@@ -95,6 +95,7 @@ test(
         .select()
         .from(valoDocumentRevisions)
         .where(eq(valoDocumentRevisions.workspaceId, a.workspaceId));
+      assert.ok(revision);
       for (const state of ["retained", "pending", "cleanup"] as const) {
         const key = `valo/development/${a.workspaceId}/${randomUUID()}.pdf`,
           jobId = randomUUID(),
@@ -323,7 +324,7 @@ test(
                 .select()
                 .from(valoPrivacyErasureObjects)
                 .where(eq(valoPrivacyErasureObjects.caseId, id))
-            )[0].status,
+            )[0]!.status,
             "failed",
           );
           assert.equal(
@@ -355,6 +356,7 @@ test(
           assert.ok(inventory.every((x) => x.status === "deleted"));
           for (const object of privateObjects) {
             const [job] = await db.select().from(valoExportJobs).where(eq(valoExportJobs.id, object.jobId));
+            assert.ok(job);
             assert.equal(job.status, "failed");
             assert.notEqual(job.queueId, object.queueId);
             await executeExport(object.jobId, a.workspaceId, object.queueId);
@@ -440,6 +442,7 @@ test(
             .select()
             .from(valoAIDrafts)
             .where(eq(valoAIDrafts.workspaceId, a.workspaceId));
+          assert.ok(usage);
           assert.equal(usage.providerCalls, 1);
           assert.equal(usage.budgetReserved, true);
           assert.deepEqual(usage.preview, {});
@@ -567,6 +570,7 @@ test(
           .select()
           .from(valoPrivacyTombstones)
           .where(eq(valoPrivacyTombstones.caseId, id));
+        assert.ok(original);
         await assert.rejects(
           () =>
             db
@@ -600,6 +604,7 @@ test(
           .from(valoPrivacyEvents)
           .where(eq(valoPrivacyEvents.caseId, id))
           .limit(1);
+        assert.ok(receipt);
         try {
           await db
             .update(valoPrivacyEvents)

@@ -143,7 +143,7 @@ async function main() {
         worstCaseReservationNanoUsd: proposal.worstCaseReservationNanoUsd,
         worstCaseReservationUsd: "0.7411008",
         allocationCapNanoUsd: proposal.allocationCapNanoUsd,
-        attempts: decisionPacket.manifests[0].works,
+        attempts: decisionPacket.manifests[0]!.works,
         mechanicalChecks: current.checks.map((c) => ({ name: c.name, result: c.result })),
         evidenceBindings: current.serverEvidence,
         exportsPassed: current.exportReport.passed,

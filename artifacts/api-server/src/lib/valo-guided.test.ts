@@ -84,12 +84,12 @@ test("invalid dates, units and money remain raw draft answers and never become c
   const data = completeGuidedTestData("TPL-01");
   data.values.issueDate = "2026-02-30";
   data.values.dueDate = "2025-01-01";
-  data.tables.items[0].unit = "invented_unit";
-  data.tables.items[0].unitPriceKobo = "12.50";
+  data.tables.items![0]!.unit = "invented_unit";
+  data.tables.items![0]!.unitPriceKobo = "12.50";
   const content = compileGuidedContent(data),
     read = guidedDataFromBlocks(content.blocks)!;
   assert.equal(read.values.issueDate, "2026-02-30");
-  assert.equal(read.tables.items[0].unitPriceKobo, "12.50");
+  assert.equal(read.tables.items![0]!.unitPriceKobo, "12.50");
   const issues = guidedDataIssues(GUIDED_SPECS_V1["TPL-01"], read);
   assert(issues.issueDate);
   assert(issues["items:0:unit"]);
@@ -139,12 +139,12 @@ test("arithmetic, required-question deletion and unknown layouts fail server val
   const content = compileGuidedContent(completeGuidedTestData("TPL-01"));
   const tampered = structuredClone(content);
   const totals = tampered.blocks.find((b) => b.id.includes(":calc:financial-summary"))!;
-  totals.rows[totals.rows.length - 1][1] = "₦0.01";
+  totals.rows[totals.rows.length - 1]![1] = "₦0.01";
   assert(!documentInput.safeParse({ title: "Synthetic tamper", content: tampered }).success);
   const removed = { ...content, blocks: content.blocks.filter((b) => !b.id.endsWith(":field:issuerName")) };
   assert(!documentInput.safeParse({ title: "Synthetic removal", content: removed }).success);
   const unknown = structuredClone(content);
-  unknown.blocks[0].id = unknown.blocks[0].id.replace("TPL-01", "TPL-99");
+  unknown.blocks[0]!.id = unknown.blocks[0]!.id.replace("TPL-01", "TPL-99");
   assert(!documentInput.safeParse({ title: "Synthetic unsupported", content: unknown }).success);
 });
 
@@ -170,14 +170,14 @@ test("recalculation preserves manually positioned sections without retaining tam
     content = compileGuidedContent(data);
   const tail = { id: "own-tail", type: "paragraph" as const, text: "Synthetic after totals", rows: [] };
   content.blocks.push(tail);
-  data.tables.items[0].quantity = "3";
+  data.tables.items![0]!.quantity = "3";
   const next = compileGuidedContent(data, content);
   assert.equal(next.blocks.at(-1)?.id, tail.id);
   assert.equal(guidedContentConsistent(next), true);
   assert(
     next.blocks
       .find((b) => b.id.includes(":calc:financial-summary"))!
-      .rows.at(-1)![1]
+      .rows.at(-1)![1]!
       .includes("300.00"),
   );
 });

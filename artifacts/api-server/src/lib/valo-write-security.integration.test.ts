@@ -95,7 +95,7 @@ test("durable customer write ceilings preserve saved data", { skip: !enabled }, 
             .from(valoProfileVersions)
             .where(eq(valoProfileVersions.workspaceId, a.workspaceId));
           assert.equal(rows.length, 1);
-          assert.deepEqual(rows[0].profile, syntheticProfile);
+          assert.deepEqual(rows[0]!.profile, syntheticProfile);
         } else if (operation === "document") {
           await saveDocument(a, doc!.id, {
             ...syntheticDocument,

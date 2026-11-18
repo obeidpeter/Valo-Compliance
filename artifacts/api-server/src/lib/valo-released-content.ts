@@ -197,7 +197,7 @@ export function projectReleasedCatalogue(
 /** These are existing public enquiry/directory pages, not publications, providers
  * or regulatory evidence. They contain no source documents or private records. */
 export function directorySearchItems(): ReleasedLibraryItem[] {
-  const services = [
+  const services: [slug: string, title: string][] = [
     ["registration", "Business registration"],
     ["tax", "Tax"],
     ["accounting", "Accounting and bookkeeping"],

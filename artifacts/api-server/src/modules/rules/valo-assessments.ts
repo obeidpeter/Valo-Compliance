@@ -32,6 +32,7 @@ import { z } from "zod";
 import { ValoProblem, authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
 
 import { lockSourceState, sourceTargetAllowed } from "../../lib/valo-source-state";
+import { singleRow } from "../../platform/rows";
 export type WorkspaceTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /** Repository methods recheck membership, including worker and direct-service callers. */
 export async function workspaceTransaction<T>(
@@ -219,10 +220,9 @@ export async function createAssessment(actor: WorkspaceActor, raw: unknown) {
     .refine((i) => i.saveConsent, "Saving requires explicit consent")
     .parse(raw);
   return workspaceTransaction(actor, async (tx) => {
-    const [workspace] = await tx
-      .select()
-      .from(valoWorkspaces)
-      .where(eq(valoWorkspaces.id, actor.workspaceId));
+    const workspace = singleRow(
+      await tx.select().from(valoWorkspaces).where(eq(valoWorkspaces.id, actor.workspaceId)),
+    );
     if (
       input.expectedProfileRevision !== undefined &&
       input.expectedProfileRevision !== workspace.profileRevision
@@ -243,26 +243,29 @@ export async function createAssessment(actor: WorkspaceActor, raw: unknown) {
       );
     if (!input.facts && !profile)
       throw new ValoProblem(422, "Complete a business profile or provide questionnaire answers first");
-    const facts = suppliedFacts ?? factsFromProfile(profile.profile);
+    // Without supplied facts, the check above found the profile: each `profile!` below relies on it.
+    const facts = suppliedFacts ?? factsFromProfile(profile!.profile);
     const result = await runAssessment(facts, input.asOfDate, tx);
     const id = randomUUID();
-    const [row] = await tx
-      .insert(valoAssessments)
-      .values({
-        id,
-        workspaceId: actor.workspaceId,
-        profileVersionId: input.facts ? null : profile.id,
-        profileRevision: input.facts ? null : profile.revision,
-        facts,
-        factsHash: digest(facts),
-        result,
-        resultHash: result.resultHash,
-        rulesetVersion: result.rulesetVersion,
-        asOfDate: input.asOfDate,
-        consentVersion: "assessment-save-v1",
-        actorId: actor.identityId,
-      })
-      .returning();
+    const row = singleRow(
+      await tx
+        .insert(valoAssessments)
+        .values({
+          id,
+          workspaceId: actor.workspaceId,
+          profileVersionId: input.facts ? null : profile!.id,
+          profileRevision: input.facts ? null : profile!.revision,
+          facts,
+          factsHash: digest(facts),
+          result,
+          resultHash: result.resultHash,
+          rulesetVersion: result.rulesetVersion,
+          asOfDate: input.asOfDate,
+          consentVersion: "assessment-save-v1",
+          actorId: actor.identityId,
+        })
+        .returning(),
+    );
     await workspaceEvent(tx, actor, "assessment.saved", id);
     return serializeAssessment(row);
   });

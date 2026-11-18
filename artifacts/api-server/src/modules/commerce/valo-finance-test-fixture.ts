@@ -3,6 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db, valoContentVersions, valoPublicationPolicies } from "@workspace/db";
 import { setting } from "../../platform/settings";
+import { singleRow } from "../../platform/rows";
 export async function financeHeldFixture() {
   const [existing] = await db
     .select()
@@ -23,20 +24,22 @@ export async function financeHeldFixture() {
     policy,
     authority: { syntheticOnly: true, ownerApprovalClaimed: false },
   });
-  const [row] = await db
-    .insert(valoContentVersions)
-    .values({
-      id: randomUUID(),
-      templateId: `CONTROLLED-FINANCE-${token}`,
-      version: 1,
-      slug: `controlled-finance-${token}`,
-      policyId,
-      candidateHash: hash(bundle),
-      bundle,
-      attestations: { checks: [] },
-      reviewBy: new Date(0),
-    })
-    .returning();
+  const row = singleRow(
+    await db
+      .insert(valoContentVersions)
+      .values({
+        id: randomUUID(),
+        templateId: `CONTROLLED-FINANCE-${token}`,
+        version: 1,
+        slug: `controlled-finance-${token}`,
+        policyId,
+        candidateHash: hash(bundle),
+        bundle,
+        attestations: { checks: [] },
+        reviewBy: new Date(0),
+      })
+      .returning(),
+  );
   await db
     .update(valoContentVersions)
     .set({

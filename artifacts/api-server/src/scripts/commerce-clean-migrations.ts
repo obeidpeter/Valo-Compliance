@@ -112,7 +112,8 @@ try {
   report.productionCompatibilityProved = false;
 } catch (error) {
   report.failed = true;
-  report.failure = error instanceof Error ? error.message.split("\n")[0].slice(0, 200) : "LOCAL_PROOF_FAILED";
+  report.failure =
+    error instanceof Error ? error.message.split("\n")[0]!.slice(0, 200) : "LOCAL_PROOF_FAILED";
   process.exitCode = 1;
 } finally {
   if (started)

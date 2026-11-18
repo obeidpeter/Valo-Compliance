@@ -15,9 +15,9 @@ export function trustedProxyRanges(raw: string | undefined): string[] {
     if (
       !family ||
       parts.length > 2 ||
-      parts[0].includes("%") ||
+      parts[0]!.includes("%") ||
       (parts.length === 2 &&
-        (!/^\d+$/.test(parts[1]) || Number(parts[1]) < 1 || Number(parts[1]) > (family === 4 ? 32 : 128)))
+        (!/^\d+$/.test(parts[1]!) || Number(parts[1]) < 1 || Number(parts[1]) > (family === 4 ? 32 : 128)))
     )
       throw Error("INVALID_TRUSTED_PROXY_RANGES");
   }

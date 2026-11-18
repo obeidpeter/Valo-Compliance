@@ -30,8 +30,8 @@ async function main() {
       await tx.execute(sql`select count(*)::int as reservations,count(*) filter(where outcome='legacy_unmetered')::int as legacy,
       count(*) filter(where input_tokens is not null or output_tokens is not null)::int as measured from valo_publication_ai_attempts`);
     if (
-      Number(before.rows[0].reservations) !== Number(after.rows[0].reservations) ||
-      Number(after.rows[0].measured) !== 0
+      Number(before.rows[0]!.reservations) !== Number(after.rows[0]!.reservations) ||
+      Number(after.rows[0]!.measured) !== 0
     )
       throw Error("MIGRATION_CHANGED_HISTORIC_USAGE");
     return { before: before.rows[0], after: after.rows[0], columns: columns.rows };

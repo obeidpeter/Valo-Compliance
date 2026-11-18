@@ -50,6 +50,7 @@ async function fixtureSeed() {
   const store = await import("../lib/valo-store");
   const { syntheticDocument, syntheticProfile } = await import("../lib/valo-test-fixtures");
   const directory = process.argv[3];
+  assert.ok(directory);
   assert.ok(directory.startsWith("/tmp/valo-recovery-"));
   const fixtures: Fixture[] = [];
   try {
@@ -119,8 +120,10 @@ async function captureErasure() {
     await import("../lib/valo-privacy");
   const { processPrivacyErasure, closePrivacyErasureLocks } = await import("../lib/valo-privacy-erasure");
   const { captureRecoveryErasureReceipt } = await import("../lib/valo-recovery-erasure");
-  const [fixture] = JSON.parse(await readFile(process.argv[3], "utf8")) as Fixture[];
+  const [fixture] = JSON.parse(await readFile(process.argv[3]!, "utf8")) as Fixture[];
+  assert.ok(fixture);
   const objects = process.argv[4];
+  assert.ok(objects);
   assert.ok(objects.startsWith("/tmp/valo-recovery-"));
   const actor = workspaceActorFromRecord({
     workspaceId: fixture.workspaceId,
@@ -194,13 +197,14 @@ async function purgeRestored() {
   const { pool } = await import("@workspace/db");
   const { replayErasedApplication, closePrivacyErasureLocks } = await import("../lib/valo-privacy-erasure");
   const { assertErasureObjectScope } = await import("../lib/valo-erasure-seal");
-  const saved = JSON.parse(await readFile(process.argv[3], "utf8")) as {
+  const saved = JSON.parse(await readFile(process.argv[3]!, "utf8")) as {
     controls: RecoveryControls;
     signature: string;
     snapshotHash: string;
   };
   const directory = process.argv[4],
     behavior = process.argv[5];
+  assert.ok(directory);
   assert.ok(directory.startsWith("/tmp/valo-recovery-"));
   const client = await pool.connect();
   try {
@@ -261,6 +265,7 @@ async function fixtureReplay() {
   assertFixtureTargetEnvironment();
   const { pool } = await import("@workspace/db");
   const path = process.argv[3];
+  assert.ok(path);
   assert.ok(path.startsWith("/tmp/valo-recovery-"));
   const saved = JSON.parse(await readFile(path, "utf8")) as {
     controls: RecoveryControls;
@@ -285,7 +290,7 @@ async function verifyAccess() {
     store = await import("../lib/valo-store");
   const { privacyKeys, privacyKey } = await import("../lib/valo-privacy-keys");
   const { quotaSubjectHash } = await import("../lib/valo-quota-policy");
-  const fixtures = JSON.parse(await readFile(process.argv[3], "utf8")) as Fixture[];
+  const fixtures = JSON.parse(await readFile(process.argv[3]!, "utf8")) as Fixture[];
   try {
     const client = await pool.connect();
     try {
@@ -298,29 +303,29 @@ async function verifyAccess() {
     const tombstones = (
       await pool.query(
         "SELECT identity_hash,key_version FROM valo_privacy_tombstones WHERE workspace_id=$1",
-        [fixtures[0].workspaceId],
+        [fixtures[0]!.workspaceId],
       )
     ).rows;
     assert.equal(tombstones.length, 1);
     assert.equal(tombstones[0].key_version, ring.current);
-    assert.equal(tombstones[0].identity_hash, quotaSubjectHash(key, "user", fixtures[0].identityId));
+    assert.equal(tombstones[0].identity_hash, quotaSubjectHash(key, "user", fixtures[0]!.identityId));
     const before = (
       await pool.query(
         "SELECT (SELECT count(*) FROM valo_workspaces) AS workspaces,(SELECT count(*) FROM valo_memberships) AS memberships,(SELECT count(*) FROM valo_privacy_key_versions) AS key_versions",
       )
     ).rows;
     // A missing historical key (503) is not a successful authorization denial.
-    await assert.rejects(() => store.resolveWorkspace(fixtures[0].identityId), {
+    await assert.rejects(() => store.resolveWorkspace(fixtures[0]!.identityId), {
       status: 403,
       message: "Identity deletion is recorded. Access cannot be recreated.",
     });
-    await assert.rejects(() => store.resolveWorkspace(fixtures[1].identityId), {
+    await assert.rejects(() => store.resolveWorkspace(fixtures[1]!.identityId), {
       status: 403,
       message: "Workspace membership is suspended",
     });
-    const c = await store.resolveWorkspace(fixtures[2].identityId);
-    assert.equal((await store.getDocument(c, fixtures[2].documentId)).id, fixtures[2].documentId);
-    await assert.rejects(() => store.getDocument(c, fixtures[0].documentId), {
+    const c = await store.resolveWorkspace(fixtures[2]!.identityId);
+    assert.equal((await store.getDocument(c, fixtures[2]!.documentId)).id, fixtures[2]!.documentId);
+    await assert.rejects(() => store.getDocument(c, fixtures[0]!.documentId), {
       status: 404,
       message: "Document not found",
     });
@@ -500,7 +505,7 @@ async function drill() {
     ]);
     await source.query(
       "INSERT INTO valo_events(id,workspace_id,actor_id,action,entity_id) VALUES($1,$2,'synthetic-recovery','recovery.post_cutoff',$3)",
-      [randomUUID(), fixtures[2].workspaceId, randomUUID()],
+      [randomUUID(), fixtures[2]!.workspaceId, randomUUID()],
     );
     if (mode === "--prepare-separate-host") {
       const handoff = process.env.VALO_RECOVERY_HANDOFF_DIR ?? "";
@@ -567,7 +572,7 @@ async function drill() {
       const originalPrivacyEvent = (
         await client.query(
           "SELECT id,reason FROM valo_privacy_events WHERE workspace_id=$1 ORDER BY sequence LIMIT 1",
-          [fixtures[0].workspaceId],
+          [fixtures[0]!.workspaceId],
         )
       ).rows[0];
       assert.ok(
@@ -609,7 +614,7 @@ async function drill() {
       await writeFile(controlsPath, JSON.stringify({ controls, signature, snapshotHash }), { mode: 0o600 });
       const changed = structuredClone(controls);
       const changedReceipt = changed.erasureReceipts![0] as typeof receipt;
-      (changedReceipt.records.valo_privacy_tombstones[0]!.erasure_seal as { mac: string }).mac = "0".repeat(
+      (changedReceipt.records.valo_privacy_tombstones![0]!.erasure_seal as { mac: string }).mac = "0".repeat(
         64,
       );
       const changedPath = join(directory, "changed-receipt.json");
@@ -685,16 +690,20 @@ async function drill() {
         assert.equal(hash(bytes), row.checksum);
       }
       check.tenantObjectChecksums = rows.length;
-      const object = join(restoredObjects, fixtures[2].workspaceId, `${fixtures[2].documentId}.docx`),
+      const object = join(restoredObjects, fixtures[2]!.workspaceId, `${fixtures[2]!.documentId}.docx`),
         bytes = await readFile(object);
       await writeFile(object, "SYNTHETIC_TAMPER");
-      assert.notEqual(hash(await readFile(object)), fixtures[2].checksum);
+      assert.notEqual(hash(await readFile(object)), fixtures[2]!.checksum);
       await writeFile(object, bytes);
       check.tamperedObjectDetected = true;
-      const deletedObject = join(restoredObjects, fixtures[0].workspaceId, `${fixtures[0].documentId}.docx`);
+      const deletedObject = join(
+        restoredObjects,
+        fixtures[0]!.workspaceId,
+        `${fixtures[0]!.documentId}.docx`,
+      );
       assert.equal(
         hash(await readFile(deletedObject)),
-        fixtures[0].checksum,
+        fixtures[0]!.checksum,
         "old object really returned with the snapshot",
       );
       // Observe the actual Node child signal, not pnpm/tsx CLI wrapper exit
@@ -718,7 +727,7 @@ async function drill() {
       check.controlledObjectFailure = failure;
       assert.equal(failure.failed, 1);
       assert.equal(failure.remaining, true);
-      assert.equal(hash(await readFile(deletedObject)), fixtures[0].checksum);
+      assert.equal(hash(await readFile(deletedObject)), fixtures[0]!.checksum);
       report.phase = "replay_kill_after_object";
       await assert.rejects(
         () => purge("crash-after-object"),
@@ -739,7 +748,7 @@ async function drill() {
         Number(
           (
             await client.query("SELECT count(*) FROM valo_documents WHERE workspace_id=$1", [
-              fixtures[0].workspaceId,
+              fixtures[0]!.workspaceId,
             ])
           ).rows[0].count,
         ),
@@ -761,7 +770,7 @@ async function drill() {
           Number(
             (
               await client.query(`SELECT count(*) FROM ${table} WHERE workspace_id=$1`, [
-                fixtures[0].workspaceId,
+                fixtures[0]!.workspaceId,
               ])
             ).rows[0].count,
           ),
@@ -771,7 +780,7 @@ async function drill() {
         Number(
           (
             await client.query("SELECT count(*) FROM valo_jobs.job WHERE data->>'workspaceId'=$1", [
-              fixtures[0].workspaceId,
+              fixtures[0]!.workspaceId,
             ])
           ).rows[0].count,
         ),
@@ -797,7 +806,7 @@ async function drill() {
               await client.query(
                 `SELECT count(*) FROM ${table} r WHERE workspace_id=$1
           AND to_jsonb(r)::text LIKE '%SYNTHETIC-OLDER-PRIVACY-COPY%'`,
-                [fixtures[0].workspaceId],
+                [fixtures[0]!.workspaceId],
               )
             ).rows[0].count,
           ),

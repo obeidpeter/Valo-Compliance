@@ -203,7 +203,7 @@ test(
             tasks.saveReminderPreferences(a, { enabled: true, offsets: [1], expectedRevision: 1 }),
             { status: 409 },
           );
-          await assert.rejects(processReminder(b.workspaceId, before[0].id), { status: 404 });
+          await assert.rejects(processReminder(b.workspaceId, before[0]!.id), { status: 404 });
         },
       );
       await t.test("dispatch checks opt-out before any adapter invocation", async () => {
@@ -212,7 +212,7 @@ test(
         let calls = 0;
         const result = await processReminder(
           a.workspaceId,
-          rows[0].id,
+          rows[0]!.id,
           {
             send: async () => {
               calls++;

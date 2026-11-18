@@ -146,14 +146,14 @@ test(
             resolution: "merchant-accepted",
             amountKobo: 1000,
           });
-          const path = `/admin/dispute-actions/${prepared.actions[0].id}/execute`,
-            body = { expectedVersion: prepared.actions[0].version, acknowledgement: true };
+          const path = `/admin/dispute-actions/${prepared.actions[0]!.id}/execute`,
+            body = { expectedVersion: prepared.actions[0]!.version, acknowledgement: true };
           assert.equal(
             (await request(path, f.staff.identityId, body, "https://untrusted.invalid")).status,
             403,
           );
           assert.equal((await request(path, f.staff.identityId, body)).status, 503);
-          assert.equal((await financeDispute(f.staff, d.id)).actions[0].status, "prepared");
+          assert.equal((await financeDispute(f.staff, d.id)).actions[0]!.status, "prepared");
           assert.equal(f.counters().puts, 0);
           await db
             .update(valoStaffAssignments)

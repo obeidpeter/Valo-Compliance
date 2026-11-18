@@ -97,7 +97,7 @@ try {
   assert.equal(response?.status(), 200);
   await expect(page.getByRole("link", { name: "Library", exact: true }).first()).toBeVisible();
   await expect(page.getByText("Loading Valo", { exact: true })).toHaveCount(0);
-  const liveNonce = response!.headers()["content-security-policy"].match(/'nonce-([^']+)'/)![1];
+  const liveNonce = response!.headers()["content-security-policy"]!.match(/'nonce-([^']+)'/)![1];
   const scripts = await page
     .locator("script")
     .evaluateAll((elements) =>
@@ -117,7 +117,7 @@ try {
   // does not model an attacker inserting untrusted HTML into a response.
   await page.route(origin + "/?csp-canary=1", async (route) => {
     const upstream = await route.fetch(),
-      nonce = upstream.headers()["content-security-policy"].match(/'nonce-([^']+)'/)![1];
+      nonce = upstream.headers()["content-security-policy"]!.match(/'nonce-([^']+)'/)![1];
     const canaries =
       '<script>document.documentElement.setAttribute("data-csp-denied","ran")</script>' +
       `<script nonce="${nonce}">document.documentElement.setAttribute("data-csp-allowed","ran")</script>`;

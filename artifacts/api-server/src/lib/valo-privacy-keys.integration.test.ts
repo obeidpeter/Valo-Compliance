@@ -151,6 +151,8 @@ test(
             for (let n = 0; n < before.rows.length; n++) {
               const old = before.rows[n],
                 now = afterRows.rows[n];
+              assert.ok(now);
+              assert.ok(old);
               assert.equal(now.order_id, old.order_id);
               assert.equal(now.id, old.id);
               assert.equal(

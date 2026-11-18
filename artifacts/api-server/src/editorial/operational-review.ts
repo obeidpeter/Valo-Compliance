@@ -20,6 +20,7 @@ import {
 } from "./operational-review-contract";
 export type { OperationalServerEvidence } from "./operational-review-contract";
 import { meterReviewRequest, providerUsage } from "./review-meter";
+import { singleRow } from "../platform/rows";
 export function operationalReviewRequests(
   candidate: PublicationBundle["candidate"],
   rights: unknown,
@@ -70,7 +71,7 @@ export function operationalReviewRequests(
       request,
       reviewAsOf,
       promptVersion: `operational-${role}-${candidate.id === "TPL-07" ? "4" : "5"}`,
-      promptHash: digest(request.messages[0].content),
+      promptHash: digest(request.messages[0]!.content),
       meter: meterReviewRequest(request),
     };
   });
@@ -78,16 +79,18 @@ export function operationalReviewRequests(
 /** A private, hash-bound dispatch manifest, not a provider call or pass verdict. */
 export async function saveOperationalReviewPlan(...args: Parameters<typeof operationalReviewRequests>) {
   const entries = operationalReviewRequests(...args);
+  // One entry per review role, all prepared at the same moment.
+  const preparedAt = entries[0]!.reviewAsOf;
   const reviewBy = Date.parse(args[0].reviewBy ?? "");
-  if (!Number.isFinite(reviewBy) || reviewBy <= Date.parse(entries[0].reviewAsOf))
+  if (!Number.isFinite(reviewBy) || reviewBy <= Date.parse(preparedAt))
     throw Error("REVIEW_PLAN_FRESHNESS_INVALID");
   const manifest = {
     schemaVersion: 1,
     lane: "operational_publication_review",
     candidateHash: args[0].hash,
     serverEvidence: args[4],
-    preparedAt: entries[0].reviewAsOf,
-    expiresAt: new Date(Math.min(reviewBy, Date.parse(entries[0].reviewAsOf) + 3600000)).toISOString(),
+    preparedAt,
+    expiresAt: new Date(Math.min(reviewBy, Date.parse(preparedAt) + 3600000)).toISOString(),
     attemptsRequired: 2,
     dailyLimit: null,
     finiteAllocationRequired: true,
@@ -184,7 +187,7 @@ export async function executeOperationalReviewPlan(
       const rows = await tx.execute(sql`insert into valo_publication_ai_attempts
         (candidate_hash,role,request_hash,request_meter,outcome)
         values(${candidate.hash},${entry.role},${entry.meter.requestHash},${JSON.stringify(entry.meter)}::jsonb,'reserved') returning id`);
-      reserved.set(entry.role, String(rows.rows[0].id));
+      reserved.set(entry.role, String(singleRow(rows.rows).id));
     }
     return reserved;
   });

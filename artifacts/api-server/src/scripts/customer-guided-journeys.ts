@@ -51,13 +51,13 @@ export async function runGuidedCustomerJourneys(
         "All shown answers are complete",
       );
       for (const f of spec.fields)
-        if (guidedVisible(f, input.values)) await fill(f, "g-" + f.id, input.values[f.id]);
+        if (guidedVisible(f, input.values)) await fill(f, "g-" + f.id, input.values[f.id]!);
       for (const t of spec.tables)
         if (guidedVisible(t, input.values))
-          for (const [rowIndex, row] of input.tables[t.id].entries())
+          for (const [rowIndex, row] of input.tables[t.id]!.entries())
             for (const c of t.columns)
               if (guidedVisible(c, { ...input.values, ...row }))
-                await fill(c, `gt-${t.id}-${rowIndex}-${c.id}`, row[c.id]);
+                await fill(c, `gt-${t.id}-${rowIndex}-${c.id}`, row[c.id]!);
       await expect(page.getByTestId("status-guided-issues")).toHaveText("All shown answers are complete");
       await save(id);
       if (["TPL-13", "TPL-14", "TPL-15", "TPL-16", "TPL-17"].includes(templateId)) {
@@ -67,7 +67,7 @@ export async function runGuidedCustomerJourneys(
         );
         const incomplete = await save(id);
         expect(guidedDataFromBlocks(incomplete.content.blocks)!.values.recipientName).toBe("");
-        await page.locator("#g-recipientName").fill(input.values.recipientName);
+        await page.locator("#g-recipientName").fill(input.values.recipientName!);
       }
       if (templateId === "TPL-01") {
         await page.locator("#g-dueDate").fill("2026-01-01");
@@ -78,9 +78,9 @@ export async function runGuidedCustomerJourneys(
         const invalid = await save(id),
           raw = guidedDataFromBlocks(invalid.content.blocks)!;
         expect(raw.values.dueDate).toBe("2026-01-01");
-        expect(raw.tables.items[0].unitPriceKobo).toBe("12.50");
-        await page.locator("#g-dueDate").fill(input.values.dueDate);
-        await page.locator("#gt-items-0-unitPriceKobo").fill(input.tables.items[0].unitPriceKobo);
+        expect(raw.tables.items![0]!.unitPriceKobo).toBe("12.50");
+        await page.locator("#g-dueDate").fill(input.values.dueDate!);
+        await page.locator("#gt-items-0-unitPriceKobo").fill(input.tables.items![0]!.unitPriceKobo!);
       }
       const saved = await save(id),
         answers = guidedDataFromBlocks(saved.content.blocks)!;
@@ -89,12 +89,12 @@ export async function runGuidedCustomerJourneys(
         if (guidedVisible(f, input.values)) expect(answers.values[f.id]).toBe(input.values[f.id]);
       for (const t of spec.tables)
         if (guidedVisible(t, input.values))
-          for (const [i, row] of input.tables[t.id].entries())
+          for (const [i, row] of input.tables[t.id]!.entries())
             for (const c of t.columns)
               if (guidedVisible(c, { ...input.values, ...row }))
-                expect(answers.tables[t.id][i][c.id]).toBe(row[c.id]);
+                expect(answers.tables[t.id]![i]![c.id]).toBe(row[c.id]);
       await page.reload();
-      await expect(page.locator("#g-issuerName")).toHaveValue(input.values.issuerName);
+      await expect(page.locator("#g-issuerName")).toHaveValue(input.values.issuerName!);
       await expect(page.getByTestId("status-guided-issues")).toHaveText("All shown answers are complete");
       await page.setViewportSize({ width: 360, height: 800 });
       expect(await page.evaluate("document.documentElement.scrollWidth<=innerWidth")).toBe(true);

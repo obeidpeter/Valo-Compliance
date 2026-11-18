@@ -18,6 +18,7 @@ const root = process.env.VALO_RECOVERY_WINDOWS_ROOT ?? "";
 assert.equal(root, resolve(root));
 const bundle = join(root, "bundle"),
   mode = process.argv[2];
+assert.ok(mode);
 const keys = JSON.parse(await readFile(join(bundle, "synthetic-keys.json"), "utf8"));
 assert.equal(keys.syntheticOnly, true);
 // These keys were freshly generated for these disposable fixtures, never copied from the app.
@@ -48,13 +49,13 @@ try {
     const receipt = changed.erasureReceipts![0] as {
       records: { valo_privacy_tombstones: { erasure_seal: { mac: string } }[] };
     };
-    receipt.records.valo_privacy_tombstones[0].erasure_seal.mac = "0".repeat(64);
+    receipt.records.valo_privacy_tombstones[0]!.erasure_seal.mac = "0".repeat(64);
     await assert.rejects(
       replayRecoveryControls(client, changed, signRecoveryControls(changed, key), key, saved.snapshotHash),
       /ERASURE_SEAL_INVALID/,
     );
     const swapped = structuredClone(saved.controls);
-    swapped.entries[0].workspaceId = fixtures[2].workspaceId;
+    swapped.entries[0]!.workspaceId = fixtures[2].workspaceId;
     await assert.rejects(
       replayRecoveryControls(client, swapped, signRecoveryControls(swapped, key), key, saved.snapshotHash),
     );

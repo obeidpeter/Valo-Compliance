@@ -124,7 +124,7 @@ test(
             .from(valoPaymentEvents)
             .where(eq(valoPaymentEvents.eventKey, eventKey));
           assert.equal(rows.length, 1);
-          assert.equal(rows[0].status, "pending");
+          assert.equal(rows[0]!.status, "pending");
           assert.equal(JSON.stringify(rows[0]).includes("no-card-data"), false);
         },
       );

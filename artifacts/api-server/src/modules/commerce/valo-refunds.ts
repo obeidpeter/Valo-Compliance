@@ -25,6 +25,7 @@ import {
   type RefundProvider,
 } from "./valo-refund-provider";
 import { setting } from "../../platform/settings";
+import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Refund = typeof valoRefundRequests.$inferSelect;
 export type FinanceActor = { identityId: string; recentMfa: boolean; verifiedAt: number };
@@ -188,19 +189,21 @@ export async function requestOrderRefund(actor: WorkspaceActor, id: string, raw:
         "The amount exceeds the unreserved purchase balance. Pending and unknown refunds remain reserved.",
       );
     const refundId = randomUUID();
-    const [row] = await tx
-      .insert(valoRefundRequests)
-      .values({
-        id: refundId,
-        workspaceId: actor.workspaceId,
-        orderId: id,
-        reason: input.reason,
-        amountKobo: input.amountKobo,
-        requestKey: input.requestKey,
-        reference: `vr-test-${refundId}`,
-        policyVersion: TEST_REFUND_POLICY_VERSION,
-      })
-      .returning();
+    const row = singleRow(
+      await tx
+        .insert(valoRefundRequests)
+        .values({
+          id: refundId,
+          workspaceId: actor.workspaceId,
+          orderId: id,
+          reason: input.reason,
+          amountKobo: input.amountKobo,
+          requestKey: input.requestKey,
+          reference: `vr-test-${refundId}`,
+          policyVersion: TEST_REFUND_POLICY_VERSION,
+        })
+        .returning(),
+    );
     await transition(
       tx,
       row,
@@ -259,17 +262,19 @@ export async function decideRefund(actor: FinanceActor, id: string, raw: unknown
         throw new ValoProblem(409, "Cumulative refunds would exceed the payment.");
     }
     const status = input.decision === "approve" ? "approved" : "rejected";
-    const [result] = await tx
-      .update(valoRefundRequests)
-      .set({
-        status,
-        decisionReason: input.reason,
-        authorisedBy: actor.identityId,
-        authorisedAt: new Date(),
-        version: row.version + 1,
-      })
-      .where(eq(valoRefundRequests.id, id))
-      .returning();
+    const result = singleRow(
+      await tx
+        .update(valoRefundRequests)
+        .set({
+          status,
+          decisionReason: input.reason,
+          authorisedBy: actor.identityId,
+          authorisedAt: new Date(),
+          version: row.version + 1,
+        })
+        .where(eq(valoRefundRequests.id, id))
+        .returning(),
+    );
     await transition(tx, result, actor.identityId, status, input.reason);
     return refundView(result);
   });
@@ -414,21 +419,23 @@ export async function processRefund(
         return;
       }
       const status = verified.status.replace("-", "_");
-      const [result] = await tx
-        .update(valoRefundRequests)
-        .set({
-          status,
-          providerId: verified.id,
-          checkedAt: new Date(),
-          completedAt: status === "processed" ? new Date() : row.completedAt,
-          failure: null,
-          leaseToken: null,
-          leaseUntil: null,
-          nextAttemptAt: new Date(Date.now() + 60000),
-          version: row.version + 1,
-        })
-        .where(eq(valoRefundRequests.id, id))
-        .returning();
+      const result = singleRow(
+        await tx
+          .update(valoRefundRequests)
+          .set({
+            status,
+            providerId: verified.id,
+            checkedAt: new Date(),
+            completedAt: status === "processed" ? new Date() : row.completedAt,
+            failure: null,
+            leaseToken: null,
+            leaseUntil: null,
+            nextAttemptAt: new Date(Date.now() + 60000),
+            version: row.version + 1,
+          })
+          .where(eq(valoRefundRequests.id, id))
+          .returning(),
+      );
       await transition(
         tx,
         result,

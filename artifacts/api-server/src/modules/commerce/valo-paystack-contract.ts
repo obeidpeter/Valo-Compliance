@@ -35,7 +35,7 @@ export function authenticPaystackBody(
     }
     if (name === "v1") {
       const match = /^whk_[A-Za-z0-9]+:([a-f0-9]{128})$/.exec(value);
-      if (match) signatures.push(match[1]);
+      if (match) signatures.push(match[1]!);
     }
   }
   if (!timestamp || Math.abs(now - Number(timestamp)) > 300 || !signatures.length) return false;

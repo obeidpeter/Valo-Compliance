@@ -4,6 +4,7 @@ import { db, valoOrders, valoEntitlements, valoPaymentDisputes, valoEvents } fro
 import { paystackRequest, sandboxPaymentsConfigured } from "./valo-paystack-contract";
 import { ValoProblem } from "../../lib/valo-problem";
 import { verifiedDispute } from "./valo-dispute-schema";
+import { singleRow } from "../../platform/rows";
 export { verifiedDispute } from "./valo-dispute-schema";
 export function disputeSnapshotHash(data: ReturnType<typeof verifiedDispute.parse>) {
   return createHash("sha256")
@@ -76,11 +77,19 @@ export async function storeVerifiedDispute(providerId: string, raw: unknown) {
       snapshotHash,
       category: data.category ?? null,
     };
-    const [row] = await tx
-      .insert(valoPaymentDisputes)
-      .values({ id: randomUUID(), workspaceId: order.workspaceId, orderId: order.id, providerId, ...values })
-      .onConflictDoUpdate({ target: valoPaymentDisputes.providerId, set: values })
-      .returning();
+    const row = singleRow(
+      await tx
+        .insert(valoPaymentDisputes)
+        .values({
+          id: randomUUID(),
+          workspaceId: order.workspaceId,
+          orderId: order.id,
+          providerId,
+          ...values,
+        })
+        .onConflictDoUpdate({ target: valoPaymentDisputes.providerId, set: values })
+        .returning(),
+    );
     // Terminal/archived is not a documented final bank outcome. Do not newly
     // suspend from that status alone, or restore access held for another reason.
     if (!["resolved", "archived"].includes(data.status))

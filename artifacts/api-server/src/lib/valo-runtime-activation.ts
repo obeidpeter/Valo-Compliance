@@ -67,19 +67,19 @@ export async function verifyRehearsalDatabase(query: Query, env: Environment) {
   );
   if (
     marker.rows.length !== 1 ||
-    marker.rows[0].instance_id !== config.databaseId ||
-    marker.rows[0].environment !== "production-rehearsal" ||
-    marker.rows[0].storage_fingerprint !== config.storageFingerprint
+    marker.rows[0]?.instance_id !== config.databaseId ||
+    marker.rows[0]?.environment !== "production-rehearsal" ||
+    marker.rows[0]?.storage_fingerprint !== config.storageFingerprint
   )
     fail("PRODUCTION_DATABASE_IDENTITY_MISMATCH");
   const unsafe =
     await query(`SELECT EXISTS(SELECT 1 FROM valo_workspaces WHERE owner_identity_id NOT LIKE 'synthetic-production-%')
     OR EXISTS(SELECT 1 FROM valo_orders) OR EXISTS(SELECT 1 FROM valo_privacy_tombstones)
     OR EXISTS(SELECT 1 FROM valo_privacy_cases WHERE kind='deletion') AS unsafe`);
-  if (unsafe.rows.length !== 1 || unsafe.rows[0].unsafe !== false)
+  if (unsafe.rows.length !== 1 || unsafe.rows[0]?.unsafe !== false)
     fail("PRODUCTION_REHEARSAL_REQUIRES_FIXTURE_ONLY_DATABASE");
   const version = await query("SELECT version FROM valo_jobs.version");
-  if (version.rows.length !== 1 || version.rows[0].version !== 46) fail("PRODUCTION_QUEUE_VERSION_MISMATCH");
+  if (version.rows.length !== 1 || version.rows[0]?.version !== 46) fail("PRODUCTION_QUEUE_VERSION_MISMATCH");
   const queues = await query(
     "SELECT name,policy,retry_limit,expire_seconds FROM valo_jobs.queue WHERE name IN ('valo-manual-export-v1','valo-workspace-data-v1')",
   );

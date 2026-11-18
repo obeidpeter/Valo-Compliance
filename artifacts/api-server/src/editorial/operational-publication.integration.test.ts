@@ -41,6 +41,7 @@ test(
         .select()
         .from(valoPublicationPolicies)
         .where(eq(valoPublicationPolicies.id, row.policyId));
+      assert.ok(p);
       const policy = p.policy as { developmentOnly: boolean; authorityRefs: unknown[] };
       assert.equal(policy.developmentOnly, true);
       assert.equal(policy.authorityRefs.length, 2);
