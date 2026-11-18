@@ -28,7 +28,7 @@ No recorded implementation evidence: WEB-003, WEB-004, DOC-008, DOC-009, EDT-010
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 303 citations of 178 tests for 120 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 313 citations of 187 tests for 123 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -55,7 +55,7 @@ A citation is partial evidence: it never accepts a requirement.
 | CMP-001 | 3 | foundation |
 | CMP-002 | 3 | foundation, postgres |
 | CMP-003 | 3 | foundation |
-| CMP-004 | 3 | foundation |
+| CMP-004 | 4 | foundation |
 | CMP-005 | 2 | foundation |
 | CMP-006 | 2 | foundation, postgres |
 | CMP-007 | 3 | foundation, postgres |
@@ -99,6 +99,7 @@ A citation is partial evidence: it never accepts a requirement.
 | NFR-004 | 5 | foundation, postgres |
 | NFR-005 | 3 | foundation |
 | NFR-006 | 1 | foundation |
+| NFR-007 | 1 | foundation |
 | NFR-008 | 3 | foundation |
 | NFR-009 | 4 | postgres |
 | NFR-010 | 3 | foundation |
@@ -117,7 +118,7 @@ A citation is partial evidence: it never accepts a requirement.
 | PAY-006 | 1 | postgres |
 | PAY-007 | 1 | postgres |
 | PAY-008 | 3 | foundation, postgres |
-| PAY-009 | 2 | foundation |
+| PAY-009 | 3 | foundation |
 | PAY-010 | 3 | foundation |
 | PRO-001 | 3 | foundation |
 | PRO-002 | 2 | foundation, postgres |
@@ -128,9 +129,9 @@ A citation is partial evidence: it never accepts a requirement.
 | RUL-001 | 3 | foundation |
 | RUL-002 | 3 | foundation |
 | RUL-003 | 3 | foundation |
-| RUL-004 | 2 | foundation |
+| RUL-004 | 3 | foundation |
 | RUL-005 | 3 | foundation |
-| RUL-006 | 3 | foundation, postgres |
+| RUL-006 | 5 | foundation, postgres |
 | RUL-007 | 3 | foundation, postgres |
 | RUL-008 | 3 | foundation |
 | RUL-009 | 2 | postgres |
@@ -146,10 +147,12 @@ A citation is partial evidence: it never accepts a requirement.
 | SRV-002 | 4 | foundation, postgres |
 | SRV-003 | 1 | foundation |
 | SRV-004 | 1 | foundation |
+| WEB-001 | 2 | foundation |
 | WEB-002 | 1 | foundation |
 | WEB-003 | 3 | foundation, postgres |
 | WEB-004 | 3 | foundation |
 | WRK-001 | 3 | postgres |
+| WRK-002 | 2 | foundation |
 | WRK-003 | 2 | postgres |
 | WRK-004 | 2 | postgres |
 | WRK-005 | 1 | foundation |
@@ -157,7 +160,7 @@ A citation is partial evidence: it never accepts a requirement.
 
 Neither recorded implementation evidence nor a cited test: none.
 
-No test is cited yet for 7 of the 126 R1 requirements: WEB-001, DOC-005, WRK-002, EDP-010, OPS-005, OPS-007, NFR-007.
+No test is cited yet for 4 of the 126 R1 requirements: DOC-005, EDP-010, OPS-005, OPS-007.
 
 ## Release gates
 
