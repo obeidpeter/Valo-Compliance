@@ -27,7 +27,7 @@ import {
   assertStaffAssignmentCurrent,
   requireFreshStaffSession,
   type StaffActor,
-} from "../../lib/valo-staff-authority";
+} from "../staff";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Case = typeof valoSupportCases.$inferSelect;
 export type SupportStaffActor = StaffActor;

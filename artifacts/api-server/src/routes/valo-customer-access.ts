@@ -15,7 +15,6 @@ import {
   saveAccessSupport,
   customerAccount,
   requestPrivacy,
-  staffOperations,
   listPrivacyCases,
   customerPrivacyDetail,
   confirmPrivacyCase,
@@ -30,6 +29,7 @@ import {
   requesterPrivacyDetail,
   requesterPrivacyReply,
 } from "../modules/privacy";
+import { staffOperations } from "../modules/staff";
 import { makeWorkspaceDataDownloadHandler } from "../lib/valo-data-download-http";
 import { makeWorkspaceExportRouter } from "../lib/valo-workspace-export-http";
 import {

@@ -5,8 +5,8 @@ import {
   ChangeStaffRoleResponse,
 } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
-import { staffRoleService, type makeStaffRoleService } from "../lib/valo-staff-roles";
-import type { StaffActor } from "../lib/valo-staff-authority";
+import { staffRoleService, type makeStaffRoleService } from "../modules/staff";
+import type { StaffActor } from "../modules/staff";
 export function createStaffRoleRouter(
   authenticate: (req: Request) => Promise<StaffActor>,
   service: ReturnType<typeof makeStaffRoleService> = staffRoleService,

@@ -5,13 +5,13 @@ import express from "express";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, pool, valoStaffAssignments, valoStaffRoleChanges } from "@workspace/db";
 import { makeStaffRoleService, type StaffTarget } from "./valo-staff-roles";
-import { requireFinance, assertFinanceActor } from "../modules/commerce/valo-refunds";
-import { requirePrivacyStaff } from "../modules/privacy/valo-privacy";
-import { staffOperations } from "../modules/privacy/valo-customer-access";
-import { createStaffRoleRouter } from "../routes/valo-staff-roles";
-import { makeVerifiedStaffSession } from "../routes/valo-customer-access";
+import { requireFinance, assertFinanceActor } from "../commerce/valo-refunds";
+import { requirePrivacyStaff } from "../privacy/valo-privacy";
+import { staffOperations } from "./valo-staff-operations";
+import { createStaffRoleRouter } from "../../routes/valo-staff-roles";
+import { makeVerifiedStaffSession } from "../../routes/valo-customer-access";
 import { activeStaffAssignment } from "./valo-staff-authority";
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../../lib/valo-problem";
 
 test(
   "staff role governance: disposable PostgreSQL, managed-session boundary and no real role mutations",

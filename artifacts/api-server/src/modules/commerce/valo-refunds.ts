@@ -1,4 +1,4 @@
-import { activeStaffAssignment, assertStaffAssignmentCurrent } from "../../lib/valo-staff-authority";
+import { activeStaffAssignment, assertStaffAssignmentCurrent } from "../staff";
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";

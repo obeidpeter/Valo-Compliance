@@ -1,5 +1,4 @@
 import { randomUUID, createHash } from "node:crypto";
-import { clerkClient } from "@clerk/express";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db, valoStaffAssignments, valoStaffAccessAudit, valoStaffRoleChanges } from "@workspace/db";
 import {
@@ -13,8 +12,8 @@ import {
   requireFreshStaffSession,
   type StaffActor,
 } from "./valo-staff-authority";
-import { ValoProblem } from "./valo-problem";
-import { singleRow } from "../platform/rows";
+import { ValoProblem } from "../../lib/valo-problem";
+import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Assignment = typeof valoStaffAssignments.$inferSelect;
 type Change = typeof valoStaffRoleChanges.$inferSelect;
@@ -28,6 +27,8 @@ export type StaffTarget = {
 };
 type TargetVerifier = (identityId: string) => Promise<StaffTarget>;
 const verifyManagedTarget: TargetVerifier = async (id) => {
+  // Loaded here, so code that only reads staff authority never loads the identity SDK.
+  const { clerkClient } = await import("@clerk/express");
   const user = await clerkClient.users.getUser(id),
     primary = user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId);
   return {

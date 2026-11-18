@@ -69,8 +69,8 @@ export const COVERAGE_AREAS = {
       api("lib/valo-download-session.ts"),
       api("lib/valo-managed-session.ts"),
       api("lib/valo-proxy-boundary.ts"),
-      api("lib/valo-staff-authority.ts"),
-      api("lib/valo-staff-roles.ts"),
+      api("modules/staff/valo-staff-authority.ts"),
+      api("modules/staff/valo-staff-roles.ts"),
       api("middlewares/clerkProxyMiddleware.ts"),
       api("middlewares/valo-identity.ts"),
       api("middlewares/valo-staff-gate.ts"),
@@ -81,7 +81,7 @@ export const COVERAGE_AREAS = {
     ],
     excluded: {},
     pattern:
-      /^artifacts\/api-server\/src\/(lib|routes|middlewares|platform)\/(valo-(managed-session|download-session|proxy-boundary|staff-authority|staff-roles|staff-gate|identity|session-verification)|clerkProxyMiddleware|session-verification|workspace-context)\.ts$/,
+      /^artifacts\/api-server\/src\/(lib|routes|middlewares|platform|modules\/staff)\/(valo-(managed-session|download-session|proxy-boundary|staff-authority|staff-roles|staff-gate|identity|session-verification)|clerkProxyMiddleware|session-verification|workspace-context)\.ts$/,
     tests: [
       api("lib/valo-managed-session.test.ts"),
       api("lib/valo-proxy-boundary.test.ts"),
@@ -90,10 +90,10 @@ export const COVERAGE_AREAS = {
       api("lib/valo-download-session.test.ts"),
       api("routes/valo-tenant-substitution.integration.test.ts"),
       api("platform/workspace-row-security.integration.test.ts"),
-      api("lib/valo-staff-bootstrap.integration.test.ts"),
+      api("modules/staff/valo-staff-bootstrap.integration.test.ts"),
     ],
     notRerun: {
-      [api("lib/valo-staff-roles.integration.test.ts")]:
+      [api("modules/staff/valo-staff-roles.integration.test.ts")]:
         "refuses a database that already holds an administrator, and the job has already run it once",
     },
   },

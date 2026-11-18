@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import { and, eq } from "drizzle-orm";
 import { db, valoStaffAssignments } from "@workspace/db";
 import { verifiedStaffSession } from "../lib/valo-managed-session";
-import { activeStaffAssignment } from "../lib/valo-staff-authority";
+import { activeStaffAssignment } from "../modules/staff";
 import { ValoProblem } from "../lib/valo-problem";
 
 /**

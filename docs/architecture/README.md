@@ -200,8 +200,7 @@ database connection, and the module's index loads the export code and its databa
 `modules/privacy` holds privacy requests and their processing, erasure with its seal, lock and
 inventory, redaction, private copies and the authority that clears them for cleanup, the customer's
 account and access requests, the data download, and the workspace data export with its jobs and
-storage. `valo-customer-access.ts` also holds the staff operations summaries, which belong with the
-staff code and move when it becomes a module. Five files stay outside:
+storage. Five files stay outside:
 
 - The privacy keys and their audit state (`src/lib/valo-privacy-keys.ts`, `valo-privacy-state.ts`).
   The store hashes identities with the keys, and the privacy code reads the store, so reaching the
@@ -213,6 +212,11 @@ staff code and move when it becomes a module. Five files stay outside:
   the identity SDK, which the export worker, reaching privacy through the index, does not need. And
   the repository rules treat a `src/lib/*-http.ts` file as HTTP code, which may not create a
   workspace actor (`workspace-actor`).
+
+`modules/staff` holds staff authority (the active role assignments and the recent multi-factor
+check every staff action needs), staff role administration and the read-only operations summary
+of each staff area. The identity SDK loads only when a
+role change looks up its target account, so code that only checks staff authority never loads it.
 
 `modules/tasks` holds customer tasks and their pages, reminder preferences, the reminder worker and
 the development reminder email. `modules/support` holds the support lifecycle: cases, their
