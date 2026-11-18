@@ -15,3 +15,4 @@ never edited after acceptance; a later record supersedes an earlier one.
 | [0008](0008-workspace-row-level-security.md) | Enforce workspace scoping with PostgreSQL row-level security | Accepted |
 | [0009](0009-lint-with-oxlint.md) | Lint with oxlint instead of ESLint | Accepted |
 | [0010](0010-ci-test-results-as-requirement-evidence.md) | Cite CI test results as requirement evidence | Accepted |
+| [0011](0011-server-rendered-public-pages.md) | Server-render the public pages | Proposed |
