@@ -441,6 +441,20 @@
       "file": "lib/db/scripts/phase1-migrations.test.mjs",
       "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
       "proves": "The security signals migration applies tracked and unjournalled without changing existing rows, its table refuses any other kind of event and any subject that is not a hash, and a customer request's scoped role can neither read nor write it."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-rule-release.test.ts",
+      "test": "a rule version is ready only with a valid condition, the next version and passing critical scenarios",
+      "proves": "Planning a rule release refuses a condition the schema rejects, a skipped or repeated version, a candidate without a critical scenario and any failed critical scenario, reports other failed scenarios without blocking, and previews which saved profiles' results would change and how."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-rule-release.test.ts",
+      "test": "restoring a prior rule version releases it again as the next version and changes no saved result",
+      "proves": "Restoring a prior rule version gives its content the next version number, leaves the earlier versions unchanged so a result saved under one still reproduces exactly, and goes through the same release plan."
     }
   ]
 }
