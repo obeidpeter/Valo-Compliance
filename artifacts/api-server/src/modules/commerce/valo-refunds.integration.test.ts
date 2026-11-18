@@ -18,8 +18,8 @@ import {
   valoDocumentRevisions,
   valoDocuments,
 } from "@workspace/db";
-import * as store from "./valo-store";
-import { syntheticDocument } from "./valo-test-fixtures";
+import * as store from "../../lib/valo-store";
+import { syntheticDocument } from "../../lib/valo-test-fixtures";
 import {
   requestOrderRefund,
   decideRefund,
@@ -31,7 +31,7 @@ import { assertRefundMatch, refundBalance, type RefundProvider } from "./valo-re
 import { storeVerifiedDispute } from "./valo-payment-disputes";
 import { purchases } from "./valo-commerce";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
-import { quotaSubjectHash } from "./valo-quota";
+import { quotaSubjectHash } from "../../lib/valo-quota";
 
 test(
   "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
@@ -362,7 +362,7 @@ test(
         async () => {
           const order = await fixture(),
             id = await approved(order, 1000);
-          const child = fork(new URL("../scripts/refund-crash-child.ts", import.meta.url), [id], {
+          const child = fork(new URL("../../scripts/refund-crash-child.ts", import.meta.url), [id], {
             execArgv: ["--import", "tsx"],
             env: { ...process.env, NODE_ENV: "development" },
             stdio: ["ignore", "ignore", "ignore", "ipc"],

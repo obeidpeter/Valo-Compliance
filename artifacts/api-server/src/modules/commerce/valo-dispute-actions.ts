@@ -18,9 +18,9 @@ import {
   HoldFinanceDisputeBody,
   LinkFinanceDisputeBody,
 } from "@workspace/api-zod";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "./valo-store";
+import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
 import { assertFinanceActor, requireFinance, type FinanceActor } from "./valo-refunds";
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../../lib/valo-problem";
 import {
   disputeInformation,
   disputeTransport,
@@ -31,9 +31,9 @@ import {
   type DisputeContext,
 } from "./valo-dispute-provider";
 import { storeVerifiedDispute, disputeSnapshotHash } from "./valo-payment-disputes";
-import { assertRecoveryEffectsAllowed } from "./valo-recovery-effects";
-import { renderDocument } from "./valo-render";
-import { setting } from "../platform/settings";
+import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
+import { renderDocument } from "../../lib/valo-render";
+import { setting } from "../../platform/settings";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Action = typeof valoDisputeActions.$inferSelect;
 type Order = typeof valoOrders.$inferSelect;

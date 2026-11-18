@@ -14,11 +14,11 @@ import {
   valoEvents,
   valoMemberships,
 } from "@workspace/db";
-import * as store from "./valo-store";
+import * as store from "../../lib/valo-store";
 import * as commerce from "./valo-commerce";
 import { verifiedTransaction } from "./valo-paystack-contract";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
-import { guardNestedConnections } from "../test-support/nested-connection-guard";
+import { guardNestedConnections } from "../../test-support/nested-connection-guard";
 
 test(
   "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",

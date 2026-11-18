@@ -1,8 +1,8 @@
-import { assertRecoveryEffectsAllowed } from "./valo-recovery-effects";
+import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-import { ValoProblem } from "./valo-problem";
-import { setting } from "../platform/settings";
+import { ValoProblem } from "../../lib/valo-problem";
+import { setting } from "../../platform/settings";
 
 export type WebhookConfiguration =
   { mode: "timestamped"; secrets: string[] } | { mode: "legacy"; apiSecret: string };

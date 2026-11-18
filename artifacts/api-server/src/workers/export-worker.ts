@@ -11,10 +11,13 @@ import { logger } from "../lib/logger";
 import { reconcileDueReminders } from "../lib/valo-reminder-worker";
 import { recoverAbandonedExports, reconcileExportOrphans } from "../lib/valo-export-recovery";
 import { expireGeneratedExports } from "../lib/valo-export-retention";
-import { processPaymentEvents, reconcilePayments } from "../lib/valo-commerce";
-import { processRefundQueue } from "../lib/valo-refunds";
-import { reconcileDisputeActions } from "../lib/valo-dispute-actions";
-import { reconcileKnownDisputes } from "../lib/valo-payment-disputes";
+import {
+  processPaymentEvents,
+  reconcilePayments,
+  processRefundQueue,
+  reconcileDisputeActions,
+  reconcileKnownDisputes,
+} from "../modules/commerce";
 import { dispatchOperationalJobs } from "../lib/valo-operational-dispatch";
 import { assertRecoveryEffectsAllowed } from "../lib/valo-recovery-effects";
 import {

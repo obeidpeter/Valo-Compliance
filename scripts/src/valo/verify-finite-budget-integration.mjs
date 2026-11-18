@@ -98,7 +98,7 @@ try {
     "--import",
     "tsx",
     "--test",
-    "src/lib/valo-contract-runtime.test.ts",
+    "src/modules/commerce/valo-contract-runtime.test.ts",
   ]);
   const listener = createServer();
   await new Promise((r) => listener.listen(0, "127.0.0.1", r));

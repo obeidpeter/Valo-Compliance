@@ -8,11 +8,11 @@ import {
   valoStaffAssignments,
   valoEvents,
 } from "@workspace/db";
-import { resolveWorkspace } from "./valo-store";
+import { resolveWorkspace } from "../../lib/valo-store";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
 import { type FinanceActor } from "./valo-refunds";
 import { makeDisputeTransport } from "./valo-dispute-provider";
-import { setting } from "../platform/settings";
+import { setting } from "../../platform/settings";
 export async function disputeFixture() {
   if (
     setting("NODE_ENV") !== "development" ||

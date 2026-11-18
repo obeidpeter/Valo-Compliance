@@ -145,7 +145,7 @@ test(
     const { db, pool, valoAIDrafts, valoOrders, valoPrices } = await import("@workspace/db");
     const { resolveWorkspace, saveProfile } = await import("../lib/valo-store");
     const { syntheticDocument, syntheticProfile } = await import("../lib/valo-test-fixtures");
-    const { financeHeldFixture } = await import("../lib/valo-finance-test-fixture");
+    const { financeHeldFixture } = await import("../modules/commerce/valo-finance-test-fixture");
     const { createPrivacyCase } = await import("../lib/valo-privacy");
 
     const server = app.listen(0, "127.0.0.1");

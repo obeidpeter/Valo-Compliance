@@ -136,7 +136,7 @@ test("R1 calls Paystack only for one-time charges, refunds and disputes and keep
     if (source.includes("api.paystack.co"))
       assert.equal(
         file,
-        "artifacts/api-server/src/lib/valo-paystack-contract.ts",
+        "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts",
         "every call goes through paystackRequest",
       );
     const all = [...source.matchAll(/\bpaystackRequest\(/g)].length;

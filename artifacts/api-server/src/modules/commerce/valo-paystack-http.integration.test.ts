@@ -6,7 +6,7 @@ import type { AddressInfo } from "node:net";
 import { db, pool, valoPaymentEvents } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import app from "../app";
+import app from "../../app";
 
 test(
   "isolated real HTTP signature/durability controls — synthetic signing key, NOT Paystack delivery",

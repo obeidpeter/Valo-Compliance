@@ -2,7 +2,7 @@ import { randomUUID, createHash } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { db, valoOrders, valoEntitlements, valoPaymentDisputes, valoEvents } from "@workspace/db";
 import { paystackRequest, sandboxPaymentsConfigured } from "./valo-paystack-contract";
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../../lib/valo-problem";
 import { verifiedDispute } from "./valo-dispute-schema";
 export { verifiedDispute } from "./valo-dispute-schema";
 export function disputeSnapshotHash(data: ReturnType<typeof verifiedDispute.parse>) {

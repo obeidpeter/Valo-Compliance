@@ -1,6 +1,6 @@
 import { controlDisputeAction } from "./valo-dispute-actions";
 import { makeDisputeTransport } from "./valo-dispute-provider";
-import { setting } from "../platform/settings";
+import { setting } from "../../platform/settings";
 if (
   setting("NODE_ENV") !== "development" ||
   setting("REPLIT_DEPLOYMENT") ||

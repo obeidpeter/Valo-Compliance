@@ -10,9 +10,13 @@ import {
 } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
 import { makeVerifiedStaffSession } from "./valo-customer-access";
-import { assertFinanceActor, type FinanceActor } from "../lib/valo-refunds";
-import { holdFinanceDispute, linkFinanceDispute } from "../lib/valo-dispute-actions";
-import * as concern from "../lib/valo-payment-concerns";
+import {
+  assertFinanceActor,
+  holdFinanceDispute,
+  linkFinanceDispute,
+  type FinanceActor,
+} from "../modules/commerce";
+import * as concern from "../modules/commerce";
 const id = (v: unknown) => z.string().uuid().parse(v);
 export const customerPaymentConcernsRouter = Router();
 customerPaymentConcernsRouter.use((_req, res, next) => {

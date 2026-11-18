@@ -13,7 +13,12 @@ import {
   RespondPaymentConcernBody,
   ActOnPaymentConcernBody,
 } from "@workspace/api-zod";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, ValoProblem, type WorkspaceActor } from "./valo-store";
+import {
+  authorizeWorkspaceWrite,
+  limitWorkspaceWrite,
+  ValoProblem,
+  type WorkspaceActor,
+} from "../../lib/valo-store";
 import { assertFinanceActor, requireFinance, type FinanceActor } from "./valo-refunds";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Order = typeof valoOrders.$inferSelect;

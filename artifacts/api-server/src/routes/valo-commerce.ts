@@ -10,7 +10,7 @@ import {
   StartCommerceCheckoutBody,
   RefreshCommerceOrderBody,
 } from "@workspace/api-zod";
-import * as commerce from "../lib/valo-commerce";
+import * as commerce from "../modules/commerce";
 export const commerceRouter = Router();
 const id = (value: unknown) => z.string().uuid().parse(value);
 commerceRouter.use("/workspace", (_req, res, next) => {

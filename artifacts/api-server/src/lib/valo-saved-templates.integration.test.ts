@@ -14,7 +14,7 @@ import {
 import { disclosure, publicationSchema } from "@workspace/valo-core";
 import { resolveWorkspace } from "./valo-store";
 import { syntheticDocument } from "./valo-test-fixtures";
-import { financeHeldFixture } from "./valo-finance-test-fixture";
+import { financeHeldFixture } from "../modules/commerce/valo-finance-test-fixture";
 
 test(
   "actual PostgreSQL saved-template ownership, durable state and blocked-release boundaries",

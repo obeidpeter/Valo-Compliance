@@ -153,5 +153,11 @@ review lanes, the history loader and the work-binding checks stay in `src/lib` f
 now: they depend on customer documents, the editorial pipeline or the database,
 and move with the modules that own those.
 
+`modules/commerce` is the second. It holds one-time purchases, payment events and their
+reconciliation, receipts and their recovery, refunds, payment concerns, disputes and the Paystack
+contract. Its `index.ts` re-exports what the routes, the worker and the privacy code use; the
+merchant transports, the dispute schema and the test fixtures stay internal. The routes stay in
+`src/routes`.
+
 The proposed R2 team access model (roles, grants, invitations and the migration path)
 is in [r2-team-access.md](r2-team-access.md).

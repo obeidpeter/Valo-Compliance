@@ -6,7 +6,7 @@ import {
   redactAuditReason,
   redactDisputeAction,
 } from "./valo-privacy-redactions";
-import { cancelUnsentDisputeWork } from "./valo-dispute-actions";
+import { cancelUnsentDisputeWork } from "../modules/commerce";
 import { ValoProblem } from "./valo-store";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export const copyPhases = [

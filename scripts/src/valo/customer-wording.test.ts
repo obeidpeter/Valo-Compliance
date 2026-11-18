@@ -27,6 +27,7 @@ const customerText = () => [
   ...sourceFiles("artifacts/valo/src", /\.tsx?$/),
   ...sourceFiles("artifacts/valo/app", /\.tsx?$/),
   ...sourceFiles("artifacts/api-server/src/lib", /\.ts$/),
+  ...sourceFiles("artifacts/api-server/src/modules", /\.ts$/),
   ...sourceFiles("artifacts/api-server/src/routes", /\.ts$/),
 ];
 
@@ -63,7 +64,7 @@ test("losing access is never described as taking back a downloaded copy, and sav
   // What customers are told stays theirs, and the reuse policy a refund applies.
   const says = (file: string, text: RegExp) => assert.match(read(file).replace(/\s+/g, " "), text, file);
   says(
-    "artifacts/api-server/src/lib/valo-refund-provider.ts",
+    "artifacts/api-server/src/modules/commerce/valo-refund-provider.ts",
     /a confirmed full refund suspends future template reuse\. Saved drafts, revisions and already downloaded files are never deleted\./,
   );
   says(

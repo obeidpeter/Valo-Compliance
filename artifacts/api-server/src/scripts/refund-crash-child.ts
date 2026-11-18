@@ -1,4 +1,4 @@
-import { processRefund } from "../lib/valo-refunds";
+import { processRefund } from "../modules/commerce";
 if (
   process.env.NODE_ENV !== "development" ||
   process.env.VALO_RUN_REFUND_TESTS !== "synthetic-development-only" ||

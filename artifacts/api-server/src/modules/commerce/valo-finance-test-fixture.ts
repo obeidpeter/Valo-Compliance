@@ -2,7 +2,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db, valoContentVersions, valoPublicationPolicies } from "@workspace/db";
-import { setting } from "../platform/settings";
+import { setting } from "../../platform/settings";
 export async function financeHeldFixture() {
   const [existing] = await db
     .select()

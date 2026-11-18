@@ -7,8 +7,12 @@ import { eq } from "drizzle-orm";
 import { db, pool, valoStaffAssignments } from "@workspace/db";
 import { createFinancePaymentConcernsRouter, customerPaymentConcernsRouter } from "./valo-payment-concerns";
 import { makeVerifiedStaffSession, makeDisputeOperationsRouter } from "./valo-customer-access";
-import { disputeFixture } from "../lib/valo-dispute-workflow-fixture";
-import { linkFinanceDispute, prepareDisputeAction, financeDispute } from "../lib/valo-dispute-actions";
+import { disputeFixture } from "../modules/commerce/valo-dispute-workflow-fixture";
+import {
+  linkFinanceDispute,
+  prepareDisputeAction,
+  financeDispute,
+} from "../modules/commerce/valo-dispute-actions";
 import { ValoProblem } from "../lib/valo-problem";
 
 test(

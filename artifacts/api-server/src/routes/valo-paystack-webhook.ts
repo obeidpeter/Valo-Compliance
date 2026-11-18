@@ -1,6 +1,5 @@
 import { Router, raw } from "express";
-import { authenticPaystackBody, type WebhookConfiguration } from "../lib/valo-paystack-contract";
-import { recordPaymentEvent } from "../lib/valo-commerce";
+import { authenticPaystackBody, recordPaymentEvent, type WebhookConfiguration } from "../modules/commerce";
 import { setting } from "../platform/settings";
 /** Mounted before JSON, identity and browser-CSRF middleware. */
 export const paystackWebhookRouter = Router();

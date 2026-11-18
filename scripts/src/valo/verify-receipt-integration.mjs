@@ -154,7 +154,7 @@ globalThis.fetch=blocked;globalThis.__valoReceiptNetworkGuard=true;syncBuiltinES
       "--import",
       "tsx",
       "--test",
-      `src/lib/${file}`,
+      `src/modules/commerce/${file}`,
     ]);
     const log = result.stdout + result.stderr;
     const count = (key) => Number(log.match(new RegExp(`(?:# |ℹ )${key} (\\d+)`))?.[1] ?? NaN);

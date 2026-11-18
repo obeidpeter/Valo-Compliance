@@ -22,7 +22,7 @@ import {
   valoPaymentConcernEvents,
   valoSupportTickets,
 } from "@workspace/db";
-import { resolveWorkspace, ValoProblem } from "./valo-store";
+import { resolveWorkspace, ValoProblem } from "../../lib/valo-store";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
 import { storeVerifiedDispute } from "./valo-payment-disputes";
 import { makeDisputeTransport } from "./valo-dispute-provider";
@@ -44,9 +44,9 @@ import {
   actOnPaymentConcern,
   getWorkspaceDisputes,
 } from "./valo-payment-concerns";
-import { eraseSupportContentBatch, closePrivacyErasureLocks } from "./valo-privacy-erasure";
-import { workspaceDataExport } from "./valo-customer-access";
-import { makeDisputeOperationsRouter } from "../routes/valo-customer-access";
+import { eraseSupportContentBatch, closePrivacyErasureLocks } from "../../lib/valo-privacy-erasure";
+import { workspaceDataExport } from "../../lib/valo-customer-access";
+import { makeDisputeOperationsRouter } from "../../routes/valo-customer-access";
 
 test(
   "durable dispute intents: development PostgreSQL, controlled PSP and actual receipt PDF",

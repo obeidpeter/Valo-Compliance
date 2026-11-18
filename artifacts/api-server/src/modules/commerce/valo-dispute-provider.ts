@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../../lib/valo-problem";
 import { verifiedDispute } from "./valo-dispute-schema";
 import { paystackRequest, sandboxPaymentsConfigured } from "./valo-paystack-contract";
-import { assertRecoveryEffectsAllowed } from "./valo-recovery-effects";
-import { setting } from "../platform/settings";
+import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
+import { setting } from "../../platform/settings";
 
 const providerId = z.string().regex(/^\d{1,40}$/);
 const filename = z.string().regex(/^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}$/);

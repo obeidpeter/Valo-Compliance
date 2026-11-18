@@ -15,9 +15,9 @@ import {
   valoWorkspaces,
 } from "@workspace/db";
 import { z } from "zod";
-import { liveOperationalVersions } from "./valo-released-content";
-import { authorizeWorkspaceWrite, ValoProblem, type WorkspaceActor } from "./valo-store";
-import { consumeQuota, quotaSubjectHash } from "./valo-quota";
+import { liveOperationalVersions } from "../../lib/valo-released-content";
+import { authorizeWorkspaceWrite, ValoProblem, type WorkspaceActor } from "../../lib/valo-store";
+import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
 import {
   assertOrderMatch,
   paystack,
@@ -26,14 +26,14 @@ import {
   sandboxPaymentsConfigured,
   type VerifiedTransaction,
 } from "./valo-paystack-contract";
-import { trustedSiteOrigin } from "./valo-site-origin";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { trustedSiteOrigin } from "../../lib/valo-site-origin";
+import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
 import { CreateCommerceOrderBody } from "@workspace/api-zod";
 import { requestOrderRefund, refundView, handleRefundEvent } from "./valo-refunds";
 import { syncDispute } from "./valo-payment-disputes";
 import { refundBalance, TEST_REFUND_POLICY } from "./valo-refund-provider";
-import { setting } from "../platform/settings";
-import { assertSafetyActive, withSafetyDispatch } from "./valo-source-state";
+import { setting } from "../../platform/settings";
+import { assertSafetyActive, withSafetyDispatch } from "../../lib/valo-source-state";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const originalReceiptActions = ["payment.verified_success", "payment.synthetic_receipt_recovered"];
 function audit(tx: Tx, workspaceId: string, actorId: string, action: string, id: string) {

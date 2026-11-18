@@ -88,14 +88,14 @@
     {
       "requirement": "PAY-010",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-paystack-contract.test.ts",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
       "test": "checkout asks Paystack only for a one-time charge, with no plan, split, subaccount or saved card",
       "proves": "Checkout initialisation sends Paystack exactly the fields of a single naira charge (reference, amount, currency, email, return URL and order metadata) and nothing that sets up a plan, split, subaccount or saved card."
     },
     {
       "requirement": "PAY-010",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-paystack-contract.test.ts",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
       "test": "only one-time charge, refund and dispute events are processed; subscription, invoice and transfer events are not",
       "proves": "The webhook processes only charge, refund and dispute events; subscription, invoice, transfer, payment request and dedicated account events are classed as not processed."
     },
@@ -270,7 +270,7 @@
     {
       "requirement": "ADM-006",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-commerce.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
       "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
       "proves": "A price's terms cannot be edited in place: a change of price closes the current row and adds a new one, and the price change log records both. An order keeps the amount and licence text it was created with after that change, and its receipt shows them; a checkout request that brings its own amount or currency is refused."
     },
@@ -375,7 +375,7 @@
     {
       "requirement": "EDT-010",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-refunds.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
       "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
       "proves": "While a refund is pending or partial the template entitlement stays active, a full refund suspends it, and the customer's saved draft still exists afterwards."
     },
