@@ -542,6 +542,11 @@ jobs:
           VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts exec tsx src/valo/readiness.ts > generated-artifacts/readiness/readiness.json
       - name: Check every cited test passed in this run
         run: VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts valo:ci-evidence --all
+      - name: Check no test was skipped in every job that ran it
+        # Only when every job finished: a job that failed or was cancelled stops early, so its
+        # later tests are missing from the results rather than skipped.
+        if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+        run: VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts valo:skipped-tests
       - name: Retain the readiness report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
