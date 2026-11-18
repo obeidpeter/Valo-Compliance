@@ -16,7 +16,7 @@ import {
   authorizeWorkspaceWrite,
   type WorkspaceActor,
   ValoProblem,
-} from "./valo-store";
+} from "../../lib/valo-store";
 import { workspaceDataExport } from "./valo-customer-access";
 import {
   workspaceExportStorage,
@@ -25,10 +25,10 @@ import {
   WORKSPACE_EXPORT_ATTEMPT_MS,
   type WorkspaceExportStorage,
 } from "./valo-workspace-export-storage";
-import { abortable } from "./valo-abort";
-import { assertApplicationRuntime, runtimeEnvironment } from "./valo-runtime-activation";
+import { abortable } from "../../lib/valo-abort";
+import { assertApplicationRuntime, runtimeEnvironment } from "../../lib/valo-runtime-activation";
 import { privateCleanupAuthority } from "./valo-private-cleanup-authority";
-import { workspaceActorFromRecord } from "../platform/workspace-context";
+import { workspaceActorFromRecord } from "../../platform/workspace-context";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export const WORKSPACE_EXPORT_QUEUE = "valo-workspace-data-v1";
 export const WORKSPACE_EXPORT_LEASE_MS = 90_000;

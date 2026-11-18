@@ -28,8 +28,8 @@ import {
   valoSavedTemplates,
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
-import { resolveWorkspace, saveProfile, createDocument, authorizeWorkspaceWrite } from "./valo-store";
-import { syntheticProfile, syntheticDocument } from "./valo-test-fixtures";
+import { resolveWorkspace, saveProfile, createDocument, authorizeWorkspaceWrite } from "../../lib/valo-store";
+import { syntheticProfile, syntheticDocument } from "../../lib/valo-test-fixtures";
 import {
   createPrivacyCase,
   confirmPrivacyCase,
@@ -43,11 +43,11 @@ import {
   replayErasedApplication,
   closePrivacyErasureLocks,
 } from "./valo-privacy-erasure";
-import { erasureProofMode, erasureProofStorage } from "../test-support/erasure-proof-storage";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { erasureProofMode, erasureProofStorage } from "../../test-support/erasure-proof-storage";
+import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
 import { signErasureSeal, type ErasureSeal } from "./valo-erasure-seal";
-import { privacySigner } from "./valo-privacy-keys";
-import { executeExport } from "../modules/exports/valo-exports";
+import { privacySigner } from "../../lib/valo-privacy-keys";
+import { executeExport } from "../exports/valo-exports";
 
 test(
   "resumable physical development erasure with retained exclusions and replay",

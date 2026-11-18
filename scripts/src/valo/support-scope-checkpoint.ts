@@ -34,7 +34,7 @@ for (const path of [
   "artifacts/valo/src/components/support-records.tsx",
   "artifacts/valo/src/screens/staff.tsx",
   "artifacts/valo/src/screens/account.tsx",
-  "artifacts/api-server/src/lib/valo-customer-access.ts",
+  "artifacts/api-server/src/modules/privacy/valo-customer-access.ts",
   "artifacts/api-server/src/scripts/customer-experience-journey.ts",
 ])
   codeHashes[path] = digest(await read(path));

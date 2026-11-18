@@ -4,8 +4,7 @@ import type { PoolClient } from "pg";
 import { z } from "zod";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { schema } from "@workspace/db";
-import { verifyCompletedErasureReceipt } from "./valo-privacy-erasure";
-import { redactAuditReason, removedPrivateText } from "./valo-privacy-redactions";
+import { verifyCompletedErasureReceipt, redactAuditReason, removedPrivateText } from "../modules/privacy";
 const tables = [
   "valo_support_tickets",
   "valo_privacy_cases",

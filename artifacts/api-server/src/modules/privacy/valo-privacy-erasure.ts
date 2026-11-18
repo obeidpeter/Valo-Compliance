@@ -2,7 +2,7 @@ import { ErasureInventoryAttestations, inventoryGuardStamp } from "./valo-erasur
 import { randomUUID } from "node:crypto";
 import { rm } from "node:fs/promises";
 import { Pool } from "pg";
-import { logger } from "./logger";
+import { logger } from "../../lib/logger";
 import { withPrivacyCaseLock, ErasureLockBusyError } from "./valo-erasure-lock";
 import { and, eq, ne, sql, lte, asc } from "drizzle-orm";
 import {
@@ -16,10 +16,10 @@ import {
   valoExportObjects,
 } from "@workspace/db";
 import { ActOnStaffPrivacyCaseBody } from "@workspace/api-zod";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
-import { deletePrivateFile } from "./valo-private-storage";
-import { privacyKey, privacySigner } from "./valo-privacy-keys";
-import { quotaSubjectHash } from "./valo-quota";
+import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { deletePrivateFile } from "../../lib/valo-private-storage";
+import { privacyKey, privacySigner } from "../../lib/valo-privacy-keys";
+import { quotaSubjectHash } from "../../lib/valo-quota";
 import {
   inventoryHasher,
   signErasureSeal,
@@ -33,12 +33,12 @@ import {
   type ErasureSeal,
   type ReplayState,
 } from "./valo-erasure-seal";
-import { ValoProblem } from "./valo-problem";
-import { cancelUnsentDisputeWork } from "../modules/commerce";
+import { ValoProblem } from "../../lib/valo-problem";
+import { cancelUnsentDisputeWork } from "../commerce";
 import { retireWorkspaceExports, workspaceExportScratch } from "./valo-workspace-export-jobs";
 import { copyPhases, erasePrivateCopyPhase, fencePrivateCopies } from "./valo-private-copy-inventory";
 import { erasureProgressReason } from "./valo-privacy-redactions";
-import { assertPrivacyVersion } from "./valo-privacy-state";
+import { assertPrivacyVersion } from "../../lib/valo-privacy-state";
 import {
   readPrivacyCase,
   requirePrivacyStaff,
@@ -47,7 +47,7 @@ import {
   type PrivacyStaffActor,
   type PrivacyRow,
 } from "./valo-privacy";
-import { setting } from "../platform/settings";
+import { setting } from "../../platform/settings";
 
 const legacyPhases = [
   "valo_reminder_outbox",

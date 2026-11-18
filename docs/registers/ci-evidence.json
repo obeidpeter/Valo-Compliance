@@ -186,7 +186,7 @@
     {
       "requirement": "ADM-008",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-customer-access.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/privacy/valo-customer-access.integration.test.ts",
       "test": "real development access intake, privacy isolation and staff boundaries",
       "proves": "Anyone can send a request to staff without signing in or paying; it is saved for staff and never dispatched anywhere else."
     },

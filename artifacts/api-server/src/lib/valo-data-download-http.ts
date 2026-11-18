@@ -3,7 +3,7 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import { getAuth, clerkClient } from "@clerk/express";
-import { withWorkspaceDataFile } from "./valo-data-download";
+import { withWorkspaceDataFile } from "../modules/privacy";
 import { assertWorkspaceDownloadSession } from "./valo-download-session";
 import type { WorkspaceActor } from "./valo-store";
 

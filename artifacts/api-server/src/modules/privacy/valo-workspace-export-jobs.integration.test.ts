@@ -16,9 +16,9 @@ import {
   valoWorkspaceExports as jobs,
   valoWorkspaceExportAttempts as attempts,
 } from "@workspace/db";
-import { makeWorkspaceExportRouter } from "./valo-workspace-export-http";
-import { resolveWorkspace, ValoProblem } from "./valo-store";
-import { assertWorkspaceDownloadSession } from "./valo-download-session";
+import { makeWorkspaceExportRouter } from "../../lib/valo-workspace-export-http";
+import { resolveWorkspace, ValoProblem } from "../../lib/valo-store";
+import { assertWorkspaceDownloadSession } from "../../lib/valo-download-session";
 import {
   createWorkspaceExport,
   executeWorkspaceExport,
@@ -26,7 +26,7 @@ import {
   cancelWorkspaceExport,
 } from "./valo-workspace-export-jobs";
 import { workspaceExportStorage } from "./valo-workspace-export-storage";
-import { anonymousPrivateFileStatus } from "./valo-private-storage";
+import { anonymousPrivateFileStatus } from "../../lib/valo-private-storage";
 const bounded = <T>(p: Promise<T>, ms = 15000) =>
   Promise.race([
     p,

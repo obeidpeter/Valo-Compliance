@@ -34,9 +34,9 @@ import {
   valoWorkspaceExportAttempts,
 } from "@workspace/db";
 import { cleanupWorkspaceExports, workspaceExportScratch } from "./valo-workspace-export-jobs";
-import { resolveWorkspace, createDocument, saveProfile } from "./valo-store";
-import { syntheticDocument, syntheticProfile } from "./valo-test-fixtures";
-import { RENDER_VERSION } from "./valo-render";
+import { resolveWorkspace, createDocument, saveProfile } from "../../lib/valo-store";
+import { syntheticDocument, syntheticProfile } from "../../lib/valo-test-fixtures";
+import { RENDER_VERSION } from "../../lib/valo-render";
 import { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } from "./valo-privacy";
 import {
   processPrivacyErasure,
@@ -45,12 +45,12 @@ import {
   reconcileErasedObjects,
   closePrivacyErasureLocks,
 } from "./valo-privacy-erasure";
-import { requestExport, executeExport } from "../modules/exports/valo-exports";
-import { reconcileExportOrphans } from "../modules/exports/valo-export-recovery";
-import { privacyKeys, privacySigner } from "./valo-privacy-keys";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
-import { writePrivateFile, readPrivateFile, deletePrivateFile } from "./valo-private-storage";
-import { erasureProofMode } from "../test-support/erasure-proof-storage";
+import { requestExport, executeExport } from "../exports/valo-exports";
+import { reconcileExportOrphans } from "../exports/valo-export-recovery";
+import { privacyKeys, privacySigner } from "../../lib/valo-privacy-keys";
+import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { writePrivateFile, readPrivateFile, deletePrivateFile } from "../../lib/valo-private-storage";
+import { erasureProofMode } from "../../test-support/erasure-proof-storage";
 
 const reason = "Controlled synthetic erasure race and recovery proof; no production or provider deletion.";
 test(
@@ -425,7 +425,7 @@ test(
               [
                 "--import",
                 "tsx",
-                fileURLToPath(new URL("../scripts/erasure-replay-batch-child.ts", import.meta.url)),
+                fileURLToPath(new URL("../../scripts/erasure-replay-batch-child.ts", import.meta.url)),
               ],
               {
                 env: { ...process.env, VALO_ERASURE_BATCH_CHILD: "new-synthetic-fixture-only" },
@@ -1021,7 +1021,7 @@ test(
           };
           await db.insert(valoExportJobs).values(job);
           const child = fork(
-            fileURLToPath(new URL("../scripts/erasure-upload-crash-child.ts", import.meta.url)),
+            fileURLToPath(new URL("../../scripts/erasure-upload-crash-child.ts", import.meta.url)),
             [job.id, f.owner.workspaceId, job.queueId],
             {
               execArgv: ["--import", "tsx"],

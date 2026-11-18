@@ -1,6 +1,6 @@
 import { db, pool, valoWorkspaceExports } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { executeWorkspaceExport, type WorkspaceExportStage } from "../lib/valo-workspace-export-jobs";
+import { executeWorkspaceExport, type WorkspaceExportStage } from "../modules/privacy";
 import { fixtureWorkspaceStorage } from "../lib/test-support/workspace-export-storage";
 if (
   process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only" ||

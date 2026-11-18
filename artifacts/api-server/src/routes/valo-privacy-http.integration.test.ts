@@ -25,7 +25,7 @@ import {
   makeVerifiedStaffSession,
   customerAccessRouter,
 } from "./valo-customer-access";
-import { createPrivacyCase, confirmPrivacyCase } from "../lib/valo-privacy";
+import { createPrivacyCase, confirmPrivacyCase } from "../modules/privacy/valo-privacy";
 import { resolveWorkspace, ValoProblem } from "../lib/valo-store";
 
 test(

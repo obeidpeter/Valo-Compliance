@@ -11,8 +11,9 @@ import {
   customerPrivacyDetail,
   listStaffPrivacyCases,
   simpleStaffPrivacyAction,
-} from "../lib/valo-privacy";
-import { processPrivacyAction, privacyPreparedResult } from "../lib/valo-privacy-processing";
+  processPrivacyAction,
+  privacyPreparedResult,
+} from "../modules/privacy";
 import { saveProfile } from "../lib/valo-store";
 import { syntheticProfile } from "../lib/valo-test-fixtures";
 import { workspaceActorFromRecord } from "../platform/workspace-context";

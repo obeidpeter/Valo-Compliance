@@ -48,7 +48,7 @@ test(
     const { hashAI, customerProviderPayload, customerPreview } = await import("./valo-customer-ai-domain");
     const { buildBusinessDraft } = await import("@workspace/valo-core/customer-document");
     const { documentInput } = await import("./valo-validation");
-    const { withWorkspaceDataFile } = await import("./valo-data-download");
+    const { withWorkspaceDataFile } = await import("../modules/privacy/valo-data-download");
     const run = randomUUID(),
       a = await resolveWorkspace(`synthetic-customer-control-a-${run}`),
       b = await resolveWorkspace(`synthetic-customer-control-b-${run}`),

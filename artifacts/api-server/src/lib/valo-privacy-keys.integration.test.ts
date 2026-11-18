@@ -6,7 +6,7 @@ import { db, pool, valoPrivacyEvents } from "@workspace/db";
 import { privacySigner, privacyKey, privacyIdentityHashes, type PrivacyKeys } from "./valo-privacy-keys";
 import { privacyAuditHash, privacyAuditEqual, type PrivacyAuditInput } from "./valo-privacy-state";
 import { quotaSubjectHash } from "./valo-quota";
-import { holdUnsentPrivacyNotifications } from "./valo-privacy-erasure";
+import { holdUnsentPrivacyNotifications } from "../modules/privacy/valo-privacy-erasure";
 test(
   "isolated privacy signing-key rotation — no real secret rotation",
   {

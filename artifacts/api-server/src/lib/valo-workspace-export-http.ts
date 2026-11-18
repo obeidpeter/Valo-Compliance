@@ -13,8 +13,9 @@ import {
   cancelWorkspaceExport,
   retryWorkspaceExport,
   withPreparedWorkspaceExport,
-} from "./valo-workspace-export-jobs";
-import { workspaceExportStorage, type WorkspaceExportStorage } from "./valo-workspace-export-storage";
+  workspaceExportStorage,
+  type WorkspaceExportStorage,
+} from "../modules/privacy";
 import { type WorkspaceActor, ValoProblem } from "./valo-store";
 import { assertApplicationRuntime } from "./valo-runtime-activation";
 const live = async (req: Request, actor: WorkspaceActor) =>

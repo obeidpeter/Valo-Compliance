@@ -3,8 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { db } from "@workspace/db";
 import { workspaceDataExport } from "./valo-customer-access";
-import { authorizeWorkspaceRead, type WorkspaceActor } from "./valo-store";
-import { abortable } from "./valo-abort";
+import { authorizeWorkspaceRead, type WorkspaceActor } from "../../lib/valo-store";
+import { abortable } from "../../lib/valo-abort";
 
 /** Build a complete snapshot before sending headers. Private scratch bytes are
  * removed on success, denied authorization, reader failure or client disconnect.

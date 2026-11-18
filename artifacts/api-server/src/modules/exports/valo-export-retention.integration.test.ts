@@ -27,8 +27,8 @@ import {
   confirmPrivacyCase,
   simpleStaffPrivacyAction,
   readPrivacyCase,
-} from "../../lib/valo-privacy";
-import { privateCleanupAuthority } from "../../lib/valo-private-cleanup-authority";
+} from "../privacy/valo-privacy";
+import { privateCleanupAuthority } from "../privacy/valo-private-cleanup-authority";
 import {
   exportRetentionAt,
   exportIsExpired,

@@ -6,11 +6,11 @@ process.chdir(fileURLToPath(new URL("../../../", import.meta.url)));
 const sha = (v: string | Buffer) => createHash("sha256").update(v).digest("hex");
 const sourceRevision = process.argv[2] ?? "uncommitted-worktree";
 const paths = [
-  "artifacts/api-server/src/lib/valo-privacy.ts",
+  "artifacts/api-server/src/modules/privacy/valo-privacy.ts",
   "artifacts/api-server/src/lib/valo-privacy-state.ts",
-  "artifacts/api-server/src/lib/valo-privacy-processing.ts",
+  "artifacts/api-server/src/modules/privacy/valo-privacy-processing.ts",
   "artifacts/api-server/src/lib/valo-privacy-state.test.ts",
-  "artifacts/api-server/src/lib/valo-customer-access.ts",
+  "artifacts/api-server/src/modules/privacy/valo-customer-access.ts",
   "artifacts/api-server/src/lib/valo-store.ts",
   "artifacts/api-server/src/routes/valo-customer-access.ts",
   "artifacts/api-server/src/scripts/privacy-case-proof.ts",

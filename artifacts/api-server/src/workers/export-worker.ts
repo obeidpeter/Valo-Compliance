@@ -1,7 +1,13 @@
 import { initializeApplicationRuntime, verifyRehearsalDatabase } from "../lib/valo-runtime-activation";
 import { reconcileSourceMonitoring } from "../lib/valo-source-monitor";
 import { z } from "zod";
-import { closePrivacyErasureLocks } from "../lib/valo-privacy-erasure";
+import {
+  closePrivacyErasureLocks,
+  cleanupWorkspaceExports,
+  pendingWorkspaceExports,
+  executeWorkspaceExport,
+  WORKSPACE_EXPORT_QUEUE,
+} from "../modules/privacy";
 import { db, pool, valoExportJobs } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { exportQueue, EXPORT_QUEUE } from "../modules/exports";
@@ -27,12 +33,6 @@ import {
   type OperationalDomain,
 } from "../lib/valo-operations-queue";
 import { assertRecoveryEffectsAllowed } from "../lib/valo-recovery-effects";
-import {
-  cleanupWorkspaceExports,
-  pendingWorkspaceExports,
-  executeWorkspaceExport,
-  WORKSPACE_EXPORT_QUEUE,
-} from "../lib/valo-workspace-export-jobs";
 import {
   recordWorkerHeartbeat,
   collectOperationalSample,

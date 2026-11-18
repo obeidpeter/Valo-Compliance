@@ -21,15 +21,15 @@ export function partialPrivacyCopyEvidence(id: string) {
     return { paths: [], records: [] };
   return {
     paths: [
-      "artifacts/api-server/src/lib/valo-private-copy-inventory.ts",
-      "artifacts/api-server/src/lib/valo-privacy-redactions.ts",
-      "artifacts/api-server/src/lib/valo-privacy-erasure.ts",
-      "artifacts/api-server/src/lib/valo-customer-access.ts",
-      "artifacts/api-server/src/lib/valo-private-copy-inventory.integration.test.ts",
+      "artifacts/api-server/src/modules/privacy/valo-private-copy-inventory.ts",
+      "artifacts/api-server/src/modules/privacy/valo-privacy-redactions.ts",
+      "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.ts",
+      "artifacts/api-server/src/modules/privacy/valo-customer-access.ts",
+      "artifacts/api-server/src/modules/privacy/valo-private-copy-inventory.integration.test.ts",
       "artifacts/api-server/src/lib/valo-recovery-erasure.ts",
       "artifacts/api-server/src/lib/valo-recovery-controls.ts",
-      "artifacts/api-server/src/lib/valo-privacy-requester.ts",
-      "artifacts/api-server/src/lib/valo-erasure-inventory-cache.ts",
+      "artifacts/api-server/src/modules/privacy/valo-privacy-requester.ts",
+      "artifacts/api-server/src/modules/privacy/valo-erasure-inventory-cache.ts",
       "artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts",
       "artifacts/api-server/src/scripts/isolated-recovery.ts",
       "lib/db/drizzle/0029_privacy_copy_redaction.sql",

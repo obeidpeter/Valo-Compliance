@@ -6,7 +6,7 @@ import {
   assertRuntimeObjectScope,
   runtimeEnvironment,
 } from "../../lib/valo-runtime-activation";
-import { privateCleanupAuthority } from "../../lib/valo-private-cleanup-authority";
+import { privateCleanupAuthority } from "../privacy";
 import { environment } from "../../platform/settings";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];

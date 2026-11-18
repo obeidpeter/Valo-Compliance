@@ -432,9 +432,9 @@ const groups = [
       "NFR-007",
     ],
     paths: [
-      "artifacts/api-server/src/lib/valo-customer-access.ts",
+      "artifacts/api-server/src/modules/privacy/valo-customer-access.ts",
       "artifacts/api-server/src/routes/valo-customer-access.ts",
-      "artifacts/api-server/src/lib/valo-customer-access.integration.test.ts",
+      "artifacts/api-server/src/modules/privacy/valo-customer-access.integration.test.ts",
       "artifacts/api-server/src/scripts/customer-experience-journey.ts",
       "artifacts/valo/src/screens/contact.tsx",
       "artifacts/valo/src/screens/account.tsx",
@@ -678,7 +678,7 @@ export function partialWorkflowEvidence(id: string) {
       paths: [
         "artifacts/api-server/src/routes/valo-customer-access.ts",
         "artifacts/api-server/src/lib/valo-store.ts",
-        "artifacts/api-server/src/lib/valo-privacy-erasure.ts",
+        "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.ts",
         "artifacts/api-server/src/modules/ai/inference-batch-dispatch.ts",
         "artifacts/api-server/src/lib/inference-work-bindings.ts",
         "artifacts/api-server/src/modules/editorial/external-action-boundary.ts",
@@ -696,9 +696,9 @@ export function partialWorkflowEvidence(id: string) {
       ids: ["PRV-003", "IAM-003", "SEC-001", "SEC-002", "OPS-004"],
       paths: [
         "artifacts/api-server/src/lib/valo-privacy-keys.ts",
-        "artifacts/api-server/src/lib/valo-privacy-erasure.ts",
+        "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.ts",
         "artifacts/api-server/src/lib/valo-privacy-keys.integration.test.ts",
-        "artifacts/api-server/src/lib/valo-privacy-erasure.integration.test.ts",
+        "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.integration.test.ts",
         "lib/db/drizzle/0021_privacy_key_versions.sql",
         "docs/valo/privacy-erasure-v2-checkpoint.md",
       ],
@@ -712,7 +712,7 @@ export function partialWorkflowEvidence(id: string) {
     {
       ids: ["PRV-003", "IAM-003", "ADM-001", "ADM-009", "WRK-006"],
       paths: [
-        "artifacts/api-server/src/lib/valo-privacy.ts",
+        "artifacts/api-server/src/modules/privacy/valo-privacy.ts",
         "artifacts/api-server/src/routes/valo-customer-access.ts",
         "artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts",
         "artifacts/valo/src/components/privacy-cases.tsx",
@@ -744,8 +744,8 @@ export function partialWorkflowEvidence(id: string) {
       paths: [
         "lib/valo-core/src/checker-rich.ts",
         "artifacts/api-server/src/modules/rules/valo-checker-rich.test.ts",
-        "artifacts/api-server/src/lib/valo-privacy-erasure.ts",
-        "artifacts/api-server/src/lib/valo-erasure-hardening.integration.test.ts",
+        "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.ts",
+        "artifacts/api-server/src/modules/privacy/valo-erasure-hardening.integration.test.ts",
         "lib/db/drizzle/0022_privacy_erasure_hardening.sql",
         "docs/valo/privacy-checker-reconciliation.md",
       ],
@@ -801,8 +801,8 @@ export function partialWorkflowEvidence(id: string) {
     {
       ids: ["PRO-002", "PRV-003", "ADM-001", "ADM-009", "SEC-001", "SEC-006", "WRK-006", "NFR-009"],
       paths: [
-        "artifacts/api-server/src/lib/valo-privacy.ts",
-        "artifacts/api-server/src/lib/valo-privacy-processing.ts",
+        "artifacts/api-server/src/modules/privacy/valo-privacy.ts",
+        "artifacts/api-server/src/modules/privacy/valo-privacy-processing.ts",
         "artifacts/api-server/src/lib/valo-privacy-state.ts",
         "artifacts/api-server/src/scripts/privacy-case-proof.ts",
         "artifacts/valo/src/components/privacy-cases.tsx",
@@ -839,7 +839,7 @@ export function partialWorkflowEvidence(id: string) {
         "artifacts/valo/src/components/support-records.tsx",
         "artifacts/valo/src/screens/staff.tsx",
         "artifacts/valo/src/screens/account.tsx",
-        "artifacts/api-server/src/lib/valo-customer-access.ts",
+        "artifacts/api-server/src/modules/privacy/valo-customer-access.ts",
         "artifacts/api-server/src/scripts/customer-experience-journey.ts",
       ],
       record: supportScopeProof,
@@ -904,8 +904,8 @@ export function partialWorkflowEvidence(id: string) {
     {
       ids: ["PRV-003", "PRO-002", "SEC-001", "WRK-001"],
       paths: [
-        "artifacts/api-server/src/lib/valo-customer-access.ts",
-        "artifacts/api-server/src/lib/valo-privacy-processing.ts",
+        "artifacts/api-server/src/modules/privacy/valo-customer-access.ts",
+        "artifacts/api-server/src/modules/privacy/valo-privacy-processing.ts",
         "artifacts/api-server/src/scripts/privacy-data-browser.ts",
         "artifacts/valo/src/screens/account.tsx",
       ],
@@ -988,7 +988,7 @@ export function partialWorkflowEvidence(id: string) {
         "artifacts/api-server/src/modules/commerce/valo-dispute-provider.ts",
         "artifacts/api-server/src/routes/valo-customer-access.ts",
         "artifacts/valo/src/components/dispute-workflows.tsx",
-        "artifacts/api-server/src/lib/valo-privacy-erasure.ts",
+        "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.ts",
         "lib/db/drizzle/0025_dispute_merchant.sql",
         "lib/db/drizzle/0026_dispute_category.sql",
       ],
@@ -1002,10 +1002,10 @@ export function partialWorkflowEvidence(id: string) {
     {
       ids: ["PRV-003", "IAM-003", "SEC-001", "WRK-001", "NFR-009", "OPS-008"],
       paths: [
-        "artifacts/api-server/src/lib/valo-workspace-export-jobs.ts",
+        "artifacts/api-server/src/modules/privacy/valo-workspace-export-jobs.ts",
         "artifacts/api-server/src/lib/valo-workspace-export-http.ts",
-        "artifacts/api-server/src/lib/valo-workspace-export-storage.ts",
-        "artifacts/api-server/src/lib/valo-customer-access.ts",
+        "artifacts/api-server/src/modules/privacy/valo-workspace-export-storage.ts",
+        "artifacts/api-server/src/modules/privacy/valo-customer-access.ts",
         "artifacts/valo/src/components/workspace-data-download.tsx",
         "lib/db/drizzle/0027_workspace_exports.sql",
         "lib/db/drizzle/0028_workspace_export_cleanup.sql",

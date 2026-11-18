@@ -8,10 +8,10 @@ const root = fileURLToPath(new URL("../../../", import.meta.url)),
 if (!/^[a-f0-9]{40}$/.test(sourceCommit ?? "")) throw Error("SAVED_APPLICATION_COMMIT_REQUIRED");
 const hash = (s: string | Buffer) => createHash("sha256").update(s).digest("hex");
 const targets = [
-  "artifacts/api-server/src/lib/valo-workspace-export-jobs.ts",
+  "artifacts/api-server/src/modules/privacy/valo-workspace-export-jobs.ts",
   "artifacts/api-server/src/lib/valo-workspace-export-http.ts",
-  "artifacts/api-server/src/lib/valo-workspace-export-storage.ts",
-  "artifacts/api-server/src/lib/valo-customer-access.ts",
+  "artifacts/api-server/src/modules/privacy/valo-workspace-export-storage.ts",
+  "artifacts/api-server/src/modules/privacy/valo-customer-access.ts",
   "artifacts/valo/src/components/workspace-data-download.tsx",
   "lib/db/drizzle/0027_workspace_exports.sql",
   "lib/db/drizzle/0028_workspace_export_cleanup.sql",

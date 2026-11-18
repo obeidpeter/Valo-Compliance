@@ -16,7 +16,20 @@ import {
   customerAccount,
   requestPrivacy,
   staffOperations,
-} from "../lib/valo-customer-access";
+  listPrivacyCases,
+  customerPrivacyDetail,
+  confirmPrivacyCase,
+  listStaffPrivacyCases,
+  respondPrivacyCase,
+  staffPrivacyDetail,
+  processPrivacyAction,
+  privacyPreparedResult,
+  requirePrivacyStaff,
+  type PrivacyStaffActor,
+  requesterPrivacyList,
+  requesterPrivacyDetail,
+  requesterPrivacyReply,
+} from "../modules/privacy";
 import { makeWorkspaceDataDownloadHandler } from "../lib/valo-data-download-http";
 import { makeWorkspaceExportRouter } from "../lib/valo-workspace-export-http";
 import {
@@ -44,22 +57,7 @@ import {
   ListStaffPrivacyCasesResponse,
   ActOnStaffPrivacyCaseResponse,
 } from "@workspace/api-zod";
-import {
-  listPrivacyCases,
-  customerPrivacyDetail,
-  confirmPrivacyCase,
-  listStaffPrivacyCases,
-  respondPrivacyCase,
-  staffPrivacyDetail,
-} from "../lib/valo-privacy";
-import { processPrivacyAction, privacyPreparedResult } from "../lib/valo-privacy-processing";
 import { db } from "@workspace/db";
-import { requirePrivacyStaff, type PrivacyStaffActor } from "../lib/valo-privacy";
-import {
-  requesterPrivacyList,
-  requesterPrivacyDetail,
-  requesterPrivacyReply,
-} from "../lib/valo-privacy-requester";
 export const publicAccessRouter = Router();
 publicAccessRouter.post("/public/access-support", sameOriginMutation, async (req, res) => {
   res.set("Cache-Control", "private, no-store");

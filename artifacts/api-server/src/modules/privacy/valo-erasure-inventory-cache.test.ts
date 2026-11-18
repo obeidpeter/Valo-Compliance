@@ -10,7 +10,7 @@ import {
 } from "./valo-erasure-inventory-cache";
 test("cached inventory authority matches the reviewed SQL, not mutable caller policy", async () => {
   const ddl = await readFile(
-    new URL("../../../../lib/db/drizzle/0022_privacy_erasure_hardening.sql", import.meta.url),
+    new URL("../../../../../lib/db/drizzle/0022_privacy_erasure_hardening.sql", import.meta.url),
     "utf8",
   );
   const body = ddl.match(
