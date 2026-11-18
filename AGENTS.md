@@ -64,8 +64,11 @@ layout. In short:
 
 Rules that apply now:
 
-- Change the API contract in `lib/api-spec/openapi.yaml`, then run
-  `pnpm --filter @workspace/api-spec run codegen`. Never edit generated files.
+- Change the API contract in its module's file in `lib/api-spec/src`, then run
+  `pnpm --filter @workspace/api-spec run codegen`, which rebuilds
+  `lib/api-spec/openapi.yaml` and the clients. A schema lives in the file of the one
+  module that uses it, or in `shared.yaml` when several do; the build refuses anything
+  else. Never edit generated files.
 - Validate all request input with the generated Zod schemas.
 - An empty `catch` or `.catch(() => {})` needs a comment saying why the error is
   ignored. Prefer logging it. Import cycles fail CI, type-only and lazy imports

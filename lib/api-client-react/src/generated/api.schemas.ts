@@ -5,146 +5,450 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface SessionMfaVerification {
-  verified: true;
-  checkedAt: string;
+export type AccessSupportAckDelivery = typeof AccessSupportAckDelivery[keyof typeof AccessSupportAckDelivery];
+
+
+export const AccessSupportAckDelivery = {
+  not_dispatched: 'not_dispatched',
+} as const;
+
+export interface AccessSupportAck {
+  reference: string;
+  message: string;
+  delivery: AccessSupportAckDelivery;
 }
 
-export interface VerifyStaffRoleTargetInput {
+export type CustomerAITask = typeof CustomerAITask[keyof typeof CustomerAITask];
+
+
+export const CustomerAITask = {
+  invoice: 'invoice',
+  quotation: 'quotation',
+  payment_reminder: 'payment_reminder',
+  business_proposal: 'business_proposal',
+} as const;
+
+export interface FinancialLine {
   /**
-     * @maxLength 128
-     * @pattern ^user_[A-Za-z0-9_-]+$
-     */
-  identityId: string;
-}
-
-export type StaffRoleAssignmentRole = typeof StaffRoleAssignmentRole[keyof typeof StaffRoleAssignmentRole];
-
-
-export const StaffRoleAssignmentRole = {
-  content: 'content',
-  support: 'support',
-  finance: 'finance',
-  system: 'system',
-  privacy: 'privacy',
-} as const;
-
-export type StaffRoleAssignmentGrantMode = typeof StaffRoleAssignmentGrantMode[keyof typeof StaffRoleAssignmentGrantMode];
-
-
-export const StaffRoleAssignmentGrantMode = {
-  permanent: 'permanent',
-  break_glass: 'break_glass',
-} as const;
-
-export interface StaffRoleAssignment {
-  id: string;
-  identityId: string;
-  role: StaffRoleAssignmentRole;
-  active: boolean;
-  grantMode: StaffRoleAssignmentGrantMode;
-  /** @nullable */
-  expiresAt: string | null;
-  /** @minimum 1 */
-  version: number;
-  grantedBy: string;
-  grantedAt: string;
-  reason: string;
-}
-
-export type StaffRoleChangeReceiptAction = typeof StaffRoleChangeReceiptAction[keyof typeof StaffRoleChangeReceiptAction];
-
-
-export const StaffRoleChangeReceiptAction = {
-  grant: 'grant',
-  revoke: 'revoke',
-} as const;
-
-/**
- * @nullable
- */
-export type StaffRoleChangeReceiptBefore = { [key: string]: unknown } | null;
-
-export type StaffRoleChangeReceiptAfter = { [key: string]: unknown };
-
-export interface StaffRoleChangeReceipt {
-  id: string;
-  requestKey: string;
-  actorId: string;
-  assignmentId: string;
-  targetIdentityId: string;
-  action: StaffRoleChangeReceiptAction;
-  role: string;
-  reason: string;
-  /** @nullable */
-  incidentReference: string | null;
-  /** @nullable */
-  before: StaffRoleChangeReceiptBefore;
-  after: StaffRoleChangeReceiptAfter;
-  createdAt: string;
-}
-
-export type StaffRoleChangeInputRole = typeof StaffRoleChangeInputRole[keyof typeof StaffRoleChangeInputRole];
-
-
-export const StaffRoleChangeInputRole = {
-  content: 'content',
-  support: 'support',
-  finance: 'finance',
-  system: 'system',
-  privacy: 'privacy',
-} as const;
-
-export type StaffRoleChangeInputAction = typeof StaffRoleChangeInputAction[keyof typeof StaffRoleChangeInputAction];
-
-
-export const StaffRoleChangeInputAction = {
-  grant: 'grant',
-  revoke: 'revoke',
-} as const;
-
-export type StaffRoleChangeInputGrantMode = typeof StaffRoleChangeInputGrantMode[keyof typeof StaffRoleChangeInputGrantMode];
-
-
-export const StaffRoleChangeInputGrantMode = {
-  permanent: 'permanent',
-  break_glass: 'break_glass',
-} as const;
-
-export interface StaffRoleChangeInput {
-  requestKey: string;
-  /**
-     * @maxLength 128
-     * @pattern ^user_[A-Za-z0-9_-]+$
-     */
-  identityId: string;
-  role: StaffRoleChangeInputRole;
-  action: StaffRoleChangeInputAction;
-  /** @minimum 0 */
-  expectedVersion: number;
-  /**
-     * @minLength 20
-     * @maxLength 1000
-     */
-  reason: string;
-  acknowledgement: true;
-  grantMode?: StaffRoleChangeInputGrantMode;
-  /**
-     * @minimum 5
-     * @maximum 60
-     */
-  durationMinutes?: number;
-  /**
-     * @minLength 5
+     * @minLength 1
      * @maxLength 200
      */
-  incidentReference?: string;
+  description: string;
+  /** @pattern ^(0|[1-9][0-9]{0,6})(\.[0-9]{1,3})?$ */
+  quantity: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  unitPriceKobo: string;
+  /**
+     * @minLength 3
+     * @maxLength 3
+     */
+  currency?: string;
 }
 
-export interface StaffRoleAdministration {
-  assignments: StaffRoleAssignment[];
-  changes: StaffRoleChangeReceipt[];
+export type FinancialInputOptionalLinesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 240
+     */
+  description: string;
+  /** @pattern ^(0|[1-9][0-9]{0,6})(\.[0-9]{1,3})?$ */
+  quantity: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  unitPriceKobo: string;
+  selected: boolean;
+  /** @pattern ^[A-Z]{3}$ */
+  currency?: string;
+};
+
+export type FinancialInputPaymentRecordPaymentsItem = {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  reference: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  amountKobo: string;
+};
+
+export type FinancialInputPaymentRecord = {
+  /** @pattern ^[0-9]{1,24}$ */
+  invoiceAmountKobo: string;
+  duplicatesConfirmed?: boolean;
+  /** @maxItems 40 */
+  payments: FinancialInputPaymentRecordPaymentsItem[];
+};
+
+export interface FinancialInput {
+  kind: CustomerAITask;
+  /** @maxItems 40 */
+  lines: FinancialLine[];
+  /**
+     * @nullable
+     * @pattern ^[0-9]{1,24}$
+     */
+  taxAmountKobo: string | null;
+  /** @maxLength 80 */
+  taxLabel: string;
+  /**
+     * @nullable
+     * @pattern ^[0-9]{1,24}$
+     */
+  discountKobo: string | null;
+  /** @pattern ^[0-9]{1,24}$ */
+  deliveryKobo?: string;
+  /** @pattern ^(0|[1-9][0-9]{0,2})(\.[0-9]{1,4})?$ */
+  discountPercent?: string;
+  /** @pattern ^(0|[1-9][0-9]{0,2})(\.[0-9]{1,4})?$ */
+  taxPercent?: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  taxBaseKobo?: string;
+  /**
+     * @minLength 3
+     * @maxLength 3
+     */
+  currency?: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  requestedTotalKobo?: string;
+  /** @pattern ^[0-9]{1,24}$ */
+  disputedKobo?: string;
+  /** @maxItems 40 */
+  optionalLines?: FinancialInputOptionalLinesItem[];
+  /**
+     * @nullable
+     * @pattern ^[0-9]{1,24}$
+     */
+  amountDueKobo: string | null;
+  paymentRecord?: FinancialInputPaymentRecord;
+}
+
+export interface ApiProblem {
+  error: string;
+  code: string;
+  message: string;
+  requestId: string;
+  currentRevision?: number;
+}
+
+export type Answer = typeof Answer[keyof typeof Answer];
+
+
+export const Answer = {
+  yes: 'yes',
+  no: 'no',
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type DocumentBlockType = typeof DocumentBlockType[keyof typeof DocumentBlockType];
+
+
+export const DocumentBlockType = {
+  paragraph: 'paragraph',
+  list: 'list',
+  table: 'table',
+} as const;
+
+export interface DocumentBlock {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  id: string;
+  type: DocumentBlockType;
+  /** @maxLength 8000 */
+  text: string;
+  /**
+     * @maxItems 100
+     * @items.maxItems 10
+     * @items.items.maxLength 1000
+     */
+  rows: string[][];
+}
+
+export type CanonicalDocumentFields = {
+  /** @maxLength 160 */
+  issuerName: string;
+  /** @maxLength 160 */
+  recipientName: string;
+  /** @maxLength 80 */
+  documentNumber: string;
+  /** @maxLength 10 */
+  issueDate: string;
+  /** @maxLength 10 */
+  dueDate: string;
+  /** @maxLength 5000 */
+  notes: string;
+};
+
+export type CanonicalDocumentFormattingFont = typeof CanonicalDocumentFormattingFont[keyof typeof CanonicalDocumentFormattingFont];
+
+
+export const CanonicalDocumentFormattingFont = {
+  sans: 'sans',
+  serif: 'serif',
+} as const;
+
+export type CanonicalDocumentFormattingAccent = typeof CanonicalDocumentFormattingAccent[keyof typeof CanonicalDocumentFormattingAccent];
+
+
+export const CanonicalDocumentFormattingAccent = {
+  forest: 'forest',
+  charcoal: 'charcoal',
+} as const;
+
+export type CanonicalDocumentFormatting = {
+  font: CanonicalDocumentFormattingFont;
+  accent: CanonicalDocumentFormattingAccent;
+};
+
+export interface CanonicalDocument {
+  fields: CanonicalDocumentFields;
+  /** @maxItems 100 */
+  blocks: DocumentBlock[];
+  /** @maxItems 0 */
+  selectedClauses: string[];
+  financialInput?: FinancialInput;
+  formatting: CanonicalDocumentFormatting;
+}
+
+export type BusinessDocumentStatus = typeof BusinessDocumentStatus[keyof typeof BusinessDocumentStatus];
+
+
+export const BusinessDocumentStatus = {
+  business_draft: 'business_draft',
+} as const;
+
+export interface BusinessDocument {
+  revisionId: string;
+  id: string;
+  title: string;
+  revision: number;
+  content: CanonicalDocument;
+  contentHash: string;
+  createdAt: string;
+  updatedAt: string;
+  status: BusinessDocumentStatus;
+  /** @nullable */
+  templateVersion: string | null;
+}
+
+export type CustomerAIInputTone = typeof CustomerAIInputTone[keyof typeof CustomerAIInputTone];
+
+
+export const CustomerAIInputTone = {
+  neutral: 'neutral',
+  polite: 'polite',
+  firm: 'firm',
+} as const;
+
+export interface CustomerAIInput {
+  task: CustomerAITask;
+  tone: CustomerAIInputTone;
+  /** @maxLength 160 */
+  issuerName: string;
+  /** @maxLength 160 */
+  recipientName: string;
+  /** @maxLength 80 */
+  documentNumber: string;
+  /** @pattern ^([0-9]{4}-[0-9]{2}-[0-9]{2})?$ */
+  issueDate: string;
+  /** @pattern ^([0-9]{4}-[0-9]{2}-[0-9]{2})?$ */
+  dueDate: string;
+  /**
+     * @maxItems 20
+     * @items.minLength 1
+     * @items.maxLength 1000
+     */
+  contextLines: string[];
+  /**
+     * Optional untrusted organisation preference; never copied into the business document or used to supply missing business facts.
+     * @maxLength 1000
+     */
+  draftingInstruction?: string;
+  financialInput: FinancialInput;
+  processingConsent: boolean;
+  idempotencyKey: string;
+}
+
+export type CustomerAIPreviewStatus = typeof CustomerAIPreviewStatus[keyof typeof CustomerAIPreviewStatus];
+
+
+export const CustomerAIPreviewStatus = {
+  ready: 'ready',
+  needs_information: 'needs_information',
+  manual_fallback: 'manual_fallback',
+  unsupported: 'unsupported',
+  running: 'running',
+} as const;
+
+export interface CustomerAIPreview {
+  id: string;
+  task: CustomerAITask;
+  status: CustomerAIPreviewStatus;
+  title: string;
+  content: CanonicalDocument;
+  missingFields: string[];
+  limitations: string[];
+  /** @nullable */
+  modelUsed: string | null;
+  /** @nullable */
+  providerCalls: number | null;
+  inputHash: string;
+  previewHash: string;
+  /** @nullable */
+  acceptedDocumentId: string | null;
+}
+
+export interface CustomerAISelection {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  title: string;
+  content: CanonicalDocument;
+  confirmBusinessDraft: boolean;
+}
+
+export interface CustomerAIUsage {
+  enabled: boolean;
+  workspaceUsed: number;
+  workspaceDailyLimit: number;
+  minuteLimit: number;
+  globalAvailable: boolean;
+  manualFallbackAvailable: boolean;
+  policyNotice: string;
+}
+
+export type ReleasedResourceKind = typeof ReleasedResourceKind[keyof typeof ReleasedResourceKind];
+
+
+export const ReleasedResourceKind = {
+  guidance: 'guidance',
+  guide: 'guide',
+  industry_pack: 'industry_pack',
+  location_pack: 'location_pack',
+} as const;
+
+export interface PublicSourceReference {
+  url: string;
+  title: string;
+  locator: string;
+}
+
+export interface ReleasedResource {
+  id: string;
+  slug: string;
+  title: string;
+  kind: ReleasedResourceKind;
+  industrySlugs: string[];
+  summary: string;
+  body: string;
+  reviewedAt: string;
+  disclosure: string;
+  scope: string;
+  limitations: string;
+  sources: PublicSourceReference[];
+}
+
+export interface IndustryCoverage {
+  id: string;
+  slug: string;
+  title: string;
+  deeperPackTarget: boolean;
+  enhancedEvidenceRequired: boolean;
+  coverageState: string;
+  evidenceState: string;
+  /** @nullable */
+  sourceCheckedAt: string | null;
+  publishedItems: number;
+}
+
+export interface PublicCoverage {
+  industries: IndustryCoverage[];
+  guidanceTarget: number;
+  publishedGuidance: number;
+  guidesTarget: number;
+  publishedGuides: number;
+  deeperPackTarget: number;
+  publishedDeeperPacks: number;
+  selectableLocations: number;
+  priorityLocations: string[];
+  checkedLocationPacks: number;
   notice: string;
+  ngoNotice: string;
+}
+
+export type PublicItemAccess = typeof PublicItemAccess[keyof typeof PublicItemAccess];
+
+
+export const PublicItemAccess = {
+  free: 'free',
+  premium: 'premium',
+} as const;
+
+export interface PublicItem {
+  id: string;
+  slug: string;
+  title: string;
+  type: string;
+  summary: string;
+  industry: string;
+  templateId?: string;
+  category?: string;
+  access?: PublicItemAccess;
+  reviewedAt?: string;
+  href?: string;
+  reason?: string;
+}
+
+export type SavedTemplatesItemsItem = {
+  templateId: string;
+  title: string;
+  savedVersion: number;
+  savedAt: string;
+  available: boolean;
+  current: PublicItem | null;
+};
+
+export interface SavedTemplates {
+  notice: string;
+  recommendations: PublicItem[];
+  /** @maxItems 200 */
+  items: SavedTemplatesItemsItem[];
+}
+
+export type ReleasedTemplateFormatsItem = typeof ReleasedTemplateFormatsItem[keyof typeof ReleasedTemplateFormatsItem];
+
+
+export const ReleasedTemplateFormatsItem = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export interface ReleasedTemplate {
+  id: string;
+  templateId: string;
+  slug: string;
+  title: string;
+  summary: string;
+  version: number;
+  reviewedAt: string;
+  reviewBy: string;
+  disclosure: string;
+  scope: string;
+  limitations: string;
+  preview: string[];
+  developmentOnly: boolean;
+  commercialLicenceAccepted: boolean;
+  formats: ReleasedTemplateFormatsItem[];
+}
+
+export interface CataloguePage {
+  items: PublicItem[];
+  total: number;
+  page: number;
+  heldTemplates: number;
 }
 
 export type DisputeHistoryActorType = typeof DisputeHistoryActorType[keyof typeof DisputeHistoryActorType];
@@ -253,314 +557,6 @@ export interface FinanceDisputeLink {
   orderId: string;
   /** @pattern ^\d{1,40}$ */
   providerId: string;
-}
-
-export type AccessSupportInputTopic = typeof AccessSupportInputTopic[keyof typeof AccessSupportInputTopic];
-
-
-export const AccessSupportInputTopic = {
-  account_access: 'account_access',
-  general: 'general',
-  content_issue: 'content_issue',
-} as const;
-
-export interface AccessSupportInput {
-  idempotencyKey: string;
-  /** @maxLength 254 */
-  email: string;
-  topic: AccessSupportInputTopic;
-  /**
-     * @minLength 20
-     * @maxLength 2000
-     */
-  message: string;
-  /** @maxLength 0 */
-  website?: string;
-}
-
-export type AccessSupportAckDelivery = typeof AccessSupportAckDelivery[keyof typeof AccessSupportAckDelivery];
-
-
-export const AccessSupportAckDelivery = {
-  not_dispatched: 'not_dispatched',
-} as const;
-
-export interface AccessSupportAck {
-  reference: string;
-  message: string;
-  delivery: AccessSupportAckDelivery;
-}
-
-export type ReleasedResourceKind = typeof ReleasedResourceKind[keyof typeof ReleasedResourceKind];
-
-
-export const ReleasedResourceKind = {
-  guidance: 'guidance',
-  guide: 'guide',
-  industry_pack: 'industry_pack',
-  location_pack: 'location_pack',
-} as const;
-
-export interface PublicSourceReference {
-  url: string;
-  title: string;
-  locator: string;
-}
-
-export interface ReleasedResource {
-  id: string;
-  slug: string;
-  title: string;
-  kind: ReleasedResourceKind;
-  industrySlugs: string[];
-  summary: string;
-  body: string;
-  reviewedAt: string;
-  disclosure: string;
-  scope: string;
-  limitations: string;
-  sources: PublicSourceReference[];
-}
-
-export type PrivacyRequestInputKind = typeof PrivacyRequestInputKind[keyof typeof PrivacyRequestInputKind];
-
-
-export const PrivacyRequestInputKind = {
-  correction: 'correction',
-  export: 'export',
-  deletion: 'deletion',
-} as const;
-
-export interface PrivacyRequestInput {
-  kind: PrivacyRequestInputKind;
-  /**
-     * @minLength 10
-     * @maxLength 1500
-     */
-  message: string;
-  acknowledgement: true;
-  idempotencyKey?: string;
-}
-
-export interface PrivacyCaseConfirmation {
-  /** @minimum 1 */
-  expectedVersion: number;
-  acknowledgement: true;
-}
-
-export type PrivacyCaseKind = typeof PrivacyCaseKind[keyof typeof PrivacyCaseKind];
-
-
-export const PrivacyCaseKind = {
-  correction: 'correction',
-  export: 'export',
-  deletion: 'deletion',
-} as const;
-
-export type PrivacyCaseStatus = typeof PrivacyCaseStatus[keyof typeof PrivacyCaseStatus];
-
-
-export const PrivacyCaseStatus = {
-  awaiting_verification: 'awaiting_verification',
-  verified: 'verified',
-  assigned: 'assigned',
-  in_progress: 'in_progress',
-  needs_information: 'needs_information',
-  held: 'held',
-  partially_fulfilled: 'partially_fulfilled',
-  fulfilled: 'fulfilled',
-  rejected: 'rejected',
-  cancelled: 'cancelled',
-  failed: 'failed',
-} as const;
-
-export interface PrivacyCase {
-  id: string;
-  workspaceId: string;
-  reference: string;
-  kind: PrivacyCaseKind;
-  message: string;
-  status: PrivacyCaseStatus;
-  version: number;
-  assigned: boolean;
-  /** @nullable */
-  verifiedAt: string | null;
-  resultAvailable: boolean;
-  resultScope: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PrivacyInformation {
-  /** @minimum 1 */
-  expectedVersion: number;
-  /**
-     * @minLength 10
-     * @maxLength 4000
-     */
-  message: string;
-}
-
-export type PrivacyCaseDetailMessagesItem = {
-  id: string;
-  body: string;
-  createdAt: string;
-};
-
-export type PrivacyCaseDetailEventsItemActorType = typeof PrivacyCaseDetailEventsItemActorType[keyof typeof PrivacyCaseDetailEventsItemActorType];
-
-
-export const PrivacyCaseDetailEventsItemActorType = {
-  customer: 'customer',
-  staff: 'staff',
-  worker: 'worker',
-} as const;
-
-export type PrivacyCaseDetailEventsItem = {
-  sequence: number;
-  action: string;
-  actorType: PrivacyCaseDetailEventsItemActorType;
-  reason: string;
-  createdAt: string;
-};
-
-export type PrivacyCaseDetailStepsItemStatus = typeof PrivacyCaseDetailStepsItemStatus[keyof typeof PrivacyCaseDetailStepsItemStatus];
-
-
-export const PrivacyCaseDetailStepsItemStatus = {
-  pending: 'pending',
-  running: 'running',
-  confirmed: 'confirmed',
-  held: 'held',
-  failed: 'failed',
-  not_applicable: 'not_applicable',
-} as const;
-
-export type PrivacyCaseDetailStepsItem = {
-  system: string;
-  status: PrivacyCaseDetailStepsItemStatus;
-  detail: string;
-};
-
-export interface PrivacyCaseDetail {
-  request: PrivacyCase;
-  mayRespond: boolean;
-  availableActions?: string[];
-  messages: PrivacyCaseDetailMessagesItem[];
-  events: PrivacyCaseDetailEventsItem[];
-  steps: PrivacyCaseDetailStepsItem[];
-}
-
-export type PrivacyStaffActionAction = typeof PrivacyStaffActionAction[keyof typeof PrivacyStaffActionAction];
-
-
-export const PrivacyStaffActionAction = {
-  claim: 'claim',
-  request_information: 'request_information',
-  hold: 'hold',
-  release_hold: 'release_hold',
-  reject: 'reject',
-  prepare_export: 'prepare_export',
-  record_correction: 'record_correction',
-  start_erasure: 'start_erasure',
-  resume_erasure: 'resume_erasure',
-} as const;
-
-export interface PrivacyStaffAction {
-  /** @minimum 1 */
-  expectedVersion: number;
-  action: PrivacyStaffActionAction;
-  /**
-     * @minLength 10
-     * @maxLength 1000
-     */
-  reason: string;
-  profileVersionId?: string;
-  acknowledgement?: boolean;
-}
-
-export interface PrivacyRequestRecord {
-  reference: string;
-  request: string;
-  status: string;
-  createdAt: string;
-}
-
-export interface CustomerAccount {
-  workspaceId: string;
-  privacyRequests: PrivacyRequestRecord[];
-}
-
-export interface WorkspaceExportRequest {
-  requestKey: string;
-}
-
-export interface WorkspaceExportAction {
-  /** @minimum 1 */
-  expectedVersion: number;
-}
-
-export type WorkspaceExportJobStatus = typeof WorkspaceExportJobStatus[keyof typeof WorkspaceExportJobStatus];
-
-
-export const WorkspaceExportJobStatus = {
-  queued: 'queued',
-  preparing: 'preparing',
-  interrupted: 'interrupted',
-  ready: 'ready',
-  cancelled: 'cancelled',
-  expired: 'expired',
-} as const;
-
-export type WorkspaceExportJobProgress = {
-  /** @nullable */
-  section: string | null;
-  /** @minimum 0 */
-  rows: number;
-  /** @minimum 0 */
-  bytes: number;
-};
-
-/**
- * @nullable
- */
-export type WorkspaceExportJobCounts = {[key: string]: number} | null;
-
-export interface WorkspaceExportJob {
-  id: string;
-  status: WorkspaceExportJobStatus;
-  /** @minimum 1 */
-  version: number;
-  retryAvailable: boolean;
-  progress: WorkspaceExportJobProgress;
-  attempts: number;
-  createdAt: string;
-  expiresAt: string;
-  /** @nullable */
-  snapshotAt: string | null;
-  /** @nullable */
-  size: number | null;
-  /** @nullable */
-  counts: WorkspaceExportJobCounts;
-  /** @nullable */
-  errorCode: string | null;
-  notice: string;
-}
-
-export interface WorkspaceExportPage {
-  items: WorkspaceExportJob[];
-  /** @nullable */
-  nextCursor: string | null;
-}
-
-export type WorkspaceDataExportData = { [key: string]: unknown };
-
-export interface WorkspaceDataExport {
-  schemaVersion: number;
-  exportedAt: string;
-  workspaceId: string;
-  scope: string;
-  data: WorkspaceDataExportData;
 }
 
 export type CustomerPurchasesProductsItem = {
@@ -829,284 +825,866 @@ export interface FinanceRefunds {
 
 export interface CommerceActionInput { [key: string]: never }
 
-export type StaffOperationsArea = typeof StaffOperationsArea[keyof typeof StaffOperationsArea];
+export type EditorialRunEvidencePublication = typeof EditorialRunEvidencePublication[keyof typeof EditorialRunEvidencePublication];
 
 
-export const StaffOperationsArea = {
-  content: 'content',
-  support: 'support',
-  finance: 'finance',
-  system: 'system',
+export const EditorialRunEvidencePublication = {
+  held: 'held',
 } as const;
 
-export type StaffOperationsRecordsItem = { [key: string]: unknown };
-
-export interface StaffOperations {
-  area: StaffOperationsArea;
-  notice: string;
-  records: StaffOperationsRecordsItem[];
-}
-
-export type CustomerAITask = typeof CustomerAITask[keyof typeof CustomerAITask];
-
-
-export const CustomerAITask = {
-  invoice: 'invoice',
-  quotation: 'quotation',
-  payment_reminder: 'payment_reminder',
-  business_proposal: 'business_proposal',
-} as const;
-
-export interface FinancialLine {
-  /**
-     * @minLength 1
-     * @maxLength 200
-     */
-  description: string;
-  /** @pattern ^(0|[1-9][0-9]{0,6})(\.[0-9]{1,3})?$ */
-  quantity: string;
-  /** @pattern ^[0-9]{1,24}$ */
-  unitPriceKobo: string;
-  /**
-     * @minLength 3
-     * @maxLength 3
-     */
-  currency?: string;
-}
-
-export type FinancialInputOptionalLinesItem = {
-  /**
-     * @minLength 1
-     * @maxLength 240
-     */
-  description: string;
-  /** @pattern ^(0|[1-9][0-9]{0,6})(\.[0-9]{1,3})?$ */
-  quantity: string;
-  /** @pattern ^[0-9]{1,24}$ */
-  unitPriceKobo: string;
-  selected: boolean;
-  /** @pattern ^[A-Z]{3}$ */
-  currency?: string;
-};
-
-export type FinancialInputPaymentRecordPaymentsItem = {
-  /**
-     * @minLength 1
-     * @maxLength 80
-     */
-  reference: string;
-  /** @pattern ^[0-9]{1,24}$ */
-  amountKobo: string;
-};
-
-export type FinancialInputPaymentRecord = {
-  /** @pattern ^[0-9]{1,24}$ */
-  invoiceAmountKobo: string;
-  duplicatesConfirmed?: boolean;
-  /** @maxItems 40 */
-  payments: FinancialInputPaymentRecordPaymentsItem[];
-};
-
-export interface FinancialInput {
-  kind: CustomerAITask;
-  /** @maxItems 40 */
-  lines: FinancialLine[];
-  /**
-     * @nullable
-     * @pattern ^[0-9]{1,24}$
-     */
-  taxAmountKobo: string | null;
-  /** @maxLength 80 */
-  taxLabel: string;
-  /**
-     * @nullable
-     * @pattern ^[0-9]{1,24}$
-     */
-  discountKobo: string | null;
-  /** @pattern ^[0-9]{1,24}$ */
-  deliveryKobo?: string;
-  /** @pattern ^(0|[1-9][0-9]{0,2})(\.[0-9]{1,4})?$ */
-  discountPercent?: string;
-  /** @pattern ^(0|[1-9][0-9]{0,2})(\.[0-9]{1,4})?$ */
-  taxPercent?: string;
-  /** @pattern ^[0-9]{1,24}$ */
-  taxBaseKobo?: string;
-  /**
-     * @minLength 3
-     * @maxLength 3
-     */
-  currency?: string;
-  /** @pattern ^[0-9]{1,24}$ */
-  requestedTotalKobo?: string;
-  /** @pattern ^[0-9]{1,24}$ */
-  disputedKobo?: string;
-  /** @maxItems 40 */
-  optionalLines?: FinancialInputOptionalLinesItem[];
-  /**
-     * @nullable
-     * @pattern ^[0-9]{1,24}$
-     */
-  amountDueKobo: string | null;
-  paymentRecord?: FinancialInputPaymentRecord;
-}
-
-export type CustomerAIInputTone = typeof CustomerAIInputTone[keyof typeof CustomerAIInputTone];
-
-
-export const CustomerAIInputTone = {
-  neutral: 'neutral',
-  polite: 'polite',
-  firm: 'firm',
-} as const;
-
-export interface CustomerAIInput {
-  task: CustomerAITask;
-  tone: CustomerAIInputTone;
-  /** @maxLength 160 */
-  issuerName: string;
-  /** @maxLength 160 */
-  recipientName: string;
-  /** @maxLength 80 */
-  documentNumber: string;
-  /** @pattern ^([0-9]{4}-[0-9]{2}-[0-9]{2})?$ */
-  issueDate: string;
-  /** @pattern ^([0-9]{4}-[0-9]{2}-[0-9]{2})?$ */
-  dueDate: string;
-  /**
-     * @maxItems 20
-     * @items.minLength 1
-     * @items.maxLength 1000
-     */
-  contextLines: string[];
-  /**
-     * Optional untrusted organisation preference; never copied into the business document or used to supply missing business facts.
-     * @maxLength 1000
-     */
-  draftingInstruction?: string;
-  financialInput: FinancialInput;
-  processingConsent: boolean;
-  idempotencyKey: string;
-}
-
-export type CustomerAIPreviewStatus = typeof CustomerAIPreviewStatus[keyof typeof CustomerAIPreviewStatus];
-
-
-export const CustomerAIPreviewStatus = {
-  ready: 'ready',
-  needs_information: 'needs_information',
-  manual_fallback: 'manual_fallback',
-  unsupported: 'unsupported',
-  running: 'running',
-} as const;
-
-export type DocumentBlockType = typeof DocumentBlockType[keyof typeof DocumentBlockType];
-
-
-export const DocumentBlockType = {
-  paragraph: 'paragraph',
-  list: 'list',
-  table: 'table',
-} as const;
-
-export interface DocumentBlock {
-  /**
-     * @minLength 1
-     * @maxLength 80
-     */
+export interface EditorialRunEvidence {
   id: string;
-  type: DocumentBlockType;
-  /** @maxLength 8000 */
-  text: string;
-  /**
-     * @maxItems 100
-     * @items.maxItems 10
-     * @items.items.maxLength 1000
-     */
-  rows: string[][];
+  pipelineId: string;
+  role: string;
+  status: string;
+  model: string;
+  promptVersion: string;
+  sourceHash: string;
+  /** @nullable */
+  candidateHash: string | null;
+  /** @nullable */
+  providerResponseId: string | null;
+  /** @nullable */
+  latencyMs: number | null;
+  /** @nullable */
+  inputTokens: number | null;
+  /** @nullable */
+  outputTokens: number | null;
+  createdAt: string;
+  publication: EditorialRunEvidencePublication;
+  /** @nullable */
+  failureCode: string | null;
+  /** @nullable */
+  modelVerdict: string | null;
 }
 
-export type CanonicalDocumentFormattingFont = typeof CanonicalDocumentFormattingFont[keyof typeof CanonicalDocumentFormattingFont];
+export type ReferenceEvidencePublication = typeof ReferenceEvidencePublication[keyof typeof ReferenceEvidencePublication];
 
 
-export const CanonicalDocumentFormattingFont = {
-  sans: 'sans',
-  serif: 'serif',
+export const ReferenceEvidencePublication = {
+  held: 'held',
 } as const;
 
-export type CanonicalDocumentFormattingAccent = typeof CanonicalDocumentFormattingAccent[keyof typeof CanonicalDocumentFormattingAccent];
-
-
-export const CanonicalDocumentFormattingAccent = {
-  forest: 'forest',
-  charcoal: 'charcoal',
-} as const;
-
-export type CanonicalDocumentFields = {
-  /** @maxLength 160 */
-  issuerName: string;
-  /** @maxLength 160 */
-  recipientName: string;
-  /** @maxLength 80 */
-  documentNumber: string;
-  /** @maxLength 10 */
-  issueDate: string;
-  /** @maxLength 10 */
-  dueDate: string;
-  /** @maxLength 5000 */
-  notes: string;
-};
-
-export type CanonicalDocumentFormatting = {
-  font: CanonicalDocumentFormattingFont;
-  accent: CanonicalDocumentFormattingAccent;
-};
-
-export interface CanonicalDocument {
-  fields: CanonicalDocumentFields;
-  /** @maxItems 100 */
-  blocks: DocumentBlock[];
-  /** @maxItems 0 */
-  selectedClauses: string[];
-  financialInput?: FinancialInput;
-  formatting: CanonicalDocumentFormatting;
-}
-
-export interface CustomerAIPreview {
+export interface ReferenceEvidence {
+  coordinatingNotes: string[];
+  /** @nullable */
+  titleEvidenceStatus: string | null;
+  /** @nullable */
+  metadataTitle: string | null;
+  /** @nullable */
+  titleWarning: string | null;
   id: string;
-  task: CustomerAITask;
-  status: CustomerAIPreviewStatus;
   title: string;
-  content: CanonicalDocument;
-  missingFields: string[];
-  limitations: string[];
+  url: string;
+  category: string;
+  baselineNotes: string;
+  sourceLocator: string;
+  status: string;
   /** @nullable */
-  modelUsed: string | null;
+  attemptedAt: string | null;
   /** @nullable */
-  providerCalls: number | null;
-  inputHash: string;
-  previewHash: string;
+  fetchedAt: string | null;
   /** @nullable */
-  acceptedDocumentId: string | null;
+  httpStatus: number | null;
+  /** @nullable */
+  failureCode: string | null;
+  /** @nullable */
+  rawChecksum: string | null;
+  /** @nullable */
+  textChecksum: string | null;
+  rawStored: boolean;
+  textStored: boolean;
+  publication: ReferenceEvidencePublication;
+  /** @nullable */
+  aiReviewedAt: string | null;
+  /** @nullable */
+  sourceCheckedAt: string | null;
 }
 
-export interface CustomerAISelection {
+export interface RetentionProposal {
+  id: string;
+  dataClass: string;
+  exactProposal: string;
+  status: string;
+  statutoryPeriod: false;
+  approved: false;
+  enforced: false;
+}
+
+export interface RoadmapContext {
+  id: string;
+  title: string;
+  exactContract: string;
+  sha256: string;
+  status: string;
+}
+
+export interface SourceEvidenceRegister {
+  editorialRuns: EditorialRunEvidence[];
+  handoverSummary: string;
+  coordinatingSummary: string;
+  notice: string;
+  references: ReferenceEvidence[];
+  retentionProposals: RetentionProposal[];
+  roadmapSections: RoadmapContext[];
+}
+
+export interface InventoryOverlap {
+  id: string;
+  source_ids: string[];
+  type: string;
+  note: string;
+  canonical_id?: string;
+}
+
+export interface CoverageLayer {
+  id: string;
+  title: string;
+  commitment: string;
+  representation: string;
+  status: string;
+}
+
+export interface ExpansionBoundary {
+  id: string;
+  release: string;
+  horizon: string;
+  priority: string;
+  condition: string;
+  enabled: boolean;
+  status: string;
+}
+
+export interface ManagementFile {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface ExpansionTargets {
+  templates: number;
+  guided: number;
+  guidance: number;
+  deeperPacks: number;
+  locationsUpTo: number;
+}
+
+export interface UatPack {
+  id: string;
+  title: string;
+  requirements: string;
+  requiredEvidence: string;
+  status: string;
+  accepted: boolean;
+  reason: string;
+}
+
+export interface ReleaseGate {
+  id: string;
+  phaseId: string;
+  plannedWindow: string;
+  requiredEvidence: string;
+  approvers: string;
+  status: string;
+  reason: string;
+}
+
+export interface ReleaseControl {
+  id: string;
+  title: string;
+  source: string;
+  text: string;
+}
+
+export interface ProofSuite {
+  id: string;
+  requiredCases: number;
+  executedCases: number;
+  accepted: boolean;
+}
+
+export interface ProofRegister {
+  uatPackages: UatPack[];
+  gates: ReleaseGate[];
+  releaseControls: ReleaseControl[];
+  suites: ProofSuite[];
+  r1Accepted: boolean;
+  r2Unlocked: boolean;
+  publicLaunchEnabled: boolean;
+}
+
+export interface ContentTraceRow {
+  id: string;
+  title: string;
+  kind: string;
+  status: string;
+  relatedIds: string[];
+  limitation: string;
+  /** @nullable */
+  canonicalId: string | null;
+  mappingType: string;
+  evidenceState: string;
+  coverageState: string;
+  publicationEligible: boolean;
+  sourceLocator: string;
+  overlapIds: string[];
+  /** @nullable */
+  sourceCheckedAt: string | null;
+}
+
+export interface ContentRegister {
+  rows: ContentTraceRow[];
+  industries: string[];
+  deeperPacks: string[];
+  identifiedTemplates: number;
+  regulatoryRows: number;
+  publishedTemplates: number;
+  notice: string;
+  overlaps: InventoryOverlap[];
+  coverageLayers: CoverageLayer[];
+  expansionBoundaries: ExpansionBoundary[];
+  managementFiles: ManagementFile[];
+  ngoCaution: string;
+  provisionalTargets: string;
+  r2Targets: ExpansionTargets;
+}
+
+export type RequirementRecordStatus = typeof RequirementRecordStatus[keyof typeof RequirementRecordStatus];
+
+
+export const RequirementRecordStatus = {
+  blocked: 'blocked',
+  verified: 'verified',
+  in_progress: 'in_progress',
+  not_started: 'not_started',
+} as const;
+
+export interface RequirementRecord {
+  id: string;
+  title: string;
+  release: string;
+  priority: string;
+  exactText: string;
+  acceptance: string;
+  status: RequirementRecordStatus;
+  implementationPaths: string[];
+  blockers: string[];
+  sourceExactText?: string;
+  sourceLocator?: string;
+  owner?: string;
+  dependencies?: string[];
+}
+
+export interface ConflictRecord {
+  id: string;
+  topic: string;
+  status: string;
+  issue: string;
+  /** @nullable */
+  resolution: string | null;
+  blocks: string[];
+}
+
+export interface RequirementsRegister {
+  requirements: RequirementRecord[];
+  conflicts: ConflictRecord[];
+}
+
+export interface DocumentInput {
   /**
      * @minLength 1
      * @maxLength 160
      */
   title: string;
   content: CanonicalDocument;
-  confirmBusinessDraft: boolean;
 }
 
-export interface CustomerAIUsage {
+export interface DocumentUpdate {
+  /** @minimum 1 */
+  expectedRevision: number;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  title: string;
+  content: CanonicalDocument;
+}
+
+export type SourceControlAction = {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  action: 'watch_source';
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  sourceId: string;
+} | {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  action: 'hold_version';
+  kind: 'content' | 'rule';
+  id: string;
+  /** @minimum 1 */
+  version: number;
+} | {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  action: 'withdraw_version';
+  kind: 'content' | 'rule';
+  id: string;
+  /** @minimum 1 */
+  version: number;
+} | {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  action: 'pause_service';
+  service: 'ai' | 'checkout';
+} | {
+  requestKey: string;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  action: 'resume_service';
+  service: 'ai' | 'checkout';
+};
+
+export type SourceControlResultResult = { [key: string]: unknown };
+
+export interface SourceControlResult {
+  auditId: string;
+  replayed: boolean;
+  result: SourceControlResultResult;
+}
+
+export type SourceControlVersionKind = typeof SourceControlVersionKind[keyof typeof SourceControlVersionKind];
+
+
+export const SourceControlVersionKind = {
+  content: 'content',
+  rule: 'rule',
+} as const;
+
+export interface SourceControlVersion {
+  kind: SourceControlVersionKind;
+  id: string;
+  key: string;
+  version: number;
+  status: string;
+  /** @nullable */
+  reviewBy: string | null;
+  safetyHeld: boolean;
+}
+
+export interface SourceControlWatch {
+  sourceId: string;
+  url: string;
+  risk: string;
+  /** @nullable */
+  checkedAt: string | null;
+  /** @nullable */
+  failureCode: string | null;
+  nextCheckAt: string;
+}
+
+export interface SourceControlReview {
+  id: string;
+  status: string;
+  targetKind: string;
+  targetKey: string;
+  targetVersion: number;
+  reason: string;
+  createdAt: string;
+}
+
+export interface SourceControlService {
+  key: string;
   enabled: boolean;
-  workspaceUsed: number;
-  workspaceDailyLimit: number;
-  minuteLimit: number;
-  globalAvailable: boolean;
-  manualFallbackAvailable: boolean;
-  policyNotice: string;
+  reason: string;
+  updatedAt: string;
+}
+
+export interface SourceControlChoice {
+  id: string;
+  title: string;
+}
+
+export type SourceControlsArea = typeof SourceControlsArea[keyof typeof SourceControlsArea];
+
+
+export const SourceControlsArea = {
+  content: 'content',
+  system: 'system',
+} as const;
+
+export interface SourceControls {
+  area: SourceControlsArea;
+  page: number;
+  hasMore: boolean;
+  notice: string;
+  versions: SourceControlVersion[];
+  sources: SourceControlWatch[];
+  review: SourceControlReview[];
+  services: SourceControlService[];
+  sourceChoices: SourceControlChoice[];
+}
+
+export interface EditorialRun {
+  runId: string;
+  model: string;
+  promptVersion: string;
+}
+
+export type EditorialReviewRole = typeof EditorialReviewRole[keyof typeof EditorialReviewRole];
+
+
+export const EditorialReviewRole = {
+  factual: 'factual',
+  challenge: 'challenge',
+} as const;
+
+export type EditorialReviewVerdict = typeof EditorialReviewVerdict[keyof typeof EditorialReviewVerdict];
+
+
+export const EditorialReviewVerdict = {
+  pass: 'pass',
+  hold: 'hold',
+} as const;
+
+export interface EditorialReview {
+  role: EditorialReviewRole;
+  runId: string;
+  model: string;
+  promptVersion: string;
+  verdict: EditorialReviewVerdict;
+  /** The review's findings, at most 20, each cut to 600 characters. */
+  findings: string[];
+  receivedOtherVerdict: boolean;
+}
+
+export interface EditorialCheckCounts {
+  passed: number;
+  failed: number;
+  notRun: number;
+}
+
+export type EditorialRecordKind = typeof EditorialRecordKind[keyof typeof EditorialRecordKind];
+
+
+export const EditorialRecordKind = {
+  content: 'content',
+  rule: 'rule',
+} as const;
+
+export type EditorialRecordCheckDecision = typeof EditorialRecordCheckDecision[keyof typeof EditorialRecordCheckDecision];
+
+
+export const EditorialRecordCheckDecision = {
+  eligible: 'eligible',
+  hold: 'hold',
+} as const;
+
+/**
+ * What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release.
+ */
+export type EditorialRecordCheck = {
+  checkedAt: string;
+  decision: EditorialRecordCheckDecision;
+  reasons: string[];
+};
+
+export type EditorialRecordAuditItem = {
+  action: string;
+  actor: string;
+  reason: string;
+  at: string;
+};
+
+export type EditorialRecordSafetyHoldsItem = {
+  action: string;
+  reason: string;
+  phase: string;
+  createdAt: string;
+  /** @nullable */
+  completedAt: string | null;
+};
+
+export interface EditorialRecord {
+  kind: EditorialRecordKind;
+  id: string;
+  key: string;
+  version: number;
+  status: string;
+  /** @nullable */
+  reviewBy: string | null;
+  /** @nullable */
+  publishedAt: string | null;
+  /** @nullable */
+  withdrawnReason: string | null;
+  /** @nullable */
+  candidateHash: string | null;
+  /** @nullable */
+  manifestStatus: string | null;
+  /** What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release. */
+  check: EditorialRecordCheck;
+  draftRun: EditorialRun | null;
+  reviews: EditorialReview[];
+  mechanicalChecks: EditorialCheckCounts;
+  enhancedChecks: EditorialCheckCounts;
+  audit: EditorialRecordAuditItem[];
+  safetyHolds: EditorialRecordSafetyHoldsItem[];
+  notice: string;
+}
+
+export interface CorrectionNotice {
+  id: string;
+  entityKind: string;
+  entityId: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface CorrectionNotices {
+  page: number;
+  hasMore: boolean;
+  notices: CorrectionNotice[];
+}
+
+export type ExportInputFormat = typeof ExportInputFormat[keyof typeof ExportInputFormat];
+
+
+export const ExportInputFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export interface ExportInput {
+  revisionId: string;
+  format: ExportInputFormat;
+  acknowledgeDraft: boolean;
+}
+
+export interface ExportRetryInput { [key: string]: never }
+
+export type ExportJobFormat = typeof ExportJobFormat[keyof typeof ExportJobFormat];
+
+
+export const ExportJobFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export type ExportJobStatus = typeof ExportJobStatus[keyof typeof ExportJobStatus];
+
+
+export const ExportJobStatus = {
+  queued: 'queued',
+  running: 'running',
+  retrying: 'retrying',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export interface ExportJob {
+  id: string;
+  documentId: string;
+  revisionId: string;
+  revision: number;
+  format: ExportJobFormat;
+  renderVersion: string;
+  sourceHash: string;
+  status: ExportJobStatus;
+  attempts: number;
+  /** @nullable */
+  errorCode: string | null;
+  /** @nullable */
+  checksum: string | null;
+  /** @nullable */
+  size: number | null;
+  /** @nullable */
+  downloadUrl: string | null;
+  /** @nullable */
+  expiresAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SessionMfaVerification {
+  verified: true;
+  checkedAt: string;
+}
+
+export interface BuildStatus {
+  receivedRequirements: number;
+  expectedRequirements: number;
+  publishedTemplates: number;
+  p0Passed: boolean;
+  r2Unlocked: boolean;
+  livePaymentsEnabled: boolean;
+  notice: string;
+}
+
+export interface HealthStatus {
+  status: string;
+}
+
+export type PrivacyRequestInputKind = typeof PrivacyRequestInputKind[keyof typeof PrivacyRequestInputKind];
+
+
+export const PrivacyRequestInputKind = {
+  correction: 'correction',
+  export: 'export',
+  deletion: 'deletion',
+} as const;
+
+export interface PrivacyRequestInput {
+  kind: PrivacyRequestInputKind;
+  /**
+     * @minLength 10
+     * @maxLength 1500
+     */
+  message: string;
+  acknowledgement: true;
+  idempotencyKey?: string;
+}
+
+export interface PrivacyCaseConfirmation {
+  /** @minimum 1 */
+  expectedVersion: number;
+  acknowledgement: true;
+}
+
+export type PrivacyCaseKind = typeof PrivacyCaseKind[keyof typeof PrivacyCaseKind];
+
+
+export const PrivacyCaseKind = {
+  correction: 'correction',
+  export: 'export',
+  deletion: 'deletion',
+} as const;
+
+export type PrivacyCaseStatus = typeof PrivacyCaseStatus[keyof typeof PrivacyCaseStatus];
+
+
+export const PrivacyCaseStatus = {
+  awaiting_verification: 'awaiting_verification',
+  verified: 'verified',
+  assigned: 'assigned',
+  in_progress: 'in_progress',
+  needs_information: 'needs_information',
+  held: 'held',
+  partially_fulfilled: 'partially_fulfilled',
+  fulfilled: 'fulfilled',
+  rejected: 'rejected',
+  cancelled: 'cancelled',
+  failed: 'failed',
+} as const;
+
+export interface PrivacyCase {
+  id: string;
+  workspaceId: string;
+  reference: string;
+  kind: PrivacyCaseKind;
+  message: string;
+  status: PrivacyCaseStatus;
+  version: number;
+  assigned: boolean;
+  /** @nullable */
+  verifiedAt: string | null;
+  resultAvailable: boolean;
+  resultScope: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PrivacyInformation {
+  /** @minimum 1 */
+  expectedVersion: number;
+  /**
+     * @minLength 10
+     * @maxLength 4000
+     */
+  message: string;
+}
+
+export type PrivacyCaseDetailMessagesItem = {
+  id: string;
+  body: string;
+  createdAt: string;
+};
+
+export type PrivacyCaseDetailEventsItemActorType = typeof PrivacyCaseDetailEventsItemActorType[keyof typeof PrivacyCaseDetailEventsItemActorType];
+
+
+export const PrivacyCaseDetailEventsItemActorType = {
+  customer: 'customer',
+  staff: 'staff',
+  worker: 'worker',
+} as const;
+
+export type PrivacyCaseDetailEventsItem = {
+  sequence: number;
+  action: string;
+  actorType: PrivacyCaseDetailEventsItemActorType;
+  reason: string;
+  createdAt: string;
+};
+
+export type PrivacyCaseDetailStepsItemStatus = typeof PrivacyCaseDetailStepsItemStatus[keyof typeof PrivacyCaseDetailStepsItemStatus];
+
+
+export const PrivacyCaseDetailStepsItemStatus = {
+  pending: 'pending',
+  running: 'running',
+  confirmed: 'confirmed',
+  held: 'held',
+  failed: 'failed',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type PrivacyCaseDetailStepsItem = {
+  system: string;
+  status: PrivacyCaseDetailStepsItemStatus;
+  detail: string;
+};
+
+export interface PrivacyCaseDetail {
+  request: PrivacyCase;
+  mayRespond: boolean;
+  availableActions?: string[];
+  messages: PrivacyCaseDetailMessagesItem[];
+  events: PrivacyCaseDetailEventsItem[];
+  steps: PrivacyCaseDetailStepsItem[];
+}
+
+export type PrivacyStaffActionAction = typeof PrivacyStaffActionAction[keyof typeof PrivacyStaffActionAction];
+
+
+export const PrivacyStaffActionAction = {
+  claim: 'claim',
+  request_information: 'request_information',
+  hold: 'hold',
+  release_hold: 'release_hold',
+  reject: 'reject',
+  prepare_export: 'prepare_export',
+  record_correction: 'record_correction',
+  start_erasure: 'start_erasure',
+  resume_erasure: 'resume_erasure',
+} as const;
+
+export interface PrivacyStaffAction {
+  /** @minimum 1 */
+  expectedVersion: number;
+  action: PrivacyStaffActionAction;
+  /**
+     * @minLength 10
+     * @maxLength 1000
+     */
+  reason: string;
+  profileVersionId?: string;
+  acknowledgement?: boolean;
+}
+
+export interface PrivacyRequestRecord {
+  reference: string;
+  request: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface CustomerAccount {
+  workspaceId: string;
+  privacyRequests: PrivacyRequestRecord[];
+}
+
+export interface WorkspaceExportRequest {
+  requestKey: string;
+}
+
+export interface WorkspaceExportAction {
+  /** @minimum 1 */
+  expectedVersion: number;
+}
+
+export type WorkspaceExportJobStatus = typeof WorkspaceExportJobStatus[keyof typeof WorkspaceExportJobStatus];
+
+
+export const WorkspaceExportJobStatus = {
+  queued: 'queued',
+  preparing: 'preparing',
+  interrupted: 'interrupted',
+  ready: 'ready',
+  cancelled: 'cancelled',
+  expired: 'expired',
+} as const;
+
+export type WorkspaceExportJobProgress = {
+  /** @nullable */
+  section: string | null;
+  /** @minimum 0 */
+  rows: number;
+  /** @minimum 0 */
+  bytes: number;
+};
+
+/**
+ * @nullable
+ */
+export type WorkspaceExportJobCounts = {[key: string]: number} | null;
+
+export interface WorkspaceExportJob {
+  id: string;
+  status: WorkspaceExportJobStatus;
+  /** @minimum 1 */
+  version: number;
+  retryAvailable: boolean;
+  progress: WorkspaceExportJobProgress;
+  attempts: number;
+  createdAt: string;
+  expiresAt: string;
+  /** @nullable */
+  snapshotAt: string | null;
+  /** @nullable */
+  size: number | null;
+  /** @nullable */
+  counts: WorkspaceExportJobCounts;
+  /** @nullable */
+  errorCode: string | null;
+  notice: string;
+}
+
+export interface WorkspaceExportPage {
+  items: WorkspaceExportJob[];
+  /** @nullable */
+  nextCursor: string | null;
+}
+
+export type WorkspaceDataExportData = { [key: string]: unknown };
+
+export interface WorkspaceDataExport {
+  schemaVersion: number;
+  exportedAt: string;
+  workspaceId: string;
+  scope: string;
+  data: WorkspaceDataExportData;
 }
 
 export type RichCheckerFactsBusinessNameLegalForm = 'individual' | 'firm' | 'company' | 'other' | {
@@ -1737,17 +2315,6 @@ export const UnknownAnswer = {
   not_applicable: 'not_applicable',
 } as const;
 
-export type Answer = typeof Answer[keyof typeof Answer];
-
-
-export const Answer = {
-  yes: 'yes',
-  no: 'no',
-  unknown: 'unknown',
-  unanswered: 'unanswered',
-  not_applicable: 'not_applicable',
-} as const;
-
 export interface CheckerFacts {
   factsVersion?: CheckerFactsFactsVersion;
   rich?: RichCheckerFacts;
@@ -1916,773 +2483,182 @@ export interface AssessmentComparison {
   explanations: AssessmentChange[];
 }
 
-export type TaskState = typeof TaskState[keyof typeof TaskState];
+export interface VerifyStaffRoleTargetInput {
+  /**
+     * @maxLength 128
+     * @pattern ^user_[A-Za-z0-9_-]+$
+     */
+  identityId: string;
+}
+
+export type StaffRoleAssignmentRole = typeof StaffRoleAssignmentRole[keyof typeof StaffRoleAssignmentRole];
 
 
-export const TaskState = {
-  not_started: 'not_started',
-  in_progress: 'in_progress',
-  completed_by_user: 'completed_by_user',
-  needs_review: 'needs_review',
+export const StaffRoleAssignmentRole = {
+  content: 'content',
+  support: 'support',
+  finance: 'finance',
+  system: 'system',
+  privacy: 'privacy',
 } as const;
 
-export interface TaskArchiveInput {
+export type StaffRoleAssignmentGrantMode = typeof StaffRoleAssignmentGrantMode[keyof typeof StaffRoleAssignmentGrantMode];
+
+
+export const StaffRoleAssignmentGrantMode = {
+  permanent: 'permanent',
+  break_glass: 'break_glass',
+} as const;
+
+export interface StaffRoleAssignment {
+  id: string;
+  identityId: string;
+  role: StaffRoleAssignmentRole;
+  active: boolean;
+  grantMode: StaffRoleAssignmentGrantMode;
+  /** @nullable */
+  expiresAt: string | null;
   /** @minimum 1 */
-  expectedRevision: number;
-}
-
-export interface TaskInput {
-  /**
-     * @minLength 1
-     * @maxLength 200
-     */
-  title: string;
-  /** @maxLength 6000 */
-  notes: string;
-  /**
-     * @nullable
-     * @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
-     */
-  dueDate: string | null;
-  dateConfirmed: boolean;
-  /** @nullable */
-  assessmentId: string | null;
-  /**
-     * @maxLength 100
-     * @nullable
-     */
-  ruleId: string | null;
-}
-
-export interface TaskUpdate {
-  /**
-     * @minLength 1
-     * @maxLength 200
-     */
-  title: string;
-  /** @maxLength 6000 */
-  notes: string;
-  /**
-     * @nullable
-     * @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
-     */
-  dueDate: string | null;
-  dateConfirmed: boolean;
-  state: TaskState;
-  /** @minimum 1 */
-  expectedRevision: number;
-}
-
-export interface WorkspaceTask {
-  id: string;
-  title: string;
-  notes: string;
-  state: TaskState;
-  revision: number;
-  /** @nullable */
-  dueDate: string | null;
-  dateConfirmed: boolean;
-  /** @nullable */
-  assessmentId: string | null;
-  /** @nullable */
-  ruleId: string | null;
-  needsReview: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface TaskPage {
-  items: WorkspaceTask[];
-  total: number;
-  openCount: number;
-  filteredTotal: number;
-  page: number;
-  pageSize: number;
-  hasNext: boolean;
-}
-
-export type ReminderPreferencesInputOffsetsItem = typeof ReminderPreferencesInputOffsetsItem[keyof typeof ReminderPreferencesInputOffsetsItem];
-
-
-export const ReminderPreferencesInputOffsetsItem = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_3: 3,
-  NUMBER_7: 7,
-  NUMBER_14: 14,
-} as const;
-
-export interface ReminderPreferencesInput {
-  enabled: boolean;
-  /**
-     * @minItems 0
-     * @maxItems 4
-     */
-  offsets: ReminderPreferencesInputOffsetsItem[];
-  /** @minimum 0 */
-  expectedRevision: number;
-}
-
-export interface ReminderPreferences {
-  enabled: boolean;
-  offsets: number[];
-  revision: number;
-  timezone: string;
-  deliveryAvailable: boolean;
-  /** @nullable */
-  deliveryBlocker: string | null;
-}
-
-export type ReminderRecordStatus = typeof ReminderRecordStatus[keyof typeof ReminderRecordStatus];
-
-
-export const ReminderRecordStatus = {
-  held: 'held',
-  pending: 'pending',
-  sent: 'sent',
-  cancelled: 'cancelled',
-  failed: 'failed',
-} as const;
-
-export interface ReminderRecord {
-  id: string;
-  taskId: string;
-  scheduledAt: string;
-  status: ReminderRecordStatus;
-  /** @minimum 0 */
-  attempts: number;
-  /** @nullable */
-  nextAttemptAt: string | null;
-  /** @nullable */
-  lastAttemptAt: string | null;
-  /** @nullable */
-  reason: string | null;
-  /** @nullable */
-  deliveredAt: string | null;
-}
-
-export type EditorialRunEvidencePublication = typeof EditorialRunEvidencePublication[keyof typeof EditorialRunEvidencePublication];
-
-
-export const EditorialRunEvidencePublication = {
-  held: 'held',
-} as const;
-
-export interface EditorialRunEvidence {
-  id: string;
-  pipelineId: string;
-  role: string;
-  status: string;
-  model: string;
-  promptVersion: string;
-  sourceHash: string;
-  /** @nullable */
-  candidateHash: string | null;
-  /** @nullable */
-  providerResponseId: string | null;
-  /** @nullable */
-  latencyMs: number | null;
-  /** @nullable */
-  inputTokens: number | null;
-  /** @nullable */
-  outputTokens: number | null;
-  createdAt: string;
-  publication: EditorialRunEvidencePublication;
-  /** @nullable */
-  failureCode: string | null;
-  /** @nullable */
-  modelVerdict: string | null;
-}
-
-export type ReferenceEvidencePublication = typeof ReferenceEvidencePublication[keyof typeof ReferenceEvidencePublication];
-
-
-export const ReferenceEvidencePublication = {
-  held: 'held',
-} as const;
-
-export interface ReferenceEvidence {
-  coordinatingNotes: string[];
-  /** @nullable */
-  titleEvidenceStatus: string | null;
-  /** @nullable */
-  metadataTitle: string | null;
-  /** @nullable */
-  titleWarning: string | null;
-  id: string;
-  title: string;
-  url: string;
-  category: string;
-  baselineNotes: string;
-  sourceLocator: string;
-  status: string;
-  /** @nullable */
-  attemptedAt: string | null;
-  /** @nullable */
-  fetchedAt: string | null;
-  /** @nullable */
-  httpStatus: number | null;
-  /** @nullable */
-  failureCode: string | null;
-  /** @nullable */
-  rawChecksum: string | null;
-  /** @nullable */
-  textChecksum: string | null;
-  rawStored: boolean;
-  textStored: boolean;
-  publication: ReferenceEvidencePublication;
-  /** @nullable */
-  aiReviewedAt: string | null;
-  /** @nullable */
-  sourceCheckedAt: string | null;
-}
-
-export interface RetentionProposal {
-  id: string;
-  dataClass: string;
-  exactProposal: string;
-  status: string;
-  statutoryPeriod: false;
-  approved: false;
-  enforced: false;
-}
-
-export interface RoadmapContext {
-  id: string;
-  title: string;
-  exactContract: string;
-  sha256: string;
-  status: string;
-}
-
-export interface SourceEvidenceRegister {
-  editorialRuns: EditorialRunEvidence[];
-  handoverSummary: string;
-  coordinatingSummary: string;
-  notice: string;
-  references: ReferenceEvidence[];
-  retentionProposals: RetentionProposal[];
-  roadmapSections: RoadmapContext[];
-}
-
-export interface IndustryCoverage {
-  id: string;
-  slug: string;
-  title: string;
-  deeperPackTarget: boolean;
-  enhancedEvidenceRequired: boolean;
-  coverageState: string;
-  evidenceState: string;
-  /** @nullable */
-  sourceCheckedAt: string | null;
-  publishedItems: number;
-}
-
-export interface PublicCoverage {
-  industries: IndustryCoverage[];
-  guidanceTarget: number;
-  publishedGuidance: number;
-  guidesTarget: number;
-  publishedGuides: number;
-  deeperPackTarget: number;
-  publishedDeeperPacks: number;
-  selectableLocations: number;
-  priorityLocations: string[];
-  checkedLocationPacks: number;
-  notice: string;
-  ngoNotice: string;
-}
-
-export interface InventoryOverlap {
-  id: string;
-  source_ids: string[];
-  type: string;
-  note: string;
-  canonical_id?: string;
-}
-
-export interface CoverageLayer {
-  id: string;
-  title: string;
-  commitment: string;
-  representation: string;
-  status: string;
-}
-
-export interface ExpansionBoundary {
-  id: string;
-  release: string;
-  horizon: string;
-  priority: string;
-  condition: string;
-  enabled: boolean;
-  status: string;
-}
-
-export interface ManagementFile {
-  id: string;
-  title: string;
-  description: string;
-}
-
-export interface ExpansionTargets {
-  templates: number;
-  guided: number;
-  guidance: number;
-  deeperPacks: number;
-  locationsUpTo: number;
-}
-
-export interface UatPack {
-  id: string;
-  title: string;
-  requirements: string;
-  requiredEvidence: string;
-  status: string;
-  accepted: boolean;
-  reason: string;
-}
-
-export interface ReleaseGate {
-  id: string;
-  phaseId: string;
-  plannedWindow: string;
-  requiredEvidence: string;
-  approvers: string;
-  status: string;
-  reason: string;
-}
-
-export interface ReleaseControl {
-  id: string;
-  title: string;
-  source: string;
-  text: string;
-}
-
-export interface ProofSuite {
-  id: string;
-  requiredCases: number;
-  executedCases: number;
-  accepted: boolean;
-}
-
-export interface ProofRegister {
-  uatPackages: UatPack[];
-  gates: ReleaseGate[];
-  releaseControls: ReleaseControl[];
-  suites: ProofSuite[];
-  r1Accepted: boolean;
-  r2Unlocked: boolean;
-  publicLaunchEnabled: boolean;
-}
-
-export interface ContentTraceRow {
-  id: string;
-  title: string;
-  kind: string;
-  status: string;
-  relatedIds: string[];
-  limitation: string;
-  /** @nullable */
-  canonicalId: string | null;
-  mappingType: string;
-  evidenceState: string;
-  coverageState: string;
-  publicationEligible: boolean;
-  sourceLocator: string;
-  overlapIds: string[];
-  /** @nullable */
-  sourceCheckedAt: string | null;
-}
-
-export interface ContentRegister {
-  rows: ContentTraceRow[];
-  industries: string[];
-  deeperPacks: string[];
-  identifiedTemplates: number;
-  regulatoryRows: number;
-  publishedTemplates: number;
-  notice: string;
-  overlaps: InventoryOverlap[];
-  coverageLayers: CoverageLayer[];
-  expansionBoundaries: ExpansionBoundary[];
-  managementFiles: ManagementFile[];
-  ngoCaution: string;
-  provisionalTargets: string;
-  r2Targets: ExpansionTargets;
-}
-
-export type RequirementRecordStatus = typeof RequirementRecordStatus[keyof typeof RequirementRecordStatus];
-
-
-export const RequirementRecordStatus = {
-  blocked: 'blocked',
-  verified: 'verified',
-  in_progress: 'in_progress',
-  not_started: 'not_started',
-} as const;
-
-export interface RequirementRecord {
-  id: string;
-  title: string;
-  release: string;
-  priority: string;
-  exactText: string;
-  acceptance: string;
-  status: RequirementRecordStatus;
-  implementationPaths: string[];
-  blockers: string[];
-  sourceExactText?: string;
-  sourceLocator?: string;
-  owner?: string;
-  dependencies?: string[];
-}
-
-export interface ConflictRecord {
-  id: string;
-  topic: string;
-  status: string;
-  issue: string;
-  /** @nullable */
-  resolution: string | null;
-  blocks: string[];
-}
-
-export interface RequirementsRegister {
-  requirements: RequirementRecord[];
-  conflicts: ConflictRecord[];
-}
-
-export interface ApiProblem {
-  error: string;
-  code: string;
-  message: string;
-  requestId: string;
-  currentRevision?: number;
-}
-
-export type PublicItemAccess = typeof PublicItemAccess[keyof typeof PublicItemAccess];
-
-
-export const PublicItemAccess = {
-  free: 'free',
-  premium: 'premium',
-} as const;
-
-export interface PublicItem {
-  id: string;
-  slug: string;
-  title: string;
-  type: string;
-  summary: string;
-  industry: string;
-  templateId?: string;
-  category?: string;
-  access?: PublicItemAccess;
-  reviewedAt?: string;
-  href?: string;
-  reason?: string;
-}
-
-export type SavedTemplatesItemsItem = {
-  templateId: string;
-  title: string;
-  savedVersion: number;
-  savedAt: string;
-  available: boolean;
-  current: PublicItem | null;
-};
-
-export interface SavedTemplates {
-  notice: string;
-  recommendations: PublicItem[];
-  /** @maxItems 200 */
-  items: SavedTemplatesItemsItem[];
-}
-
-export type ReleasedTemplateFormatsItem = typeof ReleasedTemplateFormatsItem[keyof typeof ReleasedTemplateFormatsItem];
-
-
-export const ReleasedTemplateFormatsItem = {
-  docx: 'docx',
-  pdf: 'pdf',
-} as const;
-
-export interface ReleasedTemplate {
-  id: string;
-  templateId: string;
-  slug: string;
-  title: string;
-  summary: string;
   version: number;
-  reviewedAt: string;
-  reviewBy: string;
-  disclosure: string;
-  scope: string;
-  limitations: string;
-  preview: string[];
-  developmentOnly: boolean;
-  commercialLicenceAccepted: boolean;
-  formats: ReleasedTemplateFormatsItem[];
+  grantedBy: string;
+  grantedAt: string;
+  reason: string;
 }
 
-export interface CataloguePage {
-  items: PublicItem[];
-  total: number;
-  page: number;
-  heldTemplates: number;
+export type StaffRoleChangeReceiptAction = typeof StaffRoleChangeReceiptAction[keyof typeof StaffRoleChangeReceiptAction];
+
+
+export const StaffRoleChangeReceiptAction = {
+  grant: 'grant',
+  revoke: 'revoke',
+} as const;
+
+/**
+ * @nullable
+ */
+export type StaffRoleChangeReceiptBefore = { [key: string]: unknown } | null;
+
+export type StaffRoleChangeReceiptAfter = { [key: string]: unknown };
+
+export interface StaffRoleChangeReceipt {
+  id: string;
+  requestKey: string;
+  actorId: string;
+  assignmentId: string;
+  targetIdentityId: string;
+  action: StaffRoleChangeReceiptAction;
+  role: string;
+  reason: string;
+  /** @nullable */
+  incidentReference: string | null;
+  /** @nullable */
+  before: StaffRoleChangeReceiptBefore;
+  after: StaffRoleChangeReceiptAfter;
+  createdAt: string;
 }
 
-export interface BuildStatus {
-  receivedRequirements: number;
-  expectedRequirements: number;
-  publishedTemplates: number;
-  p0Passed: boolean;
-  r2Unlocked: boolean;
-  livePaymentsEnabled: boolean;
+export type StaffRoleChangeInputRole = typeof StaffRoleChangeInputRole[keyof typeof StaffRoleChangeInputRole];
+
+
+export const StaffRoleChangeInputRole = {
+  content: 'content',
+  support: 'support',
+  finance: 'finance',
+  system: 'system',
+  privacy: 'privacy',
+} as const;
+
+export type StaffRoleChangeInputAction = typeof StaffRoleChangeInputAction[keyof typeof StaffRoleChangeInputAction];
+
+
+export const StaffRoleChangeInputAction = {
+  grant: 'grant',
+  revoke: 'revoke',
+} as const;
+
+export type StaffRoleChangeInputGrantMode = typeof StaffRoleChangeInputGrantMode[keyof typeof StaffRoleChangeInputGrantMode];
+
+
+export const StaffRoleChangeInputGrantMode = {
+  permanent: 'permanent',
+  break_glass: 'break_glass',
+} as const;
+
+export interface StaffRoleChangeInput {
+  requestKey: string;
+  /**
+     * @maxLength 128
+     * @pattern ^user_[A-Za-z0-9_-]+$
+     */
+  identityId: string;
+  role: StaffRoleChangeInputRole;
+  action: StaffRoleChangeInputAction;
+  /** @minimum 0 */
+  expectedVersion: number;
+  /**
+     * @minLength 20
+     * @maxLength 1000
+     */
+  reason: string;
+  acknowledgement: true;
+  grantMode?: StaffRoleChangeInputGrantMode;
+  /**
+     * @minimum 5
+     * @maximum 60
+     */
+  durationMinutes?: number;
+  /**
+     * @minLength 5
+     * @maxLength 200
+     */
+  incidentReference?: string;
+}
+
+export interface StaffRoleAdministration {
+  assignments: StaffRoleAssignment[];
+  changes: StaffRoleChangeReceipt[];
   notice: string;
 }
 
-export type ProfileLegalForm = typeof ProfileLegalForm[keyof typeof ProfileLegalForm];
+export type StaffOperationsArea = typeof StaffOperationsArea[keyof typeof StaffOperationsArea];
 
 
-export const ProfileLegalForm = {
-  unknown: 'unknown',
-  sole_proprietor: 'sole_proprietor',
-  partnership: 'partnership',
-  limited_company: 'limited_company',
-  incorporated_trustees: 'incorporated_trustees',
-  company_limited_by_guarantee: 'company_limited_by_guarantee',
+export const StaffOperationsArea = {
+  content: 'content',
+  support: 'support',
+  finance: 'finance',
+  system: 'system',
 } as const;
 
-export type ProfileRegistrationStatus = typeof ProfileRegistrationStatus[keyof typeof ProfileRegistrationStatus];
+export type StaffOperationsRecordsItem = { [key: string]: unknown };
+
+export interface StaffOperations {
+  area: StaffOperationsArea;
+  notice: string;
+  records: StaffOperationsRecordsItem[];
+}
+
+export type AccessSupportInputTopic = typeof AccessSupportInputTopic[keyof typeof AccessSupportInputTopic];
 
 
-export const ProfileRegistrationStatus = {
-  unknown: 'unknown',
-  registered: 'registered',
-  unregistered: 'unregistered',
-  pending: 'pending',
+export const AccessSupportInputTopic = {
+  account_access: 'account_access',
+  general: 'general',
+  content_issue: 'content_issue',
 } as const;
 
-export type ProfileState = typeof ProfileState[keyof typeof ProfileState];
-
-
-export const ProfileState = {
-  unknown: 'unknown',
-  unanswered: 'unanswered',
-  Abia: 'Abia',
-  Adamawa: 'Adamawa',
-  Akwa_Ibom: 'Akwa Ibom',
-  Anambra: 'Anambra',
-  Bauchi: 'Bauchi',
-  Bayelsa: 'Bayelsa',
-  Benue: 'Benue',
-  Borno: 'Borno',
-  Cross_River: 'Cross River',
-  Delta: 'Delta',
-  Ebonyi: 'Ebonyi',
-  Edo: 'Edo',
-  Ekiti: 'Ekiti',
-  Enugu: 'Enugu',
-  FCT: 'FCT',
-  Gombe: 'Gombe',
-  Imo: 'Imo',
-  Jigawa: 'Jigawa',
-  Kaduna: 'Kaduna',
-  Kano: 'Kano',
-  Katsina: 'Katsina',
-  Kebbi: 'Kebbi',
-  Kogi: 'Kogi',
-  Kwara: 'Kwara',
-  Lagos: 'Lagos',
-  Nasarawa: 'Nasarawa',
-  Niger: 'Niger',
-  Ogun: 'Ogun',
-  Ondo: 'Ondo',
-  Osun: 'Osun',
-  Oyo: 'Oyo',
-  Plateau: 'Plateau',
-  Rivers: 'Rivers',
-  Sokoto: 'Sokoto',
-  Taraba: 'Taraba',
-  Yobe: 'Yobe',
-  Zamfara: 'Zamfara',
-} as const;
-
-export type ProfileTurnoverBand = typeof ProfileTurnoverBand[keyof typeof ProfileTurnoverBand];
-
-
-export const ProfileTurnoverBand = {
-  unknown: 'unknown',
-  unanswered: 'unanswered',
-  not_applicable: 'not_applicable',
-  under_5m: 'under_5m',
-  '5m_to_25m': '5m_to_25m',
-  '25m_to_100m': '25m_to_100m',
-  over_100m: 'over_100m',
-} as const;
-
-export type ProfileTurnoverMetric = typeof ProfileTurnoverMetric[keyof typeof ProfileTurnoverMetric];
-
-
-export const ProfileTurnoverMetric = {
-  unknown: 'unknown',
-  gross_revenue: 'gross_revenue',
-} as const;
-
-export type ProfileTurnoverCurrency = typeof ProfileTurnoverCurrency[keyof typeof ProfileTurnoverCurrency];
-
-
-export const ProfileTurnoverCurrency = {
-  unknown: 'unknown',
-  NGN: 'NGN',
-} as const;
-
-export interface Profile {
+export interface AccessSupportInput {
+  idempotencyKey: string;
+  /** @maxLength 254 */
+  email: string;
+  topic: AccessSupportInputTopic;
   /**
-     * @minLength 1
-     * @maxLength 160
+     * @minLength 20
+     * @maxLength 2000
      */
-  businessName: string;
-  legalForm: ProfileLegalForm;
-  registrationStatus: ProfileRegistrationStatus;
-  /**
-     * @minItems 1
-     * @maxItems 10
-     * @items.minLength 1
-     * @items.maxLength 120
-     */
-  activities: string[];
-  state: ProfileState;
-  /** @maxLength 100 */
-  lga: string;
-  /** @pattern ^(unknown|unanswered|not_applicable|[0-9]{1,7})$ */
-  employees: string;
-  turnoverBand: ProfileTurnoverBand;
-  /** @pattern ^(unknown|[0-9]{4})$ */
-  turnoverYear: string;
-  turnoverMetric: ProfileTurnoverMetric;
-  turnoverCurrency: ProfileTurnoverCurrency;
-  premises: Answer;
-  manufacturing: Answer;
-  importing: Answer;
-  personalData: Answer;
-  marketingConsent: boolean;
-}
-
-export interface ProfileInput {
-  /** @minimum 0 */
-  expectedRevision: number;
-  profile: Profile;
-}
-
-export interface Workspace {
-  id: string;
-  profileRevision: number;
-  profile: Profile | null;
-  documentCount: number;
-}
-
-export type ExportInputFormat = typeof ExportInputFormat[keyof typeof ExportInputFormat];
-
-
-export const ExportInputFormat = {
-  docx: 'docx',
-  pdf: 'pdf',
-} as const;
-
-export interface ExportInput {
-  revisionId: string;
-  format: ExportInputFormat;
-  acknowledgeDraft: boolean;
-}
-
-export interface ExportRetryInput { [key: string]: never }
-
-export type ExportJobFormat = typeof ExportJobFormat[keyof typeof ExportJobFormat];
-
-
-export const ExportJobFormat = {
-  docx: 'docx',
-  pdf: 'pdf',
-} as const;
-
-export type ExportJobStatus = typeof ExportJobStatus[keyof typeof ExportJobStatus];
-
-
-export const ExportJobStatus = {
-  queued: 'queued',
-  running: 'running',
-  retrying: 'retrying',
-  ready: 'ready',
-  failed: 'failed',
-} as const;
-
-export interface ExportJob {
-  id: string;
-  documentId: string;
-  revisionId: string;
-  revision: number;
-  format: ExportJobFormat;
-  renderVersion: string;
-  sourceHash: string;
-  status: ExportJobStatus;
-  attempts: number;
-  /** @nullable */
-  errorCode: string | null;
-  /** @nullable */
-  checksum: string | null;
-  /** @nullable */
-  size: number | null;
-  /** @nullable */
-  downloadUrl: string | null;
-  /** @nullable */
-  expiresAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DocumentInput {
-  /**
-     * @minLength 1
-     * @maxLength 160
-     */
-  title: string;
-  content: CanonicalDocument;
-}
-
-export interface DocumentUpdate {
-  /** @minimum 1 */
-  expectedRevision: number;
-  /**
-     * @minLength 1
-     * @maxLength 160
-     */
-  title: string;
-  content: CanonicalDocument;
-}
-
-export type BusinessDocumentStatus = typeof BusinessDocumentStatus[keyof typeof BusinessDocumentStatus];
-
-
-export const BusinessDocumentStatus = {
-  business_draft: 'business_draft',
-} as const;
-
-export interface BusinessDocument {
-  revisionId: string;
-  id: string;
-  title: string;
-  revision: number;
-  content: CanonicalDocument;
-  contentHash: string;
-  createdAt: string;
-  updatedAt: string;
-  status: BusinessDocumentStatus;
-  /** @nullable */
-  templateVersion: string | null;
+  message: string;
+  /** @maxLength 0 */
+  website?: string;
 }
 
 export type TicketInputCategory = typeof TicketInputCategory[keyof typeof TicketInputCategory];
@@ -2722,268 +2698,6 @@ export interface TicketReceipt {
   reference: string;
   message: string;
   dispatchStatus: TicketReceiptDispatchStatus;
-}
-
-export interface HealthStatus {
-  status: string;
-}
-
-export type SourceControlAction = {
-  requestKey: string;
-  /**
-     * @minLength 20
-     * @maxLength 1000
-     */
-  reason: string;
-  action: 'watch_source';
-  /**
-     * @minLength 1
-     * @maxLength 100
-     */
-  sourceId: string;
-} | {
-  requestKey: string;
-  /**
-     * @minLength 20
-     * @maxLength 1000
-     */
-  reason: string;
-  action: 'hold_version';
-  kind: 'content' | 'rule';
-  id: string;
-  /** @minimum 1 */
-  version: number;
-} | {
-  requestKey: string;
-  /**
-     * @minLength 20
-     * @maxLength 1000
-     */
-  reason: string;
-  action: 'withdraw_version';
-  kind: 'content' | 'rule';
-  id: string;
-  /** @minimum 1 */
-  version: number;
-} | {
-  requestKey: string;
-  /**
-     * @minLength 20
-     * @maxLength 1000
-     */
-  reason: string;
-  action: 'pause_service';
-  service: 'ai' | 'checkout';
-} | {
-  requestKey: string;
-  /**
-     * @minLength 20
-     * @maxLength 1000
-     */
-  reason: string;
-  action: 'resume_service';
-  service: 'ai' | 'checkout';
-};
-
-export type SourceControlResultResult = { [key: string]: unknown };
-
-export interface SourceControlResult {
-  auditId: string;
-  replayed: boolean;
-  result: SourceControlResultResult;
-}
-
-export type SourceControlVersionKind = typeof SourceControlVersionKind[keyof typeof SourceControlVersionKind];
-
-
-export const SourceControlVersionKind = {
-  content: 'content',
-  rule: 'rule',
-} as const;
-
-export interface SourceControlVersion {
-  kind: SourceControlVersionKind;
-  id: string;
-  key: string;
-  version: number;
-  status: string;
-  /** @nullable */
-  reviewBy: string | null;
-  safetyHeld: boolean;
-}
-
-export interface SourceControlWatch {
-  sourceId: string;
-  url: string;
-  risk: string;
-  /** @nullable */
-  checkedAt: string | null;
-  /** @nullable */
-  failureCode: string | null;
-  nextCheckAt: string;
-}
-
-export interface SourceControlReview {
-  id: string;
-  status: string;
-  targetKind: string;
-  targetKey: string;
-  targetVersion: number;
-  reason: string;
-  createdAt: string;
-}
-
-export interface SourceControlService {
-  key: string;
-  enabled: boolean;
-  reason: string;
-  updatedAt: string;
-}
-
-export interface SourceControlChoice {
-  id: string;
-  title: string;
-}
-
-export type SourceControlsArea = typeof SourceControlsArea[keyof typeof SourceControlsArea];
-
-
-export const SourceControlsArea = {
-  content: 'content',
-  system: 'system',
-} as const;
-
-export interface SourceControls {
-  area: SourceControlsArea;
-  page: number;
-  hasMore: boolean;
-  notice: string;
-  versions: SourceControlVersion[];
-  sources: SourceControlWatch[];
-  review: SourceControlReview[];
-  services: SourceControlService[];
-  sourceChoices: SourceControlChoice[];
-}
-
-export interface EditorialRun {
-  runId: string;
-  model: string;
-  promptVersion: string;
-}
-
-export type EditorialReviewRole = typeof EditorialReviewRole[keyof typeof EditorialReviewRole];
-
-
-export const EditorialReviewRole = {
-  factual: 'factual',
-  challenge: 'challenge',
-} as const;
-
-export type EditorialReviewVerdict = typeof EditorialReviewVerdict[keyof typeof EditorialReviewVerdict];
-
-
-export const EditorialReviewVerdict = {
-  pass: 'pass',
-  hold: 'hold',
-} as const;
-
-export interface EditorialReview {
-  role: EditorialReviewRole;
-  runId: string;
-  model: string;
-  promptVersion: string;
-  verdict: EditorialReviewVerdict;
-  /** The review's findings, at most 20, each cut to 600 characters. */
-  findings: string[];
-  receivedOtherVerdict: boolean;
-}
-
-export interface EditorialCheckCounts {
-  passed: number;
-  failed: number;
-  notRun: number;
-}
-
-export type EditorialRecordKind = typeof EditorialRecordKind[keyof typeof EditorialRecordKind];
-
-
-export const EditorialRecordKind = {
-  content: 'content',
-  rule: 'rule',
-} as const;
-
-export type EditorialRecordCheckDecision = typeof EditorialRecordCheckDecision[keyof typeof EditorialRecordCheckDecision];
-
-
-export const EditorialRecordCheckDecision = {
-  eligible: 'eligible',
-  hold: 'hold',
-} as const;
-
-/**
- * What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release.
- */
-export type EditorialRecordCheck = {
-  checkedAt: string;
-  decision: EditorialRecordCheckDecision;
-  reasons: string[];
-};
-
-export type EditorialRecordAuditItem = {
-  action: string;
-  actor: string;
-  reason: string;
-  at: string;
-};
-
-export type EditorialRecordSafetyHoldsItem = {
-  action: string;
-  reason: string;
-  phase: string;
-  createdAt: string;
-  /** @nullable */
-  completedAt: string | null;
-};
-
-export interface EditorialRecord {
-  kind: EditorialRecordKind;
-  id: string;
-  key: string;
-  version: number;
-  status: string;
-  /** @nullable */
-  reviewBy: string | null;
-  /** @nullable */
-  publishedAt: string | null;
-  /** @nullable */
-  withdrawnReason: string | null;
-  /** @nullable */
-  candidateHash: string | null;
-  /** @nullable */
-  manifestStatus: string | null;
-  /** What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release. */
-  check: EditorialRecordCheck;
-  draftRun: EditorialRun | null;
-  reviews: EditorialReview[];
-  mechanicalChecks: EditorialCheckCounts;
-  enhancedChecks: EditorialCheckCounts;
-  audit: EditorialRecordAuditItem[];
-  safetyHolds: EditorialRecordSafetyHoldsItem[];
-  notice: string;
-}
-
-export interface CorrectionNotice {
-  id: string;
-  entityKind: string;
-  entityId: string;
-  message: string;
-  createdAt: string;
-}
-
-export interface CorrectionNotices {
-  page: number;
-  hasMore: boolean;
-  notices: CorrectionNotice[];
 }
 
 export type SupportCaseStatus = typeof SupportCaseStatus[keyof typeof SupportCaseStatus];
@@ -3276,6 +2990,292 @@ export interface ContentEscalationResult {
   notice: string;
 }
 
+export type TaskState = typeof TaskState[keyof typeof TaskState];
+
+
+export const TaskState = {
+  not_started: 'not_started',
+  in_progress: 'in_progress',
+  completed_by_user: 'completed_by_user',
+  needs_review: 'needs_review',
+} as const;
+
+export interface TaskArchiveInput {
+  /** @minimum 1 */
+  expectedRevision: number;
+}
+
+export interface TaskInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /** @maxLength 6000 */
+  notes: string;
+  /**
+     * @nullable
+     * @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+     */
+  dueDate: string | null;
+  dateConfirmed: boolean;
+  /** @nullable */
+  assessmentId: string | null;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  ruleId: string | null;
+}
+
+export interface TaskUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /** @maxLength 6000 */
+  notes: string;
+  /**
+     * @nullable
+     * @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+     */
+  dueDate: string | null;
+  dateConfirmed: boolean;
+  state: TaskState;
+  /** @minimum 1 */
+  expectedRevision: number;
+}
+
+export interface WorkspaceTask {
+  id: string;
+  title: string;
+  notes: string;
+  state: TaskState;
+  revision: number;
+  /** @nullable */
+  dueDate: string | null;
+  dateConfirmed: boolean;
+  /** @nullable */
+  assessmentId: string | null;
+  /** @nullable */
+  ruleId: string | null;
+  needsReview: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskPage {
+  items: WorkspaceTask[];
+  total: number;
+  openCount: number;
+  filteredTotal: number;
+  page: number;
+  pageSize: number;
+  hasNext: boolean;
+}
+
+export type ReminderPreferencesInputOffsetsItem = typeof ReminderPreferencesInputOffsetsItem[keyof typeof ReminderPreferencesInputOffsetsItem];
+
+
+export const ReminderPreferencesInputOffsetsItem = {
+  NUMBER_0: 0,
+  NUMBER_1: 1,
+  NUMBER_3: 3,
+  NUMBER_7: 7,
+  NUMBER_14: 14,
+} as const;
+
+export interface ReminderPreferencesInput {
+  enabled: boolean;
+  /**
+     * @minItems 0
+     * @maxItems 4
+     */
+  offsets: ReminderPreferencesInputOffsetsItem[];
+  /** @minimum 0 */
+  expectedRevision: number;
+}
+
+export interface ReminderPreferences {
+  enabled: boolean;
+  offsets: number[];
+  revision: number;
+  timezone: string;
+  deliveryAvailable: boolean;
+  /** @nullable */
+  deliveryBlocker: string | null;
+}
+
+export type ReminderRecordStatus = typeof ReminderRecordStatus[keyof typeof ReminderRecordStatus];
+
+
+export const ReminderRecordStatus = {
+  held: 'held',
+  pending: 'pending',
+  sent: 'sent',
+  cancelled: 'cancelled',
+  failed: 'failed',
+} as const;
+
+export interface ReminderRecord {
+  id: string;
+  taskId: string;
+  scheduledAt: string;
+  status: ReminderRecordStatus;
+  /** @minimum 0 */
+  attempts: number;
+  /** @nullable */
+  nextAttemptAt: string | null;
+  /** @nullable */
+  lastAttemptAt: string | null;
+  /** @nullable */
+  reason: string | null;
+  /** @nullable */
+  deliveredAt: string | null;
+}
+
+export type ProfileLegalForm = typeof ProfileLegalForm[keyof typeof ProfileLegalForm];
+
+
+export const ProfileLegalForm = {
+  unknown: 'unknown',
+  sole_proprietor: 'sole_proprietor',
+  partnership: 'partnership',
+  limited_company: 'limited_company',
+  incorporated_trustees: 'incorporated_trustees',
+  company_limited_by_guarantee: 'company_limited_by_guarantee',
+} as const;
+
+export type ProfileRegistrationStatus = typeof ProfileRegistrationStatus[keyof typeof ProfileRegistrationStatus];
+
+
+export const ProfileRegistrationStatus = {
+  unknown: 'unknown',
+  registered: 'registered',
+  unregistered: 'unregistered',
+  pending: 'pending',
+} as const;
+
+export type ProfileState = typeof ProfileState[keyof typeof ProfileState];
+
+
+export const ProfileState = {
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  Abia: 'Abia',
+  Adamawa: 'Adamawa',
+  Akwa_Ibom: 'Akwa Ibom',
+  Anambra: 'Anambra',
+  Bauchi: 'Bauchi',
+  Bayelsa: 'Bayelsa',
+  Benue: 'Benue',
+  Borno: 'Borno',
+  Cross_River: 'Cross River',
+  Delta: 'Delta',
+  Ebonyi: 'Ebonyi',
+  Edo: 'Edo',
+  Ekiti: 'Ekiti',
+  Enugu: 'Enugu',
+  FCT: 'FCT',
+  Gombe: 'Gombe',
+  Imo: 'Imo',
+  Jigawa: 'Jigawa',
+  Kaduna: 'Kaduna',
+  Kano: 'Kano',
+  Katsina: 'Katsina',
+  Kebbi: 'Kebbi',
+  Kogi: 'Kogi',
+  Kwara: 'Kwara',
+  Lagos: 'Lagos',
+  Nasarawa: 'Nasarawa',
+  Niger: 'Niger',
+  Ogun: 'Ogun',
+  Ondo: 'Ondo',
+  Osun: 'Osun',
+  Oyo: 'Oyo',
+  Plateau: 'Plateau',
+  Rivers: 'Rivers',
+  Sokoto: 'Sokoto',
+  Taraba: 'Taraba',
+  Yobe: 'Yobe',
+  Zamfara: 'Zamfara',
+} as const;
+
+export type ProfileTurnoverBand = typeof ProfileTurnoverBand[keyof typeof ProfileTurnoverBand];
+
+
+export const ProfileTurnoverBand = {
+  unknown: 'unknown',
+  unanswered: 'unanswered',
+  not_applicable: 'not_applicable',
+  under_5m: 'under_5m',
+  '5m_to_25m': '5m_to_25m',
+  '25m_to_100m': '25m_to_100m',
+  over_100m: 'over_100m',
+} as const;
+
+export type ProfileTurnoverMetric = typeof ProfileTurnoverMetric[keyof typeof ProfileTurnoverMetric];
+
+
+export const ProfileTurnoverMetric = {
+  unknown: 'unknown',
+  gross_revenue: 'gross_revenue',
+} as const;
+
+export type ProfileTurnoverCurrency = typeof ProfileTurnoverCurrency[keyof typeof ProfileTurnoverCurrency];
+
+
+export const ProfileTurnoverCurrency = {
+  unknown: 'unknown',
+  NGN: 'NGN',
+} as const;
+
+export interface Profile {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  businessName: string;
+  legalForm: ProfileLegalForm;
+  registrationStatus: ProfileRegistrationStatus;
+  /**
+     * @minItems 1
+     * @maxItems 10
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  activities: string[];
+  state: ProfileState;
+  /** @maxLength 100 */
+  lga: string;
+  /** @pattern ^(unknown|unanswered|not_applicable|[0-9]{1,7})$ */
+  employees: string;
+  turnoverBand: ProfileTurnoverBand;
+  /** @pattern ^(unknown|[0-9]{4})$ */
+  turnoverYear: string;
+  turnoverMetric: ProfileTurnoverMetric;
+  turnoverCurrency: ProfileTurnoverCurrency;
+  premises: Answer;
+  manufacturing: Answer;
+  importing: Answer;
+  personalData: Answer;
+  marketingConsent: boolean;
+}
+
+export interface ProfileInput {
+  /** @minimum 0 */
+  expectedRevision: number;
+  profile: Profile;
+}
+
+export interface Workspace {
+  id: string;
+  profileRevision: number;
+  profile: Profile | null;
+  documentCount: number;
+}
+
 export type WriteLimitResponseCode = typeof WriteLimitResponseCode[keyof typeof WriteLimitResponseCode];
 
 
@@ -3306,20 +3306,6 @@ export type ConflictErrorResponse = {
  */
 export type AuthErrorResponse = ApiProblem;
 
-export type GetStaffRoleAdministrationParams = {
-  /**
-   * @maxLength 128
-   * @pattern ^user_[A-Za-z0-9_-]+$
-   */
-  identityId?: string;
-};
-
-export type VerifyStaffRoleTarget200 = {
-  identityId: string;
-  label: string;
-  verifiedAt: string;
-};
-
 export type GetPublicDiscovery200ItemsItem = {
   path: string;
   title: string;
@@ -3331,38 +3317,6 @@ export type GetPublicDiscovery200ItemsItem = {
 export type GetPublicDiscovery200 = {
   items: GetPublicDiscovery200ItemsItem[];
 };
-
-export type ListWorkspaceDataExportsParams = {
-  cursor?: string;
-};
-
-export type StartCommerceCheckout200 = {
-  url: string;
-};
-
-export type GetCommerceReceipt200 = CommerceOrder & {
-  notice: string;
-  deliveryStatus: string;
-};
-
-export type RequestCommerceRefund201 = {
-  reference: string;
-  status: string;
-};
-
-export type GetStaffOperationsParams = {
-  area: GetStaffOperationsArea;
-};
-
-export type GetStaffOperationsArea = typeof GetStaffOperationsArea[keyof typeof GetStaffOperationsArea];
-
-
-export const GetStaffOperationsArea = {
-  content: 'content',
-  support: 'support',
-  finance: 'finance',
-  system: 'system',
-} as const;
 
 export type ListPublicCatalogueParams = {
   /** @maxLength 120 */
@@ -3408,36 +3362,18 @@ export const ListPublicCatalogueSort = {
   recently_checked: 'recently_checked',
 } as const;
 
-export type ListTasksPageParams = {
-  /**
-   * @minimum 1
-   * @maximum 100000
-   */
-  page?: number;
-  filter?: ListTasksPageFilter;
+export type StartCommerceCheckout200 = {
+  url: string;
 };
 
-export type ListTasksPageFilter = typeof ListTasksPageFilter[keyof typeof ListTasksPageFilter];
-
-
-export const ListTasksPageFilter = {
-  open: 'open',
-  done: 'done',
-  all: 'all',
-} as const;
-
-export type DownloadPrivacyCaseResult200 = { [key: string]: unknown };
-
-export type ListStaffPrivacyCasesParams = {
-  /** @minimum 1 */
-  page?: number;
+export type GetCommerceReceipt200 = CommerceOrder & {
+  notice: string;
+  deliveryStatus: string;
 };
 
-export type ListStaffPrivacyCases200 = {
-  items: PrivacyCase[];
-  page: number;
-  total: number;
-  pageSize: number;
+export type RequestCommerceRefund201 = {
+  reference: string;
+  status: string;
 };
 
 export type GetSourceControlsParams = {
@@ -3464,6 +3400,52 @@ export type GetCorrectionNoticesParams = {
    */
   page?: number;
 };
+
+export type ListWorkspaceDataExportsParams = {
+  cursor?: string;
+};
+
+export type DownloadPrivacyCaseResult200 = { [key: string]: unknown };
+
+export type ListStaffPrivacyCasesParams = {
+  /** @minimum 1 */
+  page?: number;
+};
+
+export type ListStaffPrivacyCases200 = {
+  items: PrivacyCase[];
+  page: number;
+  total: number;
+  pageSize: number;
+};
+
+export type GetStaffRoleAdministrationParams = {
+  /**
+   * @maxLength 128
+   * @pattern ^user_[A-Za-z0-9_-]+$
+   */
+  identityId?: string;
+};
+
+export type VerifyStaffRoleTarget200 = {
+  identityId: string;
+  label: string;
+  verifiedAt: string;
+};
+
+export type GetStaffOperationsParams = {
+  area: GetStaffOperationsArea;
+};
+
+export type GetStaffOperationsArea = typeof GetStaffOperationsArea[keyof typeof GetStaffOperationsArea];
+
+
+export const GetStaffOperationsArea = {
+  content: 'content',
+  support: 'support',
+  finance: 'finance',
+  system: 'system',
+} as const;
 
 export type ListCustomerSupportCasesParams = {
   /**
@@ -3516,4 +3498,22 @@ export type ListContentEscalationsParams = {
    */
   page?: number;
 };
+
+export type ListTasksPageParams = {
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
+  page?: number;
+  filter?: ListTasksPageFilter;
+};
+
+export type ListTasksPageFilter = typeof ListTasksPageFilter[keyof typeof ListTasksPageFilter];
+
+
+export const ListTasksPageFilter = {
+  open: 'open',
+  done: 'done',
+  all: 'all',
+} as const;
 

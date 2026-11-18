@@ -8,110 +8,653 @@
 import * as zod from 'zod';
 
 
-export const getStaffRoleAdministrationQueryIdentityIdMax = 128;
+export const createCustomerAIDraftBodyIssuerNameMax = 160;
+
+export const createCustomerAIDraftBodyRecipientNameMax = 160;
+
+export const createCustomerAIDraftBodyDocumentNumberMax = 80;
+
+export const createCustomerAIDraftBodyIssueDateRegExp = new RegExp('^([0-9]{4}-[0-9]{2}-[0-9]{2})?$');
+export const createCustomerAIDraftBodyDueDateRegExp = new RegExp('^([0-9]{4}-[0-9]{2}-[0-9]{2})?$');
+export const createCustomerAIDraftBodyContextLinesItemMax = 1000;
+
+export const createCustomerAIDraftBodyContextLinesMax = 20;
+
+export const createCustomerAIDraftBodyDraftingInstructionMax = 1000;
+
+export const createCustomerAIDraftBodyFinancialInputLinesItemDescriptionMax = 200;
+
+export const createCustomerAIDraftBodyFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createCustomerAIDraftBodyFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMin = 3;
+export const createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMax = 3;
+
+export const createCustomerAIDraftBodyFinancialInputLinesMax = 40;
+
+export const createCustomerAIDraftBodyFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputTaxLabelMax = 80;
+
+export const createCustomerAIDraftBodyFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createCustomerAIDraftBodyFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createCustomerAIDraftBodyFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputCurrencyMin = 3;
+export const createCustomerAIDraftBodyFinancialInputCurrencyMax = 3;
+
+export const createCustomerAIDraftBodyFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const createCustomerAIDraftBodyFinancialInputOptionalLinesMax = 40;
+
+export const createCustomerAIDraftBodyFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
+
+export const createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsMax = 40;
 
 
-export const getStaffRoleAdministrationQueryIdentityIdRegExp = new RegExp('^user_[A-Za-z0-9_-]+$');
+
+export const CreateCustomerAIDraftBody = zod.object({
+  "task": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "tone": zod.enum(['neutral', 'polite', 'firm']),
+  "issuerName": zod.string().max(createCustomerAIDraftBodyIssuerNameMax),
+  "recipientName": zod.string().max(createCustomerAIDraftBodyRecipientNameMax),
+  "documentNumber": zod.string().max(createCustomerAIDraftBodyDocumentNumberMax),
+  "issueDate": zod.string().regex(createCustomerAIDraftBodyIssueDateRegExp),
+  "dueDate": zod.string().regex(createCustomerAIDraftBodyDueDateRegExp),
+  "contextLines": zod.array(zod.string().min(1).max(createCustomerAIDraftBodyContextLinesItemMax)).max(createCustomerAIDraftBodyContextLinesMax),
+  "draftingInstruction": zod.string().max(createCustomerAIDraftBodyDraftingInstructionMax).optional().describe('Optional untrusted organisation preference; never copied into the business document or used to supply missing business facts.'),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createCustomerAIDraftBodyFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createCustomerAIDraftBodyFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMin).max(createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMax).optional()
+})).max(createCustomerAIDraftBodyFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(createCustomerAIDraftBodyFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(createCustomerAIDraftBodyFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(createCustomerAIDraftBodyFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(createCustomerAIDraftBodyFinancialInputCurrencyMin).max(createCustomerAIDraftBodyFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createCustomerAIDraftBodyFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createCustomerAIDraftBodyFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(createCustomerAIDraftBodyFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(createCustomerAIDraftBodyFinancialInputOptionalLinesMax).optional(),
+  "amountDueKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputAmountDueKoboRegExp).nullable(),
+  "paymentRecord": zod.object({
+  "invoiceAmountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
+  "payments": zod.array(zod.object({
+  "reference": zod.string().min(1).max(createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemReferenceMax),
+  "amountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
+})).max(createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsMax)
+}).optional()
+}),
+  "processingConsent": zod.boolean(),
+  "idempotencyKey": zod.uuid()
+})
+
+export const createCustomerAIDraftResponseContentFieldsIssuerNameMax = 160;
+
+export const createCustomerAIDraftResponseContentFieldsRecipientNameMax = 160;
+
+export const createCustomerAIDraftResponseContentFieldsDocumentNumberMax = 80;
+
+export const createCustomerAIDraftResponseContentFieldsIssueDateMax = 10;
+
+export const createCustomerAIDraftResponseContentFieldsDueDateMax = 10;
+
+export const createCustomerAIDraftResponseContentFieldsNotesMax = 5000;
+
+export const createCustomerAIDraftResponseContentBlocksItemIdMax = 80;
+
+export const createCustomerAIDraftResponseContentBlocksItemTextMax = 8000;
+
+export const createCustomerAIDraftResponseContentBlocksItemRowsItemItemMax = 1000;
+
+export const createCustomerAIDraftResponseContentBlocksItemRowsItemMax = 10;
+
+export const createCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
+
+export const createCustomerAIDraftResponseContentBlocksMax = 100;
+
+export const createCustomerAIDraftResponseContentSelectedClausesMax = 0;
+
+export const createCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const createCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
+export const createCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
+
+export const createCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
+
+export const createCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const createCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputCurrencyMin = 3;
+export const createCustomerAIDraftResponseContentFinancialInputCurrencyMax = 3;
+
+export const createCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesMax = 40;
+
+export const createCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
+
+export const createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
 
 
-export const GetStaffRoleAdministrationQueryParams = zod.object({
-  "identityId": zod.coerce.string().max(getStaffRoleAdministrationQueryIdentityIdMax).regex(getStaffRoleAdministrationQueryIdentityIdRegExp).optional()
+
+export const CreateCustomerAIDraftResponse = zod.object({
+  "id": zod.string(),
+  "task": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "status": zod.enum(['ready', 'needs_information', 'manual_fallback', 'unsupported', 'running']),
+  "title": zod.string(),
+  "content": zod.object({
+  "fields": zod.object({
+  "issuerName": zod.string().max(createCustomerAIDraftResponseContentFieldsIssuerNameMax),
+  "recipientName": zod.string().max(createCustomerAIDraftResponseContentFieldsRecipientNameMax),
+  "documentNumber": zod.string().max(createCustomerAIDraftResponseContentFieldsDocumentNumberMax),
+  "issueDate": zod.string().max(createCustomerAIDraftResponseContentFieldsIssueDateMax),
+  "dueDate": zod.string().max(createCustomerAIDraftResponseContentFieldsDueDateMax),
+  "notes": zod.string().max(createCustomerAIDraftResponseContentFieldsNotesMax)
+}),
+  "blocks": zod.array(zod.object({
+  "id": zod.string().min(1).max(createCustomerAIDraftResponseContentBlocksItemIdMax),
+  "type": zod.enum(['paragraph', 'list', 'table']),
+  "text": zod.string().max(createCustomerAIDraftResponseContentBlocksItemTextMax),
+  "rows": zod.array(zod.array(zod.string().max(createCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsMax)
+})).max(createCustomerAIDraftResponseContentBlocksMax),
+  "selectedClauses": zod.array(zod.string()).max(createCustomerAIDraftResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin).max(createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax).optional()
+})).max(createCustomerAIDraftResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(createCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(createCustomerAIDraftResponseContentFinancialInputCurrencyMin).max(createCustomerAIDraftResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(createCustomerAIDraftResponseContentFinancialInputOptionalLinesMax).optional(),
+  "amountDueKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
+  "paymentRecord": zod.object({
+  "invoiceAmountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
+  "payments": zod.array(zod.object({
+  "reference": zod.string().min(1).max(createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
+  "amountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
+})).max(createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax)
+}).optional()
+}).optional(),
+  "formatting": zod.object({
+  "font": zod.enum(['sans', 'serif']),
+  "accent": zod.enum(['forest', 'charcoal'])
+})
+}),
+  "missingFields": zod.array(zod.string()),
+  "limitations": zod.array(zod.string()),
+  "modelUsed": zod.string().nullable(),
+  "providerCalls": zod.int().nullable(),
+  "inputHash": zod.string(),
+  "previewHash": zod.string(),
+  "acceptedDocumentId": zod.string().nullable()
 })
 
 
+export const GetCustomerAIDraftParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const getCustomerAIDraftResponseContentFieldsIssuerNameMax = 160;
+
+export const getCustomerAIDraftResponseContentFieldsRecipientNameMax = 160;
+
+export const getCustomerAIDraftResponseContentFieldsDocumentNumberMax = 80;
+
+export const getCustomerAIDraftResponseContentFieldsIssueDateMax = 10;
+
+export const getCustomerAIDraftResponseContentFieldsDueDateMax = 10;
+
+export const getCustomerAIDraftResponseContentFieldsNotesMax = 5000;
+
+export const getCustomerAIDraftResponseContentBlocksItemIdMax = 80;
+
+export const getCustomerAIDraftResponseContentBlocksItemTextMax = 8000;
+
+export const getCustomerAIDraftResponseContentBlocksItemRowsItemItemMax = 1000;
+
+export const getCustomerAIDraftResponseContentBlocksItemRowsItemMax = 10;
+
+export const getCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
+
+export const getCustomerAIDraftResponseContentBlocksMax = 100;
+
+export const getCustomerAIDraftResponseContentSelectedClausesMax = 0;
+
+export const getCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const getCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const getCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
+export const getCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
+
+export const getCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
+
+export const getCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const getCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const getCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputCurrencyMin = 3;
+export const getCustomerAIDraftResponseContentFinancialInputCurrencyMax = 3;
+
+export const getCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesMax = 40;
+
+export const getCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
+
+export const getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
 
 
-export const GetStaffRoleAdministrationResponse = zod.object({
-  "assignments": zod.array(zod.object({
-  "id": zod.uuid(),
-  "identityId": zod.string(),
-  "role": zod.enum(['content', 'support', 'finance', 'system', 'privacy']),
-  "active": zod.boolean(),
-  "grantMode": zod.enum(['permanent', 'break_glass']),
-  "expiresAt": zod.coerce.date().nullable(),
-  "version": zod.int().min(1),
-  "grantedBy": zod.string(),
-  "grantedAt": zod.coerce.date(),
-  "reason": zod.string()
-})),
-  "changes": zod.array(zod.object({
-  "id": zod.uuid(),
-  "requestKey": zod.uuid(),
-  "actorId": zod.string(),
-  "assignmentId": zod.uuid(),
-  "targetIdentityId": zod.string(),
-  "action": zod.enum(['grant', 'revoke']),
-  "role": zod.string(),
-  "reason": zod.string(),
-  "incidentReference": zod.string().nullable(),
-  "before": zod.record(zod.string(), zod.unknown()).nullable(),
-  "after": zod.record(zod.string(), zod.unknown()),
-  "createdAt": zod.coerce.date()
-})),
-  "notice": zod.string()
+
+export const GetCustomerAIDraftResponse = zod.object({
+  "id": zod.string(),
+  "task": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "status": zod.enum(['ready', 'needs_information', 'manual_fallback', 'unsupported', 'running']),
+  "title": zod.string(),
+  "content": zod.object({
+  "fields": zod.object({
+  "issuerName": zod.string().max(getCustomerAIDraftResponseContentFieldsIssuerNameMax),
+  "recipientName": zod.string().max(getCustomerAIDraftResponseContentFieldsRecipientNameMax),
+  "documentNumber": zod.string().max(getCustomerAIDraftResponseContentFieldsDocumentNumberMax),
+  "issueDate": zod.string().max(getCustomerAIDraftResponseContentFieldsIssueDateMax),
+  "dueDate": zod.string().max(getCustomerAIDraftResponseContentFieldsDueDateMax),
+  "notes": zod.string().max(getCustomerAIDraftResponseContentFieldsNotesMax)
+}),
+  "blocks": zod.array(zod.object({
+  "id": zod.string().min(1).max(getCustomerAIDraftResponseContentBlocksItemIdMax),
+  "type": zod.enum(['paragraph', 'list', 'table']),
+  "text": zod.string().max(getCustomerAIDraftResponseContentBlocksItemTextMax),
+  "rows": zod.array(zod.array(zod.string().max(getCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsMax)
+})).max(getCustomerAIDraftResponseContentBlocksMax),
+  "selectedClauses": zod.array(zod.string()).max(getCustomerAIDraftResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(getCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin).max(getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax).optional()
+})).max(getCustomerAIDraftResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(getCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(getCustomerAIDraftResponseContentFinancialInputCurrencyMin).max(getCustomerAIDraftResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(getCustomerAIDraftResponseContentFinancialInputOptionalLinesMax).optional(),
+  "amountDueKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
+  "paymentRecord": zod.object({
+  "invoiceAmountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
+  "payments": zod.array(zod.object({
+  "reference": zod.string().min(1).max(getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
+  "amountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
+})).max(getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax)
+}).optional()
+}).optional(),
+  "formatting": zod.object({
+  "font": zod.enum(['sans', 'serif']),
+  "accent": zod.enum(['forest', 'charcoal'])
+})
+}),
+  "missingFields": zod.array(zod.string()),
+  "limitations": zod.array(zod.string()),
+  "modelUsed": zod.string().nullable(),
+  "providerCalls": zod.int().nullable(),
+  "inputHash": zod.string(),
+  "previewHash": zod.string(),
+  "acceptedDocumentId": zod.string().nullable()
 })
 
 
-export const changeStaffRoleBodyIdentityIdMax = 128;
-
-
-export const changeStaffRoleBodyIdentityIdRegExp = new RegExp('^user_[A-Za-z0-9_-]+$');
-export const changeStaffRoleBodyExpectedVersionMin = 0;
-
-export const changeStaffRoleBodyReasonMin = 20;
-export const changeStaffRoleBodyReasonMax = 1000;
-
-export const changeStaffRoleBodyDurationMinutesMin = 5;
-export const changeStaffRoleBodyDurationMinutesMax = 60;
-
-export const changeStaffRoleBodyIncidentReferenceMin = 5;
-export const changeStaffRoleBodyIncidentReferenceMax = 200;
-
-
-
-export const ChangeStaffRoleBody = zod.object({
-  "requestKey": zod.uuid(),
-  "identityId": zod.string().max(changeStaffRoleBodyIdentityIdMax).regex(changeStaffRoleBodyIdentityIdRegExp),
-  "role": zod.enum(['content', 'support', 'finance', 'system', 'privacy']),
-  "action": zod.enum(['grant', 'revoke']),
-  "expectedVersion": zod.int().min(changeStaffRoleBodyExpectedVersionMin),
-  "reason": zod.string().min(changeStaffRoleBodyReasonMin).max(changeStaffRoleBodyReasonMax),
-  "acknowledgement": zod.literal(true),
-  "grantMode": zod.enum(['permanent', 'break_glass']).optional(),
-  "durationMinutes": zod.int().min(changeStaffRoleBodyDurationMinutesMin).max(changeStaffRoleBodyDurationMinutesMax).optional(),
-  "incidentReference": zod.string().min(changeStaffRoleBodyIncidentReferenceMin).max(changeStaffRoleBodyIncidentReferenceMax).optional()
+export const AcceptCustomerAIDraftParams = zod.object({
+  "id": zod.uuid()
 })
 
-export const ChangeStaffRoleResponse = zod.object({
-  "id": zod.uuid(),
-  "requestKey": zod.uuid(),
-  "actorId": zod.string(),
-  "assignmentId": zod.uuid(),
-  "targetIdentityId": zod.string(),
-  "action": zod.enum(['grant', 'revoke']),
-  "role": zod.string(),
-  "reason": zod.string(),
-  "incidentReference": zod.string().nullable(),
-  "before": zod.record(zod.string(), zod.unknown()).nullable(),
-  "after": zod.record(zod.string(), zod.unknown()),
-  "createdAt": zod.coerce.date()
+export const acceptCustomerAIDraftBodyTitleMax = 160;
+
+export const acceptCustomerAIDraftBodyContentFieldsIssuerNameMax = 160;
+
+export const acceptCustomerAIDraftBodyContentFieldsRecipientNameMax = 160;
+
+export const acceptCustomerAIDraftBodyContentFieldsDocumentNumberMax = 80;
+
+export const acceptCustomerAIDraftBodyContentFieldsIssueDateMax = 10;
+
+export const acceptCustomerAIDraftBodyContentFieldsDueDateMax = 10;
+
+export const acceptCustomerAIDraftBodyContentFieldsNotesMax = 5000;
+
+export const acceptCustomerAIDraftBodyContentBlocksItemIdMax = 80;
+
+export const acceptCustomerAIDraftBodyContentBlocksItemTextMax = 8000;
+
+export const acceptCustomerAIDraftBodyContentBlocksItemRowsItemItemMax = 1000;
+
+export const acceptCustomerAIDraftBodyContentBlocksItemRowsItemMax = 10;
+
+export const acceptCustomerAIDraftBodyContentBlocksItemRowsMax = 100;
+
+export const acceptCustomerAIDraftBodyContentBlocksMax = 100;
+
+export const acceptCustomerAIDraftBodyContentSelectedClausesMax = 0;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMin = 3;
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMax = 3;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputLinesMax = 40;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputTaxLabelMax = 80;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const acceptCustomerAIDraftBodyContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const acceptCustomerAIDraftBodyContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputCurrencyMin = 3;
+export const acceptCustomerAIDraftBodyContentFinancialInputCurrencyMax = 3;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesMax = 40;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
+
+export const acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsMax = 40;
+
+
+
+export const AcceptCustomerAIDraftBody = zod.object({
+  "title": zod.string().min(1).max(acceptCustomerAIDraftBodyTitleMax),
+  "content": zod.object({
+  "fields": zod.object({
+  "issuerName": zod.string().max(acceptCustomerAIDraftBodyContentFieldsIssuerNameMax),
+  "recipientName": zod.string().max(acceptCustomerAIDraftBodyContentFieldsRecipientNameMax),
+  "documentNumber": zod.string().max(acceptCustomerAIDraftBodyContentFieldsDocumentNumberMax),
+  "issueDate": zod.string().max(acceptCustomerAIDraftBodyContentFieldsIssueDateMax),
+  "dueDate": zod.string().max(acceptCustomerAIDraftBodyContentFieldsDueDateMax),
+  "notes": zod.string().max(acceptCustomerAIDraftBodyContentFieldsNotesMax)
+}),
+  "blocks": zod.array(zod.object({
+  "id": zod.string().min(1).max(acceptCustomerAIDraftBodyContentBlocksItemIdMax),
+  "type": zod.enum(['paragraph', 'list', 'table']),
+  "text": zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemTextMax),
+  "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsMax)
+})).max(acceptCustomerAIDraftBodyContentBlocksMax),
+  "selectedClauses": zod.array(zod.string()).max(acceptCustomerAIDraftBodyContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(acceptCustomerAIDraftBodyContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMin).max(acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMax).optional()
+})).max(acceptCustomerAIDraftBodyContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(acceptCustomerAIDraftBodyContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(acceptCustomerAIDraftBodyContentFinancialInputCurrencyMin).max(acceptCustomerAIDraftBodyContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesMax).optional(),
+  "amountDueKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputAmountDueKoboRegExp).nullable(),
+  "paymentRecord": zod.object({
+  "invoiceAmountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
+  "payments": zod.array(zod.object({
+  "reference": zod.string().min(1).max(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
+  "amountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
+})).max(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsMax)
+}).optional()
+}).optional(),
+  "formatting": zod.object({
+  "font": zod.enum(['sans', 'serif']),
+  "accent": zod.enum(['forest', 'charcoal'])
+})
+}),
+  "confirmBusinessDraft": zod.boolean()
+})
+
+export const acceptCustomerAIDraftResponseContentFieldsIssuerNameMax = 160;
+
+export const acceptCustomerAIDraftResponseContentFieldsRecipientNameMax = 160;
+
+export const acceptCustomerAIDraftResponseContentFieldsDocumentNumberMax = 80;
+
+export const acceptCustomerAIDraftResponseContentFieldsIssueDateMax = 10;
+
+export const acceptCustomerAIDraftResponseContentFieldsDueDateMax = 10;
+
+export const acceptCustomerAIDraftResponseContentFieldsNotesMax = 5000;
+
+export const acceptCustomerAIDraftResponseContentBlocksItemIdMax = 80;
+
+export const acceptCustomerAIDraftResponseContentBlocksItemTextMax = 8000;
+
+export const acceptCustomerAIDraftResponseContentBlocksItemRowsItemItemMax = 1000;
+
+export const acceptCustomerAIDraftResponseContentBlocksItemRowsItemMax = 10;
+
+export const acceptCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
+
+export const acceptCustomerAIDraftResponseContentBlocksMax = 100;
+
+export const acceptCustomerAIDraftResponseContentSelectedClausesMax = 0;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin = 3;
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax = 3;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const acceptCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
+export const acceptCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputCurrencyMin = 3;
+export const acceptCustomerAIDraftResponseContentFinancialInputCurrencyMax = 3;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
+export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesMax = 40;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
+
+export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
+export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
+
+
+
+export const AcceptCustomerAIDraftResponse = zod.object({
+  "revisionId": zod.uuid(),
+  "id": zod.string(),
+  "title": zod.string(),
+  "revision": zod.int(),
+  "content": zod.object({
+  "fields": zod.object({
+  "issuerName": zod.string().max(acceptCustomerAIDraftResponseContentFieldsIssuerNameMax),
+  "recipientName": zod.string().max(acceptCustomerAIDraftResponseContentFieldsRecipientNameMax),
+  "documentNumber": zod.string().max(acceptCustomerAIDraftResponseContentFieldsDocumentNumberMax),
+  "issueDate": zod.string().max(acceptCustomerAIDraftResponseContentFieldsIssueDateMax),
+  "dueDate": zod.string().max(acceptCustomerAIDraftResponseContentFieldsDueDateMax),
+  "notes": zod.string().max(acceptCustomerAIDraftResponseContentFieldsNotesMax)
+}),
+  "blocks": zod.array(zod.object({
+  "id": zod.string().min(1).max(acceptCustomerAIDraftResponseContentBlocksItemIdMax),
+  "type": zod.enum(['paragraph', 'list', 'table']),
+  "text": zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemTextMax),
+  "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsMax)
+})).max(acceptCustomerAIDraftResponseContentBlocksMax),
+  "selectedClauses": zod.array(zod.string()).max(acceptCustomerAIDraftResponseContentSelectedClausesMax),
+  "financialInput": zod.object({
+  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
+  "lines": zod.array(zod.object({
+  "description": zod.string().min(1).max(acceptCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
+  "quantity": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
+  "currency": zod.string().min(acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin).max(acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax).optional()
+})).max(acceptCustomerAIDraftResponseContentFinancialInputLinesMax),
+  "taxAmountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
+  "taxLabel": zod.string().max(acceptCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
+  "discountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
+  "deliveryKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp).optional(),
+  "discountPercent": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp).optional(),
+  "taxPercent": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp).optional(),
+  "taxBaseKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
+  "currency": zod.string().min(acceptCustomerAIDraftResponseContentFinancialInputCurrencyMin).max(acceptCustomerAIDraftResponseContentFinancialInputCurrencyMax).optional(),
+  "requestedTotalKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
+  "disputedKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp).optional(),
+  "optionalLines": zod.array(zod.object({
+  "description": zod.string().min(1).max(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax),
+  "quantity": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
+  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
+  "selected": zod.boolean(),
+  "currency": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
+})).max(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesMax).optional(),
+  "amountDueKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
+  "paymentRecord": zod.object({
+  "invoiceAmountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
+  "duplicatesConfirmed": zod.boolean().optional(),
+  "payments": zod.array(zod.object({
+  "reference": zod.string().min(1).max(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
+  "amountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
+})).max(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax)
+}).optional()
+}).optional(),
+  "formatting": zod.object({
+  "font": zod.enum(['sans', 'serif']),
+  "accent": zod.enum(['forest', 'charcoal'])
+})
+}),
+  "contentHash": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "status": zod.enum(['business_draft']),
+  "templateVersion": zod.string().nullable()
 })
 
 
-export const verifyStaffRoleTargetBodyIdentityIdMax = 128;
-
-
-export const verifyStaffRoleTargetBodyIdentityIdRegExp = new RegExp('^user_[A-Za-z0-9_-]+$');
-
-
-export const VerifyStaffRoleTargetBody = zod.object({
-  "identityId": zod.string().max(verifyStaffRoleTargetBodyIdentityIdMax).regex(verifyStaffRoleTargetBodyIdentityIdRegExp)
-})
-
-export const VerifyStaffRoleTargetResponse = zod.object({
-  "identityId": zod.string(),
-  "label": zod.string(),
-  "verifiedAt": zod.coerce.date()
+export const GetCustomerAIUsageResponse = zod.object({
+  "enabled": zod.boolean(),
+  "workspaceUsed": zod.int(),
+  "workspaceDailyLimit": zod.int(),
+  "minuteLimit": zod.int(),
+  "globalAvailable": zod.boolean(),
+  "manualFallbackAvailable": zod.boolean(),
+  "policyNotice": zod.string()
 })
 
 
@@ -122,30 +665,6 @@ export const GetPublicDiscoveryResponse = zod.object({
   "description": zod.string(),
   "modifiedAt": zod.string().nullable()
 }))
-})
-
-
-export const requestAccessSupportBodyEmailMax = 254;
-
-export const requestAccessSupportBodyMessageMin = 20;
-export const requestAccessSupportBodyMessageMax = 2000;
-
-export const requestAccessSupportBodyWebsiteMax = 0;
-
-
-
-export const RequestAccessSupportBody = zod.object({
-  "idempotencyKey": zod.uuid(),
-  "email": zod.email().max(requestAccessSupportBodyEmailMax),
-  "topic": zod.enum(['account_access', 'general', 'content_issue']),
-  "message": zod.string().min(requestAccessSupportBodyMessageMin).max(requestAccessSupportBodyMessageMax),
-  "website": zod.string().max(requestAccessSupportBodyWebsiteMax).optional()
-})
-
-export const RequestAccessSupportResponse = zod.object({
-  "reference": zod.string(),
-  "message": zod.string(),
-  "delivery": zod.enum(['not_dispatched'])
 })
 
 
@@ -198,817 +717,6 @@ export const GetReleasedResourceResponse = zod.object({
 })
 
 
-export const GetCustomerAccountResponse = zod.object({
-  "workspaceId": zod.uuid(),
-  "privacyRequests": zod.array(zod.object({
-  "reference": zod.string(),
-  "request": zod.string(),
-  "status": zod.string(),
-  "createdAt": zod.string()
-}))
-})
-
-
-export const requestCustomerPrivacyBodyMessageMin = 10;
-export const requestCustomerPrivacyBodyMessageMax = 1500;
-
-
-
-export const RequestCustomerPrivacyBody = zod.object({
-  "kind": zod.enum(['correction', 'export', 'deletion']),
-  "message": zod.string().min(requestCustomerPrivacyBodyMessageMin).max(requestCustomerPrivacyBodyMessageMax),
-  "acknowledgement": zod.literal(true),
-  "idempotencyKey": zod.uuid().optional()
-})
-
-export const RequestCustomerPrivacyResponse = zod.object({
-  "reference": zod.string(),
-  "message": zod.string(),
-  "delivery": zod.enum(['not_dispatched'])
-})
-
-
-export const DownloadWorkspaceDataResponse = zod.object({
-  "schemaVersion": zod.int(),
-  "exportedAt": zod.string(),
-  "workspaceId": zod.string(),
-  "scope": zod.string(),
-  "data": zod.record(zod.string(), zod.unknown())
-})
-
-
-export const ListWorkspaceDataExportsQueryParams = zod.object({
-  "cursor": zod.uuid().optional()
-})
-
-
-export const listWorkspaceDataExportsResponseItemsItemProgressRowsMin = 0;
-
-export const listWorkspaceDataExportsResponseItemsItemProgressBytesMin = 0;
-
-
-
-export const ListWorkspaceDataExportsResponse = zod.object({
-  "items": zod.array(zod.object({
-  "id": zod.uuid(),
-  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
-  "version": zod.int().min(1),
-  "retryAvailable": zod.boolean(),
-  "progress": zod.object({
-  "section": zod.string().nullable(),
-  "rows": zod.int().min(listWorkspaceDataExportsResponseItemsItemProgressRowsMin),
-  "bytes": zod.int().min(listWorkspaceDataExportsResponseItemsItemProgressBytesMin)
-}),
-  "attempts": zod.int(),
-  "createdAt": zod.coerce.date(),
-  "expiresAt": zod.coerce.date(),
-  "snapshotAt": zod.string().nullable(),
-  "size": zod.number().nullable(),
-  "counts": zod.record(zod.string(), zod.int()).nullable(),
-  "errorCode": zod.string().nullable(),
-  "notice": zod.string()
-})),
-  "nextCursor": zod.string().nullable()
-})
-
-
-export const CreateWorkspaceDataExportBody = zod.object({
-  "requestKey": zod.uuid()
-})
-
-
-export const createWorkspaceDataExportResponseProgressRowsMin = 0;
-
-export const createWorkspaceDataExportResponseProgressBytesMin = 0;
-
-
-
-export const CreateWorkspaceDataExportResponse = zod.object({
-  "id": zod.uuid(),
-  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
-  "version": zod.int().min(1),
-  "retryAvailable": zod.boolean(),
-  "progress": zod.object({
-  "section": zod.string().nullable(),
-  "rows": zod.int().min(createWorkspaceDataExportResponseProgressRowsMin),
-  "bytes": zod.int().min(createWorkspaceDataExportResponseProgressBytesMin)
-}),
-  "attempts": zod.int(),
-  "createdAt": zod.coerce.date(),
-  "expiresAt": zod.coerce.date(),
-  "snapshotAt": zod.string().nullable(),
-  "size": zod.number().nullable(),
-  "counts": zod.record(zod.string(), zod.int()).nullable(),
-  "errorCode": zod.string().nullable(),
-  "notice": zod.string()
-})
-
-
-export const GetWorkspaceDataExportParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-export const getWorkspaceDataExportResponseProgressRowsMin = 0;
-
-export const getWorkspaceDataExportResponseProgressBytesMin = 0;
-
-
-
-export const GetWorkspaceDataExportResponse = zod.object({
-  "id": zod.uuid(),
-  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
-  "version": zod.int().min(1),
-  "retryAvailable": zod.boolean(),
-  "progress": zod.object({
-  "section": zod.string().nullable(),
-  "rows": zod.int().min(getWorkspaceDataExportResponseProgressRowsMin),
-  "bytes": zod.int().min(getWorkspaceDataExportResponseProgressBytesMin)
-}),
-  "attempts": zod.int(),
-  "createdAt": zod.coerce.date(),
-  "expiresAt": zod.coerce.date(),
-  "snapshotAt": zod.string().nullable(),
-  "size": zod.number().nullable(),
-  "counts": zod.record(zod.string(), zod.int()).nullable(),
-  "errorCode": zod.string().nullable(),
-  "notice": zod.string()
-})
-
-
-export const CancelWorkspaceDataExportParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-
-
-export const CancelWorkspaceDataExportBody = zod.object({
-  "expectedVersion": zod.int().min(1)
-})
-
-
-export const cancelWorkspaceDataExportResponseProgressRowsMin = 0;
-
-export const cancelWorkspaceDataExportResponseProgressBytesMin = 0;
-
-
-
-export const CancelWorkspaceDataExportResponse = zod.object({
-  "id": zod.uuid(),
-  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
-  "version": zod.int().min(1),
-  "retryAvailable": zod.boolean(),
-  "progress": zod.object({
-  "section": zod.string().nullable(),
-  "rows": zod.int().min(cancelWorkspaceDataExportResponseProgressRowsMin),
-  "bytes": zod.int().min(cancelWorkspaceDataExportResponseProgressBytesMin)
-}),
-  "attempts": zod.int(),
-  "createdAt": zod.coerce.date(),
-  "expiresAt": zod.coerce.date(),
-  "snapshotAt": zod.string().nullable(),
-  "size": zod.number().nullable(),
-  "counts": zod.record(zod.string(), zod.int()).nullable(),
-  "errorCode": zod.string().nullable(),
-  "notice": zod.string()
-})
-
-
-export const RetryWorkspaceDataExportParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-
-
-export const RetryWorkspaceDataExportBody = zod.object({
-  "expectedVersion": zod.int().min(1)
-})
-
-
-export const retryWorkspaceDataExportResponseProgressRowsMin = 0;
-
-export const retryWorkspaceDataExportResponseProgressBytesMin = 0;
-
-
-
-export const RetryWorkspaceDataExportResponse = zod.object({
-  "id": zod.uuid(),
-  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
-  "version": zod.int().min(1),
-  "retryAvailable": zod.boolean(),
-  "progress": zod.object({
-  "section": zod.string().nullable(),
-  "rows": zod.int().min(retryWorkspaceDataExportResponseProgressRowsMin),
-  "bytes": zod.int().min(retryWorkspaceDataExportResponseProgressBytesMin)
-}),
-  "attempts": zod.int(),
-  "createdAt": zod.coerce.date(),
-  "expiresAt": zod.coerce.date(),
-  "snapshotAt": zod.string().nullable(),
-  "size": zod.number().nullable(),
-  "counts": zod.record(zod.string(), zod.int()).nullable(),
-  "errorCode": zod.string().nullable(),
-  "notice": zod.string()
-})
-
-
-export const DownloadWorkspaceDataArtifactParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const DownloadWorkspaceDataArtifactResponse = zod.object({
-  "schemaVersion": zod.int(),
-  "exportedAt": zod.string(),
-  "workspaceId": zod.string(),
-  "scope": zod.string(),
-  "data": zod.record(zod.string(), zod.unknown())
-})
-
-
-export const GetCustomerPurchasesResponse = zod.object({
-  "available": zod.boolean(),
-  "message": zod.string(),
-  "livePaymentsEnabled": zod.boolean(),
-  "orders": zod.array(zod.object({
-  "id": zod.string(),
-  "reference": zod.string(),
-  "title": zod.string(),
-  "amountKobo": zod.int(),
-  "currency": zod.string(),
-  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
-  "createdAt": zod.string(),
-  "lastCheckedAt": zod.string().nullable(),
-  "licenceVersion": zod.string(),
-  "licenceText": zod.string(),
-  "taxTreatment": zod.string(),
-  "contentVersionId": zod.string(),
-  "refundStatus": zod.string().nullable(),
-  "receiptReference": zod.string().nullable(),
-  "refunds": zod.array(zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "amountKobo": zod.int().nullable(),
-  "status": zod.string(),
-  "reference": zod.string(),
-  "reason": zod.string(),
-  "decisionReason": zod.string().nullable(),
-  "policyVersion": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "createdAt": zod.string(),
-  "checkedAt": zod.string().nullable(),
-  "completedAt": zod.string().nullable(),
-  "failure": zod.string().nullable()
-})),
-  "refundableKobo": zod.int(),
-  "refundedKobo": zod.int(),
-  "refundPolicy": zod.string(),
-  "disputeStatus": zod.string().nullable()
-})),
-  "products": zod.array(zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "amountKobo": zod.int(),
-  "currency": zod.string(),
-  "licenceVersion": zod.string(),
-  "licenceText": zod.string(),
-  "taxTreatment": zod.string()
-}))
-})
-
-
-export const createCommerceOrderBodyAcceptedLicenceVersionMax = 100;
-
-
-
-export const CreateCommerceOrderBody = zod.object({
-  "priceId": zod.uuid(),
-  "acceptedLicenceVersion": zod.string().min(1).max(createCommerceOrderBodyAcceptedLicenceVersionMax),
-  "requestKey": zod.uuid()
-})
-
-export const CreateCommerceOrderResponse = zod.object({
-  "id": zod.string(),
-  "reference": zod.string(),
-  "title": zod.string(),
-  "amountKobo": zod.int(),
-  "currency": zod.string(),
-  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
-  "createdAt": zod.string(),
-  "lastCheckedAt": zod.string().nullable(),
-  "licenceVersion": zod.string(),
-  "licenceText": zod.string(),
-  "taxTreatment": zod.string(),
-  "contentVersionId": zod.string(),
-  "refundStatus": zod.string().nullable(),
-  "receiptReference": zod.string().nullable(),
-  "refunds": zod.array(zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "amountKobo": zod.int().nullable(),
-  "status": zod.string(),
-  "reference": zod.string(),
-  "reason": zod.string(),
-  "decisionReason": zod.string().nullable(),
-  "policyVersion": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "createdAt": zod.string(),
-  "checkedAt": zod.string().nullable(),
-  "completedAt": zod.string().nullable(),
-  "failure": zod.string().nullable()
-})),
-  "refundableKobo": zod.int(),
-  "refundedKobo": zod.int(),
-  "refundPolicy": zod.string(),
-  "disputeStatus": zod.string().nullable()
-})
-
-
-export const StartCommerceCheckoutParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const StartCommerceCheckoutBody = zod.object({
-
-})
-
-export const StartCommerceCheckoutResponse = zod.object({
-  "url": zod.string()
-})
-
-
-export const RefreshCommerceOrderParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const RefreshCommerceOrderBody = zod.object({
-
-})
-
-export const RefreshCommerceOrderResponse = zod.object({
-  "id": zod.string(),
-  "reference": zod.string(),
-  "title": zod.string(),
-  "amountKobo": zod.int(),
-  "currency": zod.string(),
-  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
-  "createdAt": zod.string(),
-  "lastCheckedAt": zod.string().nullable(),
-  "licenceVersion": zod.string(),
-  "licenceText": zod.string(),
-  "taxTreatment": zod.string(),
-  "contentVersionId": zod.string(),
-  "refundStatus": zod.string().nullable(),
-  "receiptReference": zod.string().nullable(),
-  "refunds": zod.array(zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "amountKobo": zod.int().nullable(),
-  "status": zod.string(),
-  "reference": zod.string(),
-  "reason": zod.string(),
-  "decisionReason": zod.string().nullable(),
-  "policyVersion": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "createdAt": zod.string(),
-  "checkedAt": zod.string().nullable(),
-  "completedAt": zod.string().nullable(),
-  "failure": zod.string().nullable()
-})),
-  "refundableKobo": zod.int(),
-  "refundedKobo": zod.int(),
-  "refundPolicy": zod.string(),
-  "disputeStatus": zod.string().nullable()
-})
-
-
-export const GetCommerceReceiptParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const GetCommerceReceiptResponse = zod.object({
-  "id": zod.string(),
-  "reference": zod.string(),
-  "title": zod.string(),
-  "amountKobo": zod.int(),
-  "currency": zod.string(),
-  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
-  "createdAt": zod.string(),
-  "lastCheckedAt": zod.string().nullable(),
-  "licenceVersion": zod.string(),
-  "licenceText": zod.string(),
-  "taxTreatment": zod.string(),
-  "contentVersionId": zod.string(),
-  "refundStatus": zod.string().nullable(),
-  "receiptReference": zod.string().nullable(),
-  "refunds": zod.array(zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "amountKobo": zod.int().nullable(),
-  "status": zod.string(),
-  "reference": zod.string(),
-  "reason": zod.string(),
-  "decisionReason": zod.string().nullable(),
-  "policyVersion": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "createdAt": zod.string(),
-  "checkedAt": zod.string().nullable(),
-  "completedAt": zod.string().nullable(),
-  "failure": zod.string().nullable()
-})),
-  "refundableKobo": zod.int(),
-  "refundedKobo": zod.int(),
-  "refundPolicy": zod.string(),
-  "disputeStatus": zod.string().nullable()
-}).and(zod.object({
-  "notice": zod.string(),
-  "deliveryStatus": zod.string()
-}))
-
-
-export const RequestCommerceRefundParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const requestCommerceRefundBodyReasonMin = 10;
-export const requestCommerceRefundBodyReasonMax = 1500;
-
-export const requestCommerceRefundBodyAmountKoboMax = 2147483647;
-
-
-
-export const RequestCommerceRefundBody = zod.object({
-  "reason": zod.string().min(requestCommerceRefundBodyReasonMin).max(requestCommerceRefundBodyReasonMax),
-  "amountKobo": zod.int().min(1).max(requestCommerceRefundBodyAmountKoboMax),
-  "requestKey": zod.uuid(),
-  "acceptedPolicyVersion": zod.enum(['test-refund-v1'])
-})
-
-export const RequestCommerceRefundResponse = zod.object({
-  "reference": zod.string(),
-  "status": zod.string()
-})
-
-
-export const GetStaffOperationsQueryParams = zod.object({
-  "area": zod.enum(['content', 'support', 'finance', 'system'])
-})
-
-export const GetStaffOperationsResponse = zod.object({
-  "area": zod.enum(['content', 'support', 'finance', 'system']),
-  "notice": zod.string(),
-  "records": zod.array(zod.record(zod.string(), zod.unknown()))
-})
-
-
-export const GetOrderDisputeInformationParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const GetOrderDisputeInformationResponse = zod.object({
-  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
-  "information": zod.array(zod.record(zod.string(), zod.unknown())),
-  "notice": zod.string()
-})
-
-
-export const SaveOrderDisputeInformationParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const saveOrderDisputeInformationBodyCustomerNameMax = 150;
-
-export const saveOrderDisputeInformationBodyCustomerPhoneMin = 5;
-export const saveOrderDisputeInformationBodyCustomerPhoneMax = 40;
-
-export const saveOrderDisputeInformationBodyServiceDetailsMin = 10;
-export const saveOrderDisputeInformationBodyServiceDetailsMax = 2000;
-
-export const saveOrderDisputeInformationBodyDeliveryAddressMax = 500;
-
-
-
-export const SaveOrderDisputeInformationBody = zod.object({
-  "disputeId": zod.uuid(),
-  "requestKey": zod.uuid(),
-  "customerName": zod.string().min(1).max(saveOrderDisputeInformationBodyCustomerNameMax),
-  "customerPhone": zod.string().min(saveOrderDisputeInformationBodyCustomerPhoneMin).max(saveOrderDisputeInformationBodyCustomerPhoneMax),
-  "serviceDetails": zod.string().min(saveOrderDisputeInformationBodyServiceDetailsMin).max(saveOrderDisputeInformationBodyServiceDetailsMax),
-  "deliveryAddress": zod.string().max(saveOrderDisputeInformationBodyDeliveryAddressMax).optional(),
-  "deliveryDate": zod.coerce.date().optional(),
-  "consentVersion": zod.enum(['test-dispute-information-v1'])
-})
-
-export const SaveOrderDisputeInformationResponse = zod.object({
-  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
-  "information": zod.array(zod.record(zod.string(), zod.unknown())),
-  "notice": zod.string()
-})
-
-
-export const GetFinanceDisputeParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const GetFinanceDisputeResponse = zod.object({
-  "providerId": zod.string(),
-  "held": zod.boolean(),
-  "controlVersion": zod.int(),
-  "category": zod.string().nullable(),
-  "entitlementStatus": zod.string().nullable(),
-  "id": zod.string(),
-  "orderReference": zod.string(),
-  "amountKobo": zod.int(),
-  "status": zod.string(),
-  "resolution": zod.string().nullable(),
-  "actions": zod.array(zod.object({
-  "id": zod.string(),
-  "kind": zod.string(),
-  "status": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "payload": zod.record(zod.string(), zod.unknown()),
-  "result": zod.record(zod.string(), zod.unknown()).nullable(),
-  "failure": zod.string().nullable()
-})),
-  "information": zod.array(zod.record(zod.string(), zod.unknown())),
-  "executionEnabled": zod.boolean(),
-  "policy": zod.string(),
-  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
-})
-
-
-export const PrepareFinanceDisputeParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const prepareFinanceDisputeBodyMessageMin = 10;
-export const prepareFinanceDisputeBodyMessageMax = 1500;
-
-export const prepareFinanceDisputeBodyAmountKoboMin = 0;
-export const prepareFinanceDisputeBodyAmountKoboMax = 2147483647;
-
-
-
-export const PrepareFinanceDisputeBody = zod.object({
-  "kind": zod.enum(['upload_receipt', 'submit_evidence', 'merchant_decision']),
-  "requestKey": zod.uuid(),
-  "message": zod.string().min(prepareFinanceDisputeBodyMessageMin).max(prepareFinanceDisputeBodyMessageMax),
-  "informationId": zod.uuid().optional(),
-  "resolution": zod.enum(['merchant-accepted', 'declined']).optional(),
-  "amountKobo": zod.int().min(prepareFinanceDisputeBodyAmountKoboMin).max(prepareFinanceDisputeBodyAmountKoboMax).optional()
-})
-
-export const PrepareFinanceDisputeResponse = zod.object({
-  "providerId": zod.string(),
-  "held": zod.boolean(),
-  "controlVersion": zod.int(),
-  "category": zod.string().nullable(),
-  "entitlementStatus": zod.string().nullable(),
-  "id": zod.string(),
-  "orderReference": zod.string(),
-  "amountKobo": zod.int(),
-  "status": zod.string(),
-  "resolution": zod.string().nullable(),
-  "actions": zod.array(zod.object({
-  "id": zod.string(),
-  "kind": zod.string(),
-  "status": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "payload": zod.record(zod.string(), zod.unknown()),
-  "result": zod.record(zod.string(), zod.unknown()).nullable(),
-  "failure": zod.string().nullable()
-})),
-  "information": zod.array(zod.record(zod.string(), zod.unknown())),
-  "executionEnabled": zod.boolean(),
-  "policy": zod.string(),
-  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
-})
-
-
-export const ControlFinanceDisputeParams = zod.object({
-  "id": zod.uuid(),
-  "operation": zod.enum(['execute', 'reconcile', 'cancel'])
-})
-
-
-
-
-export const ControlFinanceDisputeBody = zod.object({
-  "acknowledgement": zod.boolean().optional(),
-  "expectedVersion": zod.int().min(1)
-})
-
-export const ControlFinanceDisputeResponse = zod.object({
-  "providerId": zod.string(),
-  "held": zod.boolean(),
-  "controlVersion": zod.int(),
-  "category": zod.string().nullable(),
-  "entitlementStatus": zod.string().nullable(),
-  "id": zod.string(),
-  "orderReference": zod.string(),
-  "amountKobo": zod.int(),
-  "status": zod.string(),
-  "resolution": zod.string().nullable(),
-  "actions": zod.array(zod.object({
-  "id": zod.string(),
-  "kind": zod.string(),
-  "status": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "payload": zod.record(zod.string(), zod.unknown()),
-  "result": zod.record(zod.string(), zod.unknown()).nullable(),
-  "failure": zod.string().nullable()
-})),
-  "information": zod.array(zod.record(zod.string(), zod.unknown())),
-  "executionEnabled": zod.boolean(),
-  "policy": zod.string(),
-  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
-})
-
-
-export const GetFinanceRefundsResponse = zod.object({
-  "refunds": zod.array(zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "amountKobo": zod.int().nullable(),
-  "status": zod.string(),
-  "reference": zod.string(),
-  "reason": zod.string(),
-  "decisionReason": zod.string().nullable(),
-  "policyVersion": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "createdAt": zod.string(),
-  "checkedAt": zod.string().nullable(),
-  "completedAt": zod.string().nullable(),
-  "failure": zod.string().nullable()
-})),
-  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
-  "policy": zod.string()
-})
-
-
-export const DecideFinanceRefundParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const decideFinanceRefundBodyReasonMin = 10;
-export const decideFinanceRefundBodyReasonMax = 1500;
-
-
-
-
-export const DecideFinanceRefundBody = zod.object({
-  "decision": zod.enum(['approve', 'reject']),
-  "reason": zod.string().min(decideFinanceRefundBodyReasonMin).max(decideFinanceRefundBodyReasonMax),
-  "expectedVersion": zod.int().min(1)
-})
-
-export const DecideFinanceRefundResponse = zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "amountKobo": zod.int().nullable(),
-  "status": zod.string(),
-  "reference": zod.string(),
-  "reason": zod.string(),
-  "decisionReason": zod.string().nullable(),
-  "policyVersion": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "createdAt": zod.string(),
-  "checkedAt": zod.string().nullable(),
-  "completedAt": zod.string().nullable(),
-  "failure": zod.string().nullable()
-})
-
-
-export const ReconcileFinanceRefundParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const ReconcileFinanceRefundBody = zod.object({
-
-})
-
-export const ReconcileFinanceRefundResponse = zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "amountKobo": zod.int().nullable(),
-  "status": zod.string(),
-  "reference": zod.string(),
-  "reason": zod.string(),
-  "decisionReason": zod.string().nullable(),
-  "policyVersion": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "createdAt": zod.string(),
-  "checkedAt": zod.string().nullable(),
-  "completedAt": zod.string().nullable(),
-  "failure": zod.string().nullable()
-})
-
-
-export const ListDocumentExportsParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const ListDocumentExportsResponseItem = zod.object({
-  "id": zod.uuid(),
-  "documentId": zod.uuid(),
-  "revisionId": zod.uuid(),
-  "revision": zod.int(),
-  "format": zod.enum(['docx', 'pdf']),
-  "renderVersion": zod.string(),
-  "sourceHash": zod.string(),
-  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
-  "attempts": zod.int(),
-  "errorCode": zod.string().nullable(),
-  "checksum": zod.string().nullable(),
-  "size": zod.int().nullable(),
-  "downloadUrl": zod.string().nullable(),
-  "expiresAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-export const ListDocumentExportsResponse = zod.array(ListDocumentExportsResponseItem)
-
-
-export const CreateDocumentExportParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const CreateDocumentExportHeader = zod.object({
-  "Idempotency-Key": zod.uuid()
-})
-
-export const CreateDocumentExportBody = zod.object({
-  "revisionId": zod.uuid(),
-  "format": zod.enum(['docx', 'pdf']),
-  "acknowledgeDraft": zod.boolean()
-})
-
-export const CreateDocumentExportResponse = zod.object({
-  "id": zod.uuid(),
-  "documentId": zod.uuid(),
-  "revisionId": zod.uuid(),
-  "revision": zod.int(),
-  "format": zod.enum(['docx', 'pdf']),
-  "renderVersion": zod.string(),
-  "sourceHash": zod.string(),
-  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
-  "attempts": zod.int(),
-  "errorCode": zod.string().nullable(),
-  "checksum": zod.string().nullable(),
-  "size": zod.int().nullable(),
-  "downloadUrl": zod.string().nullable(),
-  "expiresAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-
-
-export const RetryDocumentExportParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const RetryDocumentExportBody = zod.object({
-
-})
-
-export const RetryDocumentExportResponse = zod.object({
-  "id": zod.uuid(),
-  "documentId": zod.uuid(),
-  "revisionId": zod.uuid(),
-  "revision": zod.int(),
-  "format": zod.enum(['docx', 'pdf']),
-  "renderVersion": zod.string(),
-  "sourceHash": zod.string(),
-  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
-  "attempts": zod.int(),
-  "errorCode": zod.string().nullable(),
-  "checksum": zod.string().nullable(),
-  "size": zod.int().nullable(),
-  "downloadUrl": zod.string().nullable(),
-  "expiresAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-
-
-export const DownloadDocumentExportParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const DownloadDocumentExportResponse = zod.unknown()
-
-
 export const GetPublicCoverageResponse = zod.object({
   "industries": zod.array(zod.object({
   "id": zod.string(),
@@ -1032,198 +740,6 @@ export const GetPublicCoverageResponse = zod.object({
   "checkedLocationPacks": zod.int(),
   "notice": zod.string(),
   "ngoNotice": zod.string()
-})
-
-
-export const GetSourceEvidenceResponse = zod.object({
-  "editorialRuns": zod.array(zod.object({
-  "id": zod.string(),
-  "pipelineId": zod.string(),
-  "role": zod.string(),
-  "status": zod.string(),
-  "model": zod.string(),
-  "promptVersion": zod.string(),
-  "sourceHash": zod.string(),
-  "candidateHash": zod.string().nullable(),
-  "providerResponseId": zod.string().nullable(),
-  "latencyMs": zod.int().nullable(),
-  "inputTokens": zod.int().nullable(),
-  "outputTokens": zod.int().nullable(),
-  "createdAt": zod.string(),
-  "publication": zod.enum(['held']),
-  "failureCode": zod.string().nullable(),
-  "modelVerdict": zod.string().nullable()
-})),
-  "handoverSummary": zod.string(),
-  "coordinatingSummary": zod.string(),
-  "notice": zod.string(),
-  "references": zod.array(zod.object({
-  "coordinatingNotes": zod.array(zod.string()),
-  "titleEvidenceStatus": zod.string().nullable(),
-  "metadataTitle": zod.string().nullable(),
-  "titleWarning": zod.string().nullable(),
-  "id": zod.string(),
-  "title": zod.string(),
-  "url": zod.url(),
-  "category": zod.string(),
-  "baselineNotes": zod.string(),
-  "sourceLocator": zod.string(),
-  "status": zod.string(),
-  "attemptedAt": zod.string().nullable(),
-  "fetchedAt": zod.string().nullable(),
-  "httpStatus": zod.int().nullable(),
-  "failureCode": zod.string().nullable(),
-  "rawChecksum": zod.string().nullable(),
-  "textChecksum": zod.string().nullable(),
-  "rawStored": zod.boolean(),
-  "textStored": zod.boolean(),
-  "publication": zod.enum(['held']),
-  "aiReviewedAt": zod.string().nullable(),
-  "sourceCheckedAt": zod.string().nullable()
-})),
-  "retentionProposals": zod.array(zod.object({
-  "id": zod.string(),
-  "dataClass": zod.string(),
-  "exactProposal": zod.string(),
-  "status": zod.string(),
-  "statutoryPeriod": zod.literal(false),
-  "approved": zod.literal(false),
-  "enforced": zod.literal(false)
-})),
-  "roadmapSections": zod.array(zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "exactContract": zod.string(),
-  "sha256": zod.string(),
-  "status": zod.string()
-}))
-})
-
-
-export const GetProofRegisterResponse = zod.object({
-  "uatPackages": zod.array(zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "requirements": zod.string(),
-  "requiredEvidence": zod.string(),
-  "status": zod.string(),
-  "accepted": zod.boolean(),
-  "reason": zod.string()
-})),
-  "gates": zod.array(zod.object({
-  "id": zod.string(),
-  "phaseId": zod.string(),
-  "plannedWindow": zod.string(),
-  "requiredEvidence": zod.string(),
-  "approvers": zod.string(),
-  "status": zod.string(),
-  "reason": zod.string()
-})),
-  "releaseControls": zod.array(zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "source": zod.string(),
-  "text": zod.string()
-})),
-  "suites": zod.array(zod.object({
-  "id": zod.string(),
-  "requiredCases": zod.int(),
-  "executedCases": zod.int(),
-  "accepted": zod.boolean()
-})),
-  "r1Accepted": zod.boolean(),
-  "r2Unlocked": zod.boolean(),
-  "publicLaunchEnabled": zod.boolean()
-})
-
-
-export const GetContentRegisterResponse = zod.object({
-  "rows": zod.array(zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "kind": zod.string(),
-  "status": zod.string(),
-  "relatedIds": zod.array(zod.string()),
-  "limitation": zod.string(),
-  "canonicalId": zod.string().nullable(),
-  "mappingType": zod.string(),
-  "evidenceState": zod.string(),
-  "coverageState": zod.string(),
-  "publicationEligible": zod.boolean(),
-  "sourceLocator": zod.string(),
-  "overlapIds": zod.array(zod.string()),
-  "sourceCheckedAt": zod.coerce.date().nullable()
-})),
-  "industries": zod.array(zod.string()),
-  "deeperPacks": zod.array(zod.string()),
-  "identifiedTemplates": zod.int(),
-  "regulatoryRows": zod.int(),
-  "publishedTemplates": zod.int(),
-  "notice": zod.string(),
-  "overlaps": zod.array(zod.object({
-  "id": zod.string(),
-  "source_ids": zod.array(zod.string()),
-  "type": zod.string(),
-  "note": zod.string(),
-  "canonical_id": zod.string().optional()
-})),
-  "coverageLayers": zod.array(zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "commitment": zod.string(),
-  "representation": zod.string(),
-  "status": zod.string()
-})),
-  "expansionBoundaries": zod.array(zod.object({
-  "id": zod.string(),
-  "release": zod.string(),
-  "horizon": zod.string(),
-  "priority": zod.string(),
-  "condition": zod.string(),
-  "enabled": zod.boolean(),
-  "status": zod.string()
-})),
-  "managementFiles": zod.array(zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "description": zod.string()
-})),
-  "ngoCaution": zod.string(),
-  "provisionalTargets": zod.string(),
-  "r2Targets": zod.object({
-  "templates": zod.int(),
-  "guided": zod.int(),
-  "guidance": zod.int(),
-  "deeperPacks": zod.int(),
-  "locationsUpTo": zod.int()
-})
-})
-
-
-export const GetRequirementsRegisterResponse = zod.object({
-  "requirements": zod.array(zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "release": zod.string(),
-  "priority": zod.string(),
-  "exactText": zod.string(),
-  "acceptance": zod.string(),
-  "status": zod.enum(['blocked', 'verified', 'in_progress', 'not_started']),
-  "implementationPaths": zod.array(zod.string()),
-  "blockers": zod.array(zod.string()),
-  "sourceExactText": zod.string().optional(),
-  "sourceLocator": zod.string().optional(),
-  "owner": zod.string().optional(),
-  "dependencies": zod.array(zod.string()).optional()
-})),
-  "conflicts": zod.array(zod.object({
-  "id": zod.string(),
-  "topic": zod.string(),
-  "status": zod.string(),
-  "issue": zod.string(),
-  "resolution": zod.string().nullable(),
-  "blocks": zod.array(zod.string())
-}))
 })
 
 
@@ -1607,124 +1123,904 @@ export const DownloadReleasedTemplateParams = zod.object({
 export const DownloadReleasedTemplateResponse = zod.unknown()
 
 
-export const GetBuildStatusResponse = zod.object({
-  "receivedRequirements": zod.int(),
-  "expectedRequirements": zod.int(),
-  "publishedTemplates": zod.int(),
-  "p0Passed": zod.boolean(),
-  "r2Unlocked": zod.boolean(),
+export const GetCustomerPurchasesResponse = zod.object({
+  "available": zod.boolean(),
+  "message": zod.string(),
   "livePaymentsEnabled": zod.boolean(),
+  "orders": zod.array(zod.object({
+  "id": zod.string(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
+  "createdAt": zod.string(),
+  "lastCheckedAt": zod.string().nullable(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "contentVersionId": zod.string(),
+  "refundStatus": zod.string().nullable(),
+  "receiptReference": zod.string().nullable(),
+  "refunds": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})),
+  "refundableKobo": zod.int(),
+  "refundedKobo": zod.int(),
+  "refundPolicy": zod.string(),
+  "disputeStatus": zod.string().nullable()
+})),
+  "products": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string()
+}))
+})
+
+
+export const createCommerceOrderBodyAcceptedLicenceVersionMax = 100;
+
+
+
+export const CreateCommerceOrderBody = zod.object({
+  "priceId": zod.uuid(),
+  "acceptedLicenceVersion": zod.string().min(1).max(createCommerceOrderBodyAcceptedLicenceVersionMax),
+  "requestKey": zod.uuid()
+})
+
+export const CreateCommerceOrderResponse = zod.object({
+  "id": zod.string(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
+  "createdAt": zod.string(),
+  "lastCheckedAt": zod.string().nullable(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "contentVersionId": zod.string(),
+  "refundStatus": zod.string().nullable(),
+  "receiptReference": zod.string().nullable(),
+  "refunds": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})),
+  "refundableKobo": zod.int(),
+  "refundedKobo": zod.int(),
+  "refundPolicy": zod.string(),
+  "disputeStatus": zod.string().nullable()
+})
+
+
+export const StartCommerceCheckoutParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const StartCommerceCheckoutBody = zod.object({
+
+})
+
+export const StartCommerceCheckoutResponse = zod.object({
+  "url": zod.string()
+})
+
+
+export const RefreshCommerceOrderParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const RefreshCommerceOrderBody = zod.object({
+
+})
+
+export const RefreshCommerceOrderResponse = zod.object({
+  "id": zod.string(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
+  "createdAt": zod.string(),
+  "lastCheckedAt": zod.string().nullable(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "contentVersionId": zod.string(),
+  "refundStatus": zod.string().nullable(),
+  "receiptReference": zod.string().nullable(),
+  "refunds": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})),
+  "refundableKobo": zod.int(),
+  "refundedKobo": zod.int(),
+  "refundPolicy": zod.string(),
+  "disputeStatus": zod.string().nullable()
+})
+
+
+export const GetCommerceReceiptParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetCommerceReceiptResponse = zod.object({
+  "id": zod.string(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "amountKobo": zod.int(),
+  "currency": zod.string(),
+  "status": zod.enum(['created', 'pending', 'abandoned', 'failed', 'verified_success', 'needs_review', 'reversed']),
+  "createdAt": zod.string(),
+  "lastCheckedAt": zod.string().nullable(),
+  "licenceVersion": zod.string(),
+  "licenceText": zod.string(),
+  "taxTreatment": zod.string(),
+  "contentVersionId": zod.string(),
+  "refundStatus": zod.string().nullable(),
+  "receiptReference": zod.string().nullable(),
+  "refunds": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})),
+  "refundableKobo": zod.int(),
+  "refundedKobo": zod.int(),
+  "refundPolicy": zod.string(),
+  "disputeStatus": zod.string().nullable()
+}).and(zod.object({
+  "notice": zod.string(),
+  "deliveryStatus": zod.string()
+}))
+
+
+export const RequestCommerceRefundParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const requestCommerceRefundBodyReasonMin = 10;
+export const requestCommerceRefundBodyReasonMax = 1500;
+
+export const requestCommerceRefundBodyAmountKoboMax = 2147483647;
+
+
+
+export const RequestCommerceRefundBody = zod.object({
+  "reason": zod.string().min(requestCommerceRefundBodyReasonMin).max(requestCommerceRefundBodyReasonMax),
+  "amountKobo": zod.int().min(1).max(requestCommerceRefundBodyAmountKoboMax),
+  "requestKey": zod.uuid(),
+  "acceptedPolicyVersion": zod.enum(['test-refund-v1'])
+})
+
+export const RequestCommerceRefundResponse = zod.object({
+  "reference": zod.string(),
+  "status": zod.string()
+})
+
+
+export const GetOrderDisputeInformationParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetOrderDisputeInformationResponse = zod.object({
+  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
   "notice": zod.string()
 })
 
 
-export const getWorkspaceResponseProfileOneBusinessNameMax = 160;
+export const SaveOrderDisputeInformationParams = zod.object({
+  "id": zod.uuid()
+})
 
-export const getWorkspaceResponseProfileOneActivitiesItemMax = 120;
+export const saveOrderDisputeInformationBodyCustomerNameMax = 150;
 
-export const getWorkspaceResponseProfileOneActivitiesMax = 10;
+export const saveOrderDisputeInformationBodyCustomerPhoneMin = 5;
+export const saveOrderDisputeInformationBodyCustomerPhoneMax = 40;
 
-export const getWorkspaceResponseProfileOneLgaMax = 100;
+export const saveOrderDisputeInformationBodyServiceDetailsMin = 10;
+export const saveOrderDisputeInformationBodyServiceDetailsMax = 2000;
 
-export const getWorkspaceResponseProfileOneEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
-export const getWorkspaceResponseProfileOneTurnoverYearRegExp = new RegExp('^(unknown|[0-9]{4})$');
+export const saveOrderDisputeInformationBodyDeliveryAddressMax = 500;
 
 
-export const GetWorkspaceResponse = zod.object({
+
+export const SaveOrderDisputeInformationBody = zod.object({
+  "disputeId": zod.uuid(),
+  "requestKey": zod.uuid(),
+  "customerName": zod.string().min(1).max(saveOrderDisputeInformationBodyCustomerNameMax),
+  "customerPhone": zod.string().min(saveOrderDisputeInformationBodyCustomerPhoneMin).max(saveOrderDisputeInformationBodyCustomerPhoneMax),
+  "serviceDetails": zod.string().min(saveOrderDisputeInformationBodyServiceDetailsMin).max(saveOrderDisputeInformationBodyServiceDetailsMax),
+  "deliveryAddress": zod.string().max(saveOrderDisputeInformationBodyDeliveryAddressMax).optional(),
+  "deliveryDate": zod.coerce.date().optional(),
+  "consentVersion": zod.enum(['test-dispute-information-v1'])
+})
+
+export const SaveOrderDisputeInformationResponse = zod.object({
+  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "notice": zod.string()
+})
+
+
+export const GetFinanceDisputeParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetFinanceDisputeResponse = zod.object({
+  "providerId": zod.string(),
+  "held": zod.boolean(),
+  "controlVersion": zod.int(),
+  "category": zod.string().nullable(),
+  "entitlementStatus": zod.string().nullable(),
   "id": zod.string(),
-  "profileRevision": zod.int(),
-  "profile": zod.union([zod.object({
-  "businessName": zod.string().min(1).max(getWorkspaceResponseProfileOneBusinessNameMax),
-  "legalForm": zod.enum(['unknown', 'sole_proprietor', 'partnership', 'limited_company', 'incorporated_trustees', 'company_limited_by_guarantee']),
-  "registrationStatus": zod.enum(['unknown', 'registered', 'unregistered', 'pending']),
-  "activities": zod.array(zod.string().min(1).max(getWorkspaceResponseProfileOneActivitiesItemMax)).min(1).max(getWorkspaceResponseProfileOneActivitiesMax),
-  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
-  "lga": zod.string().max(getWorkspaceResponseProfileOneLgaMax),
-  "employees": zod.string().regex(getWorkspaceResponseProfileOneEmployeesRegExp),
-  "turnoverBand": zod.enum(['unknown', 'unanswered', 'not_applicable', 'under_5m', '5m_to_25m', '25m_to_100m', 'over_100m']),
-  "turnoverYear": zod.string().regex(getWorkspaceResponseProfileOneTurnoverYearRegExp),
-  "turnoverMetric": zod.enum(['unknown', 'gross_revenue']),
-  "turnoverCurrency": zod.enum(['unknown', 'NGN']),
-  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "marketingConsent": zod.boolean()
-}),zod.null()]),
-  "documentCount": zod.int()
-})
-
-
-export const saveBusinessProfileBodyExpectedRevisionMin = 0;
-
-export const saveBusinessProfileBodyProfileBusinessNameMax = 160;
-
-export const saveBusinessProfileBodyProfileActivitiesItemMax = 120;
-
-export const saveBusinessProfileBodyProfileActivitiesMax = 10;
-
-export const saveBusinessProfileBodyProfileLgaMax = 100;
-
-export const saveBusinessProfileBodyProfileEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
-export const saveBusinessProfileBodyProfileTurnoverYearRegExp = new RegExp('^(unknown|[0-9]{4})$');
-
-
-export const SaveBusinessProfileBody = zod.object({
-  "expectedRevision": zod.int().min(saveBusinessProfileBodyExpectedRevisionMin),
-  "profile": zod.object({
-  "businessName": zod.string().min(1).max(saveBusinessProfileBodyProfileBusinessNameMax),
-  "legalForm": zod.enum(['unknown', 'sole_proprietor', 'partnership', 'limited_company', 'incorporated_trustees', 'company_limited_by_guarantee']),
-  "registrationStatus": zod.enum(['unknown', 'registered', 'unregistered', 'pending']),
-  "activities": zod.array(zod.string().min(1).max(saveBusinessProfileBodyProfileActivitiesItemMax)).min(1).max(saveBusinessProfileBodyProfileActivitiesMax),
-  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
-  "lga": zod.string().max(saveBusinessProfileBodyProfileLgaMax),
-  "employees": zod.string().regex(saveBusinessProfileBodyProfileEmployeesRegExp),
-  "turnoverBand": zod.enum(['unknown', 'unanswered', 'not_applicable', 'under_5m', '5m_to_25m', '25m_to_100m', 'over_100m']),
-  "turnoverYear": zod.string().regex(saveBusinessProfileBodyProfileTurnoverYearRegExp),
-  "turnoverMetric": zod.enum(['unknown', 'gross_revenue']),
-  "turnoverCurrency": zod.enum(['unknown', 'NGN']),
-  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "marketingConsent": zod.boolean()
-})
-})
-
-export const saveBusinessProfileResponseProfileOneBusinessNameMax = 160;
-
-export const saveBusinessProfileResponseProfileOneActivitiesItemMax = 120;
-
-export const saveBusinessProfileResponseProfileOneActivitiesMax = 10;
-
-export const saveBusinessProfileResponseProfileOneLgaMax = 100;
-
-export const saveBusinessProfileResponseProfileOneEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
-export const saveBusinessProfileResponseProfileOneTurnoverYearRegExp = new RegExp('^(unknown|[0-9]{4})$');
-
-
-export const SaveBusinessProfileResponse = zod.object({
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
   "id": zod.string(),
-  "profileRevision": zod.int(),
-  "profile": zod.union([zod.object({
-  "businessName": zod.string().min(1).max(saveBusinessProfileResponseProfileOneBusinessNameMax),
-  "legalForm": zod.enum(['unknown', 'sole_proprietor', 'partnership', 'limited_company', 'incorporated_trustees', 'company_limited_by_guarantee']),
-  "registrationStatus": zod.enum(['unknown', 'registered', 'unregistered', 'pending']),
-  "activities": zod.array(zod.string().min(1).max(saveBusinessProfileResponseProfileOneActivitiesItemMax)).min(1).max(saveBusinessProfileResponseProfileOneActivitiesMax),
-  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
-  "lga": zod.string().max(saveBusinessProfileResponseProfileOneLgaMax),
-  "employees": zod.string().regex(saveBusinessProfileResponseProfileOneEmployeesRegExp),
-  "turnoverBand": zod.enum(['unknown', 'unanswered', 'not_applicable', 'under_5m', '5m_to_25m', '25m_to_100m', 'over_100m']),
-  "turnoverYear": zod.string().regex(saveBusinessProfileResponseProfileOneTurnoverYearRegExp),
-  "turnoverMetric": zod.enum(['unknown', 'gross_revenue']),
-  "turnoverCurrency": zod.enum(['unknown', 'NGN']),
-  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
-  "marketingConsent": zod.boolean()
-}),zod.null()]),
-  "documentCount": zod.int()
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const PrepareFinanceDisputeParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const prepareFinanceDisputeBodyMessageMin = 10;
+export const prepareFinanceDisputeBodyMessageMax = 1500;
+
+export const prepareFinanceDisputeBodyAmountKoboMin = 0;
+export const prepareFinanceDisputeBodyAmountKoboMax = 2147483647;
+
+
+
+export const PrepareFinanceDisputeBody = zod.object({
+  "kind": zod.enum(['upload_receipt', 'submit_evidence', 'merchant_decision']),
+  "requestKey": zod.uuid(),
+  "message": zod.string().min(prepareFinanceDisputeBodyMessageMin).max(prepareFinanceDisputeBodyMessageMax),
+  "informationId": zod.uuid().optional(),
+  "resolution": zod.enum(['merchant-accepted', 'declined']).optional(),
+  "amountKobo": zod.int().min(prepareFinanceDisputeBodyAmountKoboMin).max(prepareFinanceDisputeBodyAmountKoboMax).optional()
+})
+
+export const PrepareFinanceDisputeResponse = zod.object({
+  "providerId": zod.string(),
+  "held": zod.boolean(),
+  "controlVersion": zod.int(),
+  "category": zod.string().nullable(),
+  "entitlementStatus": zod.string().nullable(),
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const ControlFinanceDisputeParams = zod.object({
+  "id": zod.uuid(),
+  "operation": zod.enum(['execute', 'reconcile', 'cancel'])
+})
+
+
+
+
+export const ControlFinanceDisputeBody = zod.object({
+  "acknowledgement": zod.boolean().optional(),
+  "expectedVersion": zod.int().min(1)
+})
+
+export const ControlFinanceDisputeResponse = zod.object({
+  "providerId": zod.string(),
+  "held": zod.boolean(),
+  "controlVersion": zod.int(),
+  "category": zod.string().nullable(),
+  "entitlementStatus": zod.string().nullable(),
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const GetFinanceRefundsResponse = zod.object({
+  "refunds": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})),
+  "disputes": zod.array(zod.record(zod.string(), zod.unknown())),
+  "policy": zod.string()
+})
+
+
+export const DecideFinanceRefundParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const decideFinanceRefundBodyReasonMin = 10;
+export const decideFinanceRefundBodyReasonMax = 1500;
+
+
+
+
+export const DecideFinanceRefundBody = zod.object({
+  "decision": zod.enum(['approve', 'reject']),
+  "reason": zod.string().min(decideFinanceRefundBodyReasonMin).max(decideFinanceRefundBodyReasonMax),
+  "expectedVersion": zod.int().min(1)
+})
+
+export const DecideFinanceRefundResponse = zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})
+
+
+export const ReconcileFinanceRefundParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const ReconcileFinanceRefundBody = zod.object({
+
+})
+
+export const ReconcileFinanceRefundResponse = zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "amountKobo": zod.int().nullable(),
+  "status": zod.string(),
+  "reference": zod.string(),
+  "reason": zod.string(),
+  "decisionReason": zod.string().nullable(),
+  "policyVersion": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "createdAt": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "completedAt": zod.string().nullable(),
+  "failure": zod.string().nullable()
+})
+
+
+export const GetWorkspaceDisputesResponse = zod.object({
+  "concerns": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "orderReference": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
+  "latestReply": zod.string().nullable(),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "history": zod.array(zod.object({
+  "id": zod.string(),
+  "action": zod.string(),
+  "reason": zod.string(),
+  "actorType": zod.enum(['customer', 'finance', 'worker']),
+  "createdAt": zod.string()
+}))
+})),
+  "notice": zod.string()
+})
+
+
+export const CreatePaymentConcernParams = zod.object({
+  "orderId": zod.uuid()
+})
+
+export const createPaymentConcernBodyMessageMin = 20;
+export const createPaymentConcernBodyMessageMax = 2000;
+
+
+
+export const CreatePaymentConcernBody = zod.object({
+  "requestKey": zod.uuid(),
+  "message": zod.string().min(createPaymentConcernBodyMessageMin).max(createPaymentConcernBodyMessageMax),
+  "acknowledgement": zod.literal(true)
+})
+
+export const CreatePaymentConcernResponse = zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "orderReference": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
+  "latestReply": zod.string().nullable(),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "history": zod.array(zod.object({
+  "id": zod.string(),
+  "action": zod.string(),
+  "reason": zod.string(),
+  "actorType": zod.enum(['customer', 'finance', 'worker']),
+  "createdAt": zod.string()
+}))
+})
+
+
+export const RespondPaymentConcernParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const respondPaymentConcernBodyMessageMin = 10;
+export const respondPaymentConcernBodyMessageMax = 2000;
+
+
+
+export const RespondPaymentConcernBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "message": zod.string().min(respondPaymentConcernBodyMessageMin).max(respondPaymentConcernBodyMessageMax)
+})
+
+export const RespondPaymentConcernResponse = zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "orderReference": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
+  "latestReply": zod.string().nullable(),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "history": zod.array(zod.object({
+  "id": zod.string(),
+  "action": zod.string(),
+  "reason": zod.string(),
+  "actorType": zod.enum(['customer', 'finance', 'worker']),
+  "createdAt": zod.string()
+}))
+})
+
+
+export const ActOnPaymentConcernParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const actOnPaymentConcernBodyMessageMin = 10;
+export const actOnPaymentConcernBodyMessageMax = 2000;
+
+
+
+export const ActOnPaymentConcernBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "action": zod.enum(['reply', 'request_information', 'close']),
+  "message": zod.string().min(actOnPaymentConcernBodyMessageMin).max(actOnPaymentConcernBodyMessageMax)
+})
+
+export const ActOnPaymentConcernResponse = zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "orderReference": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
+  "latestReply": zod.string().nullable(),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "history": zod.array(zod.object({
+  "id": zod.string(),
+  "action": zod.string(),
+  "reason": zod.string(),
+  "actorType": zod.enum(['customer', 'finance', 'worker']),
+  "createdAt": zod.string()
+}))
+})
+
+
+export const GetFinancePaymentConcernsResponse = zod.object({
+  "concerns": zod.array(zod.object({
+  "id": zod.string(),
+  "orderId": zod.string(),
+  "orderReference": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
+  "latestReply": zod.string().nullable(),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "history": zod.array(zod.object({
+  "id": zod.string(),
+  "action": zod.string(),
+  "reason": zod.string(),
+  "actorType": zod.enum(['customer', 'finance', 'worker']),
+  "createdAt": zod.string()
+}))
+})),
+  "notice": zod.string()
+})
+
+
+export const linkFinanceDisputeBodyProviderIdRegExp = new RegExp('^\\d{1,40}$');
+
+
+export const LinkFinanceDisputeBody = zod.object({
+  "orderId": zod.uuid(),
+  "providerId": zod.string().regex(linkFinanceDisputeBodyProviderIdRegExp)
+})
+
+export const LinkFinanceDisputeResponse = zod.object({
+  "providerId": zod.string(),
+  "held": zod.boolean(),
+  "controlVersion": zod.int(),
+  "category": zod.string().nullable(),
+  "entitlementStatus": zod.string().nullable(),
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const HoldFinanceDisputeParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const holdFinanceDisputeBodyReasonMin = 10;
+export const holdFinanceDisputeBodyReasonMax = 1500;
+
+
+
+export const HoldFinanceDisputeBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "held": zod.boolean(),
+  "reason": zod.string().min(holdFinanceDisputeBodyReasonMin).max(holdFinanceDisputeBodyReasonMax)
+})
+
+export const HoldFinanceDisputeResponse = zod.object({
+  "providerId": zod.string(),
+  "held": zod.boolean(),
+  "controlVersion": zod.int(),
+  "category": zod.string().nullable(),
+  "entitlementStatus": zod.string().nullable(),
+  "id": zod.string(),
+  "orderReference": zod.string(),
+  "amountKobo": zod.int(),
+  "status": zod.string(),
+  "resolution": zod.string().nullable(),
+  "actions": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "version": zod.int(),
+  "attempts": zod.int(),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "result": zod.record(zod.string(), zod.unknown()).nullable(),
+  "failure": zod.string().nullable()
+})),
+  "information": zod.array(zod.record(zod.string(), zod.unknown())),
+  "executionEnabled": zod.boolean(),
+  "policy": zod.string(),
+  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+export const GetSourceEvidenceResponse = zod.object({
+  "editorialRuns": zod.array(zod.object({
+  "id": zod.string(),
+  "pipelineId": zod.string(),
+  "role": zod.string(),
+  "status": zod.string(),
+  "model": zod.string(),
+  "promptVersion": zod.string(),
+  "sourceHash": zod.string(),
+  "candidateHash": zod.string().nullable(),
+  "providerResponseId": zod.string().nullable(),
+  "latencyMs": zod.int().nullable(),
+  "inputTokens": zod.int().nullable(),
+  "outputTokens": zod.int().nullable(),
+  "createdAt": zod.string(),
+  "publication": zod.enum(['held']),
+  "failureCode": zod.string().nullable(),
+  "modelVerdict": zod.string().nullable()
+})),
+  "handoverSummary": zod.string(),
+  "coordinatingSummary": zod.string(),
+  "notice": zod.string(),
+  "references": zod.array(zod.object({
+  "coordinatingNotes": zod.array(zod.string()),
+  "titleEvidenceStatus": zod.string().nullable(),
+  "metadataTitle": zod.string().nullable(),
+  "titleWarning": zod.string().nullable(),
+  "id": zod.string(),
+  "title": zod.string(),
+  "url": zod.url(),
+  "category": zod.string(),
+  "baselineNotes": zod.string(),
+  "sourceLocator": zod.string(),
+  "status": zod.string(),
+  "attemptedAt": zod.string().nullable(),
+  "fetchedAt": zod.string().nullable(),
+  "httpStatus": zod.int().nullable(),
+  "failureCode": zod.string().nullable(),
+  "rawChecksum": zod.string().nullable(),
+  "textChecksum": zod.string().nullable(),
+  "rawStored": zod.boolean(),
+  "textStored": zod.boolean(),
+  "publication": zod.enum(['held']),
+  "aiReviewedAt": zod.string().nullable(),
+  "sourceCheckedAt": zod.string().nullable()
+})),
+  "retentionProposals": zod.array(zod.object({
+  "id": zod.string(),
+  "dataClass": zod.string(),
+  "exactProposal": zod.string(),
+  "status": zod.string(),
+  "statutoryPeriod": zod.literal(false),
+  "approved": zod.literal(false),
+  "enforced": zod.literal(false)
+})),
+  "roadmapSections": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "exactContract": zod.string(),
+  "sha256": zod.string(),
+  "status": zod.string()
+}))
+})
+
+
+export const GetProofRegisterResponse = zod.object({
+  "uatPackages": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "requirements": zod.string(),
+  "requiredEvidence": zod.string(),
+  "status": zod.string(),
+  "accepted": zod.boolean(),
+  "reason": zod.string()
+})),
+  "gates": zod.array(zod.object({
+  "id": zod.string(),
+  "phaseId": zod.string(),
+  "plannedWindow": zod.string(),
+  "requiredEvidence": zod.string(),
+  "approvers": zod.string(),
+  "status": zod.string(),
+  "reason": zod.string()
+})),
+  "releaseControls": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "source": zod.string(),
+  "text": zod.string()
+})),
+  "suites": zod.array(zod.object({
+  "id": zod.string(),
+  "requiredCases": zod.int(),
+  "executedCases": zod.int(),
+  "accepted": zod.boolean()
+})),
+  "r1Accepted": zod.boolean(),
+  "r2Unlocked": zod.boolean(),
+  "publicLaunchEnabled": zod.boolean()
+})
+
+
+export const GetContentRegisterResponse = zod.object({
+  "rows": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "kind": zod.string(),
+  "status": zod.string(),
+  "relatedIds": zod.array(zod.string()),
+  "limitation": zod.string(),
+  "canonicalId": zod.string().nullable(),
+  "mappingType": zod.string(),
+  "evidenceState": zod.string(),
+  "coverageState": zod.string(),
+  "publicationEligible": zod.boolean(),
+  "sourceLocator": zod.string(),
+  "overlapIds": zod.array(zod.string()),
+  "sourceCheckedAt": zod.coerce.date().nullable()
+})),
+  "industries": zod.array(zod.string()),
+  "deeperPacks": zod.array(zod.string()),
+  "identifiedTemplates": zod.int(),
+  "regulatoryRows": zod.int(),
+  "publishedTemplates": zod.int(),
+  "notice": zod.string(),
+  "overlaps": zod.array(zod.object({
+  "id": zod.string(),
+  "source_ids": zod.array(zod.string()),
+  "type": zod.string(),
+  "note": zod.string(),
+  "canonical_id": zod.string().optional()
+})),
+  "coverageLayers": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "commitment": zod.string(),
+  "representation": zod.string(),
+  "status": zod.string()
+})),
+  "expansionBoundaries": zod.array(zod.object({
+  "id": zod.string(),
+  "release": zod.string(),
+  "horizon": zod.string(),
+  "priority": zod.string(),
+  "condition": zod.string(),
+  "enabled": zod.boolean(),
+  "status": zod.string()
+})),
+  "managementFiles": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string()
+})),
+  "ngoCaution": zod.string(),
+  "provisionalTargets": zod.string(),
+  "r2Targets": zod.object({
+  "templates": zod.int(),
+  "guided": zod.int(),
+  "guidance": zod.int(),
+  "deeperPacks": zod.int(),
+  "locationsUpTo": zod.int()
+})
+})
+
+
+export const GetRequirementsRegisterResponse = zod.object({
+  "requirements": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "release": zod.string(),
+  "priority": zod.string(),
+  "exactText": zod.string(),
+  "acceptance": zod.string(),
+  "status": zod.enum(['blocked', 'verified', 'in_progress', 'not_started']),
+  "implementationPaths": zod.array(zod.string()),
+  "blockers": zod.array(zod.string()),
+  "sourceExactText": zod.string().optional(),
+  "sourceLocator": zod.string().optional(),
+  "owner": zod.string().optional(),
+  "dependencies": zod.array(zod.string()).optional()
+})),
+  "conflicts": zod.array(zod.object({
+  "id": zod.string(),
+  "topic": zod.string(),
+  "status": zod.string(),
+  "issue": zod.string(),
+  "resolution": zod.string().nullable(),
+  "blocks": zod.array(zod.string())
+}))
 })
 
 
@@ -2661,25 +2957,299 @@ export const ListDocumentRevisionsResponseItem = zod.object({
 export const ListDocumentRevisionsResponse = zod.array(ListDocumentRevisionsResponseItem)
 
 
-export const createSupportTicketBodyScopeMin = 10;
-export const createSupportTicketBodyScopeMax = 4000;
-
-export const createSupportTicketBodyContactEmailMax = 254;
+export const getSourceControlsQueryPageDefault = 1;
+export const getSourceControlsQueryPageMax = 10000;
 
 
 
-export const CreateSupportTicketBody = zod.object({
-  "category": zod.enum(['support', 'registration', 'tax', 'accounting', 'employment', 'legal', 'privacy', 'sector_approval']),
-  "scope": zod.string().min(createSupportTicketBodyScopeMin).max(createSupportTicketBodyScopeMax),
-  "contactEmail": zod.email().max(createSupportTicketBodyContactEmailMax),
-  "sharingConsent": zod.boolean()
+export const GetSourceControlsQueryParams = zod.object({
+  "area": zod.enum(['content', 'system']),
+  "page": zod.coerce.number().int().min(1).max(getSourceControlsQueryPageMax).default(getSourceControlsQueryPageDefault)
 })
 
-export const CreateSupportTicketResponse = zod.object({
-  "reference": zod.string(),
+export const GetSourceControlsResponse = zod.object({
+  "area": zod.enum(['content', 'system']),
+  "page": zod.int(),
+  "hasMore": zod.boolean(),
+  "notice": zod.string(),
+  "versions": zod.array(zod.object({
+  "kind": zod.enum(['content', 'rule']),
+  "id": zod.uuid(),
+  "key": zod.string(),
+  "version": zod.int(),
+  "status": zod.string(),
+  "reviewBy": zod.string().nullable(),
+  "safetyHeld": zod.boolean()
+})),
+  "sources": zod.array(zod.object({
+  "sourceId": zod.string(),
+  "url": zod.string(),
+  "risk": zod.string(),
+  "checkedAt": zod.string().nullable(),
+  "failureCode": zod.string().nullable(),
+  "nextCheckAt": zod.coerce.date()
+})),
+  "review": zod.array(zod.object({
+  "id": zod.uuid(),
+  "status": zod.string(),
+  "targetKind": zod.string(),
+  "targetKey": zod.string(),
+  "targetVersion": zod.int(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "services": zod.array(zod.object({
+  "key": zod.string(),
+  "enabled": zod.boolean(),
+  "reason": zod.string(),
+  "updatedAt": zod.coerce.date()
+})),
+  "sourceChoices": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string()
+}))
+})
+
+
+export const actOnSourceControlsBodyOneReasonMin = 20;
+export const actOnSourceControlsBodyOneReasonMax = 1000;
+
+export const actOnSourceControlsBodyOneSourceIdMax = 100;
+
+export const actOnSourceControlsBodyTwoReasonMin = 20;
+export const actOnSourceControlsBodyTwoReasonMax = 1000;
+
+
+export const actOnSourceControlsBodyThreeReasonMin = 20;
+export const actOnSourceControlsBodyThreeReasonMax = 1000;
+
+
+export const actOnSourceControlsBodyFourReasonMin = 20;
+export const actOnSourceControlsBodyFourReasonMax = 1000;
+
+export const actOnSourceControlsBodyFiveReasonMin = 20;
+export const actOnSourceControlsBodyFiveReasonMax = 1000;
+
+
+
+export const ActOnSourceControlsBody = zod.union([zod.object({
+  "requestKey": zod.uuid(),
+  "reason": zod.string().min(actOnSourceControlsBodyOneReasonMin).max(actOnSourceControlsBodyOneReasonMax),
+  "action": zod.enum(['watch_source']),
+  "sourceId": zod.string().min(1).max(actOnSourceControlsBodyOneSourceIdMax)
+}),zod.object({
+  "requestKey": zod.uuid(),
+  "reason": zod.string().min(actOnSourceControlsBodyTwoReasonMin).max(actOnSourceControlsBodyTwoReasonMax),
+  "action": zod.enum(['hold_version']),
+  "kind": zod.enum(['content', 'rule']),
+  "id": zod.uuid(),
+  "version": zod.int().min(1)
+}),zod.object({
+  "requestKey": zod.uuid(),
+  "reason": zod.string().min(actOnSourceControlsBodyThreeReasonMin).max(actOnSourceControlsBodyThreeReasonMax),
+  "action": zod.enum(['withdraw_version']),
+  "kind": zod.enum(['content', 'rule']),
+  "id": zod.uuid(),
+  "version": zod.int().min(1)
+}),zod.object({
+  "requestKey": zod.uuid(),
+  "reason": zod.string().min(actOnSourceControlsBodyFourReasonMin).max(actOnSourceControlsBodyFourReasonMax),
+  "action": zod.enum(['pause_service']),
+  "service": zod.enum(['ai', 'checkout'])
+}),zod.object({
+  "requestKey": zod.uuid(),
+  "reason": zod.string().min(actOnSourceControlsBodyFiveReasonMin).max(actOnSourceControlsBodyFiveReasonMax),
+  "action": zod.enum(['resume_service']),
+  "service": zod.enum(['ai', 'checkout'])
+})])
+
+export const ActOnSourceControlsResponse = zod.object({
+  "auditId": zod.uuid(),
+  "replayed": zod.boolean(),
+  "result": zod.record(zod.string(), zod.unknown())
+})
+
+
+/**
+ * The stored bundle's current check, the drafting and review runs, check counts, safety holds and publication audit of one content or rule version (ADM-002). Read-only: it approves, publishes and holds nothing.
+ * @summary One version's publication record, for content staff
+ */
+export const GetEditorialRecordParams = zod.object({
+  "kind": zod.enum(['content', 'rule']),
+  "id": zod.uuid()
+})
+
+export const GetEditorialRecordResponse = zod.object({
+  "kind": zod.enum(['content', 'rule']),
+  "id": zod.uuid(),
+  "key": zod.string(),
+  "version": zod.int(),
+  "status": zod.string(),
+  "reviewBy": zod.string().nullable(),
+  "publishedAt": zod.string().nullable(),
+  "withdrawnReason": zod.string().nullable(),
+  "candidateHash": zod.string().nullable(),
+  "manifestStatus": zod.string().nullable(),
+  "check": zod.object({
+  "checkedAt": zod.coerce.date(),
+  "decision": zod.enum(['eligible', 'hold']),
+  "reasons": zod.array(zod.string())
+}).describe('What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release.'),
+  "draftRun": zod.union([zod.object({
+  "runId": zod.string(),
+  "model": zod.string(),
+  "promptVersion": zod.string()
+}),zod.null()]),
+  "reviews": zod.array(zod.object({
+  "role": zod.enum(['factual', 'challenge']),
+  "runId": zod.string(),
+  "model": zod.string(),
+  "promptVersion": zod.string(),
+  "verdict": zod.enum(['pass', 'hold']),
+  "findings": zod.array(zod.string()).describe('The review\'s findings, at most 20, each cut to 600 characters.'),
+  "receivedOtherVerdict": zod.boolean()
+})),
+  "mechanicalChecks": zod.object({
+  "passed": zod.int(),
+  "failed": zod.int(),
+  "notRun": zod.int()
+}),
+  "enhancedChecks": zod.object({
+  "passed": zod.int(),
+  "failed": zod.int(),
+  "notRun": zod.int()
+}),
+  "audit": zod.array(zod.object({
+  "action": zod.string(),
+  "actor": zod.string(),
+  "reason": zod.string(),
+  "at": zod.coerce.date()
+})),
+  "safetyHolds": zod.array(zod.object({
+  "action": zod.string(),
+  "reason": zod.string(),
+  "phase": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "completedAt": zod.string().nullable()
+})),
+  "notice": zod.string()
+})
+
+
+export const getCorrectionNoticesQueryPageDefault = 1;
+export const getCorrectionNoticesQueryPageMax = 10000;
+
+
+
+export const GetCorrectionNoticesQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).max(getCorrectionNoticesQueryPageMax).default(getCorrectionNoticesQueryPageDefault)
+})
+
+export const GetCorrectionNoticesResponse = zod.object({
+  "page": zod.int(),
+  "hasMore": zod.boolean(),
+  "notices": zod.array(zod.object({
+  "id": zod.uuid(),
+  "entityKind": zod.string(),
+  "entityId": zod.uuid(),
   "message": zod.string(),
-  "dispatchStatus": zod.enum(['awaiting_staff'])
+  "createdAt": zod.coerce.date()
+}))
 })
+
+
+export const ListDocumentExportsParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const ListDocumentExportsResponseItem = zod.object({
+  "id": zod.uuid(),
+  "documentId": zod.uuid(),
+  "revisionId": zod.uuid(),
+  "revision": zod.int(),
+  "format": zod.enum(['docx', 'pdf']),
+  "renderVersion": zod.string(),
+  "sourceHash": zod.string(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
+  "attempts": zod.int(),
+  "errorCode": zod.string().nullable(),
+  "checksum": zod.string().nullable(),
+  "size": zod.int().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "expiresAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListDocumentExportsResponse = zod.array(ListDocumentExportsResponseItem)
+
+
+export const CreateDocumentExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const CreateDocumentExportHeader = zod.object({
+  "Idempotency-Key": zod.uuid()
+})
+
+export const CreateDocumentExportBody = zod.object({
+  "revisionId": zod.uuid(),
+  "format": zod.enum(['docx', 'pdf']),
+  "acknowledgeDraft": zod.boolean()
+})
+
+export const CreateDocumentExportResponse = zod.object({
+  "id": zod.uuid(),
+  "documentId": zod.uuid(),
+  "revisionId": zod.uuid(),
+  "revision": zod.int(),
+  "format": zod.enum(['docx', 'pdf']),
+  "renderVersion": zod.string(),
+  "sourceHash": zod.string(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
+  "attempts": zod.int(),
+  "errorCode": zod.string().nullable(),
+  "checksum": zod.string().nullable(),
+  "size": zod.int().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "expiresAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const RetryDocumentExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const RetryDocumentExportBody = zod.object({
+
+})
+
+export const RetryDocumentExportResponse = zod.object({
+  "id": zod.uuid(),
+  "documentId": zod.uuid(),
+  "revisionId": zod.uuid(),
+  "revision": zod.int(),
+  "format": zod.enum(['docx', 'pdf']),
+  "renderVersion": zod.string(),
+  "sourceHash": zod.string(),
+  "status": zod.enum(['queued', 'running', 'retrying', 'ready', 'failed']),
+  "attempts": zod.int(),
+  "errorCode": zod.string().nullable(),
+  "checksum": zod.string().nullable(),
+  "size": zod.int().nullable(),
+  "downloadUrl": zod.string().nullable(),
+  "expiresAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const DownloadDocumentExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const DownloadDocumentExportResponse = zod.unknown()
 
 
 /**
@@ -2692,6 +3262,17 @@ export const VerifySessionMfaResponse = zod.object({
 })
 
 
+export const GetBuildStatusResponse = zod.object({
+  "receivedRequirements": zod.int(),
+  "expectedRequirements": zod.int(),
+  "publishedTemplates": zod.int(),
+  "p0Passed": zod.boolean(),
+  "r2Unlocked": zod.boolean(),
+  "livePaymentsEnabled": zod.boolean(),
+  "notice": zod.string()
+})
+
+
 /**
  * Returns server health status
  * @summary Health check
@@ -2701,653 +3282,580 @@ export const HealthCheckResponse = zod.object({
 })
 
 
-export const createCustomerAIDraftBodyIssuerNameMax = 160;
-
-export const createCustomerAIDraftBodyRecipientNameMax = 160;
-
-export const createCustomerAIDraftBodyDocumentNumberMax = 80;
-
-export const createCustomerAIDraftBodyIssueDateRegExp = new RegExp('^([0-9]{4}-[0-9]{2}-[0-9]{2})?$');
-export const createCustomerAIDraftBodyDueDateRegExp = new RegExp('^([0-9]{4}-[0-9]{2}-[0-9]{2})?$');
-export const createCustomerAIDraftBodyContextLinesItemMax = 1000;
-
-export const createCustomerAIDraftBodyContextLinesMax = 20;
-
-export const createCustomerAIDraftBodyDraftingInstructionMax = 1000;
-
-export const createCustomerAIDraftBodyFinancialInputLinesItemDescriptionMax = 200;
-
-export const createCustomerAIDraftBodyFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
-export const createCustomerAIDraftBodyFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMin = 3;
-export const createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMax = 3;
-
-export const createCustomerAIDraftBodyFinancialInputLinesMax = 40;
-
-export const createCustomerAIDraftBodyFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputTaxLabelMax = 80;
-
-export const createCustomerAIDraftBodyFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
-export const createCustomerAIDraftBodyFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
-export const createCustomerAIDraftBodyFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputCurrencyMin = 3;
-export const createCustomerAIDraftBodyFinancialInputCurrencyMax = 3;
-
-export const createCustomerAIDraftBodyFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemDescriptionMax = 240;
-
-export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
-export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
-export const createCustomerAIDraftBodyFinancialInputOptionalLinesMax = 40;
-
-export const createCustomerAIDraftBodyFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
-
-export const createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsMax = 40;
-
-
-
-export const CreateCustomerAIDraftBody = zod.object({
-  "task": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
-  "tone": zod.enum(['neutral', 'polite', 'firm']),
-  "issuerName": zod.string().max(createCustomerAIDraftBodyIssuerNameMax),
-  "recipientName": zod.string().max(createCustomerAIDraftBodyRecipientNameMax),
-  "documentNumber": zod.string().max(createCustomerAIDraftBodyDocumentNumberMax),
-  "issueDate": zod.string().regex(createCustomerAIDraftBodyIssueDateRegExp),
-  "dueDate": zod.string().regex(createCustomerAIDraftBodyDueDateRegExp),
-  "contextLines": zod.array(zod.string().min(1).max(createCustomerAIDraftBodyContextLinesItemMax)).max(createCustomerAIDraftBodyContextLinesMax),
-  "draftingInstruction": zod.string().max(createCustomerAIDraftBodyDraftingInstructionMax).optional().describe('Optional untrusted organisation preference; never copied into the business document or used to supply missing business facts.'),
-  "financialInput": zod.object({
-  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
-  "lines": zod.array(zod.object({
-  "description": zod.string().min(1).max(createCustomerAIDraftBodyFinancialInputLinesItemDescriptionMax),
-  "quantity": zod.string().regex(createCustomerAIDraftBodyFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputLinesItemUnitPriceKoboRegExp),
-  "currency": zod.string().min(createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMin).max(createCustomerAIDraftBodyFinancialInputLinesItemCurrencyMax).optional()
-})).max(createCustomerAIDraftBodyFinancialInputLinesMax),
-  "taxAmountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputTaxAmountKoboRegExp).nullable(),
-  "taxLabel": zod.string().max(createCustomerAIDraftBodyFinancialInputTaxLabelMax),
-  "discountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputDiscountKoboRegExp).nullable(),
-  "deliveryKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputDeliveryKoboRegExp).optional(),
-  "discountPercent": zod.string().regex(createCustomerAIDraftBodyFinancialInputDiscountPercentRegExp).optional(),
-  "taxPercent": zod.string().regex(createCustomerAIDraftBodyFinancialInputTaxPercentRegExp).optional(),
-  "taxBaseKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputTaxBaseKoboRegExp).optional(),
-  "currency": zod.string().min(createCustomerAIDraftBodyFinancialInputCurrencyMin).max(createCustomerAIDraftBodyFinancialInputCurrencyMax).optional(),
-  "requestedTotalKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputRequestedTotalKoboRegExp).optional(),
-  "disputedKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputDisputedKoboRegExp).optional(),
-  "optionalLines": zod.array(zod.object({
-  "description": zod.string().min(1).max(createCustomerAIDraftBodyFinancialInputOptionalLinesItemDescriptionMax),
-  "quantity": zod.string().regex(createCustomerAIDraftBodyFinancialInputOptionalLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
-  "selected": zod.boolean(),
-  "currency": zod.string().regex(createCustomerAIDraftBodyFinancialInputOptionalLinesItemCurrencyRegExp).optional()
-})).max(createCustomerAIDraftBodyFinancialInputOptionalLinesMax).optional(),
-  "amountDueKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputAmountDueKoboRegExp).nullable(),
-  "paymentRecord": zod.object({
-  "invoiceAmountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
-  "duplicatesConfirmed": zod.boolean().optional(),
-  "payments": zod.array(zod.object({
-  "reference": zod.string().min(1).max(createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemReferenceMax),
-  "amountKobo": zod.string().regex(createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
-})).max(createCustomerAIDraftBodyFinancialInputPaymentRecordPaymentsMax)
-}).optional()
-}),
-  "processingConsent": zod.boolean(),
-  "idempotencyKey": zod.uuid()
-})
-
-export const createCustomerAIDraftResponseContentFieldsIssuerNameMax = 160;
-
-export const createCustomerAIDraftResponseContentFieldsRecipientNameMax = 160;
-
-export const createCustomerAIDraftResponseContentFieldsDocumentNumberMax = 80;
-
-export const createCustomerAIDraftResponseContentFieldsIssueDateMax = 10;
-
-export const createCustomerAIDraftResponseContentFieldsDueDateMax = 10;
-
-export const createCustomerAIDraftResponseContentFieldsNotesMax = 5000;
-
-export const createCustomerAIDraftResponseContentBlocksItemIdMax = 80;
-
-export const createCustomerAIDraftResponseContentBlocksItemTextMax = 8000;
-
-export const createCustomerAIDraftResponseContentBlocksItemRowsItemItemMax = 1000;
-
-export const createCustomerAIDraftResponseContentBlocksItemRowsItemMax = 10;
-
-export const createCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
-
-export const createCustomerAIDraftResponseContentBlocksMax = 100;
-
-export const createCustomerAIDraftResponseContentSelectedClausesMax = 0;
-
-export const createCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
-
-export const createCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
-export const createCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin = 3;
-export const createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax = 3;
-
-export const createCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
-
-export const createCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
-
-export const createCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
-export const createCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
-export const createCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputCurrencyMin = 3;
-export const createCustomerAIDraftResponseContentFinancialInputCurrencyMax = 3;
-
-export const createCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
-
-export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
-export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
-export const createCustomerAIDraftResponseContentFinancialInputOptionalLinesMax = 40;
-
-export const createCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
-
-export const createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
-
-
-
-export const CreateCustomerAIDraftResponse = zod.object({
-  "id": zod.string(),
-  "task": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
-  "status": zod.enum(['ready', 'needs_information', 'manual_fallback', 'unsupported', 'running']),
-  "title": zod.string(),
-  "content": zod.object({
-  "fields": zod.object({
-  "issuerName": zod.string().max(createCustomerAIDraftResponseContentFieldsIssuerNameMax),
-  "recipientName": zod.string().max(createCustomerAIDraftResponseContentFieldsRecipientNameMax),
-  "documentNumber": zod.string().max(createCustomerAIDraftResponseContentFieldsDocumentNumberMax),
-  "issueDate": zod.string().max(createCustomerAIDraftResponseContentFieldsIssueDateMax),
-  "dueDate": zod.string().max(createCustomerAIDraftResponseContentFieldsDueDateMax),
-  "notes": zod.string().max(createCustomerAIDraftResponseContentFieldsNotesMax)
-}),
-  "blocks": zod.array(zod.object({
-  "id": zod.string().min(1).max(createCustomerAIDraftResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
-  "text": zod.string().max(createCustomerAIDraftResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(createCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(createCustomerAIDraftResponseContentBlocksItemRowsMax)
-})).max(createCustomerAIDraftResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(createCustomerAIDraftResponseContentSelectedClausesMax),
-  "financialInput": zod.object({
-  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
-  "lines": zod.array(zod.object({
-  "description": zod.string().min(1).max(createCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
-  "quantity": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
-  "currency": zod.string().min(createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin).max(createCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax).optional()
-})).max(createCustomerAIDraftResponseContentFinancialInputLinesMax),
-  "taxAmountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
-  "taxLabel": zod.string().max(createCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
-  "discountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
-  "deliveryKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp).optional(),
-  "discountPercent": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp).optional(),
-  "taxPercent": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp).optional(),
-  "taxBaseKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
-  "currency": zod.string().min(createCustomerAIDraftResponseContentFinancialInputCurrencyMin).max(createCustomerAIDraftResponseContentFinancialInputCurrencyMax).optional(),
-  "requestedTotalKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
-  "disputedKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp).optional(),
-  "optionalLines": zod.array(zod.object({
-  "description": zod.string().min(1).max(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax),
-  "quantity": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
-  "selected": zod.boolean(),
-  "currency": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
-})).max(createCustomerAIDraftResponseContentFinancialInputOptionalLinesMax).optional(),
-  "amountDueKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
-  "paymentRecord": zod.object({
-  "invoiceAmountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
-  "duplicatesConfirmed": zod.boolean().optional(),
-  "payments": zod.array(zod.object({
-  "reference": zod.string().min(1).max(createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
-  "amountKobo": zod.string().regex(createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
-})).max(createCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax)
-}).optional()
-}).optional(),
-  "formatting": zod.object({
-  "font": zod.enum(['sans', 'serif']),
-  "accent": zod.enum(['forest', 'charcoal'])
-})
-}),
-  "missingFields": zod.array(zod.string()),
-  "limitations": zod.array(zod.string()),
-  "modelUsed": zod.string().nullable(),
-  "providerCalls": zod.int().nullable(),
-  "inputHash": zod.string(),
-  "previewHash": zod.string(),
-  "acceptedDocumentId": zod.string().nullable()
+export const GetCustomerAccountResponse = zod.object({
+  "workspaceId": zod.uuid(),
+  "privacyRequests": zod.array(zod.object({
+  "reference": zod.string(),
+  "request": zod.string(),
+  "status": zod.string(),
+  "createdAt": zod.string()
+}))
 })
 
 
-export const GetCustomerAIDraftParams = zod.object({
+export const requestCustomerPrivacyBodyMessageMin = 10;
+export const requestCustomerPrivacyBodyMessageMax = 1500;
+
+
+
+export const RequestCustomerPrivacyBody = zod.object({
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string().min(requestCustomerPrivacyBodyMessageMin).max(requestCustomerPrivacyBodyMessageMax),
+  "acknowledgement": zod.literal(true),
+  "idempotencyKey": zod.uuid().optional()
+})
+
+export const RequestCustomerPrivacyResponse = zod.object({
+  "reference": zod.string(),
+  "message": zod.string(),
+  "delivery": zod.enum(['not_dispatched'])
+})
+
+
+export const DownloadWorkspaceDataResponse = zod.object({
+  "schemaVersion": zod.int(),
+  "exportedAt": zod.string(),
+  "workspaceId": zod.string(),
+  "scope": zod.string(),
+  "data": zod.record(zod.string(), zod.unknown())
+})
+
+
+export const ListWorkspaceDataExportsQueryParams = zod.object({
+  "cursor": zod.uuid().optional()
+})
+
+
+export const listWorkspaceDataExportsResponseItemsItemProgressRowsMin = 0;
+
+export const listWorkspaceDataExportsResponseItemsItemProgressBytesMin = 0;
+
+
+
+export const ListWorkspaceDataExportsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "retryAvailable": zod.boolean(),
+  "progress": zod.object({
+  "section": zod.string().nullable(),
+  "rows": zod.int().min(listWorkspaceDataExportsResponseItemsItemProgressRowsMin),
+  "bytes": zod.int().min(listWorkspaceDataExportsResponseItemsItemProgressBytesMin)
+}),
+  "attempts": zod.int(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "snapshotAt": zod.string().nullable(),
+  "size": zod.number().nullable(),
+  "counts": zod.record(zod.string(), zod.int()).nullable(),
+  "errorCode": zod.string().nullable(),
+  "notice": zod.string()
+})),
+  "nextCursor": zod.string().nullable()
+})
+
+
+export const CreateWorkspaceDataExportBody = zod.object({
+  "requestKey": zod.uuid()
+})
+
+
+export const createWorkspaceDataExportResponseProgressRowsMin = 0;
+
+export const createWorkspaceDataExportResponseProgressBytesMin = 0;
+
+
+
+export const CreateWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "retryAvailable": zod.boolean(),
+  "progress": zod.object({
+  "section": zod.string().nullable(),
+  "rows": zod.int().min(createWorkspaceDataExportResponseProgressRowsMin),
+  "bytes": zod.int().min(createWorkspaceDataExportResponseProgressBytesMin)
+}),
+  "attempts": zod.int(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "snapshotAt": zod.string().nullable(),
+  "size": zod.number().nullable(),
+  "counts": zod.record(zod.string(), zod.int()).nullable(),
+  "errorCode": zod.string().nullable(),
+  "notice": zod.string()
+})
+
+
+export const GetWorkspaceDataExportParams = zod.object({
   "id": zod.uuid()
 })
 
-export const getCustomerAIDraftResponseContentFieldsIssuerNameMax = 160;
 
-export const getCustomerAIDraftResponseContentFieldsRecipientNameMax = 160;
+export const getWorkspaceDataExportResponseProgressRowsMin = 0;
 
-export const getCustomerAIDraftResponseContentFieldsDocumentNumberMax = 80;
-
-export const getCustomerAIDraftResponseContentFieldsIssueDateMax = 10;
-
-export const getCustomerAIDraftResponseContentFieldsDueDateMax = 10;
-
-export const getCustomerAIDraftResponseContentFieldsNotesMax = 5000;
-
-export const getCustomerAIDraftResponseContentBlocksItemIdMax = 80;
-
-export const getCustomerAIDraftResponseContentBlocksItemTextMax = 8000;
-
-export const getCustomerAIDraftResponseContentBlocksItemRowsItemItemMax = 1000;
-
-export const getCustomerAIDraftResponseContentBlocksItemRowsItemMax = 10;
-
-export const getCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
-
-export const getCustomerAIDraftResponseContentBlocksMax = 100;
-
-export const getCustomerAIDraftResponseContentSelectedClausesMax = 0;
-
-export const getCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
-
-export const getCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
-export const getCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin = 3;
-export const getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax = 3;
-
-export const getCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
-
-export const getCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
-
-export const getCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
-export const getCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
-export const getCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputCurrencyMin = 3;
-export const getCustomerAIDraftResponseContentFinancialInputCurrencyMax = 3;
-
-export const getCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
-
-export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
-export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
-export const getCustomerAIDraftResponseContentFinancialInputOptionalLinesMax = 40;
-
-export const getCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
-
-export const getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
+export const getWorkspaceDataExportResponseProgressBytesMin = 0;
 
 
 
-export const GetCustomerAIDraftResponse = zod.object({
-  "id": zod.string(),
-  "task": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
-  "status": zod.enum(['ready', 'needs_information', 'manual_fallback', 'unsupported', 'running']),
-  "title": zod.string(),
-  "content": zod.object({
-  "fields": zod.object({
-  "issuerName": zod.string().max(getCustomerAIDraftResponseContentFieldsIssuerNameMax),
-  "recipientName": zod.string().max(getCustomerAIDraftResponseContentFieldsRecipientNameMax),
-  "documentNumber": zod.string().max(getCustomerAIDraftResponseContentFieldsDocumentNumberMax),
-  "issueDate": zod.string().max(getCustomerAIDraftResponseContentFieldsIssueDateMax),
-  "dueDate": zod.string().max(getCustomerAIDraftResponseContentFieldsDueDateMax),
-  "notes": zod.string().max(getCustomerAIDraftResponseContentFieldsNotesMax)
+export const GetWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "retryAvailable": zod.boolean(),
+  "progress": zod.object({
+  "section": zod.string().nullable(),
+  "rows": zod.int().min(getWorkspaceDataExportResponseProgressRowsMin),
+  "bytes": zod.int().min(getWorkspaceDataExportResponseProgressBytesMin)
 }),
-  "blocks": zod.array(zod.object({
-  "id": zod.string().min(1).max(getCustomerAIDraftResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
-  "text": zod.string().max(getCustomerAIDraftResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(getCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(getCustomerAIDraftResponseContentBlocksItemRowsMax)
-})).max(getCustomerAIDraftResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(getCustomerAIDraftResponseContentSelectedClausesMax),
-  "financialInput": zod.object({
-  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
-  "lines": zod.array(zod.object({
-  "description": zod.string().min(1).max(getCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
-  "quantity": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
-  "currency": zod.string().min(getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin).max(getCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax).optional()
-})).max(getCustomerAIDraftResponseContentFinancialInputLinesMax),
-  "taxAmountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
-  "taxLabel": zod.string().max(getCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
-  "discountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
-  "deliveryKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp).optional(),
-  "discountPercent": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp).optional(),
-  "taxPercent": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp).optional(),
-  "taxBaseKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
-  "currency": zod.string().min(getCustomerAIDraftResponseContentFinancialInputCurrencyMin).max(getCustomerAIDraftResponseContentFinancialInputCurrencyMax).optional(),
-  "requestedTotalKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
-  "disputedKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp).optional(),
-  "optionalLines": zod.array(zod.object({
-  "description": zod.string().min(1).max(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax),
-  "quantity": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
-  "selected": zod.boolean(),
-  "currency": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
-})).max(getCustomerAIDraftResponseContentFinancialInputOptionalLinesMax).optional(),
-  "amountDueKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
-  "paymentRecord": zod.object({
-  "invoiceAmountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
-  "duplicatesConfirmed": zod.boolean().optional(),
-  "payments": zod.array(zod.object({
-  "reference": zod.string().min(1).max(getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
-  "amountKobo": zod.string().regex(getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
-})).max(getCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax)
-}).optional()
-}).optional(),
-  "formatting": zod.object({
-  "font": zod.enum(['sans', 'serif']),
-  "accent": zod.enum(['forest', 'charcoal'])
-})
-}),
-  "missingFields": zod.array(zod.string()),
-  "limitations": zod.array(zod.string()),
-  "modelUsed": zod.string().nullable(),
-  "providerCalls": zod.int().nullable(),
-  "inputHash": zod.string(),
-  "previewHash": zod.string(),
-  "acceptedDocumentId": zod.string().nullable()
+  "attempts": zod.int(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "snapshotAt": zod.string().nullable(),
+  "size": zod.number().nullable(),
+  "counts": zod.record(zod.string(), zod.int()).nullable(),
+  "errorCode": zod.string().nullable(),
+  "notice": zod.string()
 })
 
 
-export const AcceptCustomerAIDraftParams = zod.object({
+export const CancelWorkspaceDataExportParams = zod.object({
   "id": zod.uuid()
 })
 
-export const acceptCustomerAIDraftBodyTitleMax = 160;
-
-export const acceptCustomerAIDraftBodyContentFieldsIssuerNameMax = 160;
-
-export const acceptCustomerAIDraftBodyContentFieldsRecipientNameMax = 160;
-
-export const acceptCustomerAIDraftBodyContentFieldsDocumentNumberMax = 80;
-
-export const acceptCustomerAIDraftBodyContentFieldsIssueDateMax = 10;
-
-export const acceptCustomerAIDraftBodyContentFieldsDueDateMax = 10;
-
-export const acceptCustomerAIDraftBodyContentFieldsNotesMax = 5000;
-
-export const acceptCustomerAIDraftBodyContentBlocksItemIdMax = 80;
-
-export const acceptCustomerAIDraftBodyContentBlocksItemTextMax = 8000;
-
-export const acceptCustomerAIDraftBodyContentBlocksItemRowsItemItemMax = 1000;
-
-export const acceptCustomerAIDraftBodyContentBlocksItemRowsItemMax = 10;
-
-export const acceptCustomerAIDraftBodyContentBlocksItemRowsMax = 100;
-
-export const acceptCustomerAIDraftBodyContentBlocksMax = 100;
-
-export const acceptCustomerAIDraftBodyContentSelectedClausesMax = 0;
-
-export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemDescriptionMax = 200;
-
-export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
-export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMin = 3;
-export const acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMax = 3;
-
-export const acceptCustomerAIDraftBodyContentFinancialInputLinesMax = 40;
-
-export const acceptCustomerAIDraftBodyContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputTaxLabelMax = 80;
-
-export const acceptCustomerAIDraftBodyContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
-export const acceptCustomerAIDraftBodyContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
-export const acceptCustomerAIDraftBodyContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputCurrencyMin = 3;
-export const acceptCustomerAIDraftBodyContentFinancialInputCurrencyMax = 3;
-
-export const acceptCustomerAIDraftBodyContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemDescriptionMax = 240;
-
-export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
-export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesMax = 40;
-
-export const acceptCustomerAIDraftBodyContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
-
-export const acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsMax = 40;
 
 
 
-export const AcceptCustomerAIDraftBody = zod.object({
-  "title": zod.string().min(1).max(acceptCustomerAIDraftBodyTitleMax),
-  "content": zod.object({
-  "fields": zod.object({
-  "issuerName": zod.string().max(acceptCustomerAIDraftBodyContentFieldsIssuerNameMax),
-  "recipientName": zod.string().max(acceptCustomerAIDraftBodyContentFieldsRecipientNameMax),
-  "documentNumber": zod.string().max(acceptCustomerAIDraftBodyContentFieldsDocumentNumberMax),
-  "issueDate": zod.string().max(acceptCustomerAIDraftBodyContentFieldsIssueDateMax),
-  "dueDate": zod.string().max(acceptCustomerAIDraftBodyContentFieldsDueDateMax),
-  "notes": zod.string().max(acceptCustomerAIDraftBodyContentFieldsNotesMax)
-}),
-  "blocks": zod.array(zod.object({
-  "id": zod.string().min(1).max(acceptCustomerAIDraftBodyContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
-  "text": zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftBodyContentBlocksItemRowsMax)
-})).max(acceptCustomerAIDraftBodyContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(acceptCustomerAIDraftBodyContentSelectedClausesMax),
-  "financialInput": zod.object({
-  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
-  "lines": zod.array(zod.object({
-  "description": zod.string().min(1).max(acceptCustomerAIDraftBodyContentFinancialInputLinesItemDescriptionMax),
-  "quantity": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputLinesItemUnitPriceKoboRegExp),
-  "currency": zod.string().min(acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMin).max(acceptCustomerAIDraftBodyContentFinancialInputLinesItemCurrencyMax).optional()
-})).max(acceptCustomerAIDraftBodyContentFinancialInputLinesMax),
-  "taxAmountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputTaxAmountKoboRegExp).nullable(),
-  "taxLabel": zod.string().max(acceptCustomerAIDraftBodyContentFinancialInputTaxLabelMax),
-  "discountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDiscountKoboRegExp).nullable(),
-  "deliveryKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDeliveryKoboRegExp).optional(),
-  "discountPercent": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDiscountPercentRegExp).optional(),
-  "taxPercent": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputTaxPercentRegExp).optional(),
-  "taxBaseKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputTaxBaseKoboRegExp).optional(),
-  "currency": zod.string().min(acceptCustomerAIDraftBodyContentFinancialInputCurrencyMin).max(acceptCustomerAIDraftBodyContentFinancialInputCurrencyMax).optional(),
-  "requestedTotalKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputRequestedTotalKoboRegExp).optional(),
-  "disputedKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputDisputedKoboRegExp).optional(),
-  "optionalLines": zod.array(zod.object({
-  "description": zod.string().min(1).max(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemDescriptionMax),
-  "quantity": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
-  "selected": zod.boolean(),
-  "currency": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
-})).max(acceptCustomerAIDraftBodyContentFinancialInputOptionalLinesMax).optional(),
-  "amountDueKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputAmountDueKoboRegExp).nullable(),
-  "paymentRecord": zod.object({
-  "invoiceAmountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
-  "duplicatesConfirmed": zod.boolean().optional(),
-  "payments": zod.array(zod.object({
-  "reference": zod.string().min(1).max(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
-  "amountKobo": zod.string().regex(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
-})).max(acceptCustomerAIDraftBodyContentFinancialInputPaymentRecordPaymentsMax)
-}).optional()
-}).optional(),
-  "formatting": zod.object({
-  "font": zod.enum(['sans', 'serif']),
-  "accent": zod.enum(['forest', 'charcoal'])
-})
-}),
-  "confirmBusinessDraft": zod.boolean()
+export const CancelWorkspaceDataExportBody = zod.object({
+  "expectedVersion": zod.int().min(1)
 })
 
-export const acceptCustomerAIDraftResponseContentFieldsIssuerNameMax = 160;
 
-export const acceptCustomerAIDraftResponseContentFieldsRecipientNameMax = 160;
+export const cancelWorkspaceDataExportResponseProgressRowsMin = 0;
 
-export const acceptCustomerAIDraftResponseContentFieldsDocumentNumberMax = 80;
-
-export const acceptCustomerAIDraftResponseContentFieldsIssueDateMax = 10;
-
-export const acceptCustomerAIDraftResponseContentFieldsDueDateMax = 10;
-
-export const acceptCustomerAIDraftResponseContentFieldsNotesMax = 5000;
-
-export const acceptCustomerAIDraftResponseContentBlocksItemIdMax = 80;
-
-export const acceptCustomerAIDraftResponseContentBlocksItemTextMax = 8000;
-
-export const acceptCustomerAIDraftResponseContentBlocksItemRowsItemItemMax = 1000;
-
-export const acceptCustomerAIDraftResponseContentBlocksItemRowsItemMax = 10;
-
-export const acceptCustomerAIDraftResponseContentBlocksItemRowsMax = 100;
-
-export const acceptCustomerAIDraftResponseContentBlocksMax = 100;
-
-export const acceptCustomerAIDraftResponseContentSelectedClausesMax = 0;
-
-export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax = 200;
-
-export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
-export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin = 3;
-export const acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax = 3;
-
-export const acceptCustomerAIDraftResponseContentFinancialInputLinesMax = 40;
-
-export const acceptCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputTaxLabelMax = 80;
-
-export const acceptCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
-export const acceptCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp = new RegExp('^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$');
-export const acceptCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputCurrencyMin = 3;
-export const acceptCustomerAIDraftResponseContentFinancialInputCurrencyMax = 3;
-
-export const acceptCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax = 240;
-
-export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp = new RegExp('^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$');
-export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp = new RegExp('^[A-Z]{3}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesMax = 40;
-
-export const acceptCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax = 80;
-
-export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp = new RegExp('^[0-9]{1,24}$');
-export const acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax = 40;
+export const cancelWorkspaceDataExportResponseProgressBytesMin = 0;
 
 
 
-export const AcceptCustomerAIDraftResponse = zod.object({
-  "revisionId": zod.uuid(),
-  "id": zod.string(),
-  "title": zod.string(),
-  "revision": zod.int(),
-  "content": zod.object({
-  "fields": zod.object({
-  "issuerName": zod.string().max(acceptCustomerAIDraftResponseContentFieldsIssuerNameMax),
-  "recipientName": zod.string().max(acceptCustomerAIDraftResponseContentFieldsRecipientNameMax),
-  "documentNumber": zod.string().max(acceptCustomerAIDraftResponseContentFieldsDocumentNumberMax),
-  "issueDate": zod.string().max(acceptCustomerAIDraftResponseContentFieldsIssueDateMax),
-  "dueDate": zod.string().max(acceptCustomerAIDraftResponseContentFieldsDueDateMax),
-  "notes": zod.string().max(acceptCustomerAIDraftResponseContentFieldsNotesMax)
+export const CancelWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "retryAvailable": zod.boolean(),
+  "progress": zod.object({
+  "section": zod.string().nullable(),
+  "rows": zod.int().min(cancelWorkspaceDataExportResponseProgressRowsMin),
+  "bytes": zod.int().min(cancelWorkspaceDataExportResponseProgressBytesMin)
 }),
-  "blocks": zod.array(zod.object({
-  "id": zod.string().min(1).max(acceptCustomerAIDraftResponseContentBlocksItemIdMax),
-  "type": zod.enum(['paragraph', 'list', 'table']),
-  "text": zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemTextMax),
-  "rows": zod.array(zod.array(zod.string().max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsItemMax)).max(acceptCustomerAIDraftResponseContentBlocksItemRowsMax)
-})).max(acceptCustomerAIDraftResponseContentBlocksMax),
-  "selectedClauses": zod.array(zod.string()).max(acceptCustomerAIDraftResponseContentSelectedClausesMax),
-  "financialInput": zod.object({
-  "kind": zod.enum(['invoice', 'quotation', 'payment_reminder', 'business_proposal']),
-  "lines": zod.array(zod.object({
-  "description": zod.string().min(1).max(acceptCustomerAIDraftResponseContentFinancialInputLinesItemDescriptionMax),
-  "quantity": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputLinesItemUnitPriceKoboRegExp),
-  "currency": zod.string().min(acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMin).max(acceptCustomerAIDraftResponseContentFinancialInputLinesItemCurrencyMax).optional()
-})).max(acceptCustomerAIDraftResponseContentFinancialInputLinesMax),
-  "taxAmountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputTaxAmountKoboRegExp).nullable(),
-  "taxLabel": zod.string().max(acceptCustomerAIDraftResponseContentFinancialInputTaxLabelMax),
-  "discountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDiscountKoboRegExp).nullable(),
-  "deliveryKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDeliveryKoboRegExp).optional(),
-  "discountPercent": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDiscountPercentRegExp).optional(),
-  "taxPercent": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputTaxPercentRegExp).optional(),
-  "taxBaseKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputTaxBaseKoboRegExp).optional(),
-  "currency": zod.string().min(acceptCustomerAIDraftResponseContentFinancialInputCurrencyMin).max(acceptCustomerAIDraftResponseContentFinancialInputCurrencyMax).optional(),
-  "requestedTotalKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputRequestedTotalKoboRegExp).optional(),
-  "disputedKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputDisputedKoboRegExp).optional(),
-  "optionalLines": zod.array(zod.object({
-  "description": zod.string().min(1).max(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemDescriptionMax),
-  "quantity": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemQuantityRegExp),
-  "unitPriceKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemUnitPriceKoboRegExp),
-  "selected": zod.boolean(),
-  "currency": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesItemCurrencyRegExp).optional()
-})).max(acceptCustomerAIDraftResponseContentFinancialInputOptionalLinesMax).optional(),
-  "amountDueKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputAmountDueKoboRegExp).nullable(),
-  "paymentRecord": zod.object({
-  "invoiceAmountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordInvoiceAmountKoboRegExp),
-  "duplicatesConfirmed": zod.boolean().optional(),
-  "payments": zod.array(zod.object({
-  "reference": zod.string().min(1).max(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemReferenceMax),
-  "amountKobo": zod.string().regex(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsItemAmountKoboRegExp)
-})).max(acceptCustomerAIDraftResponseContentFinancialInputPaymentRecordPaymentsMax)
-}).optional()
-}).optional(),
-  "formatting": zod.object({
-  "font": zod.enum(['sans', 'serif']),
-  "accent": zod.enum(['forest', 'charcoal'])
+  "attempts": zod.int(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "snapshotAt": zod.string().nullable(),
+  "size": zod.number().nullable(),
+  "counts": zod.record(zod.string(), zod.int()).nullable(),
+  "errorCode": zod.string().nullable(),
+  "notice": zod.string()
 })
+
+
+export const RetryWorkspaceDataExportParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const RetryWorkspaceDataExportBody = zod.object({
+  "expectedVersion": zod.int().min(1)
+})
+
+
+export const retryWorkspaceDataExportResponseProgressRowsMin = 0;
+
+export const retryWorkspaceDataExportResponseProgressBytesMin = 0;
+
+
+
+export const RetryWorkspaceDataExportResponse = zod.object({
+  "id": zod.uuid(),
+  "status": zod.enum(['queued', 'preparing', 'interrupted', 'ready', 'cancelled', 'expired']),
+  "version": zod.int().min(1),
+  "retryAvailable": zod.boolean(),
+  "progress": zod.object({
+  "section": zod.string().nullable(),
+  "rows": zod.int().min(retryWorkspaceDataExportResponseProgressRowsMin),
+  "bytes": zod.int().min(retryWorkspaceDataExportResponseProgressBytesMin)
 }),
-  "contentHash": zod.string(),
+  "attempts": zod.int(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "snapshotAt": zod.string().nullable(),
+  "size": zod.number().nullable(),
+  "counts": zod.record(zod.string(), zod.int()).nullable(),
+  "errorCode": zod.string().nullable(),
+  "notice": zod.string()
+})
+
+
+export const DownloadWorkspaceDataArtifactParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const DownloadWorkspaceDataArtifactResponse = zod.object({
+  "schemaVersion": zod.int(),
+  "exportedAt": zod.string(),
+  "workspaceId": zod.string(),
+  "scope": zod.string(),
+  "data": zod.record(zod.string(), zod.unknown())
+})
+
+
+export const ListPrivacyCasesResponseItem = zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string(),
-  "status": zod.enum(['business_draft']),
-  "templateVersion": zod.string().nullable()
+  "updatedAt": zod.string()
+})
+export const ListPrivacyCasesResponse = zod.array(ListPrivacyCasesResponseItem)
+
+
+export const RespondPrivacyCaseParams = zod.object({
+  "id": zod.uuid()
 })
 
 
-export const GetCustomerAIUsageResponse = zod.object({
-  "enabled": zod.boolean(),
-  "workspaceUsed": zod.int(),
-  "workspaceDailyLimit": zod.int(),
-  "minuteLimit": zod.int(),
-  "globalAvailable": zod.boolean(),
-  "manualFallbackAvailable": zod.boolean(),
-  "policyNotice": zod.string()
+export const respondPrivacyCaseBodyMessageMin = 10;
+export const respondPrivacyCaseBodyMessageMax = 4000;
+
+
+
+export const RespondPrivacyCaseBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "message": zod.string().min(respondPrivacyCaseBodyMessageMin).max(respondPrivacyCaseBodyMessageMax)
+})
+
+export const RespondPrivacyCaseResponse = zod.object({
+  "request": zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "mayRespond": zod.boolean(),
+  "availableActions": zod.array(zod.string()).optional(),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "sequence": zod.int(),
+  "action": zod.string(),
+  "actorType": zod.enum(['customer', 'staff', 'worker']),
+  "reason": zod.string(),
+  "createdAt": zod.string()
+})),
+  "steps": zod.array(zod.object({
+  "system": zod.string(),
+  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
+  "detail": zod.string()
+}))
+})
+
+
+export const GetPrivacyCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetPrivacyCaseResponse = zod.object({
+  "request": zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "mayRespond": zod.boolean(),
+  "availableActions": zod.array(zod.string()).optional(),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "sequence": zod.int(),
+  "action": zod.string(),
+  "actorType": zod.enum(['customer', 'staff', 'worker']),
+  "reason": zod.string(),
+  "createdAt": zod.string()
+})),
+  "steps": zod.array(zod.object({
+  "system": zod.string(),
+  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
+  "detail": zod.string()
+}))
+})
+
+
+export const VerifyPrivacyCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const VerifyPrivacyCaseBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "acknowledgement": zod.literal(true)
+})
+
+export const VerifyPrivacyCaseResponse = zod.object({
+  "request": zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "mayRespond": zod.boolean(),
+  "availableActions": zod.array(zod.string()).optional(),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "sequence": zod.int(),
+  "action": zod.string(),
+  "actorType": zod.enum(['customer', 'staff', 'worker']),
+  "reason": zod.string(),
+  "createdAt": zod.string()
+})),
+  "steps": zod.array(zod.object({
+  "system": zod.string(),
+  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
+  "detail": zod.string()
+}))
+})
+
+
+export const CancelPrivacyCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const CancelPrivacyCaseBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "acknowledgement": zod.literal(true)
+})
+
+export const CancelPrivacyCaseResponse = zod.object({
+  "request": zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "mayRespond": zod.boolean(),
+  "availableActions": zod.array(zod.string()).optional(),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "sequence": zod.int(),
+  "action": zod.string(),
+  "actorType": zod.enum(['customer', 'staff', 'worker']),
+  "reason": zod.string(),
+  "createdAt": zod.string()
+})),
+  "steps": zod.array(zod.object({
+  "system": zod.string(),
+  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
+  "detail": zod.string()
+}))
+})
+
+
+export const DownloadPrivacyCaseResultParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const DownloadPrivacyCaseResultResponse = zod.record(zod.string(), zod.unknown())
+
+
+export const listStaffPrivacyCasesQueryPageDefault = 1;
+
+
+
+export const ListStaffPrivacyCasesQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).default(listStaffPrivacyCasesQueryPageDefault)
+})
+
+export const ListStaffPrivacyCasesResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})),
+  "page": zod.int(),
+  "total": zod.int(),
+  "pageSize": zod.int()
+})
+
+
+export const GetStaffPrivacyCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const GetStaffPrivacyCaseResponse = zod.object({
+  "request": zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "mayRespond": zod.boolean(),
+  "availableActions": zod.array(zod.string()).optional(),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "sequence": zod.int(),
+  "action": zod.string(),
+  "actorType": zod.enum(['customer', 'staff', 'worker']),
+  "reason": zod.string(),
+  "createdAt": zod.string()
+})),
+  "steps": zod.array(zod.object({
+  "system": zod.string(),
+  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
+  "detail": zod.string()
+}))
+})
+
+
+export const ActOnStaffPrivacyCaseParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const actOnStaffPrivacyCaseBodyReasonMin = 10;
+export const actOnStaffPrivacyCaseBodyReasonMax = 1000;
+
+
+
+export const ActOnStaffPrivacyCaseBody = zod.object({
+  "expectedVersion": zod.int().min(1),
+  "action": zod.enum(['claim', 'request_information', 'hold', 'release_hold', 'reject', 'prepare_export', 'record_correction', 'start_erasure', 'resume_erasure']),
+  "reason": zod.string().min(actOnStaffPrivacyCaseBodyReasonMin).max(actOnStaffPrivacyCaseBodyReasonMax),
+  "profileVersionId": zod.uuid().optional(),
+  "acknowledgement": zod.boolean().optional()
+})
+
+export const ActOnStaffPrivacyCaseResponse = zod.object({
+  "request": zod.object({
+  "id": zod.uuid(),
+  "workspaceId": zod.uuid(),
+  "reference": zod.string(),
+  "kind": zod.enum(['correction', 'export', 'deletion']),
+  "message": zod.string(),
+  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
+  "version": zod.int(),
+  "assigned": zod.boolean(),
+  "verifiedAt": zod.string().nullable(),
+  "resultAvailable": zod.boolean(),
+  "resultScope": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "mayRespond": zod.boolean(),
+  "availableActions": zod.array(zod.string()).optional(),
+  "messages": zod.array(zod.object({
+  "id": zod.uuid(),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "sequence": zod.int(),
+  "action": zod.string(),
+  "actorType": zod.enum(['customer', 'staff', 'worker']),
+  "reason": zod.string(),
+  "createdAt": zod.string()
+})),
+  "steps": zod.array(zod.object({
+  "system": zod.string(),
+  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
+  "detail": zod.string()
+}))
 })
 
 
@@ -6010,971 +6518,166 @@ export const CompareAssessmentsResponse = zod.object({
 })
 
 
-export const listTasksPageQueryPageDefault = 1;
-export const listTasksPageQueryPageMax = 100000;
-
-export const listTasksPageQueryFilterDefault = `open`;
-
-export const ListTasksPageQueryParams = zod.object({
-  "page": zod.coerce.number().int().min(1).max(listTasksPageQueryPageMax).default(listTasksPageQueryPageDefault),
-  "filter": zod.enum(['open', 'done', 'all']).default(listTasksPageQueryFilterDefault)
-})
-
-export const ListTasksPageResponse = zod.object({
-  "items": zod.array(zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "notes": zod.string(),
-  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
-  "revision": zod.int(),
-  "dueDate": zod.string().nullable(),
-  "dateConfirmed": zod.boolean(),
-  "assessmentId": zod.string().nullable(),
-  "ruleId": zod.string().nullable(),
-  "needsReview": zod.boolean(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})),
-  "total": zod.int(),
-  "openCount": zod.int(),
-  "filteredTotal": zod.int(),
-  "page": zod.int(),
-  "pageSize": zod.int(),
-  "hasNext": zod.boolean()
-})
+export const getStaffRoleAdministrationQueryIdentityIdMax = 128;
 
 
-export const ListTasksResponseItem = zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "notes": zod.string(),
-  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
-  "revision": zod.int(),
-  "dueDate": zod.string().nullable(),
-  "dateConfirmed": zod.boolean(),
-  "assessmentId": zod.string().nullable(),
-  "ruleId": zod.string().nullable(),
-  "needsReview": zod.boolean(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})
-export const ListTasksResponse = zod.array(ListTasksResponseItem)
+export const getStaffRoleAdministrationQueryIdentityIdRegExp = new RegExp('^user_[A-Za-z0-9_-]+$');
 
 
-export const createTaskBodyTitleMax = 200;
-
-export const createTaskBodyNotesMax = 6000;
-
-export const createTaskBodyDueDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
-export const createTaskBodyRuleIdMax = 100;
-
-
-
-export const CreateTaskBody = zod.object({
-  "title": zod.string().min(1).max(createTaskBodyTitleMax),
-  "notes": zod.string().max(createTaskBodyNotesMax),
-  "dueDate": zod.string().regex(createTaskBodyDueDateRegExp).nullable(),
-  "dateConfirmed": zod.boolean(),
-  "assessmentId": zod.uuid().nullable(),
-  "ruleId": zod.string().max(createTaskBodyRuleIdMax).nullable()
-})
-
-export const CreateTaskResponse = zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "notes": zod.string(),
-  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
-  "revision": zod.int(),
-  "dueDate": zod.string().nullable(),
-  "dateConfirmed": zod.boolean(),
-  "assessmentId": zod.string().nullable(),
-  "ruleId": zod.string().nullable(),
-  "needsReview": zod.boolean(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})
-
-
-export const UpdateTaskParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const updateTaskBodyTitleMax = 200;
-
-export const updateTaskBodyNotesMax = 6000;
-
-export const updateTaskBodyDueDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
-
-
-
-export const UpdateTaskBody = zod.object({
-  "title": zod.string().min(1).max(updateTaskBodyTitleMax),
-  "notes": zod.string().max(updateTaskBodyNotesMax),
-  "dueDate": zod.string().regex(updateTaskBodyDueDateRegExp).nullable(),
-  "dateConfirmed": zod.boolean(),
-  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
-  "expectedRevision": zod.int().min(1)
-})
-
-export const UpdateTaskResponse = zod.object({
-  "id": zod.string(),
-  "title": zod.string(),
-  "notes": zod.string(),
-  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
-  "revision": zod.int(),
-  "dueDate": zod.string().nullable(),
-  "dateConfirmed": zod.boolean(),
-  "assessmentId": zod.string().nullable(),
-  "ruleId": zod.string().nullable(),
-  "needsReview": zod.boolean(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})
-
-
-export const DeleteTaskParams = zod.object({
-  "id": zod.uuid()
+export const GetStaffRoleAdministrationQueryParams = zod.object({
+  "identityId": zod.coerce.string().max(getStaffRoleAdministrationQueryIdentityIdMax).regex(getStaffRoleAdministrationQueryIdentityIdRegExp).optional()
 })
 
 
 
 
-export const DeleteTaskBody = zod.object({
-  "expectedRevision": zod.int().min(1)
-})
-
-export const DeleteTaskResponse = zod.void()
-
-
-export const GetReminderPreferencesResponse = zod.object({
-  "enabled": zod.boolean(),
-  "offsets": zod.array(zod.int()),
-  "revision": zod.int(),
-  "timezone": zod.string(),
-  "deliveryAvailable": zod.boolean(),
-  "deliveryBlocker": zod.string().nullable()
-})
-
-
-export const saveReminderPreferencesBodyOffsetsMin = 0;
-export const saveReminderPreferencesBodyOffsetsMax = 4;
-
-export const saveReminderPreferencesBodyExpectedRevisionMin = 0;
-
-
-
-export const SaveReminderPreferencesBody = zod.object({
-  "enabled": zod.boolean(),
-  "offsets": zod.array(zod.union([zod.literal(0),zod.literal(1),zod.literal(3),zod.literal(7),zod.literal(14)])).min(saveReminderPreferencesBodyOffsetsMin).max(saveReminderPreferencesBodyOffsetsMax),
-  "expectedRevision": zod.int().min(saveReminderPreferencesBodyExpectedRevisionMin)
-})
-
-export const SaveReminderPreferencesResponse = zod.object({
-  "enabled": zod.boolean(),
-  "offsets": zod.array(zod.int()),
-  "revision": zod.int(),
-  "timezone": zod.string(),
-  "deliveryAvailable": zod.boolean(),
-  "deliveryBlocker": zod.string().nullable()
-})
-
-
-export const listRemindersResponseAttemptsMin = 0;
-
-
-
-export const ListRemindersResponseItem = zod.object({
-  "id": zod.string(),
-  "taskId": zod.string(),
-  "scheduledAt": zod.string(),
-  "status": zod.enum(['held', 'pending', 'sent', 'cancelled', 'failed']),
-  "attempts": zod.int().min(listRemindersResponseAttemptsMin),
-  "nextAttemptAt": zod.string().nullable(),
-  "lastAttemptAt": zod.string().nullable(),
-  "reason": zod.string().nullable(),
-  "deliveredAt": zod.string().nullable()
-})
-export const ListRemindersResponse = zod.array(ListRemindersResponseItem)
-
-
-export const ListPrivacyCasesResponseItem = zod.object({
+export const GetStaffRoleAdministrationResponse = zod.object({
+  "assignments": zod.array(zod.object({
   "id": zod.uuid(),
-  "workspaceId": zod.uuid(),
-  "reference": zod.string(),
-  "kind": zod.enum(['correction', 'export', 'deletion']),
-  "message": zod.string(),
-  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
-  "version": zod.int(),
-  "assigned": zod.boolean(),
-  "verifiedAt": zod.string().nullable(),
-  "resultAvailable": zod.boolean(),
-  "resultScope": zod.string(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})
-export const ListPrivacyCasesResponse = zod.array(ListPrivacyCasesResponseItem)
-
-
-export const RespondPrivacyCaseParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-export const respondPrivacyCaseBodyMessageMin = 10;
-export const respondPrivacyCaseBodyMessageMax = 4000;
-
-
-
-export const RespondPrivacyCaseBody = zod.object({
-  "expectedVersion": zod.int().min(1),
-  "message": zod.string().min(respondPrivacyCaseBodyMessageMin).max(respondPrivacyCaseBodyMessageMax)
-})
-
-export const RespondPrivacyCaseResponse = zod.object({
-  "request": zod.object({
+  "identityId": zod.string(),
+  "role": zod.enum(['content', 'support', 'finance', 'system', 'privacy']),
+  "active": zod.boolean(),
+  "grantMode": zod.enum(['permanent', 'break_glass']),
+  "expiresAt": zod.coerce.date().nullable(),
+  "version": zod.int().min(1),
+  "grantedBy": zod.string(),
+  "grantedAt": zod.coerce.date(),
+  "reason": zod.string()
+})),
+  "changes": zod.array(zod.object({
   "id": zod.uuid(),
-  "workspaceId": zod.uuid(),
-  "reference": zod.string(),
-  "kind": zod.enum(['correction', 'export', 'deletion']),
-  "message": zod.string(),
-  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
-  "version": zod.int(),
-  "assigned": zod.boolean(),
-  "verifiedAt": zod.string().nullable(),
-  "resultAvailable": zod.boolean(),
-  "resultScope": zod.string(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-}),
-  "mayRespond": zod.boolean(),
-  "availableActions": zod.array(zod.string()).optional(),
-  "messages": zod.array(zod.object({
-  "id": zod.uuid(),
-  "body": zod.string(),
-  "createdAt": zod.string()
-})),
-  "events": zod.array(zod.object({
-  "sequence": zod.int(),
-  "action": zod.string(),
-  "actorType": zod.enum(['customer', 'staff', 'worker']),
-  "reason": zod.string(),
-  "createdAt": zod.string()
-})),
-  "steps": zod.array(zod.object({
-  "system": zod.string(),
-  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
-  "detail": zod.string()
-}))
-})
-
-
-export const GetPrivacyCaseParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const GetPrivacyCaseResponse = zod.object({
-  "request": zod.object({
-  "id": zod.uuid(),
-  "workspaceId": zod.uuid(),
-  "reference": zod.string(),
-  "kind": zod.enum(['correction', 'export', 'deletion']),
-  "message": zod.string(),
-  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
-  "version": zod.int(),
-  "assigned": zod.boolean(),
-  "verifiedAt": zod.string().nullable(),
-  "resultAvailable": zod.boolean(),
-  "resultScope": zod.string(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-}),
-  "mayRespond": zod.boolean(),
-  "availableActions": zod.array(zod.string()).optional(),
-  "messages": zod.array(zod.object({
-  "id": zod.uuid(),
-  "body": zod.string(),
-  "createdAt": zod.string()
-})),
-  "events": zod.array(zod.object({
-  "sequence": zod.int(),
-  "action": zod.string(),
-  "actorType": zod.enum(['customer', 'staff', 'worker']),
-  "reason": zod.string(),
-  "createdAt": zod.string()
-})),
-  "steps": zod.array(zod.object({
-  "system": zod.string(),
-  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
-  "detail": zod.string()
-}))
-})
-
-
-export const VerifyPrivacyCaseParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-
-
-export const VerifyPrivacyCaseBody = zod.object({
-  "expectedVersion": zod.int().min(1),
-  "acknowledgement": zod.literal(true)
-})
-
-export const VerifyPrivacyCaseResponse = zod.object({
-  "request": zod.object({
-  "id": zod.uuid(),
-  "workspaceId": zod.uuid(),
-  "reference": zod.string(),
-  "kind": zod.enum(['correction', 'export', 'deletion']),
-  "message": zod.string(),
-  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
-  "version": zod.int(),
-  "assigned": zod.boolean(),
-  "verifiedAt": zod.string().nullable(),
-  "resultAvailable": zod.boolean(),
-  "resultScope": zod.string(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-}),
-  "mayRespond": zod.boolean(),
-  "availableActions": zod.array(zod.string()).optional(),
-  "messages": zod.array(zod.object({
-  "id": zod.uuid(),
-  "body": zod.string(),
-  "createdAt": zod.string()
-})),
-  "events": zod.array(zod.object({
-  "sequence": zod.int(),
-  "action": zod.string(),
-  "actorType": zod.enum(['customer', 'staff', 'worker']),
-  "reason": zod.string(),
-  "createdAt": zod.string()
-})),
-  "steps": zod.array(zod.object({
-  "system": zod.string(),
-  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
-  "detail": zod.string()
-}))
-})
-
-
-export const CancelPrivacyCaseParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-
-
-export const CancelPrivacyCaseBody = zod.object({
-  "expectedVersion": zod.int().min(1),
-  "acknowledgement": zod.literal(true)
-})
-
-export const CancelPrivacyCaseResponse = zod.object({
-  "request": zod.object({
-  "id": zod.uuid(),
-  "workspaceId": zod.uuid(),
-  "reference": zod.string(),
-  "kind": zod.enum(['correction', 'export', 'deletion']),
-  "message": zod.string(),
-  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
-  "version": zod.int(),
-  "assigned": zod.boolean(),
-  "verifiedAt": zod.string().nullable(),
-  "resultAvailable": zod.boolean(),
-  "resultScope": zod.string(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-}),
-  "mayRespond": zod.boolean(),
-  "availableActions": zod.array(zod.string()).optional(),
-  "messages": zod.array(zod.object({
-  "id": zod.uuid(),
-  "body": zod.string(),
-  "createdAt": zod.string()
-})),
-  "events": zod.array(zod.object({
-  "sequence": zod.int(),
-  "action": zod.string(),
-  "actorType": zod.enum(['customer', 'staff', 'worker']),
-  "reason": zod.string(),
-  "createdAt": zod.string()
-})),
-  "steps": zod.array(zod.object({
-  "system": zod.string(),
-  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
-  "detail": zod.string()
-}))
-})
-
-
-export const DownloadPrivacyCaseResultParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const DownloadPrivacyCaseResultResponse = zod.record(zod.string(), zod.unknown())
-
-
-export const listStaffPrivacyCasesQueryPageDefault = 1;
-
-
-
-export const ListStaffPrivacyCasesQueryParams = zod.object({
-  "page": zod.coerce.number().int().min(1).default(listStaffPrivacyCasesQueryPageDefault)
-})
-
-export const ListStaffPrivacyCasesResponse = zod.object({
-  "items": zod.array(zod.object({
-  "id": zod.uuid(),
-  "workspaceId": zod.uuid(),
-  "reference": zod.string(),
-  "kind": zod.enum(['correction', 'export', 'deletion']),
-  "message": zod.string(),
-  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
-  "version": zod.int(),
-  "assigned": zod.boolean(),
-  "verifiedAt": zod.string().nullable(),
-  "resultAvailable": zod.boolean(),
-  "resultScope": zod.string(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})),
-  "page": zod.int(),
-  "total": zod.int(),
-  "pageSize": zod.int()
-})
-
-
-export const GetStaffPrivacyCaseParams = zod.object({
-  "id": zod.uuid()
-})
-
-export const GetStaffPrivacyCaseResponse = zod.object({
-  "request": zod.object({
-  "id": zod.uuid(),
-  "workspaceId": zod.uuid(),
-  "reference": zod.string(),
-  "kind": zod.enum(['correction', 'export', 'deletion']),
-  "message": zod.string(),
-  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
-  "version": zod.int(),
-  "assigned": zod.boolean(),
-  "verifiedAt": zod.string().nullable(),
-  "resultAvailable": zod.boolean(),
-  "resultScope": zod.string(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-}),
-  "mayRespond": zod.boolean(),
-  "availableActions": zod.array(zod.string()).optional(),
-  "messages": zod.array(zod.object({
-  "id": zod.uuid(),
-  "body": zod.string(),
-  "createdAt": zod.string()
-})),
-  "events": zod.array(zod.object({
-  "sequence": zod.int(),
-  "action": zod.string(),
-  "actorType": zod.enum(['customer', 'staff', 'worker']),
-  "reason": zod.string(),
-  "createdAt": zod.string()
-})),
-  "steps": zod.array(zod.object({
-  "system": zod.string(),
-  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
-  "detail": zod.string()
-}))
-})
-
-
-export const ActOnStaffPrivacyCaseParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-export const actOnStaffPrivacyCaseBodyReasonMin = 10;
-export const actOnStaffPrivacyCaseBodyReasonMax = 1000;
-
-
-
-export const ActOnStaffPrivacyCaseBody = zod.object({
-  "expectedVersion": zod.int().min(1),
-  "action": zod.enum(['claim', 'request_information', 'hold', 'release_hold', 'reject', 'prepare_export', 'record_correction', 'start_erasure', 'resume_erasure']),
-  "reason": zod.string().min(actOnStaffPrivacyCaseBodyReasonMin).max(actOnStaffPrivacyCaseBodyReasonMax),
-  "profileVersionId": zod.uuid().optional(),
-  "acknowledgement": zod.boolean().optional()
-})
-
-export const ActOnStaffPrivacyCaseResponse = zod.object({
-  "request": zod.object({
-  "id": zod.uuid(),
-  "workspaceId": zod.uuid(),
-  "reference": zod.string(),
-  "kind": zod.enum(['correction', 'export', 'deletion']),
-  "message": zod.string(),
-  "status": zod.enum(['awaiting_verification', 'verified', 'assigned', 'in_progress', 'needs_information', 'held', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled', 'failed']),
-  "version": zod.int(),
-  "assigned": zod.boolean(),
-  "verifiedAt": zod.string().nullable(),
-  "resultAvailable": zod.boolean(),
-  "resultScope": zod.string(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-}),
-  "mayRespond": zod.boolean(),
-  "availableActions": zod.array(zod.string()).optional(),
-  "messages": zod.array(zod.object({
-  "id": zod.uuid(),
-  "body": zod.string(),
-  "createdAt": zod.string()
-})),
-  "events": zod.array(zod.object({
-  "sequence": zod.int(),
-  "action": zod.string(),
-  "actorType": zod.enum(['customer', 'staff', 'worker']),
-  "reason": zod.string(),
-  "createdAt": zod.string()
-})),
-  "steps": zod.array(zod.object({
-  "system": zod.string(),
-  "status": zod.enum(['pending', 'running', 'confirmed', 'held', 'failed', 'not_applicable']),
-  "detail": zod.string()
-}))
-})
-
-
-export const GetWorkspaceDisputesResponse = zod.object({
-  "concerns": zod.array(zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "message": zod.string(),
-  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
-  "latestReply": zod.string().nullable(),
-  "version": zod.int(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string(),
-  "history": zod.array(zod.object({
-  "id": zod.string(),
-  "action": zod.string(),
-  "reason": zod.string(),
-  "actorType": zod.enum(['customer', 'finance', 'worker']),
-  "createdAt": zod.string()
-}))
-})),
-  "notice": zod.string()
-})
-
-
-export const CreatePaymentConcernParams = zod.object({
-  "orderId": zod.uuid()
-})
-
-export const createPaymentConcernBodyMessageMin = 20;
-export const createPaymentConcernBodyMessageMax = 2000;
-
-
-
-export const CreatePaymentConcernBody = zod.object({
   "requestKey": zod.uuid(),
-  "message": zod.string().min(createPaymentConcernBodyMessageMin).max(createPaymentConcernBodyMessageMax),
-  "acknowledgement": zod.literal(true)
-})
-
-export const CreatePaymentConcernResponse = zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "message": zod.string(),
-  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
-  "latestReply": zod.string().nullable(),
-  "version": zod.int(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string(),
-  "history": zod.array(zod.object({
-  "id": zod.string(),
-  "action": zod.string(),
+  "actorId": zod.string(),
+  "assignmentId": zod.uuid(),
+  "targetIdentityId": zod.string(),
+  "action": zod.enum(['grant', 'revoke']),
+  "role": zod.string(),
   "reason": zod.string(),
-  "actorType": zod.enum(['customer', 'finance', 'worker']),
-  "createdAt": zod.string()
-}))
-})
-
-
-export const RespondPaymentConcernParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-export const respondPaymentConcernBodyMessageMin = 10;
-export const respondPaymentConcernBodyMessageMax = 2000;
-
-
-
-export const RespondPaymentConcernBody = zod.object({
-  "expectedVersion": zod.int().min(1),
-  "message": zod.string().min(respondPaymentConcernBodyMessageMin).max(respondPaymentConcernBodyMessageMax)
-})
-
-export const RespondPaymentConcernResponse = zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "message": zod.string(),
-  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
-  "latestReply": zod.string().nullable(),
-  "version": zod.int(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string(),
-  "history": zod.array(zod.object({
-  "id": zod.string(),
-  "action": zod.string(),
-  "reason": zod.string(),
-  "actorType": zod.enum(['customer', 'finance', 'worker']),
-  "createdAt": zod.string()
-}))
-})
-
-
-export const ActOnPaymentConcernParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-export const actOnPaymentConcernBodyMessageMin = 10;
-export const actOnPaymentConcernBodyMessageMax = 2000;
-
-
-
-export const ActOnPaymentConcernBody = zod.object({
-  "expectedVersion": zod.int().min(1),
-  "action": zod.enum(['reply', 'request_information', 'close']),
-  "message": zod.string().min(actOnPaymentConcernBodyMessageMin).max(actOnPaymentConcernBodyMessageMax)
-})
-
-export const ActOnPaymentConcernResponse = zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "message": zod.string(),
-  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
-  "latestReply": zod.string().nullable(),
-  "version": zod.int(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string(),
-  "history": zod.array(zod.object({
-  "id": zod.string(),
-  "action": zod.string(),
-  "reason": zod.string(),
-  "actorType": zod.enum(['customer', 'finance', 'worker']),
-  "createdAt": zod.string()
-}))
-})
-
-
-export const GetFinancePaymentConcernsResponse = zod.object({
-  "concerns": zod.array(zod.object({
-  "id": zod.string(),
-  "orderId": zod.string(),
-  "orderReference": zod.string(),
-  "message": zod.string(),
-  "status": zod.enum(['open', 'needs_information', 'responded', 'closed']),
-  "latestReply": zod.string().nullable(),
-  "version": zod.int(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string(),
-  "history": zod.array(zod.object({
-  "id": zod.string(),
-  "action": zod.string(),
-  "reason": zod.string(),
-  "actorType": zod.enum(['customer', 'finance', 'worker']),
-  "createdAt": zod.string()
-}))
+  "incidentReference": zod.string().nullable(),
+  "before": zod.record(zod.string(), zod.unknown()).nullable(),
+  "after": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date()
 })),
   "notice": zod.string()
 })
 
 
-export const linkFinanceDisputeBodyProviderIdRegExp = new RegExp('^\\d{1,40}$');
+export const changeStaffRoleBodyIdentityIdMax = 128;
 
 
-export const LinkFinanceDisputeBody = zod.object({
-  "orderId": zod.uuid(),
-  "providerId": zod.string().regex(linkFinanceDisputeBodyProviderIdRegExp)
+export const changeStaffRoleBodyIdentityIdRegExp = new RegExp('^user_[A-Za-z0-9_-]+$');
+export const changeStaffRoleBodyExpectedVersionMin = 0;
+
+export const changeStaffRoleBodyReasonMin = 20;
+export const changeStaffRoleBodyReasonMax = 1000;
+
+export const changeStaffRoleBodyDurationMinutesMin = 5;
+export const changeStaffRoleBodyDurationMinutesMax = 60;
+
+export const changeStaffRoleBodyIncidentReferenceMin = 5;
+export const changeStaffRoleBodyIncidentReferenceMax = 200;
+
+
+
+export const ChangeStaffRoleBody = zod.object({
+  "requestKey": zod.uuid(),
+  "identityId": zod.string().max(changeStaffRoleBodyIdentityIdMax).regex(changeStaffRoleBodyIdentityIdRegExp),
+  "role": zod.enum(['content', 'support', 'finance', 'system', 'privacy']),
+  "action": zod.enum(['grant', 'revoke']),
+  "expectedVersion": zod.int().min(changeStaffRoleBodyExpectedVersionMin),
+  "reason": zod.string().min(changeStaffRoleBodyReasonMin).max(changeStaffRoleBodyReasonMax),
+  "acknowledgement": zod.literal(true),
+  "grantMode": zod.enum(['permanent', 'break_glass']).optional(),
+  "durationMinutes": zod.int().min(changeStaffRoleBodyDurationMinutesMin).max(changeStaffRoleBodyDurationMinutesMax).optional(),
+  "incidentReference": zod.string().min(changeStaffRoleBodyIncidentReferenceMin).max(changeStaffRoleBodyIncidentReferenceMax).optional()
 })
 
-export const LinkFinanceDisputeResponse = zod.object({
-  "providerId": zod.string(),
-  "held": zod.boolean(),
-  "controlVersion": zod.int(),
-  "category": zod.string().nullable(),
-  "entitlementStatus": zod.string().nullable(),
-  "id": zod.string(),
-  "orderReference": zod.string(),
-  "amountKobo": zod.int(),
-  "status": zod.string(),
-  "resolution": zod.string().nullable(),
-  "actions": zod.array(zod.object({
-  "id": zod.string(),
-  "kind": zod.string(),
-  "status": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "payload": zod.record(zod.string(), zod.unknown()),
-  "result": zod.record(zod.string(), zod.unknown()).nullable(),
-  "failure": zod.string().nullable()
-})),
-  "information": zod.array(zod.record(zod.string(), zod.unknown())),
-  "executionEnabled": zod.boolean(),
-  "policy": zod.string(),
-  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
-})
-
-
-export const HoldFinanceDisputeParams = zod.object({
-  "id": zod.uuid()
-})
-
-
-export const holdFinanceDisputeBodyReasonMin = 10;
-export const holdFinanceDisputeBodyReasonMax = 1500;
-
-
-
-export const HoldFinanceDisputeBody = zod.object({
-  "expectedVersion": zod.int().min(1),
-  "held": zod.boolean(),
-  "reason": zod.string().min(holdFinanceDisputeBodyReasonMin).max(holdFinanceDisputeBodyReasonMax)
-})
-
-export const HoldFinanceDisputeResponse = zod.object({
-  "providerId": zod.string(),
-  "held": zod.boolean(),
-  "controlVersion": zod.int(),
-  "category": zod.string().nullable(),
-  "entitlementStatus": zod.string().nullable(),
-  "id": zod.string(),
-  "orderReference": zod.string(),
-  "amountKobo": zod.int(),
-  "status": zod.string(),
-  "resolution": zod.string().nullable(),
-  "actions": zod.array(zod.object({
-  "id": zod.string(),
-  "kind": zod.string(),
-  "status": zod.string(),
-  "version": zod.int(),
-  "attempts": zod.int(),
-  "payload": zod.record(zod.string(), zod.unknown()),
-  "result": zod.record(zod.string(), zod.unknown()).nullable(),
-  "failure": zod.string().nullable()
-})),
-  "information": zod.array(zod.record(zod.string(), zod.unknown())),
-  "executionEnabled": zod.boolean(),
-  "policy": zod.string(),
-  "history": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+export const ChangeStaffRoleResponse = zod.object({
+  "id": zod.uuid(),
+  "requestKey": zod.uuid(),
+  "actorId": zod.string(),
+  "assignmentId": zod.uuid(),
+  "targetIdentityId": zod.string(),
+  "action": zod.enum(['grant', 'revoke']),
+  "role": zod.string(),
+  "reason": zod.string(),
+  "incidentReference": zod.string().nullable(),
+  "before": zod.record(zod.string(), zod.unknown()).nullable(),
+  "after": zod.record(zod.string(), zod.unknown()),
+  "createdAt": zod.coerce.date()
 })
 
 
-export const getSourceControlsQueryPageDefault = 1;
-export const getSourceControlsQueryPageMax = 10000;
+export const verifyStaffRoleTargetBodyIdentityIdMax = 128;
 
 
+export const verifyStaffRoleTargetBodyIdentityIdRegExp = new RegExp('^user_[A-Za-z0-9_-]+$');
 
-export const GetSourceControlsQueryParams = zod.object({
-  "area": zod.enum(['content', 'system']),
-  "page": zod.coerce.number().int().min(1).max(getSourceControlsQueryPageMax).default(getSourceControlsQueryPageDefault)
+
+export const VerifyStaffRoleTargetBody = zod.object({
+  "identityId": zod.string().max(verifyStaffRoleTargetBodyIdentityIdMax).regex(verifyStaffRoleTargetBodyIdentityIdRegExp)
 })
 
-export const GetSourceControlsResponse = zod.object({
-  "area": zod.enum(['content', 'system']),
-  "page": zod.int(),
-  "hasMore": zod.boolean(),
+export const VerifyStaffRoleTargetResponse = zod.object({
+  "identityId": zod.string(),
+  "label": zod.string(),
+  "verifiedAt": zod.coerce.date()
+})
+
+
+export const GetStaffOperationsQueryParams = zod.object({
+  "area": zod.enum(['content', 'support', 'finance', 'system'])
+})
+
+export const GetStaffOperationsResponse = zod.object({
+  "area": zod.enum(['content', 'support', 'finance', 'system']),
   "notice": zod.string(),
-  "versions": zod.array(zod.object({
-  "kind": zod.enum(['content', 'rule']),
-  "id": zod.uuid(),
-  "key": zod.string(),
-  "version": zod.int(),
-  "status": zod.string(),
-  "reviewBy": zod.string().nullable(),
-  "safetyHeld": zod.boolean()
-})),
-  "sources": zod.array(zod.object({
-  "sourceId": zod.string(),
-  "url": zod.string(),
-  "risk": zod.string(),
-  "checkedAt": zod.string().nullable(),
-  "failureCode": zod.string().nullable(),
-  "nextCheckAt": zod.coerce.date()
-})),
-  "review": zod.array(zod.object({
-  "id": zod.uuid(),
-  "status": zod.string(),
-  "targetKind": zod.string(),
-  "targetKey": zod.string(),
-  "targetVersion": zod.int(),
-  "reason": zod.string(),
-  "createdAt": zod.coerce.date()
-})),
-  "services": zod.array(zod.object({
-  "key": zod.string(),
-  "enabled": zod.boolean(),
-  "reason": zod.string(),
-  "updatedAt": zod.coerce.date()
-})),
-  "sourceChoices": zod.array(zod.object({
-  "id": zod.string(),
-  "title": zod.string()
-}))
+  "records": zod.array(zod.record(zod.string(), zod.unknown()))
 })
 
 
-export const actOnSourceControlsBodyOneReasonMin = 20;
-export const actOnSourceControlsBodyOneReasonMax = 1000;
+export const requestAccessSupportBodyEmailMax = 254;
 
-export const actOnSourceControlsBodyOneSourceIdMax = 100;
+export const requestAccessSupportBodyMessageMin = 20;
+export const requestAccessSupportBodyMessageMax = 2000;
 
-export const actOnSourceControlsBodyTwoReasonMin = 20;
-export const actOnSourceControlsBodyTwoReasonMax = 1000;
-
-
-export const actOnSourceControlsBodyThreeReasonMin = 20;
-export const actOnSourceControlsBodyThreeReasonMax = 1000;
-
-
-export const actOnSourceControlsBodyFourReasonMin = 20;
-export const actOnSourceControlsBodyFourReasonMax = 1000;
-
-export const actOnSourceControlsBodyFiveReasonMin = 20;
-export const actOnSourceControlsBodyFiveReasonMax = 1000;
+export const requestAccessSupportBodyWebsiteMax = 0;
 
 
 
-export const ActOnSourceControlsBody = zod.union([zod.object({
-  "requestKey": zod.uuid(),
-  "reason": zod.string().min(actOnSourceControlsBodyOneReasonMin).max(actOnSourceControlsBodyOneReasonMax),
-  "action": zod.enum(['watch_source']),
-  "sourceId": zod.string().min(1).max(actOnSourceControlsBodyOneSourceIdMax)
-}),zod.object({
-  "requestKey": zod.uuid(),
-  "reason": zod.string().min(actOnSourceControlsBodyTwoReasonMin).max(actOnSourceControlsBodyTwoReasonMax),
-  "action": zod.enum(['hold_version']),
-  "kind": zod.enum(['content', 'rule']),
-  "id": zod.uuid(),
-  "version": zod.int().min(1)
-}),zod.object({
-  "requestKey": zod.uuid(),
-  "reason": zod.string().min(actOnSourceControlsBodyThreeReasonMin).max(actOnSourceControlsBodyThreeReasonMax),
-  "action": zod.enum(['withdraw_version']),
-  "kind": zod.enum(['content', 'rule']),
-  "id": zod.uuid(),
-  "version": zod.int().min(1)
-}),zod.object({
-  "requestKey": zod.uuid(),
-  "reason": zod.string().min(actOnSourceControlsBodyFourReasonMin).max(actOnSourceControlsBodyFourReasonMax),
-  "action": zod.enum(['pause_service']),
-  "service": zod.enum(['ai', 'checkout'])
-}),zod.object({
-  "requestKey": zod.uuid(),
-  "reason": zod.string().min(actOnSourceControlsBodyFiveReasonMin).max(actOnSourceControlsBodyFiveReasonMax),
-  "action": zod.enum(['resume_service']),
-  "service": zod.enum(['ai', 'checkout'])
-})])
-
-export const ActOnSourceControlsResponse = zod.object({
-  "auditId": zod.uuid(),
-  "replayed": zod.boolean(),
-  "result": zod.record(zod.string(), zod.unknown())
+export const RequestAccessSupportBody = zod.object({
+  "idempotencyKey": zod.uuid(),
+  "email": zod.email().max(requestAccessSupportBodyEmailMax),
+  "topic": zod.enum(['account_access', 'general', 'content_issue']),
+  "message": zod.string().min(requestAccessSupportBodyMessageMin).max(requestAccessSupportBodyMessageMax),
+  "website": zod.string().max(requestAccessSupportBodyWebsiteMax).optional()
 })
 
-
-/**
- * The stored bundle's current check, the drafting and review runs, check counts, safety holds and publication audit of one content or rule version (ADM-002). Read-only: it approves, publishes and holds nothing.
- * @summary One version's publication record, for content staff
- */
-export const GetEditorialRecordParams = zod.object({
-  "kind": zod.enum(['content', 'rule']),
-  "id": zod.uuid()
-})
-
-export const GetEditorialRecordResponse = zod.object({
-  "kind": zod.enum(['content', 'rule']),
-  "id": zod.uuid(),
-  "key": zod.string(),
-  "version": zod.int(),
-  "status": zod.string(),
-  "reviewBy": zod.string().nullable(),
-  "publishedAt": zod.string().nullable(),
-  "withdrawnReason": zod.string().nullable(),
-  "candidateHash": zod.string().nullable(),
-  "manifestStatus": zod.string().nullable(),
-  "check": zod.object({
-  "checkedAt": zod.coerce.date(),
-  "decision": zod.enum(['eligible', 'hold']),
-  "reasons": zod.array(zod.string())
-}).describe('What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release.'),
-  "draftRun": zod.union([zod.object({
-  "runId": zod.string(),
-  "model": zod.string(),
-  "promptVersion": zod.string()
-}),zod.null()]),
-  "reviews": zod.array(zod.object({
-  "role": zod.enum(['factual', 'challenge']),
-  "runId": zod.string(),
-  "model": zod.string(),
-  "promptVersion": zod.string(),
-  "verdict": zod.enum(['pass', 'hold']),
-  "findings": zod.array(zod.string()).describe('The review\'s findings, at most 20, each cut to 600 characters.'),
-  "receivedOtherVerdict": zod.boolean()
-})),
-  "mechanicalChecks": zod.object({
-  "passed": zod.int(),
-  "failed": zod.int(),
-  "notRun": zod.int()
-}),
-  "enhancedChecks": zod.object({
-  "passed": zod.int(),
-  "failed": zod.int(),
-  "notRun": zod.int()
-}),
-  "audit": zod.array(zod.object({
-  "action": zod.string(),
-  "actor": zod.string(),
-  "reason": zod.string(),
-  "at": zod.coerce.date()
-})),
-  "safetyHolds": zod.array(zod.object({
-  "action": zod.string(),
-  "reason": zod.string(),
-  "phase": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "completedAt": zod.string().nullable()
-})),
-  "notice": zod.string()
-})
-
-
-export const getCorrectionNoticesQueryPageDefault = 1;
-export const getCorrectionNoticesQueryPageMax = 10000;
-
-
-
-export const GetCorrectionNoticesQueryParams = zod.object({
-  "page": zod.coerce.number().int().min(1).max(getCorrectionNoticesQueryPageMax).default(getCorrectionNoticesQueryPageDefault)
-})
-
-export const GetCorrectionNoticesResponse = zod.object({
-  "page": zod.int(),
-  "hasMore": zod.boolean(),
-  "notices": zod.array(zod.object({
-  "id": zod.uuid(),
-  "entityKind": zod.string(),
-  "entityId": zod.uuid(),
+export const RequestAccessSupportResponse = zod.object({
+  "reference": zod.string(),
   "message": zod.string(),
-  "createdAt": zod.coerce.date()
-}))
+  "delivery": zod.enum(['not_dispatched'])
+})
+
+
+export const createSupportTicketBodyScopeMin = 10;
+export const createSupportTicketBodyScopeMax = 4000;
+
+export const createSupportTicketBodyContactEmailMax = 254;
+
+
+
+export const CreateSupportTicketBody = zod.object({
+  "category": zod.enum(['support', 'registration', 'tax', 'accounting', 'employment', 'legal', 'privacy', 'sector_approval']),
+  "scope": zod.string().min(createSupportTicketBodyScopeMin).max(createSupportTicketBodyScopeMax),
+  "contactEmail": zod.email().max(createSupportTicketBodyContactEmailMax),
+  "sharingConsent": zod.boolean()
+})
+
+export const CreateSupportTicketResponse = zod.object({
+  "reference": zod.string(),
+  "message": zod.string(),
+  "dispatchStatus": zod.enum(['awaiting_staff'])
 })
 
 
@@ -7402,6 +7105,303 @@ export const ActOnContentEscalationResponse = zod.object({
 }),
   "caseVersion": zod.int().min(1),
   "notice": zod.string()
+})
+
+
+export const listTasksPageQueryPageDefault = 1;
+export const listTasksPageQueryPageMax = 100000;
+
+export const listTasksPageQueryFilterDefault = `open`;
+
+export const ListTasksPageQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).max(listTasksPageQueryPageMax).default(listTasksPageQueryPageDefault),
+  "filter": zod.enum(['open', 'done', 'all']).default(listTasksPageQueryFilterDefault)
+})
+
+export const ListTasksPageResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "notes": zod.string(),
+  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
+  "revision": zod.int(),
+  "dueDate": zod.string().nullable(),
+  "dateConfirmed": zod.boolean(),
+  "assessmentId": zod.string().nullable(),
+  "ruleId": zod.string().nullable(),
+  "needsReview": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})),
+  "total": zod.int(),
+  "openCount": zod.int(),
+  "filteredTotal": zod.int(),
+  "page": zod.int(),
+  "pageSize": zod.int(),
+  "hasNext": zod.boolean()
+})
+
+
+export const ListTasksResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "notes": zod.string(),
+  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
+  "revision": zod.int(),
+  "dueDate": zod.string().nullable(),
+  "dateConfirmed": zod.boolean(),
+  "assessmentId": zod.string().nullable(),
+  "ruleId": zod.string().nullable(),
+  "needsReview": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListTasksResponse = zod.array(ListTasksResponseItem)
+
+
+export const createTaskBodyTitleMax = 200;
+
+export const createTaskBodyNotesMax = 6000;
+
+export const createTaskBodyDueDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+export const createTaskBodyRuleIdMax = 100;
+
+
+
+export const CreateTaskBody = zod.object({
+  "title": zod.string().min(1).max(createTaskBodyTitleMax),
+  "notes": zod.string().max(createTaskBodyNotesMax),
+  "dueDate": zod.string().regex(createTaskBodyDueDateRegExp).nullable(),
+  "dateConfirmed": zod.boolean(),
+  "assessmentId": zod.uuid().nullable(),
+  "ruleId": zod.string().max(createTaskBodyRuleIdMax).nullable()
+})
+
+export const CreateTaskResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "notes": zod.string(),
+  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
+  "revision": zod.int(),
+  "dueDate": zod.string().nullable(),
+  "dateConfirmed": zod.boolean(),
+  "assessmentId": zod.string().nullable(),
+  "ruleId": zod.string().nullable(),
+  "needsReview": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const UpdateTaskParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const updateTaskBodyTitleMax = 200;
+
+export const updateTaskBodyNotesMax = 6000;
+
+export const updateTaskBodyDueDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+
+export const UpdateTaskBody = zod.object({
+  "title": zod.string().min(1).max(updateTaskBodyTitleMax),
+  "notes": zod.string().max(updateTaskBodyNotesMax),
+  "dueDate": zod.string().regex(updateTaskBodyDueDateRegExp).nullable(),
+  "dateConfirmed": zod.boolean(),
+  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
+  "expectedRevision": zod.int().min(1)
+})
+
+export const UpdateTaskResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "notes": zod.string(),
+  "state": zod.enum(['not_started', 'in_progress', 'completed_by_user', 'needs_review']),
+  "revision": zod.int(),
+  "dueDate": zod.string().nullable(),
+  "dateConfirmed": zod.boolean(),
+  "assessmentId": zod.string().nullable(),
+  "ruleId": zod.string().nullable(),
+  "needsReview": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const DeleteTaskParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+
+
+export const DeleteTaskBody = zod.object({
+  "expectedRevision": zod.int().min(1)
+})
+
+export const DeleteTaskResponse = zod.void()
+
+
+export const GetReminderPreferencesResponse = zod.object({
+  "enabled": zod.boolean(),
+  "offsets": zod.array(zod.int()),
+  "revision": zod.int(),
+  "timezone": zod.string(),
+  "deliveryAvailable": zod.boolean(),
+  "deliveryBlocker": zod.string().nullable()
+})
+
+
+export const saveReminderPreferencesBodyOffsetsMin = 0;
+export const saveReminderPreferencesBodyOffsetsMax = 4;
+
+export const saveReminderPreferencesBodyExpectedRevisionMin = 0;
+
+
+
+export const SaveReminderPreferencesBody = zod.object({
+  "enabled": zod.boolean(),
+  "offsets": zod.array(zod.union([zod.literal(0),zod.literal(1),zod.literal(3),zod.literal(7),zod.literal(14)])).min(saveReminderPreferencesBodyOffsetsMin).max(saveReminderPreferencesBodyOffsetsMax),
+  "expectedRevision": zod.int().min(saveReminderPreferencesBodyExpectedRevisionMin)
+})
+
+export const SaveReminderPreferencesResponse = zod.object({
+  "enabled": zod.boolean(),
+  "offsets": zod.array(zod.int()),
+  "revision": zod.int(),
+  "timezone": zod.string(),
+  "deliveryAvailable": zod.boolean(),
+  "deliveryBlocker": zod.string().nullable()
+})
+
+
+export const listRemindersResponseAttemptsMin = 0;
+
+
+
+export const ListRemindersResponseItem = zod.object({
+  "id": zod.string(),
+  "taskId": zod.string(),
+  "scheduledAt": zod.string(),
+  "status": zod.enum(['held', 'pending', 'sent', 'cancelled', 'failed']),
+  "attempts": zod.int().min(listRemindersResponseAttemptsMin),
+  "nextAttemptAt": zod.string().nullable(),
+  "lastAttemptAt": zod.string().nullable(),
+  "reason": zod.string().nullable(),
+  "deliveredAt": zod.string().nullable()
+})
+export const ListRemindersResponse = zod.array(ListRemindersResponseItem)
+
+
+export const getWorkspaceResponseProfileOneBusinessNameMax = 160;
+
+export const getWorkspaceResponseProfileOneActivitiesItemMax = 120;
+
+export const getWorkspaceResponseProfileOneActivitiesMax = 10;
+
+export const getWorkspaceResponseProfileOneLgaMax = 100;
+
+export const getWorkspaceResponseProfileOneEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
+export const getWorkspaceResponseProfileOneTurnoverYearRegExp = new RegExp('^(unknown|[0-9]{4})$');
+
+
+export const GetWorkspaceResponse = zod.object({
+  "id": zod.string(),
+  "profileRevision": zod.int(),
+  "profile": zod.union([zod.object({
+  "businessName": zod.string().min(1).max(getWorkspaceResponseProfileOneBusinessNameMax),
+  "legalForm": zod.enum(['unknown', 'sole_proprietor', 'partnership', 'limited_company', 'incorporated_trustees', 'company_limited_by_guarantee']),
+  "registrationStatus": zod.enum(['unknown', 'registered', 'unregistered', 'pending']),
+  "activities": zod.array(zod.string().min(1).max(getWorkspaceResponseProfileOneActivitiesItemMax)).min(1).max(getWorkspaceResponseProfileOneActivitiesMax),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
+  "lga": zod.string().max(getWorkspaceResponseProfileOneLgaMax),
+  "employees": zod.string().regex(getWorkspaceResponseProfileOneEmployeesRegExp),
+  "turnoverBand": zod.enum(['unknown', 'unanswered', 'not_applicable', 'under_5m', '5m_to_25m', '25m_to_100m', 'over_100m']),
+  "turnoverYear": zod.string().regex(getWorkspaceResponseProfileOneTurnoverYearRegExp),
+  "turnoverMetric": zod.enum(['unknown', 'gross_revenue']),
+  "turnoverCurrency": zod.enum(['unknown', 'NGN']),
+  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "marketingConsent": zod.boolean()
+}),zod.null()]),
+  "documentCount": zod.int()
+})
+
+
+export const saveBusinessProfileBodyExpectedRevisionMin = 0;
+
+export const saveBusinessProfileBodyProfileBusinessNameMax = 160;
+
+export const saveBusinessProfileBodyProfileActivitiesItemMax = 120;
+
+export const saveBusinessProfileBodyProfileActivitiesMax = 10;
+
+export const saveBusinessProfileBodyProfileLgaMax = 100;
+
+export const saveBusinessProfileBodyProfileEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
+export const saveBusinessProfileBodyProfileTurnoverYearRegExp = new RegExp('^(unknown|[0-9]{4})$');
+
+
+export const SaveBusinessProfileBody = zod.object({
+  "expectedRevision": zod.int().min(saveBusinessProfileBodyExpectedRevisionMin),
+  "profile": zod.object({
+  "businessName": zod.string().min(1).max(saveBusinessProfileBodyProfileBusinessNameMax),
+  "legalForm": zod.enum(['unknown', 'sole_proprietor', 'partnership', 'limited_company', 'incorporated_trustees', 'company_limited_by_guarantee']),
+  "registrationStatus": zod.enum(['unknown', 'registered', 'unregistered', 'pending']),
+  "activities": zod.array(zod.string().min(1).max(saveBusinessProfileBodyProfileActivitiesItemMax)).min(1).max(saveBusinessProfileBodyProfileActivitiesMax),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
+  "lga": zod.string().max(saveBusinessProfileBodyProfileLgaMax),
+  "employees": zod.string().regex(saveBusinessProfileBodyProfileEmployeesRegExp),
+  "turnoverBand": zod.enum(['unknown', 'unanswered', 'not_applicable', 'under_5m', '5m_to_25m', '25m_to_100m', 'over_100m']),
+  "turnoverYear": zod.string().regex(saveBusinessProfileBodyProfileTurnoverYearRegExp),
+  "turnoverMetric": zod.enum(['unknown', 'gross_revenue']),
+  "turnoverCurrency": zod.enum(['unknown', 'NGN']),
+  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "marketingConsent": zod.boolean()
+})
+})
+
+export const saveBusinessProfileResponseProfileOneBusinessNameMax = 160;
+
+export const saveBusinessProfileResponseProfileOneActivitiesItemMax = 120;
+
+export const saveBusinessProfileResponseProfileOneActivitiesMax = 10;
+
+export const saveBusinessProfileResponseProfileOneLgaMax = 100;
+
+export const saveBusinessProfileResponseProfileOneEmployeesRegExp = new RegExp('^(unknown|unanswered|not_applicable|[0-9]{1,7})$');
+export const saveBusinessProfileResponseProfileOneTurnoverYearRegExp = new RegExp('^(unknown|[0-9]{4})$');
+
+
+export const SaveBusinessProfileResponse = zod.object({
+  "id": zod.string(),
+  "profileRevision": zod.int(),
+  "profile": zod.union([zod.object({
+  "businessName": zod.string().min(1).max(saveBusinessProfileResponseProfileOneBusinessNameMax),
+  "legalForm": zod.enum(['unknown', 'sole_proprietor', 'partnership', 'limited_company', 'incorporated_trustees', 'company_limited_by_guarantee']),
+  "registrationStatus": zod.enum(['unknown', 'registered', 'unregistered', 'pending']),
+  "activities": zod.array(zod.string().min(1).max(saveBusinessProfileResponseProfileOneActivitiesItemMax)).min(1).max(saveBusinessProfileResponseProfileOneActivitiesMax),
+  "state": zod.enum(['unknown', 'unanswered', 'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara']),
+  "lga": zod.string().max(saveBusinessProfileResponseProfileOneLgaMax),
+  "employees": zod.string().regex(saveBusinessProfileResponseProfileOneEmployeesRegExp),
+  "turnoverBand": zod.enum(['unknown', 'unanswered', 'not_applicable', 'under_5m', '5m_to_25m', '25m_to_100m', 'over_100m']),
+  "turnoverYear": zod.string().regex(saveBusinessProfileResponseProfileOneTurnoverYearRegExp),
+  "turnoverMetric": zod.enum(['unknown', 'gross_revenue']),
+  "turnoverCurrency": zod.enum(['unknown', 'NGN']),
+  "premises": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "manufacturing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "importing": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "personalData": zod.enum(['yes', 'no', 'unknown', 'unanswered', 'not_applicable']),
+  "marketingConsent": zod.boolean()
+}),zod.null()]),
+  "documentCount": zod.int()
 })
 
 

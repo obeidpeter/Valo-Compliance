@@ -1,0 +1,118 @@
+# Source controls, editorial records and correction notices.
+paths:
+  /admin/source-controls: {"get": {"operationId": "getSourceControls", "tags": ["staff"], "parameters": [{"name": "area", "in": "query", "required": true, "schema": {"type": "string", "enum": ["content", "system"]}}, {"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 1}}], "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControls"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
+  /admin/source-controls/action: {"post": {"operationId": "actOnSourceControls", "tags": ["staff"], "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControlAction"}}}}, "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SourceControlResult"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
+  /admin/editorial-records/{kind}/{id}:
+    get:
+      operationId: getEditorialRecord
+      tags: [staff]
+      summary: One version's publication record, for content staff
+      description: >-
+        The stored bundle's current check, the drafting and review runs, check counts, safety holds
+        and publication audit of one content or rule version (ADM-002). Read-only: it approves,
+        publishes and holds nothing.
+      parameters:
+        - { name: kind, in: path, required: true, schema: { type: string, enum: [content, rule] } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Current authorized record. No publication or spending approval is granted.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EditorialRecord" }
+        "401": { description: Sign-in required }
+        "403": { description: Active content role and recent MFA required }
+        "404": { description: No such version }
+  /workspace/correction-notices: {"get": {"operationId": "getCorrectionNotices", "tags": ["workspace"], "parameters": [{"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 10000, "default": 1}}], "responses": {"200": {"description": "Current authorized result. No publication or spending approval is granted.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CorrectionNotices"}}}}, "401": {"description": "Sign-in required"}, "403": {"description": "Active area role and recent MFA required"}, "409": {"description": "Changed version or request-key conflict"}}}}
+schemas:
+  SourceControlAction: {"oneOf": [{"type": "object", "required": ["requestKey", "reason", "action", "sourceId"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["watch_source"]}, "sourceId": {"type": "string", "minLength": 1, "maxLength": 100}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["hold_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "kind", "id", "version"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["withdraw_version"]}, "kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "version": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["pause_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}, {"type": "object", "required": ["requestKey", "reason", "action", "service"], "properties": {"requestKey": {"type": "string", "format": "uuid"}, "reason": {"type": "string", "minLength": 20, "maxLength": 1000}, "action": {"type": "string", "enum": ["resume_service"]}, "service": {"type": "string", "enum": ["ai", "checkout"]}}, "additionalProperties": false}]}
+  SourceControlResult: {"type": "object", "required": ["auditId", "replayed", "result"], "properties": {"auditId": {"type": "string", "format": "uuid"}, "replayed": {"type": "boolean"}, "result": {"type": "object", "additionalProperties": true}}}
+  SourceControlVersion: {"type": "object", "required": ["kind", "id", "key", "version", "status", "reviewBy", "safetyHeld"], "properties": {"kind": {"type": "string", "enum": ["content", "rule"]}, "id": {"type": "string", "format": "uuid"}, "key": {"type": "string"}, "version": {"type": "integer"}, "status": {"type": "string"}, "reviewBy": {"type": ["string", "null"]}, "safetyHeld": {"type": "boolean"}}}
+  SourceControlWatch: {"type": "object", "required": ["sourceId", "url", "risk", "checkedAt", "failureCode", "nextCheckAt"], "properties": {"sourceId": {"type": "string"}, "url": {"type": "string"}, "risk": {"type": "string"}, "checkedAt": {"type": ["string", "null"]}, "failureCode": {"type": ["string", "null"]}, "nextCheckAt": {"type": "string", "format": "date-time"}}}
+  SourceControlReview: {"type": "object", "required": ["id", "status", "targetKind", "targetKey", "targetVersion", "reason", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "status": {"type": "string"}, "targetKind": {"type": "string"}, "targetKey": {"type": "string"}, "targetVersion": {"type": "integer"}, "reason": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
+  SourceControlService: {"type": "object", "required": ["key", "enabled", "reason", "updatedAt"], "properties": {"key": {"type": "string"}, "enabled": {"type": "boolean"}, "reason": {"type": "string"}, "updatedAt": {"type": "string", "format": "date-time"}}}
+  SourceControlChoice: {"type": "object", "required": ["id", "title"], "properties": {"id": {"type": "string"}, "title": {"type": "string"}}}
+  SourceControls: {"type": "object", "required": ["area", "page", "hasMore", "notice", "versions", "sources", "review", "services", "sourceChoices"], "properties": {"area": {"type": "string", "enum": ["content", "system"]}, "page": {"type": "integer"}, "hasMore": {"type": "boolean"}, "notice": {"type": "string"}, "versions": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlVersion"}}, "sources": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlWatch"}}, "review": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlReview"}}, "services": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlService"}}, "sourceChoices": {"type": "array", "items": {"$ref": "#/components/schemas/SourceControlChoice"}}}}
+  EditorialRun:
+    type: object
+    required: [runId, model, promptVersion]
+    properties:
+      runId: { type: string }
+      model: { type: string }
+      promptVersion: { type: string }
+  EditorialReview:
+    type: object
+    required: [role, runId, model, promptVersion, verdict, findings, receivedOtherVerdict]
+    properties:
+      role: { type: string, enum: [factual, challenge] }
+      runId: { type: string }
+      model: { type: string }
+      promptVersion: { type: string }
+      verdict: { type: string, enum: [pass, hold] }
+      findings:
+        description: The review's findings, at most 20, each cut to 600 characters.
+        type: array
+        items: { type: string }
+      receivedOtherVerdict: { type: boolean }
+  EditorialCheckCounts:
+    type: object
+    required: [passed, failed, notRun]
+    properties:
+      passed: { type: integer }
+      failed: { type: integer }
+      notRun: { type: integer }
+  EditorialRecord:
+    type: object
+    required:
+      [kind, id, key, version, status, reviewBy, publishedAt, withdrawnReason, candidateHash, manifestStatus,
+       check, draftRun, reviews, mechanicalChecks, enhancedChecks, audit, safetyHolds, notice]
+    properties:
+      kind: { type: string, enum: [content, rule] }
+      id: { type: string, format: uuid }
+      key: { type: string }
+      version: { type: integer }
+      status: { type: string }
+      reviewBy: { type: [string, "null"] }
+      publishedAt: { type: [string, "null"] }
+      withdrawnReason: { type: [string, "null"] }
+      candidateHash: { type: [string, "null"] }
+      manifestStatus: { type: [string, "null"] }
+      check:
+        description: What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release.
+        type: object
+        required: [checkedAt, decision, reasons]
+        properties:
+          checkedAt: { type: string, format: date-time }
+          decision: { type: string, enum: [eligible, hold] }
+          reasons: { type: array, items: { type: string } }
+      draftRun:
+        oneOf:
+          - { $ref: "#/components/schemas/EditorialRun" }
+          - { type: "null" }
+      reviews: { type: array, items: { $ref: "#/components/schemas/EditorialReview" } }
+      mechanicalChecks: { $ref: "#/components/schemas/EditorialCheckCounts" }
+      enhancedChecks: { $ref: "#/components/schemas/EditorialCheckCounts" }
+      audit:
+        type: array
+        items:
+          type: object
+          required: [action, actor, reason, at]
+          properties:
+            action: { type: string }
+            actor: { type: string }
+            reason: { type: string }
+            at: { type: string, format: date-time }
+      safetyHolds:
+        type: array
+        items:
+          type: object
+          required: [action, reason, phase, createdAt, completedAt]
+          properties:
+            action: { type: string }
+            reason: { type: string }
+            phase: { type: string }
+            createdAt: { type: string, format: date-time }
+            completedAt: { type: [string, "null"] }
+      notice: { type: string }
+  CorrectionNotice: {"type": "object", "required": ["id", "entityKind", "entityId", "message", "createdAt"], "properties": {"id": {"type": "string", "format": "uuid"}, "entityKind": {"type": "string"}, "entityId": {"type": "string", "format": "uuid"}, "message": {"type": "string"}, "createdAt": {"type": "string", "format": "date-time"}}}
+  CorrectionNotices: {"type": "object", "required": ["page", "hasMore", "notices"], "properties": {"page": {"type": "integer"}, "hasMore": {"type": "boolean"}, "notices": {"type": "array", "items": {"$ref": "#/components/schemas/CorrectionNotice"}}}}

@@ -42,7 +42,7 @@ environment each needs, are listed in
 | `artifacts/valo` | Next.js web app: public site and private workspace |
 | `artifacts/api-server` | Express API, background worker, operator commands |
 | `lib/db` | Database schema and append-only SQL migrations |
-| `lib/api-spec` | OpenAPI contract (source of the generated `lib/api-zod` and `lib/api-client-react`) |
+| `lib/api-spec` | OpenAPI contract, one file per module in `src/` joined into `openapi.yaml` (source of the generated `lib/api-zod` and `lib/api-client-react`) |
 | `lib/valo-core` | Logic shared by the API and web app |
 | `lib/valo-records` | Requirement records, traceability and evidence bookkeeping |
 | `scripts`, `scripts/ops` | Registers, readiness report, security scans; backup, restore and release tooling |

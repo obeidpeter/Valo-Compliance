@@ -1,0 +1,401 @@
+# Purchases, orders, receipts, refunds, payment concerns and disputes.
+paths:
+  /workspace/purchases:
+    get:
+      operationId: getCustomerPurchases
+      tags: [workspace]
+      responses:
+        "200":
+          description: Honest unavailable state until server-verified commerce and purchase records exist.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CustomerPurchases" }
+  /workspace/orders:
+    post:
+      operationId: createCommerceOrder
+      tags: [valo]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommerceOrderInput" }
+      responses:
+        "201":
+          description: Server-priced test order; not a payment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommerceOrder" }
+  /workspace/orders/{id}/checkout:
+    post:
+      operationId: startCommerceCheckout
+      tags: [valo]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommerceActionInput" }
+      responses:
+        "200":
+          description: Validated hosted test checkout
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url: { type: string }
+  /workspace/orders/{id}/refresh:
+    post:
+      operationId: refreshCommerceOrder
+      tags: [valo]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommerceActionInput" }
+      responses:
+        "200":
+          description: Authoritative server verification result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommerceOrder" }
+  /workspace/orders/{id}/receipt:
+    get:
+      operationId: getCommerceReceipt
+      tags: [valo]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Test receipt available only after server verification
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: "#/components/schemas/CommerceOrder" }
+                  - type: object
+                    required: [notice, deliveryStatus]
+                    properties:
+                      notice: { type: string }
+                      deliveryStatus: { type: string }
+  /workspace/orders/{id}/refund:
+    post:
+      operationId: requestCommerceRefund
+      tags: [valo]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommerceRefundInput" }
+      responses:
+        "201":
+          description: Durable request, not an authorised or completed refund
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reference, status]
+                properties:
+                  reference: { type: string }
+                  status: { type: string }
+  /workspace/orders/{id}/dispute-information:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getOrderDisputeInformation
+      responses:
+        "200":
+          description: Own provider dispute references and customer statements, not bank findings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DisputeInformationList" }
+    post:
+      operationId: saveOrderDisputeInformation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DisputeInformationInput" }
+      responses:
+        "201":
+          description: Customer statement and explicit sharing consent saved, not submitted to provider
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DisputeInformationList" }
+  /admin/disputes/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getFinanceDispute
+      responses:
+        "200":
+          description: Finance-only scoped records and immutable prepared intent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinanceDispute" }
+  /admin/disputes/{id}/actions:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: prepareFinanceDispute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DisputeIntentInput" }
+      responses:
+        "201":
+          description: Finance-authorized intent prepared, not a provider mutation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinanceDispute" }
+  /admin/dispute-actions/{id}/{operation}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: operation, in: path, required: true, schema: { type: string, enum: [execute, reconcile, cancel] } }
+    post:
+      operationId: controlFinanceDispute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DisputeControlInput" }
+      responses:
+        "200":
+          description: Actual intent/provider observation state; never a claimed bank victory
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinanceDispute" }
+  /admin/refunds:
+    get:
+      operationId: getFinanceRefunds
+      tags: [admin]
+      responses:
+        "200":
+          description: Finance-only test refunds; active managed identity and fresh MFA required.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FinanceRefunds" }
+  /admin/refunds/{id}/decision:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: decideFinanceRefund
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RefundDecisionInput" }
+      responses:
+        "200":
+          description: Recorded decision, not provider completion.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundRecord" }
+  /admin/refunds/{id}/reconcile:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      operationId: reconcileFinanceRefund
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommerceActionInput" }
+      responses:
+        "200":
+          description: Verified provider observation or explicit unmet configuration; never assumed success.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RefundRecord" }
+  /workspace/disputes: {"get":{"operationId":"getWorkspaceDisputes","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/WorkspaceDisputes"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}}}}
+  /workspace/orders/{orderId}/concerns: {"post":{"operationId":"createPaymentConcern","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcern"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}},"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcernInput"}}}},"parameters":[{"name":"orderId","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]}}
+  /workspace/concerns/{id}/respond: {"post":{"operationId":"respondPaymentConcern","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcern"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}},"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcernResponse"}}}},"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]}}
+  /admin/payment-concerns/{id}/action: {"post":{"operationId":"actOnPaymentConcern","tags":["disputes"],"responses":{"200":{"description":"Private durable test-mode workflow. Provider outcomes are not bank victory guarantees.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcern"}}}},"403":{"description":"Active authority, recent staff MFA or workspace membership is absent."},"409":{"description":"Version, hold, canonical state or operation acknowledgement requires review."}},"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PaymentConcernAction"}}}},"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string","format":"uuid"}}]}}
+  /admin/payment-concerns: {"get": {"operationId": "getFinancePaymentConcerns", "tags": ["disputes"], "responses": {"200": {"description": "Private durable test-mode finance workflow.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FinancePaymentConcerns"}}}}}}}
+  /admin/disputes/link: {"post": {"operationId": "linkFinanceDispute", "tags": ["disputes"], "responses": {"200": {"description": "Private durable test-mode finance workflow.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FinanceDispute"}}}}}, "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FinanceDisputeLink"}}}}}}
+  /admin/disputes/{id}/hold: {"post": {"operationId": "holdFinanceDispute", "tags": ["disputes"], "responses": {"200": {"description": "Private durable test-mode finance workflow.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FinanceDispute"}}}}}, "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DisputeHoldInput"}}}}, "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}]}}
+schemas:
+  DisputeHistory: {"type":"object","additionalProperties":false,"required":["id","action","reason","actorType","createdAt"],"properties":{"id":{"type":"string"},"action":{"type":"string"},"reason":{"type":"string"},"actorType":{"type":"string","enum":["customer","finance","worker"]},"createdAt":{"type":"string"}}}
+  PaymentConcern: {"type":"object","additionalProperties":false,"required":["id","orderId","orderReference","message","status","latestReply","version","createdAt","updatedAt","history"],"properties":{"id":{"type":"string"},"orderId":{"type":"string"},"orderReference":{"type":"string"},"message":{"type":"string"},"status":{"type":"string","enum":["open","needs_information","responded","closed"]},"latestReply":{"type":["string","null"]},"version":{"type":"integer"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"history":{"type":"array","items":{"$ref":"#/components/schemas/DisputeHistory"}}}}
+  PaymentConcernInput: {"type":"object","additionalProperties":false,"required":["requestKey","message","acknowledgement"],"properties":{"requestKey":{"type":"string","format":"uuid"},"message":{"type":"string","minLength":20,"maxLength":2000},"acknowledgement":{"type":"boolean","enum":[true]}}}
+  PaymentConcernResponse: {"type":"object","additionalProperties":false,"required":["expectedVersion","message"],"properties":{"expectedVersion":{"type":"integer","minimum":1},"message":{"type":"string","minLength":10,"maxLength":2000}}}
+  PaymentConcernAction: {"type":"object","additionalProperties":false,"required":["expectedVersion","action","message"],"properties":{"expectedVersion":{"type":"integer","minimum":1},"action":{"type":"string","enum":["reply","request_information","close"]},"message":{"type":"string","minLength":10,"maxLength":2000}}}
+  WorkspaceDisputes: {"type": "object", "additionalProperties": false, "required": ["concerns", "notice"], "properties": {"concerns": {"type": "array", "items": {"$ref": "#/components/schemas/PaymentConcern"}}, "notice": {"type": "string"}}}
+  FinancePaymentConcerns: {"type": "object", "additionalProperties": false, "required": ["concerns", "notice"], "properties": {"concerns": {"type": "array", "items": {"$ref": "#/components/schemas/PaymentConcern"}}, "notice": {"type": "string"}}}
+  DisputeHoldInput: {"type": "object", "additionalProperties": false, "required": ["expectedVersion", "held", "reason"], "properties": {"expectedVersion": {"type": "integer", "minimum": 1}, "held": {"type": "boolean"}, "reason": {"type": "string", "minLength": 10, "maxLength": 1500}}}
+  FinanceDisputeLink: {"type": "object", "additionalProperties": false, "required": ["orderId", "providerId"], "properties": {"orderId": {"type": "string", "format": "uuid"}, "providerId": {"type": "string", "pattern": "^\\d{1,40}$"}}}
+  CustomerPurchases:
+    type: object
+    required: [available, message, orders, products, livePaymentsEnabled]
+    properties:
+      available: { type: boolean }
+      message: { type: string }
+      livePaymentsEnabled: { type: boolean }
+      orders: { type: array, items: { $ref: "#/components/schemas/CommerceOrder" } }
+      products:
+        type: array
+        items:
+          type: object
+          required: [id, title, amountKobo, currency, licenceVersion, licenceText, taxTreatment]
+          properties:
+            id: { type: string }
+            title: { type: string }
+            amountKobo: { type: integer }
+            currency: { type: string }
+            licenceVersion: { type: string }
+            licenceText: { type: string }
+            taxTreatment: { type: string }
+  CommerceOrderInput:
+    type: object
+    required: [priceId, acceptedLicenceVersion, requestKey]
+    properties:
+      priceId: { type: string, format: uuid }
+      acceptedLicenceVersion: { type: string, minLength: 1, maxLength: 100 }
+      requestKey: { type: string, format: uuid }
+  CommerceRefundInput:
+    type: object
+    additionalProperties: false
+    required: [reason, amountKobo, requestKey, acceptedPolicyVersion]
+    properties:
+      reason: { type: string, minLength: 10, maxLength: 1500 }
+      amountKobo: { type: integer, minimum: 1, maximum: 2147483647 }
+      requestKey: { type: string, format: uuid }
+      acceptedPolicyVersion: { type: string, enum: [test-refund-v1] }
+  RefundDecisionInput:
+    type: object
+    additionalProperties: false
+    required: [decision, reason, expectedVersion]
+    properties:
+      decision: { type: string, enum: [approve, reject] }
+      reason: { type: string, minLength: 10, maxLength: 1500 }
+      expectedVersion: { type: integer, minimum: 1 }
+  RefundRecord:
+    type: object
+    required: [id, orderId, amountKobo, status, reference, reason, decisionReason, policyVersion, version, attempts, createdAt, checkedAt, completedAt, failure]
+    properties:
+      id: { type: string }
+      orderId: { type: string }
+      amountKobo: { type: [integer, "null"] }
+      status: { type: string }
+      reference: { type: string }
+      reason: { type: string }
+      decisionReason: { type: [string, "null"] }
+      policyVersion: { type: string }
+      version: { type: integer }
+      attempts: { type: integer }
+      createdAt: { type: string }
+      checkedAt: { type: [string, "null"] }
+      completedAt: { type: [string, "null"] }
+      failure: { type: [string, "null"] }
+  DisputeInformationInput:
+    type: object
+    additionalProperties: false
+    required: [disputeId, requestKey, customerName, customerPhone, serviceDetails, consentVersion]
+    properties:
+      disputeId: { type: string, format: uuid }
+      requestKey: { type: string, format: uuid }
+      customerName: { type: string, minLength: 1, maxLength: 150 }
+      customerPhone: { type: string, minLength: 5, maxLength: 40 }
+      serviceDetails: { type: string, minLength: 10, maxLength: 2000 }
+      deliveryAddress: { type: string, maxLength: 500 }
+      deliveryDate: { type: string, format: date }
+      consentVersion: { type: string, enum: [test-dispute-information-v1] }
+  DisputeInformationList:
+    type: object
+    required: [disputes, information, notice]
+    properties:
+      disputes: { type: array, items: { type: object, additionalProperties: true } }
+      information: { type: array, items: { type: object, additionalProperties: true } }
+      notice: { type: string }
+  DisputeIntentInput:
+    type: object
+    additionalProperties: false
+    required: [kind, requestKey, message]
+    properties:
+      kind: { type: string, enum: [upload_receipt, submit_evidence, merchant_decision] }
+      requestKey: { type: string, format: uuid }
+      message: { type: string, minLength: 10, maxLength: 1500 }
+      informationId: { type: string, format: uuid }
+      resolution: { type: string, enum: [merchant-accepted, declined] }
+      amountKobo: { type: integer, minimum: 0, maximum: 2147483647 }
+  DisputeControlInput:
+    type: object
+    additionalProperties: false
+    required: [expectedVersion]
+    properties:
+      acknowledgement: { type: boolean }
+      expectedVersion: { type: integer, minimum: 1 }
+  DisputeActionRecord:
+    type: object
+    required: [id, kind, status, version, attempts, payload, result, failure]
+    properties:
+      id: { type: string }
+      kind: { type: string }
+      status: { type: string }
+      version: { type: integer }
+      attempts: { type: integer }
+      payload: { type: object, additionalProperties: true }
+      result: { type: object, nullable: true, additionalProperties: true }
+      failure: { type: string, nullable: true }
+  FinanceDispute:
+    type: object
+    required: [providerId, held, controlVersion, category, entitlementStatus, id, orderReference, amountKobo, status, resolution, actions, information, executionEnabled, policy]
+    properties:
+      providerId: { type: string }
+      held: { type: boolean }
+      controlVersion: { type: integer }
+      category: { type: string, nullable: true }
+      entitlementStatus: { type: string, nullable: true }
+      id: { type: string }
+      orderReference: { type: string }
+      amountKobo: { type: integer }
+      status: { type: string }
+      resolution: { type: string, nullable: true }
+      actions: { type: array, items: { $ref: "#/components/schemas/DisputeActionRecord" } }
+      information: { type: array, items: { type: object, additionalProperties: true } }
+      executionEnabled: { type: boolean }
+      policy: { type: string }
+      history: { type: array, items: { type: object, additionalProperties: true } }
+  FinanceRefunds:
+    type: object
+    required: [refunds, disputes, policy]
+    properties:
+      refunds: { type: array, items: { $ref: "#/components/schemas/RefundRecord" } }
+      disputes: { type: array, items: { type: object, additionalProperties: true } }
+      policy: { type: string }
+  CommerceActionInput:
+    type: object
+    additionalProperties: false
+    properties: {}
+  CommerceOrder:
+    type: object
+    required: [id, reference, title, amountKobo, currency, status, createdAt, lastCheckedAt, licenceVersion, licenceText, taxTreatment, contentVersionId, refundStatus, receiptReference, refunds, refundableKobo, refundedKobo, refundPolicy, disputeStatus]
+    properties:
+      id: { type: string }
+      reference: { type: string }
+      title: { type: string }
+      amountKobo: { type: integer }
+      currency: { type: string }
+      status: { type: string, enum: [created, pending, abandoned, failed, verified_success, needs_review, reversed] }
+      createdAt: { type: string }
+      lastCheckedAt: { type: string, nullable: true }
+      licenceVersion: { type: string }
+      licenceText: { type: string }
+      taxTreatment: { type: string }
+      contentVersionId: { type: string }
+      refundStatus: { type: string, nullable: true }
+      receiptReference: { type: string, nullable: true }
+      refunds: { type: array, items: { $ref: "#/components/schemas/RefundRecord" } }
+      refundableKobo: { type: integer }
+      refundedKobo: { type: integer }
+      refundPolicy: { type: string }
+      disputeStatus: { type: [string, "null"] }
