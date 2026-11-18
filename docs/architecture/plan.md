@@ -63,7 +63,7 @@ Exit: CI rejects unformatted code, lint findings, stray environment reads and di
 | Remove the three import cycles | done: the last ran through the inference dispatcher, which loaded its work-binding checks and through them the callers that call it. The operator commands that run approved work now hand the dispatcher those checks (`provideFiniteWorkBindings`), and the repository rules checker rejects any import cycle and any unreviewed caller of that function (`inference-bindings`) |
 | Every client-facing route in the API contract | done (the staff MFA check was the last one missing; the Paystack webhook faces the provider and stays outside the client contract) |
 | Split the API contract per module | not started |
-| Worker loop becomes scheduled queue jobs | not started |
+| Worker loop becomes scheduled queue jobs | done in development: the seven operational tasks (source checks, reminders, payment events, refunds, disputes, dispute actions, payment reconciliation) are each a job on `valo-operations-v1`, scheduled every minute by the reviewed development queue setup. The queue allows one queued and one active job per task, so a slow task never piles up or holds back another, a failed run stays visible as a failed job, and with several workers each task still runs once a minute. The worker's loop keeps the export outbox and its health probes; its queue check refuses to run without the queue and its schedules. Production runs none of these tasks and has no such queue |
 | Separate product logic from requirement/evidence bookkeeping in `valo-core` | not started |
 | Branch coverage of payments, sign-in and rules (NFR-011) | done as Node measures it: the database job runs each area's tests with Node's coverage and fails an area below 80% of branches; each run's figures are in its run summary and readiness report. The first hosted run (639db48) measured payment 84.79%, sign-in 91.45% and rules 88.41%. Node counts V8 blocks, so a function no test calls is one uncovered branch, and its figures can be higher than those of a tool that counts every branch. NFR-011 also asks for scenario tests, and a percentage never stands in for negative security cases |
 
@@ -89,7 +89,7 @@ reach the 80% branch coverage NFR-011 requires.
 | --- | --- |
 | Local session verification, live checks for sensitive actions | done (everyday routes re-check Clerk at most once a minute per session; sensitive and unlisted routes check live) |
 | Rate-limit cleanup off the request path | done |
-| Published-content cache with invalidation | not started |
+| Published-content cache with invalidation | deferred by owner decision (18 November): outside development the released-content reader returns nothing, and the development database has no published content, so a cache would save one policy read and one empty query. It waits for released content and a measured need; it must then be invalidated through the database, because EDP-011 requires a withdrawal made by another process to reach it at once |
 | Reuse one browser for PDFs, five in parallel | done |
 | Server-rendered public pages, split bundle, self-hosted fonts | in progress: the three fonts are served from the app (`src/fonts.css`, OFL files from Fontsource), so no visitor request goes to Google, and the content security policy allows fonts and styles from the app's own origin only; server-rendered public pages and a split bundle are not started |
 

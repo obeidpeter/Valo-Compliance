@@ -342,6 +342,8 @@ jobs:
           PRIVATE_OBJECT_DIR: ""
           DEFAULT_OBJECT_STORAGE_BUCKET_ID: ""
           PUBLIC_OBJECT_SEARCH_PATHS: ""
+      - name: Prove each operational task is its own scheduled job, held back by no other
+        run: pnpm --filter @workspace/api-server test:valo-operations-queue-db
       - name: Prove dispute HTTP and transport controls without merchant calls
         run: pnpm --filter @workspace/api-server test:valo-disputes
       - name: Prove canonical background exports, restart, holds and final byte release

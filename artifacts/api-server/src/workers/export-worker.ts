@@ -18,7 +18,14 @@ import {
   reconcileDisputeActions,
   reconcileKnownDisputes,
 } from "../modules/commerce";
-import { dispatchOperationalJobs } from "../lib/valo-operational-dispatch";
+import {
+  OPERATIONS_QUEUE,
+  OPERATIONAL_DOMAINS,
+  OPERATIONS_QUEUE_OPTIONS,
+  operationalJobRunner,
+  operationsHealthy,
+  type OperationalDomain,
+} from "../lib/valo-operations-queue";
 import { assertRecoveryEffectsAllowed } from "../lib/valo-recovery-effects";
 import {
   cleanupWorkspaceExports,
@@ -38,7 +45,25 @@ await initializeApplicationRuntime();
 developmentExportsOnly();
 assertRecoveryEffectsAllowed();
 const payload = z.object({ jobId: z.string().uuid(), workspaceId: z.string().uuid() }).strict();
-const boss = exportQueue();
+// Outside production the worker runs the schedule timekeeper for the scheduled operations queue.
+const operationsEnabled = setting("NODE_ENV") !== "production";
+const boss = exportQueue({ schedules: operationsEnabled });
+const operationalHealth = new Map<OperationalDomain, boolean>();
+const runOperationalJob = operationalJobRunner(
+  {
+    sources: reconcileSourceMonitoring,
+    reminders: () => reconcileDueReminders(),
+    paymentEvents: () => processPaymentEvents(),
+    refunds: () => processRefundQueue(),
+    disputes: () => reconcileKnownDisputes(),
+    disputeActions: () => reconcileDisputeActions(),
+    paymentReconciliation: () => reconcilePayments(),
+  },
+  (domain, healthy) => {
+    operationalHealth.set(domain, healthy);
+    if (!healthy) logger.error({ event: "operational.dispatch_failed", domain });
+  },
+);
 const health = new WorkerHealth();
 let heartbeatWrite = Promise.resolve();
 const heartbeatPublishFailed = () => logger.warn({ event: "worker.heartbeat_publish_failed" });
@@ -140,10 +165,17 @@ startup = (async () => {
       await executeWorkspaceExport(input.jobId, input.workspaceId, entry.id);
     }
   });
+  // Each domain's job runs on its own, so all seven can run at once, as the minute loop did.
+  if (operationsEnabled && !stopping)
+    await boss.work(
+      OPERATIONS_QUEUE,
+      { batchSize: 1, localConcurrency: OPERATIONAL_DOMAINS.length, pollingIntervalSeconds: 2 },
+      async (jobs) => {
+        for (const job of jobs) await runOperationalJob(job.data);
+      },
+    );
 })();
-let reminderCheckedAt = 0;
 let operationalCheckedAt = 0;
-let operationalDispatchHealthy = true;
 async function dispatch() {
   developmentExportsOnly();
   if (dispatching) return;
@@ -161,21 +193,42 @@ async function dispatch() {
         const query = { text: sql, query_timeout: 1500 };
         return pool.query(query);
       }, environment());
-    // An idle queue must still prove that both configured queues are reachable.
+    // An idle queue must still prove that every configured queue is reachable, and outside
+    // production that each operational domain still has its schedule.
+    const names = operationsEnabled
+      ? [EXPORT_QUEUE, WORKSPACE_EXPORT_QUEUE, OPERATIONS_QUEUE]
+      : [EXPORT_QUEUE, WORKSPACE_EXPORT_QUEUE];
     const queueQuery = {
-      text: "SELECT name,retry_limit,expire_seconds FROM valo_jobs.queue WHERE name=ANY($1::text[])",
-      values: [[EXPORT_QUEUE, WORKSPACE_EXPORT_QUEUE]],
+      text: "SELECT name,policy,retry_limit,expire_seconds FROM valo_jobs.queue WHERE name=ANY($1::text[])",
+      values: [names],
       query_timeout: 1500,
     };
     const queues = await pool.query(queueQuery);
     if (
-      queues.rows.length !== 2 ||
+      queues.rows.length !== names.length ||
       !queues.rows.some((q) => q.name === EXPORT_QUEUE && q.retry_limit === 2 && q.expire_seconds === 120) ||
       !queues.rows.some(
         (q) => q.name === WORKSPACE_EXPORT_QUEUE && q.retry_limit === 0 && q.expire_seconds === 360,
-      )
+      ) ||
+      (operationsEnabled &&
+        !queues.rows.some(
+          (q) =>
+            q.name === OPERATIONS_QUEUE &&
+            q.policy === OPERATIONS_QUEUE_OPTIONS.policy &&
+            q.retry_limit === OPERATIONS_QUEUE_OPTIONS.retryLimit &&
+            q.expire_seconds === OPERATIONS_QUEUE_OPTIONS.expireInSeconds,
+        ))
     )
       throw Error("WORKER_QUEUE_CONFIGURATION_INVALID");
+    if (operationsEnabled) {
+      const scheduleQuery = {
+        text: "SELECT key FROM valo_jobs.schedule WHERE name=$1",
+        values: [OPERATIONS_QUEUE],
+        query_timeout: 1500,
+      };
+      const keys = new Set((await pool.query(scheduleQuery)).rows.map((r) => r.key));
+      if (OPERATIONAL_DOMAINS.some((domain) => !keys.has(domain))) throw Error("WORKER_SCHEDULES_MISSING");
+    }
     await recoverAbandonedExports();
     const retention = await expireGeneratedExports();
     if (retention.failed) logger.error({ event: "export.retention_binding_failed", count: retention.failed });
@@ -208,21 +261,7 @@ async function dispatch() {
       if (stopping) break;
       await boss.send(EXPORT_QUEUE, { jobId: job.id, workspaceId: job.workspaceId }, { id: job.queueId });
     }
-    if (setting("NODE_ENV") !== "production" && !stopping && Date.now() - reminderCheckedAt >= 60000) {
-      reminderCheckedAt = Date.now();
-      const failures = await dispatchOperationalJobs({
-        sources: reconcileSourceMonitoring,
-        reminders: () => reconcileDueReminders(),
-        paymentEvents: () => processPaymentEvents(),
-        refunds: () => processRefundQueue(),
-        disputes: () => reconcileKnownDisputes(),
-        disputeActions: () => reconcileDisputeActions(),
-        paymentReconciliation: () => reconcilePayments(),
-      });
-      for (const domain of failures) logger.error({ event: "operational.dispatch_failed", domain });
-      operationalDispatchHealthy = failures.length === 0;
-    }
-    succeeded = operationalDispatchHealthy;
+    succeeded = operationsHealthy(operationalHealth);
   } catch (error) {
     logger.error({ event: "export.dispatch_failed", err: error });
   } finally {

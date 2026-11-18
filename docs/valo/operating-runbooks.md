@@ -28,6 +28,13 @@ and at most three explicit retry cycles are bounded independently.
 
 Reviewed development queue setup is explicit:
 `VALO_DEV_QUEUE_MIGRATION=reviewed-synthetic-development pnpm --filter @workspace/api-server queue:apply-development`.
+It also installs `valo-operations-v1` and one every-minute schedule for each operational task
+(source checks, reminders, payment events, refunds, disputes, dispute actions, payment
+reconciliation), which the development worker runs as separate jobs. Run it again on a database
+set up before the operations queue existed: until then the worker's queue check refuses to
+dispatch (`WORKER_QUEUE_CONFIGURATION_INVALID` or `WORKER_SCHEDULES_MISSING`) and its health
+reports unhealthy. A failed task stays in the queue as a failed job; the next minute's job runs it
+again.
 Never run it against production. Normal workers cannot migrate at startup.
 The retained SQL order and current functions/permissions need a separate approved
 production path; changing publish/start commands to run DDL is prohibited.

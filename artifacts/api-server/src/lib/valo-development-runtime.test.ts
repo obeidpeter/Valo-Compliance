@@ -90,10 +90,6 @@ test("actual export entries and worker startup reject before database, queue or 
       reconcileKnownDisputes=hit,reconcileDisputeActions=hit;`,
     ],
     [
-      "valo-operational-dispatch",
-      "export const dispatchOperationalJobs=async()=>{globalThis.guardEffects.services++};",
-    ],
-    [
       "valo-source-monitor",
       "export const reconcileSourceMonitoring=async()=>{globalThis.guardEffects.services++};",
     ],
