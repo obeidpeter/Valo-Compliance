@@ -389,7 +389,7 @@ test("original source candidate bytes remain bound and unchanged", () => {
     ["checker-source-candidates.ts", "privacy"],
   ] as const) {
     const hash = createHash("sha256")
-      .update(readFileSync(new URL(`../../../../lib/valo-core/src/${file}`, import.meta.url)))
+      .update(readFileSync(new URL(`../../../../../lib/valo-core/src/${file}`, import.meta.url)))
       .digest("hex");
     assert.equal(hash, sourceFamilyAlgorithmHashes[key]);
   }

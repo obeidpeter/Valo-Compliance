@@ -35,7 +35,7 @@ import { scheduleSourceChecks, claimSourceCheck, completeSourceCheck } from "../
 import { readSourceText } from "./source-storage";
 import { readEditorialRun } from "./run-storage";
 import { assertBlindReviewInputs } from "./operational-review-contract";
-import { releasedRegistry } from "../lib/valo-assessments";
+import { releasedRegistry } from "../modules/rules";
 import { assertLifecycleRunDatabase } from "./editorial-lifecycle-sandbox";
 import type { LifecycleResult } from "./editorial-lifecycle-dispatch";
 import { workspaceActorFromRecord } from "../platform/workspace-context";

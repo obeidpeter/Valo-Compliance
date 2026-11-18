@@ -517,7 +517,7 @@ const groups = [
       "NFR-009",
     ],
     paths: [
-      "artifacts/api-server/src/lib/valo-assessments.ts",
+      "artifacts/api-server/src/modules/rules/valo-assessments.ts",
       "artifacts/api-server/src/lib/valo-tasks.ts",
       "artifacts/api-server/src/lib/valo-reminder-worker.ts",
       "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
@@ -743,7 +743,7 @@ export function partialWorkflowEvidence(id: string) {
       ],
       paths: [
         "lib/valo-core/src/checker-rich.ts",
-        "artifacts/api-server/src/lib/valo-checker-rich.test.ts",
+        "artifacts/api-server/src/modules/rules/valo-checker-rich.test.ts",
         "artifacts/api-server/src/lib/valo-privacy-erasure.ts",
         "artifacts/api-server/src/lib/valo-erasure-hardening.integration.test.ts",
         "lib/db/drizzle/0022_privacy_erasure_hardening.sql",

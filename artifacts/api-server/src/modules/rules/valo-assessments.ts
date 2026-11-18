@@ -29,9 +29,9 @@ import {
   type CheckerFacts,
 } from "@workspace/valo-core";
 import { z } from "zod";
-import { ValoProblem, authorizeWorkspaceWrite, type WorkspaceActor } from "./valo-store";
+import { ValoProblem, authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
 
-import { lockSourceState, sourceTargetAllowed } from "./valo-source-state";
+import { lockSourceState, sourceTargetAllowed } from "../../lib/valo-source-state";
 export type WorkspaceTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /** Repository methods recheck membership, including worker and direct-service callers. */
 export async function workspaceTransaction<T>(

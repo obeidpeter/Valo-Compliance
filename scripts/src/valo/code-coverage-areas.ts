@@ -104,12 +104,13 @@ export const COVERAGE_AREAS = {
       "lib/valo-core/src/checker-rich.ts",
       "lib/valo-core/src/checker-business-name.ts",
       "lib/valo-core/src/checker-source-candidates.ts",
-      api("lib/valo-assessments.ts"),
+      api("modules/rules/valo-assessments.ts"),
     ],
     excluded: {},
-    pattern: /^(lib\/valo-core\/src\/checker[a-z-]*|artifacts\/api-server\/src\/lib\/valo-assessments)\.ts$/,
+    pattern:
+      /^(lib\/valo-core\/src\/checker[a-z-]*|artifacts\/api-server\/src\/modules\/rules\/valo-assessments)\.ts$/,
     tests: [
-      api("lib/valo-checker-rich.test.ts"),
+      api("modules/rules/valo-checker-rich.test.ts"),
       "artifacts/valo/src/lib/rich-checker.test.ts",
       api("routes/valo-checker-http.integration.test.ts"),
       api("editorial/business-name-candidate-evaluation.test.ts"),

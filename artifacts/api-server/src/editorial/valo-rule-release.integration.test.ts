@@ -5,7 +5,7 @@ import { eq, sql } from "drizzle-orm";
 import { db, valoRuleReleases } from "@workspace/db";
 import { allSourceLeads, assess, checkerFactsSchema, restoredRuleVersion } from "@workspace/valo-core";
 import { syntheticRuleRelease } from "../test-support/synthetic-rule-release";
-import { currentAssessmentDate, releasedRegistry } from "../lib/valo-assessments";
+import { currentAssessmentDate, releasedRegistry } from "../modules/rules/valo-assessments";
 import { applyStoredRuleRelease, planStoredRuleRelease, type RuleReleaseRequest } from "./valo-rule-release";
 import { registerSourceWatch } from "../lib/valo-source-monitor";
 

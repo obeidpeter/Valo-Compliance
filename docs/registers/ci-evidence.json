@@ -221,7 +221,7 @@
     {
       "requirement": "EDP-011",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-checker-rich.test.ts",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-rich.test.ts",
       "test": "source-family implementation, publication, period and freshness gates fail closed",
       "proves": "The checker leaves out a rule that is withdrawn or whose review has expired."
     },
@@ -389,7 +389,7 @@
     {
       "requirement": "CMP-009",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-checker-explanations.test.ts",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
       "test": "each checker result says why it may matter, what to do next and what is missing, with its source",
       "proves": "A likely result carries its rule's reason, next step and source passage; one that needs more information names the missing fact and says to answer it or ask the named authority; a negative one says it is not a legal exemption; the result says it is not legal certification; and the result page shows every checker fact in words, not by its internal name."
     },
@@ -410,7 +410,7 @@
     {
       "requirement": "CMP-005",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-checker-explanations.test.ts",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
       "test": "the same profile under two rule versions is reproducible and the comparison explains what changed",
       "proves": "The same answers under each of two versions of a rule give the same result every time; comparing them names the rule's old and new version and result, a changed answer the rule used is named, an unchanged result is not reported, and rules that appear or disappear are."
     },

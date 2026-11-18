@@ -20,7 +20,7 @@ import {
   releasedRegistry,
   currentSourceTaskRecommendation,
   type WorkspaceTx,
-} from "./valo-assessments";
+} from "../modules/rules";
 import { reminderEmailConfiguration, automaticReminderDeliveryReady } from "./valo-reminder-resend";
 
 const emailBlocker =

@@ -17,7 +17,7 @@ import {
   type CustomerPreview,
 } from "./valo-customer-ai-domain";
 import { organizeCustomerDraft } from "./valo-customer-ai-model";
-import { workspaceTransaction, workspaceEvent, type WorkspaceTx } from "./valo-assessments";
+import { workspaceTransaction, workspaceEvent, type WorkspaceTx } from "../modules/rules";
 import { createDocumentInTransaction, getDocument, ValoProblem, type WorkspaceActor } from "./valo-store";
 import { documentInput } from "./valo-validation";
 import { hasApprovedInferenceContext } from "../modules/ai";

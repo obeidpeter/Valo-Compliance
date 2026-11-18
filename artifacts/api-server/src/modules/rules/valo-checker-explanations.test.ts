@@ -98,7 +98,7 @@ test("each checker result says why it may matter, what to do next and what is mi
     assert.doesNotMatch(text, /\b[a-z]+[A-Z]\w*\b|\b[a-z]+_[a-z_]+\b/, text);
   }
   // The result page shows every fact the engine can report missing as words, not as its name.
-  const web = (await import(new URL("../../../valo/src/lib/checker.ts", import.meta.url).href)) as {
+  const web = (await import(new URL("../../../../valo/src/lib/checker.ts", import.meta.url).href)) as {
     factLabel: (name: string) => string;
   };
   for (const name of factNames) {

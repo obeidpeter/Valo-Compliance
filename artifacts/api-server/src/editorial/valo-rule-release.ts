@@ -10,7 +10,7 @@ import {
 } from "@workspace/valo-core";
 import { bindVerifiedSources, verifyReleasedSources } from "./source-release-bindings";
 import { readSourceText } from "./source-storage";
-import { currentAssessmentDate, releasedRegistry, ruleReleaseEligible } from "../lib/valo-assessments";
+import { currentAssessmentDate, releasedRegistry, ruleReleaseEligible } from "../modules/rules";
 import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
 import { lockSourceState } from "../lib/valo-source-state";
 
