@@ -71,9 +71,11 @@ jobs:
     # PostgreSQL 16 recovery tooling is part of the supported CI target.
     # ubuntu-latest advanced to 26.04, which no longer supplies that package.
     runs-on: ubuntu-24.04
-    # The job takes about six minutes, but the Playwright browser download alone has taken from
-    # 16 seconds to 6 minutes, which pushed the job past a 10-minute limit. 20 still stops a hang.
-    timeout-minutes: 20
+    # The job's own steps take about six minutes, but its downloads have taken up to 14: the
+    # Playwright browser from 16 seconds to 9 minutes, and the two apt installs up to 5 minutes
+    # together. On 18 November 2026 a run took 17 minutes 38 seconds of a 20-minute limit.
+    # 30 still stops a hang.
+    timeout-minutes: 30
     env:
       # How each test ends, for the requirement evidence register (decision 0010). NODE_OPTIONS
       # is set for the whole job here because the runner refuses it through $GITHUB_ENV.
@@ -466,7 +468,8 @@ jobs:
   web-performance:
     name: Public pages on an emulated phone (NFR-002 lab check)
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # The same Playwright download as the foundation job; a run has taken 13 minutes.
+    timeout-minutes: 30
     env:
       # How each test ends, for the requirement evidence register (decision 0010).
       VALO_TEST_RESULTS_DIR: ${{ github.workspace }}/generated-artifacts/test-results/web-performance
