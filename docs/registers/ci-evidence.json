@@ -504,6 +504,48 @@
       "file": "scripts/src/valo/synthetic-data.test.ts",
       "test": "the operator journeys that sign customers in refuse to run without a Clerk test key",
       "proves": "Each operator journey that signs customers in through Clerk throws unless it runs in development, outside a deployment, with a Clerk test key."
+    },
+    {
+      "requirement": "NFR-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-load.integration.test.ts",
+      "test": "ordinary requests and catalogue search keep p95 under one second at 20 requests per second",
+      "proves": "With the real app on PostgreSQL, 20 requests a second for 60 seconds, sent on a fixed schedule (reads and saves of a business's own records, and catalogue searches signed in and anonymous), keep each kind's p95 at or under one second with under 1% server errors and no other refusal; the requirement's 30-minute run is the same test with VALO_LOAD_SECONDS=1800."
+    },
+    {
+      "requirement": "NFR-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-export-timing.integration.test.ts",
+      "test": "five parallel DOCX and PDF exports finish within NFR-004's p95, queue time included",
+      "proves": "Twenty DOCX and twenty PDF exports of a document of two to ten pages, requested five at a time and rendered by the real export worker from its queue, finish within 10 and 30 seconds at p95, timed from request to completion from the durable job events, so the time in the queue counts."
+    },
+    {
+      "requirement": "NFR-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-export-recovery.integration.test.ts",
+      "test": "real process death, PostgreSQL lease fencing and export recovery",
+      "proves": "When a real worker process is killed at each stage of an export, lease recovery completes or fails the job visibly, only one recovery wins, live leases are not taken over, retry cycles stay bounded and a restarted dispatcher detects an abandoned final attempt."
+    },
+    {
+      "requirement": "NFR-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "PDFs share one browser, render in isolated contexts and never exceed five at once",
+      "proves": "Seven PDFs rendered at once share one browser, each holds only its own content, and no more than five render at the same time."
+    },
+    {
+      "requirement": "NFR-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
+      "test": "actual DOCX and Chromium PDF preserve the complete exact candidate and required notices",
+      "proves": "Read back from each file, a template's DOCX and PDF exports both hold its complete text and required notices, so the two formats are compared with the source and each other."
+    },
+    {
+      "requirement": "NFR-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
+      "test": "both formats must be readable; a claimed pass cannot replace re-execution",
+      "proves": "An export inspection fails when either file cannot be read, and a recorded pass does not replace reading the files again."
     }
   ]
 }
