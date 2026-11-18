@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { pool } from "@workspace/db";
-import { exportQueue } from "./valo-export-queue";
+import { exportQueue } from "../modules/exports/valo-export-queue";
 import {
   OPERATIONAL_DOMAINS,
   OPERATIONS_CRON,

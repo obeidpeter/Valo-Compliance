@@ -52,11 +52,11 @@ import {
   WORKSPACE_EXPORT_QUEUE,
 } from "./valo-workspace-export-jobs";
 import { fixtureWorkspaceStorage } from "./test-support/workspace-export-storage";
-import { exportQueue } from "./valo-export-queue";
+import { exportQueue } from "../modules/exports/valo-export-queue";
 import { makeWorkspaceExportRouter } from "./valo-workspace-export-http";
 import { syntheticDocument } from "./valo-test-fixtures";
-import { requestExport } from "./valo-exports";
-import { reconcileExportOrphans } from "./valo-export-recovery";
+import { requestExport } from "../modules/exports/valo-exports";
+import { reconcileExportOrphans } from "../modules/exports/valo-export-recovery";
 import { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } from "./valo-privacy";
 import { processPrivacyErasure, closePrivacyErasureLocks } from "./valo-privacy-erasure";
 const reason = "Controlled synthetic canonical export lifecycle proof; no customer/provider data.";

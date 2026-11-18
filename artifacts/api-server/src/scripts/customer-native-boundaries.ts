@@ -21,7 +21,7 @@ import {
 } from "../lib/valo-customer-case-binding";
 import { getDocument, saveDocument } from "../lib/valo-store";
 import { documentInput } from "../lib/valo-validation";
-import { downloadExport } from "../lib/valo-exports";
+import { downloadExport } from "../modules/exports";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
 async function main() {
   assert.equal(process.env.NODE_ENV, "development");

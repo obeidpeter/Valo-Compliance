@@ -20,26 +20,26 @@ import {
   valoStaffAssignments,
   valoStaffAccessAudit,
 } from "@workspace/db";
-import { resolveWorkspace, createDocument } from "./valo-store";
-import { syntheticDocument } from "./valo-test-fixtures";
+import { resolveWorkspace, createDocument } from "../../lib/valo-store";
+import { syntheticDocument } from "../../lib/valo-test-fixtures";
 import {
   createPrivacyCase,
   confirmPrivacyCase,
   simpleStaffPrivacyAction,
   readPrivacyCase,
-} from "./valo-privacy";
-import { privateCleanupAuthority } from "./valo-private-cleanup-authority";
+} from "../../lib/valo-privacy";
+import { privateCleanupAuthority } from "../../lib/valo-private-cleanup-authority";
 import {
   exportRetentionAt,
   exportIsExpired,
   expireGeneratedExports,
   retireExpiredExport,
 } from "./valo-export-retention";
-import { readinessQueries } from "./valo-operations";
+import { readinessQueries } from "../../lib/valo-operations";
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const files = new Map<string, Buffer>();
 let onRead: (() => Promise<void>) | undefined;
-mock.module(new URL("./valo-private-storage.ts", import.meta.url).href, {
+mock.module(new URL("../../lib/valo-private-storage.ts", import.meta.url).href, {
   namedExports: {
     fileChecksum: digest,
     anonymousPrivateFileStatus: async () => 404,

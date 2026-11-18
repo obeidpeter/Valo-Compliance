@@ -5,9 +5,9 @@ import {
   assertApplicationRuntime,
   assertRuntimeObjectScope,
   runtimeEnvironment,
-} from "./valo-runtime-activation";
-import { privateCleanupAuthority } from "./valo-private-cleanup-authority";
-import { environment } from "../platform/settings";
+} from "../../lib/valo-runtime-activation";
+import { privateCleanupAuthority } from "../../lib/valo-private-cleanup-authority";
+import { environment } from "../../platform/settings";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Job = typeof valoExportJobs.$inferSelect;

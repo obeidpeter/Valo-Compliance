@@ -354,7 +354,7 @@ jobs:
       - name: Prove cleanup retry fairness, privacy holds and outage recovery
         run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-workspace-cleanup.integration.test.ts
       - name: Prove export retention, hold safety, regeneration and final-byte expiry
-        run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --experimental-test-module-mocks --import tsx --test src/lib/valo-export-retention.integration.test.ts
+        run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --experimental-test-module-mocks --import tsx --test src/modules/exports/valo-export-retention.integration.test.ts
       - name: Prove read-only legacy retention inventory, privacy exclusions and proposal drift
         run: NODE_ENV=development pnpm --filter @workspace/api-server exec node --import tsx --test src/lib/valo-export-retention-inventory.integration.test.ts
       - name: Prove dispute immutability and authenticated privacy-copy redaction coexist

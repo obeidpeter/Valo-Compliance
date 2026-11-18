@@ -122,10 +122,10 @@ test("actual export entries and worker startup reject before database, queue or 
     },
   };
   const entry = resolve("src/workers/export-worker.ts");
-  const source = `import{requestExport,getExport,listExports,retryExport,downloadExport,executeExport}from${JSON.stringify(resolve("src/lib/valo-exports.ts"))};
-    import{recoverAbandonedExports,reconcileExportOrphans}from${JSON.stringify(resolve("src/lib/valo-export-recovery.ts"))};
+  const source = `import{requestExport,getExport,listExports,retryExport,downloadExport,executeExport}from${JSON.stringify(resolve("src/modules/exports/valo-exports.ts"))};
+    import{recoverAbandonedExports,reconcileExportOrphans}from${JSON.stringify(resolve("src/modules/exports/valo-export-recovery.ts"))};
     import{createWorkspaceExport,listWorkspaceExports,getWorkspaceExport,cancelWorkspaceExport,retryWorkspaceExport,executeWorkspaceExport,recoverWorkspaceExports,cleanupWorkspaceExports,pendingWorkspaceExports,withPreparedWorkspaceExport}from${JSON.stringify(resolve("src/lib/valo-workspace-export-jobs.ts"))};
-    import{exportQueue}from${JSON.stringify(resolve("src/lib/valo-export-queue.ts"))};
+    import{exportQueue}from${JSON.stringify(resolve("src/modules/exports/valo-export-queue.ts"))};
     const actor={workspaceId:"not-accessed",identityId:"not-accessed"};
     const ops=[()=>requestExport(actor,"id","key",{}),()=>getExport(actor,"id"),()=>listExports(actor,"id"),
       ()=>retryExport(actor,"id"),()=>downloadExport(actor,"id"),()=>executeExport("id","ws","queue"),

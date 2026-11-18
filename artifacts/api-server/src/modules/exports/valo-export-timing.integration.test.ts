@@ -11,9 +11,9 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
 import { and, eq, inArray } from "drizzle-orm";
 import { db, pool, valoEvents } from "@workspace/db";
-import { resolveWorkspace, createDocument } from "./valo-store";
+import { resolveWorkspace, createDocument } from "../../lib/valo-store";
 import { requestExport, getExport, downloadExport } from "./valo-exports";
-import { syntheticDocument } from "./valo-test-fixtures";
+import { syntheticDocument } from "../../lib/valo-test-fixtures";
 
 /**
  * NFR-004: "Typical ≤10-page DOCX p95 ≤10s; PDF ≤30s under five parallel jobs", accepted with "job
@@ -82,7 +82,7 @@ test(
         "tsx",
         "--experimental-test-module-mocks",
         "--import",
-        new URL("../test-support/private-file-process.mts", import.meta.url).href,
+        new URL("../../test-support/private-file-process.mts", import.meta.url).href,
         "src/workers/export-worker.ts",
       ],
       {

@@ -47,7 +47,7 @@ import { erasureProofMode, erasureProofStorage } from "../test-support/erasure-p
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
 import { signErasureSeal, type ErasureSeal } from "./valo-erasure-seal";
 import { privacySigner } from "./valo-privacy-keys";
-import { executeExport } from "./valo-exports";
+import { executeExport } from "../modules/exports/valo-exports";
 
 test(
   "resumable physical development erasure with retained exclusions and replay",

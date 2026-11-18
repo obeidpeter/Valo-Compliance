@@ -10,7 +10,7 @@ import {
   DownloadDocumentExportParams,
 } from "@workspace/api-zod";
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
-import { requestExport, listExports, retryExport, downloadExport } from "../lib/valo-exports";
+import { requestExport, listExports, retryExport, downloadExport } from "../modules/exports";
 import { consumeQuota, quotaSubjectHash } from "../lib/valo-quota";
 import { setting } from "../platform/settings";
 const router = Router();

@@ -22,7 +22,7 @@ const pgTool = (name) =>
   join(process.env.VALO_RECOVERY_PG_BIN, name + (process.platform === "win32" ? ".exe" : ""));
 if (process.argv[2] === "--probe") {
   const fixtures = JSON.parse(await readFile(process.argv[3], "utf8"));
-  const { listExports, downloadExport } = await import(app("lib/valo-exports.ts"));
+  const { listExports, downloadExport } = await import(app("modules/exports/valo-exports.ts"));
   const { getDocument } = await import(app("lib/valo-store.ts"));
   const { pool } = await import(pathToFileURL(join(root, "lib/db/src/index.ts")).href);
   try {
