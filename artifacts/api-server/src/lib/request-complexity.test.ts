@@ -70,7 +70,8 @@ test(
   },
   async (t) => {
     const child = fork(fileURLToPath(new URL("../scripts/request-budget-child.ts", import.meta.url)), [], {
-      execArgv: ["--import", "tsx"],
+      // The child stands in for the identity provider (request-budget-child.ts).
+      execArgv: ["--import", "tsx", "--experimental-test-module-mocks"],
       env: { ...process.env, NODE_ENV: "development" },
       stdio: ["ignore", "ignore", "ignore", "ipc"],
       detached: true,
