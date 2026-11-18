@@ -11,6 +11,7 @@
     "test:valo-checker-http-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-checker-http.integration.test.ts",
     "test:valo-export-timing-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node src/test-support/run-private-file-tests.mjs src/modules/exports/valo-export-timing.integration.test.ts",
     "test:valo-page-performance": "tsx --test src/scripts/public-page-performance.test.ts",
+    "test:valo-primary-journeys-browser": "tsx --test src/scripts/primary-journeys-browser.test.ts",
     "test:valo-load-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-load.integration.test.ts",
     "test:valo-tenant-substitution": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-tenant-substitution.integration.test.ts",
     "test:valo-template-entitlement": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/modules/catalogue/valo-template-entitlement.integration.test.ts",
