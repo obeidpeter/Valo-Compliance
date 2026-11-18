@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { readiness } from "@workspace/valo-records";
+import { CI_EVIDENCE_REGISTER, readCitations } from "./ci-evidence";
 
 /** Generates docs/status.md from the requirement registers so status is never hand-written. */
 const root = new URL("../../../", import.meta.url);
@@ -30,6 +31,16 @@ export function renderStatus(): string {
   const unverified = register.requirements
     .filter((r) => r.implementation_status === "unverified")
     .map((r) => r.id);
+  const citations = readCitations();
+  const cited = new Map<string, { tests: Set<string>; jobs: Set<string> }>();
+  for (const c of citations) {
+    const entry = cited.get(c.requirement) ?? { tests: new Set<string>(), jobs: new Set<string>() };
+    entry.tests.add(`${c.file}\0${c.test}`);
+    entry.jobs.add(c.job);
+    cited.set(c.requirement, entry);
+  }
+  const citedTests = new Set(citations.map((c) => `${c.file}\0${c.test}`)).size;
+  const uncovered = unverified.filter((id) => !cited.has(id));
   const lines = [
     "# Valo status",
     "",
@@ -62,6 +73,20 @@ export function renderStatus(): string {
       .map(([status, count]) => `| ${status} | ${count} |`),
     "",
     `No recorded implementation evidence: ${unverified.join(", ") || "none"}.`,
+    "",
+    "## Tests cited as evidence",
+    "",
+    `\`${CI_EVIDENCE_REGISTER}\` holds ${citations.length} citations of ${citedTests} tests for ${cited.size} requirements (decision 0010).`,
+    "A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.",
+    "A citation is partial evidence: it never accepts a requirement.",
+    "",
+    "| Requirement | Cited tests | CI jobs |",
+    "| --- | ---: | --- |",
+    ...[...cited.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([id, entry]) => `| ${id} | ${entry.tests.size} | ${[...entry.jobs].sort().join(", ")} |`),
+    "",
+    `Neither recorded implementation evidence nor a cited test: ${uncovered.join(", ") || "none"}.`,
     "",
     "## Release gates",
     "",
