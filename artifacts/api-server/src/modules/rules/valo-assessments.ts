@@ -31,7 +31,7 @@ import {
 import { z } from "zod";
 import { ValoProblem, authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
 
-import { lockSourceState, sourceTargetAllowed } from "../../lib/valo-source-state";
+import { lockSourceState, sourceTargetAllowed } from "../sources";
 import { singleRow } from "../../platform/rows";
 export type WorkspaceTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /** Repository methods recheck membership, including worker and direct-service callers. */

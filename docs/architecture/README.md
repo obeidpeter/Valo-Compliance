@@ -169,8 +169,10 @@ The editorial code is three modules, each depending only on the ones after it:
 `modules/editorial`, then `modules/publication`, then `modules/sources`.
 
 - `modules/sources` fetches, extracts and stores official source snapshots, keeps their identities
-  and registers, and holds the source bindings a rule release uses and the business-name source
-  evidence.
+  and registers, and holds the source bindings a rule release uses, the business-name source
+  evidence, and the current-source state with its lock and the source corrections that change it.
+  The staff source controls and the daily source check stay in `src/lib`: they import the database
+  client and the staff code at the top, and every reader of this module's index would load them.
 - `modules/publication` holds the operational publication policy and its restrictions, release
   artifacts, the intake and content of original operational templates, their mechanical, export,
   rights and final checks, and the publisher. The catalogue reads published content through it,
@@ -180,8 +182,7 @@ The editorial code is three modules, each depending only on the ones after it:
   and the rule release command.
 
 Importing a module's index loads every file it re-exports, so these modules load the database
-client only inside the functions that query it, as `modules/ai` does (the source state and source
-correction files in `src/lib` that the publisher uses do the same). Code and tests that need one
+client only inside the functions that query it, as `modules/ai` does. Code and tests that need one
 editorial function therefore load no database client, and tests that stand in for a dependency
 mock the module's index, the boundary the code imports it through.
 

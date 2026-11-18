@@ -1,14 +1,16 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { referenceFor } from "../modules/sources";
-import { lockSourceState, sourceTime, type SourceTx } from "./valo-source-state";
 import {
+  referenceFor,
+  lockSourceState,
+  sourceTime,
+  type SourceTx,
   impactSourceDependants,
   processSourceDependencyJob,
   processSourceImpact,
   queueExpiredSourceReviews,
-} from "./valo-source-corrections";
+} from "../modules/sources";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
 export async function registerSourceWatch(tx: SourceTx, id: string) {
   const source = referenceFor(id); // No request URL or newly discovered domain is fetched.

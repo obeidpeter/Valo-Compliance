@@ -24,7 +24,7 @@ import {
   type ReleasedLibraryItem,
 } from "./valo-catalogue";
 import { setting } from "../../platform/settings";
-import { lockSourceState, sourceTargetAllowed } from "../../lib/valo-source-state";
+import { lockSourceState, sourceTargetAllowed } from "../sources";
 export function releaseVisible(
   row: typeof valoContentVersions.$inferSelect,
   policyHash: string,

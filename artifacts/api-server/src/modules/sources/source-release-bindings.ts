@@ -7,7 +7,7 @@ import {
   type SourceTarget,
   sourceTargetAllowed,
   sourceTime,
-} from "../../lib/valo-source-state";
+} from "./valo-source-state";
 
 /** A bundle source's retained capture, checked against its stored text. */
 export type VerifiedSourceCapture = {
