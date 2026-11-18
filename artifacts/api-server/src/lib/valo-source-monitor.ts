@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { referenceFor } from "../editorial/source-fetch";
+import { referenceFor } from "../modules/sources";
 import { lockSourceState, sourceTime, type SourceTx } from "./valo-source-state";
 import {
   impactSourceDependants,
@@ -127,7 +127,7 @@ export async function reconcileSourceMonitoring() {
     let id: string | null = null,
       timer: ReturnType<typeof setTimeout> | undefined;
     const capture = (async () =>
-      (await (await import("../editorial/source-capture")).captureReference(claim.source_id)).id)();
+      (await (await import("../modules/sources")).captureReference(claim.source_id)).id)();
     captureInFlight = capture;
     // The race below handles the capture's outcome; this chain only clears the in-flight marker.
     void capture

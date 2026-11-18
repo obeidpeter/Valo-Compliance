@@ -8,8 +8,8 @@ import {
   originalSections,
   industrySections,
   operationalDocument,
-} from "../editorial/original-content-adapter";
-import { publicationWorkspaceRoot } from "../editorial/operational-policy";
+  publicationWorkspaceRoot,
+} from "../modules/publication";
 import { renderDocument } from "../lib/valo-render";
 const exec = promisify(execFile);
 async function main() {

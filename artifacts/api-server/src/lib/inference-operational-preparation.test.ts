@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { candidateDigest, sha256, type PublicationBundle } from "@workspace/valo-core";
-import type { ArtifactRef } from "../editorial/publication-artifacts";
+import type { ArtifactRef } from "../modules/publication/publication-artifacts";
 import {
   prepareFiniteAllocationPackage,
   allocationPackageId,
@@ -94,7 +94,7 @@ test("actual preparation and saved-readiness callers bind another form without a
   t.mock.module("@workspace/db", {
     namedExports: { db: database, valoContentVersions: contentTable, valoPublicationPolicies: policyTable },
   });
-  t.mock.module(new URL("../editorial/publication-artifacts.ts", import.meta.url).href, {
+  t.mock.module(new URL("../modules/publication/publication-artifacts.ts", import.meta.url).href, {
     namedExports: { putPublicationArtifact: put, getPublicationArtifact: get },
   });
   t.mock.module(new URL("./valo-render.ts", import.meta.url).href, {
@@ -103,10 +103,10 @@ test("actual preparation and saved-readiness callers bind another form without a
         Buffer.from(JSON.stringify({ format, body: JSON.stringify(document) })),
     },
   });
-  t.mock.module(new URL("../editorial/operational-export-inspection.ts", import.meta.url).href, {
+  t.mock.module(new URL("../modules/publication/operational-export-inspection.ts", import.meta.url).href, {
     namedExports: { inspectOperationalExports: inspect },
   });
-  t.mock.module(new URL("../editorial/operational-authoring.ts", import.meta.url).href, {
+  t.mock.module(new URL("../modules/editorial/operational-authoring.ts", import.meta.url).href, {
     namedExports: {
       recordOriginalAuthoring: async () => {
         authoringCalls++;
@@ -114,7 +114,7 @@ test("actual preparation and saved-readiness callers bind another form without a
       },
     },
   });
-  t.mock.module(new URL("../editorial/operational-review.ts", import.meta.url).href, {
+  t.mock.module(new URL("../modules/editorial/operational-review.ts", import.meta.url).href, {
     namedExports: {
       reviewOperationalCandidate: async () => {
         reviewCalls++;
@@ -122,7 +122,7 @@ test("actual preparation and saved-readiness callers bind another form without a
       },
     },
   });
-  t.mock.module(new URL("../editorial/publication-publisher.ts", import.meta.url).href, {
+  t.mock.module(new URL("../modules/publication/publication-publisher.ts", import.meta.url).href, {
     namedExports: {
       publishOperationalVersion: async () => {
         publishCalls++;
@@ -134,7 +134,7 @@ test("actual preparation and saved-readiness callers bind another form without a
       },
     },
   });
-  const { prepareOperationalCandidateRelease } = await import("../editorial/operational-preparation");
+  const { prepareOperationalCandidateRelease } = await import("../modules/editorial/operational-preparation");
   const { readOperationalInferenceReadiness } = await import("./inference-operational-ready");
   const now = new Date(),
     quote = "We hereby assign to you all our right, title, and interest, if any, in and to Output.";

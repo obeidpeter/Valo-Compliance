@@ -5,10 +5,12 @@ import { db, pool, valoContentVersions } from "@workspace/db";
 import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
 import { operationalInferenceTemplateIds } from "../lib/inference-operational-coverage";
 import { readOperationalInferenceReadiness } from "../lib/inference-operational-ready";
-import { prepareOperationalCandidateRelease } from "../editorial/operational-preparation";
-import { getPublicationArtifact } from "../editorial/publication-artifacts";
-import { publicationWorkspaceRoot } from "../editorial/operational-policy";
-import type { ReleaseAttestations } from "../editorial/publication-publisher";
+import { prepareOperationalCandidateRelease } from "../modules/editorial";
+import {
+  getPublicationArtifact,
+  publicationWorkspaceRoot,
+  type ReleaseAttestations,
+} from "../modules/publication";
 
 /** Original supplied content only; no authoring, model review, publication,
  * inference approval or quota operation. Each item runs its real gates. */

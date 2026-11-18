@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { db, pool } from "@workspace/db";
 import { finalSourceContext } from "@workspace/valo-core";
-import { captureReference } from "../editorial/source-capture";
+import { captureReference } from "../modules/sources";
 import { logger } from "../lib/logger";
 void db;
 if (

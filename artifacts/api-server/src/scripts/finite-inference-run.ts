@@ -71,9 +71,9 @@ async function main() {
     import("../lib/inference-operational-ready"),
     import("../lib/inference-work-bindings"),
     import("../modules/ai"),
-    import("../editorial/operational-review"),
-    import("../editorial/publication-artifacts"),
-    import("../editorial/operational-policy"),
+    import("../modules/editorial"),
+    import("../modules/publication"),
+    import("../modules/publication"),
   ]);
   // This command is the composition root: the dispatcher checks approved work with these.
   provideFiniteWorkBindings(assertFiniteWorkBindings);
@@ -148,7 +148,7 @@ async function main() {
     if (mode === "--prepare-template-candidate") {
       if (!batchId || !supportsOperationalInferenceTemplate(batchId) || extra.length !== 1 || !extra[0])
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
-      const { prepareOperationalCandidateRelease } = await import("../editorial/operational-preparation");
+      const { prepareOperationalCandidateRelease } = await import("../modules/editorial");
       const prepared = await prepareOperationalCandidateRelease(batchId, extra[0]);
       console.log(
         JSON.stringify({

@@ -1,8 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { pool } from "@workspace/db";
-import { captureReference } from "../editorial/source-capture";
-import { readSourceText } from "../editorial/source-storage";
+import { captureReference, readSourceText } from "../modules/sources";
 
 if (
   process.env.NODE_ENV !== "development" ||

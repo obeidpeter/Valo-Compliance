@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
-import { contentPreparationReadiness } from "../editorial/content-intake-preparation";
-import { publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { contentPreparationReadiness } from "../modules/editorial";
+import { publicationWorkspaceRoot } from "../modules/publication";
 
 const report = await contentPreparationReadiness();
 const path = resolve(

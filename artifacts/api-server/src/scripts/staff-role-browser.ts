@@ -6,7 +6,7 @@ import { mkdir, writeFile, readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
-import { developmentPublicationOnly, publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { developmentPublicationOnly, publicationWorkspaceRoot } from "../modules/publication";
 developmentPublicationOnly();
 if (process.env.VALO_RUN_STAFF_ROLE_BROWSER !== "synthetic-development-only" || process.env.CI !== "true")
   throw Error("CONTROLLED_CI_BROWSER_REQUIRED");

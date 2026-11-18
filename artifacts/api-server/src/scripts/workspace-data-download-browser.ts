@@ -7,7 +7,7 @@ import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
-import { developmentPublicationOnly, publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { developmentPublicationOnly, publicationWorkspaceRoot } from "../modules/publication";
 import type { WorkspaceExportJob as WorkspaceExportModel } from "@workspace/api-zod";
 // JSON transport dates are ISO strings; the generated server model uses Date.
 type WorkspaceDataExportJob = Omit<WorkspaceExportModel, "createdAt" | "expiresAt"> & {

@@ -16,7 +16,7 @@ import {
 import { customerCompletionRequest } from "./valo-customer-ai-model";
 import { additionalInferenceAllocation, inferenceProposal, requestDigest } from "../modules/ai";
 import type { FiniteManifest, FiniteWork } from "../modules/ai";
-import type { ArtifactRef } from "../editorial/publication-artifacts";
+import type { ArtifactRef } from "../modules/publication";
 
 const root = resolve(import.meta.dirname, "../../../.."),
   corpusPath = "docs/evaluation-candidates/customer-ai.json";

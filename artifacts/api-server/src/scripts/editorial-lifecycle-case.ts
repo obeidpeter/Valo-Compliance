@@ -1,5 +1,5 @@
 import { pool } from "@workspace/db";
-import { runEditorialLifecycle } from "../editorial/editorial-lifecycle-runtime";
+import { runEditorialLifecycle } from "../modules/editorial";
 try {
   process.stdout.write(
     JSON.stringify(await runEditorialLifecycle(process.argv[2]!, process.argv[3]!)) + "\n",

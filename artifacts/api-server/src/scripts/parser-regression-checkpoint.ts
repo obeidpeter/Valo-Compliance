@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { publicationWorkspaceRoot } from "../modules/publication";
 const exec = promisify(execFile);
 const hash = (value: string | Buffer) => createHash("sha256").update(value).digest("hex");
 async function main() {

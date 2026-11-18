@@ -19,7 +19,7 @@ import {
   executePreparedCustomerCase,
 } from "../lib/inference-customer-runtime";
 import type { FiniteManifest } from "../modules/ai";
-import type { ArtifactRef } from "../editorial/publication-artifacts";
+import type { ArtifactRef } from "../modules/publication";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
 
 /** Private development preparation/execution only. No command writes owner
@@ -46,7 +46,7 @@ async function main() {
     const plan = await prepareCustomerEvaluationPlan(null, new Date(), followupFile.values);
     const [{ runCustomerFaultControls }, { putPublicationArtifact }] = await Promise.all([
       import("../lib/inference-customer-controls"),
-      import("../editorial/publication-artifacts"),
+      import("../modules/publication"),
     ]);
     const report = await runCustomerFaultControls(plan),
       artifact = await putPublicationArtifact(Buffer.from(JSON.stringify(report)), "json");
@@ -72,7 +72,7 @@ async function main() {
     { InferenceBudgetStore },
   ] = await Promise.all([
     import("@workspace/db"),
-    import("../editorial/publication-artifacts"),
+    import("../modules/publication"),
     import("../lib/inference-work-bindings"),
     import("../modules/ai"),
   ]);

@@ -8,7 +8,7 @@ import {
   fileChecksum,
   anonymousPrivateFileStatus,
 } from "../lib/valo-private-storage";
-import { publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { publicationWorkspaceRoot } from "../modules/publication";
 async function main() {
   if (
     process.env.NODE_ENV !== "development" ||

@@ -11,7 +11,7 @@ import { syntheticDocument } from "../lib/valo-test-fixtures";
 import { resolveWorkspace, createDocument } from "../lib/valo-store";
 import { requestExport, getExport, downloadExport } from "../lib/valo-exports";
 import { deletePrivateFile } from "../lib/valo-private-storage";
-import { developmentPublicationOnly, publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { developmentPublicationOnly, publicationWorkspaceRoot } from "../modules/publication";
 const hash = (text: string | Buffer) => createHash("sha256").update(text).digest("hex");
 const dir = resolve(publicationWorkspaceRoot(), "generated-artifacts/valo-zod-upgrade");
 const file = resolve(dir, "before.json");

@@ -1,16 +1,18 @@
 import { eq } from "drizzle-orm";
 import { db, valoContentVersions } from "@workspace/db";
 import { candidateDigest, digest, publicationSchema } from "@workspace/valo-core";
-import { getPublicationArtifact } from "../editorial/publication-artifacts";
-import { readOperationalIntake } from "../editorial/operational-intake";
-import { templateCandidate } from "../editorial/operational-content";
+import {
+  getPublicationArtifact,
+  readOperationalIntake,
+  templateCandidate,
+  loadChatGPTPermission,
+  operationalPolicy,
+  operationalMechanicalChecks,
+  inspectOperationalExports,
+  type OperationalServerEvidence,
+  type ReleaseAttestations,
+} from "../modules/publication";
 import { supportsOperationalInferenceTemplate } from "./inference-operational-coverage";
-import { loadChatGPTPermission } from "../editorial/rights-applicability";
-import { operationalPolicy } from "../editorial/operational-policy";
-import { operationalMechanicalChecks } from "../editorial/operational-mechanical";
-import { inspectOperationalExports } from "../editorial/operational-export-inspection";
-import type { OperationalServerEvidence } from "../editorial/operational-review-contract";
-import type { ReleaseAttestations } from "../editorial/publication-publisher";
 
 /** Reconstruct a supported saved original form and recheck all its retained
  * private evidence. Intake coverage alone never establishes readiness. */

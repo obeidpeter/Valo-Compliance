@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
-import { db } from "@workspace/db";
 import { type SourceTx, type SourceTarget, lockSourceState } from "./valo-source-state";
 import { ValoProblem } from "./valo-problem";
 export type ImpactInput = {
@@ -65,6 +64,7 @@ export async function impactSourceDependants(
   values(${randomUUID()}::uuid,${sourceId},${key},${reason},${newSnapshotId}::uuid,${newSnapshotId && !watch?.failure_code ? String(watch?.last_raw_hash) : null}) on conflict(dedupe_key) do nothing`);
 }
 export async function processSourceDependencyJob() {
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     await lockSourceState(tx, true);
     const job = (
@@ -103,6 +103,7 @@ export async function processSourceDependencyJob() {
  * not made stale by an old version's hold. The read gate covers this edge before
  * this queued fan-out reaches tasks or notices. */
 export async function processDerivedImpact() {
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     await lockSourceState(tx, true);
     const impact = (
@@ -157,6 +158,7 @@ type Impact = {
 /** One transaction handles at most 200 records in one phase. The cursor and
  * effects commit together. A failed/abandoned transaction resumes safely. */
 export async function processSourceImpact() {
+  const { db } = await import("@workspace/db");
   if (await processDerivedImpact()) return true;
   return db.transaction(async (tx) => {
     const impact = (
@@ -222,6 +224,7 @@ export async function processSourceImpact() {
 /** Daily source availability and monthly/quarterly substantive reviews are
  * separate. Neither a successful fetch nor a staff click renews review dates. */
 export async function queueExpiredSourceReviews(now = new Date()) {
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     await lockSourceState(tx, true);
     const stale = await tx.execute(

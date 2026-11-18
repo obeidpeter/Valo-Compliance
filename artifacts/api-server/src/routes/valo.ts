@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { GetSourceEvidenceResponse } from "@workspace/api-zod";
-import { sourceEvidenceRegister } from "../editorial/source-register";
+import { sourceEvidenceRegister } from "../modules/sources";
 import { z } from "zod";
 import {
   ListPublicCatalogueQueryParams,

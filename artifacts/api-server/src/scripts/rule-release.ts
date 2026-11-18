@@ -1,10 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { pool } from "@workspace/db";
-import {
-  applyStoredRuleRelease,
-  planStoredRuleRelease,
-  type RuleReleaseRequest,
-} from "../editorial/valo-rule-release";
+import { applyStoredRuleRelease, planStoredRuleRelease, type RuleReleaseRequest } from "../modules/editorial";
 
 /**
  * Operator command, development only (ADM-004). Plans or applies the release of a rule version from

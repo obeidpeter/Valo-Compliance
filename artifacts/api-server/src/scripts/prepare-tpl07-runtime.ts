@@ -34,11 +34,11 @@ async function main() {
     import("@workspace/db"),
     import("drizzle-orm"),
     import("../lib/inference-operational-ready"),
-    import("../editorial/operational-review"),
+    import("../modules/editorial"),
     import("../modules/ai"),
     import("../lib/inference-work-bindings"),
-    import("../editorial/publication-artifacts"),
-    import("../editorial/operational-policy"),
+    import("../modules/publication"),
+    import("../modules/publication"),
   ]);
   const report: Record<string, unknown> = {
     startedAt: new Date().toISOString(),

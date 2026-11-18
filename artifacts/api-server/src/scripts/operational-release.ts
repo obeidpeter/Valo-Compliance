@@ -2,9 +2,8 @@ import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pool } from "@workspace/db";
 import { versionedEvidencePath } from "../lib/versioned-evidence-path";
-import { prepareInventoryRelease } from "../editorial/operational-preparation";
-import { withdrawOperationalVersion } from "../editorial/publication-publisher";
-import { publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { prepareInventoryRelease } from "../modules/editorial";
+import { withdrawOperationalVersion, publicationWorkspaceRoot } from "../modules/publication";
 async function main() {
   if (process.env.VALO_OPERATIONAL_PUBLICATION !== "synthetic-development-only")
     throw Error("EXPLICIT_DEVELOPMENT_PUBLICATION_FLAG_REQUIRED");

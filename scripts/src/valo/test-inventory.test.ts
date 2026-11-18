@@ -11,7 +11,7 @@ import { repositoryRoot } from "./architecture-check";
  * is listed below with the reason it cannot.
  */
 const NOT_RUN_BY_ANY_SCRIPT: Record<string, string> = {
-  "artifacts/api-server/src/editorial/source-instruments.integration.test.ts":
+  "artifacts/api-server/src/modules/sources/source-instruments.integration.test.ts":
     "retrieves official sources over the network; run manually with VALO_RUN_SOURCE_TESTS=official-development-only",
 };
 

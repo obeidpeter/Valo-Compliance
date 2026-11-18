@@ -2,7 +2,7 @@ import { readFile, writeFile, copyFile, mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { sha256 } from "@workspace/valo-core";
-import { publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { publicationWorkspaceRoot } from "../modules/publication";
 import { reminderEmailConfiguration } from "../lib/valo-reminder-resend";
 const root = publicationWorkspaceRoot(),
   from = resolve(root, "generated-artifacts/valo-completion"),

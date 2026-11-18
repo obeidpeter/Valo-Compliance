@@ -392,7 +392,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
       },
     },
   });
-  t.mock.module(new URL("../editorial/publication-artifacts.ts", import.meta.url).href, {
+  t.mock.module(new URL("../modules/publication/publication-artifacts.ts", import.meta.url).href, {
     namedExports: {
       getPublicationArtifact: async (ref: { id: string; hash: string }) => {
         const bytes = artifacts.get(ref.id);

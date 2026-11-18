@@ -11,7 +11,7 @@ import { InferenceBudgetStore } from "../modules/ai/inference-budget-store";
 import { FiniteInferenceDispatcher, type FiniteManifest } from "../modules/ai/inference-batch-dispatch";
 import { inferenceProposal, requestDigest, emptyBudget } from "../modules/ai/inference-budget";
 import { createManagedSDKTransport } from "../modules/ai/managed-sdk-transport";
-import type { ArtifactRef } from "../editorial/publication-artifacts";
+import type { ArtifactRef } from "../modules/publication/publication-artifacts";
 import type { ManagedRequest, ManagedCompletionResult } from "../modules/ai/managed-inference";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
 import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
@@ -175,16 +175,17 @@ test(
         );
       await copyDatabaseFunctions(scoped, schema, INFERENCE_LEDGER_FUNCTIONS);
       t.mock.module("@workspace/db", { namedExports: { ...database, db: drizzle(scoped), pool: scoped } });
-      t.mock.module(new URL("../editorial/publication-artifacts.ts", import.meta.url).href, {
+      t.mock.module(new URL("../modules/publication/publication-artifacts.ts", import.meta.url).href, {
         namedExports: { getPublicationArtifact: get, putPublicationArtifact: put },
       });
       // Everything below is the real entry, real callers, real binding checker and real SQL store.
       // Only the model SDK and private file adapter are controlled; no checker is stubbed.
       const { assertFiniteWorkBindings } = await import("./inference-work-bindings");
       const { readOperationalInferenceReadiness } = await import("./inference-operational-ready");
-      const { prepareOperationalCandidateRelease } = await import("../editorial/operational-preparation");
+      const { prepareOperationalCandidateRelease } =
+        await import("../modules/editorial/operational-preparation");
       const { saveOperationalReviewPlan, executeOperationalReviewPlan } =
-        await import("../editorial/operational-review");
+        await import("../modules/editorial/operational-review");
       const { prepareOperationalFiniteManifest } = await import("../modules/ai/inference-manifest");
       const { withBoundInferenceDispatcher, withApprovedInferencePair, withApprovedInferenceWork } =
         await import("../modules/ai/managed-inference");

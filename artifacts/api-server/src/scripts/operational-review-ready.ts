@@ -5,24 +5,25 @@ import { openai } from "@workspace/integrations-openai-ai-server";
 import { desc, eq, sql } from "drizzle-orm";
 import { db, pool, valoContentVersions } from "@workspace/db";
 import { digest, publicationSchema } from "@workspace/valo-core";
-import { getPublicationArtifact, putPublicationArtifact } from "../editorial/publication-artifacts";
-import { readOperationalIntake } from "../editorial/operational-intake";
-import { inventoryCandidate } from "../editorial/operational-content";
-import { loadChatGPTPermission } from "../editorial/rights-applicability";
 import {
+  getPublicationArtifact,
+  putPublicationArtifact,
+  readOperationalIntake,
+  inventoryCandidate,
+  loadChatGPTPermission,
   operationalPolicy,
   publicationWorkspaceRoot,
   developmentPublicationOnly,
-} from "../editorial/operational-policy";
-import { operationalMechanicalChecks } from "../editorial/operational-mechanical";
-import { inspectOperationalExports } from "../editorial/operational-export-inspection";
+  operationalMechanicalChecks,
+  inspectOperationalExports,
+  type ReleaseAttestations,
+} from "../modules/publication";
 import {
   saveOperationalReviewPlan,
   executeOperationalReviewPlan,
   type OperationalServerEvidence,
-} from "../editorial/operational-review";
-import { meterReviewRequest } from "../editorial/review-meter";
-import type { ReleaseAttestations } from "../editorial/publication-publisher";
+  meterReviewRequest,
+} from "../modules/editorial";
 async function main() {
   developmentPublicationOnly();
   // This command NEVER dispatches a model, raises a cap, or changes a candidate.

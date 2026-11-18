@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { db } from "@workspace/db";
+import type { db } from "@workspace/db";
 import { publicationSchema } from "@workspace/valo-core";
 import { ValoProblem } from "./valo-problem";
 export type SourceTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -74,6 +74,7 @@ export async function assertSafetyActive(tx: SourceReader, key: "ai" | "checkout
  * a connection let ten concurrent dispatches exhaust the pool and stop the API.
  */
 export async function withSafetyDispatch<T>(key: "ai" | "checkout", run: () => Promise<T>) {
+  const { db } = await import("@workspace/db");
   await db.transaction((tx) => assertSafetyActive(tx, key));
   return run();
 }

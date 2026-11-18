@@ -3,11 +3,14 @@ import { resolve } from "node:path";
 import { desc, eq } from "drizzle-orm";
 import { db, pool, valoContentVersions } from "@workspace/db";
 import { digest, publicationSchema } from "@workspace/valo-core";
-import { developmentPublicationOnly, publicationWorkspaceRoot } from "../editorial/operational-policy";
-import { getPublicationArtifact } from "../editorial/publication-artifacts";
-import { operationalMechanicalChecks } from "../editorial/operational-mechanical";
-import { loadChatGPTPermission } from "../editorial/rights-applicability";
-import type { ReleaseAttestations } from "../editorial/publication-publisher";
+import {
+  developmentPublicationOnly,
+  publicationWorkspaceRoot,
+  getPublicationArtifact,
+  operationalMechanicalChecks,
+  loadChatGPTPermission,
+  type ReleaseAttestations,
+} from "../modules/publication";
 developmentPublicationOnly();
 try {
   const [row] = await db
