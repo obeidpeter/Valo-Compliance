@@ -13,7 +13,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
       "test": "another workspace's identifiers are refused exactly like unknown ones and change nothing",
-      "proves": "On every private customer API operation that takes a workspace-owned identifier, another workspace's identifier is refused exactly like an unknown one and changes nothing."
+      "proves": "On every private customer API operation that takes a workspace-owned identifier, in its path, body or query string, another workspace's identifier is refused exactly like an unknown one and changes nothing; every private listing shows another workspace none of the owner's records; client-chosen request keys are unique only within their workspace; and every table holding workspace rows is mapped to the cases that try its identifiers or to a recorded reason."
     },
     {
       "requirement": "SEC-001",
@@ -21,6 +21,13 @@
       "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
       "test": "every private operation with an identifier has a substitution case or a recorded reason",
       "proves": "A private operation added to the API contract with an identifier and no substitution case, or no recorded reason for having none, fails CI."
+    },
+    {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+      "test": "every identifier a private operation takes outside its path has a substitution case or a recorded reason",
+      "proves": "An identifier field added to a private operation's body, query string or headers, as the API's own request schemas declare them, fails CI until it has a substitution case, a client-key scope or a recorded reason."
     },
     {
       "requirement": "IAM-003",

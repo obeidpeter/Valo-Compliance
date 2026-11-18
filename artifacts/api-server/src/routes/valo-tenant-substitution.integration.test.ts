@@ -7,6 +7,7 @@ import {
   pathParameters,
   type ContractOperation,
 } from "../test-support/contract-operations";
+import { requestIdentifiers } from "../test-support/request-identifiers";
 
 /**
  * SEC-001 and IAM-003: changing a workspace, draft, order or file identifier must not
@@ -17,6 +18,12 @@ import {
  * byte-for-byte the reply for an identifier that does not exist (so it reveals neither
  * data nor existence), it must be a refusal, and none of the owner's rows may change.
  * Owner requests then show that the same identifiers and bodies are valid.
+ *
+ * The same holds for identifiers in request bodies, query strings and headers, read from the
+ * schemas the API validates requests with. Every private listing must show another workspace
+ * none of the owner's records, and every table holding workspace rows must be mapped to the
+ * cases that try its identifiers or to a recorded reason. Each list is checked against the
+ * contract or the database, so something new fails until it is covered.
  *
  * The real app runs: every middleware, router, error handler and PostgreSQL query.
  * Only the identity provider is controlled in this process. Synthetic records only.
@@ -79,10 +86,250 @@ const CASE_KEYS = [
   "DELETE /workspace/tasks/{id}",
 ] as const;
 
+/**
+ * Identifiers a private operation takes outside its path, in its body, query string or headers
+ * (request-identifiers.ts reads them from the schemas the API validates requests with). The
+ * database test below tries another workspace's value in each of these fields.
+ */
+const REQUEST_FIELD_CASES = [
+  "POST /v1/documents/{id}/exports body.revisionId",
+  "POST /workspace/tasks body.assessmentId",
+  "GET /workspace/data-exports query.cursor",
+] as const;
+
+/** Identifier fields that name nothing belonging to a workspace, with the reason. */
+const REQUEST_FIELDS_NOT_WORKSPACE_OWNED: Record<string, string> = {
+  "POST /workspace/orders body.priceId": "Public price identifier, the same for every workspace.",
+  "POST /workspace/tasks body.ruleId":
+    "Rule identifier from the shared released rule registry; a source-linked task also needs the assessment, which has its own case, to contain that rule.",
+  "POST /workspace/orders/{id}/dispute-information body.disputeId":
+    "Names a dispute on the order in the path: the service reads that order in the caller's workspace, then the dispute only on that order (saveDisputeInformation), and the order identifier has its own case.",
+  "POST /workspace/documents body.content.blocks[].id":
+    "Block identifiers inside the document's own content, chosen by the client.",
+  "PATCH /workspace/documents/{id} body.content.blocks[].id":
+    "Block identifiers inside the document's own content, chosen by the client.",
+  "POST /workspace/ai-drafts/{id}/accept body.content.blocks[].id":
+    "Block identifiers inside the draft's own content, chosen by the client.",
+};
+
+/**
+ * Keys a client chooses so that a retried request is not done twice. Each is unique only within
+ * the listed columns of its unique index, so another workspace's key names nothing here; the
+ * database test checks each index.
+ */
+const CLIENT_KEYS: Record<string, { index: string; within: string[] }> = {
+  "POST /workspace/ai-drafts body.idempotencyKey": {
+    index: "valo_ai_idempotency_unique",
+    within: ["workspace_id"],
+  },
+  "POST /workspace/orders body.requestKey": {
+    index: "valo_order_workspace_key_unique",
+    within: ["workspace_id"],
+  },
+  "POST /workspace/orders/{id}/refund body.requestKey": {
+    index: "valo_refund_request_key_unique",
+    within: ["workspace_id"],
+  },
+  "POST /workspace/orders/{id}/dispute-information body.requestKey": {
+    index: "valo_dispute_information_request",
+    within: ["workspace_id"],
+  },
+  "POST /workspace/orders/{orderId}/concerns body.requestKey": {
+    index: "valo_concern_request_once",
+    within: ["workspace_id"],
+  },
+  "POST /workspace/privacy-requests body.idempotencyKey": {
+    index: "valo_privacy_case_idempotency",
+    within: ["workspace_id"],
+  },
+  "POST /workspace/data-exports body.requestKey": {
+    index: "valo_workspace_export_request",
+    within: ["workspace_id", "requester_id"],
+  },
+  "POST /v1/documents/{id}/exports header.Idempotency-Key": {
+    index: "valo_export_request_key_unique",
+    within: ["workspace_id"],
+  },
+  // The case identifier in the path has its own case.
+  "POST /workspace/support-cases/{id}/reply body.idempotencyKey": {
+    index: "valo_support_action_request",
+    within: ["case_id", "actor_id"],
+  },
+};
+
+/** Query strings the listing operations need; the rest take none. */
+const LIST_QUERIES: Record<string, string> = {
+  "GET /workspace/correction-notices": "?page=1",
+  "GET /workspace/support-cases": "?page=1",
+  "GET /workspace/tasks/page": "?page=1&filter=all",
+};
+
+/**
+ * Every table holding a workspace's rows (those row-level security limits to one workspace,
+ * decision 0008): the cases that try another workspace's identifier for its rows, directly or
+ * through the parent row they are reached by, or why no customer request names one of its rows.
+ * The database test reads the tables from the database, so a new one fails until it is listed.
+ */
+const PRIVATE_TABLES: Record<string, { cases: readonly string[] } | { reason: string }> = {
+  valo_ai_drafts: { cases: ["GET /workspace/ai-drafts/{id}", "POST /workspace/ai-drafts/{id}/accept"] },
+  valo_assessments: {
+    cases: [
+      "GET /workspace/assessments/{id}",
+      "GET /workspace/assessments/{id}/compare/{previousId}",
+      "POST /workspace/tasks body.assessmentId",
+    ],
+  },
+  valo_concern_messages: { cases: ["POST /workspace/concerns/{id}/respond"] },
+  valo_correction_notices: {
+    reason: "Notices to the workspace; customers list only their own (GET /workspace/correction-notices).",
+  },
+  valo_dispute_actions: {
+    reason: "Provider actions the dispute workflow records; no customer request names one.",
+  },
+  valo_dispute_information: {
+    cases: [
+      "GET /workspace/orders/{id}/dispute-information",
+      "POST /workspace/orders/{id}/dispute-information",
+    ],
+  },
+  valo_dispute_transitions: {
+    reason: "History the dispute workflow records; no customer request names one.",
+  },
+  valo_document_revisions: {
+    cases: ["GET /workspace/documents/{id}/revisions", "POST /v1/documents/{id}/exports body.revisionId"],
+  },
+  valo_documents: {
+    cases: [
+      "GET /workspace/documents/{id}",
+      "PATCH /workspace/documents/{id}",
+      "GET /v1/documents/{id}/exports",
+      "POST /v1/documents/{id}/exports",
+    ],
+  },
+  valo_entitlements: {
+    reason:
+      "Looked up by public template identifier within the caller's workspace; valo-template-entitlement.integration.test.ts proves another workspace's purchase grants nothing.",
+  },
+  valo_events: {
+    reason: "The workspace's audit trail, written by the server; no customer request names one.",
+  },
+  valo_export_jobs: { cases: ["GET /v1/exports/{id}/file", "POST /v1/exports/{id}/retry"] },
+  valo_export_objects: { cases: ["GET /v1/exports/{id}/file"] },
+  valo_export_requests: {
+    reason: "Each export request's client-chosen key (see CLIENT_KEYS); no customer request names one.",
+  },
+  valo_file_assets: { cases: ["GET /v1/exports/{id}/file", "GET /workspace/data-exports/{id}/download"] },
+  valo_memberships: {
+    reason: "Resolved by the server from the signed-in identity; no customer request names a membership.",
+  },
+  valo_orders: {
+    cases: [
+      "POST /workspace/orders/{id}/checkout",
+      "GET /workspace/orders/{id}/receipt",
+      "POST /workspace/orders/{id}/refresh",
+      "POST /workspace/orders/{id}/refund",
+      "POST /workspace/orders/{orderId}/concerns",
+      "GET /workspace/orders/{id}/dispute-information",
+    ],
+  },
+  valo_payment_concern_events: { cases: ["POST /workspace/concerns/{id}/respond"] },
+  valo_payment_concerns: {
+    cases: ["POST /workspace/concerns/{id}/respond", "POST /workspace/orders/{orderId}/concerns"],
+  },
+  valo_payment_disputes: {
+    cases: [
+      "GET /workspace/orders/{id}/dispute-information",
+      "POST /workspace/orders/{id}/dispute-information",
+    ],
+  },
+  valo_payment_reconciliations: {
+    reason: "Payment checks the server runs with the provider; no customer request names one.",
+  },
+  valo_privacy_cases: {
+    cases: [
+      "GET /workspace/privacy-cases/{id}",
+      "POST /workspace/privacy-cases/{id}/cancel",
+      "POST /workspace/privacy-cases/{id}/respond",
+      "GET /workspace/privacy-cases/{id}/result",
+      "POST /workspace/privacy-cases/{id}/verify",
+    ],
+  },
+  valo_privacy_erasure_objects: {
+    reason: "Erasure bookkeeping the server keeps; no customer request names one.",
+  },
+  valo_privacy_events: { cases: ["GET /workspace/privacy-cases/{id}"] },
+  valo_privacy_messages: {
+    cases: ["GET /workspace/privacy-cases/{id}", "POST /workspace/privacy-cases/{id}/respond"],
+  },
+  valo_privacy_redactions: {
+    reason:
+      "Authenticated redaction records for the workspace's privacy events and refund history, read with those rows; no customer request names one.",
+  },
+  valo_privacy_tombstones: { reason: "Erasure records the server keeps; no customer request names one." },
+  valo_profile_versions: {
+    reason: "History of the workspace's own profile (PUT /workspace/profile); never named by identifier.",
+  },
+  valo_purchase_outbox: { reason: "Purchase work the server queues; no customer request names one." },
+  valo_refund_requests: { cases: ["POST /workspace/orders/{id}/refund"] },
+  valo_refund_transitions: { reason: "Refund history the server records; no customer request names one." },
+  valo_reminder_outbox: { reason: "Reminder deliveries the server queues; no customer request names one." },
+  valo_reminder_preferences: {
+    reason:
+      "The workspace's own preferences (GET and PUT /workspace/reminder-preferences); never named by identifier.",
+  },
+  valo_saved_templates: {
+    reason:
+      "Named by public template identifier within the caller's workspace; valo-saved-templates.integration.test.ts proves workspaces cannot see or change each other's.",
+  },
+  valo_support_actions: { cases: ["POST /workspace/support-cases/{id}/reply"] },
+  valo_support_cases: {
+    cases: ["GET /workspace/support-cases/{id}", "POST /workspace/support-cases/{id}/reply"],
+  },
+  valo_support_escalations: { reason: "Staff escalations of a support case; no customer request names one." },
+  valo_support_events: { cases: ["GET /workspace/support-cases/{id}"] },
+  valo_support_messages: {
+    cases: ["GET /workspace/support-cases/{id}", "POST /workspace/support-cases/{id}/reply"],
+  },
+  valo_support_tickets: {
+    reason:
+      "Support requests a customer submits (POST /workspace/support); the case each opens has its own cases.",
+  },
+  valo_tasks: { cases: ["PATCH /workspace/tasks/{id}", "DELETE /workspace/tasks/{id}"] },
+  valo_payment_events: {
+    reason: "Provider payment events the webhook records; no customer request names one.",
+  },
+  valo_workspace_export_attempts: { cases: ["GET /workspace/data-exports/{id}"] },
+  valo_workspace_exports: {
+    cases: [
+      "GET /workspace/data-exports/{id}",
+      "POST /workspace/data-exports/{id}/cancel",
+      "GET /workspace/data-exports/{id}/download",
+      "POST /workspace/data-exports/{id}/retry",
+      "GET /workspace/data-exports query.cursor",
+    ],
+  },
+  valo_workspaces: {
+    reason:
+      "The workspace itself, resolved by the server from the signed-in identity's membership; no customer request names one.",
+  },
+};
+
+/** Every private customer operation: the workspace's own routes and the document API. */
+function privateOperations(): ContractOperation[] {
+  return contractOperations().filter(
+    (o) => o.path === "/workspace" || o.path.startsWith("/workspace/") || o.path.startsWith("/v1/"),
+  );
+}
+
 function customerOperations(): ContractOperation[] {
   return contractOperations().filter(
     (o) => (o.path.startsWith("/workspace/") || o.path.startsWith("/v1/")) && o.path.includes("{"),
   );
+}
+
+/** Private reads that take no identifier: lists, searches and the workspace's own records. */
+function listingOperations(): ContractOperation[] {
+  return privateOperations().filter((o) => o.method === "GET" && !o.path.includes("{"));
 }
 
 test("every private operation with an identifier has a substitution case or a recorded reason", () => {
@@ -94,6 +341,27 @@ test("every private operation with an identifier has a substitution case or a re
   assert.deepEqual(missing, [], "add a substitution case for each new operation");
   const stale = [...covered].filter((key) => !customerOperations().some((o) => o.key === key));
   assert.deepEqual(stale, [], "remove cases for operations no longer in the contract");
+});
+
+test("every identifier a private operation takes outside its path has a substitution case or a recorded reason", () => {
+  const found = requestIdentifiers(privateOperations()).map((field) => field.key);
+  assert.ok(found.length >= 10, "request fields were read from the generated schemas");
+  const classified = [
+    ...REQUEST_FIELD_CASES,
+    ...Object.keys(REQUEST_FIELDS_NOT_WORKSPACE_OWNED),
+    ...Object.keys(CLIENT_KEYS),
+  ];
+  assert.equal(new Set(classified).size, classified.length, "each field is classified once");
+  assert.deepEqual(
+    found.filter((key) => !classified.includes(key)),
+    [],
+    "add a substitution case, a client key or a reason for each new identifier field",
+  );
+  assert.deepEqual(
+    classified.filter((key) => !found.includes(key)),
+    [],
+    "remove entries for fields no longer in the contract",
+  );
 });
 
 test(
@@ -523,38 +791,197 @@ test(
         }
       });
 
-      await t.test("another workspace's identifiers inside request bodies are refused", async () => {
-        const attacker = identity("body-references");
-        const ownDocument = json(await call(attacker, "POST", "/workspace/documents", syntheticDocument)) as {
-          id: string;
-        };
-        const before = await ownerState();
-        for (const [path, body, headers] of [
-          [
-            `/v1/documents/${ownDocument.id}/exports`,
-            (revisionId: string) => ({ revisionId, format: "pdf", acknowledgeDraft: true }),
-            () => ({ "Idempotency-Key": randomUUID() }),
-          ],
-          [
-            "/workspace/tasks",
-            (assessmentId: string) => ({
-              title: "Synthetic task linked to another business",
-              notes: "",
-              dueDate: null,
-              dateConfirmed: false,
-              assessmentId,
-              ruleId: null,
-            }),
-            () => ({}),
-          ],
-        ] as const) {
-          const reference = path.startsWith("/v1/") ? document.revisionId : assessments[0]!;
-          const foreign = await call(attacker, "POST", path, body(reference), headers());
-          const unknown = await call(attacker, "POST", path, body(randomUUID()), headers());
-          assert.ok(foreign.status >= 400 && foreign.status < 500, `${path} answered ${foreign.status}`);
-          assert.equal(foreign.status, unknown.status, path);
+      await t.test(
+        "another workspace's identifiers in request bodies and query strings are refused",
+        async () => {
+          const attacker = identity("request-fields");
+          // A complete workspace of its own, so the identifier is the only difference.
+          await saveProfile(await resolveWorkspace(attacker), {
+            expectedRevision: 0,
+            profile: syntheticProfile,
+          });
+          const ownDocument = json(
+            await call(attacker, "POST", "/workspace/documents", syntheticDocument),
+          ) as { id: string };
+          const taskBody = (assessmentId: string) => ({
+            title: "Synthetic task linked to an assessment",
+            notes: "",
+            dueDate: null,
+            dateConfirmed: false,
+            assessmentId,
+            ruleId: null,
+          });
+          // Each request names the caller's own records in its path and `value` in the field.
+          type FieldRequest = {
+            method: string;
+            path: string;
+            body?: unknown;
+            headers?: Record<string, string>;
+          };
+          const fields: Record<
+            (typeof REQUEST_FIELD_CASES)[number],
+            {
+              reference: string;
+              ownerStatus: number;
+              request: (caller: string, value: string) => FieldRequest;
+            }
+          > = {
+            "POST /v1/documents/{id}/exports body.revisionId": {
+              reference: document.revisionId,
+              ownerStatus: 202,
+              request: (caller, revisionId) => ({
+                method: "POST",
+                path: `/v1/documents/${caller === owner ? document.id : ownDocument.id}/exports`,
+                body: { revisionId, format: "pdf", acknowledgeDraft: true },
+                headers: { "Idempotency-Key": randomUUID() },
+              }),
+            },
+            "POST /workspace/tasks body.assessmentId": {
+              reference: assessments[0]!,
+              ownerStatus: 201,
+              request: (_caller, assessmentId) => ({
+                method: "POST",
+                path: "/workspace/tasks",
+                body: taskBody(assessmentId),
+              }),
+            },
+            "GET /workspace/data-exports query.cursor": {
+              reference: dataExport.id,
+              ownerStatus: 200,
+              request: (_caller, cursor) => ({
+                method: "GET",
+                path: `/workspace/data-exports?cursor=${cursor}`,
+              }),
+            },
+          };
+          for (const key of REQUEST_FIELD_CASES) {
+            const field = fields[key];
+            const before = await ownerState();
+            const send = async (caller: string, value: string) => {
+              const r = field.request(caller, value);
+              return call(caller, r.method, r.path, r.body, r.headers);
+            };
+            const unknownValue = randomUUID();
+            const foreign = await send(attacker, field.reference);
+            const unknown = await send(attacker, unknownValue);
+            assert.ok(foreign.status >= 400 && foreign.status < 500, `${key} answered ${foreign.status}`);
+            assert.equal(foreign.status, unknown.status, `${key}: existence is visible through the status`);
+            assert.equal(
+              normalised(foreign, [field.reference]),
+              normalised(unknown, [unknownValue]),
+              `${key}: existence is visible through the reply`,
+            );
+            assert.equal(await ownerState(), before, `${key} changed the owner's data`);
+            // The owner's own request with the same value succeeds, so the refusal is the
+            // ownership check and not a malformed request.
+            const own = await send(owner, field.reference);
+            assert.equal(own.status, field.ownerStatus, `${key} as the owner: ${own.text.slice(0, 300)}`);
+          }
+        },
+      );
+
+      await t.test("each client-chosen request key is unique only within its own scope", async () => {
+        for (const [key, { index, within }] of Object.entries(CLIENT_KEYS)) {
+          const { rows } = await pool.query<{ indexdef: string }>(
+            "SELECT indexdef FROM pg_indexes WHERE schemaname = 'public' AND indexname = $1",
+            [index],
+          );
+          assert.equal(rows.length, 1, `${key}: unique index ${index} exists`);
+          const definition = rows[0]!.indexdef;
+          assert.match(definition, /^CREATE UNIQUE INDEX /, `${key}: ${index} is unique`);
+          const columns =
+            /\(([^)]*)\)\s*$/
+              .exec(definition)?.[1]
+              ?.split(",")
+              .map((c) => c.trim()) ?? [];
+          for (const column of within)
+            assert.ok(
+              columns.includes(column),
+              `${key}: ${index} (${columns.join(", ")}) is within ${column}`,
+            );
         }
-        assert.equal(await ownerState(), before);
+      });
+
+      await t.test("every private listing shows another workspace none of the owner's records", async () => {
+        const ownerIdentifiers = [
+          owner,
+          ownerActor.workspaceId,
+          document.id,
+          document.revisionId,
+          exportJob.id,
+          task.id,
+          ...assessments,
+          dataExport.id,
+          privacyCaseId,
+          orderId,
+          concern.id,
+          aiDraftId,
+          supportCase.id,
+        ];
+        const listings = listingOperations();
+        assert.ok(listings.length >= 15, "listing operations were read from the contract");
+        const outsider = identity("lister");
+        await saveProfile(await resolveWorkspace(outsider), {
+          expectedRevision: 0,
+          profile: syntheticProfile,
+        });
+        for (const operation of listings) {
+          const reply = await call(outsider, "GET", operation.path + (LIST_QUERIES[operation.key] ?? ""));
+          assert.ok(
+            reply.status < 500,
+            `${operation.key} answered ${reply.status}: ${reply.text.slice(0, 300)}`,
+          );
+          for (const id of ownerIdentifiers)
+            assert.ok(
+              !reply.text.includes(id),
+              `${operation.key} showed another workspace the owner's ${id}`,
+            );
+        }
+        // The same listings show the owner its own records, so the check above can fail.
+        const ownerSees: Record<string, string> = {
+          "GET /workspace/documents": document.id,
+          "GET /workspace/tasks": task.id,
+          "GET /workspace/assessments": assessments[0]!,
+          "GET /workspace/data-exports": dataExport.id,
+          "GET /workspace/privacy-cases": privacyCaseId,
+          "GET /workspace/support-cases": supportCase.id,
+        };
+        for (const [key, id] of Object.entries(ownerSees)) {
+          assert.ok(
+            listings.some((o) => o.key === key),
+            `${key} is a listing operation`,
+          );
+          const reply = await call(owner, "GET", key.slice("GET ".length) + (LIST_QUERIES[key] ?? ""));
+          assert.equal(reply.status, 200, `${key} as the owner: ${reply.text.slice(0, 300)}`);
+          assert.ok(reply.text.includes(id), `${key} shows the owner its own record`);
+        }
+      });
+
+      await t.test("every private table has substitution cases or a recorded reason", async () => {
+        // The tables row-level security limits to one workspace; rowSecurityGaps checks that
+        // these are exactly the tables holding workspace rows.
+        const { rows } = await pool.query<{ tablename: string }>(
+          "SELECT tablename FROM pg_policies WHERE schemaname = 'public' AND policyname = 'valo_workspace_scope' ORDER BY tablename",
+        );
+        const privateTables = rows.map((row) => row.tablename);
+        assert.ok(privateTables.length >= 40, "private tables were read from the database");
+        assert.deepEqual(
+          privateTables.filter((table) => !(table in PRIVATE_TABLES)),
+          [],
+          "list each new private table with its cases or a reason",
+        );
+        assert.deepEqual(
+          Object.keys(PRIVATE_TABLES).filter((table) => !privateTables.includes(table)),
+          [],
+          "remove tables that no longer hold workspace rows",
+        );
+        const known = new Set<string>([...CASE_KEYS, ...REQUEST_FIELD_CASES]);
+        for (const [table, entry] of Object.entries(PRIVATE_TABLES))
+          if ("cases" in entry) {
+            assert.ok(entry.cases.length > 0, `${table} lists its cases`);
+            for (const key of entry.cases)
+              assert.ok(known.has(key), `${table}: ${key} is a substitution case`);
+          }
       });
 
       await t.test("the owner can use the same identifiers and bodies", async () => {
@@ -635,7 +1062,7 @@ test(
           "GET /workspace/account": {},
           "GET /workspace/ai-usage": {},
           "GET /workspace/assessments": {},
-          "GET /workspace/correction-notices": { query: "?page=1" },
+          "GET /workspace/correction-notices": { query: LIST_QUERIES["GET /workspace/correction-notices"]! },
           "GET /workspace/data-export": {},
           "GET /workspace/data-exports": {},
           "GET /workspace/disputes": {},
@@ -645,9 +1072,9 @@ test(
           "GET /workspace/reminder-preferences": {},
           "GET /workspace/reminders": {},
           "GET /workspace/saved-templates": {},
-          "GET /workspace/support-cases": { query: "?page=1" },
+          "GET /workspace/support-cases": { query: LIST_QUERIES["GET /workspace/support-cases"]! },
           "GET /workspace/tasks": {},
-          "GET /workspace/tasks/page": { query: "?page=1&filter=all" },
+          "GET /workspace/tasks/page": { query: LIST_QUERIES["GET /workspace/tasks/page"]! },
           "POST /workspace/ai-drafts": {
             body: () => ({ ...structuredClone(customerAICases[0]!.input), idempotencyKey: randomUUID() }),
           },
