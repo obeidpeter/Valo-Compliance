@@ -1,13 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { and, eq, desc, sql } from "drizzle-orm";
-import {
-  db,
-  valoSavedTemplates,
-  valoWorkspaces,
-  valoMemberships,
-  valoProfileVersions,
-  valoEvents,
-} from "@workspace/db";
+import type { db } from "@workspace/db";
 import { publicationSchema } from "@workspace/valo-core";
 import { authorizeWorkspaceWrite, limitWorkspaceWrite, ValoProblem, type WorkspaceActor } from "./valo-store";
 import {
@@ -21,6 +14,7 @@ import { developmentPublicationOnly } from "../modules/publication";
 import { singleRow } from "../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 async function owner(tx: Tx, actor: WorkspaceActor) {
+  const { valoMemberships, valoWorkspaces } = await import("@workspace/db");
   // Workspace lock serializes capacity/idempotency; membership lock is taken
   // after waits so a committed revocation wins before the write.
   const [w] = await tx
@@ -43,6 +37,7 @@ async function owner(tx: Tx, actor: WorkspaceActor) {
   return w;
 }
 export async function savedTemplateList(actor: WorkspaceActor) {
+  const { db, valoProfileVersions, valoSavedTemplates } = await import("@workspace/db");
   const current = projectReleasedCatalogue(await liveReleasedVersions());
   return db.transaction(async (tx) => {
     const w = await owner(tx, actor);
@@ -84,6 +79,7 @@ export async function savedTemplateList(actor: WorkspaceActor) {
   });
 }
 export async function saveTemplate(actor: WorkspaceActor, releaseId: string) {
+  const { db, valoEvents, valoSavedTemplates } = await import("@workspace/db");
   developmentPublicationOnly();
   const release = await checkReleaseEvidence(releaseId);
   await db.transaction(async (tx) => {
@@ -131,6 +127,7 @@ export async function saveTemplate(actor: WorkspaceActor, releaseId: string) {
   return savedTemplateList(actor);
 }
 export async function unsaveTemplate(actor: WorkspaceActor, templateId: string) {
+  const { db, valoEvents, valoSavedTemplates } = await import("@workspace/db");
   await db.transaction(async (tx) => {
     await owner(tx, actor);
     const removed = await tx
