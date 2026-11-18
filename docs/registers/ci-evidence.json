@@ -137,14 +137,14 @@
     {
       "requirement": "ADM-007",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
       "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
       "proves": "Safety actions need an active staff role for their area and fresh MFA; a checkout pause stops new checkouts while AI still runs, free guidance reads the same with AI and checkout both paused, and the pause's reason, actor and customer impact are recorded in an append-only audit."
     },
     {
       "requirement": "ADM-007",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-source-controls.test.ts",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.test.ts",
       "test": "source safety adds freshness, binding and sticky-hold checks without manufacturing eligibility",
       "proves": "The source safety gate refuses a held item, a changed hash, a failed check and a stale review, so a hold takes the item out of use."
     },
@@ -200,14 +200,14 @@
     {
       "requirement": "EDP-011",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
       "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
       "proves": "A changed source capture blocks the affected rule at once, then flags the affected tasks, cancels their pending reminders and sends correction notices only to affected workspaces, leaving past assessments unchanged."
     },
     {
       "requirement": "EDP-011",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-source-controls.test.ts",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.test.ts",
       "test": "source safety adds freshness, binding and sticky-hold checks without manufacturing eligibility",
       "proves": "Content is refused when it is held, its source changed or failed checking, its source check is more than a day old or its high-impact review is more than 30 days old."
     },
@@ -627,7 +627,7 @@
     {
       "requirement": "ADM-002",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
       "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
       "proves": "Content staff with fresh MFA can read a synthetic version's publication record, which gives its candidate hash, the hold decision and reasons from checking the stored bundle at the read time, the drafting run's ID, model and prompt version and its safety holds, and the read adds one entry to the staff access audit, while system-only staff and content staff without fresh MFA are refused."
     },
@@ -655,7 +655,7 @@
     {
       "requirement": "ADM-003",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
       "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
       "proves": "When the source monitor records a changed synthetic capture of a watched source, the rule bound to it is blocked at once, two source impacts are recorded across the two bound versions and none for an unbound one, and the staff source controls refuse a content staff request to publish the affected content version, leaving it a candidate with no published audit entry."
     },
@@ -851,7 +851,7 @@
     {
       "requirement": "AI-009",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
       "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
       "proves": "With AI and checkout both paused by staff, the public catalogue and the free guidance resources read exactly as they did before the pauses."
     },
@@ -1201,7 +1201,7 @@
     {
       "requirement": "EDP-007",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-source-controls.test.ts",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.test.ts",
       "test": "source safety adds freshness, binding and sticky-hold checks without manufacturing eligibility",
       "proves": "A rule is no longer allowed for use when its last source check is a day old, failed or dated in the future, its retained source has changed, its binding names a different URL or source text, or a hold applies."
     },
@@ -1292,7 +1292,7 @@
     {
       "requirement": "EDP-012",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
       "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
       "proves": "The staff source controls refuse a content staff request to publish a synthetic version that has not passed its gates, and the version stays a candidate with no published audit entry."
     },
@@ -1992,7 +1992,7 @@
     {
       "requirement": "RUL-009",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
       "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
       "proves": "When the captured source behind a synthetic rule changes, the rule is blocked at once and all 202 tasks linked to it in two workspaces are kept and flagged for review with no reminder left pending, while a task for an unaffected rule is not flagged, saved assessments are unchanged, the workspace holding 201 of those tasks gets correction notices and the workspace holding only the unaffected task gets none."
     },

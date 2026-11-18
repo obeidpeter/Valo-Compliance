@@ -4,7 +4,7 @@ import { digest, evaluatePublication } from "@workspace/valo-core";
 import { heldSourceBundle } from "./valo-source-controls.fixtures";
 test("source safety adds freshness, binding and sticky-hold checks without manufacturing eligibility", async () => {
   process.env.DATABASE_URL ??= "postgresql://unused@localhost/unused";
-  const { sourceTargetAllowed } = await import("../modules/sources/valo-source-state");
+  const { sourceTargetAllowed } = await import("./valo-source-state");
   const now = new Date("2026-11-15T10:00:00.000Z"),
     b = heldSourceBundle(now),
     h = b.sources[0]!.hash;

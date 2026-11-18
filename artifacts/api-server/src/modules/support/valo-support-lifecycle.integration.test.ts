@@ -46,7 +46,7 @@ test(
     const { saveAccessSupport, workspaceDataExport } = await import("../privacy/valo-customer-access");
     const api = await import("./valo-support-lifecycle");
     const { digest } = await import("@workspace/valo-core");
-    const { heldSourceBundle } = await import("../../lib/valo-source-controls.fixtures");
+    const { heldSourceBundle } = await import("../sources/valo-source-controls.fixtures");
     const prefix = `synthetic-support-${randomUUID()}`,
       a = await resolveWorkspace(`${prefix}-a`),
       b = await resolveWorkspace(`${prefix}-b`);

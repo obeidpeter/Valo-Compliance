@@ -14,7 +14,7 @@ import {
   actOnSourceControls,
   correctionNotices,
   type SourceStaffActor,
-} from "../lib/valo-source-controls";
+} from "../modules/sources";
 import { editorialRecord } from "../lib/valo-editorial-record";
 import { ValoProblem } from "../platform/valo-problem";
 const page = (value: unknown) => z.coerce.number().int().min(1).max(10000).default(1).parse(value);

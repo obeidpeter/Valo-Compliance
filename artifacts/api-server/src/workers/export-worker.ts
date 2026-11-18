@@ -1,5 +1,5 @@
 import { initializeApplicationRuntime, verifyRehearsalDatabase } from "../platform/valo-runtime-activation";
-import { reconcileSourceMonitoring } from "../lib/valo-source-monitor";
+import { reconcileSourceMonitoring } from "../modules/sources";
 import { z } from "zod";
 import {
   closePrivacyErasureLocks,

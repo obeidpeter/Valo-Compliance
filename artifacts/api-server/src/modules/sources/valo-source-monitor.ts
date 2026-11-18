@@ -1,16 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
+import { referenceFor } from "./source-fetch";
+import { lockSourceState, sourceTime, type SourceTx } from "./valo-source-state";
 import {
-  referenceFor,
-  lockSourceState,
-  sourceTime,
-  type SourceTx,
   impactSourceDependants,
   processSourceDependencyJob,
   processSourceImpact,
   queueExpiredSourceReviews,
-} from "../modules/sources";
-import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
+} from "./valo-source-corrections";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 export async function registerSourceWatch(tx: SourceTx, id: string) {
   const source = referenceFor(id); // No request URL or newly discovered domain is fetched.
   await tx.execute(
@@ -132,7 +130,7 @@ export async function reconcileSourceMonitoring() {
     let id: string | null = null,
       timer: ReturnType<typeof setTimeout> | undefined;
     const capture = (async () =>
-      (await (await import("../modules/sources")).captureReference(claim.source_id)).id)();
+      (await (await import("./source-capture")).captureReference(claim.source_id)).id)();
     captureInFlight = capture;
     // The race below handles the capture's outcome; this chain only clears the in-flight marker.
     void capture

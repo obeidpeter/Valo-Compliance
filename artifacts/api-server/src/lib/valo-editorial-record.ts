@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { evaluatePublication, publicationSchema } from "@workspace/valo-core";
 import { ValoProblem } from "../platform/valo-problem";
-import { requireSourceStaff, type SourceStaffActor } from "./valo-source-controls";
+import { requireSourceStaff, type SourceStaffActor } from "../modules/sources";
 import { sourceTime } from "../modules/sources";
 
 type Checks = { result: "pass" | "fail" | "not_run" }[];

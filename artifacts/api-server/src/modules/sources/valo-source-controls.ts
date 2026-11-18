@@ -2,12 +2,13 @@ import { randomUUID, createHash } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { allSourceLeads } from "@workspace/valo-core";
-import { lockSourceState, sourceTime, type SourceTx, recordSourceImpact } from "../modules/sources";
+import { lockSourceState, sourceTime, type SourceTx } from "./valo-source-state";
+import { recordSourceImpact } from "./valo-source-corrections";
 import { registerSourceWatch } from "./valo-source-monitor";
-import { ValoProblem } from "../platform/valo-problem";
-import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
-import type { StaffActor } from "../modules/staff";
-import { authorizeWorkspaceWrite, type WorkspaceActor } from "./valo-store";
+import { ValoProblem } from "../../platform/valo-problem";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
+import type { StaffActor } from "../staff";
+import { authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
 export type SourceStaffActor = StaffActor;
 const base = { requestKey: z.string().uuid(), reason: z.string().trim().min(20).max(1000) };
 export const sourceControlInput = z.discriminatedUnion("action", [
@@ -41,7 +42,7 @@ export async function requireSourceStaff(tx: SourceTx, actor: SourceStaffActor, 
   const [
     { activeStaffAssignment, assertStaffAssignmentCurrent, requireFreshStaffSession },
     { valoStaffAssignments },
-  ] = await Promise.all([import("../modules/staff"), import("@workspace/db")]);
+  ] = await Promise.all([import("../staff"), import("@workspace/db")]);
   requireFreshStaffSession(actor);
   const [row] = await tx
     .select({ id: valoStaffAssignments.id })

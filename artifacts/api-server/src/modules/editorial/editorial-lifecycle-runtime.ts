@@ -32,8 +32,10 @@ import {
   processSourceDependencyJob,
   processSourceImpact,
   readSourceText,
+  scheduleSourceChecks,
+  claimSourceCheck,
+  completeSourceCheck,
 } from "../sources";
-import { scheduleSourceChecks, claimSourceCheck, completeSourceCheck } from "../../lib/valo-source-monitor";
 import { readEditorialRun } from "./run-storage";
 import { releasedRegistry } from "../rules";
 import { assertLifecycleRunDatabase } from "./editorial-lifecycle-sandbox";
