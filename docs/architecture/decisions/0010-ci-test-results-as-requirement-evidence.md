@@ -31,7 +31,11 @@ security or architecture checks counted toward a requirement, and nothing new wo
   to the run summary and fails if any citation did not pass.
 - A unit test checks that every citation names a known requirement and job, an
   existing test file and a test with exactly that name, once, and that the workflow
-  records, checks and collects the results of every cited job.
+  records, checks and collects the results of every cited job. A file that builds
+  test names from a template, such as one test per fixture, names its tests only
+  through the template; for those the unit test checks that the cited name fits it
+  (added 18 November 2026). The job's own check still requires a test of exactly the
+  cited name to have run and passed.
 
 Evidence never accepts anything. Each requirement stays blocked in the readiness
 report until the acceptance evidence and approvals the specification names exist, and

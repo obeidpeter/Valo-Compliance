@@ -51,8 +51,31 @@ export function workflowJobs(root = repositoryRoot): Set<string> {
   return new Set(Object.keys(workflow.jobs ?? {}));
 }
 
+/**
+ * The names a test file builds from a template, such as test(`${fixture.id}: ${fixture.name}`),
+ * as patterns in which each placeholder stands for any text and the rest must match exactly. A
+ * reviewer finds such a test by its fixed words; the job's own check still requires a test of
+ * exactly the cited name to have run and passed.
+ */
+export function generatedTestNames(source: string): RegExp[] {
+  const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return [...source.matchAll(/\btest\(\s*`((?:[^`\\]|\\.)*)`/g)]
+    .map((match) => match[1]!)
+    .filter((template) => template.includes("${"))
+    .map(
+      (template) =>
+        new RegExp(
+          `^${template
+            .split(/\$\{[^}]*\}/)
+            .map(escape)
+            .join(".+")}$`,
+        ),
+    );
+}
+
 /** What a reviewer can check without running anything: every citation names a requirement,
- * a CI job, an existing test file and a test with exactly that name, once. */
+ * a CI job, an existing test file and a test with exactly that name, once. A name the file builds
+ * from a template must fit the template (generatedTestNames). */
 export function citationProblems(
   citations: Citation[],
   root = repositoryRoot,
@@ -70,7 +93,10 @@ export function citationProblems(
       problems.push(`${label}: no test file ${c.file}`);
     else {
       const source = readFileSync(path, "utf8");
-      if (!['"', "'", "`"].some((quote) => source.includes(`${quote}${c.test}${quote}`)))
+      if (
+        !['"', "'", "`"].some((quote) => source.includes(`${quote}${c.test}${quote}`)) &&
+        !generatedTestNames(source).some((name) => name.test(c.test))
+      )
         problems.push(`${label}: ${c.file} names no test exactly like this`);
     }
     const key = `${c.requirement}\0${c.file}\0${c.test}`;
