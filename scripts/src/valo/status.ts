@@ -7,7 +7,12 @@ import { CI_EVIDENCE_REGISTER, readCitations } from "./ci-evidence";
 const root = new URL("../../../", import.meta.url);
 export const statusPath = fileURLToPath(new URL("docs/status.md", root));
 
-type EvidenceRequirement = { id: string; implementation_status: string; acceptance_status?: string };
+type EvidenceRequirement = {
+  id: string;
+  release: string;
+  implementation_status: string;
+  acceptance_status?: string;
+};
 type EvidenceRegister = {
   date: string;
   status: string;
@@ -41,6 +46,8 @@ export function renderStatus(): string {
   }
   const citedTests = new Set(citations.map((c) => `${c.file}\0${c.test}`)).size;
   const uncovered = unverified.filter((id) => !cited.has(id));
+  const releaseOne = register.requirements.filter((r) => r.release === "R1").map((r) => r.id);
+  const releaseOneUncited = releaseOne.filter((id) => !cited.has(id));
   const lines = [
     "# Valo status",
     "",
@@ -87,6 +94,8 @@ export function renderStatus(): string {
       .map(([id, entry]) => `| ${id} | ${entry.tests.size} | ${[...entry.jobs].sort().join(", ")} |`),
     "",
     `Neither recorded implementation evidence nor a cited test: ${uncovered.join(", ") || "none"}.`,
+    "",
+    `No test is cited yet for ${releaseOneUncited.length} of the ${releaseOne.length} R1 requirements: ${releaseOneUncited.join(", ") || "none"}.`,
     "",
     "## Release gates",
     "",
