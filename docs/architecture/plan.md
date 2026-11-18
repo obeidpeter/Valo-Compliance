@@ -99,7 +99,7 @@ reach the 80% branch coverage NFR-011 requires.
 | --- | --- |
 | Container images (API, web) built and start-checked in CI; environment profiles documented | done |
 | Release and rollback procedure | done ([release-and-rollback.md](../valo/release-and-rollback.md)) |
-| Alert definitions in one place | done (catalogue of the existing internal and external alerts) |
+| Alert definitions in one place | done (catalogue of the existing internal and external alerts). Every internal alert names its runbook and accountable roles (NFR-010), and the probes count security signals: repeated refusals, signature failures, staff role changes and callers at a quota limit (SEC-008, development thresholds) |
 | External error tracking and metrics service | blocked (a new dependency and a new processor of operational data; needs owner approval) |
 | Backup retention policy (backups are never pruned today) | blocked (35-day policy proposed with a tested dry-run planner; nothing is removed until the owner approves it) |
 | Staging and production environments | blocked (needs spend approval) |
@@ -109,7 +109,7 @@ reach the 80% branch coverage NFR-011 requires.
 | Item | Status |
 | --- | --- |
 | Publish path from passing reviews to published versions | not started |
-| Rule release path through the editorial gates | not started |
+| Rule release path through the editorial gates | in progress: `planRuleRelease` checks a candidate's condition, that it is the next version and that its critical regression scenarios pass, and previews whose saved results would change; `restoredRuleVersion` releases a prior version again as the next one (ADM-004). No command writes a release yet, and it must also require an eligible publication bundle |
 | Owner approval command for the AI budget | not started |
 | Editorial staff screen, high-risk checks, source monitoring, user notices | not started |
 | Acceptance suites against the live engine | not started |
