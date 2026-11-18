@@ -14,7 +14,7 @@ import {
   customerProviderPayload,
 } from "../lib/valo-customer-ai-domain";
 import { getDocument, listRevisions, saveDocument } from "../lib/valo-store";
-import { requestExport, getExport, downloadExport } from "../lib/valo-exports";
+import { requestExport, getExport, downloadExport } from "../modules/exports";
 import { documentInput } from "../lib/valo-validation";
 import { readerContainsText } from "../lib/valo-reader-checks";
 import { workspaceActorFromRecord } from "../platform/workspace-context";

@@ -39,7 +39,7 @@ import {
 } from "@workspace/db";
 import { resolveWorkspace, saveProfile, createDocument } from "../lib/valo-store";
 import { syntheticDocument, syntheticProfile } from "../lib/valo-test-fixtures";
-import { requestExport, getExport, executeExport } from "../lib/valo-exports";
+import { requestExport, getExport, executeExport } from "../modules/exports/valo-exports";
 import { createWorkspaceExport, executeWorkspaceExport } from "../lib/valo-workspace-export-jobs";
 import { fixtureWorkspaceStorage } from "../lib/test-support/workspace-export-storage";
 import { createTask, saveReminderPreferences, reminderInstant } from "../modules/tasks/valo-tasks";

@@ -4,13 +4,13 @@ import { z } from "zod";
 import { closePrivacyErasureLocks } from "../lib/valo-privacy-erasure";
 import { db, pool, valoExportJobs } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { exportQueue, EXPORT_QUEUE } from "../lib/valo-export-queue";
-import { executeExport, developmentExportsOnly } from "../lib/valo-exports";
+import { exportQueue, EXPORT_QUEUE } from "../modules/exports";
+import { executeExport, developmentExportsOnly } from "../modules/exports";
 import { closeRenderer } from "../lib/valo-render";
 import { logger } from "../lib/logger";
 import { reconcileDueReminders } from "../modules/tasks";
-import { recoverAbandonedExports, reconcileExportOrphans } from "../lib/valo-export-recovery";
-import { expireGeneratedExports } from "../lib/valo-export-retention";
+import { recoverAbandonedExports, reconcileExportOrphans } from "../modules/exports";
+import { expireGeneratedExports } from "../modules/exports";
 import {
   processPaymentEvents,
   reconcilePayments,

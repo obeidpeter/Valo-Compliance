@@ -45,8 +45,8 @@ import {
   reconcileErasedObjects,
   closePrivacyErasureLocks,
 } from "./valo-privacy-erasure";
-import { requestExport, executeExport } from "./valo-exports";
-import { reconcileExportOrphans } from "./valo-export-recovery";
+import { requestExport, executeExport } from "../modules/exports/valo-exports";
+import { reconcileExportOrphans } from "../modules/exports/valo-export-recovery";
 import { privacyKeys, privacySigner } from "./valo-privacy-keys";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
 import { writePrivateFile, readPrivateFile, deletePrivateFile } from "./valo-private-storage";

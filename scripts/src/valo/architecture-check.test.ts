@@ -62,13 +62,16 @@ test("HTTP code cannot create, cast or redirect a workspace actor", () => {
   // Background work may act for a stored requester; every use re-checks membership.
   assert.equal(
     flagged(
-      "artifacts/api-server/src/lib/valo-exports.ts",
+      "artifacts/api-server/src/modules/exports/valo-exports.ts",
       "workspaceActorFromRecord({ workspaceId, identityId })",
     ),
     0,
   );
   assert.equal(
-    flagged("artifacts/api-server/src/lib/valo-exports.ts", "insert({ id, workspaceId, ...values })"),
+    flagged(
+      "artifacts/api-server/src/modules/exports/valo-exports.ts",
+      "insert({ id, workspaceId, ...values })",
+    ),
     0,
     "rows that spread other values are not actors",
   );

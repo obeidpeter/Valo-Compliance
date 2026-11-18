@@ -8,7 +8,7 @@ import { db, pool, valoAIDrafts } from "@workspace/db";
 import { digest, sha256 } from "@workspace/valo-core";
 import { getCustomerAIDraft, acceptCustomerAIDraft } from "../lib/valo-customer-ai";
 import { getDocument, listRevisions, saveDocument } from "../lib/valo-store";
-import { requestExport, getExport, downloadExport } from "../lib/valo-exports";
+import { requestExport, getExport, downloadExport } from "../modules/exports";
 import { documentInput } from "../lib/valo-validation";
 import { readerContainsText } from "../lib/valo-reader-checks";
 import { caseUUID } from "../lib/valo-customer-case-binding";

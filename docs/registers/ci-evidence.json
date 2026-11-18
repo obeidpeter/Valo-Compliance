@@ -515,14 +515,14 @@
     {
       "requirement": "NFR-004",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-export-timing.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-timing.integration.test.ts",
       "test": "five parallel DOCX and PDF exports finish within NFR-004's p95, queue time included",
       "proves": "Twenty DOCX and twenty PDF exports of a document of two to ten pages, requested five at a time and rendered by the real export worker from its queue, finish within 10 and 30 seconds at p95, timed from request to completion from the durable job events, so the time in the queue counts."
     },
     {
       "requirement": "NFR-004",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-export-recovery.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-recovery.integration.test.ts",
       "test": "real process death, PostgreSQL lease fencing and export recovery",
       "proves": "When a real worker process is killed at each stage of an export, lease recovery completes or fails the job visibly, only one recovery wins, live leases are not taken over, retry cycles stay bounded and a restarted dispatcher detects an abandoned final attempt."
     },

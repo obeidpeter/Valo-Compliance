@@ -1,5 +1,5 @@
 import { reconcileExportOrphans } from "./valo-export-recovery";
-import { serializeRevision } from "./valo-revision-codec";
+import { serializeRevision } from "../../lib/valo-revision-codec";
 import { randomUUID } from "node:crypto";
 import { and, eq, ne, desc } from "drizzle-orm";
 import {
@@ -17,20 +17,20 @@ import {
 } from "@workspace/db";
 import { CreateDocumentExportBody, CreateDocumentExportResponse } from "@workspace/api-zod";
 import { sha256 } from "@workspace/valo-core";
-import { ValoProblem, authorizeWorkspaceWrite, type WorkspaceActor } from "./valo-store";
-import { RENDER_VERSION, renderDocument, exportMime } from "./valo-render";
-import { readPrivateFile, writePrivateFile, deletePrivateFile } from "./valo-private-storage";
-import { documentInput } from "./valo-validation";
+import { ValoProblem, authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
+import { RENDER_VERSION, renderDocument, exportMime } from "../../lib/valo-render";
+import { readPrivateFile, writePrivateFile, deletePrivateFile } from "../../lib/valo-private-storage";
+import { documentInput } from "../../lib/valo-validation";
 import { EXPORT_HEARTBEAT_MS, EXPORT_LEASE_MS, recoverAbandonedExports } from "./valo-export-recovery";
-import { assertApplicationRuntime, runtimeEnvironment } from "./valo-runtime-activation";
+import { assertApplicationRuntime, runtimeEnvironment } from "../../lib/valo-runtime-activation";
 import {
   EXPORT_EXPIRED,
   exportIsExpired,
   exportRetentionAt,
   retireExpiredExport,
 } from "./valo-export-retention";
-import { privateCleanupAuthority } from "./valo-private-cleanup-authority";
-import { workspaceActorFromRecord } from "../platform/workspace-context";
+import { privateCleanupAuthority } from "../../lib/valo-private-cleanup-authority";
+import { workspaceActorFromRecord } from "../../platform/workspace-context";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export function developmentExportsOnly() {

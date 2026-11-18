@@ -15,7 +15,7 @@ assert.ok(
 // The test files to run with portable private files; the export recovery test by default.
 const tests = process.argv.slice(2).length
   ? process.argv.slice(2)
-  : ["src/lib/valo-export-recovery.integration.test.ts"];
+  : ["src/modules/exports/valo-export-recovery.integration.test.ts"];
 assert.ok(
   tests.every((file) => /^src\/[\w/.-]+\.integration\.test\.ts$/.test(file)),
   "integration tests only",

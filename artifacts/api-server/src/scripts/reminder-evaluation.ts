@@ -9,7 +9,7 @@ import { db, pool, valoAIDrafts, valoDocumentRevisions } from "@workspace/db";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
 import { createCustomerAIDraft, acceptCustomerAIDraft, getCustomerAIDraft } from "../lib/valo-customer-ai";
 import { resolveWorkspace, saveDocument, getDocument } from "../lib/valo-store";
-import { requestExport, getExport, downloadExport } from "../lib/valo-exports";
+import { requestExport, getExport, downloadExport } from "../modules/exports";
 import { recordedBalance, formatKobo } from "@workspace/valo-core/money";
 import { candidateReminder, reminderCandidates, exactKobo } from "./reminder-candidate-inputs";
 import { logger } from "../lib/logger";

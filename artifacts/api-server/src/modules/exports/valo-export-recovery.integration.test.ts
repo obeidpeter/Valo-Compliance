@@ -16,7 +16,7 @@ import {
   valoMemberships,
   valoWorkspaces,
 } from "@workspace/db";
-import { resolveWorkspace, createDocument } from "./valo-store";
+import { resolveWorkspace, createDocument } from "../../lib/valo-store";
 import {
   requestExport,
   executeExport,
@@ -26,8 +26,8 @@ import {
   type ExportStage,
 } from "./valo-exports";
 import { recoverAbandonedExports, reconcileExportOrphans, EXPORT_LEASE_MS } from "./valo-export-recovery";
-import { deletePrivateFile, readPrivateFile, writePrivateFile } from "./valo-private-storage";
-import { syntheticDocument } from "./valo-test-fixtures";
+import { deletePrivateFile, readPrivateFile, writePrivateFile } from "../../lib/valo-private-storage";
+import { syntheticDocument } from "../../lib/valo-test-fixtures";
 
 const enabled = process.env.VALO_RUN_EXPORT_CRASH_TESTS === "synthetic-development-only";
 const storage =
@@ -50,7 +50,7 @@ test(
         ? [
             "--experimental-test-module-mocks",
             "--import",
-            new URL("../test-support/private-file-process.mts", import.meta.url).href,
+            new URL("../../test-support/private-file-process.mts", import.meta.url).href,
           ]
         : []),
     ];

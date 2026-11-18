@@ -191,6 +191,12 @@ customers may read or download, and saved templates. It reads published content 
 modules, it and the store, quota and privacy key files it reaches load the database client only
 when a function queries it, so the catalogue browser check runs without a database.
 
+`modules/exports` holds document exports and their queue, crash recovery and retention.
+Rendering (`src/lib/valo-render.ts`) stays shared: publication checks and release preparation
+render documents too. The read-only retention inventory (`src/lib/valo-export-retention-inventory.ts`)
+stays outside the module: its operator command must refuse its arguments before it opens a
+database connection, and the module's index loads the export code and its database client.
+
 `modules/tasks` holds customer tasks and their pages, reminder preferences, the reminder worker and
 the development reminder email. `modules/support` holds the support lifecycle: cases, their
 messages, staff assignment and escalations. The intake that opens a support case from an access

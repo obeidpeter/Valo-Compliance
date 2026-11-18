@@ -22,7 +22,7 @@ import {
   valoWorkspaces,
   valoExportObjects,
 } from "@workspace/db";
-import { resolveWorkspace, createDocument, saveDocument, getDocument } from "./valo-store";
+import { resolveWorkspace, createDocument, saveDocument, getDocument } from "../../lib/valo-store";
 import {
   requestExport,
   getExport,
@@ -36,8 +36,8 @@ import {
   anonymousPrivateFileStatus,
   fileChecksum,
   writePrivateFile,
-} from "./valo-private-storage";
-import { syntheticDocument } from "./valo-test-fixtures";
+} from "../../lib/valo-private-storage";
+import { syntheticDocument } from "../../lib/valo-test-fixtures";
 
 const enabled = process.env.VALO_RUN_EXPORT_TESTS === "synthetic-development-only";
 test(
