@@ -546,6 +546,34 @@
       "file": "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
       "test": "both formats must be readable; a claimed pass cannot replace re-execution",
       "proves": "An export inspection fails when either file cannot be read, and a recorded pass does not replace reading the files again."
+    },
+    {
+      "requirement": "NFR-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-performance.test.ts",
+      "test": "public pages answer a tap within NFR-002's INP target and keep CLS within 0.1 on an emulated mid-range phone",
+      "proves": "On an emulated Moto G4 with a four times slower processor over slow 4G, five fresh loads of each public page but the home page keep p75 INP for a tap on the menu within 200 ms and p75 CLS within 0.1, with every API call answered by contract-checked synthetic data. LCP is measured too but misses 2.5 s on every page, so it is a todo test, not evidence; the home page and real-user measurements need a deployed instance."
+    },
+    {
+      "requirement": "NFR-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-availability.test.ts",
+      "test": "monthly core availability counts confirmed failures, leaves out announced maintenance and meets 99.5% at its edge",
+      "proves": "The proposed monthly measure counts a core journey as down only when a failed check is confirmed by the next one, until it recovers; it leaves maintenance announced 72 hours ahead out of the denominator, for at most four hours a month, counts late-announced maintenance as downtime, and puts 223 down minutes of a 31-day month at 99.5% and 224 below it."
+    },
+    {
+      "requirement": "NFR-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-availability.test.ts",
+      "test": "AI and payment provider outages are reported separately and never count against core availability",
+      "proves": "Incidents logged against the AI or payment provider dependency give those dependencies their own figures and leave core availability unchanged."
+    },
+    {
+      "requirement": "NFR-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-availability.test.ts",
+      "test": "minutes without checks are disclosed and left out, but a logged incident in them still counts",
+      "proves": "Minutes with no synthetic check are reported and left out of the denominator rather than assumed available, while a logged incident in those minutes still counts as downtime."
     }
   ]
 }

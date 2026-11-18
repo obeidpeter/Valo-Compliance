@@ -454,9 +454,56 @@ jobs:
           persist-credentials: false
       - name: Build the API and web images and prove PDF rendering, refusal without configuration and web headers
         run: scripts/ops/check-container-images.sh
+  web-performance:
+    name: Public pages on an emulated phone (NFR-002 lab check)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      # How each test ends, for the requirement evidence register (decision 0010).
+      VALO_TEST_RESULTS_DIR: ${{ github.workspace }}/generated-artifacts/test-results/web-performance
+      NODE_OPTIONS: >-
+        --test-reporter=spec --test-reporter-destination=stdout
+        --test-reporter=${{ github.workspace }}/scripts/src/valo/test-results-reporter.mjs
+        --test-reporter-destination=${{ github.workspace }}/generated-artifacts/test-results/web-performance/reporter-output.txt
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+      - name: Set up pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.1 --activate
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Make the folder for this job's test results
+        run: mkdir -p "$VALO_TEST_RESULTS_DIR"
+      # The app refuses to start without an identity publishable key. This one names a reserved,
+      # unreachable host (RFC 2606), so the identity provider's script never loads in the lab.
+      - name: Build the web app with a synthetic identity key
+        run: CLERK_PUBLISHABLE_KEY="pk_test_$(printf 'clerk.example.invalid$' | base64 -w0)" pnpm --filter @workspace/valo run build
+      - name: Install the locked Playwright Chromium
+        run: |
+          pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
+          echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
+      - name: Measure public pages on an emulated mid-range phone over slow 4G (NFR-002)
+        run: pnpm --filter @workspace/api-server test:valo-page-performance
+      - name: Check every test the evidence register cites for this job passed
+        run: pnpm --filter @workspace/scripts valo:ci-evidence --job web-performance
+      - name: Retain this job's test results for the evidence job
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-results-web-performance
+          path: generated-artifacts/test-results/web-performance
+          if-no-files-found: ignore
   evidence:
     name: Requirement evidence from this run
-    needs: [foundation, postgres]
+    needs: [foundation, postgres, web-performance]
     # Runs after a failed job too, so the report shows which cited tests did not pass.
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
