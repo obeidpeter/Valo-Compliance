@@ -71,7 +71,7 @@ jobs:
     # PostgreSQL 16 recovery tooling is part of the supported CI target.
     # ubuntu-latest advanced to 26.04, which no longer supplies that package.
     runs-on: ubuntu-24.04
-    # The job's own steps take about six minutes, but its downloads have taken up to 14: the
+    # The job's own steps take about four minutes, but its downloads have taken up to 14: the
     # Playwright browser from 16 seconds to 9 minutes, and the two apt installs up to 5 minutes
     # together. On 18 November 2026 a run took 17 minutes 38 seconds of a 20-minute limit.
     # 30 still stops a hang.
