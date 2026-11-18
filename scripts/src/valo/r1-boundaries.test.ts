@@ -191,9 +191,12 @@ const webSource = () => [
 ];
 
 /** Sentences in `file` that match `claim` and do not deny it, as in release-notices.test.tsx. */
-function undeniedClaims(file: string, claim: RegExp): string[] {
+function undeniedClaims(
+  file: string,
+  claim: RegExp,
+  denial = /\b(not|no|never|nor|without|isn't|aren't|doesn't|don't|cannot)\b/i,
+): string[] {
   const text = read(file);
-  const denial = /\b(not|no|never|nor|without|isn't|aren't|doesn't|don't|cannot)\b/i;
   const found: string[] = [];
   for (const match of text.matchAll(claim)) {
     const before = text.slice(0, match.index);
@@ -307,4 +310,55 @@ test("R1 offers no booking: no booking, appointment, availability or quote reque
     [],
     "support case code imports or calls no payment code",
   );
+});
+
+// OPS-006 is accepted when there is "no claim that Nigerian customer data stays in Nigeria without
+// proof", and PRV-002 with a "documented review covers Replit, identity, email, payments, AI and
+// monitoring; no unverified 'zero retention' promise". docs/valo/processor-review.md is that review,
+// a draft awaiting the privacy owner.
+test("the web app claims neither that data stays in Nigeria nor that a provider keeps nothing, and the processor review covers every kind of service", () => {
+  const web = webSource();
+  assert.ok(web.length > 50, "the web app source was read");
+  const location =
+    /\b(?:stays?|remains?|kept|stored|held|hosted|processed)\b[^.<{}"`]{0,40}\bin nigeria\b|\bnigerian (?:servers?|data cent(?:re|er)s?|hosting|cloud)\b|\bdata (?:residency|sovereignty|locali[sz]ation)\b/gi;
+  assert.deepEqual(
+    web.flatMap((file) => undeniedClaims(file, location)),
+    [],
+    "no sentence claims customer data stays in Nigeria",
+  );
+  // A retention promise reads as a denial ("never stored by the provider"), so only a sentence that
+  // disclaims the promise itself passes.
+  const retention =
+    /\bzero[- ](?:data[- ])?retention\b|\bno[- ](?:data[- ])?retention\b|\b(?:never|not) (?:stored|retained|kept|logged|saved) by (?:the |our |any )?(?:ai|model|provider|processor|openai|clerk|paystack|resend|third part(?:y|ies))\b|\bnot used (?:for|to) train\w*|\b(?:deleted|erased) immediately\b/gi;
+  const disclaimed = /\b(?:no|not|never|cannot|without)\b[^.]{0,40}\b(?:promise|claim|guarantee)\w*/i;
+  assert.deepEqual(
+    web.flatMap((file) => undeniedClaims(file, retention, disclaimed)),
+    [],
+    "no sentence promises that a provider keeps nothing",
+  );
+
+  const review = read("docs/valo/processor-review.md");
+  assert.match(review, /^\*\*Status: draft, not approved\.\*\*/m, "the review says it is not approved");
+  const rows = review
+    .split("\n")
+    .filter((line) => line.startsWith("| ") && !line.startsWith("| Service") && !line.startsWith("| ---"))
+    .map((line) =>
+      line
+        .split("|")
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    );
+  assert.ok(
+    rows.every((cells) => cells.length === 6 && cells.every(Boolean)),
+    "every service states what it receives, its region, its retention and its contract",
+  );
+  assert.ok(
+    rows.some(([service]) => service === "Replit"),
+    "the review covers Replit",
+  );
+  for (const kind of ["Hosting", "Identity", "Email", "Payments", "AI", "Monitoring"])
+    assert.ok(
+      rows.some((cells) => cells[1]!.startsWith(kind)),
+      `the review covers ${kind.toLowerCase()}`,
+    );
 });
