@@ -218,6 +218,7 @@ export function richQuestionTarget(path: string): RichQuestionTarget | undefined
     if (!arrayIndex(index, 30)) return undefined;
     if (parts.length === 2) return target(`rich-partner-${index}-type-state`, "rich-partners-add");
     if (
+      child === undefined ||
       !PARTNER_QUESTION_FIELDS.includes(child) ||
       (parts.length !== 3 &&
         !(parts.length === 4 && LIST_QUESTION_FIELDS.includes(child) && arrayIndex(listIndex, 20)))
@@ -227,11 +228,11 @@ export function richQuestionTarget(path: string): RichQuestionTarget | undefined
   }
   if (section === "businessName" && key === "namingAssessment") {
     if (parts.length === 1) return target("rich-naming-onlyAddedWordsIndicateSuccession-state");
-    return parts.length === 2 && NAMING_QUESTION_FIELDS.includes(index)
+    return parts.length === 2 && index !== undefined && NAMING_QUESTION_FIELDS.includes(index)
       ? target(`rich-naming-${index}-state`)
       : undefined;
   }
-  if (!(QUESTION_FIELDS[section] as readonly string[]).includes(key)) return undefined;
+  if (key === undefined || !(QUESTION_FIELDS[section] as readonly string[]).includes(key)) return undefined;
   if (
     parts.length !== 1 &&
     !(parts.length === 2 && LIST_QUESTION_FIELDS.includes(key) && arrayIndex(index, 20))
