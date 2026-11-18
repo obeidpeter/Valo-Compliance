@@ -14,6 +14,7 @@
     "valo:sync-specification": "tsx ./src/valo/sync-specification.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "valo:ci-evidence": "tsx ./src/valo/ci-evidence.ts",
+    "valo:skipped-tests": "tsx ./src/valo/skipped-tests.ts",
     "valo:code-coverage": "tsx ./src/valo/code-coverage.ts"
   },
   "dependencies": {

@@ -98,6 +98,7 @@
     "test:valo-source-controls-db": "NODE_ENV=development node --import tsx --test src/lib/valo-source-controls.integration.test.ts",
     "test:valo-editorial-lifecycle": "NODE_ENV=development node --import tsx --test src/modules/editorial/editorial-lifecycle-controls.test.ts src/modules/publication/publication-final-check.test.ts",
     "test:valo-editorial-lifecycle-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/modules/editorial/editorial-lifecycle.integration.test.ts",
+    "test:valo-publication-guards-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/modules/publication/publication-guards.integration.test.ts",
     "test:valo-support-ui": "node --import tsx --test src/lib/valo-support-ui.test.ts",
     "test:valo-support-browser": "node src/scripts/support-case-browser.mjs",
     "test:valo-support-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/modules/support/valo-support-lifecycle.integration.test.ts",
