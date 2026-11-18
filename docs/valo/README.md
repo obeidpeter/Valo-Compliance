@@ -135,7 +135,7 @@ All 27 supplementary document mappings and 79 regulatory source rows are preserv
 
 - `pnpm --filter @workspace/scripts valo:readiness` returns the current formal traceability, conflicts, release holds, catalogue and evaluation-suite state.
 - `pnpm --filter @workspace/scripts test:valo` runs early deterministic unit checks. These are NOT the formal 80-rule, 60-customer-AI or 60-editorial suites, nor real model/export/restore evidence.
-- `lib/valo-core/src/traceability.ts` and `requirements-r1.ts` preserve every supplied exact requirement body and acceptance text. Paths are partial implementation links, not acceptance evidence.
+- `lib/valo-records/src/traceability.ts` and `requirements-r1.ts` preserve every supplied exact requirement body and acceptance text. Paths are partial implementation links, not acceptance evidence.
 - `/development` reads the live development-only requirements, content and conflict registers from the API; it exposes no customer records and its detailed endpoints return 404 in production.
 - `pnpm --filter @workspace/scripts valo:sync-specification` regenerates the canonical runtime registers only after all 127 source quotations and inventory counts validate.
 - `lib/valo-core/src/catalogue.ts` contains inventory metadata only. Zero templates are released.

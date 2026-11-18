@@ -1,0 +1,9 @@
+{
+  "name": "@workspace/valo-records",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@workspace/valo-core": "workspace:*" },
+  "devDependencies": { "@types/node": "catalog:" }
+}

@@ -44,6 +44,7 @@ environment each needs, are listed in
 | `lib/db` | Database schema and append-only SQL migrations |
 | `lib/api-spec` | OpenAPI contract (source of the generated `lib/api-zod` and `lib/api-client-react`) |
 | `lib/valo-core` | Logic shared by the API and web app |
+| `lib/valo-records` | Requirement records, traceability and evidence bookkeeping |
 | `scripts`, `scripts/ops` | Registers, readiness report, security scans; backup, restore and release tooling |
 | `docs/specification` | The original brief, technical requirements and roadmap |
 | `docs/registers` | Requirements traceability, content inventory, conflicts and decisions |

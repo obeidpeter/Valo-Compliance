@@ -57,6 +57,7 @@ layout. In short:
 | `lib/db` | Drizzle schema, SQL migrations, guarded schema tooling |
 | `lib/api-spec` | OpenAPI contract; generates `lib/api-zod` and `lib/api-client-react` |
 | `lib/valo-core` | Business logic shared by the API and web app |
+| `lib/valo-records` | Requirement records, traceability and evidence bookkeeping |
 | `scripts/` | Requirement registers, readiness report, security scans |
 | `scripts/ops/` | Backup, restore, release and host supervision tooling |
 | `docs/` | Specification, registers, architecture, runbooks, evidence |

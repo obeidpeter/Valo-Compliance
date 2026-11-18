@@ -4,12 +4,10 @@ import {
   additionalCandidates,
   baselineTemplates,
   catalogueSummary,
-  readiness,
-  requirements,
-  requirementStatus,
   sha256,
   contentReadiness,
 } from "@workspace/valo-core";
+import { readiness, requirements, requirementStatus } from "@workspace/valo-records";
 
 test("baseline preserves all 40 original identifiers and exact capability counts", () => {
   assert.equal(baselineTemplates.length, 40);
@@ -153,7 +151,7 @@ test("R2, launch, live commerce and real confidential data remain disabled", () 
 test("partial execution bindings match the actual retained report bytes", async () => {
   const { readFile } = await import("node:fs/promises");
   const { createHash } = await import("node:crypto");
-  const { readiness } = await import("@workspace/valo-core");
+  const { readiness } = await import("@workspace/valo-records");
   const records = new Map(
     readiness()
       .requirements.flatMap((r) => r.evidence)

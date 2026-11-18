@@ -56,7 +56,8 @@ everything else. This is deliberate: no production launch is approved.
 | `lib/api-spec` | The OpenAPI contract, the single source of truth for HTTP shapes. |
 | `lib/api-zod`, `lib/api-client-react` | Generated validation and React Query client. Never edited by hand. |
 | `lib/db` | Drizzle schema, append-only SQL migrations, guarded schema tooling. |
-| `lib/valo-core` | Logic shared by API and web: guided forms, money, checker, publication rules, plus requirement and evidence registers. |
+| `lib/valo-core` | Logic shared by API and web: guided forms, money, checker, publication rules, content catalogue and inventory. |
+| `lib/valo-records` | Requirement and evidence bookkeeping: requirement records, traceability and readiness, evidence links, acceptance work items, handover checkpoint. Depends on `valo-core`; the API reads it only to report status. |
 | `lib/integrations-openai-ai-server` | OpenAI client configured through Replit AI Integrations. |
 | `scripts` | Readiness report, register synchronisation, security scans. |
 | `scripts/ops` | Backup, restore, retention replay and planning, release manifest, host supervision, container image check. |

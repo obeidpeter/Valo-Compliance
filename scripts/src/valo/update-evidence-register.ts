@@ -3,7 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { requirements, requirementStatus, workItemsForRequirement } from "@workspace/valo-core";
+import { requirements, requirementStatus, workItemsForRequirement } from "@workspace/valo-records";
 
 const revision = process.argv[2] ?? execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 assert.match(revision, /^[a-f0-9]{40}$/);

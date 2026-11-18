@@ -29,7 +29,8 @@ Valo is a Nigerian SME business-documentation and source-governed compliance app
 - `artifacts/api-server` — identity/tenant-scoped private API and persistence
 - `lib/db/src/schema`, `lib/db/drizzle` — Drizzle schema and retained SQL migration
 - `lib/api-spec/openapi.yaml` — source API contract
-- `lib/valo-core` — fail-closed editorial validator and executable requirements/content registers
+- `lib/valo-core` — fail-closed editorial validator and executable content registers
+- `lib/valo-records` — executable requirement, traceability and evidence registers
 - `docs/specification`, `docs/registers` — complete coordinating-team specification baseline
 - `docs/valo` — measured evidence, compatibility, limitations and operations notes
 

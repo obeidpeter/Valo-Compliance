@@ -3,7 +3,7 @@ import { appendFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { requirements } from "@workspace/valo-core";
+import { requirements } from "@workspace/valo-records";
 import { repositoryRoot } from "./architecture-check";
 import { coverageTable, MEASURED_BY, readAreaCoverage } from "./code-coverage";
 import { WORKFLOW } from "./database-tests";

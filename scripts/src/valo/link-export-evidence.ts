@@ -19,5 +19,5 @@ export const partialExportEvidence: {
   record: { kind:"test";path:string;hash:string;result:"pass"|"not_run" };
 } = ${JSON.stringify(data, null, 2)};
 `;
-await writeFile(new URL("lib/valo-core/src/export-evidence.generated.ts", root), output);
+await writeFile(new URL("lib/valo-records/src/export-evidence.generated.ts", root), output);
 console.log("Linked actual partial export test evidence to nine blocked requirements; no gate accepted.");

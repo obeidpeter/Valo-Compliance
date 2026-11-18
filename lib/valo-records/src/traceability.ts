@@ -1,4 +1,4 @@
-import { coordinatingRefinement } from "./coordinating.generated";
+import { coordinatingRefinement } from "@workspace/valo-core";
 import { r1Transfer } from "./requirements-r1";
 import {
   sourceRequirements,

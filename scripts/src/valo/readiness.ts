@@ -1,4 +1,5 @@
-import { readiness, baselineTemplates, additionalCandidates, catalogueSummary } from "@workspace/valo-core";
+import { baselineTemplates, additionalCandidates, catalogueSummary } from "@workspace/valo-core";
+import { readiness } from "@workspace/valo-records";
 import { CI_EVIDENCE_REGISTER, evidenceByRequirement, readCitations, readTestRecords } from "./ci-evidence";
 import { coverageReport, readAreaCoverage } from "./code-coverage";
 

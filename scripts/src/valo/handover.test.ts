@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { handoverCheckpoint } from "@workspace/valo-core";
+import { handoverCheckpoint } from "@workspace/valo-records";
 test("documentation checkpoint is a real ancestor, not a copied revision label", () => {
   assert.doesNotThrow(() =>
     execFileSync("git", ["merge-base", "--is-ancestor", handoverCheckpoint.baselineCommit, "HEAD"]),

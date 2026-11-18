@@ -17,7 +17,8 @@
     "valo:code-coverage": "tsx ./src/valo/code-coverage.ts"
   },
   "dependencies": {
-    "@workspace/valo-core": "workspace:*"
+    "@workspace/valo-core": "workspace:*",
+    "@workspace/valo-records": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

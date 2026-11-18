@@ -100,6 +100,7 @@ test("R1 has no way to upload a file: the API takes JSON only and the web app ha
     "scripts/package.json",
     "lib/db/package.json",
     "lib/valo-core/package.json",
+    "lib/valo-records/package.json",
   ]) {
     const json = JSON.parse(read(manifest)) as Record<string, Record<string, string> | undefined>;
     const names = Object.keys({ ...json.dependencies, ...json.devDependencies });

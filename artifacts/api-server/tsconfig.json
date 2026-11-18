@@ -10,7 +10,7 @@
   "include": ["src"],
   "references": [
     { "path": "../../lib/integrations-openai-ai-server" },
-    { "path": "../../lib/valo-core" },
+    { "path": "../../lib/valo-core" }, { "path": "../../lib/valo-records" },
     {
       "path": "../../lib/db"
     },
