@@ -214,6 +214,10 @@ staff code and move when it becomes a module. Five files stay outside:
   the repository rules treat a `src/lib/*-http.ts` file as HTTP code, which may not create a
   workspace actor (`workspace-actor`).
 
+`modules/staff` holds staff authority (the active role assignments and the recent multi-factor
+check every staff action needs) and staff role administration. The identity SDK loads only when a
+role change looks up its target account, so code that only checks staff authority never loads it.
+
 `modules/tasks` holds customer tasks and their pages, reminder preferences, the reminder worker and
 the development reminder email. `modules/support` holds the support lifecycle: cases, their
 messages, staff assignment and escalations. The intake that opens a support case from an access

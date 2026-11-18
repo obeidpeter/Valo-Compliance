@@ -13,7 +13,7 @@ import {
   assertStaffAssignmentCurrent,
   requireFreshStaffSession,
   type StaffActor,
-} from "./valo-staff-authority";
+} from "../modules/staff";
 import { authorizeWorkspaceWrite, type WorkspaceActor } from "./valo-store";
 export type SourceStaffActor = StaffActor;
 const base = { requestKey: z.string().uuid(), reason: z.string().trim().min(20).max(1000) };

@@ -9,7 +9,7 @@ import {
   type StaffTarget,
 } from "./valo-staff-roles";
 import { activeStaffAssignment } from "./valo-staff-authority";
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../../lib/valo-problem";
 
 const rollback = Symbol("rollback");
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];

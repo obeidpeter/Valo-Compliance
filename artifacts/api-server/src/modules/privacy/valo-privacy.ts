@@ -1,8 +1,4 @@
-import {
-  activeStaffAssignment,
-  assertStaffAssignmentCurrent,
-  requireFreshStaffSession,
-} from "../../lib/valo-staff-authority";
+import { activeStaffAssignment, assertStaffAssignmentCurrent, requireFreshStaffSession } from "../staff";
 import { randomUUID, createHash } from "node:crypto";
 import { and, eq, desc, asc, sql } from "drizzle-orm";
 import {

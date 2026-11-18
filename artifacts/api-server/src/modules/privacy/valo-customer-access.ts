@@ -3,7 +3,7 @@ import {
   assertStaffAssignmentCurrent,
   requireFreshStaffSession,
   type StaffActor,
-} from "../../lib/valo-staff-authority";
+} from "../staff";
 import { randomUUID, createHash } from "node:crypto";
 import { createPrivacyCase } from "./valo-privacy";
 import { and, eq, desc, like, sql } from "drizzle-orm";

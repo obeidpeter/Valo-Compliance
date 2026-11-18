@@ -9,7 +9,7 @@
  * with a verified primary email.
  */
 import { pool } from "@workspace/db";
-import { bootstrapFirstSystemAdministrator } from "../lib/valo-staff-roles";
+import { bootstrapFirstSystemAdministrator } from "../modules/staff";
 import { ValoProblem } from "../lib/valo-problem";
 import { setting } from "../platform/settings";
 
