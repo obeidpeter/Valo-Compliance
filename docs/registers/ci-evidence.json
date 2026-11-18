@@ -1136,6 +1136,13 @@
       "proves": "An otherwise complete item that records a missing piece of operative evidence is held for material uncertainty."
     },
     {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "holds unresolved contract clause",
+      "proves": "A synthetic publication bundle whose candidate records an unresolved termination clause is held, with a material-uncertainty reason."
+    },
+    {
       "requirement": "EDP-006",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-mechanical.test.ts",
@@ -1155,6 +1162,13 @@
       "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
       "test": "invented quotation fails independently of any model pass",
       "proves": "An invented quotation fails the mechanical citation check, which is computed from the candidate and its source alone and takes no review verdict."
+    },
+    {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "holds failed deterministic arithmetic",
+      "proves": "A synthetic publication bundle whose two AI reviews both pass is held when its arithmetic check is marked failed, with a reason naming the failed arithmetic check."
     },
     {
       "requirement": "EDP-007",
@@ -1185,6 +1199,27 @@
       "proves": "If the owner narrows the publication policy after an item's first check, the final check before release refuses it because the policy changed."
     },
     {
+      "requirement": "EDP-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "holds changed body",
+      "proves": "A synthetic publication bundle whose candidate body is edited after its manifest was bound is held, with a reason naming the candidate-hash mismatch."
+    },
+    {
+      "requirement": "EDP-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "holds expired evidence",
+      "proves": "A synthetic publication bundle whose source evidence is no longer fresh at the evaluation time is held, with a reason naming the source as not current."
+    },
+    {
+      "requirement": "EDP-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "holds policy changed after binding",
+      "proves": "A synthetic publication bundle whose publication policy changes after its manifest was bound is held, with a reason naming the policy-hash mismatch."
+    },
+    {
       "requirement": "EDP-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/editorial/editorial-lifecycle.integration.test.ts",
@@ -1211,6 +1246,13 @@
       "file": "artifacts/api-server/src/modules/rules/valo-checker-rich.test.ts",
       "test": "source-family implementation, publication, period and freshness gates fail closed",
       "proves": "Outside fixture mode, a rule that claims an editorial release without a trusted publication manifest gives an assessment no result item."
+    },
+    {
+      "requirement": "EDP-009",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "holds forged rights binding",
+      "proves": "A synthetic publication bundle whose manifest carries a forged rights hash is held, with a reason naming the rights-hash mismatch."
     },
     {
       "requirement": "EDP-012",

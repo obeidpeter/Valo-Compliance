@@ -28,7 +28,7 @@ No recorded implementation evidence: WEB-003, WEB-004, DOC-008, DOC-009, EDT-010
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 297 citations of 172 tests for 120 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 303 citations of 178 tests for 120 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -73,11 +73,11 @@ A citation is partial evidence: it never accepts a requirement.
 | EDP-002 | 3 | foundation |
 | EDP-003 | 3 | foundation |
 | EDP-004 | 2 | foundation |
-| EDP-005 | 3 | foundation |
-| EDP-006 | 3 | foundation |
-| EDP-007 | 4 | foundation, postgres |
+| EDP-005 | 4 | foundation |
+| EDP-006 | 4 | foundation |
+| EDP-007 | 7 | foundation, postgres |
 | EDP-008 | 3 | foundation |
-| EDP-009 | 4 | foundation, postgres |
+| EDP-009 | 5 | foundation, postgres |
 | EDP-011 | 5 | foundation, postgres |
 | EDP-012 | 3 | foundation, postgres |
 | EDT-001 | 2 | foundation |
