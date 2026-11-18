@@ -8,7 +8,7 @@ import { registerSourceWatch } from "./valo-source-monitor";
 import { ValoProblem } from "../../platform/valo-problem";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import type { StaffActor } from "../staff";
-import { authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
+import type { WorkspaceActor } from "../../platform/workspace-context";
 export type SourceStaffActor = StaffActor;
 const base = { requestKey: z.string().uuid(), reason: z.string().trim().min(20).max(1000) };
 export const sourceControlInput = z.discriminatedUnion("action", [
@@ -253,7 +253,11 @@ export async function actOnSourceControls(actor: SourceStaffActor, raw: unknown)
   });
 }
 export async function correctionNotices(actor: WorkspaceActor, page = 1) {
-  const { db } = await import("@workspace/db");
+  // The store loads here, not with every reader of the sources module's index.
+  const [{ db }, { authorizeWorkspaceWrite }] = await Promise.all([
+    import("@workspace/db"),
+    import("../../lib/valo-store"),
+  ]);
   return db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
     const rows = (
