@@ -110,7 +110,7 @@ reach the 80% branch coverage NFR-011 requires.
 | --- | --- |
 | Publish path from passing reviews to published versions | not started |
 | Rule release path through the editorial gates | done in development (ADM-004): `src/scripts/rule-release.ts` plans a rule version against the registry and saved profiles (condition, next version, critical regression scenarios, preview of changed results) and applies it only with the operator's confirming manifest hash. It applies the registry's own admission check, reads each source's stored text before its transaction, then binds the sources to their current captures and supersedes the previous version inside it. A prior version is restored by releasing it again as the next one. Nothing produces real release requests yet: that needs the regulatory editorial pipeline, whose reviews are AI runs |
-| Owner approval command for the AI budget | not started |
+| Owner approval command for the AI budget | done in development: `src/scripts/finite-allocation-approval.ts` prepares the current finite package, records the owner's approval of that exact package for at most 24 hours and revokes it ([operating runbook](../valo/operating-runbooks.md)). Only one approval is current at a time, and the approval is kept only if the dispatcher's own admission check accepts it. A database test approves synthetic packages in an isolated schema; no approval exists, and running the command is the owner's spending decision. The package the 14 November decision packet names predates the clarified allocation boundary and is refused |
 | Editorial staff screen, high-risk checks, source monitoring, user notices | not started |
 | Acceptance suites against the live engine | not started |
 

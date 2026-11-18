@@ -32,6 +32,37 @@ Never run it against production. Normal workers cannot migrate at startup.
 The retained SQL order and current functions/permissions need a separate approved
 production path; changing publish/start commands to run DDL is prohibited.
 
+## Approving a finite AI allocation (owner only)
+
+Recording this approval authorizes spending: up to the allocation's US$30 cap of additional
+application inference, within the package's attempt ceilings, for at most 24 hours. Only the
+product owner runs `approve`, or an operator acting on the owner's written instruction. Building
+and testing the command spends nothing; its test runs only in a disposable database. Each command
+below runs from the repository root with `NODE_ENV=development` and refuses a deployment; file
+paths are relative to `artifacts/api-server`, where `pnpm --filter … exec` runs.
+
+1. `pnpm --filter @workspace/api-server exec tsx src/scripts/finite-allocation-approval.ts prepare <package.json>`
+   writes the current package, prepared from the repository's content inventory and evaluation
+   corpora, and prints its id, cap, attempt ceilings and holds. It never overwrites a file.
+2. The owner reads that file and writes the approval down, naming the package id, for example in a
+   dated decision record.
+3. `VALO_RECORD_OWNER_INFERENCE_APPROVAL=owner-approved-exact-finite-package pnpm --filter @workspace/api-server exec tsx src/scripts/finite-allocation-approval.ts approve <package.json> --confirm <package id> --approved-by <who approved> --reference <where it is written> [--hours 24]`
+   records it. The command refuses a package whose limits differ from the current allocation, a
+   confirmation that is not the package's own id, more than 24 hours, the delegated-child marker as
+   the approver, a second approval while one is current, and a package already recorded. It keeps
+   the approval only if the dispatcher's own admission check accepts it in the same transaction,
+   and the database freezes the approval once written.
+4. `... finite-allocation-approval.ts revoke --confirm <package id>` stops all new work under the
+   package at once; an approval is never re-enabled. `... finite-allocation-approval.ts status`
+   lists every recorded approval.
+
+The package the 14 November decision packet names (`finite-package:3f21b47b…`) predates the
+clarified allocation boundary, so the command refuses it: the approval names the package that
+`prepare` printed. Approving never adds money. Every package draws on the one additional allocation
+(`valo-additional-inference-30-20261114-v1`), whose ledger counts each reservation and charge
+against its cap. Approval admits only work that passes its own preparation and readiness checks;
+it does not waive a publication gate, approve content or authorize a launch.
+
 ## Recovery/launch/handover
 
 Use development checkpoints or the supported production recovery pane, never
