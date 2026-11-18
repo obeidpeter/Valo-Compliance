@@ -127,6 +127,28 @@ test(
     const canonicalFacts = checkerFactsSchema.parse(facts);
     let first: { id: string; facts: typeof facts; result: { resultHash: string } };
     try {
+      // CMP-009: basic guidance stays readable without signing in or buying anything.
+      await t.test(
+        "an anonymous visitor can run the basic checker and read its notice, gaps and missing answers",
+        async () => {
+          const basic = Object.fromEntries(
+            Object.entries(facts).filter(([key]) => key !== "factsVersion" && key !== "rich"),
+          );
+          const response = await request("/checker/preview", { facts: basic, asOfDate: day }, "");
+          assert.equal(response.status, 200);
+          const body = (await response.json()) as {
+            notice: string;
+            gaps: string[];
+            unanswered: string[];
+            items: { label: string; reason: string; nextStep: string; sources: unknown[] }[];
+          };
+          assert.match(body.notice, /not legal certification/);
+          assert.ok(body.gaps.length > 0);
+          assert.ok(body.unanswered.includes("premises"), body.unanswered.join(", "));
+          for (const item of body.items)
+            assert.ok(item.label && item.reason && item.nextStep && item.sources.length > 0, item.label);
+        },
+      );
       await t.test(
         "anonymous name facts, unverified accounts and hostile origins cannot enter private preview",
         async () => {

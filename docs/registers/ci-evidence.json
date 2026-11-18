@@ -385,6 +385,27 @@
       "file": "scripts/src/valo/customer-wording.test.ts",
       "test": "R1 offers no government form to download and never presents a template or checklist as an official form",
       "proves": "None of the prepared template and guidance titles, no customer-facing sentence (unless it denies it) and no API operation presents an official, government or authority filing form; R1 offers no government form to download."
+    },
+    {
+      "requirement": "CMP-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-checker-explanations.test.ts",
+      "test": "each checker result says why it may matter, what to do next and what is missing, with its source",
+      "proves": "A likely result carries its rule's reason, next step and source passage; one that needs more information names the missing fact and says to answer it or ask the named authority; a negative one says it is not a legal exemption; the result says it is not legal certification; and the result page shows every checker fact in words, not by its internal name."
+    },
+    {
+      "requirement": "CMP-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-checker-http.integration.test.ts",
+      "test": "rich checker HTTP preview, consented save, history and isolation",
+      "proves": "A visitor who has not signed in can run the basic checker over HTTP and reads its not-legal-certification notice, its coverage gaps and the answers still missing, while private name facts still need a signed-in, verified account."
+    },
+    {
+      "requirement": "CMP-009",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/release-notices.test.tsx",
+      "test": "the web app never claims lawyer approval, professional verification or guaranteed compliance",
+      "proves": "No sentence in the web app's source claims lawyer approval, legal or professional verification or guaranteed compliance unless it denies it, so guidance is never presented as a professional endorsement."
     }
   ]
 }
