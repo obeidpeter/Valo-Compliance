@@ -574,6 +574,20 @@
       "file": "artifacts/api-server/src/lib/valo-availability.test.ts",
       "test": "minutes without checks are disclosed and left out, but a logged incident in them still counts",
       "proves": "Minutes with no synthetic check are reported and left out of the denominator rather than assumed available, while a logged incident in those minutes still counts as downtime."
+    },
+    {
+      "requirement": "OPS-006",
+      "job": "foundation",
+      "file": "scripts/src/valo/r1-boundaries.test.ts",
+      "test": "the web app claims neither that data stays in Nigeria nor that a provider keeps nothing, and the processor review covers every kind of service",
+      "proves": "No sentence in the web app claims that customer data stays in Nigeria, or names Nigerian servers or data residency, unless it denies the claim; the draft review that records each outside service's region exists and says it is not approved."
+    },
+    {
+      "requirement": "PRV-002",
+      "job": "foundation",
+      "file": "scripts/src/valo/r1-boundaries.test.ts",
+      "test": "the web app claims neither that data stays in Nigeria nor that a provider keeps nothing, and the processor review covers every kind of service",
+      "proves": "The draft review of outside services covers Replit, identity, email, payments, AI and monitoring, each with what the code sends it, its region, its retention and its contract, and no sentence in the web app promises that a provider keeps nothing unless it disclaims the promise."
     }
   ]
 }
