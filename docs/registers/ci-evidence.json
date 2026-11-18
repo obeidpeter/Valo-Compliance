@@ -364,6 +364,27 @@
       "file": "artifacts/valo/src/components/service-categories.test.tsx",
       "test": "the services page explains each kind of help without listing a provider or speaking for an authority",
       "proves": "The services page lists every service topic in the API contract with a plain description of what someone can ask about and \"No provider yet\", no description promises a provider, booking, fee or outcome or names a government body or regulator, and the page says nothing is booked or forwarded."
+    },
+    {
+      "requirement": "EDT-010",
+      "job": "foundation",
+      "file": "scripts/src/valo/customer-wording.test.ts",
+      "test": "losing access is never described as taking back a downloaded copy, and saved work is said to stay",
+      "proves": "No customer-facing sentence about downloaded or local copies says they are removed, retracted or disabled unless it denies it, and the refund policy, purchase history, template and export pages say saved drafts and downloaded files stay, while a full refund suspends future template reuse."
+    },
+    {
+      "requirement": "EDT-010",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-refunds.integration.test.ts",
+      "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+      "proves": "While a refund is pending or partial the template entitlement stays active, a full refund suspends it, and the customer's saved draft still exists afterwards."
+    },
+    {
+      "requirement": "DOC-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/customer-wording.test.ts",
+      "test": "R1 offers no government form to download and never presents a template or checklist as an official form",
+      "proves": "None of the prepared template and guidance titles, no customer-facing sentence (unless it denies it) and no API operation presents an official, government or authority filing form; R1 offers no government form to download."
     }
   ]
 }
