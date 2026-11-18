@@ -26,9 +26,24 @@ export type RuleReleasePlan = {
   affected: { profiles: number; changes: { profile: number; change: AssessmentChange }[] };
 };
 
-type Run = { now: Date; asOfDate: string; fixtureMode?: boolean };
-const items = (facts: CheckerFacts, rules: ReleasedRule[], run: Run, asOfDate = run.asOfDate) =>
-  assess(facts, rules, asOfDate, run.now, run.fixtureMode ? { fixtureMode: true } : {}).items;
+type Run = {
+  now: Date;
+  asOfDate: string;
+  fixtureMode?: boolean;
+  /** The manifests of the released rules in `current` that the registry trusts. */
+  trustedManifestHashes?: ReadonlySet<string>;
+};
+const items = (
+  facts: CheckerFacts,
+  rules: ReleasedRule[],
+  run: Run,
+  trusted: ReadonlySet<string> | undefined,
+  asOfDate = run.asOfDate,
+) =>
+  assess(facts, rules, asOfDate, run.now, {
+    ...(run.fixtureMode ? { fixtureMode: true } : {}),
+    ...(trusted ? { trustedManifestHashes: trusted } : {}),
+  }).items;
 
 /**
  * ADM-004: what releasing a new version of a rule would do, worked out before anything is
@@ -44,6 +59,8 @@ export function planRuleRelease(
     current: ReleasedRule[];
     scenarios: RuleScenario[];
     profiles: CheckerFacts[];
+    /** The rule's highest version ever released, admitted or not; by default, its highest in `current`. */
+    latestVersion?: number;
   } & Run,
 ): RuleReleasePlan {
   const blocked = (reasons: string[]): RuleReleasePlan => ({
@@ -57,19 +74,30 @@ export function planRuleRelease(
     return blocked(parsed.error.issues.map((issue) => `condition_schema_invalid:${issue.path.join(".")}`));
   const candidate = parsed.data;
   const reasons: string[] = [];
-  const latest = Math.max(0, ...input.current.filter((r) => r.id === candidate.id).map((r) => r.version));
+  const latest =
+    input.latestVersion ??
+    Math.max(0, ...input.current.filter((r) => r.id === candidate.id).map((r) => r.version));
   if (candidate.version !== latest + 1) reasons.push("version_not_next");
   if (!input.scenarios.some((s) => s.critical)) reasons.push("no_critical_scenario");
   const released = [...input.current.filter((r) => r.id !== candidate.id), candidate];
+  // The plan asks what the checker would give were the candidate released, so its manifest is
+  // trusted for these runs only; whether the registry would admit it is checked separately.
+  const trustedNow = input.trustedManifestHashes;
+  const trustedAfter = trustedNow && new Set([...trustedNow, candidate.manifestHash]);
   const scenarios = input.scenarios.map((s) => {
     const actualLabel =
-      items(s.facts, released, input, s.asOfDate).find((i) => i.ruleId === candidate.id)?.label ?? null;
+      items(s.facts, released, input, trustedAfter, s.asOfDate).find((i) => i.ruleId === candidate.id)
+        ?.label ?? null;
     const passed = actualLabel === s.expectedLabel;
     if (!passed && s.critical) reasons.push(`critical_scenario_failed:${s.id}`);
     return { id: s.id, critical: s.critical, expectedLabel: s.expectedLabel, actualLabel, passed };
   });
   const changes = input.profiles.flatMap((facts, profile) =>
-    explainAssessmentChanges(items(facts, input.current, input), items(facts, released, input), [])
+    explainAssessmentChanges(
+      items(facts, input.current, input, trustedNow),
+      items(facts, released, input, trustedAfter),
+      [],
+    )
       .filter((change) => change.ruleId === candidate.id)
       .map((change) => ({ profile, change })),
   );

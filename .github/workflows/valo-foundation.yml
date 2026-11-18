@@ -415,6 +415,9 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-catalogue-visibility-db
       - name: Prove refusals and signature failures are counted for the security alerts (SEC-008)
         run: pnpm --filter @workspace/api-server test:valo-security-signals-db
+      # Publishes synthetic rule versions, so it runs last, after every suite that reads the registry.
+      - name: Prove a rule version is released only after its plan, source check and confirmation (ADM-004)
+        run: pnpm --filter @workspace/api-server test:valo-rule-release-db
       - name: Check that no transaction took a second pooled connection
         run: node artifacts/api-server/src/test-support/nested-connection-report.mjs
       - name: Check every test the evidence register cites for this job passed

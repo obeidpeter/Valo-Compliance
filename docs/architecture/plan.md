@@ -109,7 +109,7 @@ reach the 80% branch coverage NFR-011 requires.
 | Item | Status |
 | --- | --- |
 | Publish path from passing reviews to published versions | not started |
-| Rule release path through the editorial gates | in progress: `planRuleRelease` checks a candidate's condition, that it is the next version and that its critical regression scenarios pass, and previews whose saved results would change; `restoredRuleVersion` releases a prior version again as the next one (ADM-004). No command writes a release yet. It must apply the registry's own admission check (`ruleReleaseEligible`), bind each source to a current retained capture through `bindReleasedSources`, and supersede the previous version in the same transaction; testing its success path needs a retained capture of an official source in test storage, which no fixture provides yet |
+| Rule release path through the editorial gates | done in development (ADM-004): `src/scripts/rule-release.ts` plans a rule version against the registry and saved profiles (condition, next version, critical regression scenarios, preview of changed results) and applies it only with the operator's confirming manifest hash. It applies the registry's own admission check, reads each source's stored text before its transaction, then binds the sources to their current captures and supersedes the previous version inside it. A prior version is restored by releasing it again as the next one. Nothing produces real release requests yet: that needs the regulatory editorial pipeline, whose reviews are AI runs |
 | Owner approval command for the AI budget | not started |
 | Editorial staff screen, high-risk checks, source monitoring, user notices | not started |
 | Acceptance suites against the live engine | not started |

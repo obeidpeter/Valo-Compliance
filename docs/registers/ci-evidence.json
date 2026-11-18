@@ -455,6 +455,13 @@
       "file": "artifacts/api-server/src/lib/valo-rule-release.test.ts",
       "test": "restoring a prior rule version releases it again as the next version and changes no saved result",
       "proves": "Restoring a prior rule version gives its content the next version number, leaves the earlier versions unchanged so a result saved under one still reproduces exactly, and goes through the same release plan."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-rule-release.integration.test.ts",
+      "test": "a rule version is released only after its plan, source check and confirmation, and replaces the one before",
+      "proves": "A synthetic rule version is released only with the operator's confirming manifest hash, after its plan passes and its source's stored text holds the quoted passage, and the checker then admits it; a failed critical scenario, a bundle the registry would refuse, a missing passage or a stale version writes nothing; each new version supersedes the one before, and version 1 is restored as version 3."
     }
   ]
 }

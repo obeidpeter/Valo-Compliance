@@ -98,7 +98,8 @@
     "test:valo-support-browser": "node src/scripts/support-case-browser.mjs",
     "test:valo-support-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-support-lifecycle.integration.test.ts",
     "test:valo-catalogue-visibility-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test src/lib/valo-catalogue-visibility.integration.test.ts",
-    "test:valo-security-signals-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test src/lib/valo-security-signals.integration.test.ts"
+    "test:valo-security-signals-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test src/lib/valo-security-signals.integration.test.ts",
+    "test:valo-rule-release-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development tsx --test src/lib/valo-rule-release.integration.test.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.88",
