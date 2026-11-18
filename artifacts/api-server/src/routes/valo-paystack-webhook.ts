@@ -31,6 +31,7 @@ paystackWebhookRouter.post(
     const header = req.get(config.mode === "timestamped" ? "paystack-signature" : "x-paystack-signature");
     if (!authenticPaystackBody(req.body, header, config)) {
       req.log.warn({ event: "payment.signature_rejected" });
+      res.locals.valoSecuritySignal = "signature_failure";
       res.status(401).json({ error: "Invalid payment event signature." });
       return;
     }

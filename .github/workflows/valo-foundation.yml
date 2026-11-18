@@ -409,10 +409,12 @@ jobs:
         run: pnpm --filter @workspace/scripts valo:code-coverage auth --minimum
       - name: Measure branch coverage of the rules engine and require 80% (NFR-011)
         run: pnpm --filter @workspace/scripts valo:code-coverage rules --minimum
-      # This adds shared rows (held and candidate versions), so it runs on its own after every
-      # suite that hashes shared tables or reuses a held version.
+      # These two add shared rows (held and candidate versions, security counts), so they run on
+      # their own after every suite that hashes shared tables or reuses a held version.
       - name: Prove public search never shows unpublished versions or customer drafts (WEB-003)
         run: pnpm --filter @workspace/api-server test:valo-catalogue-visibility-db
+      - name: Prove refusals and signature failures are counted for the security alerts (SEC-008)
+        run: pnpm --filter @workspace/api-server test:valo-security-signals-db
       - name: Check that no transaction took a second pooled connection
         run: node artifacts/api-server/src/test-support/nested-connection-report.mjs
       - name: Check every test the evidence register cites for this job passed

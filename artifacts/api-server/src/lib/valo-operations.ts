@@ -3,7 +3,13 @@ import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { assertApplicationRuntime, runtimeEnvironment } from "./valo-runtime-activation";
 import { workerReadiness, type WorkerHeartbeat } from "./valo-worker-health";
+import { quotaPolicy, type QuotaBucket } from "./valo-quota-policy";
 export const operationsDirectory = resolve("generated-artifacts/valo-operations");
+/** Live windows of the named quota buckets that reached their limit: one caller using all of it. */
+const atQuotaLimit = (buckets: readonly QuotaBucket[]) =>
+  `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_rate_buckets WHERE expires_at > now() AND (${buckets
+    .map((bucket) => `(bucket='${bucket}' AND used_count >= ${quotaPolicy[bucket]})`)
+    .join(" OR ")}) LIMIT 10001) bounded`;
 export const readinessQueries = {
   database: "SELECT 1 AS value",
   exports:
@@ -20,7 +26,27 @@ export const readinessQueries = {
   payments: `SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_orders o WHERE o.status='verified_success' AND
     (NOT EXISTS(SELECT 1 FROM valo_entitlements e WHERE e.order_id=o.id AND e.workspace_id=o.workspace_id)
     OR NOT EXISTS(SELECT 1 FROM valo_purchase_outbox r WHERE r.order_id=o.id AND r.workspace_id=o.workspace_id AND r.kind='purchase_receipt')) LIMIT 10001) bounded`,
+  // SEC-008's security signals. Refusals by the most refused address in ten minutes:
+  deniedAccess: `SELECT COALESCE(max(total), 0)::int AS value FROM (SELECT sum(count) AS total
+    FROM valo_security_signals WHERE kind='denied_access' AND window_started_at > now() - interval '10 minutes'
+    GROUP BY subject_hash) per_subject`,
+  signatureFailures: `SELECT COALESCE(sum(count), 0)::int AS value FROM valo_security_signals
+    WHERE kind='signature_failure' AND window_started_at > now() - interval '10 minutes'`,
+  roleChanges:
+    "SELECT count(*)::int AS value FROM (SELECT 1 FROM valo_staff_role_changes WHERE created_at > now() - interval '1 hour' LIMIT 10001) bounded",
+  bulkExports: atQuotaLimit(["export-create"]),
+  paymentActivity: atQuotaLimit(["checkout-create", "refund-create", "refund-create-day"]),
+  aiActivity: atQuotaLimit(["customer-ai"]),
 } as const;
+/** Each security reading and the subject its alerts are named after. */
+const SECURITY_METRICS = [
+  ["deniedAccess", "DENIED_ACCESS"],
+  ["signatureFailures", "SIGNATURE_FAILURES"],
+  ["roleChanges", "ROLE_CHANGES"],
+  ["bulkExports", "BULK_EXPORTS"],
+  ["paymentActivity", "PAYMENT_ACTIVITY"],
+  ["aiActivity", "AI_ACTIVITY"],
+] as const;
 type Metric = { status: "ok" | "unavailable"; value: number | null; elapsedMs: number };
 export type OperationalSample = {
   checkedAt: string;
@@ -31,6 +57,12 @@ export type OperationalSample = {
   exportRetention: Metric;
   workspaceCleanup: Metric;
   payments: Metric;
+  deniedAccess: Metric;
+  signatureFailures: Metric;
+  roleChanges: Metric;
+  bulkExports: Metric;
+  paymentActivity: Metric;
+  aiActivity: Metric;
   worker: { status: "healthy" | "stale" | "unavailable"; ageMs: number | null };
   limits: {
     exports: number;
@@ -38,6 +70,12 @@ export type OperationalSample = {
     exportRetention: number;
     workspaceCleanup: number;
     workerAgeMs: number;
+    deniedAccess: number;
+    signatureFailures: number;
+    roleChanges: number;
+    bulkExports: number;
+    paymentActivity: number;
+    aiActivity: number;
   };
 };
 async function atomicJson(file: string, value: unknown) {
@@ -113,7 +151,21 @@ export async function collectOperationalSample(
     checkedAt: new Date().toISOString(),
     scope: runtimeEnvironment() === "production" ? "production-rehearsal-local" : "development-project-local",
     worker,
-    limits: { exports: 100, cleanup: 0, exportRetention: 0, workspaceCleanup: 0, workerAgeMs: 90000 },
+    limits: {
+      exports: 100,
+      cleanup: 0,
+      exportRetention: 0,
+      workspaceCleanup: 0,
+      workerAgeMs: 90000,
+      // Development defaults, not reviewed thresholds: more than 20 refusals of one address in ten
+      // minutes, and any signature failure, role change or caller at a quota limit, raise an alert.
+      deniedAccess: 20,
+      signatureFailures: 0,
+      roleChanges: 0,
+      bulkExports: 0,
+      paymentActivity: 0,
+      aiActivity: 0,
+    },
   } as OperationalSample;
 }
 /**
@@ -129,9 +181,15 @@ export const ALERT_RUNBOOKS = {
   EXPORT_RETENTION: { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" },
   WORKSPACE_CLEANUP: { runbook: "Deletion and recovery", accountable: "Engineering + privacy owner" },
   PAYMENTS: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
+  DENIED_ACCESS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  SIGNATURE_FAILURES: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  ROLE_CHANGES: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  BULK_EXPORTS: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
+  PAYMENT_ACTIVITY: { runbook: "Payment/entitlement failure", accountable: "Finance + engineering" },
+  AI_ACTIVITY: { runbook: "Security/privacy incident", accountable: "Incident lead + privacy owner" },
 } as const;
 export function alertRunbook(code: string) {
-  const subject = code.replace(/_(BACKLOG|PROBE_UNAVAILABLE|UNAVAILABLE)$/, "");
+  const subject = code.replace(/_(BACKLOG|DETECTED|PROBE_UNAVAILABLE|UNAVAILABLE)$/, "");
   return Object.hasOwn(ALERT_RUNBOOKS, subject)
     ? ALERT_RUNBOOKS[subject as keyof typeof ALERT_RUNBOOKS]
     : null;
@@ -220,6 +278,11 @@ async function recordOperationalAlertsLocked(sample: OperationalSample, director
       if (metric.status !== "ok") active.push(code + "_PROBE_UNAVAILABLE");
       else if (metric.value! > (name === "payments" ? 0 : sample.limits[name]))
         active.push(code + "_BACKLOG");
+    }
+    for (const [name, subject] of SECURITY_METRICS) {
+      const metric = sample[name];
+      if (metric.status !== "ok") active.push(subject + "_PROBE_UNAVAILABLE");
+      else if (metric.value! > sample.limits[name]) active.push(subject + "_DETECTED");
     }
     const events: Alert[] = [];
     for (const code of new Set([...state.active, ...active])) {

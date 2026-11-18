@@ -14,6 +14,15 @@ import {
   readinessQueries,
 } from "./valo-operations";
 import { versionedEvidencePath } from "./versioned-evidence-path";
+
+const securityQueries = [
+  readinessQueries.deniedAccess,
+  readinessQueries.signatureFailures,
+  readinessQueries.roleChanges,
+  readinessQueries.bulkExports,
+  readinessQueries.paymentActivity,
+  readinessQueries.aiActivity,
+];
 import { WorkerHealth } from "./valo-worker-health";
 test("operator report names reject traversal and non-integer versions", () => {
   for (const version of [
@@ -60,9 +69,11 @@ test("internal probes measure failures independently and persist/deduplicate/rec
   worker.finish(worker.begin()!, true);
   try {
     await recordWorkerHeartbeat(worker.snapshot(), dir);
+    // The security readings are zero here; their alerts have their own test.
+    const security = new Set<string>(securityQueries);
     const failures = await collectOperationalSample(async (sql) => {
       if (sql === readinessQueries.database) throw Error("SYNTHETIC_PRIVATE_DB_ERROR");
-      return { rows: [{ value: sql === readinessQueries.payments ? 2 : 101 }] };
+      return { rows: [{ value: security.has(sql) ? 0 : sql === readinessQueries.payments ? 2 : 101 }] };
     }, dir);
     assert.equal(failures.database.status, "unavailable");
     assert.equal(failures.worker.status, "healthy");
@@ -181,6 +192,84 @@ test("every alert names its accountable roles and a runbook from the operating r
         { ...alertRunbook(event.code) },
       );
     assert.ok(!JSON.stringify(history).includes("SYNTHETIC_PROBE_FAILURE"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { recursive: true, force: true });
+    if (old === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = old;
+  }
+});
+
+// SEC-008: "Alert on repeated denied access, bulk exports, role changes, signature failures and
+// unusual payment/AI activity."
+test("security signals raise their own alerts, owned by the security and payment runbooks", async () => {
+  const old = process.env.NODE_ENV;
+  process.env.NODE_ENV = "development";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw Error("EXTERNAL_MESSAGES_FORBIDDEN");
+  };
+  const dir = await mkdtemp(join(tmpdir(), "valo-ops-security-"));
+  const worker = new WorkerHealth();
+  worker.finish(worker.begin()!, true);
+  try {
+    await recordWorkerHeartbeat(worker.snapshot(), dir);
+    const sample = (security: (sql: string) => number) =>
+      collectOperationalSample(
+        async (sql) => ({
+          rows: [
+            {
+              value:
+                sql === readinessQueries.database ? 1 : securityQueries.includes(sql) ? security(sql) : 0,
+            },
+          ],
+        }),
+        dir,
+      );
+    // Twenty refusals of one address in ten minutes is within the limit; nothing else happened.
+    const quiet = await sample((sql) => (sql === readinessQueries.deniedAccess ? 20 : 0));
+    assert.deepEqual((await recordOperationalAlerts(quiet, dir)).active, []);
+    // One more refusal, and one of each other event, raise one alert each.
+    const busy = await sample((sql) => (sql === readinessQueries.deniedAccess ? 21 : 1));
+    const raised = await recordOperationalAlerts(busy, dir);
+    assert.deepEqual(raised.owners, [
+      {
+        code: "DENIED_ACCESS_DETECTED",
+        runbook: "Security/privacy incident",
+        accountable: "Incident lead + privacy owner",
+      },
+      {
+        code: "SIGNATURE_FAILURES_DETECTED",
+        runbook: "Security/privacy incident",
+        accountable: "Incident lead + privacy owner",
+      },
+      {
+        code: "ROLE_CHANGES_DETECTED",
+        runbook: "Security/privacy incident",
+        accountable: "Incident lead + privacy owner",
+      },
+      {
+        code: "BULK_EXPORTS_DETECTED",
+        runbook: "Security/privacy incident",
+        accountable: "Incident lead + privacy owner",
+      },
+      {
+        code: "PAYMENT_ACTIVITY_DETECTED",
+        runbook: "Payment/entitlement failure",
+        accountable: "Finance + engineering",
+      },
+      {
+        code: "AI_ACTIVITY_DETECTED",
+        runbook: "Security/privacy incident",
+        accountable: "Incident lead + privacy owner",
+      },
+    ]);
+    // They resolve when the signals stop.
+    assert.deepEqual((await recordOperationalAlerts(await sample(() => 0), dir)).active, []);
+    const history = JSON.parse(await readFile(join(dir, "alerts.json"), "utf8")) as {
+      events: { state: string }[];
+    };
+    assert.equal(history.events.filter((e) => e.state === "resolved").length, 6);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { recursive: true, force: true });
