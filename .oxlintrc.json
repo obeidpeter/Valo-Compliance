@@ -70,8 +70,8 @@
     "jsx-a11y/prefer-tag-over-role": "off",
     // Off: Express 5 passes a rejected handler promise to the error handler.
     "oxc/no-async-endpoint-handlers": "off",
-    // Off: type assertions are made where the value was validated or parsed, and `!` marks values
-    // that noUncheckedIndexedAccess, which the plan adopts later, will need.
+    // Off: type assertions are made where the value was validated or parsed, and `!` marks an
+    // element or group that noUncheckedIndexedAccess cannot see is there, guarded by the code around it.
     "typescript/no-unnecessary-type-assertion": "off",
     "typescript/no-unsafe-type-assertion": "off",
     // Off: comparisons with true or false, and String() or Number() on values already typed so,

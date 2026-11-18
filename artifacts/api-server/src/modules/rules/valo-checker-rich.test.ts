@@ -220,12 +220,12 @@ test("four outcomes traverse the real engine and generated response contract in 
   for (const [family, input, label] of cases) {
     const first = evaluate(family, input),
       again = evaluate(family, input);
-    assert.equal(first.items[0].label, label);
+    assert.equal(first.items[0]!.label, label);
     assert.equal(first.resultHash, again.resultHash);
     assert.deepEqual(PreviewAssessmentResponse.parse(first), first);
-    assert.ok(first.items[0].assessedProposition);
-    assert.match(first.items[0].factsNotice!, /not been independently verified/);
-    if (label !== "Likely relevant") assert.equal(first.items[0].sourceLinkedTaskEligible, false);
+    assert.ok(first.items[0]!.assessedProposition);
+    assert.match(first.items[0]!.factsNotice!, /not been independently verified/);
+    if (label !== "Likely relevant") assert.equal(first.items[0]!.sourceLinkedTaskEligible, false);
   }
 });
 
@@ -242,11 +242,11 @@ test("all partners matter; unknown appointment and unknown exception facts do no
       ],
     },
   };
-  assert.equal(evaluate("businessName", input).items[0].label, "Not indicated by these answers");
+  assert.equal(evaluate("businessName", input).items[0]!.label, "Not indicated by these answers");
   input.businessName!.businessName = "Ada Example";
-  assert.equal(evaluate("businessName", input).items[0].label, "Likely relevant");
+  assert.equal(evaluate("businessName", input).items[0]!.label, "Likely relevant");
   delete input.businessName!.namingAssessment;
-  assert.equal(evaluate("businessName", input).items[0].label, "More information needed");
+  assert.equal(evaluate("businessName", input).items[0]!.label, "More information needed");
 });
 
 test("household context never fills an omitted purpose or upgrades uncertainty into exemption", () => {
@@ -265,12 +265,12 @@ test("household context never fills an omitted purpose or upgrades uncertainty i
     });
     const before = digest(input);
     const result = assess(input, [fixture("privacy")], asOfDate, now, { fixtureMode: true });
-    assert.equal(result.items[0].label, "More information needed");
+    assert.equal(result.items[0]!.label, "More information needed");
     assert.equal(digest(input), before);
-    assert.equal(result.items[0].missingAnswerStates![0].state, purpose?.status ?? "unanswered");
+    assert.equal(result.items[0]!.missingAnswerStates![0]!.state, purpose?.status ?? "unanswered");
   }
   assert.equal(
-    evaluate("privacy", { privacy: { ...base, processingPurpose: "solely_personal_household" } }).items[0]
+    evaluate("privacy", { privacy: { ...base, processingPurpose: "solely_personal_household" } }).items[0]!
       .label,
     "Not indicated by these answers",
   );
@@ -281,12 +281,14 @@ test("unknown operator and derived exception questions map back to actual suppli
     businessName: { ...nameBase, trueForenames: ["Ada"], operatorRole: marker("unknown") },
   };
   const item = evaluate("businessName", unknownRole).items[0];
+  assert.ok(item);
   assert.equal(item.label, "More information needed");
   assert.equal(item.sourceLinkedTaskEligible, false);
   assert.deepEqual(item.missingAnswerStates, [{ field: "rich.businessName.operatorRole", state: "unknown" }]);
   const missingName = evaluate("businessName", {
     businessName: { ...nameBase, trueForenames: marker("not_applicable"), trueSurname: marker("unknown") },
   }).items[0];
+  assert.ok(missingName);
   assert.deepEqual(missingName.missingAnswerStates, [
     { field: "rich.businessName.trueSurname", state: "unknown" },
     { field: "rich.businessName.trueForenames", state: "not_applicable" },
@@ -301,6 +303,7 @@ test("unknown operator and derived exception questions map back to actual suppli
       },
     },
   }).items[0];
+  assert.ok(unknownComposition);
   assert.equal(
     unknownComposition.missingFacts.some((f) => f.endsWith("section814Exception")),
     false,
@@ -320,7 +323,7 @@ test("period and product questions retain their narrow scope without an automati
       accountingPeriodEnd: "2026-06-30",
     },
   });
-  assert.equal(tax.items[0].label, "May apply");
+  assert.equal(tax.items[0]!.label, "May apply");
   const product = evaluate("product", {
     product: {
       productCategory: "processed_food",
@@ -330,10 +333,10 @@ test("period and product questions retain their narrow scope without an automati
       registrationCoversExactProductAndManufacturer: true,
     },
   });
-  assert.equal(product.items[0].label, "Likely relevant");
-  assert.equal(product.items[0].sourceLinkedTaskEligible, false);
-  assert.match(product.items[0].nextStep, /do not create a duplicate/);
-  assert.equal(Object.hasOwn(product.items[0], "dueDate"), false);
+  assert.equal(product.items[0]!.label, "Likely relevant");
+  assert.equal(product.items[0]!.sourceLinkedTaskEligible, false);
+  assert.match(product.items[0]!.nextStep, /do not create a duplicate/);
+  assert.equal(Object.hasOwn(product.items[0]!, "dueDate"), false);
 });
 
 test("source-family implementation, publication, period and freshness gates fail closed", () => {
@@ -406,7 +409,7 @@ test("composite privacy questions preserve each original marker and target actua
       privacyRightsViolationIndicated: marker("not_applicable"),
     },
   });
-  assert.deepEqual(result.items[0].missingAnswerStates, [
+  assert.deepEqual(result.items[0]!.missingAnswerStates, [
     { field: "rich.privacy.commercialUse", state: "unknown" },
     { field: "rich.privacy.privacyRightsViolationIndicated", state: "not_applicable" },
   ]);
@@ -420,13 +423,13 @@ test("composite privacy questions preserve each original marker and target actua
       privacyRightsViolationIndicated: marker("unknown"),
     },
   });
-  assert.deepEqual(one.items[0].missingFacts, ["rich.privacy.privacyRightsViolationIndicated"]);
+  assert.deepEqual(one.items[0]!.missingFacts, ["rich.privacy.privacyRightsViolationIndicated"]);
 });
 
 test("contradictory formation and personal-data facts ask for review without changing known answers", () => {
   const input = facts({ tax: { legalForm: "foreign_company", incorporatedInNigeria: true } });
   const result = assess(input, [fixture("tax")], asOfDate, now, { fixtureMode: true });
-  assert.deepEqual(result.items[0].missingAnswerStates, [
+  assert.deepEqual(result.items[0]!.missingAnswerStates, [
     { field: "rich.tax.legalForm", state: "review" },
     { field: "rich.tax.incorporatedInNigeria", state: "review" },
   ]);
@@ -434,12 +437,12 @@ test("contradictory formation and personal-data facts ask for review without cha
   const data = evaluate("privacy", {
     privacy: { processesPersonalData: false, dataCategories: ["employee_name"], profiling: true },
   });
-  assert.deepEqual(data.items[0].missingFacts, [
+  assert.deepEqual(data.items[0]!.missingFacts, [
     "rich.privacy.processesPersonalData",
     "rich.privacy.dataCategories",
     "rich.privacy.profiling",
   ]);
-  assert.ok(data.items[0].missingAnswerStates?.every((m) => m.state === "review"));
+  assert.ok(data.items[0]!.missingAnswerStates?.every((m) => m.state === "review"));
   assert.deepEqual(PreviewAssessmentResponse.parse(result), result);
 });
 
@@ -456,6 +459,7 @@ test("authority-only classifications are explicit source holds without invented 
     }),
   ]) {
     const item = result.items[0];
+    assert.ok(item);
     assert.deepEqual(item.missingFacts, []);
     assert.deepEqual(item.missingAnswerStates, []);
     assert.match(item.sourceReviewHold!, /Valo needs source review/);
@@ -474,12 +478,14 @@ test("indirect supporting circumstances remain answerable but cannot certify an 
   } as const;
   const missing = evaluate("privacy", { privacy: { ...base, exceptionSupportingFacts: marker("unknown") } })
     .items[0];
+  assert.ok(missing);
   assert.deepEqual(missing.missingAnswerStates, [
     { field: "rich.privacy.exceptionSupportingFacts", state: "unknown" },
   ]);
   const supplied = evaluate("privacy", {
     privacy: { ...base, exceptionSupportingFacts: "An old supplier record has no current contact route." },
   }).items[0];
+  assert.ok(supplied);
   assert.deepEqual(supplied.missingFacts, []);
   assert.match(supplied.sourceReviewHold!, /supplied indirect-collection circumstances/);
   assert.equal(supplied.sourceLinkedTaskEligible, false);
@@ -495,6 +501,7 @@ test("product composite questions retain markers and separate permit authority r
       permitConditionsSatisfied: marker("unanswered"),
     },
   }).items[0];
+  assert.ok(result);
   assert.deepEqual(result.missingAnswerStates, [
     { field: "rich.product.specialSamplePermit", state: "unknown" },
     { field: "rich.product.permitScopeMatchesActivity", state: "not_applicable" },
@@ -510,6 +517,7 @@ test("product composite questions retain markers and separate permit authority r
       commercialSupplyInNigeria: false,
     },
   }).items[0];
+  assert.ok(activity);
   assert.deepEqual(activity.missingAnswerStates, [
     { field: "rich.product.manufacturesInNigeria", state: "unknown" },
     { field: "rich.product.activity", state: "not_applicable" },
@@ -524,6 +532,7 @@ test("unsupported succession composition points to real name facts and a source-
       namingAssessment: { onlyAddedWordsIndicateSuccession: true, otherBrandAddition: false },
     },
   }).items[0];
+  assert.ok(item);
   assert.deepEqual(item.missingFacts, [
     "rich.businessName.businessName",
     "rich.businessName.namingAssessment.onlyAddedWordsIndicateSuccession",
@@ -541,6 +550,7 @@ test("known unsupported classifications cannot be fixed by asserting a legal con
       effectiveManagementCountry: "outside_Nigeria",
     },
   }).items[0];
+  assert.ok(tax);
   assert.deepEqual(tax.missingFacts, []);
   assert.match(tax.sourceReviewHold!, /does not establish tax residence/);
   const names = evaluate("businessName", {
@@ -556,6 +566,7 @@ test("known unsupported classifications cannot be fixed by asserting a legal con
       ],
     },
   }).items[0];
+  assert.ok(names);
   assert.deepEqual(names.missingFacts, []);
   assert.match(names.sourceReviewHold!, /corporate-partner firms/);
   assert.equal(names.sourceLinkedTaskEligible, false);

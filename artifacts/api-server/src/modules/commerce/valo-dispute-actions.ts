@@ -34,6 +34,7 @@ import { storeVerifiedDispute, disputeSnapshotHash } from "./valo-payment-disput
 import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
 import { renderDocument } from "../../lib/valo-render";
 import { setting } from "../../platform/settings";
+import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Action = typeof valoDisputeActions.$inferSelect;
 type Order = typeof valoOrders.$inferSelect;
@@ -408,22 +409,24 @@ export async function prepareDisputeAction(actor: FinanceActor, id: string, raw:
       if (BigInt(input.amountKobo) + reserved > BigInt(order.amountKobo))
         throw new ValoProblem(409, "Refunds and other retained decisions reserve this balance.");
     }
-    const [a] = await tx
-      .insert(valoDisputeActions)
-      .values({
-        id: randomUUID(),
-        workspaceId: row.workspaceId,
-        orderId: order.id,
-        disputeId: id,
-        requestKey: input.requestKey,
-        kind: input.kind,
-        payload,
-        informationId: input.informationId ?? null,
-        sourceHash: s.hash,
-        policyVersion: "test-dispute-v1",
-        authorisedBy: actor.identityId,
-      })
-      .returning();
+    const a = singleRow(
+      await tx
+        .insert(valoDisputeActions)
+        .values({
+          id: randomUUID(),
+          workspaceId: row.workspaceId,
+          orderId: order.id,
+          disputeId: id,
+          requestKey: input.requestKey,
+          kind: input.kind,
+          payload,
+          informationId: input.informationId ?? null,
+          sourceHash: s.hash,
+          policyVersion: "test-dispute-v1",
+          authorisedBy: actor.identityId,
+        })
+        .returning(),
+    );
     await transition(tx, a, actor.identityId, "prepared");
     return detail(tx, id, disputeTransport.configured());
   });
@@ -481,7 +484,9 @@ export async function controlDisputeAction(
   const start = await db.transaction(async (tx) => {
     const { row, order } = await locked(tx, a0.disputeId);
     await requireFinance(tx, actor, "Dispute intent " + operation + "; strict MFA.");
-    const [a] = await tx.select().from(valoDisputeActions).where(eq(valoDisputeActions.id, id)).for("update");
+    const a = singleRow(
+      await tx.select().from(valoDisputeActions).where(eq(valoDisputeActions.id, id)).for("update"),
+    );
     if (
       provider !== disputeTransport &&
       (setting("NODE_ENV") !== "development" ||
@@ -575,11 +580,9 @@ export async function controlDisputeAction(
       assertRecoveryEffectsAllowed();
       if (!provider.configured())
         throw new ValoProblem(503, "Dispute execution disabled during preparation.");
-      const [a] = await tx
-        .select()
-        .from(valoDisputeActions)
-        .where(eq(valoDisputeActions.id, id))
-        .for("update");
+      const a = singleRow(
+        await tx.select().from(valoDisputeActions).where(eq(valoDisputeActions.id, id)).for("update"),
+      );
       if (
         a.status !== "dispatching" ||
         a.claimToken !== start.claimToken ||
@@ -747,11 +750,9 @@ export async function controlDisputeAction(
   }
   await db.transaction(async (tx) => {
     await locked(tx, start.row.id);
-    const [current] = await tx
-      .select()
-      .from(valoDisputeActions)
-      .where(eq(valoDisputeActions.id, id))
-      .for("update");
+    const current = singleRow(
+      await tx.select().from(valoDisputeActions).where(eq(valoDisputeActions.id, id)).for("update"),
+    );
     // A newer observed canonical outcome cannot be overwritten by a late callback.
     if (
       current.status === "observed" ||
@@ -837,29 +838,29 @@ export async function reconcileDisputeActions(provider: DisputeTransport = dispu
   for (const item of rows) {
     const saved = await db.transaction(async (tx) => {
       const { row, order } = await locked(tx, item.disputeId);
-      const [a] = await tx
-        .select()
-        .from(valoDisputeActions)
-        .where(eq(valoDisputeActions.id, item.id))
-        .for("update");
+      const a = singleRow(
+        await tx.select().from(valoDisputeActions).where(eq(valoDisputeActions.id, item.id)).for("update"),
+      );
       if (a.status !== "dispatching" && a.status !== "unknown") return null;
       if (
         a.status === "dispatching" &&
         (a.leaseUntil ?? new Date(a.updatedAt.getTime() + 120000)).getTime() > Date.now()
       )
         return null;
-      const [n] = await tx
-        .update(valoDisputeActions)
-        .set({
-          status: "unknown",
-          claimToken: null,
-          leaseUntil: null,
-          version: a.version + 1,
-          updatedAt: new Date(),
-          failure: "ABANDONED_OR_UNCERTAIN_NO_AUTOMATIC_RESEND",
-        })
-        .where(eq(valoDisputeActions.id, a.id))
-        .returning();
+      const n = singleRow(
+        await tx
+          .update(valoDisputeActions)
+          .set({
+            status: "unknown",
+            claimToken: null,
+            leaseUntil: null,
+            version: a.version + 1,
+            updatedAt: new Date(),
+            failure: "ABANDONED_OR_UNCERTAIN_NO_AUTOMATIC_RESEND",
+          })
+          .where(eq(valoDisputeActions.id, a.id))
+          .returning(),
+      );
       await transition(tx, n, "service:dispute-recovery", "unknown");
       return { a: n, row, order };
     });
@@ -888,27 +889,31 @@ export async function reconcileDisputeActions(provider: DisputeTransport = dispu
         continue;
       await db.transaction(async (tx) => {
         await locked(tx, saved.row.id);
-        const [a] = await tx
-          .select()
-          .from(valoDisputeActions)
-          .where(eq(valoDisputeActions.id, saved.a.id))
-          .for("update");
+        const a = singleRow(
+          await tx
+            .select()
+            .from(valoDisputeActions)
+            .where(eq(valoDisputeActions.id, saved.a.id))
+            .for("update"),
+        );
         if (a.status !== "unknown" || a.version !== saved.a.version) return;
-        const [n] = await tx
-          .update(valoDisputeActions)
-          .set({
-            status: "observed",
-            version: a.version + 1,
-            updatedAt: new Date(),
-            failure: null,
-            result: {
-              observation:
-                "Matching canonical financial effect; original transmission receipt and bank outcome remain unproven.",
-              canonicalHash: disputeSnapshotHash(fetched),
-            },
-          })
-          .where(eq(valoDisputeActions.id, a.id))
-          .returning();
+        const n = singleRow(
+          await tx
+            .update(valoDisputeActions)
+            .set({
+              status: "observed",
+              version: a.version + 1,
+              updatedAt: new Date(),
+              failure: null,
+              result: {
+                observation:
+                  "Matching canonical financial effect; original transmission receipt and bank outcome remain unproven.",
+                canonicalHash: disputeSnapshotHash(fetched),
+              },
+            })
+            .where(eq(valoDisputeActions.id, a.id))
+            .returning(),
+        );
         await transition(tx, n, "service:dispute-recovery", "observed");
       });
     } catch {

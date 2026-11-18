@@ -66,6 +66,7 @@ test(
             .select()
             .from(valoAccessSupport)
             .where(eq(valoAccessSupport.idempotencyKey, input.idempotencyKey));
+          assert.ok(stored);
           assert.equal(stored.status, "awaiting_staff");
           assert.equal(stored.contactEmail, email);
         },
@@ -165,10 +166,12 @@ test(
             .select()
             .from(valoDocuments)
             .where(eq(valoDocuments.workspaceId, a.workspaceId));
+          assert.ok(doc);
           const [revision] = await db
             .select()
             .from(valoDocumentRevisions)
             .where(eq(valoDocumentRevisions.documentId, doc.id));
+          assert.ok(revision);
           const jobId = randomUUID(),
             assetId = randomUUID(),
             queueId = randomUUID();

@@ -22,6 +22,7 @@ import {
   type WorkspaceTx,
 } from "../modules/rules";
 import { reminderEmailConfiguration, automaticReminderDeliveryReady } from "./valo-reminder-resend";
+import { singleRow } from "../platform/rows";
 
 const emailBlocker =
   "Development email needs an approved sender and an owner-controlled test recipient. Preferences are saved; inbox delivery has not been verified.";
@@ -166,16 +167,18 @@ export async function createTask(actor: WorkspaceActor, raw: unknown) {
         ruleVersion = item.ruleVersion;
       }
     }
-    const [row] = await tx
-      .insert(valoTasks)
-      .values({
-        ...input,
-        ruleVersion,
-        id: randomUUID(),
-        workspaceId: actor.workspaceId,
-        actorId: actor.identityId,
-      })
-      .returning();
+    const row = singleRow(
+      await tx
+        .insert(valoTasks)
+        .values({
+          ...input,
+          ruleVersion,
+          id: randomUUID(),
+          workspaceId: actor.workspaceId,
+          actorId: actor.identityId,
+        })
+        .returning(),
+    );
     await scheduleTask(tx, actor, row);
     await workspaceEvent(tx, actor, "task.created", row.id, 1);
     return taskDto(row);
@@ -191,13 +194,15 @@ export async function listTasksPage(actor: WorkspaceActor, raw: unknown) {
     .parse(raw);
   return workspaceTransaction(actor, async (tx) => {
     const owned = and(eq(valoTasks.workspaceId, actor.workspaceId), isNull(valoTasks.deletedAt));
-    const [counts] = await tx
-      .select({
-        total: sql<number>`count(*)::int`,
-        openCount: sql<number>`count(*) filter (where ${valoTasks.state}<>'completed_by_user')::int`,
-      })
-      .from(valoTasks)
-      .where(owned);
+    const counts = singleRow(
+      await tx
+        .select({
+          total: sql<number>`count(*)::int`,
+          openCount: sql<number>`count(*) filter (where ${valoTasks.state}<>'completed_by_user')::int`,
+        })
+        .from(valoTasks)
+        .where(owned),
+    );
     const filteredTotal =
       query.filter === "all"
         ? counts.total
@@ -283,11 +288,13 @@ export async function updateTask(actor: WorkspaceActor, id: string, raw: unknown
         "Task changed in another tab. Your unsaved notes were not overwritten.",
         old.revision,
       );
-    const [row] = await tx
-      .update(valoTasks)
-      .set({ ...input, revision: expectedRevision + 1, updatedAt: new Date() })
-      .where(and(eq(valoTasks.workspaceId, actor.workspaceId), eq(valoTasks.id, id)))
-      .returning();
+    const row = singleRow(
+      await tx
+        .update(valoTasks)
+        .set({ ...input, revision: expectedRevision + 1, updatedAt: new Date() })
+        .where(and(eq(valoTasks.workspaceId, actor.workspaceId), eq(valoTasks.id, id)))
+        .returning(),
+    );
     await cancelOutstanding(tx, actor, id, "TASK_CHANGED");
     await scheduleTask(tx, actor, row);
     await workspaceEvent(tx, actor, "task.updated", id, row.revision);

@@ -140,10 +140,11 @@ async function main() {
             ),
           );
         assert.ok(revision);
+        const revisionId = revision.id;
         for (const format of ["docx", "pdf"] as const) {
           stage = `${format}_request`;
           const key = randomUUID(),
-            body = { format, revisionId: revision.id, acknowledgeDraft: true };
+            body = { format, revisionId, acknowledgeDraft: true };
           const queued = await requestExport(actor, document.id, key, body);
           assert.equal((await requestExport(actor, document.id, key, body)).id, queued.id);
           let row = await getExport(actor, queued.id);

@@ -50,6 +50,7 @@ test(
             .from(valoReminderPreferences)
             .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId))
         )[0];
+        assert.ok(prefs);
         await saveReminderPreferences(actor, {
           enabled: false,
           offsets: [],
@@ -61,6 +62,7 @@ test(
             .from(valoReminderPreferences)
             .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId))
         )[0];
+        assert.ok(off);
         assert.equal(off.enabled, false);
         assert.deepEqual(off.offsets, []);
         await assert.rejects(
@@ -104,13 +106,13 @@ test(
         const first = await reconcileDueReminders(sender, { workspaceId: actor.workspaceId }, now);
         assert.equal(first.checked, 25);
         assert.equal(calls, 0);
-        assert.equal((await row(ids[0])).status, "held");
-        assert.ok((await row(ids[0])).nextAttemptAt! > now);
+        assert.equal((await row(ids[0]!)).status, "held");
+        assert.ok((await row(ids[0]!)).nextAttemptAt! > now);
         const second = await reconcileDueReminders(sender, { workspaceId: actor.workspaceId }, now);
         assert.equal(second.checked, 1);
         assert.equal(calls, 1);
-        assert.equal((await row(ids[25])).status, "sent");
-        assert.equal((await row(ids[25])).deliveredAt, null);
+        assert.equal((await row(ids[25]!)).status, "sent");
+        assert.equal((await row(ids[25]!)).deliveredAt, null);
       });
       await t.test("no configured provider holds the reminder and consumes no attempt", async () => {
         const r = await fresh();
@@ -428,6 +430,7 @@ test(
             .from(valoReminderPreferences)
             .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId))
         )[0];
+        assert.ok(current);
         await saveReminderPreferences(actor, {
           enabled: false,
           offsets: [1],

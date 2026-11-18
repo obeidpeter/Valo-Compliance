@@ -253,13 +253,13 @@ try {
     await page!.getByTestId("input-doc-price-0").fill("250.00");
     await expect(page!.getByTestId("status-financial-unsaved")).toBeVisible();
     expect(
-      GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0].unitPriceKobo,
+      GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0]!.unitPriceKobo,
     ).toBe("10000");
     await page!.getByTestId("link-back").click();
     await page!.getByTestId("button-save-leave").click();
     await expect(page!).toHaveURL(/\/workspace$/);
     expect(
-      GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0].unitPriceKobo,
+      GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0]!.unitPriceKobo,
     ).toBe("25000");
     await page!.goto(url);
     await page!.getByTestId("input-doc-price-0").fill("12x");
@@ -272,7 +272,7 @@ try {
     await page!.getByTestId("button-discard-leave").click();
     await expect(page!).toHaveURL(/\/workspace$/);
     expect(
-      GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0].unitPriceKobo,
+      GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0]!.unitPriceKobo,
     ).toBe("25000");
     await page!.goto(url);
     await page!.getByTestId("input-doc-price-0").fill("999.00");
@@ -287,7 +287,7 @@ try {
     await expect
       .poll(
         async () =>
-          GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0]
+          GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0]!
             .unitPriceKobo,
       )
       .toBe("10000");
@@ -308,7 +308,7 @@ try {
       await expect
         .poll(
           async () =>
-            GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0]
+            GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0]!
               .unitPriceKobo,
         )
         .toBe("30000");
@@ -424,7 +424,7 @@ try {
         .click();
       await expect(page!.locator("main h1")).toHaveText(resource.title);
       expect(await page!.evaluate("window.fixtureExecuted")).toBeUndefined();
-      await expect(page!.getByText(resource.body.split("\n\n")[1], { exact: true })).toBeVisible();
+      await expect(page!.getByText(resource.body.split("\n\n")[1]!, { exact: true })).toBeVisible();
       await reflow();
       available = false;
       await page!.reload();
@@ -782,7 +782,7 @@ try {
     expect(history.status).toBe(200);
     expect(history.cache).toContain("no-store");
     const recorded = GetCustomerPurchasesResponse.parse(history.body);
-    expect(recorded.orders[0].reference).toBe(reference);
+    expect(recorded.orders[0]!.reference).toBe(reference);
     expect(recorded.livePaymentsEnabled).toBe(false);
     const receipt = await api(`/api/workspace/orders/${order}/receipt`);
     expect(receipt.status).toBe(409);
@@ -874,7 +874,7 @@ try {
       (await api("/api/workspace/account")).body,
     ).privacyRequests;
     expect(privacyRequests.length).toBe(2);
-    expect(privacyRequests[0].status).toBe("awaiting_staff");
+    expect(privacyRequests[0]!.status).toBe("awaiting_staff");
     const download = page!.waitForEvent("download");
     await page!.getByTestId("button-download-workspace").click();
     const file = await download;

@@ -158,7 +158,7 @@ async function main() {
       );
       guards.push({ case: "expired plan with actual hash-matching private artifact", result: "rejected" });
       const changed = await badPlan((p) => {
-        p.entries[0].request.messages[1]!.content += " tampered";
+        p.entries[0]!.request.messages[1]!.content += " tampered";
       });
       await assert.rejects(
         () => executeOperationalReviewPlan(changed, candidate, serverEvidence),
@@ -166,8 +166,8 @@ async function main() {
       );
       guards.push({ case: "changed request with old input meter", result: "rejected" });
       const raised = await badPlan((p) => {
-        p.entries[0].request.max_completion_tokens = 16384;
-        p.entries[0].meter = meterReviewRequest(p.entries[0].request);
+        p.entries[0]!.request.max_completion_tokens = 16384;
+        p.entries[0]!.meter = meterReviewRequest(p.entries[0]!.request);
       });
       await assert.rejects(
         () => executeOperationalReviewPlan(raised, candidate, serverEvidence),
@@ -186,7 +186,7 @@ async function main() {
       assert.equal(outboundAttempts, 0);
       const after = await db.execute(sql`select count(*)::int as total from valo_publication_ai_attempts
         where role<>'draft' and created_at>=date_trunc('day',now())`);
-      assert.equal(Number(after.rows[0].total), Number(live.rows[0].reviews_today));
+      assert.equal(Number(after.rows[0]!.total), Number(live.rows[0]!.reviews_today));
     } finally {
       Object.defineProperty(openai.chat.completions, "create", { configurable: true, value: originalCreate });
     }

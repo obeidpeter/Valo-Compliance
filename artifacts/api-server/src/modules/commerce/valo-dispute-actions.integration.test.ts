@@ -96,7 +96,7 @@ test(
       async (path, body, method = "GET") => {
         calls.push({ method, path, body });
         const id = path.split("/")[2],
-          d = canonical.get(id)!;
+          d = canonical.get(id!)!;
         if (path.includes("upload_url"))
           return {
             signedUrl:
@@ -130,11 +130,12 @@ test(
             .toString(),
           "%PDF-",
         );
-        const providerId = calls.at(-1)!.path.split("/")[2];
+        const providerId = calls.at(-1)!.path.split("/")[2]!;
         const [d] = await db
           .select()
           .from(valoPaymentDisputes)
           .where(eq(valoPaymentDisputes.providerId, providerId));
+        assert.ok(d);
         const [planned] = await db
           .select()
           .from(valoDisputeActions)
@@ -145,6 +146,7 @@ test(
               eq(valoDisputeActions.status, "dispatching"),
             ),
           );
+        assert.ok(planned);
         assert.equal(planned.result!.filename, "provider-receipt-" + providerId);
         assert.ok(planned.result!.attemptChecksum, "exact upload checksum is durable before object PUT");
         return new Response(null, { status: 204 });
@@ -226,7 +228,7 @@ test(
       await t.test("terminal/archived observations alone do not suspend or restore access", async () => {
         const f = await fixture("archived");
         assert.equal(
-          (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, f.order)))[0].status,
+          (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, f.order)))[0]!.status,
           "active",
         );
         canonical.get(f.d.providerId)!.updatedAt = new Date(
@@ -282,7 +284,7 @@ test(
             });
             assert.equal(prepared.status, 201);
             const data = GetFinanceDisputeResponse.parse(await prepared.json());
-            assert.equal(data.actions[0].status, "prepared");
+            assert.equal(data.actions[0]!.status, "prepared");
           } finally {
             if (old === undefined) delete process.env.VALO_TRUSTED_ORIGIN;
             else process.env.VALO_TRUSTED_ORIGIN = old;
@@ -320,6 +322,7 @@ test(
             { status: 409 },
           );
           const stored = first.information[0];
+          assert.ok(stored);
           assert.equal(stored.information.customer_email, "fixture@example.invalid");
           assert.equal("delivery_date" in stored.information, false);
           const evidence = await action(f, "submit_evidence", { informationId: stored.id });
@@ -331,8 +334,8 @@ test(
             p,
             async () => pdf,
           );
-          assert.equal((await row(evidence.id)).status, "acknowledged");
-          assert.ok((await row(evidence.id)).result?.evidenceId);
+          assert.equal((await row(evidence.id))!.status, "acknowledged");
+          assert.ok((await row(evidence.id))!.result?.evidenceId);
           await assert.rejects(() => orderDisputeInformation(other, f.order), { status: 404 });
         },
       );
@@ -342,7 +345,8 @@ test(
           const f = await fixture(),
             a = await action(f, "upload_receipt");
           const order = (await db.select().from(valoOrders).where(eq(valoOrders.id, f.order)))[0],
-            bytes = await renderPurchaseReceipt(order);
+            bytes = await renderPurchaseReceipt(order!);
+          assert.ok(order);
           const extracted = spawnSync("pdftotext", ["-", "-"], {
             input: bytes,
             encoding: "utf8",
@@ -377,15 +381,15 @@ test(
             ),
           ]);
           assert.equal(uploadCalls, before + 1);
-          assert.equal((await row(a.id)).attempts, 1);
-          assert.ok((await row(a.id)).result?.checksum);
+          assert.equal((await row(a.id))!.attempts, 1);
+          assert.ok((await row(a.id))!.result?.checksum);
           await assert.rejects(
             async () =>
               controlDisputeAction(
                 actor,
                 a.id,
                 "cancel",
-                { acknowledgement: true, expectedVersion: (await row(a.id)).version },
+                { acknowledgement: true, expectedVersion: (await row(a.id))!.version },
                 p,
               ),
             { status: 409 },
@@ -399,7 +403,8 @@ test(
             body = input("merchant_decision", { resolution: "merchant-accepted", amountKobo: 4500 });
           const prepared = await prepareDisputeAction(actor, f.d.id, body),
             a = prepared.actions[0];
-          assert.equal((await prepareDisputeAction(actor, f.d.id, body)).actions[0].id, a.id);
+          assert.ok(a);
+          assert.equal((await prepareDisputeAction(actor, f.d.id, body)).actions[0]!.id, a.id);
           await assert.rejects(() => prepareDisputeAction(actor, f.d.id, { ...body, amountKobo: 4501 }), {
             status: 409,
           });
@@ -412,7 +417,7 @@ test(
             { acknowledgement: true, expectedVersion: 1 },
             p,
           );
-          assert.equal((await row(a.id)).status, "unknown");
+          assert.equal((await row(a.id))!.status, "unknown");
           await controlDisputeAction(
             actor,
             a.id,
@@ -426,18 +431,19 @@ test(
             actor,
             a.id,
             "reconcile",
-            { acknowledgement: true, expectedVersion: (await row(a.id)).version },
+            { acknowledgement: true, expectedVersion: (await row(a.id))!.version },
             p,
           );
-          assert.equal((await row(a.id)).status, "observed");
+          assert.equal((await row(a.id))!.status, "observed");
           assert.equal(
-            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, f.order)))[0].status,
+            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, f.order)))[0]!
+              .status,
             "suspended",
           );
-          const observation = (await row(a.id)).result!.observation;
-          assert.match(observation, /Matching merchant financial effect seen in canonical state/);
+          const observation = (await row(a.id))!.result!.observation;
+          assert.match(observation!, /Matching merchant financial effect seen in canonical state/);
           assert.match(
-            observation,
+            observation!,
             /original transmission acknowledgement and final bank outcome are not inferred/,
           );
         },
@@ -471,7 +477,7 @@ test(
             serviceDetails: "Customer-provided controlled circumstances.",
             consentVersion: "test-dispute-information-v1",
           });
-          const e = await action(f, "submit_evidence", { informationId: info.information[0].id });
+          const e = await action(f, "submit_evidence", { informationId: info.information[0]!.id });
           await controlDisputeAction(
             actor,
             e.id,
@@ -491,11 +497,11 @@ test(
             .filter((c) => c.method === "PUT" && c.path === "/dispute/" + f.d.providerId + "/resolve")
             .at(-1)!;
           const body = put.body as Record<string, unknown>;
-          assert.equal(body.uploaded_filename, (await row(upload.id)).result!.filename);
-          assert.equal(String(body.evidence), (await row(e.id)).result!.evidenceId);
+          assert.equal(body.uploaded_filename, (await row(upload.id))!.result!.filename);
+          assert.equal(String(body.evidence), (await row(e.id))!.result!.evidenceId);
           assert.equal(body.refund_amount, 0);
           assert.equal(
-            (await row(decision.id)).status,
+            (await row(decision.id))!.status,
             "acknowledged",
             "HTTP acknowledgement is not final bank success",
           );
@@ -522,18 +528,18 @@ test(
             { acknowledgement: true, expectedVersion: 1 },
             p,
           );
-          assert.equal((await row(a.id)).status, "unknown");
-          assert.equal((await row(a.id)).failure, "CANONICAL_OUTCOME_UNRESOLVED");
+          assert.equal((await row(a.id))!.status, "unknown");
+          assert.equal((await row(a.id))!.failure, "CANONICAL_OUTCOME_UNRESOLVED");
           const d = canonical.get(f.d.providerId)!;
           d.transaction = { ...(d.transaction as object), reference: "foreign-order" };
           await controlDisputeAction(
             actor,
             a.id,
             "reconcile",
-            { acknowledgement: true, expectedVersion: (await row(a.id)).version },
+            { acknowledgement: true, expectedVersion: (await row(a.id))!.version },
             p,
           );
-          assert.equal((await row(a.id)).status, "unknown");
+          assert.equal((await row(a.id))!.status, "unknown");
         },
       );
       await t.test(
@@ -561,8 +567,8 @@ test(
             { status: 403 },
           );
           assert.equal(uploadCalls, before);
-          assert.equal((await row(a.id)).status, "cancelled");
-          assert.equal((await row(a.id)).failure, "NOT_DISPATCHED");
+          assert.equal((await row(a.id))!.status, "cancelled");
+          assert.equal((await row(a.id))!.failure, "NOT_DISPATCHED");
           await db
             .update(valoStaffAssignments)
             .set({ active: true })
@@ -571,6 +577,7 @@ test(
             .select()
             .from(valoDisputeTransitions)
             .where(eq(valoDisputeTransitions.actionId, a.id));
+          assert.ok(h);
           await assert.rejects(() =>
             db
               .update(valoDisputeTransitions)
@@ -608,7 +615,7 @@ test(
             { status: 409 },
           );
           assert.equal(calls.length, before);
-          assert.equal((await row(a.id)).status, "prepared");
+          assert.equal((await row(a.id))!.status, "prepared");
         },
       );
       await t.test(
@@ -629,6 +636,7 @@ test(
             { status: 403 },
           );
           const [original] = await db.select().from(valoOrders).where(eq(valoOrders.id, f.order));
+          assert.ok(original);
           try {
             // Fault injection into this newly owned synthetic row, not a repair.
             await db
@@ -647,7 +655,7 @@ test(
               { status: 409 },
             );
             assert.equal(calls.length, before);
-            assert.equal((await row(a.id)).attempts, 0);
+            assert.equal((await row(a.id))!.attempts, 0);
           } finally {
             await db.update(valoOrders).set({ line: original.line }).where(eq(valoOrders.id, f.order));
           }
@@ -665,8 +673,8 @@ test(
             { acknowledgement: true, expectedVersion: 1 },
             p,
           );
-          assert.equal((await row(held.id)).status, "cancelled");
-          assert.equal((await row(held.id)).failure, "NO_MUTATION_DISPATCHED");
+          assert.equal((await row(held.id))!.status, "cancelled");
+          assert.equal((await row(held.id))!.failure, "NO_MUTATION_DISPATCHED");
           assert.equal(
             calls.filter((c) => c.method === "PUT").length,
             puts,
@@ -679,7 +687,7 @@ test(
           a = await action(f, "upload_receipt"),
           before = calls.length;
         await controlDisputeAction(actor, a.id, "cancel", { acknowledgement: true, expectedVersion: 1 }, p);
-        assert.equal((await row(a.id)).status, "cancelled");
+        assert.equal((await row(a.id))!.status, "cancelled");
         assert.equal(calls.length, before);
         const next = await action(f, "upload_receipt");
         assert.notEqual(next.id, a.id);
@@ -695,8 +703,8 @@ test(
         assert.ok(
           (await db.transaction((tx) => cancelUnsentDisputeWork(tx, owner.workspaceId))).rowCount > 0,
         );
-        assert.equal((await row(next.id)).failure, "PRIVACY_WORKSPACE_FENCED");
-        for (const u of unknown) assert.equal((await row(u.id)).status, "unknown");
+        assert.equal((await row(next.id))!.failure, "PRIVACY_WORKSPACE_FENCED");
+        for (const u of unknown) assert.equal((await row(u.id))!.status, "unknown");
       });
       await t.test(
         "standalone customer concerns retain thread text, tenant privacy and safe exported financial status",
@@ -862,7 +870,7 @@ test(
             release();
             await settled;
             assert.equal(mutations, 0);
-            assert.equal((await row(a.id)).status, "cancelled");
+            assert.equal((await row(a.id))!.status, "cancelled");
             await db
               .update(valoStaffAssignments)
               .set({ active: true })
@@ -899,8 +907,8 @@ test(
             },
           );
           assert.equal(requests, 0);
-          assert.equal((await row(a.id)).status, "cancelled");
-          assert.equal((await row(a.id)).failure, "NO_MUTATION_DISPATCHED");
+          assert.equal((await row(a.id))!.status, "cancelled");
+          assert.equal((await row(a.id))!.failure, "NO_MUTATION_DISPATCHED");
         },
       );
       await t.test(
@@ -1021,7 +1029,7 @@ test(
           updatedAt: new Date(Date.parse("2026-11-14T12:00:00Z") + ++stamp * 1000).toISOString(),
         });
         await controlDisputeAction(actor, a.id, "reconcile", { expectedVersion: 1 }, p);
-        assert.equal((await row(a.id)).status, "unknown");
+        assert.equal((await row(a.id))!.status, "unknown");
         await assert.rejects(prepareDisputeAction(actor, f.d.id, input("upload_receipt")), { status: 409 });
       });
       await t.test(
@@ -1059,14 +1067,14 @@ test(
             const exit = new Promise<void>((resolve) => child.once("exit", () => resolve()));
             child.kill("SIGKILL");
             await exit;
-            assert.equal((await row(a.id)).status, "dispatching");
+            assert.equal((await row(a.id))!.status, "dispatching");
             await db
               .update(valoDisputeActions)
               .set({ leaseUntil: new Date(0) })
               .where(eq(valoDisputeActions.id, a.id));
             await reconcileDisputeActions();
-            assert.equal((await row(a.id)).status, "unknown");
-            assert.equal((await row(a.id)).claimToken, null);
+            assert.equal((await row(a.id))!.status, "unknown");
+            assert.equal((await row(a.id))!.claimToken, null);
             await assert.rejects(prepareDisputeAction(actor, f.d.id, input("upload_receipt")), {
               status: 409,
             });
@@ -1083,10 +1091,10 @@ test(
             const mutations = calls.filter((c) => c.method !== "GET").length;
             await reconcileDisputeActions(p);
             const observed = await row(a.id);
-            assert.equal(observed.status, "observed");
-            assert.equal(observed.attempts, 1);
+            assert.equal(observed!.status, "observed");
+            assert.equal(observed!.attempts, 1);
             assert.equal(calls.filter((c) => c.method !== "GET").length, mutations);
-            assert.match(String(observed.result?.observation), /original transmission receipt/);
+            assert.match(String(observed!.result?.observation), /original transmission receipt/);
           } finally {
             if (child.exitCode === null) child.kill("SIGKILL");
           }

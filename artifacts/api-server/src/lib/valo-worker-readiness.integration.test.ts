@@ -169,9 +169,9 @@ test(
         assert.equal(ready, 2);
         assert.equal(launches, 2);
         assert.equal(observedOperations.length, 1);
-        assert.equal(typeof observedOperations[0].healthy, "boolean");
-        assert.ok(Number.isFinite(Date.parse(observedOperations[0].checkedAt)));
-        assert.deepEqual(Object.keys(observedOperations[0]).sort(), ["checkedAt", "healthy"]);
+        assert.equal(typeof observedOperations[0]!.healthy, "boolean");
+        assert.ok(Number.isFinite(Date.parse(observedOperations[0]!.checkedAt)));
+        assert.deepEqual(Object.keys(observedOperations[0]!).sort(), ["checkedAt", "healthy"]);
         if (process.platform !== "win32") {
           assert.equal(child!.exitCode, 0);
           assert.equal(child!.signalCode, null);
@@ -200,8 +200,8 @@ test(
       }
       await pool.query("UPDATE valo_jobs.queue SET expire_seconds=$2,retry_limit=$3 WHERE name=$1", [
         queue,
-        original.rows[0].expire_seconds,
-        original.rows[0].retry_limit,
+        original.rows[0]!.expire_seconds,
+        original.rows[0]!.retry_limit,
       ]);
       await pool.end();
       assert.equal(dirname(resolve(directory)), resolve(tmpdir()));

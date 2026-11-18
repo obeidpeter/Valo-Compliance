@@ -23,6 +23,7 @@ import { ValoProblem } from "./valo-problem";
 import { privacyIdentityHashes } from "./valo-privacy-keys";
 export { ValoProblem } from "./valo-problem";
 import { workspaceActorFromMembership, type WorkspaceActor } from "../platform/workspace-context";
+import { singleRow } from "../platform/rows";
 export type { WorkspaceActor };
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /** Read authorization must not retain a membership SHARE lock during a long
@@ -128,10 +129,9 @@ export async function resolveWorkspace(identityId: string): Promise<WorkspaceAct
       .insert(valoWorkspaces)
       .values({ id: randomUUID(), ownerIdentityId: identityId })
       .onConflictDoNothing({ target: valoWorkspaces.ownerIdentityId });
-    const [workspace] = await tx
-      .select()
-      .from(valoWorkspaces)
-      .where(eq(valoWorkspaces.ownerIdentityId, identityId));
+    const workspace = singleRow(
+      await tx.select().from(valoWorkspaces).where(eq(valoWorkspaces.ownerIdentityId, identityId)),
+    );
     const [deleted] = await tx
       .select({ id: valoPrivacyTombstones.id })
       .from(valoPrivacyTombstones)
@@ -148,10 +148,9 @@ export async function resolveWorkspace(identityId: string): Promise<WorkspaceAct
         active: "yes",
       })
       .onConflictDoNothing({ target: valoMemberships.identityId });
-    const [membership] = await tx
-      .select()
-      .from(valoMemberships)
-      .where(eq(valoMemberships.identityId, identityId));
+    const membership = singleRow(
+      await tx.select().from(valoMemberships).where(eq(valoMemberships.identityId, identityId)),
+    );
     if (membership.active !== "yes") throw new ValoProblem(403, "Workspace membership is suspended");
     return workspaceActorFromMembership({ workspaceId: membership.workspaceId, identityId });
   });
@@ -168,10 +167,12 @@ export async function getWorkspace(actor: WorkspaceActor) {
         eq(valoProfileVersions.revision, workspace.profileRevision),
       ),
     );
-  const [count] = await db
-    .select({ total: sql<number>`count(*)::int` })
-    .from(valoDocuments)
-    .where(eq(valoDocuments.workspaceId, actor.workspaceId));
+  const count = singleRow(
+    await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(valoDocuments)
+      .where(eq(valoDocuments.workspaceId, actor.workspaceId)),
+  );
   return {
     id: workspace.id,
     profileRevision: workspace.profileRevision,
@@ -211,10 +212,12 @@ export async function saveProfile(actor: WorkspaceActor, raw: unknown) {
       .set({ profileRevision: revision })
       .where(eq(valoWorkspaces.id, actor.workspaceId));
     await event(tx, actor, "profile.version_saved", actor.workspaceId, revision);
-    const [count] = await tx
-      .select({ total: sql<number>`count(*)::int` })
-      .from(valoDocuments)
-      .where(eq(valoDocuments.workspaceId, actor.workspaceId));
+    const count = singleRow(
+      await tx
+        .select({ total: sql<number>`count(*)::int` })
+        .from(valoDocuments)
+        .where(eq(valoDocuments.workspaceId, actor.workspaceId)),
+    );
     return {
       id: actor.workspaceId,
       profileRevision: revision,

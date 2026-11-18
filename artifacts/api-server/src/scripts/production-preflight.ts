@@ -4,7 +4,7 @@ import { environment } from "../platform/settings";
 const args = process.argv.slice(2);
 if (
   args.length > 1 ||
-  (args.length === 1 && !["--configuration-only", "--activate-rehearsal"].includes(args[0]))
+  (args.length === 1 && !["--configuration-only", "--activate-rehearsal"].includes(args[0]!))
 ) {
   console.error("USAGE: production-preflight [--configuration-only|--activate-rehearsal]");
   process.exitCode = 1;

@@ -24,7 +24,7 @@ test("reports one created held receipt and its stable retry", async () => {
 test("an existing receipt retains its status and is not counted as repaired", async () => {
   const outcome = await recoverReceiptWithEvidence("order-b", async () => result(false, "sent"));
   assert.equal(outcome.disposition, "already_present");
-  assert.equal(outcome.observations[2].deliveryStatus, "sent");
+  assert.equal(outcome.observations[2]!.deliveryStatus, "sent");
 });
 test("awaits a successful peer and retains its receipt when another call fails", async () => {
   let calls = 0,
@@ -41,8 +41,8 @@ test("awaits a successful peer and retains its receipt when another call fails",
   const outcome = await pending;
   assert.equal(calls, 2);
   assert.equal(outcome.disposition, "needs_review");
-  assert.equal(outcome.observations[0].receiptId, "synthetic-receipt");
-  assert.equal(outcome.failures[0].reason, "ineligible_synthetic_fixture");
+  assert.equal(outcome.observations[0]!.receiptId, "synthetic-receipt");
+  assert.equal(outcome.failures[0]!.reason, "ineligible_synthetic_fixture");
   assert.ok(!JSON.stringify(outcome).includes("PRIVATE SQL"));
 });
 test("preserves order IDs and safe database reason codes for failed repairs", async () => {
@@ -52,7 +52,7 @@ test("preserves order IDs and safe database reason codes for failed repairs", as
   });
   assert.equal(outcome.orderId, "order-d");
   assert.equal(outcome.failures.length, 2);
-  assert.equal(outcome.failures[0].databaseCode, "23503");
+  assert.equal(outcome.failures[0]!.databaseCode, "23503");
   assert.ok(!JSON.stringify(outcome).includes("PRIVATE ROW"));
 });
 test("retains precise provenance boundaries without arbitrary exception payloads", async () => {
@@ -63,12 +63,12 @@ test("retains precise provenance boundaries without arbitrary exception payloads
       blockers: ["matching_grant_absent", "order_not_verified_success", "PRIVATE VALUE"],
     });
   });
-  assert.equal(outcome.failures[0].boundaryCode, "SYNTHETIC_RECEIPT_INELIGIBLE");
-  assert.deepEqual(outcome.failures[0].provenanceBlockers, [
+  assert.equal(outcome.failures[0]!.boundaryCode, "SYNTHETIC_RECEIPT_INELIGIBLE");
+  assert.deepEqual(outcome.failures[0]!.provenanceBlockers, [
     "matching_grant_absent",
     "order_not_verified_success",
   ]);
-  assert.equal(outcome.failures[0].errorClass, "Error");
+  assert.equal(outcome.failures[0]!.errorClass, "Error");
   assert.ok(!JSON.stringify(outcome).includes("PRIVATE"));
 });
 test("does not claim success for conflicting receipt IDs or unheld new receipts", async () => {
@@ -94,7 +94,7 @@ test("records a failed repeat check without erasing the committed repair observa
   });
   assert.equal(outcome.reason, "repeat_check_failed");
   assert.equal(outcome.observations.length, 2);
-  assert.equal(outcome.observations[0].repaired, true);
-  assert.equal(outcome.failures[0].attempt, 3);
+  assert.equal(outcome.observations[0]!.repaired, true);
+  assert.equal(outcome.failures[0]!.attempt, 3);
   assert.ok(!JSON.stringify(outcome).includes("PRIVATE PROVIDER"));
 });

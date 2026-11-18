@@ -46,7 +46,7 @@ export function controlledHtml(raw: unknown, revision: number, mode: RenderMode 
   const font = content.formatting.font === "serif" ? "Georgia, serif" : "Arial, sans-serif";
   const colour = content.formatting.accent === "forest" ? "#214d3b" : "#292724";
   const fields = content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX))
-    ? [["Notes", content.fields.notes]]
+    ? [["Notes", content.fields.notes] as const]
     : Object.entries(content.fields);
   const blocks = guidedRenderableBlocks(content)
     .map((block) =>
@@ -80,7 +80,7 @@ export async function renderDocument(
         : DRAFT_NOTICE;
   const { title, content } = documentInput.parse(raw);
   const fields = content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX))
-    ? [["Notes", content.fields.notes]]
+    ? [["Notes", content.fields.notes] as const]
     : Object.entries(content.fields);
   if (format === "docx") {
     const children: (Paragraph | Table)[] = [

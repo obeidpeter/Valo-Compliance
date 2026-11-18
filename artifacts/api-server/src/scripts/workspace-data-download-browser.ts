@@ -87,7 +87,7 @@ const handle = async (req: IncomingMessage, res: ServerResponse) => {
   };
   if (url.pathname === "/fixture.js") {
     res.setHeader("Content-Type", "text/javascript");
-    res.end(bundle.outputFiles[0].text);
+    res.end(bundle.outputFiles[0]!.text);
     return;
   }
   if (url.pathname === "/__fixture/status") {
@@ -189,7 +189,7 @@ const handle = async (req: IncomingMessage, res: ServerResponse) => {
     json(publicJob(job));
     return;
   }
-  const job = jobs.get(id);
+  const job = jobs.get(id!);
   if (!job || job.owner !== owner) {
     json({ error: "Export not found." }, 404);
     return;

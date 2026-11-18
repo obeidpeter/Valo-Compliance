@@ -17,14 +17,14 @@ export async function prepareEmptyRehearsalQueue(
   );
   if (
     marker.rows.length !== 1 ||
-    marker.rows[0].instance_id !== config.databaseId ||
-    marker.rows[0].environment !== "development"
+    marker.rows[0]?.instance_id !== config.databaseId ||
+    marker.rows[0]?.environment !== "development"
   )
     throw Error("NEW_DATABASE_IDENTITY_REQUIRED");
   const contents = await query(
     "SELECT EXISTS(SELECT 1 FROM valo_workspaces) OR EXISTS(SELECT 1 FROM valo_privacy_cases) OR EXISTS(SELECT 1 FROM valo_orders) AS populated",
   );
-  if (contents.rows.length !== 1 || contents.rows[0].populated !== false)
+  if (contents.rows.length !== 1 || contents.rows[0]?.populated !== false)
     throw Error("EMPTY_DATABASE_REQUIRED");
   const existing = await query("SELECT to_regnamespace('valo_jobs') AS installed");
   if (existing.rows[0]?.installed) return; // Existing schemas are checked by preflight, never repaired.
@@ -59,15 +59,15 @@ export async function assignEmptyRehearsalDatabase(query: Query, env: Record<str
   );
   if (
     marker.rows.length !== 1 ||
-    marker.rows[0].instance_id !== config.databaseId ||
-    marker.rows[0].environment !== "development" ||
-    marker.rows[0].storage_fingerprint !== null
+    marker.rows[0]?.instance_id !== config.databaseId ||
+    marker.rows[0]?.environment !== "development" ||
+    marker.rows[0]?.storage_fingerprint !== null
   )
     throw Error("NEW_DATABASE_IDENTITY_REQUIRED");
   const contents =
     await query(`SELECT EXISTS(SELECT 1 FROM valo_workspaces) OR EXISTS(SELECT 1 FROM valo_privacy_cases)
     OR EXISTS(SELECT 1 FROM valo_orders) OR EXISTS(SELECT 1 FROM valo_jobs.job) AS populated`);
-  if (contents.rows.length !== 1 || contents.rows[0].populated !== false)
+  if (contents.rows.length !== 1 || contents.rows[0]?.populated !== false)
     throw Error("EMPTY_DATABASE_REQUIRED");
   await query(
     "UPDATE valo_runtime_identity SET environment='production-rehearsal',storage_fingerprint=$1 WHERE singleton=true",

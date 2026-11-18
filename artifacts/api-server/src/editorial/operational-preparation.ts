@@ -32,6 +32,7 @@ import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
 import { supportsOperationalInferenceTemplate } from "../lib/inference-operational-coverage";
 import { readOperationalIntake } from "./operational-intake";
 import { setting } from "../platform/settings";
+import { singleRow } from "../platform/rows";
 export async function prepareInventoryRelease(snapshotPath: string) {
   return prepareRelease("TPL-07", snapshotPath, true);
 }
@@ -66,10 +67,9 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
     .insert(valoPublicationPolicies)
     .values({ id: policy.version, hash: policy.hash, policy, authority })
     .onConflictDoNothing();
-  const [storedPolicy] = await db
-    .select()
-    .from(valoPublicationPolicies)
-    .where(eq(valoPublicationPolicies.id, policy.version));
+  const storedPolicy = singleRow(
+    await db.select().from(valoPublicationPolicies).where(eq(valoPublicationPolicies.id, policy.version)),
+  );
   if (storedPolicy.hash !== policy.hash) throw Error("POLICY_VERSION_CHANGED_CREATE_NEW_VERSION");
   const authored = useRecordedAuthoring ? await recordOriginalAuthoring() : undefined;
   let recorded: { original: string; provenance: OperationalProvenance } | undefined = intake

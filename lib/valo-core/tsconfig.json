@@ -5,7 +5,6 @@
     // bytes are the business-name candidate's version, bound to its recorded evaluation and to
     // checker-rich.ts. Turn it on with the checker's next evaluation. Every other package has it.
     "exactOptionalPropertyTypes": false,
-    "noUncheckedIndexedAccess": true,
     "composite": true,
     "declaration": true,
     "declarationMap": true,

@@ -108,7 +108,7 @@ test(
           const body = input(),
             results = await Promise.all([service.change(actor(), body), service.change(actor(), body)]);
           assert.equal(results[0].id, results[1].id);
-          assert.equal((await assignment(b, "finance")).version, 1);
+          assert.equal((await assignment(b, "finance"))!.version, 1);
           lookupFailure = true;
           assert.equal(
             (await service.change(actor(), body)).id,
@@ -194,15 +194,15 @@ test(
               hold = new Promise<void>((r) => (release = r));
             const blocker = db.transaction(async (tx) => {
               const pid = await tx.execute(sql`SELECT pg_backend_pid() AS pid`);
-              await tx.execute(sql`SELECT id FROM valo_staff_assignments WHERE id=${before.id} FOR UPDATE`);
-              entered(Number(pid.rows[0].pid));
+              await tx.execute(sql`SELECT id FROM valo_staff_assignments WHERE id=${before!.id} FOR UPDATE`);
+              entered(Number(pid.rows[0]!.pid));
               await hold;
             });
             const blockerPid = await locked;
             const measured = Date.now() - 29000,
               currentActor = stale === "actor" ? { ...actor(), verifiedAt: measured } : actor();
             target = stale === "target" ? { verifiedAt: measured } : {};
-            const pending = service.change(currentActor, input(b, { expectedVersion: before.version }));
+            const pending = service.change(currentActor, input(b, { expectedVersion: before!.version }));
             const result = pending.then(
               () => null,
               (e) => e,
@@ -228,7 +228,7 @@ test(
               target = {};
             }
             assert.equal((await result)?.status, 403);
-            assert.equal((await assignment(b, "finance")).version, before.version);
+            assert.equal((await assignment(b, "finance"))!.version, before!.version);
             assert.equal(
               (await db.select().from(valoStaffRoleChanges)).length,
               auditBefore,
@@ -285,13 +285,13 @@ test(
         async () => {
           const f = await assignment(b, "finance");
           await db.execute(
-            sql`UPDATE valo_staff_assignments SET granted_at=clock_timestamp()-interval '5 minutes',expires_at=clock_timestamp()+interval '250 milliseconds' WHERE id=${f.id}`,
+            sql`UPDATE valo_staff_assignments SET granted_at=clock_timestamp()-interval '5 minutes',expires_at=clock_timestamp()+interval '250 milliseconds' WHERE id=${f!.id}`,
           );
           let entered!: () => void, release!: () => void;
           const locked = new Promise<void>((r) => (entered = r)),
             hold = new Promise<void>((r) => (release = r));
           const blocker = db.transaction(async (tx) => {
-            await tx.execute(sql`SELECT id FROM valo_staff_assignments WHERE id=${f.id} FOR UPDATE`);
+            await tx.execute(sql`SELECT id FROM valo_staff_assignments WHERE id=${f!.id} FOR UPDATE`);
             entered();
             await hold;
           });
@@ -313,15 +313,15 @@ test(
           for (const permission of ["privacy", "support"] as const) {
             const saved = await assignment(b, permission);
             await db.execute(
-              sql`UPDATE valo_staff_assignments SET granted_at=clock_timestamp()-interval '5 minutes',expires_at=clock_timestamp()+interval '1 minute' WHERE id=${saved.id}`,
+              sql`UPDATE valo_staff_assignments SET granted_at=clock_timestamp()-interval '5 minutes',expires_at=clock_timestamp()+interval '1 minute' WHERE id=${saved!.id}`,
             );
             let entered!: (pid: number) => void, release!: () => void;
             const locked = new Promise<number>((r) => (entered = r)),
               hold = new Promise<void>((r) => (release = r));
             const blocker = db.transaction(async (tx) => {
               const pid = await tx.execute(sql`SELECT pg_backend_pid() AS pid`);
-              await tx.execute(sql`SELECT id FROM valo_staff_assignments WHERE id=${saved.id} FOR UPDATE`);
-              entered(Number(pid.rows[0].pid));
+              await tx.execute(sql`SELECT id FROM valo_staff_assignments WHERE id=${saved!.id} FOR UPDATE`);
+              entered(Number(pid.rows[0]!.pid));
               await hold;
             });
             const blockerPid = await locked,
@@ -452,18 +452,18 @@ test(
             const old = await assignment(b, "finance"),
               overview = await service.list(actor());
             assert.equal(
-              overview.assignments.some((r) => r.id === old.id),
+              overview.assignments.some((r) => r.id === old!.id),
               false,
             );
             lookupFailure = true;
             const exact = await service.list(actor(), { identityId: b });
-            assert.equal(exact.assignments.find((r) => r.id === old.id)?.version, old.version);
+            assert.equal(exact.assignments.find((r) => r.id === old!.id)?.version, old!.version);
             const revoked = await service.change(
               actor(),
-              input(b, { action: "revoke", grantMode: undefined, expectedVersion: old.version }),
+              input(b, { action: "revoke", grantMode: undefined, expectedVersion: old!.version }),
             );
             assert.equal(revoked.action, "revoke");
-            assert.equal((await assignment(b, "finance")).active, false);
+            assert.equal((await assignment(b, "finance"))!.active, false);
           } finally {
             lookupFailure = false;
             await db.delete(valoStaffAssignments).where(

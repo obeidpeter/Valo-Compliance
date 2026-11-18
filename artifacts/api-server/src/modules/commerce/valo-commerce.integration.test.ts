@@ -67,11 +67,11 @@ test(
       return verifiedTransaction.parse({
         id: String(Math.floor(Math.random() * 1e12)),
         domain: "test",
-        reference: o.reference,
+        reference: o!.reference,
         status: "success",
-        amount: o.amountKobo,
+        amount: o!.amountKobo,
         currency: "NGN",
-        metadata: { valoOrderId: o.id, workspaceId: o.workspaceId },
+        metadata: { valoOrderId: o!.id, workspaceId: o!.workspaceId },
         ...patch,
       });
     }
@@ -118,10 +118,10 @@ test(
       await t.test(
         "saved controlled order is not a receipt or entitlement; no browser-success grant exists",
         async () => {
-          assert.equal((await commerce.purchases(a)).orders[0].status, "created");
-          await assert.rejects(commerce.purchaseReceipt(a, order.id), { status: 409 });
+          assert.equal((await commerce.purchases(a)).orders[0]!.status, "created");
+          await assert.rejects(commerce.purchaseReceipt(a, order!.id), { status: 409 });
           assert.equal(
-            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order.id))).length,
+            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order!.id))).length,
             0,
           );
         },
@@ -130,17 +130,17 @@ test(
         "other tenants cannot read a receipt, refresh, checkout, settle or request a refund",
         async () => {
           for (const call of [
-            () => commerce.purchaseReceipt(b, order.id),
-            () => commerce.refreshOrder(b, order.id),
-            () => commerce.startCheckout(b, order.id, "synthetic@example.test"),
+            () => commerce.purchaseReceipt(b, order!.id),
+            () => commerce.refreshOrder(b, order!.id),
+            () => commerce.startCheckout(b, order!.id, "synthetic@example.test"),
             () =>
-              commerce.requestRefund(b, order.id, {
+              commerce.requestRefund(b, order!.id, {
                 reason: "Controlled test request",
                 amountKobo: 1000,
                 requestKey: randomUUID(),
                 acceptedPolicyVersion: "test-refund-v1",
               }),
-            () => commerce.settleVerifiedOrder(order.id, verified, b),
+            () => commerce.settleVerifiedOrder(order!.id, verified, b),
           ])
             await assert.rejects(call(), { status: 404 });
           assert.equal((await commerce.purchases(b)).orders.length, 0);
@@ -149,18 +149,18 @@ test(
       await t.test(
         "mismatched amount and workspace never grant; data outside test mode is rejected",
         async () => {
-          await assert.rejects(commerce.settleVerifiedOrder(order.id, { ...verified, amount: 12346 }), {
+          await assert.rejects(commerce.settleVerifiedOrder(order!.id, { ...verified, amount: 12346 }), {
             status: 409,
           });
           await assert.rejects(
-            commerce.settleVerifiedOrder(order.id, {
+            commerce.settleVerifiedOrder(order!.id, {
               ...verified,
               metadata: { ...verified.metadata, workspaceId: b.workspaceId },
             }),
             { status: 409 },
           );
           await assert.rejects(
-            commerce.settleVerifiedOrder(order.id, { ...verified, domain: "live" } as never),
+            commerce.settleVerifiedOrder(order!.id, { ...verified, domain: "live" } as never),
           );
         },
       );
@@ -168,23 +168,25 @@ test(
         "concurrent controlled callback/webhook results grant one entitlement, one receipt outbox and one settlement event",
         async () => {
           const result = await Promise.all(
-            Array.from({ length: 8 }, () => commerce.settleVerifiedOrder(order.id, verified)),
+            Array.from({ length: 8 }, () => commerce.settleVerifiedOrder(order!.id, verified)),
           );
           assert.ok(result.every((r) => r.status === "verified_success"));
           assert.equal(
-            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order.id))).length,
+            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order!.id))).length,
             1,
           );
           const outbox = await db
             .select()
             .from(valoPurchaseOutbox)
-            .where(eq(valoPurchaseOutbox.orderId, order.id));
+            .where(eq(valoPurchaseOutbox.orderId, order!.id));
           assert.equal(outbox.length, 1);
-          assert.equal(outbox[0].status, "awaiting_email_configuration");
+          assert.equal(outbox[0]!.status, "awaiting_email_configuration");
           const audit = await db
             .select()
             .from(valoEvents)
-            .where(and(eq(valoEvents.entityId, order.id), eq(valoEvents.action, "payment.verified_success")));
+            .where(
+              and(eq(valoEvents.entityId, order!.id), eq(valoEvents.action, "payment.verified_success")),
+            );
           assert.equal(audit.length, 1);
         },
       );
@@ -193,19 +195,19 @@ test(
         async () => {
           const repair = await fixture(),
             data = response(repair);
-          await commerce.settleVerifiedOrder(repair.id, data);
-          await db.delete(valoEntitlements).where(eq(valoEntitlements.orderId, repair.id));
-          await db.delete(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, repair.id));
+          await commerce.settleVerifiedOrder(repair!.id, data);
+          await db.delete(valoEntitlements).where(eq(valoEntitlements.orderId, repair!.id));
+          await db.delete(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, repair!.id));
           await Promise.all([
-            commerce.settleVerifiedOrder(repair.id, data),
-            commerce.settleVerifiedOrder(repair.id, data),
+            commerce.settleVerifiedOrder(repair!.id, data),
+            commerce.settleVerifiedOrder(repair!.id, data),
           ]);
           assert.equal(
-            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, repair.id))).length,
+            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, repair!.id))).length,
             1,
           );
           assert.equal(
-            (await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, repair.id)))
+            (await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, repair!.id)))
               .length,
             1,
           );
@@ -216,7 +218,7 @@ test(
                 .from(valoEvents)
                 .where(
                   and(
-                    eq(valoEvents.entityId, repair.id),
+                    eq(valoEvents.entityId, repair!.id),
                     eq(valoEvents.action, "payment.fulfilment_repaired"),
                   ),
                 )
@@ -226,16 +228,16 @@ test(
           await db
             .update(valoEntitlements)
             .set({ status: "suspended" })
-            .where(eq(valoEntitlements.orderId, repair.id));
-          await db.delete(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, repair.id));
-          await commerce.settleVerifiedOrder(repair.id, data);
+            .where(eq(valoEntitlements.orderId, repair!.id));
+          await db.delete(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, repair!.id));
+          await commerce.settleVerifiedOrder(repair!.id, data);
           assert.equal(
-            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, repair.id)))[0]
+            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, repair!.id)))[0]!
               .status,
             "suspended",
           );
           assert.equal(
-            (await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, repair.id)))
+            (await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, repair!.id)))
               .length,
             1,
           );
@@ -299,12 +301,12 @@ test(
               { change: "later:created", amount: 99999, closed: false },
             ],
           );
-          const receipt = await commerce.purchaseReceipt(a, order.id);
+          const receipt = await commerce.purchaseReceipt(a, order!.id);
           assert.equal(receipt.amountKobo, 12345);
           assert.equal(receipt.licenceText, fixtureLine.licenceText);
           assert.match(receipt.notice, /test-mode/);
           assert.equal(receipt.deliveryStatus, "awaiting_email_configuration");
-          assert.equal(receipt.receiptReference, `VALO-TEST-${order.reference}`);
+          assert.equal(receipt.receiptReference, `VALO-TEST-${order!.reference}`);
         },
       );
       await t.test(
@@ -316,24 +318,26 @@ test(
             requestKey: randomUUID(),
             acceptedPolicyVersion: "test-refund-v1",
           };
-          const r = await commerce.requestRefund(a, order.id, payload);
-          const again = await commerce.requestRefund(a, order.id, payload);
+          const r = await commerce.requestRefund(a, order!.id, payload);
+          const again = await commerce.requestRefund(a, order!.id, payload);
           assert.deepEqual(r, again);
           assert.equal(r.status, "requested");
           const [grant] = await db
             .select()
             .from(valoEntitlements)
-            .where(eq(valoEntitlements.orderId, order.id));
+            .where(eq(valoEntitlements.orderId, order!.id));
+          assert.ok(grant);
           assert.equal(grant.status, "active");
         },
       );
       await t.test("a failed fulfilment constraint rolls back settlement and outbox atomically", async () => {
         const broken = await fixture(a, { ...fixtureLine, contentVersionId: randomUUID() });
-        await assert.rejects(commerce.settleVerifiedOrder(broken.id, response(broken)));
-        const [saved] = await db.select().from(valoOrders).where(eq(valoOrders.id, broken.id));
+        await assert.rejects(commerce.settleVerifiedOrder(broken!.id, response(broken)));
+        const [saved] = await db.select().from(valoOrders).where(eq(valoOrders.id, broken!.id));
+        assert.ok(saved);
         assert.equal(saved.status, "created");
         assert.equal(
-          (await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, broken.id)))
+          (await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, broken!.id)))
             .length,
           0,
         );
@@ -344,37 +348,41 @@ test(
           for (const status of ["pending", "abandoned", "failed"] as const) {
             const o = await fixture(),
               data = response(o, { status });
-            const result = await commerce.settleVerifiedOrder(o.id, data);
+            const result = await commerce.settleVerifiedOrder(o!.id, data);
             assert.equal(result.status, status);
             assert.equal(
-              (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, o.id))).length,
+              (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, o!.id))).length,
               0,
             );
             assert.equal(
-              (await commerce.settleVerifiedOrder(o.id, { ...data, status: "success" })).status,
+              (await commerce.settleVerifiedOrder(o!.id, { ...data, status: "success" })).status,
               "verified_success",
             );
           }
         },
       );
       await t.test("reversal suspends reuse without deleting financial or customer history", async () => {
-        await commerce.settleVerifiedOrder(order.id, { ...verified, status: "reversed" });
-        const receipt = await commerce.purchaseReceipt(a, order.id);
+        await commerce.settleVerifiedOrder(order!.id, { ...verified, status: "reversed" });
+        const receipt = await commerce.purchaseReceipt(a, order!.id);
         assert.equal(receipt.status, "reversed");
-        assert.equal(receipt.amountKobo, order.amountKobo);
+        assert.equal(receipt.amountKobo, order!.amountKobo);
         assert.equal(receipt.licenceText, fixtureLine.licenceText);
-        assert.equal(receipt.receiptReference, `VALO-TEST-${order.reference}`);
+        assert.equal(receipt.receiptReference, `VALO-TEST-${order!.reference}`);
         assert.equal(
-          (await commerce.purchases(a)).orders.find((o) => o.id === order.id)?.receiptReference,
+          (await commerce.purchases(a)).orders.find((o) => o.id === order!.id)?.receiptReference,
           receipt.receiptReference,
         );
         const [grant] = await db
           .select()
           .from(valoEntitlements)
-          .where(eq(valoEntitlements.orderId, order.id));
+          .where(eq(valoEntitlements.orderId, order!.id));
+        assert.ok(grant);
         assert.equal(grant.status, "suspended");
-        assert.equal((await commerce.purchases(a)).orders.find((o) => o.id === order.id)!.status, "reversed");
-        await assert.rejects(commerce.startCheckout(a, order.id, "synthetic@example.test"), { status: 409 });
+        assert.equal(
+          (await commerce.purchases(a)).orders.find((o) => o.id === order!.id)!.status,
+          "reversed",
+        );
+        await assert.rejects(commerce.startCheckout(a, order!.id, "synthetic@example.test"), { status: 409 });
       });
       await t.test(
         "membership revoked while settlement waits on an order lock prevents the eventual customer write",
@@ -384,8 +392,8 @@ test(
             connection = await pool.connect();
           try {
             await connection.query("BEGIN");
-            await connection.query("SELECT id FROM valo_orders WHERE id=$1 FOR UPDATE", [waiting.id]);
-            const write = commerce.settleVerifiedOrder(waiting.id, data, a);
+            await connection.query("SELECT id FROM valo_orders WHERE id=$1 FOR UPDATE", [waiting!.id]);
+            const write = commerce.settleVerifiedOrder(waiting!.id, data, a);
             let observed = false;
             for (let n = 0; n < 60; n++) {
               const r = await pool.query(
@@ -405,7 +413,7 @@ test(
             await connection.query("COMMIT");
             await assert.rejects(write, { status: 403 });
             assert.equal(
-              (await db.select().from(valoOrders).where(eq(valoOrders.id, waiting.id)))[0].status,
+              (await db.select().from(valoOrders).where(eq(valoOrders.id, waiting!.id)))[0]!.status,
               "created",
             );
           } finally {
@@ -424,12 +432,12 @@ test(
           const event = {
             event: "charge.success",
             data: {
-              id: order.reference,
-              reference: order.reference,
+              id: order!.reference,
+              reference: order!.reference,
               authorization: { card: "NOT_RETAINED" },
             },
           };
-          eventKeys.push(`test:charge.success:${order.reference}`);
+          eventKeys.push(`test:charge.success:${order!.reference}`);
           const first = await commerce.recordPaymentEvent(Buffer.from(JSON.stringify(event)));
           const second = await commerce.recordPaymentEvent(Buffer.from(JSON.stringify(event, null, 2)));
           assert.equal(first.duplicate, false);
@@ -437,7 +445,8 @@ test(
           const [row] = await db
             .select()
             .from(valoPaymentEvents)
-            .where(eq(valoPaymentEvents.eventKey, eventKeys[0]));
+            .where(eq(valoPaymentEvents.eventKey, eventKeys[0]!));
+          assert.ok(row);
           assert.equal(row.status, "pending");
           assert.equal(JSON.stringify(row).includes("NOT_RETAINED"), false);
         },
@@ -455,12 +464,13 @@ test(
           const [row] = await db
             .select()
             .from(valoPaymentEvents)
-            .where(eq(valoPaymentEvents.eventKey, eventKeys[0]));
+            .where(eq(valoPaymentEvents.eventKey, eventKeys[0]!));
+          assert.ok(row);
           assert.equal(row.attempts, 0);
           assert.equal(row.status, "pending");
           const o = await fixture();
-          await assert.rejects(commerce.refreshOrder(a, o.id), { status: 503 });
-          await assert.rejects(commerce.purchaseReceipt(a, o.id), { status: 409 });
+          await assert.rejects(commerce.refreshOrder(a, o!.id), { status: 503 });
+          await assert.rejects(commerce.purchaseReceipt(a, o!.id), { status: 409 });
         },
       );
       console.log(
@@ -474,7 +484,7 @@ test(
       );
       await t.test("checkout of a product that is not released is refused", async () => {
         const order = await fixture();
-        await assert.rejects(commerce.startCheckout(a, order.id, "synthetic@example.test"), {
+        await assert.rejects(commerce.startCheckout(a, order!.id, "synthetic@example.test"), {
           status: 409,
           message: /unavailable for new checkout/,
         });

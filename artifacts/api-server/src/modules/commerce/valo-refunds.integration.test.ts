@@ -211,10 +211,10 @@ test(
             await assert.rejects(decideRefund(actor, r.reference, decision()), { status: 403 });
           }
           await assert.rejects(decideRefund(staff, r.reference, decision(2)), { status: 409 });
-          assert.equal((await row(r.reference)).status, "requested");
+          assert.equal((await row(r.reference))!.status, "requested");
           await decideRefund(staff, r.reference, { ...decision(), decision: "reject" });
-          assert.equal((await row(r.reference)).status, "rejected");
-          assert.equal(refundBalance(10000, [await row(r.reference)]).refundableKobo, 10000);
+          assert.equal((await row(r.reference))!.status, "rejected");
+          assert.equal(refundBalance(10000, [(await row(r.reference))!]).refundableKobo, 10000);
         },
       );
       await t.test("concurrent partial requests cannot reserve more than the paid amount", async () => {
@@ -238,7 +238,7 @@ test(
             decideRefund(staff, r.reference, { ...decision(), decision: "reject" }),
           ]);
           assert.equal(outcomes.filter((r) => r.status === "fulfilled").length, 1);
-          assert.equal((await row(r.reference)).version, 2);
+          assert.equal((await row(r.reference))!.version, 2);
           const log = await db
             .select()
             .from(valoRefundTransitions)
@@ -253,45 +253,45 @@ test(
             id = await approved(order, 4000);
           await processRefund(id, adapter);
           let r = await row(id);
-          assert.equal(r.status, "pending");
-          assert.equal(r.completedAt, null);
+          assert.equal(r!.status, "pending");
+          assert.equal(r!.completedAt, null);
           assert.equal(
-            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order)))[0].status,
+            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order)))[0]!.status,
             "active",
           );
-          map.set(r.reference, { ...map.get(r.reference), status: "processed" });
+          map.set(r!.reference, { ...map.get(r!.reference), status: "processed" });
           await due(id);
           await processRefund(id, adapter);
           r = await row(id);
-          assert.equal(r.status, "processed");
-          assert.ok(r.completedAt);
+          assert.equal(r!.status, "processed");
+          assert.ok(r!.completedAt);
           let history = (await purchases(a)).orders.find((o) => o.id === order)!;
           assert.equal(history.refundedKobo, 4000);
           assert.equal(history.refundableKobo, 6000);
           assert.equal(
-            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order)))[0].status,
+            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order)))[0]!.status,
             "active",
           );
           const full = await approved(order, 6000);
           await processRefund(full, adapter);
           const second = await row(full);
-          map.set(second.reference, { ...map.get(second.reference), status: "processed" });
+          map.set(second!.reference, { ...map.get(second!.reference), status: "processed" });
           await due(full);
           await processRefund(full, adapter);
           history = (await purchases(a)).orders.find((o) => o.id === order)!;
           assert.equal(history.refundedKobo, 10000);
           assert.equal(history.refundableKobo, 0);
           assert.equal(
-            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order)))[0].status,
+            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order)))[0]!.status,
             "suspended",
           );
           assert.ok((await db.select().from(valoDocuments).where(eq(valoDocuments.id, draft.id)))[0]);
           await due(id);
           await processRefund(id, adapter, true);
-          map.set(r.reference, { ...map.get(r.reference), status: "pending" });
+          map.set(r!.reference, { ...map.get(r!.reference), status: "pending" });
           await due(id);
           await processRefund(id, adapter, true);
-          assert.equal((await row(id)).status, "processed");
+          assert.equal((await row(id))!.status, "processed");
           assert.equal(
             (await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, order))).length,
             2,
@@ -313,10 +313,10 @@ test(
             },
           };
           await processRefund(id, timeout);
-          assert.equal((await row(id)).status, "unknown");
+          assert.equal((await row(id))!.status, "unknown");
           await due(id);
           await processRefund(id, timeout);
-          assert.equal((await row(id)).status, "pending");
+          assert.equal((await row(id))!.status, "pending");
           assert.equal(posted, 1);
         },
       );
@@ -329,17 +329,17 @@ test(
           await Promise.all(Array.from({ length: 6 }, () => processRefund(id, adapter)));
           assert.equal(creates - before, 1);
           let r = await row(id);
-          assert.equal(r.attempts, 1);
-          map.set(r.reference, { ...map.get(r.reference), amount: 1001, status: "processed" });
+          assert.equal(r!.attempts, 1);
+          map.set(r!.reference, { ...map.get(r!.reference), amount: 1001, status: "processed" });
           await due(id);
           await processRefund(id, adapter);
           r = await row(id);
-          assert.equal(r.status, "needs_review");
-          assert.equal(r.completedAt, null);
-          assert.equal(refundBalance(10000, [r]).refundableKobo, 9000);
+          assert.equal(r!.status, "needs_review");
+          assert.equal(r!.completedAt, null);
+          assert.equal(refundBalance(10000, [r!]).refundableKobo, 9000);
           const valid = {
             id: "123",
-            reference: r.reference,
+            reference: r!.reference,
             domain: "test",
             amount: 1000,
             currency: "NGN",
@@ -353,7 +353,7 @@ test(
             { reference: "wrong-reference" },
             { amount: 999 },
           ]) {
-            assert.throws(() => assertRefundMatch(r, "456", { ...valid, ...change }));
+            assert.throws(() => assertRefundMatch(r!, "456", { ...valid, ...change }));
           }
         },
       );
@@ -379,23 +379,23 @@ test(
             child.kill("SIGKILL");
             await new Promise<void>((resolve) => child.once("exit", () => resolve()));
             let r = await row(id);
-            assert.equal(r.status, "submitting");
-            assert.equal(r.attempts, 1);
+            assert.equal(r!.status, "submitting");
+            assert.equal(r!.attempts, 1);
             await db
               .update(valoRefundRequests)
               .set({ leaseUntil: new Date(Date.now() - 1000) })
               .where(eq(valoRefundRequests.id, id));
             await processRefund(id, adapter);
             r = await row(id);
-            assert.equal(r.status, "pending");
-            assert.equal(r.attempts, 2);
+            assert.equal(r!.status, "pending");
+            assert.equal(r!.attempts, 2);
             await db
               .update(valoRefundRequests)
               .set({ status: "unknown", attempts: 5, nextAttemptAt: null })
               .where(eq(valoRefundRequests.id, id));
             await processRefund(id, adapter);
-            assert.equal((await row(id)).status, "needs_review");
-            assert.equal((await row(id)).attempts, 5);
+            assert.equal((await row(id))!.status, "needs_review");
+            assert.equal((await row(id))!.attempts, 5);
           } finally {
             if (child.exitCode === null) child.kill("SIGKILL");
           }
@@ -429,7 +429,7 @@ test(
             .update(valoStaffAssignments)
             .set({ active: true })
             .where(eq(valoStaffAssignments.id, role));
-          assert.equal((await row(r.reference)).status, "requested");
+          assert.equal((await row(r.reference))!.status, "requested");
         },
       );
       await t.test(
@@ -439,6 +439,7 @@ test(
           // the preceding ten successful requests with this dispute-specific check.
           const order = await fixture(b),
             [o] = await db.select().from(valoOrders).where(eq(valoOrders.id, order));
+          assert.ok(o);
           const disputeId = String(++idCounter),
             raw = {
               id: disputeId,
@@ -462,7 +463,7 @@ test(
           await storeVerifiedDispute(disputeId, raw);
           await assert.rejects(requestOrderRefund(b, order, payload(1000)), { status: 409 });
           assert.equal(
-            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order)))[0].status,
+            (await db.select().from(valoEntitlements).where(eq(valoEntitlements.orderId, order)))[0]!.status,
             "suspended",
           );
           await storeVerifiedDispute(disputeId, {
@@ -473,7 +474,7 @@ test(
           });
           await storeVerifiedDispute(disputeId, raw);
           assert.equal(
-            (await db.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.orderId, order)))[0]
+            (await db.select().from(valoPaymentDisputes).where(eq(valoPaymentDisputes.orderId, order)))[0]!
               .status,
             "resolved",
           );
@@ -493,10 +494,12 @@ test(
           for (const status of ["resolved", "archived"]) {
             const order = await fixture(b),
               [before] = await db.select().from(valoOrders).where(eq(valoOrders.id, order));
+            assert.ok(before);
             const [grant] = await db
               .select()
               .from(valoEntitlements)
               .where(eq(valoEntitlements.orderId, order));
+            assert.ok(grant);
             const providerId = String(++idCounter),
               raw = {
                 id: providerId,
@@ -542,6 +545,7 @@ test(
             const order = await fixture(b);
             await db.update(valoOrders).set({ status: orderStatus }).where(eq(valoOrders.id, order));
             const [before] = await db.select().from(valoOrders).where(eq(valoOrders.id, order));
+            assert.ok(before);
             await db
               .update(valoEntitlements)
               .set({ status: "suspended" })
@@ -587,7 +591,7 @@ test(
                   .select()
                   .from(valoPaymentDisputes)
                   .where(eq(valoPaymentDisputes.providerId, providerId))
-              )[0].status,
+              )[0]!.status,
               "resolved",
             );
             assert.equal(
@@ -640,10 +644,10 @@ test(
             reference: `vr-test-${id}`,
             reason: "Legacy unknown-amount controlled fixture",
           });
-          assert.equal(refundBalance(10000, [await row(id)]).refundableKobo, 0);
+          assert.equal(refundBalance(10000, [(await row(id))!]).refundableKobo, 0);
           await assert.rejects(decideRefund(staff, id, decision()), { status: 409 });
           await decideRefund(staff, id, { ...decision(), decision: "reject" });
-          assert.equal((await row(id)).status, "rejected");
+          assert.equal((await row(id))!.status, "rejected");
         },
       );
       await t.test(
@@ -664,18 +668,18 @@ test(
           await decideRefund(staff, id, decision());
           await processRefund(id, adapter);
           let r = await row(id);
-          map.set(r.reference, { ...map.get(r.reference), status: "needs-attention" });
+          map.set(r!.reference, { ...map.get(r!.reference), status: "needs-attention" });
           await due(id);
           await processRefund(id, adapter);
           r = await row(id);
-          assert.equal(r.status, "needs_attention");
-          assert.equal(r.completedAt, null);
-          map.set(r.reference, { ...map.get(r.reference), status: "failed" });
+          assert.equal(r!.status, "needs_attention");
+          assert.equal(r!.completedAt, null);
+          map.set(r!.reference, { ...map.get(r!.reference), status: "failed" });
           await due(id);
           await processRefund(id, adapter);
           r = await row(id);
-          assert.equal(r.status, "failed");
-          assert.equal(refundBalance(10000, [r]).refundableKobo, 10000);
+          assert.equal(r!.status, "failed");
+          assert.equal(refundBalance(10000, [r!]).refundableKobo, 10000);
         },
       );
       await t.test("a late worker response cannot replace a newer completed observation", async () => {
@@ -693,9 +697,10 @@ test(
         await decideRefund(staff, id, decision());
         const saved = await row(id),
           [o] = await db.select().from(valoOrders).where(eq(valoOrders.id, order));
+        assert.ok(o);
         const observed = {
           id: String(++idCounter),
-          reference: saved.reference,
+          reference: saved!.reference,
           domain: "test",
           amount: 1000,
           currency: "NGN",
@@ -728,7 +733,7 @@ test(
         await processRefund(id, slow);
         release();
         await old;
-        assert.equal((await row(id)).status, "processed");
+        assert.equal((await row(id))!.status, "processed");
         assert.equal(
           (await db.select().from(valoPurchaseOutbox).where(eq(valoPurchaseOutbox.orderId, order))).length,
           1,
@@ -754,23 +759,23 @@ test(
           start = creates;
         await db.update(valoOrders).set({ status: "reversed" }).where(eq(valoOrders.id, reversed));
         await processRefund(held, adapter);
-        assert.equal((await row(held)).failure, "PAYMENT_STATE_CHANGED");
+        assert.equal((await row(held))!.failure, "PAYMENT_STATE_CHANGED");
         assert.equal(creates, start);
         const order = await fixture(),
           old = await reserve(order, 4000);
         await processRefund(old, adapter);
         const original = await row(old);
-        map.set(original.reference, { ...map.get(original.reference), status: "failed" });
+        map.set(original!.reference, { ...map.get(original!.reference), status: "failed" });
         await due(old);
         await processRefund(old, adapter);
         const replacement = await reserve(order, 10000);
-        map.set(original.reference, { ...map.get(original.reference), status: "processed" });
+        map.set(original!.reference, { ...map.get(original!.reference), status: "processed" });
         await due(old);
         await processRefund(old, adapter, true);
-        assert.equal((await row(old)).status, "processed");
+        assert.equal((await row(old))!.status, "processed");
         const before = creates;
         await processRefund(replacement, adapter);
-        assert.equal((await row(replacement)).failure, "REFUND_BALANCE_CHANGED");
+        assert.equal((await row(replacement))!.failure, "REFUND_BALANCE_CHANGED");
         assert.equal(creates, before);
       });
       await t.test("the database rejects changes to financial transition history", async () => {
@@ -791,6 +796,7 @@ test(
           .select()
           .from(valoRefundTransitions)
           .where(eq(valoRefundTransitions.id, r.id));
+        assert.ok(unchanged);
         assert.equal(unchanged.reason, r.reason);
       });
       console.log(

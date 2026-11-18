@@ -144,7 +144,7 @@ test(
       for (const [index, role] of (["privacy", "finance", "privacy", "privacy"] as const).entries()) {
         await db.insert(valoStaffAssignments).values({
           id: randomUUID(),
-          identityId: roles[index],
+          identityId: roles[index]!,
           role,
           active: index !== 2,
           grantedBy: "controlled-fixture",
@@ -392,7 +392,7 @@ test(
         await db
           .update(valoStaffAssignments)
           .set({ active: false })
-          .where(eq(valoStaffAssignments.identityId, roles[0]));
+          .where(eq(valoStaffAssignments.identityId, roles[0]!));
         assert.equal((await request(roles[0])).status, 403);
       });
       await t.test("hostile origin never reaches the privacy mutation", async () => {
@@ -401,7 +401,7 @@ test(
         await db
           .update(valoStaffAssignments)
           .set({ active: true })
-          .where(eq(valoStaffAssignments.identityId, roles[0]));
+          .where(eq(valoStaffAssignments.identityId, roles[0]!));
         const inspect = await fetch(`${base}/admin/privacy-cases/${caseId}`, {
           headers: { "x-test-identity": roles[0] },
         });
@@ -418,7 +418,7 @@ test(
           access: await db
             .select()
             .from(valoStaffAccessAudit)
-            .where(eq(valoStaffAccessAudit.actorId, roles[0])),
+            .where(eq(valoStaffAccessAudit.actorId, roles[0]!)),
         });
         const before = await snapshot(),
           body = {

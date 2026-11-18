@@ -97,7 +97,7 @@ test("operational checks fail closed for missing, stale, altered and out-of-scop
     [
       "altered provider bytes",
       (x) => {
-        x.snapshot.pages[0].text += "altered";
+        x.snapshot.pages[0]!.text += "altered";
       },
       "source_locators",
     ],

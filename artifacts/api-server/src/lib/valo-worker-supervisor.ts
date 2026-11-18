@@ -169,7 +169,7 @@ export async function superviseWorker({
       return 0;
     }
     const now = performance.now();
-    while (restarts.length && now - restarts[0] >= t.restartWindowMs) restarts.shift();
+    while (restarts.length && now - restarts[0]! >= t.restartWindowMs) restarts.shift();
     if (restarts.length >= t.maxRestarts) {
       report({ event: "worker_supervisor.exhausted", reason });
       return 1;

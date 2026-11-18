@@ -20,6 +20,7 @@ import {
   type WorkspaceActor,
 } from "../../lib/valo-store";
 import { assertFinanceActor, requireFinance, type FinanceActor } from "./valo-refunds";
+import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Order = typeof valoOrders.$inferSelect;
 type Concern = typeof valoPaymentConcerns.$inferSelect;
@@ -58,7 +59,7 @@ const history = (r: typeof valoPaymentConcernEvents.$inferSelect) => ({
   createdAt: r.createdAt.toISOString(),
 });
 async function concernView(tx: Tx, c: Concern) {
-  const [o] = await tx.select().from(valoOrders).where(eq(valoOrders.id, c.orderId));
+  const o = singleRow(await tx.select().from(valoOrders).where(eq(valoOrders.id, c.orderId)));
   const events = await tx
     .select()
     .from(valoPaymentConcernEvents)
@@ -123,17 +124,19 @@ export async function createPaymentConcern(actor: WorkspaceActor, id: string, ra
       return concernView(tx, old);
     }
     await limitWorkspaceWrite(tx, actor, "support");
-    const [c] = await tx
-      .insert(valoPaymentConcerns)
-      .values({
-        id: randomUUID(),
-        workspaceId: actor.workspaceId,
-        orderId: id,
-        requestKey: input.requestKey,
-        inputHash,
-        message: input.message,
-      })
-      .returning();
+    const c = singleRow(
+      await tx
+        .insert(valoPaymentConcerns)
+        .values({
+          id: randomUUID(),
+          workspaceId: actor.workspaceId,
+          orderId: id,
+          requestKey: input.requestKey,
+          inputHash,
+          message: input.message,
+        })
+        .returning(),
+    );
     const eventId = await audit(
       tx,
       o,
@@ -165,19 +168,19 @@ export async function respondPaymentConcern(actor: WorkspaceActor, id: string, r
     if (!link) throw new ValoProblem(404, "Concern not found.");
     const o = await orderLock(tx, link.orderId, actor.workspaceId);
     await authorizeWorkspaceWrite(tx, actor);
-    const [c] = await tx
-      .select()
-      .from(valoPaymentConcerns)
-      .where(eq(valoPaymentConcerns.id, id))
-      .for("update");
+    const c = singleRow(
+      await tx.select().from(valoPaymentConcerns).where(eq(valoPaymentConcerns.id, id)).for("update"),
+    );
     if (c.version !== input.expectedVersion || c.status === "closed")
       throw new ValoProblem(409, "Concern changed or is closed. Refresh before responding.");
     await limitWorkspaceWrite(tx, actor, "support");
-    const [n] = await tx
-      .update(valoPaymentConcerns)
-      .set({ status: "open", version: c.version + 1, updatedAt: new Date() })
-      .where(eq(valoPaymentConcerns.id, id))
-      .returning();
+    const n = singleRow(
+      await tx
+        .update(valoPaymentConcerns)
+        .set({ status: "open", version: c.version + 1, updatedAt: new Date() })
+        .where(eq(valoPaymentConcerns.id, id))
+        .returning(),
+    );
     const eventId = await audit(
       tx,
       o,
@@ -204,11 +207,9 @@ export async function actOnPaymentConcern(actor: FinanceActor, id: string, raw: 
     const o = await orderLock(tx, link.orderId);
     await requireFinance(tx, actor, "Respond to customer payment concern.");
     await noErasure(tx, o.workspaceId);
-    const [c] = await tx
-      .select()
-      .from(valoPaymentConcerns)
-      .where(eq(valoPaymentConcerns.id, id))
-      .for("update");
+    const c = singleRow(
+      await tx.select().from(valoPaymentConcerns).where(eq(valoPaymentConcerns.id, id)).for("update"),
+    );
     if (c.version !== input.expectedVersion || c.status === "closed")
       throw new ValoProblem(409, "Concern changed or is closed. Refresh before responding.");
     const status =
@@ -217,11 +218,13 @@ export async function actOnPaymentConcern(actor: FinanceActor, id: string, raw: 
         : input.action === "request_information"
           ? "needs_information"
           : "responded";
-    const [n] = await tx
-      .update(valoPaymentConcerns)
-      .set({ latestReply: input.message, status, version: c.version + 1, updatedAt: new Date() })
-      .where(eq(valoPaymentConcerns.id, id))
-      .returning();
+    const n = singleRow(
+      await tx
+        .update(valoPaymentConcerns)
+        .set({ latestReply: input.message, status, version: c.version + 1, updatedAt: new Date() })
+        .where(eq(valoPaymentConcerns.id, id))
+        .returning(),
+    );
     const eventId = await audit(
       tx,
       o,

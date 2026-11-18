@@ -119,6 +119,7 @@ test(
                 eq(valoSupportTickets.workspaceId, a.workspaceId),
               ),
             );
+          assert.ok(ticket);
           assert.equal(ticket.dispatchStatus, "awaiting_staff");
           assert.equal(ticket.sharingConsent, false);
           const events = await db.select().from(valoEvents).where(eq(valoEvents.workspaceId, a.workspaceId));
@@ -148,6 +149,7 @@ test(
             .select()
             .from(valoSupportTickets)
             .where(and(eq(valoSupportTickets.id, id), eq(valoSupportTickets.workspaceId, a.workspaceId)));
+          assert.ok(ticket);
           assert.equal(ticket.category, "tax");
           assert.equal(ticket.scope, enquiry.scope);
           assert.equal(ticket.contactEmail, enquiry.contactEmail);

@@ -31,7 +31,7 @@ try {
     }
     if (!version.startsWith("3.")) throw Error("BEFORE_MUST_CAPTURE_ACTUAL_LEGACY_RUNTIME");
     const documents = [structuredClone(syntheticDocument)];
-    documents[0].content.blocks.push({
+    documents[0]!.content.blocks.push({
       id: "table",
       type: "table",
       text: "Synthetic stock rows; no statutory claims",
@@ -86,7 +86,7 @@ try {
         .select()
         .from(valoDocumentRevisions)
         .where(eq(valoDocumentRevisions.documentId, document.id));
-      stored.push({ documentId: document.id, revisionId: revision.id, contentHash: revision.contentHash });
+      stored.push({ documentId: document.id, revisionId: revision!.id, contentHash: revision!.contentHash });
     }
     await writeFile(
       file,
@@ -126,12 +126,12 @@ try {
     if (profiles.some((f: { legacyHash: string; actualHash: string }) => f.legacyHash !== f.actualHash))
       throw Error("PROFILE_SERIALIZATION_CHANGED");
     const stored = [...before.stored];
-    const fresh = await createDocument(before.actor, fixtures[0].input);
+    const fresh = await createDocument(before.actor, fixtures[0]!.input);
     const [newRevision] = await db
       .select()
       .from(valoDocumentRevisions)
       .where(eq(valoDocumentRevisions.documentId, fresh.id));
-    stored.push({ documentId: fresh.id, revisionId: newRevision.id, contentHash: newRevision.contentHash });
+    stored.push({ documentId: fresh.id, revisionId: newRevision!.id, contentHash: newRevision!.contentHash });
     const exports = [];
     for (const item of stored) {
       for (const format of ["docx", "pdf"] as const) {
@@ -162,7 +162,7 @@ try {
         .select()
         .from(valoDocumentRevisions)
         .where(eq(valoDocumentRevisions.id, item.revisionId));
-      if (row.contentHash !== item.contentHash) throw Error("HISTORICAL_HASH_REWRITTEN");
+      if (row!.contentHash !== item.contentHash) throw Error("HISTORICAL_HASH_REWRITTEN");
     }
     const report = {
       executedAt: new Date().toISOString(),

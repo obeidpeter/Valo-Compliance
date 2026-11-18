@@ -55,7 +55,7 @@ if (!cssPaths.length) throw Error("PRODUCT_CSS_UNAVAILABLE");
 const css = (
   await Promise.all(
     cssPaths.map(async (path) => {
-      const r = await fetch(new URL(path, "http://localhost:80"));
+      const r = await fetch(new URL(path!, "http://localhost:80"));
       if (!r.ok) throw Error("PRODUCT_CSS_UNAVAILABLE");
       return r.text();
     }),
@@ -125,7 +125,7 @@ const handle = async (req: IncomingMessage, res: ServerResponse) => {
     });
   } else if (req.url === "/fixture.js") {
     res.setHeader("Content-Type", "text/javascript");
-    res.end(built.outputFiles[0].text);
+    res.end(built.outputFiles[0]!.text);
   } else if (req.url === "/fixture.css") {
     res.setHeader("Content-Type", "text/css");
     res.end(css);

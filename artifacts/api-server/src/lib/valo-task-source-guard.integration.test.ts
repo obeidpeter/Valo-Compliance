@@ -164,6 +164,7 @@ test(
           actorId: actor.identityId,
         })
         .returning();
+      assert.ok(row);
       saved = assessments.serializeAssessment(row);
       const input = {
         title: "Synthetic source-linked task",
@@ -208,6 +209,7 @@ test(
             .select({ ruleVersion: valoTasks.ruleVersion })
             .from(valoTasks)
             .where(eq(valoTasks.id, created.id));
+          assert.ok(stored);
           assert.equal(
             stored.ruleVersion,
             1,
@@ -296,6 +298,7 @@ test(
           .select({ ruleVersion: valoTasks.ruleVersion })
           .from(valoTasks)
           .where(eq(valoTasks.id, created.id));
+        assert.ok(stored);
         assert.equal(stored.ruleVersion, null);
       });
       assert.equal(

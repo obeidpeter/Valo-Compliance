@@ -64,11 +64,11 @@ test("changed original text or missing source-note binding fails before provider
 test("missing actual provider text, missing contextual conditions and truncated retrieval fail", () => {
   for (const index of [0, 1, 2, 3, 4]) {
     const edited = structuredClone(snapshot);
-    edited.pages[index].text = "no operative passage";
+    edited.pages[index]!.text = "no operative passage";
     assert.throws(() => chatGPTPermissionRecord(edited, source, note, now), /PERMISSION_TEXT_MISSING/);
   }
   const truncated = structuredClone(snapshot);
-  truncated.pages[0].truncated = true;
+  truncated.pages[0]!.truncated = true;
   assert.throws(() => chatGPTPermissionRecord(truncated, source, note, now));
 });
 test("future and expired rights evidence cannot pass; ChatGPT permission cannot clear Replit authoring", () => {

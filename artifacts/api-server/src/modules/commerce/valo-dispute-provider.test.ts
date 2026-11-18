@@ -165,13 +165,13 @@ test("dispute transport: official operations with controlled HTTP, not merchant 
     const receipt = await p.upload(context, "valo-receipt-624.pdf", pdf);
     assert.equal(receipt.filename, "provider-file-624");
     assert.equal(receipt.checksum, createHash("sha256").update(pdf).digest("hex"));
-    assert.equal(calls[1].path, "/dispute/624/upload_url?upload_filename=valo-receipt-624.pdf");
+    assert.equal(calls[1]!.path, "/dispute/624/upload_url?upload_filename=valo-receipt-624.pdf");
     assert.equal(sent.length, 1);
-    assert.equal(sent[0].method, "PUT");
-    assert.equal(sent[0].redirect, "error");
-    assert.equal(new Headers(sent[0].headers).has("Authorization"), false);
-    assert.equal(new Headers(sent[0].headers).get("Content-Type"), "application/pdf");
-    assert.deepEqual(Buffer.from(sent[0].body as Uint8Array), pdf);
+    assert.equal(sent[0]!.method, "PUT");
+    assert.equal(sent[0]!.redirect, "error");
+    assert.equal(new Headers(sent[0]!.headers).has("Authorization"), false);
+    assert.equal(new Headers(sent[0]!.headers).get("Content-Type"), "application/pdf");
+    assert.deepEqual(Buffer.from(sent[0]!.body as Uint8Array), pdf);
   });
   await t.test("destination expiry, host, credentials, traversal and overlong validity are rejected", () => {
     assert.equal(validateDisputeUpload(target, now), target);

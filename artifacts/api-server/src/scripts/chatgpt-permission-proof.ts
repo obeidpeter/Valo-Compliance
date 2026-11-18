@@ -13,7 +13,7 @@ import { getPublicationArtifact } from "../editorial/publication-artifacts";
 async function reservations() {
   const rows = await db.execute(sql`select count(*)::int as total from valo_publication_ai_attempts
     where role <> 'draft' and created_at >= date_trunc('day',now())`);
-  return Number(rows.rows[0].total);
+  return Number(rows.rows[0]!.total);
 }
 async function main() {
   developmentPublicationOnly();
@@ -37,6 +37,7 @@ async function main() {
   const after = await reservations();
   assert.equal(after, before);
   const [row] = await db.select().from(valoContentVersions).where(eq(valoContentVersions.id, prepared.id));
+  assert.ok(row);
   assert.equal(row.status, "held");
   const audits = await db
     .select()

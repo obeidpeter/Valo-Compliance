@@ -11,12 +11,12 @@ export function completeGuidedTestData(id: GuidedTemplateId) {
     if (f.type === "money_kobo") return "10000";
     if (f.type === "quantity") return "2.5";
     if (f.type === "integer") return "1";
-    if (f.type === "select") return f.options![0].value;
+    if (f.type === "select") return f.options![0]!.value;
     if (f.type === "acknowledgement") return "yes";
     return `Synthetic ${f.id}`;
   };
   for (const f of spec.fields) data.values[f.id] = value(f);
   for (const t of spec.tables)
-    for (const row of data.tables[t.id]) for (const c of t.columns) row[c.id] = value(c);
+    for (const row of data.tables[t.id]!) for (const c of t.columns) row[c.id] = value(c);
   return data;
 }

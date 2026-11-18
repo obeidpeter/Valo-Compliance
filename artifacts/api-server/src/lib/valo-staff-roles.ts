@@ -14,6 +14,7 @@ import {
   type StaffActor,
 } from "./valo-staff-authority";
 import { ValoProblem } from "./valo-problem";
+import { singleRow } from "../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Assignment = typeof valoStaffAssignments.$inferSelect;
 type Change = typeof valoStaffRoleChanges.$inferSelect;
@@ -256,7 +257,7 @@ export function makeStaffRoleService(verifyTarget: TargetVerifier = verifyManage
             );
         }
         const clock = await tx.execute(sql`SELECT clock_timestamp() AS current_time`),
-          now = new Date(String(clock.rows[0].current_time));
+          now = new Date(String(singleRow(clock.rows).current_time));
         // Target row and last-admin reads may wait: authority and provider eligibility
         // must still be fresh at the actual write boundary, not only before the wait.
         requireFreshStaffSession(actor);
@@ -275,42 +276,46 @@ export function makeStaffRoleService(verifyTarget: TargetVerifier = verifyManage
                 reason: input.reason,
               }
             : { active: false, reason: input.reason };
-        const [next] = old
-          ? await tx
-              .update(valoStaffAssignments)
-              .set({ ...grant, version: old.version + 1 })
-              .where(eq(valoStaffAssignments.id, old.id))
-              .returning()
-          : await tx
-              .insert(valoStaffAssignments)
-              .values({
-                id: randomUUID(),
-                identityId: input.identityId,
-                role: input.role,
-                ...grant,
-                grantedBy: actor.identityId,
-                reason: input.reason,
-              })
-              .returning();
-        const [receipt] = await tx
-          .insert(valoStaffRoleChanges)
-          .values({
-            id: randomUUID(),
-            requestKey: input.requestKey,
-            inputHash,
-            actorId: actor.identityId,
-            actorAssignmentId: authority.id,
-            assignmentId: next.id,
-            targetIdentityId: input.identityId,
-            action: input.action,
-            role: input.role,
-            reason: input.reason,
-            incidentReference: input.incidentReference?.trim() ?? null,
-            before: old ? assignmentView(old) : null,
-            after: assignmentView(next),
-            targetVerifiedAt: target ? new Date(target.verifiedAt) : null,
-          })
-          .returning();
+        const next = singleRow(
+          old
+            ? await tx
+                .update(valoStaffAssignments)
+                .set({ ...grant, version: old.version + 1 })
+                .where(eq(valoStaffAssignments.id, old.id))
+                .returning()
+            : await tx
+                .insert(valoStaffAssignments)
+                .values({
+                  id: randomUUID(),
+                  identityId: input.identityId,
+                  role: input.role,
+                  ...grant,
+                  grantedBy: actor.identityId,
+                  reason: input.reason,
+                })
+                .returning(),
+        );
+        const receipt = singleRow(
+          await tx
+            .insert(valoStaffRoleChanges)
+            .values({
+              id: randomUUID(),
+              requestKey: input.requestKey,
+              inputHash,
+              actorId: actor.identityId,
+              actorAssignmentId: authority.id,
+              assignmentId: next.id,
+              targetIdentityId: input.identityId,
+              action: input.action,
+              role: input.role,
+              reason: input.reason,
+              incidentReference: input.incidentReference?.trim() ?? null,
+              before: old ? assignmentView(old) : null,
+              after: assignmentView(next),
+              targetVerifiedAt: target ? new Date(target.verifiedAt) : null,
+            })
+            .returning(),
+        );
         return changeView(receipt);
       });
     },

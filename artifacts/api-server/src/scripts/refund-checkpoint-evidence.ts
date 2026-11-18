@@ -16,7 +16,7 @@ for (const [file, label] of [
   ["refund-webhook-regression.txt", "Signed HTTP controls including one suite parent"],
   ["refund-api-tests.txt", "API regression; one expressly skipped case"],
 ]) {
-  const bytes = await readFile(resolve(root, "generated-artifacts/valo-completion", file)),
+  const bytes = await readFile(resolve(root, "generated-artifacts/valo-completion", file!)),
     text = bytes.toString();
   const number = (field: string) => Number(text.match(new RegExp(`ℹ ${field} (\\d+)`))?.[1] ?? NaN);
   if (!Number.isInteger(number("tests")) || number("fail") !== 0) throw Error(`UNSUCCESSFUL_RESULT_${file}`);
@@ -30,7 +30,7 @@ for (const [file, label] of [
     sha256: digest(bytes),
   });
   await mkdir(out, { recursive: true });
-  await writeFile(resolve(out, file), bytes);
+  await writeFile(resolve(out, file!), bytes);
 }
 const typecheck = await readFile(resolve(root, "generated-artifacts/valo-completion/refund-typecheck.txt"));
 if (
