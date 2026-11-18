@@ -1,18 +1,12 @@
 import { randomUUID, createHash } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
-import { db, valoStaffAssignments } from "@workspace/db";
 import { z } from "zod";
 import { allSourceLeads } from "@workspace/valo-core";
 import { lockSourceState, sourceTime, type SourceTx, recordSourceImpact } from "../modules/sources";
 import { registerSourceWatch } from "./valo-source-monitor";
 import { ValoProblem } from "../platform/valo-problem";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
-import {
-  activeStaffAssignment,
-  assertStaffAssignmentCurrent,
-  requireFreshStaffSession,
-  type StaffActor,
-} from "../modules/staff";
+import type { StaffActor } from "../modules/staff";
 import { authorizeWorkspaceWrite, type WorkspaceActor } from "./valo-store";
 export type SourceStaffActor = StaffActor;
 const base = { requestKey: z.string().uuid(), reason: z.string().trim().min(20).max(1000) };
@@ -42,6 +36,12 @@ export const sourceControlInput = z.discriminatedUnion("action", [
 /** Staff reads and writes use the shared authority checks: fresh MFA, an active and
  * unexpired assignment for this area, and both re-checked after any row-lock wait. */
 export async function requireSourceStaff(tx: SourceTx, actor: SourceStaffActor, area: "content" | "system") {
+  // The staff checks and the database schema load here, when a staff request runs, not with
+  // every reader of the source code.
+  const [
+    { activeStaffAssignment, assertStaffAssignmentCurrent, requireFreshStaffSession },
+    { valoStaffAssignments },
+  ] = await Promise.all([import("../modules/staff"), import("@workspace/db")]);
   requireFreshStaffSession(actor);
   const [row] = await tx
     .select({ id: valoStaffAssignments.id })
@@ -60,6 +60,7 @@ export async function requireSourceStaff(tx: SourceTx, actor: SourceStaffActor, 
   return row.id;
 }
 export async function sourceControls(actor: SourceStaffActor, area: "content" | "system", page = 1) {
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     const assignment = await requireSourceStaff(tx, actor, area);
     await tx.execute(
@@ -170,6 +171,7 @@ export async function actOnSourceControls(actor: SourceStaffActor, raw: unknown)
   const input = sourceControlInput.parse(raw),
     area = "service" in input ? "system" : "content";
   const hash = createHash("sha256").update(JSON.stringify(input)).digest("hex");
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     await lockSourceState(tx, true);
     const assignment = await requireSourceStaff(tx, actor, area);
@@ -250,6 +252,7 @@ export async function actOnSourceControls(actor: SourceStaffActor, raw: unknown)
   });
 }
 export async function correctionNotices(actor: WorkspaceActor, page = 1) {
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);
     const rows = (

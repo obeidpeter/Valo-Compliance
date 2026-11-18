@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
-import { db } from "@workspace/db";
 import {
   referenceFor,
   lockSourceState,
@@ -19,6 +18,8 @@ export async function registerSourceWatch(tx: SourceTx, id: string) {
   );
 }
 export async function scheduleSourceChecks(now = new Date()) {
+  // The database client loads when a check runs, not with every reader of the source code.
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     const sources = await tx.execute(
       sql`select source_id from valo_source_watches where next_check_at<=${now} order by next_check_at,source_id for update skip locked limit 10`,
@@ -35,6 +36,7 @@ export async function scheduleSourceChecks(now = new Date()) {
 }
 type Claim = { id: string; source_id: string; token: string };
 export async function claimSourceCheck(now = new Date()): Promise<Claim | null> {
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(7502602)`);
     if (
@@ -69,6 +71,7 @@ export async function claimSourceCheck(now = new Date()): Promise<Claim | null> 
   });
 }
 export async function completeSourceCheck(claim: Claim, snapshotId: string | null, now = new Date()) {
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     await lockSourceState(tx, true);
     const job = (
