@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { z } from "zod";
 import { quotaSubjectHash } from "./valo-quota-policy";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { assertWindowsRecoveryTarget } from "./valo-recovery-target";
 import { setting } from "../platform/settings";
 const controlsSchema = z

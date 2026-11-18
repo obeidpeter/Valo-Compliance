@@ -1,7 +1,7 @@
 import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 import { setting } from "../../platform/settings";
 
 export type WebhookConfiguration =

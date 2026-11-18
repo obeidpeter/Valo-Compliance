@@ -7,7 +7,7 @@ import {
   deletePrivateFile,
   fileChecksum,
   anonymousPrivateFileStatus,
-} from "../lib/valo-private-storage";
+} from "../platform/valo-private-storage";
 import { publicationWorkspaceRoot } from "../modules/publication";
 async function main() {
   if (

@@ -3,7 +3,7 @@
 import { mock } from "node:test";
 if (process.env.VALO_ERASURE_STORAGE_PROOF !== "portable")
   throw Error("PORTABLE_STORAGE_GUARD_MODE_REQUIRED");
-const url = new URL("../lib/valo-private-storage.ts", import.meta.url).href;
+const url = new URL("../platform/valo-private-storage.ts", import.meta.url).href;
 const original = await import(url);
 let attempted = 0;
 const denied = async () => {

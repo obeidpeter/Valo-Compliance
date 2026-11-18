@@ -1,4 +1,4 @@
-import { externalMonitorConfiguration, pingExternalMonitor } from "../lib/valo-external-monitor";
+import { externalMonitorConfiguration, pingExternalMonitor } from "../platform/valo-external-monitor";
 import { setting } from "../platform/settings";
 try {
   if (setting("VALO_MONITORING_PROBE") !== "synthetic-notification-only")

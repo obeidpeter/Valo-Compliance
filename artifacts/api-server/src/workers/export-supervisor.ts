@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
-import { initializeApplicationRuntime } from "../lib/valo-runtime-activation";
+import { initializeApplicationRuntime } from "../platform/valo-runtime-activation";
 import { launchBuiltWorker, superviseWorker } from "../lib/valo-worker-supervisor";
-import { ExternalMonitor, externalMonitorConfiguration } from "../lib/valo-external-monitor";
+import { ExternalMonitor, externalMonitorConfiguration } from "../platform/valo-external-monitor";
 
 await initializeApplicationRuntime();
 const monitoring = new ExternalMonitor(externalMonitorConfiguration(), (event) =>

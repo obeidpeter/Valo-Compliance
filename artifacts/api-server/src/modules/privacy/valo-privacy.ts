@@ -25,9 +25,9 @@ import {
   type WorkspaceActor,
 } from "../../lib/valo-store";
 import { quotaSubjectHash } from "../../lib/valo-quota";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 import { privacyKey, privacySigner } from "../../lib/valo-privacy-keys";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { removedPrivateText, verifiedPrivacyRedaction } from "./valo-privacy-redactions";
 import {
   assertPrivacyVersion,

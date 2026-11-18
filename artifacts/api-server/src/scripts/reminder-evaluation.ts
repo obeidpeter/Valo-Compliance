@@ -12,7 +12,7 @@ import { resolveWorkspace, saveDocument, getDocument } from "../lib/valo-store";
 import { requestExport, getExport, downloadExport } from "../modules/exports";
 import { recordedBalance, formatKobo } from "@workspace/valo-core/money";
 import { candidateReminder, reminderCandidates, exactKobo } from "./reminder-candidate-inputs";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 import {
   customerPromptVersion,
   customerNoticeVersion,

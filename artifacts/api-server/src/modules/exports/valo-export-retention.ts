@@ -5,7 +5,7 @@ import {
   assertApplicationRuntime,
   assertRuntimeObjectScope,
   runtimeEnvironment,
-} from "../../lib/valo-runtime-activation";
+} from "../../platform/valo-runtime-activation";
 import { privateCleanupAuthority } from "../privacy";
 import { environment } from "../../platform/settings";
 

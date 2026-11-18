@@ -1,7 +1,7 @@
 /** Controlled integration harness only. The parent simulates the accepted
  * storage request completing after SIGKILL; no native object write is made. */
 import { executeExport } from "../modules/exports";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { db, valoExportJobs, valoWorkspaces } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 assertDevelopmentRuntime();

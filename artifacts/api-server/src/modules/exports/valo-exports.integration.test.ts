@@ -36,7 +36,7 @@ import {
   anonymousPrivateFileStatus,
   fileChecksum,
   writePrivateFile,
-} from "../../lib/valo-private-storage";
+} from "../../platform/valo-private-storage";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 
 const enabled = process.env.VALO_RUN_EXPORT_TESTS === "synthetic-development-only";

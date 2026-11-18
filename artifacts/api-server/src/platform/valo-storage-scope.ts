@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { assertDevelopmentRuntime } from "./valo-development-runtime";
-import { environment as processEnvironment } from "../platform/settings";
+import { environment as processEnvironment } from "./settings";
 
 type Environment = Record<string, string | undefined>;
 export type StorageScope = Readonly<{

@@ -8,10 +8,10 @@ import {
   valoEvents,
   valoPrivacyTombstones,
 } from "@workspace/db";
-import { assertRuntimeObjectScope } from "../../lib/valo-runtime-activation";
-import { deletePrivateFile } from "../../lib/valo-private-storage";
+import { assertRuntimeObjectScope } from "../../platform/valo-runtime-activation";
+import { deletePrivateFile } from "../../platform/valo-private-storage";
 import { privateCleanupAuthority } from "../privacy";
-import { assertApplicationRuntime } from "../../lib/valo-runtime-activation";
+import { assertApplicationRuntime } from "../../platform/valo-runtime-activation";
 import { setting } from "../../platform/settings";
 
 export const EXPORT_LEASE_MS = 90_000;

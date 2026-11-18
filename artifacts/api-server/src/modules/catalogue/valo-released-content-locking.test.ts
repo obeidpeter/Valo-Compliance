@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { workspaceActorFromRecord } from "../../platform/workspace-context";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 
 /**
  * A template download checks the version's database state under the shared source-state

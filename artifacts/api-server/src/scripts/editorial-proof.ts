@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { pool } from "@workspace/db";
 import { runDevelopmentEditorialProof, editorialCallsCompleted } from "../modules/editorial";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 try {
   const result = await runDevelopmentEditorialProof();
   await writeFile(

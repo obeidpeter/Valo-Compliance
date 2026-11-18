@@ -1,5 +1,5 @@
-import { initializeApplicationRuntime } from "../lib/valo-runtime-activation";
-import { productionPreflight } from "../lib/valo-production-readiness";
+import { initializeApplicationRuntime } from "../platform/valo-runtime-activation";
+import { productionPreflight } from "../platform/valo-production-readiness";
 import { environment } from "../platform/settings";
 const args = process.argv.slice(2);
 if (

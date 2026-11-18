@@ -23,7 +23,7 @@ const target = (key: string) => {
 const denied = async () => {
   throw Error("NATIVE_OPERATION_NOT_PART_OF_PORTABLE_WORKER_PROOF");
 };
-const url = new URL("../lib/valo-private-storage.ts", import.meta.url).href;
+const url = new URL("../platform/valo-private-storage.ts", import.meta.url).href;
 mock.module(url, {
   namedExports: {
     fileChecksum: checksum,

@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { privateStorageScope, privateObjectName, storageProbeName } from "./valo-storage-scope";
-import { productionPreflight } from "./valo-production-readiness";
-import { runStorageProbe, type ProbeClient } from "./valo-storage-probe";
+import { privateStorageScope, privateObjectName, storageProbeName } from "../platform/valo-storage-scope";
+import { productionPreflight } from "../platform/valo-production-readiness";
+import { runStorageProbe, type ProbeClient } from "../platform/valo-storage-probe";
 const id = "11111111-1111-4111-8111-111111111111",
   asset = "22222222-2222-4222-8222-222222222222";
 const env = {
@@ -99,7 +99,7 @@ test("candidate adapter rejects development keys before native SDK effects and p
       },
     },
   });
-  const { productionPrivateStorage, fileChecksum } = await import("./valo-private-storage");
+  const { productionPrivateStorage, fileChecksum } = await import("../platform/valo-private-storage");
   const store = productionPrivateStorage(env),
     key = `valo/production/${id}/${asset}.pdf`,
     bytes = Buffer.from("synthetic private production canary");

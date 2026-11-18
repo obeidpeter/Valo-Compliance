@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdtemp, readFile, writeFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { writePrivateFile, readPrivateFile, deletePrivateFile } from "../lib/valo-private-storage";
+import { writePrivateFile, readPrivateFile, deletePrivateFile } from "../platform/valo-private-storage";
 
 /** Test composition only. Production storage never falls back to local files. */
 export function erasureProofMode(env: NodeJS.ProcessEnv) {

@@ -16,7 +16,7 @@ async function main() {
     expressRequire = createRequire(require.resolve("express"));
   const { stdout: tap } = await exec(
     process.execPath,
-    ["--import", "tsx", "--test", "--test-reporter=tap", "src/lib/request-complexity.test.ts"],
+    ["--import", "tsx", "--test", "--test-reporter=tap", "src/platform/request-complexity.test.ts"],
     {
       cwd: api,
       timeout: 90000,
@@ -39,7 +39,7 @@ async function main() {
     .stdout;
   const sourcePaths = [
     "artifacts/api-server/src/app.ts",
-    "artifacts/api-server/src/lib/request-complexity.test.ts",
+    "artifacts/api-server/src/platform/request-complexity.test.ts",
     "artifacts/api-server/src/scripts/request-budget-child.ts",
     "artifacts/api-server/src/scripts/parser-regression-checkpoint.ts",
     "lib/api-spec/package.json",

@@ -1,4 +1,4 @@
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { readFile } from "node:fs/promises";
 import {
   requestDigest,

@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { db, pool } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   recoverSyntheticPurchaseReceipt,
   recoverReceiptWithEvidence,

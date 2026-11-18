@@ -13,7 +13,7 @@ import {
   prepareDisputeAction,
   financeDispute,
 } from "../modules/commerce/valo-dispute-actions";
-import { ValoProblem } from "../lib/valo-problem";
+import { ValoProblem } from "../platform/valo-problem";
 
 test(
   "actual dispute HTTP routers enforce managed finance authority, tenant binding and same-origin writes",

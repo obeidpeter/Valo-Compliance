@@ -26,7 +26,7 @@ test(
     timeout: 90000,
   },
   async (t) => {
-    const { assertDevelopmentRuntime } = await import("./valo-development-runtime");
+    const { assertDevelopmentRuntime } = await import("../platform/valo-development-runtime");
     assertDevelopmentRuntime();
     assert.ok(
       process.env.DATABASE_URL &&

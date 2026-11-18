@@ -16,7 +16,7 @@ import {
   type SourceStaffActor,
 } from "../lib/valo-source-controls";
 import { editorialRecord } from "../lib/valo-editorial-record";
-import { ValoProblem } from "../lib/valo-problem";
+import { ValoProblem } from "../platform/valo-problem";
 const page = (value: unknown) => z.coerce.number().int().min(1).max(10000).default(1).parse(value);
 export function createSourceControlsRouter(
   authenticate: (req: Request) => Promise<SourceStaffActor> = verifiedStaffSession,

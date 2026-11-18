@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Client } from "@replit/object-storage";
-import { privateStorageScope, storageProbeName } from "../lib/valo-storage-scope";
-import { runStorageProbe } from "../lib/valo-storage-probe";
+import { privateStorageScope, storageProbeName } from "../platform/valo-storage-scope";
+import { runStorageProbe } from "../platform/valo-storage-probe";
 import { setting } from "../platform/settings";
 
 // This opt-in operator command only addresses a separate synthetic canary prefix.

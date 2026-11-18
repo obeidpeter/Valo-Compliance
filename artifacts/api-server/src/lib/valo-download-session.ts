@@ -1,4 +1,4 @@
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../platform/valo-problem";
 
 type DownloadIdentity = { identityId: string; workspaceId: string };
 type DownloadClaims = { userId: string | null; sessionId: string | null };

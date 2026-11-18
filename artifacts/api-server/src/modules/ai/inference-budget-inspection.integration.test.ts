@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { pool } from "@workspace/db";
 import { InferenceBudgetStore } from "./inference-budget-store";
 import { emptyBudget, inferenceProposal, requestDigest } from "./inference-budget";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../../test-support/database-functions";
 
 test(

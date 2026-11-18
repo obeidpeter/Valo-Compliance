@@ -1,4 +1,4 @@
-import { rehearsalConfiguration } from "./valo-runtime-activation";
+import { rehearsalConfiguration } from "../platform/valo-runtime-activation";
 import { createHash } from "node:crypto";
 type Query = (sql: string, values?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>;
 /** Install the reviewed, pinned pg-boss 46 construction only in a fresh empty

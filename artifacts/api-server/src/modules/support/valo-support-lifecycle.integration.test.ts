@@ -22,7 +22,7 @@ test(
     timeout: 60000,
   },
   async (t) => {
-    const { assertDevelopmentRuntime } = await import("../../lib/valo-development-runtime");
+    const { assertDevelopmentRuntime } = await import("../../platform/valo-development-runtime");
     assertDevelopmentRuntime();
     assert.ok(
       ["localhost", "127.0.0.1"].includes(new URL(process.env.DATABASE_URL!).hostname),

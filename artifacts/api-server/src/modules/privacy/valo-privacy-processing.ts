@@ -3,7 +3,7 @@ import { db, runInWorkspaceScope, valoProfileVersions, valoWorkspaces } from "@w
 import { ActOnStaffPrivacyCaseBody } from "@workspace/api-zod";
 import { authorizeWorkspaceWrite } from "../../lib/valo-store";
 import { workspaceDataExport } from "./valo-customer-access";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 import { assertPrivacyVersion } from "../../lib/valo-privacy-state";
 import {
   requirePrivacyStaff,

@@ -1,6 +1,6 @@
 import { and, eq, or, isNull, sql } from "drizzle-orm";
 import { db, valoStaffAssignments } from "@workspace/db";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 export type StaffActor = { identityId: string; recentMfa: boolean; verifiedAt: number };
 /** Use the database wall clock, including after row-lock waits. Expiry never
  * depends on a worker sweep or a caller-supplied time. */

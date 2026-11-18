@@ -22,7 +22,7 @@ const paths = [
   "artifacts/api-server/src/lib/valo-render.ts",
   "artifacts/api-server/src/lib/valo-revision-codec.ts",
   "artifacts/api-server/src/modules/exports/valo-exports.ts",
-  "artifacts/api-server/src/lib/valo-private-storage.ts",
+  "artifacts/api-server/src/platform/valo-private-storage.ts",
   "artifacts/api-server/src/lib/valo-guided.test.ts",
   "artifacts/api-server/src/lib/valo-guided-test-fixtures.ts",
   "artifacts/api-server/src/scripts/customer-guided-journeys.ts",

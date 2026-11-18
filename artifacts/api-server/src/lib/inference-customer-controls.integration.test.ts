@@ -10,7 +10,7 @@ test(
     skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only",
   },
   async (t) => {
-    const { assertDevelopmentRuntime } = await import("./valo-development-runtime");
+    const { assertDevelopmentRuntime } = await import("../platform/valo-development-runtime");
     assertDevelopmentRuntime();
     let realProviderCalls = 0;
     const forbidden = async () => {

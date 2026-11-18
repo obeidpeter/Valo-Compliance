@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { inferenceProposal, type BudgetLane } from "./inference-budget";
 import type { FiniteInferenceDispatcher } from "./inference-batch-dispatch";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import type { ManagedSDKClient } from "./managed-sdk-transport";
 import type { ManagedCompletionResult, ManagedRequest } from "./inference-types";
 export type { ManagedCompletionResult, ManagedRequest } from "./inference-types";

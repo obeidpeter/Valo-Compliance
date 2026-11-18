@@ -11,14 +11,14 @@ import { randomBytes, randomUUID, createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { Pool } from "pg";
 import { Document, Paragraph, Packer } from "docx";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   assertIsolatedRecoveryTarget,
   replayRecoveryControls,
   signRecoveryControls,
   type RecoveryControls,
 } from "../lib/valo-recovery-controls";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
 const exec = promisify(execFile),
   hash = (b: Buffer) => createHash("sha256").update(b).digest("hex");

@@ -140,7 +140,7 @@ const partialImplementations: Record<string, string[]> = {
   "EDT-007": ["artifacts/api-server/src/workers/export-worker.ts", "lib/db/src/schema/valo-exports.ts"],
   "EDT-008": [
     "artifacts/api-server/src/routes/valo-exports.ts",
-    "artifacts/api-server/src/lib/valo-private-storage.ts",
+    "artifacts/api-server/src/platform/valo-private-storage.ts",
   ],
   "EDT-009": [
     "artifacts/api-server/src/lib/valo-render.ts",

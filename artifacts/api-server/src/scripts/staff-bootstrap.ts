@@ -10,7 +10,7 @@
  */
 import { pool } from "@workspace/db";
 import { bootstrapFirstSystemAdministrator } from "../modules/staff";
-import { ValoProblem } from "../lib/valo-problem";
+import { ValoProblem } from "../platform/valo-problem";
 import { setting } from "../platform/settings";
 
 const [identityId, operator, reason] = process.argv.slice(2);

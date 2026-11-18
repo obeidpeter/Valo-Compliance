@@ -1,7 +1,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { pool } from "@workspace/db";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 assertDevelopmentRuntime();
 const mode = process.argv[2],
   sql = await readFile(

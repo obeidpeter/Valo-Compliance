@@ -10,7 +10,7 @@ import {
   validateAllocationPackage,
   type FiniteAllocationPackage,
 } from "../modules/ai";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 
 /**
  * Operator command, development only, for the owner's approval of a finite AI allocation. Running

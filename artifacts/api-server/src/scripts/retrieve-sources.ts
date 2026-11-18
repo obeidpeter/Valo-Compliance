@@ -2,7 +2,7 @@ import { writeFile } from "node:fs/promises";
 import { db, pool } from "@workspace/db";
 import { finalSourceContext } from "@workspace/valo-core";
 import { captureReference } from "../modules/sources";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 void db;
 if (
   process.env.NODE_ENV !== "development" ||

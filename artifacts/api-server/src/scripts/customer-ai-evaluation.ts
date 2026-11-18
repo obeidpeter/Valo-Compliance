@@ -10,7 +10,7 @@ import { customerProviderPayload, hashAI } from "../lib/valo-customer-ai-domain"
 import { organizeCustomerDraft, type CustomerTransport } from "../lib/valo-customer-ai-model";
 import { createCustomerAIDraft } from "../lib/valo-customer-ai";
 import { resolveWorkspace } from "../lib/valo-store";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 async function main() {
   assert.equal(process.env.NODE_ENV, "development");
   assert.ok(!process.env.REPLIT_DEPLOYMENT);

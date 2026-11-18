@@ -1,4 +1,4 @@
-import { environment } from "../platform/settings";
+import { environment } from "./settings";
 /** Approval boundary, not an environment-name heuristic. No environment values
  * are included in errors/logs. Whitespace and "0"/"false" are nonempty markers. */
 export const deployedEnvironmentMarkers = [

@@ -44,7 +44,7 @@ import {
   closePrivacyErasureLocks,
 } from "./valo-privacy-erasure";
 import { erasureProofMode, erasureProofStorage } from "../../test-support/erasure-proof-storage";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { signErasureSeal, type ErasureSeal } from "./valo-erasure-seal";
 import { privacySigner } from "../../lib/valo-privacy-keys";
 import { executeExport } from "../exports/valo-exports";

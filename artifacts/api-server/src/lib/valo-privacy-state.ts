@@ -1,6 +1,6 @@
 import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import type { PrivacyStep } from "@workspace/db";
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../platform/valo-problem";
 export type PrivacyStatus =
   | "awaiting_verification"
   | "verified"

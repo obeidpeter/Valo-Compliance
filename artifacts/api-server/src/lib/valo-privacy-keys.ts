@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import type { db } from "@workspace/db";
 import { privacyAuditHash, privacyAuditEqual } from "./valo-privacy-state";
 import { quotaSubjectHash } from "./valo-quota";
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../platform/valo-problem";
 import { setting } from "../platform/settings";
 type Tx = Pick<Parameters<Parameters<typeof db.transaction>[0]>[0], "execute" | "select" | "selectDistinct">;
 export type PrivacyKeys = { current: string; keys: Record<string, string> };

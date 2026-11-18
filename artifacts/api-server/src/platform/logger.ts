@@ -1,6 +1,6 @@
 import pino, { type DestinationStream } from "pino";
 import { safeError } from "./safe-error";
-import { setting } from "../platform/settings";
+import { setting } from "./settings";
 
 const isProduction = setting("NODE_ENV") === "production";
 

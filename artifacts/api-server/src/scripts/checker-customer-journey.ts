@@ -17,7 +17,7 @@ import {
   ListDocumentExportsResponse,
 } from "@workspace/api-zod";
 import { syntheticProfile } from "../lib/valo-test-fixtures";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 let browser: Browser | undefined,
   page: Page | undefined,
   identityId: string | undefined,

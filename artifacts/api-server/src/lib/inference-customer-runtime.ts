@@ -1,4 +1,4 @@
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { acceptedInferenceModels, requestDigest } from "../modules/ai";
 import {
   customerPromptVersion,

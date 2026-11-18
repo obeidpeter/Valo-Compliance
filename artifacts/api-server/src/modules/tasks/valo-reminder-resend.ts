@@ -1,5 +1,5 @@
 import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { ReplitConnectors } from "@replit/connectors-sdk";
 import { clerkClient } from "@clerk/express";
 import { z } from "zod";

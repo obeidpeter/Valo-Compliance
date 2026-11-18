@@ -298,7 +298,7 @@
     {
       "requirement": "NFR-010",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/http-logging.test.ts",
+      "file": "artifacts/api-server/src/platform/http-logging.test.ts",
       "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status",
       "proves": "A private marker sent in a request's path, query, authorization and cookie headers and body, and in an application error's message, name and cause, never reaches the HTTP logs, which keep each request's correlation ID and status."
     },

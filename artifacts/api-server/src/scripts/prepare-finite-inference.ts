@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { randomUUID, createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { pool } from "@workspace/db";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   inferenceProposal,
   additionalInferenceAllocation,

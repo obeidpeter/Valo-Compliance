@@ -10,7 +10,7 @@ import { serializeRevisionV1 } from "../lib/valo-revision-codec";
 import { syntheticDocument } from "../lib/valo-test-fixtures";
 import { resolveWorkspace, createDocument } from "../lib/valo-store";
 import { requestExport, getExport, downloadExport } from "../modules/exports";
-import { deletePrivateFile } from "../lib/valo-private-storage";
+import { deletePrivateFile } from "../platform/valo-private-storage";
 import { developmentPublicationOnly, publicationWorkspaceRoot } from "../modules/publication";
 const hash = (text: string | Buffer) => createHash("sha256").update(text).digest("hex");
 const dir = resolve(publicationWorkspaceRoot(), "generated-artifacts/valo-zod-upgrade");

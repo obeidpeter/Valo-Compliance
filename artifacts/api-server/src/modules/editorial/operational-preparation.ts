@@ -28,7 +28,7 @@ import {
 } from "../publication";
 import { recordOriginalAuthoring } from "./operational-authoring";
 import { reviewOperationalCandidate } from "./operational-review";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { supportsOperationalInferenceTemplate } from "../../lib/inference-operational-coverage";
 import { setting } from "../../platform/settings";
 import { singleRow } from "../../platform/rows";

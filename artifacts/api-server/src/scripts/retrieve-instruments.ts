@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { pool } from "@workspace/db";
 import { captureReference } from "../modules/sources";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 if (
   process.env.NODE_ENV !== "development" ||
   process.env.VALO_RUN_SOURCE_RETRIEVAL !== "official-development-only"
