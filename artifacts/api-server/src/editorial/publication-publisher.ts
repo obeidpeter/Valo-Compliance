@@ -7,7 +7,7 @@ import {
   chatGPTSourcePath,
 } from "./rights-applicability";
 import { and, eq, sql } from "drizzle-orm";
-import { db, valoPublicationPolicies, valoContentVersions, valoPublicationAudit } from "@workspace/db";
+import type { db } from "@workspace/db";
 import { digest, evaluatePublication, publicationSchema, sha256 } from "@workspace/valo-core";
 import { getPublicationArtifact, type ArtifactRef } from "./publication-artifacts";
 import { developmentPublicationOnly, operationalPolicy } from "./operational-policy";
@@ -38,6 +38,7 @@ export async function validateOperationalVersionInTransaction(
   id: string,
   requestedTime?: Date,
 ) {
+  const { valoContentVersions, valoPublicationPolicies } = await import("@workspace/db");
   developmentPublicationOnly();
   // SET ROLE on a shared development connection must not turn an explicitly
   // scoped author/reviewer call back into a publisher call.
@@ -229,6 +230,7 @@ export async function validateOperationalVersionInTransaction(
 }
 
 export async function publishOperationalVersionInTransaction(tx: PublicationTx, id: string) {
+  const { valoContentVersions, valoPublicationAudit } = await import("@workspace/db");
   const { row, bundle } = await validateOperationalVersionInTransaction(tx, id);
   if (row.status === "published") return { id, decision: "published" as const, idempotent: true };
   await tx
@@ -248,10 +250,12 @@ export async function publishOperationalVersionInTransaction(tx: PublicationTx, 
   return { id, decision: "published" as const, idempotent: false };
 }
 export async function publishOperationalVersion(id: string) {
+  const { db } = await import("@workspace/db");
   developmentPublicationOnly();
   return db.transaction((tx) => publishOperationalVersionInTransaction(tx, id));
 }
 export async function withdrawOperationalVersion(id: string, reason: string) {
+  const { db, valoContentVersions, valoPublicationAudit } = await import("@workspace/db");
   developmentPublicationOnly();
   if (!reason.trim()) throw Error("WITHDRAWAL_REASON_REQUIRED");
   return db.transaction(async (tx) => {
@@ -286,6 +290,7 @@ export async function withdrawOperationalVersion(id: string, reason: string) {
   });
 }
 export async function recordActualPublicationHold(id: string, failureCode?: string) {
+  const { db, valoContentVersions, valoPublicationAudit } = await import("@workspace/db");
   developmentPublicationOnly();
   if (failureCode && !/^[A-Z_]{3,80}$/.test(failureCode)) throw Error("INVALID_HOLD_REASON_CODE");
   return db.transaction(async (tx) => {

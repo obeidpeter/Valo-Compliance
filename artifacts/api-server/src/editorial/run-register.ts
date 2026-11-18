@@ -1,6 +1,6 @@
-import { db, valoEditorialRuns } from "@workspace/db";
 import { desc } from "drizzle-orm";
 export async function editorialRunRegister() {
+  const { db, valoEditorialRuns } = await import("@workspace/db");
   const rows = await db.select().from(valoEditorialRuns).orderBy(desc(valoEditorialRuns.createdAt)).limit(18);
   return rows.map((r) => ({
     id: r.id,

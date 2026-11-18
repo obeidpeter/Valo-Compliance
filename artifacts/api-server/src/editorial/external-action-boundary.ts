@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { db, valoPublicationAudit } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { developmentPublicationOnly } from "./operational-policy";
 import { EditorialExternalActionDenied, editorialDenialReason } from "./editorial-evaluation-evidence";
@@ -11,6 +10,7 @@ export async function dispatchEditorialExternalAction(
   action: "price" | "payment" | "government_filing",
   evaluationRunId: string | null = null,
 ): Promise<never> {
+  const { db, valoPublicationAudit } = await import("@workspace/db");
   developmentPublicationOnly();
   if (
     !/^[a-f0-9-]{36}$/i.test(versionId) ||

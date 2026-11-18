@@ -7,7 +7,6 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { sql, desc } from "drizzle-orm";
-import { db, pool, valoContentVersions } from "@workspace/db";
 import { digest, evaluatePublication, publicationSchema, sha256 } from "@workspace/valo-core";
 import {
   validateOperationalVersionInTransaction,
@@ -44,6 +43,7 @@ import { environment, setting } from "../platform/settings";
 class Prerequisite extends Error {}
 const ROLLBACK = Symbol("read-only publisher validation");
 async function validate(id: string, time?: Date) {
+  const { db } = await import("@workspace/db");
   let result: Awaited<ReturnType<typeof validateOperationalVersionInTransaction>> | undefined;
   try {
     await db.transaction(async (tx) => {
@@ -58,6 +58,7 @@ async function validate(id: string, time?: Date) {
   return result;
 }
 async function genuineBaseline(requireSources = false) {
+  const { db, valoContentVersions } = await import("@workspace/db");
   const rows = await db
     .select()
     .from(valoContentVersions)
@@ -86,6 +87,7 @@ async function genuineBaseline(requireSources = false) {
   );
 }
 async function rejectedMutation(statement: ReturnType<typeof sql>) {
+  const { db } = await import("@workspace/db");
   let reason = "";
   try {
     await db.transaction(async (tx) => {
@@ -107,6 +109,7 @@ async function rejectedMutation(statement: ReturnType<typeof sql>) {
   return reason;
 }
 async function sourceRows(id: string) {
+  const { db } = await import("@workspace/db");
   return (
     await db.execute(sql`select b.*,s.text_checksum,s.raw_object_key,s.text_object_key
  from valo_source_release_bindings b join valo_source_snapshots s on s.id=b.snapshot_id where b.target_kind='content' and b.target_id=${id}::uuid`)
@@ -116,6 +119,7 @@ async function ensurePublished(id: string) {
   return publishOperationalVersion(id);
 }
 async function audit(id: string) {
+  const { db } = await import("@workspace/db");
   return (
     await db.execute(
       sql`select action,actor,reason from valo_publication_audit where version_id=${id}::uuid order by created_at,id`,
@@ -123,6 +127,7 @@ async function audit(id: string) {
   ).rows;
 }
 async function syntheticOwner() {
+  const { db } = await import("@workspace/db");
   const actor = { workspaceId: randomUUID(), identityId: `synthetic-editorial-lifecycle-${randomUUID()}` };
   await db.execute(
     sql`insert into valo_workspaces(id,owner_identity_id) values(${actor.workspaceId}::uuid,${actor.identityId})`,
@@ -133,6 +138,7 @@ async function syntheticOwner() {
   return actor;
 }
 async function pendingLock() {
+  const { db } = await import("@workspace/db");
   const until = Date.now() + 5000;
   while (Date.now() < until) {
     const rows = (
@@ -146,6 +152,7 @@ async function pendingLock() {
   throw Error("EXPECTED_PUBLICATION_LOCK_WAIT_NOT_OBSERVED");
 }
 async function sourceChangeCase() {
+  const { db } = await import("@workspace/db");
   if (
     (await db.execute(sql`select id from valo_source_impacts where phase<>'complete' limit 1`)).rows.length ||
     (await db.execute(sql`select id from valo_source_dependency_jobs where status='pending' limit 1`)).rows
@@ -336,6 +343,7 @@ async function sourceChangeCase() {
 }
 
 export async function runEditorialLifecycle(caseId: string, runId: string): Promise<LifecycleResult> {
+  const { db, pool } = await import("@workspace/db");
   const common = { formalCaseAccepted: false as const, actualProviderCalls: 0 as const };
   assertLifecycleRunDatabase(
     setting("DATABASE_URL"),

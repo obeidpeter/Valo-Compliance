@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
-import { db, valoPublicationAudit } from "@workspace/db";
 import { publishOperationalVersionInTransaction } from "./publication-publisher";
 import { developmentPublicationOnly } from "./operational-policy";
 export const editorialRestrictedRoles = ["valo_content_drafter_dev", "valo_content_reviewer_dev"] as const;
@@ -16,6 +15,7 @@ function sqlState(error: unknown): string | undefined {
 /** Actual PostgreSQL role checks followed by separate durable coordinator audit.
  * Neither a denied role nor an AI result is allowed to suppress the audit. */
 export async function evaluateEditorialPermissionDenials(versionId: string, runId: string) {
+  const { db, valoPublicationAudit } = await import("@workspace/db");
   developmentPublicationOnly();
   assert.match(versionId, /^[a-f0-9-]{36}$/);
   assert.match(runId, /^[a-f0-9-]{36}$/);

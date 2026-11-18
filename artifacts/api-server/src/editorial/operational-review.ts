@@ -9,7 +9,6 @@ import {
 } from "../modules/ai";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
 import { z } from "zod";
-import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { digest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import { putPublicationArtifact, getPublicationArtifact } from "./publication-artifacts";
@@ -123,6 +122,7 @@ export async function executeOperationalReviewPlan(
   candidate: PublicationBundle["candidate"],
   serverEvidence: OperationalServerEvidence,
 ) {
+  const { db } = await import("@workspace/db");
   const retained = await getPublicationArtifact(plan.artifact);
   if (
     sha256(Buffer.from(JSON.stringify({ manifest: plan.manifest, entries: plan.entries }))) !==

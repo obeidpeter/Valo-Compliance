@@ -1,11 +1,11 @@
 import { managedCompletion, assertManagedInferenceAvailable, parseBoundedProviderJSON } from "../modules/ai";
-import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { digest } from "@workspace/valo-core";
 import { putPublicationArtifact } from "./publication-artifacts";
 import { originalFormSchema, formMarkdown } from "./operational-authoring-contract";
 export async function recordOriginalAuthoring() {
+  const { db } = await import("@workspace/db");
   assertManagedInferenceAvailable();
   const prompt =
     "Write five short original paragraphs for a blank optional inventory-record form. No copying or quoting any document. Purpose and optional operational instructions for register details, item/unit/location records, stock receipts/issues/adjustments, and physical counts/discrepancies. No invented user facts, names, quantities, computed values, laws, duties, tax, fees, legal validity, ownership assurance, safety certification, provider rights or platform capability statements. Keep instructions optional internal business practice, not legal requirements. Do not introduce a formula or mandatory retention period. All actual facts will be blank fields supplied separately. Return the exact JSON schema.";

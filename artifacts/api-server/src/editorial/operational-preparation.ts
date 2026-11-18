@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { eq, sql } from "drizzle-orm";
-import { db, valoPublicationPolicies, valoContentVersions } from "@workspace/db";
 import {
   candidateDigest,
   digest,
@@ -45,6 +44,7 @@ export async function prepareOperationalCandidateRelease(templateId: string, sna
   return prepareRelease(templateId, snapshotPath, false);
 }
 async function prepareRelease(templateId: string, snapshotPath: string, requestReviews: boolean) {
+  const { db, valoContentVersions, valoPublicationPolicies } = await import("@workspace/db");
   developmentPublicationOnly();
   const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
   const useRecordedAuthoring = requestReviews && setting("VALO_OPERATIONAL_AUTHORING") === "recorded";

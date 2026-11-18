@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { db, valoSourceSnapshots, valoEditorialRuns, type ValoEditorialRun } from "@workspace/db";
+import type { ValoEditorialRun } from "@workspace/db";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
 import { readSourceText } from "./source-storage";
@@ -22,6 +22,7 @@ import { editorialDraftInput } from "./citation-selection";
 import { setting } from "../platform/settings";
 
 async function sourceBundle(): Promise<EvidenceBundle> {
+  const { db, valoSourceSnapshots } = await import("@workspace/db");
   const [source] = await db
     .select()
     .from(valoSourceSnapshots)
@@ -61,6 +62,7 @@ async function sourceBundle(): Promise<EvidenceBundle> {
   };
 }
 async function reserveRuns(bundle: EvidenceBundle) {
+  const { db, valoEditorialRuns } = await import("@workspace/db");
   const pipelineId = randomUUID(),
     now = new Date();
   return db.transaction(async (tx) => {
@@ -117,6 +119,7 @@ function safeFailure(error: unknown) {
   return "EDITORIAL_RUN_FAILED";
 }
 async function executeRun(row: ValoEditorialRun, input: unknown, candidateHash: string | null) {
+  const { db, valoEditorialRuns } = await import("@workspace/db");
   const role = row.role as EditorialRole,
     inputHash = hashEditorial(JSON.stringify(input));
   await db
@@ -257,6 +260,7 @@ async function executeRun(row: ValoEditorialRun, input: unknown, candidateHash: 
   }
 }
 export async function runDevelopmentEditorialProof() {
+  const { db, valoEditorialRuns } = await import("@workspace/db");
   if (
     setting("NODE_ENV") !== "development" ||
     setting("REPLIT_DEPLOYMENT") ||

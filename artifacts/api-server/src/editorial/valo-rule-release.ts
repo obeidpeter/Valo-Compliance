@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { and, eq, ne, sql } from "drizzle-orm";
-import { db, valoRuleReleases } from "@workspace/db";
+import type { db } from "@workspace/db";
 import {
   checkerFactsSchema,
   planRuleRelease,
@@ -43,6 +43,7 @@ export async function planStoredRuleRelease(
   request: RuleReleaseRequest,
   now = new Date(),
 ): Promise<RuleReleasePlan> {
+  const { db } = await import("@workspace/db");
   assertDevelopmentRuntime();
   const parsed = ruleSchema.safeParse(request.rule);
   const registry = await releasedRegistry(db, now);
@@ -92,6 +93,7 @@ export async function applyStoredRuleRelease(
   confirmedManifestHash: string,
   options: { now?: Date; readText?: (snapshotId: string, checksum: string) => Promise<string> } = {},
 ) {
+  const { db, valoRuleReleases } = await import("@workspace/db");
   assertDevelopmentRuntime();
   const now = options.now ?? new Date();
   const plan = await planStoredRuleRelease(request, now);

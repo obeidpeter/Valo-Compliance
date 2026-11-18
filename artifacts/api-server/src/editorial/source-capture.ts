@@ -1,11 +1,11 @@
 import { randomUUID, createHash } from "node:crypto";
-import { db, valoSourceSnapshots } from "@workspace/db";
 import { fetchOfficialSource, referenceFor, sourceBodyLimit, SourceFailure } from "./source-fetch";
 import { extractSource, EXTRACTION_VERSION } from "./source-extract";
 import { storeSourceSnapshot } from "./source-storage";
 import { instrumentIdentity } from "./source-identity";
 import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
 export async function captureReference(id: string) {
+  const { db, valoSourceSnapshots } = await import("@workspace/db");
   assertDevelopmentRuntime();
   const lead = referenceFor(id);
   let identity: ReturnType<typeof instrumentIdentity> = null;

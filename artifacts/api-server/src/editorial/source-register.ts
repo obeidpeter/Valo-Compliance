@@ -1,9 +1,9 @@
-import { db, valoSourceSnapshots } from "@workspace/db";
 import { desc } from "drizzle-orm";
 import { finalSourceContext, allSourceLeads, coordinatingRefinement } from "@workspace/valo-core";
 import { handoverCheckpoint } from "@workspace/valo-records";
 import { editorialRunRegister } from "./run-register";
 export async function sourceEvidenceRegister() {
+  const { db, valoSourceSnapshots } = await import("@workspace/db");
   const latest = await db
     .selectDistinctOn([valoSourceSnapshots.sourceId])
     .from(valoSourceSnapshots)
