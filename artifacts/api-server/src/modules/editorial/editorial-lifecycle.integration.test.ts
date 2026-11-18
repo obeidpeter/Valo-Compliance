@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { Pool } from "pg";
+import { Client, Pool } from "pg";
 import { sql } from "drizzle-orm";
 import { digest, evaluatePublication } from "@workspace/valo-core";
 import { heldSourceBundle } from "../../lib/valo-source-controls.fixtures";
@@ -119,11 +119,18 @@ test(
     const admin = new Pool({ connectionString: adminUrl.href, max: 1 }),
       seedUrl = new URL(configured);
     seedUrl.pathname = "/" + seedName;
+    // Short-lived connections are single clients: a pool's end() resolves before its connections
+    // close, and dropping or copying a database that still has one open fails or terminates it.
+    const connect = async (url: string) => {
+      const client = new Client({ connectionString: url });
+      await client.connect();
+      return client;
+    };
     let created = false;
     try {
       await admin.query(`CREATE DATABASE "${seedName}"`);
       created = true;
-      const seed = new Pool({ connectionString: seedUrl.href, max: 1 });
+      const seed = await connect(seedUrl.href);
       try {
         await seed.query("create table synthetic_seed_marker(value text not null)");
         await seed.query("insert into synthetic_seed_marker values('not a publication fixture')");
@@ -132,7 +139,7 @@ test(
       }
       const copy = await createLifecycleSandbox(seedUrl.href, configured.href);
       try {
-        const reader = new Pool({ connectionString: copy.url, max: 1 });
+        const reader = await connect(copy.url);
         try {
           assert.equal(
             (await reader.query("select value from synthetic_seed_marker")).rows[0].value,
@@ -150,7 +157,7 @@ test(
           .n,
         0,
       );
-      const verify = new Pool({ connectionString: seedUrl.href, max: 1 });
+      const verify = await connect(seedUrl.href);
       try {
         assert.equal((await verify.query("select count(*)::int n from synthetic_seed_marker")).rows[0].n, 1);
       } finally {
