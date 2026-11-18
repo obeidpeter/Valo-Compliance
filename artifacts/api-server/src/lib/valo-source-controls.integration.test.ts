@@ -382,6 +382,77 @@ test(
         });
       },
     );
+    await t.test(
+      "a checkout pause stops checkout but not AI or free guidance, and records its reason, actor and customer impact",
+      async () => {
+        const released = await import("./valo-released-content");
+        const catalogue = await released.releasedCatalogue(),
+          resources = await released.releasedResources();
+        const paused = await controls.actOnSourceControls(fresh(system), {
+          action: "pause_service",
+          service: "checkout",
+          requestKey: randomUUID(),
+          reason,
+        });
+        try {
+          await assert.rejects(
+            state.withSafetyDispatch("checkout", async () => "not reached"),
+            /temporarily paused/,
+          );
+          // Each switch is independent: AI still runs while checkout is paused.
+          assert.equal(await state.withSafetyDispatch("ai", async () => "AI still runs"), "AI still runs");
+          // Free guidance reads the same with checkout and AI both paused.
+          await controls.actOnSourceControls(fresh(system), {
+            action: "pause_service",
+            service: "ai",
+            requestKey: randomUUID(),
+            reason,
+          });
+          assert.deepEqual(await released.releasedCatalogue(), catalogue);
+          assert.deepEqual(await released.releasedResources(), resources);
+          const [audit] = (
+            await db.execute(
+              sql`select actor_id,area,action,target,reason,current from valo_safety_control_audit where id=${paused.auditId}::uuid`,
+            )
+          ).rows as {
+            actor_id: string;
+            area: string;
+            action: string;
+            target: string;
+            reason: string;
+            current: {
+              customerImpact: { refused: string; unaffected: string; ordersAwaitingPayment: unknown };
+            };
+          }[];
+          assert.equal(audit?.actor_id, system.identityId);
+          assert.deepEqual(
+            [audit.area, audit.action, audit.target, audit.reason],
+            ["system", "pause_service", "checkout", reason],
+          );
+          assert.equal(audit.current.customerImpact.refused, "new orders and checkout");
+          assert.match(audit.current.customerImpact.unaffected, /free guidance/);
+          assert.equal(typeof audit.current.customerImpact.ordersAwaitingPayment, "number");
+          const [switched] = (
+            await db.execute(
+              sql`select enabled,reason,actor_id from valo_safety_switches where key='checkout'`,
+            )
+          ).rows;
+          assert.deepEqual(
+            [switched?.enabled, switched?.reason, switched?.actor_id],
+            [false, reason, system.identityId],
+          );
+        } finally {
+          for (const service of ["checkout", "ai"] as const)
+            await controls.actOnSourceControls(fresh(system), {
+              action: "resume_service",
+              service,
+              requestKey: randomUUID(),
+              reason,
+            });
+        }
+        assert.equal(await state.withSafetyDispatch("checkout", async () => "resumed"), "resumed");
+      },
+    );
     await t.test("held versions cannot be manually restored or approved", async () => {
       await assert.rejects(
         controls.actOnSourceControls(fresh(staff), {
@@ -445,7 +516,7 @@ test(
       "actual task and assessment mutations recheck queued revocation and privacy tombstones",
       async () => {
         const { createTask } = await import("./valo-tasks"),
-          { createAssessment } = await import("./valo-assessments");
+          { createAssessment } = await import("../modules/rules/valo-assessments");
         const actor = actors[2]!,
           task = {
             title: "A personal task",
@@ -520,10 +591,63 @@ test(
         assert.deepEqual(await counts(), before);
       },
     );
+    await t.test(
+      "content staff read a version's publication record, and the access is recorded (ADM-002)",
+      async () => {
+        const { editorialRecord } = await import("./valo-editorial-record");
+        await assert.rejects(editorialRecord(fresh(system), "content", contentId), /active role/);
+        await assert.rejects(
+          editorialRecord({ ...fresh(staff), recentMfa: false }, "content", contentId),
+          /fresh multi-factor verification \(MFA\)/,
+        );
+        await assert.rejects(editorialRecord(fresh(staff), "content", randomUUID()), /No such version/);
+        const reads = async () =>
+          Number(
+            (
+              await db.execute(
+                sql`select count(*)::int as n from valo_staff_access_audit where actor_id=${staff.identityId} and reason like 'Read the publication record%'`,
+              )
+            ).rows[0]!.n,
+          );
+        const before = await reads();
+        const at = new Date();
+        const record = await editorialRecord(fresh(staff), "content", contentId, at);
+        assert.equal(await reads(), before + 1, "each read is recorded");
+        assert.deepEqual(
+          { key: record.key, version: record.version, candidateHash: record.candidateHash },
+          { key: prefix, version: 1, candidateHash: b.candidate.hash },
+        );
+        // The record shows the stored bundle's own check: this fixture is held, with its reasons.
+        assert.deepEqual(record.check, {
+          checkedAt: at.toISOString(),
+          ...evaluatePublication(b, at),
+        });
+        assert.equal(record.check.decision, "hold");
+        assert.ok(record.check.reasons.length > 0);
+        assert.deepEqual(record.draftRun, {
+          runId: b.draftRun.runId,
+          model: b.draftRun.model,
+          promptVersion: b.draftRun.promptVersion,
+        });
+        assert.deepEqual(record.reviews, []);
+        const impacts = (
+          await db.execute(
+            sql`select reason from valo_source_impacts where target_kind='content' and target_id=${contentId}::uuid order by created_at,id`,
+          )
+        ).rows.map((r) => r.reason);
+        assert.deepEqual(
+          record.safetyHolds.map((h) => h.reason),
+          impacts,
+        );
+        const rule = await editorialRecord(fresh(staff), "rule", ruleId, at);
+        assert.deepEqual([rule.kind, rule.key, rule.status, rule.audit], ["rule", prefix, "held", []]);
+        assert.equal(rule.check.decision, "hold");
+      },
+    );
     await t.test("actual staff routes enforce origin, area authority and generated responses", async () => {
       const { default: express } = await import("express");
       const { createSourceControlsRouter } = await import("../routes/valo-source-controls");
-      const { GetSourceControlsResponse } = await import("@workspace/api-zod");
+      const { GetSourceControlsResponse, GetEditorialRecordResponse } = await import("@workspace/api-zod");
       let mfa = true;
       const app = express();
       app.use(express.json());
@@ -566,6 +690,18 @@ test(
         const replay = await post(watch);
         assert.equal(replay.status, 200);
         assert.equal(((await replay.json()) as { replayed: boolean }).replayed, true);
+        const record = await fetch(`${url}/admin/editorial-records/content/${contentId}`);
+        assert.equal(record.status, 200);
+        assert.equal(GetEditorialRecordResponse.parse(await record.json()).id, contentId);
+        assert.match(record.headers.get("cache-control") ?? "", /no-store/);
+        for (const path of [
+          `/admin/editorial-records/content/${randomUUID()}`,
+          "/admin/editorial-records/policy/x",
+        ])
+          assert.equal((await fetch(url + path)).status, 404, path);
+        mfa = false;
+        assert.equal((await fetch(`${url}/admin/editorial-records/content/${contentId}`)).status, 403);
+        mfa = true;
       } finally {
         if (origin === undefined) delete process.env.VALO_TRUSTED_ORIGIN;
         else process.env.VALO_TRUSTED_ORIGIN = origin;

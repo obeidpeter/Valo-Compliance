@@ -396,3 +396,164 @@ export async function registerPreparedInferenceSubmanifest(
     return { state: s, value: { batchId, manifestHash, packageId: manifest.packageId, providerCalls: 0 } };
   });
 }
+
+/** The longest approval the owner can record: the decision packet proposes 24 hours from approval. */
+export const MAX_PACKAGE_APPROVAL_HOURS = 24;
+const delegate = "finite-package-delegate";
+// Printable text with no control characters, so a label reads the same in every log and listing.
+const plainLabel = (value: string, min: number, max: number) =>
+  value.length >= min && value.length <= max && /^[\x20-\x7e]+$/.test(value) && value.trim() === value;
+export type PackageApprovalRequest = {
+  /** The package id the owner read and confirms; it must equal the package's own id. */
+  confirmPackageId: string;
+  /** Who approved the allocation. Never the marker that delegated children carry. */
+  approvedBy: string;
+  /** Where the approval is written down, such as a dated decision record. */
+  reference: string;
+  /** How long the approval lasts, in whole hours, at most MAX_PACKAGE_APPROVAL_HOURS. */
+  hours: number;
+};
+export type RecordedPackageApproval = {
+  packageId: string;
+  enabled: boolean;
+  approvedBy: string;
+  reference: string;
+  approvedAt: string;
+  expiresAt: string;
+};
+const iso = (value: unknown) => new Date(value as string | Date).toISOString();
+const recorded = (row: Record<string, unknown>): RecordedPackageApproval => ({
+  packageId: String(row.id),
+  enabled: row.enabled === true,
+  approvedBy: String(row.approved_by),
+  reference: String(row.approval_reference),
+  approvedAt: iso(row.approved_at),
+  expiresAt: iso(row.expires_at),
+});
+async function inTransaction<T>(
+  pool: Pick<import("pg").Pool, "connect">,
+  fn: (c: import("pg").PoolClient) => Promise<T>,
+) {
+  const c = await pool.connect();
+  try {
+    await c.query("BEGIN");
+    const value = await fn(c);
+    await c.query("COMMIT");
+    return value;
+  } catch (error) {
+    await c.query("ROLLBACK");
+    throw error;
+  } finally {
+    c.release();
+  }
+}
+const ledgerSchema = (schema: string) => {
+  if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw Error("INVALID_LEDGER_SCHEMA");
+  return schema;
+};
+
+/**
+ * Records the owner's approval of one exact finite allocation package: the start boundary of the
+ * additional allocation. The package must pass full admission validation and its id must be the
+ * one the owner confirms. The approval lasts at most 24 hours, only one package approval can be
+ * current at a time, and the row is kept only if the dispatcher's own admission check accepts it
+ * in the same transaction. Approving never adds money: every package draws on the one additional
+ * allocation, whose ledger keeps each reservation and charge against its cap. Nothing here calls a
+ * model, reserves budget or admits work, and the database trigger freezes the approval once written.
+ */
+export async function approveFiniteAllocationPackage(
+  pool: Pick<import("pg").Pool, "connect">,
+  pkg: FiniteAllocationPackage,
+  request: PackageApprovalRequest,
+  schema = "public",
+): Promise<RecordedPackageApproval> {
+  assertDevelopmentRuntime();
+  ledgerSchema(schema);
+  validateAllocationPackage(pkg);
+  const id = allocationPackageId(pkg);
+  if (request.confirmPackageId !== id) throw Error("PACKAGE_APPROVAL_NOT_CONFIRMED");
+  if (
+    !plainLabel(request.approvedBy, 3, 120) ||
+    request.approvedBy === delegate ||
+    request.approvedBy.startsWith("delegate:")
+  )
+    throw Error("PACKAGE_APPROVER_INVALID");
+  if (!plainLabel(request.reference, 12, 300) || request.reference.startsWith("delegate:"))
+    throw Error("PACKAGE_APPROVAL_REFERENCE_INVALID");
+  if (!Number.isInteger(request.hours) || request.hours < 1 || request.hours > MAX_PACKAGE_APPROVAL_HOURS)
+    throw Error("PACKAGE_APPROVAL_HOURS_INVALID");
+  return inTransaction(pool, async (c) => {
+    // Serializes approvals so two can never both find no current approval and both be recorded.
+    await c.query("SELECT pg_advisory_xact_lock(747116)");
+    const current = await c.query(
+      `SELECT id FROM "${schema}".valo_inference_batches
+       WHERE id LIKE 'finite-package:%' AND enabled AND approved_at IS NOT NULL AND expires_at > now()`,
+    );
+    if (current.rows.length) throw Error("ANOTHER_PACKAGE_APPROVAL_CURRENT");
+    const inserted = await c.query(
+      `INSERT INTO "${schema}".valo_inference_batches
+       (id,policy_hash,manifest_hash,manifest,enabled,approved_by,approval_reference,approved_at,expires_at)
+       VALUES($1,$2,$3,$4,true,$5,$6,now(),now() + make_interval(hours => $7))
+       ON CONFLICT(id) DO NOTHING RETURNING id`,
+      [
+        id,
+        requestDigest(inferenceProposal),
+        requestDigest(pkg),
+        JSON.stringify(pkg),
+        request.approvedBy,
+        request.reference,
+        request.hours,
+      ],
+    );
+    // An approval is never extended, repeated or re-enabled: those need a new package.
+    if (!inserted.rows.length) throw Error("PACKAGE_ALREADY_RECORDED");
+    const { row } = await packageRow(c, schema, id, true);
+    return recorded(row);
+  });
+}
+
+/** Stops new work under an approved package at once: the dispatcher and every delegated child
+ * recheck the parent before each dispatch. The trigger lets an approval be disabled, never re-enabled. */
+export async function revokeFiniteAllocationPackage(
+  pool: Pick<import("pg").Pool, "connect">,
+  confirmPackageId: string,
+  schema = "public",
+): Promise<RecordedPackageApproval & { wasEnabled: boolean }> {
+  assertDevelopmentRuntime();
+  ledgerSchema(schema);
+  if (!/^finite-package:[a-f0-9]{64}$/.test(confirmPackageId)) throw Error("PACKAGE_ID_INVALID");
+  return inTransaction(pool, async (c) => {
+    const [before] = (
+      await c.query(
+        `SELECT * FROM "${schema}".valo_inference_batches WHERE id=$1 AND approved_at IS NOT NULL FOR UPDATE`,
+        [confirmPackageId],
+      )
+    ).rows;
+    if (!before || before.approved_by === delegate) throw Error("APPROVED_PACKAGE_NOT_FOUND");
+    const [after] = (
+      await c.query(`UPDATE "${schema}".valo_inference_batches SET enabled=false WHERE id=$1 RETURNING *`, [
+        confirmPackageId,
+      ])
+    ).rows;
+    return { ...recorded(after), wasEnabled: before.enabled === true };
+  });
+}
+
+/** Every recorded package approval, oldest first. Read-only. */
+export async function listFiniteAllocationApprovals(
+  pool: Pick<import("pg").Pool, "connect">,
+  schema = "public",
+): Promise<RecordedPackageApproval[]> {
+  assertDevelopmentRuntime();
+  ledgerSchema(schema);
+  const c = await pool.connect();
+  try {
+    const rows = await c.query(
+      `SELECT * FROM "${schema}".valo_inference_batches
+       WHERE id LIKE 'finite-package:%' AND approved_at IS NOT NULL ORDER BY approved_at, id`,
+    );
+    return rows.rows.map(recorded);
+  } finally {
+    c.release();
+  }
+}

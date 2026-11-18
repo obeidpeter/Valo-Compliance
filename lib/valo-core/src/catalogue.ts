@@ -62,51 +62,59 @@ export const baselineTemplates = baselineTitles.map((title, index) => {
 });
 
 /** Proposed candidates, compared against all 61 identified items; never publications. */
-export const additionalCandidates = [
-  ["Asset handover and return record", "Record custody of company equipment, distinct from maintenance."],
+export const additionalCandidates = (
   [
-    "Travel authorisation form",
-    "Approve a proposed trip before costs are incurred, distinct from expense reimbursement.",
-  ],
-  ["Petty cash reconciliation record", "Reconcile a cash float against vouchers and counted cash."],
-  [
-    "Stock discrepancy investigation form",
-    "Investigate mismatches, rather than recording routine inventory balances.",
-  ],
-  [
-    "Goods received inspection record",
-    "Record condition and acceptance of incoming goods, distinct from delivery notes.",
-  ],
-  [
-    "Supplier due diligence questionnaire",
-    "Collect pre-engagement supplier facts, distinct from bid evaluation.",
-  ],
-  [
-    "Customer credit application",
-    "Collect information for a trade-credit decision, without promising approval.",
-  ],
-  ["Credit note", "Record an invoice adjustment; not payment proof or an inferred tax adjustment."],
-  [
-    "Sales return authorisation",
-    "Record permission and reasons for product returns, distinct from complaints.",
-  ],
-  ["Project change request", "Document proposed scope/cost changes without silently amending a contract."],
-  ["Project acceptance record", "Record user-confirmed deliverable acceptance, not a fabricated signature."],
-  ["Business continuity plan", "Plan operational recovery after disruption, distinct from product recall."],
-  [
-    "Emergency contact and response sheet",
-    "Assign response contacts and actions, distinct from incident reporting.",
-  ],
-  ["Access permission review record", "Review system access and removals, distinct from staff onboarding."],
-  ["Vendor data-sharing register", "Map disclosures to vendors, distinct from a data processing agreement."],
-  ["Customer consent record", "Record actual consent and withdrawal without inventing consent."],
-  [
-    "Conflict of interest declaration",
-    "An individual's disclosure record, distinct from the NGO conflict-handling policy (TPL-57); does not certify absence of conflicts.",
-  ],
-  ["Whistleblowing intake form", "Record a confidential concern with explicit handling limitations."],
-  ["Training attendance and competency record", "Record training and assessment supplied by the business."],
-].map(([title, rationale], index) => ({
+    ["Asset handover and return record", "Record custody of company equipment, distinct from maintenance."],
+    [
+      "Travel authorisation form",
+      "Approve a proposed trip before costs are incurred, distinct from expense reimbursement.",
+    ],
+    ["Petty cash reconciliation record", "Reconcile a cash float against vouchers and counted cash."],
+    [
+      "Stock discrepancy investigation form",
+      "Investigate mismatches, rather than recording routine inventory balances.",
+    ],
+    [
+      "Goods received inspection record",
+      "Record condition and acceptance of incoming goods, distinct from delivery notes.",
+    ],
+    [
+      "Supplier due diligence questionnaire",
+      "Collect pre-engagement supplier facts, distinct from bid evaluation.",
+    ],
+    [
+      "Customer credit application",
+      "Collect information for a trade-credit decision, without promising approval.",
+    ],
+    ["Credit note", "Record an invoice adjustment; not payment proof or an inferred tax adjustment."],
+    [
+      "Sales return authorisation",
+      "Record permission and reasons for product returns, distinct from complaints.",
+    ],
+    ["Project change request", "Document proposed scope/cost changes without silently amending a contract."],
+    [
+      "Project acceptance record",
+      "Record user-confirmed deliverable acceptance, not a fabricated signature.",
+    ],
+    ["Business continuity plan", "Plan operational recovery after disruption, distinct from product recall."],
+    [
+      "Emergency contact and response sheet",
+      "Assign response contacts and actions, distinct from incident reporting.",
+    ],
+    ["Access permission review record", "Review system access and removals, distinct from staff onboarding."],
+    [
+      "Vendor data-sharing register",
+      "Map disclosures to vendors, distinct from a data processing agreement.",
+    ],
+    ["Customer consent record", "Record actual consent and withdrawal without inventing consent."],
+    [
+      "Conflict of interest declaration",
+      "An individual's disclosure record, distinct from the NGO conflict-handling policy (TPL-57); does not certify absence of conflicts.",
+    ],
+    ["Whistleblowing intake form", "Record a confidential concern with explicit handling limitations."],
+    ["Training attendance and competency record", "Record training and assessment supplied by the business."],
+  ] satisfies [title: string, rationale: string][]
+).map(([title, rationale], index) => ({
   id: `CAND-${String(index + 1).padStart(2, "0")}`,
   title,
   rationale,

@@ -14,3 +14,4 @@ never edited after acceptance; a later record supersedes an earlier one.
 | [0007](0007-port-prs-29-and-31-by-merge.md) | Port PRs 29 and 31 by merging them | Accepted |
 | [0008](0008-workspace-row-level-security.md) | Enforce workspace scoping with PostgreSQL row-level security | Accepted |
 | [0009](0009-lint-with-oxlint.md) | Lint with oxlint instead of ESLint | Accepted |
+| [0010](0010-ci-test-results-as-requirement-evidence.md) | Cite CI test results as requirement evidence | Accepted |

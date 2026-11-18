@@ -29,6 +29,7 @@ export * from "./valo-document-revisions";
 export * from "./valo-support";
 export * from "./valo-events";
 export * from "./valo-rate-buckets";
+export * from "./valo-security-signals";
 export * from "./valo-exports";
 export * from "./valo-export-objects";
 export * from "./valo-export-requests";

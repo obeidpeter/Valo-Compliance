@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { readiness } from "@workspace/valo-core";
+import { readiness } from "@workspace/valo-records";
 
 /** Generates docs/status.md from the requirement registers so status is never hand-written. */
 const root = new URL("../../../", import.meta.url);

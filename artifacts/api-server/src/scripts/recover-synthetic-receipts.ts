@@ -4,12 +4,12 @@ import { db, pool } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
-import { recoverSyntheticPurchaseReceipt } from "../lib/valo-commerce";
 import {
+  recoverSyntheticPurchaseReceipt,
   recoverReceiptWithEvidence,
   safeReceiptRecoveryFailure,
   type ReceiptRecoveryOutcome,
-} from "../lib/valo-receipt-recovery-report";
+} from "../modules/commerce";
 
 let journal: FileHandle | undefined;
 try {

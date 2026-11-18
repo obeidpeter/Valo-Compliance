@@ -68,10 +68,15 @@ test("anything the command cannot run as CI does stops it", () => {
   refuses(workflow.replace("  postgres:\n    name:", "  database:\n    name:"), /DATABASE_JOB_MISSING/);
 });
 
-test("settings written to $GITHUB_ENV carry on; other forms and DATABASE_URL do not", () => {
+test("settings written to $GITHUB_ENV carry on; other forms, DATABASE_URL and NODE_OPTIONS do not", () => {
   assert.deepEqual(githubEnvSettings("A=1\nB=x=y\n\nA=2\n"), { A: "2", B: "x=y" });
   assert.throws(() => githubEnvSettings("NOTES<<EOF\ntext\nEOF\n"), /GITHUB_ENV line/);
   assert.throws(() => githubEnvSettings("DATABASE_URL=postgresql://elsewhere/db\n"), /changes DATABASE_URL/);
+  // GitHub's runner ignores this one, so obeying it locally would test something CI never runs.
+  assert.throws(
+    () => githubEnvSettings("NODE_OPTIONS=--import x\n"),
+    /NODE_OPTIONS to \$GITHUB_ENV, which GitHub ignores/,
+  );
 });
 
 test("a step gets no database, credential or other setting from your environment", () => {
@@ -108,4 +113,22 @@ test("a step gets no database, credential or other setting from your environment
     ["/usr/bin", "/home/someone", "true", "/tmp/github-env"],
   );
   assert.deepEqual([env.WRITTEN, env.STEP, env.SHARED], ["earlier", "step", "step"]);
+});
+
+test("the checkout's root stands in for github.workspace, and any other expression stops the command", () => {
+  const service = "      DATABASE_URL: postgresql://valo_ci:pw@localhost:5432/valo_ci\n";
+  const parsed = readDatabaseJob(
+    job(
+      "      - name: ok\n        env:\n          OUT: ${{ github.workspace }}/out\n        run: echo ok\n",
+      service + "      RESULTS: ${{ github.workspace }}/results\n",
+    ),
+    "/checkout",
+  );
+  assert.equal(parsed.env.RESULTS, "/checkout/results");
+  assert.equal(parsed.steps.at(-1)?.env.OUT, "/checkout/out");
+  for (const expression of ["${{ secrets.TOKEN }}", "${{ runner.temp }}/x", "${{ env.HOME }}"])
+    assert.throws(
+      () => readDatabaseJob(job("", service + `      ODD: ${expression}\n`), "/checkout"),
+      /uses an expression other than github\.workspace/,
+    );
 });

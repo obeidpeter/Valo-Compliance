@@ -1,11 +1,7 @@
 import { db, valoSourceSnapshots } from "@workspace/db";
 import { desc } from "drizzle-orm";
-import {
-  finalSourceContext,
-  allSourceLeads,
-  coordinatingRefinement,
-  handoverCheckpoint,
-} from "@workspace/valo-core";
+import { finalSourceContext, allSourceLeads, coordinatingRefinement } from "@workspace/valo-core";
+import { handoverCheckpoint } from "@workspace/valo-records";
 import { editorialRunRegister } from "./run-register";
 export async function sourceEvidenceRegister() {
   const latest = await db

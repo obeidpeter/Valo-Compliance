@@ -12,10 +12,13 @@
     "valo:database-tests": "tsx ./src/valo/database-tests.ts",
     "valo:source-register": "tsx ./src/valo/source-register.ts",
     "valo:sync-specification": "tsx ./src/valo/sync-specification.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "valo:ci-evidence": "tsx ./src/valo/ci-evidence.ts",
+    "valo:code-coverage": "tsx ./src/valo/code-coverage.ts"
   },
   "dependencies": {
-    "@workspace/valo-core": "workspace:*"
+    "@workspace/valo-core": "workspace:*",
+    "@workspace/valo-records": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

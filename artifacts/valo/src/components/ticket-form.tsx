@@ -4,6 +4,7 @@ import { Show, useUser } from "@clerk/react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useCreateSupportTicket, TicketInputCategory, type TicketReceipt } from "@workspace/api-client-react";
 import { describeError } from "@/lib/api";
+import { enquiryProblems, needsSharingConsent } from "@/lib/enquiry";
 
 export const CATEGORY_LABELS: Record<TicketInputCategory, string> = {
   support: "Valo product support",
@@ -72,18 +73,17 @@ function TicketFormInner({
   const [touched, setTouched] = useState(false);
   const [receipt, setReceipt] = useState<TicketReceipt | null>(null);
   const opts = categories ?? (Object.keys(CATEGORY_LABELS) as TicketInputCategory[]);
-  const scopeErr =
-    scope.trim().length < 10
-      ? "Describe what you need in at least 10 characters."
-      : scope.length > 4000
-        ? "Keep it under 4,000 characters."
-        : "";
-  const emailErr = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "Enter an email we can reply to." : "";
+  const {
+    scope: scopeErr,
+    email: emailErr,
+    consent: consentErr,
+  } = enquiryProblems({ category, scope, email, consent });
+  const consentRequired = needsSharingConsent(category);
 
   function submit(e: FormEvent) {
     e.preventDefault();
     setTouched(true);
-    if (scopeErr || emailErr) return;
+    if (scopeErr || emailErr || consentErr) return;
     mutation.mutate(
       { data: { category, scope: scope.trim(), contactEmail: email.trim(), sharingConsent: consent } },
       { onSuccess: (r) => setReceipt(r) },
@@ -192,21 +192,32 @@ function TicketFormInner({
         />
         {touched && emailErr && <p className="hint text-destructive">{emailErr}</p>}
       </div>
-      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background p-4 text-sm">
-        <input
-          type="checkbox"
-          className="mt-1 h-4 w-4 accent-[hsl(155_42%_21%)]"
-          checked={consent}
-          onChange={(e) => setConsent(e.target.checked)}
-          data-testid="checkbox-consent"
-        />
-        <span>
-          I agree Valo staff may share this request with an outside adviser if that ever becomes available.{" "}
-          <span className="text-muted-foreground">
-            Optional. Nothing is shared today, and no advisers are offered.
+      <div>
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background p-4 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 accent-[hsl(155_42%_21%)]"
+            checked={consent}
+            required={consentRequired}
+            aria-invalid={touched && !!consentErr}
+            onChange={(e) => setConsent(e.target.checked)}
+            data-testid="checkbox-consent"
+          />
+          <span>
+            I agree Valo staff may share this request with an outside adviser if that ever becomes available.{" "}
+            <span className="text-muted-foreground" data-testid="text-consent-hint">
+              {consentRequired
+                ? "Required for a service enquiry. Nothing is shared today, and no advisers are offered."
+                : "Optional for product support. Nothing is shared today, and no advisers are offered."}
+            </span>
           </span>
-        </span>
-      </label>
+        </label>
+        {touched && consentErr && (
+          <p className="hint text-destructive" data-testid="text-consent-error">
+            {consentErr}
+          </p>
+        )}
+      </div>
       {err && (
         <p
           role="alert"

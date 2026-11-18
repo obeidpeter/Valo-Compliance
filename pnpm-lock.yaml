@@ -203,6 +203,9 @@ importers:
       '@workspace/valo-core':
         specifier: workspace:*
         version: link:../../lib/valo-core
+      '@workspace/valo-records':
+        specifier: workspace:*
+        version: link:../../lib/valo-records
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -425,11 +428,24 @@ importers:
         specifier: 'catalog:'
         version: 25.9.9
 
+  lib/valo-records:
+    dependencies:
+      '@workspace/valo-core':
+        specifier: workspace:*
+        version: link:../valo-core
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.9.9
+
   scripts:
     dependencies:
       '@workspace/valo-core':
         specifier: workspace:*
         version: link:../lib/valo-core
+      '@workspace/valo-records':
+        specifier: workspace:*
+        version: link:../lib/valo-records
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

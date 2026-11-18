@@ -82,22 +82,12 @@ test("actual export entries and worker startup reject before database, queue or 
       "valo-reminder-worker",
       "export const reconcileDueReminders=async()=>{globalThis.guardEffects.services++};",
     ],
+    // The worker reaches every payment, refund and dispute service through the commerce module's index.
     [
-      "valo-commerce",
-      "export const processPaymentEvents=async()=>{globalThis.guardEffects.services++},reconcilePayments=processPaymentEvents;",
-    ],
-    ["valo-refunds", "export const processRefundQueue=async()=>{globalThis.guardEffects.services++};"],
-    [
-      "valo-payment-disputes",
-      "export const reconcileKnownDisputes=async()=>{globalThis.guardEffects.services++};",
-    ],
-    [
-      "valo-dispute-actions",
-      "export const reconcileDisputeActions=async()=>{globalThis.guardEffects.services++};",
-    ],
-    [
-      "valo-operational-dispatch",
-      "export const dispatchOperationalJobs=async()=>{globalThis.guardEffects.services++};",
+      "commerce",
+      `const hit=async()=>{globalThis.guardEffects.services++;};
+      export const processPaymentEvents=hit,reconcilePayments=hit,processRefundQueue=hit,
+      reconcileKnownDisputes=hit,reconcileDisputeActions=hit;`,
     ],
     [
       "valo-source-monitor",

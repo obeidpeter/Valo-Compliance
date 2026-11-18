@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { coveragePlan } from "@workspace/valo-core";
 test("coverage totals derive from distinct eligible records, not targets or operational forms", () => {
-  const empty = coveragePlan();
-  const slug = empty.industries[0].slug;
+  const [first] = coveragePlan().industries;
+  assert.ok(first, "the coverage plan lists industries");
+  const slug = first.slug;
   const base = { industrySlugs: [slug], locationIds: [], sourceCheckedAt: "2026-11-13T12:00:00Z" };
   const guidance = { ...base, id: "SYNTHETIC-GUIDANCE", kind: "guidance" as const };
   const result = coveragePlan([
@@ -18,9 +19,9 @@ test("coverage totals derive from distinct eligible records, not targets or oper
   assert.equal(result.publishedGuides, 1);
   assert.equal(result.publishedDeeperPacks, 1);
   assert.equal(result.checkedLocationPacks, 1);
-  assert.equal(result.industries[0].publishedItems, 4);
+  assert.equal(result.industries[0]?.publishedItems, 4);
   assert.equal(
-    coveragePlan([{ ...base, id: "SYNTHETIC-FORM", kind: "template" }]).industries[0].publishedItems,
+    coveragePlan([{ ...base, id: "SYNTHETIC-FORM", kind: "template" }]).industries[0]?.publishedItems,
     0,
   );
   assert.equal(

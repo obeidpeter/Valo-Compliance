@@ -98,13 +98,15 @@ try {
     "--import",
     "tsx",
     "--test",
-    "src/lib/valo-contract-runtime.test.ts",
+    "src/modules/commerce/valo-contract-runtime.test.ts",
   ]);
   if (receiptIntegration) {
     const { scripts } = JSON.parse(await readFile(join(root, "artifacts/api-server/package.json"), "utf8"));
     const workflow = await readFile(join(root, ".github/workflows/valo-foundation.yml"), "utf8");
-    assert.ok(scripts["test:valo"].includes("src/lib/valo-receipt-recovery-report.test.ts"));
-    assert.ok(scripts["test:valo-db-core"].includes("src/lib/valo-receipt-recovery.integration.test.ts"));
+    assert.ok(scripts["test:valo"].includes("src/modules/commerce/valo-receipt-recovery-report.test.ts"));
+    assert.ok(
+      scripts["test:valo-db-core"].includes("src/modules/commerce/valo-receipt-recovery.integration.test.ts"),
+    );
     assert.ok(workflow.includes("pnpm --filter @workspace/api-server test:valo\n"));
     assert.ok(workflow.includes("pnpm --filter @workspace/api-server test:valo-db-core\n"));
     report.receiptReportingRegisteredInNormalSuite = true;
@@ -112,7 +114,7 @@ try {
       "exec",
       "tsx",
       "--test",
-      "src/lib/valo-receipt-recovery-report.test.ts",
+      "src/modules/commerce/valo-receipt-recovery-report.test.ts",
     ]);
   }
   const server = createServer();
@@ -208,7 +210,7 @@ try {
       "exec",
       "tsx",
       "--test",
-      "src/lib/valo-receipt-recovery.integration.test.ts",
+      "src/modules/commerce/valo-receipt-recovery.integration.test.ts",
     ]);
     await independentCheck("controlled-commerce", ["test:valo-commerce"]);
     await independentCheck("controlled-refunds", ["test:valo-refunds"]);

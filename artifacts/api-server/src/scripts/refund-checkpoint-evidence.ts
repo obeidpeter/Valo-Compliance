@@ -45,12 +45,12 @@ const migration = JSON.parse(
 if (!migration.migrationsPassed || migration.failed || migration.invariants.journalledMigrations !== 17)
   throw Error("MIGRATION_PROOF_NOT_PASSED");
 const codePaths = [
-  "src/lib/valo-refunds.ts",
-  "src/lib/valo-refund-provider.ts",
-  "src/lib/valo-payment-disputes.ts",
-  "src/lib/valo-commerce.ts",
-  "src/lib/valo-refunds.integration.test.ts",
-  "src/lib/valo-refund-provider.test.ts",
+  "src/modules/commerce/valo-refunds.ts",
+  "src/modules/commerce/valo-refund-provider.ts",
+  "src/modules/commerce/valo-payment-disputes.ts",
+  "src/modules/commerce/valo-commerce.ts",
+  "src/modules/commerce/valo-refunds.integration.test.ts",
+  "src/modules/commerce/valo-refund-provider.test.ts",
   "src/routes/valo-customer-access.ts",
   "src/workers/export-worker.ts",
 ];

@@ -24,7 +24,12 @@ import {
   decideRefund,
   reconcileFinanceRefund,
   assertFinanceActor,
-} from "../lib/valo-refunds";
+  financeDispute,
+  prepareDisputeAction,
+  controlDisputeAction,
+  orderDisputeInformation,
+  saveDisputeInformation,
+} from "../modules/commerce";
 import {
   GetFinanceRefundsResponse,
   DecideFinanceRefundResponse,
@@ -50,13 +55,6 @@ import {
 import { processPrivacyAction, privacyPreparedResult } from "../lib/valo-privacy-processing";
 import { db } from "@workspace/db";
 import { requirePrivacyStaff, type PrivacyStaffActor } from "../lib/valo-privacy";
-import {
-  financeDispute,
-  prepareDisputeAction,
-  controlDisputeAction,
-  orderDisputeInformation,
-  saveDisputeInformation,
-} from "../lib/valo-dispute-actions";
 import {
   requesterPrivacyList,
   requesterPrivacyDetail,

@@ -5,7 +5,7 @@ import express from "express";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, pool, valoStaffAssignments, valoStaffRoleChanges } from "@workspace/db";
 import { makeStaffRoleService, type StaffTarget } from "./valo-staff-roles";
-import { requireFinance, assertFinanceActor } from "./valo-refunds";
+import { requireFinance, assertFinanceActor } from "../modules/commerce/valo-refunds";
 import { requirePrivacyStaff } from "./valo-privacy";
 import { staffOperations } from "./valo-customer-access";
 import { createStaffRoleRouter } from "../routes/valo-staff-roles";

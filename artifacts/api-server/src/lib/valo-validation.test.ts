@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { documentInput, documentUpdate, nigerianStates, profileInput, ticketInput } from "./valo-validation";
 import { syntheticDocument, syntheticProfile } from "./valo-test-fixtures";
+import { CreateSupportTicketBody } from "@workspace/api-zod";
 test("all 36 states and FCT are allowed without inventing nationwide rules", () => {
   assert.equal(nigerianStates.length, 37);
   assert.equal(new Set(nigerianStates).size, 37);
@@ -101,4 +102,21 @@ test("service enquiry consent cannot be assumed; support does not require sharin
   assert.equal(ticketInput.safeParse(ticket).success, false);
   assert.equal(ticketInput.safeParse({ ...ticket, sharingConsent: true }).success, true);
   assert.equal(ticketInput.safeParse({ ...ticket, category: "support" }).success, true);
+});
+test("the enquiry form asks for consent exactly when the API requires it", async () => {
+  // The web app's rule, loaded by path so each package's typecheck stays inside its own source.
+  const form = (await import(new URL("../../../valo/src/lib/enquiry.ts", import.meta.url).href)) as {
+    needsSharingConsent: (category: string) => boolean;
+  };
+  const categories = CreateSupportTicketBody.shape.category.options;
+  assert.equal(categories.length, 8);
+  for (const category of categories) {
+    const refusedWithoutConsent = !ticketInput.safeParse({
+      category,
+      scope: "Synthetic enquiry only",
+      contactEmail: "synthetic@example.test",
+      sharingConsent: false,
+    }).success;
+    assert.equal(form.needsSharingConsent(category), refusedWithoutConsent, category);
+  }
 });

@@ -56,7 +56,8 @@ everything else. This is deliberate: no production launch is approved.
 | `lib/api-spec` | The OpenAPI contract, the single source of truth for HTTP shapes. |
 | `lib/api-zod`, `lib/api-client-react` | Generated validation and React Query client. Never edited by hand. |
 | `lib/db` | Drizzle schema, append-only SQL migrations, guarded schema tooling. |
-| `lib/valo-core` | Logic shared by API and web: guided forms, money, checker, publication rules, plus requirement and evidence registers. |
+| `lib/valo-core` | Logic shared by API and web: guided forms, money, checker, publication rules, content catalogue and inventory. |
+| `lib/valo-records` | Requirement and evidence bookkeeping: requirement records, traceability and readiness, evidence links, acceptance work items, handover checkpoint. Depends on `valo-core`; the API reads it only to report status. |
 | `lib/integrations-openai-ai-server` | OpenAI client configured through Replit AI Integrations. |
 | `scripts` | Readiness report, register synchronisation, security scans. |
 | `scripts/ops` | Backup, restore, retention replay and planning, release manifest, host supervision, container image check. |
@@ -152,6 +153,23 @@ transport, so disabled inference never loads it. The customer AI and operational
 review lanes, the history loader and the work-binding checks stay in `src/lib` for
 now: they depend on customer documents, the editorial pipeline or the database,
 and move with the modules that own those.
+
+`modules/commerce` is the second. It holds one-time purchases, payment events and their
+reconciliation, receipts and their recovery, refunds, payment concerns, disputes and the Paystack
+contract. Its `index.ts` re-exports what the routes, the worker and the privacy code use; the
+merchant transports, the dispute schema and the test fixtures stay internal. The routes stay in
+`src/routes`.
+
+`modules/rules` holds the released-rule registry the checker uses, saved assessments, their
+comparison and the admission check for a rule release. The rule release command itself lives in
+`src/editorial`, because it binds sources through the editorial source storage, which the rules
+module must not load into every reader of assessments.
+
+`src/editorial` is not a module yet. Its source, publication and pipeline files import each other,
+and the catalogue code imports back into it, so any module index would create import cycles and
+load the AI pipeline into the catalogue's request path. It needs untangling first: functions
+moved between files until sources, publication and the pipeline depend on one another in one
+direction only.
 
 The proposed R2 team access model (roles, grants, invitations and the migration path)
 is in [r2-team-access.md](r2-team-access.md).

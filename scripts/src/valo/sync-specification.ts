@@ -138,7 +138,7 @@ const output =
     2,
   )} as const;\n` +
   `export const sourceReleaseControls = ${JSON.stringify(controls, null, 2)} as const;\n`;
-await writeFile(root + "lib/valo-core/src/specification.generated.ts", output);
+await writeFile(root + "lib/valo-records/src/specification.generated.ts", output);
 // Inventory remains wholly held. Never turn source inventory statuses into publication.
 await writeFile(
   root + "lib/valo-core/src/content-register.generated.ts",

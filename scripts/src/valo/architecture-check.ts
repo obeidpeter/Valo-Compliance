@@ -339,6 +339,7 @@ export function silentCatchReport(root = repositoryRoot): string[] {
     "artifacts/valo/src",
     "artifacts/valo/app",
     "lib/valo-core/src",
+    "lib/valo-records/src",
     "lib/db/src",
     "scripts/src",
   ];

@@ -1,0 +1,467 @@
+{
+  "description": "Tests cited as implementation evidence for requirements (decision 0010). Each citation names the requirement, the CI job that runs the test, the test file, the test's exact top-level name and what the test shows. The job fails when a test cited for it does not pass, and the evidence job publishes every citation's result for the run in the readiness report. A citation is partial evidence for its requirement: it never accepts the requirement, which needs the acceptance evidence and approvals the specification names.",
+  "citations": [
+    {
+      "requirement": "IAM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+      "test": "another workspace's identifiers are refused exactly like unknown ones and change nothing",
+      "proves": "Every private customer operation in the API contract that takes a workspace-owned identifier, called by another workspace with the owner's real identifier, gets exactly the reply an unknown identifier gets and changes none of the owner's rows."
+    },
+    {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+      "test": "another workspace's identifiers are refused exactly like unknown ones and change nothing",
+      "proves": "On every private customer API operation that takes a workspace-owned identifier, another workspace's identifier is refused exactly like an unknown one and changes nothing."
+    },
+    {
+      "requirement": "SEC-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-tenant-substitution.integration.test.ts",
+      "test": "every private operation with an identifier has a substitution case or a recorded reason",
+      "proves": "A private operation added to the API contract with an identifier and no substitution case, or no recorded reason for having none, fails CI."
+    },
+    {
+      "requirement": "IAM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/platform/workspace-row-security.integration.test.ts",
+      "test": "row-level security limits customer requests to their own workspace",
+      "proves": "Queries with no workspace filter, run as a customer request through every database pool path, see only the request's own workspace rows."
+    },
+    {
+      "requirement": "IAM-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/platform/workspace-scope-jobs.integration.test.ts",
+      "test": "background work for one workspace reads it in that workspace's scope",
+      "proves": "Background work done for one workspace (document and workspace data exports, staff privacy exports, reminder delivery) reads that workspace's data in its database scope."
+    },
+    {
+      "requirement": "IAM-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-managed-session.test.ts",
+      "test": "missing, malformed, future and stale factor ages cannot establish MFA",
+      "proves": "A staff session whose second-factor age is missing, malformed, in the future or stale is not treated as multi-factor authenticated."
+    },
+    {
+      "requirement": "SEC-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/content-security-policy.test.ts",
+      "test": "production denies injected scripts, frames, objects and unconfigured origins while allowing required Clerk resources",
+      "proves": "The production content security policy allows scripts only by nonce, no inline or evaluated script, no objects or framing, no unconfigured origins, and fonts and styles only from the app's own origin."
+    },
+    {
+      "requirement": "NFR-011",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "the repository has no silent catches, no import cycles and no unreviewed binding checks",
+      "proves": "The API has no import cycle, no unexplained empty catch, no unreviewed creation of a workspace actor or entry into a workspace scope, no unreviewed caller of the inference dispatcher's binding checks and no import past a module's public entry."
+    },
+    {
+      "requirement": "NFR-011",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "code outside a module reaches it only through its index",
+      "proves": "The module boundary check reports code that imports a module's files other than its public entry, from outside the module or from another module."
+    },
+    {
+      "requirement": "OPS-003",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "Applying the later migrations to a synthetic database that already holds the applied phase 1 migrations keeps the applied SQL, staff access and history."
+    },
+    {
+      "requirement": "WRK-005",
+      "job": "foundation",
+      "file": "scripts/src/valo/r1-boundaries.test.ts",
+      "test": "R1 has no way to upload a file: the API takes JSON only and the web app has no file input",
+      "proves": "Every request body in the API contract is JSON with no field carrying file bytes, task inputs hold only structured fields, the API parses JSON bodies only and depends on no upload parser, and the web app has no file input, drop zone or file reader."
+    },
+    {
+      "requirement": "PAY-010",
+      "job": "foundation",
+      "file": "scripts/src/valo/r1-boundaries.test.ts",
+      "test": "R1 calls Paystack only for one-time charges, refunds and disputes and keeps no subscriptions, wallets or payouts",
+      "proves": "Every Paystack call in the API goes through one function, to the transaction, refund and dispute endpoints only, and no database table holds subscriptions, plans, wallets, balances, splits, transfers, payouts or collections."
+    },
+    {
+      "requirement": "PAY-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+      "test": "checkout asks Paystack only for a one-time charge, with no plan, split, subaccount or saved card",
+      "proves": "Checkout initialisation sends Paystack exactly the fields of a single naira charge (reference, amount, currency, email, return URL and order metadata) and nothing that sets up a plan, split, subaccount or saved card."
+    },
+    {
+      "requirement": "PAY-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+      "test": "only one-time charge, refund and dispute events are processed; subscription, invoice and transfer events are not",
+      "proves": "The webhook processes only charge, refund and dispute events; subscription, invoice, transfer, payment request and dedicated account events are classed as not processed."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-validation.test.ts",
+      "test": "the enquiry form asks for consent exactly when the API requires it",
+      "proves": "For every enquiry topic in the API contract, the web form asks for sharing consent exactly when the API refuses the enquiry without it: for every service topic, and not for product support."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/enquiry.test.ts",
+      "test": "the enquiry form asks for sharing consent before a service enquiry and not for product support",
+      "proves": "The enquiry form does not send a service enquiry without explicit sharing consent and tells the person why; product support needs none."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
+      "proves": "A service enquiry without consent is refused; with consent, its topic, scope, reply email and consent are saved, exactly one open support case is created for staff, and the receipt says “Enquiry received”, never that anything is booked."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
+      "proves": "A saved request opens exactly one support case with the same reference and full scope, which its own workspace can read and another workspace cannot."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
+      "proves": "Safety actions need an active staff role for their area and fresh MFA; a checkout pause stops new checkouts while AI still runs, free guidance reads the same with AI and checkout both paused, and the pause's reason, actor and customer impact are recorded in an append-only audit."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.test.ts",
+      "test": "source safety adds freshness, binding and sticky-hold checks without manufacturing eligibility",
+      "proves": "The source safety gate refuses a held item, a changed hash, a failed check and a stale review, so a hold takes the item out of use."
+    },
+    {
+      "requirement": "ADM-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
+      "proves": "A hold placed by content staff from a support referral records one source impact and one audit row, and staff without the content role are refused."
+    },
+    {
+      "requirement": "DOC-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-saved-templates.integration.test.ts",
+      "test": "actual PostgreSQL saved-template ownership, durable state and blocked-release boundaries",
+      "proves": "A workspace owner's save is stored once and seen by every new read; other workspaces, non-owners and revoked members are refused; and a saved template that is no longer available keeps only its saved title, is reported as unavailable and can still be removed."
+    },
+    {
+      "requirement": "DOC-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-catalogue-discovery.test.ts",
+      "test": "recommendations use supplied activity/category and omit saved or absent releases",
+      "proves": "Recommendations follow the workspace's activity and category, leave out templates already saved and templates that are not released, and are empty when nothing is released."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
+      "proves": "Support and content work are kept apart by role: content staff cannot use the support queue and support staff cannot act on content referrals; a content hold from a referral records a review-work item and claims no AI review."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-disputes-http.integration.test.ts",
+      "test": "actual dispute HTTP routers enforce managed finance authority, tenant binding and same-origin writes",
+      "proves": "Payment concerns and disputes are handled under the finance role: support staff, anonymous callers and stale, revoked or mismatched sessions are refused before anything is disclosed."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-privacy-http.integration.test.ts",
+      "test": "actual HTTP privacy routes apply an independent privacy role and fresh MFA",
+      "proves": "Privacy requests are handled under their own privacy role with fresh MFA: a privacy-only identity can read and claim them and a finance-only identity cannot."
+    },
+    {
+      "requirement": "ADM-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-customer-access.integration.test.ts",
+      "test": "real development access intake, privacy isolation and staff boundaries",
+      "proves": "Anyone can send a request to staff without signing in or paying; it is saved for staff and never dispatched anywhere else."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.integration.test.ts",
+      "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
+      "proves": "A changed source capture blocks the affected rule at once, then flags the affected tasks, cancels their pending reminders and sends correction notices only to affected workspaces, leaving past assessments unchanged."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-source-controls.test.ts",
+      "test": "source safety adds freshness, binding and sticky-hold checks without manufacturing eligibility",
+      "proves": "Content is refused when it is held, its source changed or failed checking, its source check is more than a day old or its high-impact review is more than 30 days old."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-task-source-guard.integration.test.ts",
+      "test": "new source-linked tasks recheck current eligibility before any insert",
+      "proves": "New tasks and reminders for a withdrawn or expired rule are refused, and the assessment they came from is unchanged."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
+      "test": "development saved assessments, task isolation, concurrency and reminder outbox",
+      "proves": "A source withdrawal flags a historical task for review without changing what the customer completed."
+    },
+    {
+      "requirement": "EDP-011",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-rich.test.ts",
+      "test": "source-family implementation, publication, period and freshness gates fail closed",
+      "proves": "The checker leaves out a rule that is withdrawn or whose review has expired."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
+      "test": "actual DOCX and Chromium PDF preserve the complete exact candidate and required notices",
+      "proves": "A template's DOCX and PDF exports keep its complete text together with the AI-review disclosure, scope, limitations and source-check date, checked against the text read back from both files."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/release-notices.test.tsx",
+      "test": "a template's detail page shows its source-check and review dates, the AI-review disclosure, scope and limitations",
+      "proves": "The notices on a template's detail page show the exact disclosure text, the date the sources were checked, the next review date, the scope and the limitations, and the page fills them from each released template's own values."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/release-notices.test.tsx",
+      "test": "the web app never claims lawyer approval, professional verification or guaranteed compliance",
+      "proves": "No sentence in the web app's source claims lawyer approval, legal or professional verification or guaranteed compliance unless it denies the claim."
+    },
+    {
+      "requirement": "WEB-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/discoverability.test.ts",
+      "test": "the sitemap lists the public pages and released items only, never accounts, drafts or staff pages",
+      "proves": "The sitemap lists the fixed public pages and the released items the configured origin's discovery endpoint returns, with their review dates, and drops any workspace, staff, account or traversal path it is given."
+    },
+    {
+      "requirement": "WEB-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/discoverability.test.ts",
+      "test": "public pages get a title, description and canonical URL; private or unknown pages get neither",
+      "proves": "Public pages and released items get their own title, description and canonical URL; workspace, staff, account and unreleased pages get only an unavailable-or-private title, and every page stays out of search engines until launch."
+    },
+    {
+      "requirement": "WEB-004",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/discoverability.test.ts",
+      "test": "the web app shows no testimonials, customer counts, ratings or regulator endorsements",
+      "proves": "No sentence in the web app's source shows a testimonial, customer count, rating or regulator or government endorsement unless it denies one, and every page's footer says no regulator endorses Valo."
+    },
+    {
+      "requirement": "ADM-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",
+      "test": "controlled PostgreSQL commerce mechanics — NOT real Paystack execution or publication",
+      "proves": "A price's terms cannot be edited in place: a change of price closes the current row and adds a new one, and the price change log records both. An order keeps the amount and licence text it was created with after that change, and its receipt shows them; a checkout request that brings its own amount or currency is refused."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "test": "every alert names its accountable roles and a runbook from the operating runbooks",
+      "proves": "Every internal operational alert the probes can raise names its runbook and accountable roles exactly as the operating runbooks list them, and the alert journal records both with each alert."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "test": "internal probes measure failures independently and persist/deduplicate/recover alerts without transports",
+      "proves": "Synthetic probe failures raise alerts once however many writers race, the alerts resolve when the condition clears, a corrupt journal does not poison later writes, and no private error text or outside message leaves the process."
+    },
+    {
+      "requirement": "NFR-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/http-logging.test.ts",
+      "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status",
+      "proves": "A private marker sent in a request's path, query, authorization and cookie headers and body, and in an application error's message, name and cause, never reaches the HTTP logs, which keep each request's correlation ID and status."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "missing authoritative evidence, scope or review holds an item, and no human reviewer is required",
+      "proves": "A complete publication record that names no human reviewer, approver or professional sign-off is eligible, and the gate holds the item when operative evidence or every authoritative source is missing, the legal scope is unverified or absent, a review is missing or the manifest is not eligible."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "regulatory content cannot use the operational no-citation path",
+      "proves": "Regulatory content with no sources and no verified legal scope is held: it cannot use the no-citation path operational templates use."
+    },
+    {
+      "requirement": "CMP-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "unknown schema fields cannot smuggle an override",
+      "proves": "A publication record carrying a field the schema does not define, such as an owner override, is held."
+    },
+    {
+      "requirement": "CMP-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "publication needs a separate drafting run and two separate, blind and clear review runs",
+      "proves": "The gate holds an item when a review reuses the drafting run or the other review's run, a reviewer saw the other verdict, a review holds or has findings, or either review is missing."
+    },
+    {
+      "requirement": "CMP-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/publication.test.ts",
+      "test": "enhanced content requires every controlling-text check",
+      "proves": "High-impact content (contracts in this test) is held until every enhanced controlling-text check has passed for that exact candidate, and is eligible once they have."
+    },
+    {
+      "requirement": "CMP-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/editorial/editorial-lifecycle.integration.test.ts",
+      "test": "actual isolated PostgreSQL reviewer denies release/policy and retained sources reject mutation",
+      "proves": "The drafting and review database roles are each refused when they call the publisher, change a content version's status or change the publication policy; the version stays a candidate and all six refusals are kept in an append-only audit."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-catalogue-visibility.integration.test.ts",
+      "test": "public search finds service pages but never unpublished versions or customer drafts",
+      "proves": "Candidate and held versions and a customer's draft that all carry the searched word never appear in public search, for any result type, while the same search finds the public service pages."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-catalogue-discovery.test.ts",
+      "test": "50 curated searches retrieve the expected controlled item in the first three results",
+      "proves": "Each of 50 curated searches over the 40 synthetic template entries finds the expected template in its first three results; none of the searches is for guidance, industries or services."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-catalogue-discovery.test.ts",
+      "test": "combined filters, ordering, later pages, reset, empty query and no matches",
+      "proves": "Type, industry, access and category filters combine, name and recency sorts order the results, and an unknown query or filter returns nothing."
+    },
+    {
+      "requirement": "SRV-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/service-categories.test.tsx",
+      "test": "the services page explains each kind of help without listing a provider or speaking for an authority",
+      "proves": "The services page lists every service topic in the API contract with a plain description of what someone can ask about and \"No provider yet\", no description promises a provider, booking, fee or outcome or names a government body or regulator, and the page says nothing is booked or forwarded."
+    },
+    {
+      "requirement": "EDT-010",
+      "job": "foundation",
+      "file": "scripts/src/valo/customer-wording.test.ts",
+      "test": "losing access is never described as taking back a downloaded copy, and saved work is said to stay",
+      "proves": "No customer-facing sentence about downloaded or local copies says they are removed, retracted or disabled unless it denies it, and the refund policy, purchase history, template and export pages say saved drafts and downloaded files stay, while a full refund suspends future template reuse."
+    },
+    {
+      "requirement": "EDT-010",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/commerce/valo-refunds.integration.test.ts",
+      "test": "refund lifecycle: actual development PostgreSQL and controlled provider, not a real refund",
+      "proves": "While a refund is pending or partial the template entitlement stays active, a full refund suspends it, and the customer's saved draft still exists afterwards."
+    },
+    {
+      "requirement": "DOC-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/customer-wording.test.ts",
+      "test": "R1 offers no government form to download and never presents a template or checklist as an official form",
+      "proves": "None of the prepared template and guidance titles, no customer-facing sentence (unless it denies it) and no API operation presents an official, government or authority filing form; R1 offers no government form to download."
+    },
+    {
+      "requirement": "CMP-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
+      "test": "each checker result says why it may matter, what to do next and what is missing, with its source",
+      "proves": "A likely result carries its rule's reason, next step and source passage; one that needs more information names the missing fact and says to answer it or ask the named authority; a negative one says it is not a legal exemption; the result says it is not legal certification; and the result page shows every checker fact in words, not by its internal name."
+    },
+    {
+      "requirement": "CMP-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/routes/valo-checker-http.integration.test.ts",
+      "test": "rich checker HTTP preview, consented save, history and isolation",
+      "proves": "A visitor who has not signed in can run the basic checker over HTTP and reads its not-legal-certification notice, its coverage gaps and the answers still missing, while private name facts still need a signed-in, verified account."
+    },
+    {
+      "requirement": "CMP-009",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/release-notices.test.tsx",
+      "test": "the web app never claims lawyer approval, professional verification or guaranteed compliance",
+      "proves": "No sentence in the web app's source claims lawyer approval, legal or professional verification or guaranteed compliance unless it denies it, so guidance is never presented as a professional endorsement."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/rules/valo-checker-explanations.test.ts",
+      "test": "the same profile under two rule versions is reproducible and the comparison explains what changed",
+      "proves": "The same answers under each of two versions of a rule give the same result every time; comparing them names the rule's old and new version and result, a changed answer the rule used is named, an unchanged result is not reported, and rules that appear or disappear are."
+    },
+    {
+      "requirement": "CMP-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/assessment-changes.test.ts",
+      "test": "a comparison explains each changed recommendation in words, naming the rule version and answers",
+      "proves": "The saved-assessments page explains each changed recommendation in sentences: a changed result, a rule updated from one version to another, the changed answers by their question labels, a rule that is new or no longer in the result, or updated wording or sources."
+    },
+    {
+      "requirement": "SEC-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-security-signals.integration.test.ts",
+      "test": "refusals and signature failures are counted by hashed address, outside any workspace scope, for the security alerts",
+      "proves": "Refused requests (401 and 403) and rejected payment webhook signatures are counted per hashed address and minute, including a refusal sent inside a customer's workspace scope, while successful, missing and rate-limited responses are not; the probe reads the counts, a caller at an export, checkout or AI quota limit is read as bulk exports or unusual payment or AI activity, and a failure to count never changes a response."
+    },
+    {
+      "requirement": "SEC-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "test": "security signals raise their own alerts, owned by the security and payment runbooks",
+      "proves": "Twenty refusals of one address in ten minutes raise no alert and twenty-one do; any signature failure, staff role change, bulk export or payment or AI quota limit raises its own alert under the security-incident or payment runbook, and each resolves when the signals stop."
+    },
+    {
+      "requirement": "SEC-008",
+      "job": "foundation",
+      "file": "lib/db/scripts/phase1-migrations.test.mjs",
+      "test": "phase 2 migration chain preserves applied phase 1 SQL, staff access and history",
+      "proves": "The security signals migration applies tracked and unjournalled without changing existing rows, its table refuses any other kind of event and any subject that is not a hash, and a customer request's scoped role can neither read nor write it."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/editorial/valo-rule-release.test.ts",
+      "test": "a rule version is ready only with a valid condition, the next version and passing critical scenarios",
+      "proves": "Planning a rule release refuses a condition the schema rejects, a skipped or repeated version, a candidate without a critical scenario and any failed critical scenario, reports other failed scenarios without blocking, and previews which saved profiles' results would change and how."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/editorial/valo-rule-release.test.ts",
+      "test": "restoring a prior rule version releases it again as the next version and changes no saved result",
+      "proves": "Restoring a prior rule version gives its content the next version number, leaves the earlier versions unchanged so a result saved under one still reproduces exactly, and goes through the same release plan."
+    },
+    {
+      "requirement": "ADM-004",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/editorial/valo-rule-release.integration.test.ts",
+      "test": "a rule version is released only after its plan, source check and confirmation, and replaces the one before",
+      "proves": "A synthetic rule version is released only with the operator's confirming manifest hash, after its plan passes and its source's stored text holds the quoted passage, and the checker then admits it; a failed critical scenario, a bundle the registry would refuse, a missing passage or a stale version writes nothing; each new version supersedes the one before, and version 1 is restored as version 3."
+    }
+  ]
+}

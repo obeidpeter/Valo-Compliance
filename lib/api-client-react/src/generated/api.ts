@@ -61,6 +61,7 @@ import type {
   DocumentInput,
   DocumentUpdate,
   DownloadPrivacyCaseResult200,
+  EditorialRecord,
   ExportInput,
   ExportJob,
   ExportRetryInput,
@@ -8662,6 +8663,128 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getActOnSourceControlsMutationOptions(options), queryClient);
     }
+
+export const getGetEditorialRecordUrl = (kind: 'content' | 'rule',
+    id: string,) => {
+
+
+
+
+  return `/api/admin/editorial-records/${encodeURIComponent(String(kind))}/${encodeURIComponent(String(id))}`
+}
+
+/**
+ * The stored bundle's current check, the drafting and review runs, check counts, safety holds and publication audit of one content or rule version (ADM-002). Read-only: it approves, publishes and holds nothing.
+ * @summary One version's publication record, for content staff
+ */
+export const getEditorialRecord = async (kind: 'content' | 'rule',
+    id: string, options?: Parameters<typeof customFetch>[1]): Promise<EditorialRecord> => {
+
+  return customFetch<EditorialRecord>(getGetEditorialRecordUrl(kind,id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEditorialRecordQueryKey = (kind: 'content' | 'rule',
+    id: string,) => {
+    return [
+    "getEditorialRecord", ...(id ? [id] : []), ...(kind ? [kind] : [])
+    ] as const;
+    }
+
+
+export const getGetEditorialRecordQueryOptions = <TData = Awaited<ReturnType<typeof getEditorialRecord>>, TError = ErrorType<void>>(kind: 'content' | 'rule',
+    id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEditorialRecord>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEditorialRecordQueryKey(kind,id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEditorialRecord>>> = ({ signal }) => getEditorialRecord(kind,id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: kind !== null && kind !== undefined && id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEditorialRecord>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetEditorialRecordQueryResult = NonNullable<Awaited<ReturnType<typeof getEditorialRecord>>>
+export type GetEditorialRecordQueryError = ErrorType<void>
+
+
+/**
+ * The stored bundle's current check, the drafting and review runs, check counts, safety holds and publication audit of one content or rule version (ADM-002). Read-only: it approves, publishes and holds nothing.
+ * @summary One version's publication record, for content staff
+ */
+export function useGetEditorialRecord<TData = Awaited<ReturnType<typeof getEditorialRecord>>, TError = ErrorType<void>>(
+ kind: 'content' | 'rule',
+    id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEditorialRecord>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEditorialRecord>>,
+          TError,
+          Awaited<ReturnType<typeof getEditorialRecord>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The stored bundle's current check, the drafting and review runs, check counts, safety holds and publication audit of one content or rule version (ADM-002). Read-only: it approves, publishes and holds nothing.
+ * @summary One version's publication record, for content staff
+ */
+export function useGetEditorialRecord<TData = Awaited<ReturnType<typeof getEditorialRecord>>, TError = ErrorType<void>>(
+ kind: 'content' | 'rule',
+    id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEditorialRecord>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEditorialRecord>>,
+          TError,
+          Awaited<ReturnType<typeof getEditorialRecord>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The stored bundle's current check, the drafting and review runs, check counts, safety holds and publication audit of one content or rule version (ADM-002). Read-only: it approves, publishes and holds nothing.
+ * @summary One version's publication record, for content staff
+ */
+export function useGetEditorialRecord<TData = Awaited<ReturnType<typeof getEditorialRecord>>, TError = ErrorType<void>>(
+ kind: 'content' | 'rule',
+    id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEditorialRecord>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * The stored bundle's current check, the drafting and review runs, check counts, safety holds and publication audit of one content or rule version (ADM-002). Read-only: it approves, publishes and holds nothing.
+ * @summary One version's publication record, for content staff
+ */
+export function useGetEditorialRecord<TData = Awaited<ReturnType<typeof getEditorialRecord>>, TError = ErrorType<void>>(
+ kind: 'content' | 'rule',
+    id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEditorialRecord>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetEditorialRecordQueryOptions(kind,id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetCorrectionNoticesUrl = (params?: GetCorrectionNoticesParams,) => {
   const normalizedParams = new URLSearchParams();

@@ -17,6 +17,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { requestReadQuota } from "./middlewares/valo-quota";
 import { paystackWebhookRouter } from "./routes/valo-paystack-webhook";
+import { securitySignals } from "./middlewares/valo-security-signals";
 import { configureProxyBoundary } from "./lib/valo-proxy-boundary";
 import { trustedSiteOrigin } from "./lib/valo-site-origin";
 
@@ -52,6 +53,8 @@ app.use((req, res, next) => {
     .json({ error: "Valo is undergoing private launch validation.", code: "PRODUCTION_REHEARSAL_ONLY" });
 });
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
+// Before every route, so each refusal is counted for the security alerts (SEC-008).
+app.use(securitySignals());
 app.use(paystackWebhookRouter);
 app.use(express.json({ limit: "128kb", inflate: false }));
 app.use(requestComplexityLimit);

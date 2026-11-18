@@ -34,7 +34,7 @@ import {
   type ReplayState,
 } from "./valo-erasure-seal";
 import { ValoProblem } from "./valo-problem";
-import { cancelUnsentDisputeWork } from "./valo-dispute-actions";
+import { cancelUnsentDisputeWork } from "../modules/commerce";
 import { retireWorkspaceExports, workspaceExportScratch } from "./valo-workspace-export-jobs";
 import { copyPhases, erasePrivateCopyPhase, fencePrivateCopies } from "./valo-private-copy-inventory";
 import { erasureProgressReason } from "./valo-privacy-redactions";

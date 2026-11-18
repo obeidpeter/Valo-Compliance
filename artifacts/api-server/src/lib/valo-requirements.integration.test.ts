@@ -15,7 +15,7 @@ import {
   valoWorkspaces,
 } from "@workspace/db";
 import { resolveWorkspace, saveProfile } from "./valo-store";
-import * as assessments from "./valo-assessments";
+import * as assessments from "../modules/rules/valo-assessments";
 import * as tasks from "./valo-tasks";
 import { processReminder } from "./valo-reminder-worker";
 import { syntheticProfile } from "./valo-test-fixtures";

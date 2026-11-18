@@ -6,10 +6,12 @@ import {
 } from "@workspace/api-client-react";
 import { ErrorState, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
+import { EditorialRecordPanel } from "@/components/editorial-record";
 export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
   const [page, setPage] = useState(1),
     [reason, setReason] = useState(""),
-    [source, setSource] = useState("");
+    [source, setSource] = useState(""),
+    [record, setRecord] = useState<string | null>(null);
   const q = useGetSourceControls({ area, page }, { query: { retry: false, refetchInterval: 15000 } });
   const mutation = useActOnSourceControls();
   const retry = useRef<{ body: string; key: string } | null>(null);
@@ -155,6 +157,15 @@ export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
                     <div className="flex gap-2">
                       <button
                         className="btn btn-ghost btn-sm"
+                        aria-expanded={record === `${v.kind}:${v.id}`}
+                        onClick={() =>
+                          setRecord((open) => (open === `${v.kind}:${v.id}` ? null : `${v.kind}:${v.id}`))
+                        }
+                      >
+                        Publication record
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-sm"
                         disabled={!valid || v.safetyHeld}
                         onClick={() =>
                           act({ action: "hold_version", kind: v.kind, id: v.id, version: v.version })
@@ -172,6 +183,11 @@ export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
                         Withdraw version
                       </button>
                     </div>
+                    {record === `${v.kind}:${v.id}` && (
+                      <div className="basis-full">
+                        <EditorialRecordPanel kind={v.kind} id={v.id} />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -143,7 +143,17 @@ checks, which are not provisioned yet.
 | `EXPORT_RETENTION_BACKLOG` | Any ready export past its retention date | Internal operations sample |
 | `WORKSPACE_CLEANUP_BACKLOG` | Any workspace export attempt overdue for cleanup or with a cleanup error | Internal operations sample |
 | `PAYMENTS_BACKLOG` | Any verified payment without its entitlement or receipt | Internal operations sample |
+| `DENIED_ACCESS_DETECTED` | One hashed address was refused (401 or 403) more than 20 times in ten minutes | Internal operations sample (SEC-008) |
+| `SIGNATURE_FAILURES_DETECTED` | Any payment webhook signature was rejected in the last ten minutes | Internal operations sample (SEC-008) |
+| `ROLE_CHANGES_DETECTED` | Any staff role was granted or revoked in the last hour | Internal operations sample (SEC-008) |
+| `BULK_EXPORTS_DETECTED` | Any caller used its whole export quota window | Internal operations sample (SEC-008) |
+| `PAYMENT_ACTIVITY_DETECTED` | Any caller used its whole checkout or refund quota window | Internal operations sample (SEC-008) |
+| `AI_ACTIVITY_DETECTED` | Any caller used its whole AI quota window | Internal operations sample (SEC-008) |
 | `<NAME>_PROBE_UNAVAILABLE` | A probe query fails or times out (2 seconds) | Internal operations sample |
+
+Each internal alert names its runbook and accountable roles from
+[operating-runbooks.md](operating-runbooks.md); the security alerts' thresholds
+are development defaults, not reviewed values.
 
 Internal alerts are recorded with active and resolved events. Any active
 internal alert stops the operations check from reporting success, so it reaches

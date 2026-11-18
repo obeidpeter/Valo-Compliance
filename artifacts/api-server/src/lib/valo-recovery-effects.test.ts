@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { paystackRequest } from "./valo-paystack-contract";
-import { refundProvider } from "./valo-refund-provider";
+import { paystackRequest } from "../modules/commerce/valo-paystack-contract";
+import { refundProvider } from "../modules/commerce/valo-refund-provider";
 import { assertRecoveryEffectsAllowed } from "./valo-recovery-effects";
 test("recovery blocks actual charge/refund provider boundaries before transport or credential lookup", async () => {
   const originalFetch = globalThis.fetch,

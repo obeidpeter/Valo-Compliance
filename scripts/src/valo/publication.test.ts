@@ -295,7 +295,7 @@ const cases: [string, (b: PublicationBundle) => void, string][] = [
   [
     "changed claim wording",
     (b) => {
-      b.candidate.claims[0].text = "New legal conclusion";
+      b.candidate.claims[0]!.text = "New legal conclusion";
     },
     "candidate_hash_mismatch",
   ],
@@ -316,7 +316,7 @@ const cases: [string, (b: PublicationBundle) => void, string][] = [
   [
     "changed source text",
     (b) => {
-      b.sources[0].text += " tampering";
+      b.sources[0]!.text += " tampering";
     },
     "source_hash_mismatch",
   ],
@@ -393,77 +393,77 @@ const cases: [string, (b: PublicationBundle) => void, string][] = [
   [
     "source hostname suffix attack",
     (b) => {
-      b.sources[0].url = "https://official.example.test.attacker.test";
+      b.sources[0]!.url = "https://official.example.test.attacker.test";
     },
     "source_not_allowlisted",
   ],
   [
     "source credentials attack",
     (b) => {
-      b.sources[0].url = "https://attacker@official.example.test";
+      b.sources[0]!.url = "https://attacker@official.example.test";
     },
     "source_not_allowlisted",
   ],
   [
     "source HTTP",
     (b) => {
-      b.sources[0].url = "http://official.example.test";
+      b.sources[0]!.url = "http://official.example.test";
     },
     "source_not_allowlisted",
   ],
   [
     "held operative text",
     (b) => {
-      b.sources[0].operativeTextConfirmed = false;
+      b.sources[0]!.operativeTextConfirmed = false;
     },
     "source_unresolved",
   ],
   [
     "unresolved amendments",
     (b) => {
-      b.sources[0].amendmentsResolved = false;
+      b.sources[0]!.amendmentsResolved = false;
     },
     "source_unresolved",
   ],
   [
     "expired evidence",
     (b) => {
-      b.sources[0].freshUntil = "2026-11-13T12:00:00Z";
+      b.sources[0]!.freshUntil = "2026-11-13T12:00:00Z";
     },
     "source_not_current",
   ],
   [
     "historical concession",
     (b) => {
-      b.sources[0].effectiveTo = "2025-01-01T00:00:00Z";
+      b.sources[0]!.effectiveTo = "2025-01-01T00:00:00Z";
     },
     "source_not_current",
   ],
   [
     "wrong source jurisdiction",
     (b) => {
-      b.sources[0].jurisdiction = "GH";
+      b.sources[0]!.jurisdiction = "GH";
     },
     "source_jurisdiction_mismatch",
   ],
   [
     "fabricated quote",
     (b) => {
-      b.candidate.claims[0].quote = "This sentence is not in the source.";
+      b.candidate.claims[0]!.quote = "This sentence is not in the source.";
     },
     "unsupported_claim",
   ],
   [
     "invented numerical claim",
     (b) => {
-      b.candidate.claims[0].numbers = ["7.5%"];
+      b.candidate.claims[0]!.numbers = ["7.5%"];
     },
     "unsupported_number",
   ],
   [
     "review reuses draft run",
     (b) => {
-      b.reviews[0].runId = "draft";
+      b.reviews[0]!.runId = "draft";
     },
     "runs_not_separate",
   ],
@@ -477,21 +477,21 @@ const cases: [string, (b: PublicationBundle) => void, string][] = [
   [
     "review disagreement",
     (b) => {
-      b.reviews[1].verdict = "hold";
+      b.reviews[1]!.verdict = "hold";
     },
     "review_not_clear:challenge",
   ],
   [
     "review saw other verdict",
     (b) => {
-      b.reviews[1].receivedOtherVerdict = true;
+      b.reviews[1]!.receivedOtherVerdict = true;
     },
     "review_not_blind:challenge",
   ],
   [
     "stale review",
     (b) => {
-      b.reviews[0].candidateHash = sha256("other-version");
+      b.reviews[0]!.candidateHash = sha256("other-version");
     },
     "run_binding_mismatch",
   ],
@@ -519,14 +519,14 @@ const cases: [string, (b: PublicationBundle) => void, string][] = [
   [
     "PDF missing disclosure",
     (b) => {
-      b.exports[1].disclosureIncluded = false;
+      b.exports[1]!.disclosureIncluded = false;
     },
     "export_not_passed:pdf",
   ],
   [
     "PDF bound to old version",
     (b) => {
-      b.exports[1].candidateHash = sha256("old");
+      b.exports[1]!.candidateHash = sha256("old");
     },
     "export_not_passed:pdf",
   ],
@@ -575,4 +575,66 @@ test("unknown schema fields cannot smuggle an override", () => {
 });
 test("invalid server clock holds", () => {
   assert.equal(evaluatePublication(fixture(), new Date("invalid")).decision, "hold");
+});
+
+// CMP-001: "missing authoritative evidence, scope or review manifest blocks publication of the
+// affected claim; a human reviewer is not a required field."
+test("missing authoritative evidence, scope or review holds an item, and no human reviewer is required", () => {
+  const complete = fixture();
+  assert.deepEqual(evaluatePublication(complete, now), { decision: "eligible", reasons: [] });
+  // The complete record names no human reviewer, approver or professional sign-off.
+  const keys: string[] = [];
+  const walk = (value: unknown) => {
+    if (Array.isArray(value)) value.forEach(walk);
+    else if (value && typeof value === "object")
+      for (const [key, inner] of Object.entries(value)) {
+        keys.push(key);
+        walk(inner);
+      }
+  };
+  walk(complete);
+  assert.ok(keys.length > 50, "the record's fields were read");
+  assert.deepEqual(
+    keys.filter((key) => /human|lawyer|specialist|approver|approvedBy|signOff|professional/i.test(key)),
+    [],
+  );
+  const holds = (change: (b: PublicationBundle) => void, reason: string) => {
+    const b = fixture();
+    change(b);
+    rebind(b);
+    const result = evaluatePublication(b, now);
+    assert.equal(result.decision, "hold", reason);
+    assert.ok(result.reasons.includes(reason), `${reason}: ${result.reasons.join(", ")}`);
+  };
+  holds(
+    (b) => (b.candidate.missingEvidence = ["Synthetic operative text not retrieved"]),
+    "material_uncertainty",
+  );
+  holds((b) => (b.sources = []), "regulatory_sources_required");
+  holds((b) => (b.candidate.legalScopeStatus = "unverified"), "legal_scope_unverified");
+  holds((b) => delete b.candidate.legalScopeStatus, "legal_scope_unverified");
+  holds((b) => (b.reviews = b.reviews.filter((r) => r.role !== "challenge")), "review_required:challenge");
+  const unreviewed = fixture();
+  unreviewed.manifest.status = "review";
+  assert.deepEqual(evaluatePublication(unreviewed, now).reasons, ["manifest_not_eligible"]);
+});
+
+// CMP-008: "separate drafting and review runs plus deterministic gates control automated
+// publication. No Nigerian specialist or second human approval is required."
+test("publication needs a separate drafting run and two separate, blind and clear review runs", () => {
+  assert.equal(evaluatePublication(fixture(), now).decision, "eligible");
+  const holds = (change: (b: PublicationBundle) => void, reason: string) => {
+    const b = fixture();
+    change(b);
+    rebind(b);
+    const result = evaluatePublication(b, now);
+    assert.equal(result.decision, "hold", reason);
+    assert.ok(result.reasons.includes(reason), `${reason}: ${result.reasons.join(", ")}`);
+  };
+  holds((b) => (b.reviews[0]!.runId = b.draftRun.runId), "runs_not_separate");
+  holds((b) => (b.reviews[1]!.runId = b.reviews[0]!.runId), "runs_not_separate");
+  holds((b) => (b.reviews[0]!.receivedOtherVerdict = true), "review_not_blind:factual");
+  holds((b) => (b.reviews[1]!.verdict = "hold"), "review_not_clear:challenge");
+  holds((b) => (b.reviews[0]!.findings = ["Synthetic unresolved finding"]), "review_not_clear:factual");
+  holds((b) => (b.reviews = [b.reviews[0]!, { ...b.reviews[0]! }]), "review_required:challenge");
 });

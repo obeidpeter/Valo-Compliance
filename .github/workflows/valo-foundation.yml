@@ -72,6 +72,14 @@ jobs:
     # ubuntu-latest advanced to 26.04, which no longer supplies that package.
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    env:
+      # How each test ends, for the requirement evidence register (decision 0010). NODE_OPTIONS
+      # is set for the whole job here because the runner refuses it through $GITHUB_ENV.
+      VALO_TEST_RESULTS_DIR: ${{ github.workspace }}/generated-artifacts/test-results/foundation
+      NODE_OPTIONS: >-
+        --test-reporter=spec --test-reporter-destination=stdout
+        --test-reporter=${{ github.workspace }}/scripts/src/valo/test-results-reporter.mjs
+        --test-reporter-destination=${{ github.workspace }}/generated-artifacts/test-results/foundation/reporter-output.txt
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -89,6 +97,8 @@ jobs:
           corepack prepare pnpm@10.26.1 --activate
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+      - name: Make the folder for this job's test results
+        run: mkdir -p "$VALO_TEST_RESULTS_DIR"
       - name: Typecheck all source
         run: pnpm run typecheck
       - name: Check formatting, lint rules and repository rules
@@ -248,10 +258,21 @@ jobs:
           path: generated-artifacts/valo-support/browser.json
       - name: Print factual readiness
         run: pnpm --filter @workspace/scripts valo:readiness
+      - name: Check every test the evidence register cites for this job passed
+        run: pnpm --filter @workspace/scripts valo:ci-evidence --job foundation
+      - name: Retain this job's test results for the evidence job
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-results-foundation
+          path: generated-artifacts/test-results/foundation
+          if-no-files-found: ignore
   postgres:
     name: Synthetic PostgreSQL isolation and concurrency
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    # The NFR-011 coverage steps run the payment, auth and rules tests a second time and fail an
+    # area below 80% branch coverage.
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16
@@ -273,6 +294,15 @@ jobs:
       VALO_ERASURE_STORAGE_PROOF: portable
       SESSION_SECRET: synthetic-ci-only-write-quota-key-not-a-production-secret
       NODE_ENV: test
+      # How each test ends, for the requirement evidence register (decision 0010). NODE_OPTIONS is
+      # set for the whole job here because the runner refuses it through $GITHUB_ENV. Its last
+      # option loads the nested-connection preload once a step sets VALO_NESTED_PRELOAD.
+      VALO_TEST_RESULTS_DIR: ${{ github.workspace }}/generated-artifacts/test-results/postgres
+      NODE_OPTIONS: >-
+        --test-reporter=spec --test-reporter-destination=stdout
+        --test-reporter=${{ github.workspace }}/scripts/src/valo/test-results-reporter.mjs
+        --test-reporter-destination=${{ github.workspace }}/generated-artifacts/test-results/postgres/reporter-output.txt
+        --import=data:text/javascript,if(process.env.VALO_NESTED_PRELOAD)await%20import(process.env.VALO_NESTED_PRELOAD)
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -286,6 +316,8 @@ jobs:
           corepack prepare pnpm@10.26.1 --activate
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+      - name: Make the folder for this job's test results
+        run: mkdir -p "$VALO_TEST_RESULTS_DIR"
       - name: Apply tracked migrations to empty synthetic database
         run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
       - name: Let customer requests connect as the workspace login, and check nothing widens it
@@ -298,7 +330,7 @@ jobs:
           node lib/db/scripts/workspace-row-security.mjs
       - name: Record pooled connections taken inside transactions in every later step
         run: |
-          echo "NODE_OPTIONS=--import $PWD/artifacts/api-server/src/test-support/nested-connection-preload.mjs" >> "$GITHUB_ENV"
+          echo "VALO_NESTED_PRELOAD=file://$PWD/artifacts/api-server/src/test-support/nested-connection-preload.mjs" >> "$GITHUB_ENV"
           echo "VALO_NESTED_REPORT_DIR=$PWD/generated-artifacts/nested-connections" >> "$GITHUB_ENV"
       - name: Prove audited staff changes, last-admin concurrency and post-lock emergency expiry
         run: pnpm --filter @workspace/api-server test:valo-staff-roles
@@ -310,6 +342,8 @@ jobs:
           PRIVATE_OBJECT_DIR: ""
           DEFAULT_OBJECT_STORAGE_BUCKET_ID: ""
           PUBLIC_OBJECT_SEARCH_PATHS: ""
+      - name: Prove each operational task is its own scheduled job, held back by no other
+        run: pnpm --filter @workspace/api-server test:valo-operations-queue-db
       - name: Prove dispute HTTP and transport controls without merchant calls
         run: pnpm --filter @workspace/api-server test:valo-disputes
       - name: Prove canonical background exports, restart, holds and final byte release
@@ -371,14 +405,38 @@ jobs:
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce
           pnpm --filter @workspace/api-server test:valo-refunds
+      - name: Measure branch coverage of the payment code and require 80% (NFR-011)
+        run: pnpm --filter @workspace/scripts valo:code-coverage payment --minimum
+      - name: Measure branch coverage of the sign-in and access code and require 80% (NFR-011)
+        run: pnpm --filter @workspace/scripts valo:code-coverage auth --minimum
+      - name: Measure branch coverage of the rules engine and require 80% (NFR-011)
+        run: pnpm --filter @workspace/scripts valo:code-coverage rules --minimum
+      # These two add shared rows (held and candidate versions, security counts), so they run on
+      # their own after every suite that hashes shared tables or reuses a held version.
+      - name: Prove public search never shows unpublished versions or customer drafts (WEB-003)
+        run: pnpm --filter @workspace/api-server test:valo-catalogue-visibility-db
+      - name: Prove refusals and signature failures are counted for the security alerts (SEC-008)
+        run: pnpm --filter @workspace/api-server test:valo-security-signals-db
+      # Publishes synthetic rule versions, so it runs last, after every suite that reads the registry.
+      - name: Prove a rule version is released only after its plan, source check and confirmation (ADM-004)
+        run: pnpm --filter @workspace/api-server test:valo-rule-release-db
       - name: Check that no transaction took a second pooled connection
         run: node artifacts/api-server/src/test-support/nested-connection-report.mjs
+      - name: Check every test the evidence register cites for this job passed
+        run: pnpm --filter @workspace/scripts valo:ci-evidence --job postgres
       - name: Retain nested-connection records
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: nested-connection-records
           path: generated-artifacts/nested-connections
+          if-no-files-found: ignore
+      - name: Retain this job's test results for the evidence job
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-results-postgres
+          path: generated-artifacts/test-results/postgres
           if-no-files-found: ignore
   container-images:
     name: Container images build and start safely
@@ -390,3 +448,41 @@ jobs:
           persist-credentials: false
       - name: Build the API and web images and prove PDF rendering, refusal without configuration and web headers
         run: scripts/ops/check-container-images.sh
+  evidence:
+    name: Requirement evidence from this run
+    needs: [foundation, postgres]
+    # Runs after a failed job too, so the report shows which cited tests did not pass.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+      - name: Set up pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.1 --activate
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Collect the test results each job recorded
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: test-results-*
+          path: generated-artifacts/test-results
+      - name: Write the readiness report with this run's requirement evidence
+        run: |
+          mkdir -p generated-artifacts/readiness
+          VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts exec tsx src/valo/readiness.ts > generated-artifacts/readiness/readiness.json
+      - name: Check every cited test passed in this run
+        run: VALO_EVIDENCE_RESULTS_DIR="$PWD/generated-artifacts/test-results" pnpm --filter @workspace/scripts valo:ci-evidence --all
+      - name: Retain the readiness report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: readiness-report
+          path: generated-artifacts/readiness/readiness.json
+          if-no-files-found: ignore

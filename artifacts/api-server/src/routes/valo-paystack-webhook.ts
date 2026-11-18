@@ -1,6 +1,5 @@
 import { Router, raw } from "express";
-import { authenticPaystackBody, type WebhookConfiguration } from "../lib/valo-paystack-contract";
-import { recordPaymentEvent } from "../lib/valo-commerce";
+import { authenticPaystackBody, recordPaymentEvent, type WebhookConfiguration } from "../modules/commerce";
 import { setting } from "../platform/settings";
 /** Mounted before JSON, identity and browser-CSRF middleware. */
 export const paystackWebhookRouter = Router();
@@ -31,6 +30,7 @@ paystackWebhookRouter.post(
     const header = req.get(config.mode === "timestamped" ? "paystack-signature" : "x-paystack-signature");
     if (!authenticPaystackBody(req.body, header, config)) {
       req.log.warn({ event: "payment.signature_rejected" });
+      res.locals.valoSecuritySignal = "signature_failure";
       res.status(401).json({ error: "Invalid payment event signature." });
       return;
     }

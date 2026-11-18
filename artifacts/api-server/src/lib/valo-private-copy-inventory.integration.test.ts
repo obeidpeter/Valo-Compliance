@@ -37,7 +37,7 @@ import {
   replayErasureObjects,
   closePrivacyErasureLocks,
 } from "./valo-privacy-erasure";
-import { financeHeldFixture } from "./valo-finance-test-fixture";
+import { financeHeldFixture } from "../modules/commerce/valo-finance-test-fixture";
 import { workspaceDataExport } from "./valo-customer-access";
 import { workspaceExportScratch } from "./valo-workspace-export-jobs";
 test(

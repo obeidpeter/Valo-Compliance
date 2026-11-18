@@ -10,7 +10,7 @@ import {
   type ValoReminderOutbox,
 } from "@workspace/db";
 import { ValoProblem } from "./valo-store";
-import { releasedRegistry, workspaceTransaction } from "./valo-assessments";
+import { releasedRegistry, workspaceTransaction } from "../modules/rules";
 import { reminderInstant } from "./valo-tasks";
 import { configuredReminderSender } from "./valo-reminder-resend";
 import type { ReminderSender } from "./valo-reminder-sender";

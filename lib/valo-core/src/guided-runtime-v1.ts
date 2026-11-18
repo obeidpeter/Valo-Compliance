@@ -102,15 +102,17 @@ export function guidedDataIssues(spec: GuidedSpec, data: GuidedData): Record<str
     }
   for (const check of spec.dateOrder ?? []) {
     const before = spec.fields.find((f) => f.id === check.before),
-      after = spec.fields.find((f) => f.id === check.after);
+      after = spec.fields.find((f) => f.id === check.after),
+      beforeValue = data.values[check.before] ?? "",
+      afterValue = data.values[check.after] ?? "";
     if (
       before &&
       after &&
       guidedVisible(before, data.values) &&
       guidedVisible(after, data.values) &&
-      guidedCalendarDate(data.values[check.before] ?? "") &&
-      guidedCalendarDate(data.values[check.after] ?? "") &&
-      data.values[check.after] < data.values[check.before]
+      guidedCalendarDate(beforeValue) &&
+      guidedCalendarDate(afterValue) &&
+      afterValue < beforeValue
     )
       issues[check.after] = check.message;
   }
@@ -124,6 +126,7 @@ export function guidedDataIssues(spec: GuidedSpec, data: GuidedData): Record<str
   }
   return issues;
 }
+/** Every answer read with `!` below is a visible required answer that passed guidedFieldIssue. */
 function financialData(data: GuidedData): FinancialInput | null {
   if (!["TPL-01", "TPL-02", "TPL-04", "TPL-12"].includes(data.templateId)) return null;
   const s = GUIDED_SPECS_V1[data.templateId],
@@ -134,10 +137,10 @@ function financialData(data: GuidedData): FinancialInput | null {
         s.fields.find((f) => f.id === "invoiceAmountKobo")!,
         v.invoiceAmountKobo,
       ) ||
-      !["none", "listed"].includes(v.paymentsKnown)
+      !["none", "listed"].includes(v.paymentsKnown ?? "")
     )
       return null;
-    const table = s.tables[0],
+    const table = s.tables[0]!,
       rows = v.paymentsKnown === "listed" ? (data.tables.payments ?? []) : [];
     if (
       v.paymentsKnown === "listed" &&
@@ -145,8 +148,8 @@ function financialData(data: GuidedData): FinancialInput | null {
     )
       return null;
     const paymentRecord = {
-      invoiceAmountKobo: v.invoiceAmountKobo.trim(),
-      payments: rows.map((r) => ({ reference: r.reference, amountKobo: r.amountKobo.trim() })),
+      invoiceAmountKobo: v.invoiceAmountKobo!.trim(),
+      payments: rows.map((r) => ({ reference: r.reference!, amountKobo: r.amountKobo!.trim() })),
     };
     const b = recordedBalance(paymentRecord);
     return {
@@ -176,12 +179,12 @@ function financialData(data: GuidedData): FinancialInput | null {
     kind: data.templateId === "TPL-02" ? "quotation" : "invoice",
     lines: rows.map((r) => ({
       description: `${r.description} (${r.unit === "other" ? r.otherUnit : r.unit})`,
-      quantity: r.quantity.trim(),
-      unitPriceKobo: r.unitPriceKobo.trim(),
+      quantity: r.quantity!.trim(),
+      unitPriceKobo: r.unitPriceKobo!.trim(),
     })),
-    taxAmountKobo: v.taxMode === "supplied" ? v.taxAmountKobo.trim() : null,
-    taxLabel: v.taxMode === "supplied" ? v.taxLabel : "",
-    discountKobo: v.discountMode === "supplied" ? v.discountKobo.trim() : null,
+    taxAmountKobo: v.taxMode === "supplied" ? v.taxAmountKobo!.trim() : null,
+    taxLabel: v.taxMode === "supplied" ? v.taxLabel! : "",
+    discountKobo: v.discountMode === "supplied" ? v.discountKobo!.trim() : null,
     amountDueKobo: null,
   };
 }
@@ -214,11 +217,11 @@ function questionBlocks(data: GuidedData): GuidedBlock[] {
 export function guidedDataFromBlocks(blocks: readonly GuidedBlock[]): GuidedData | null {
   const tagged = blocks.filter((b) => b.id.startsWith(GUIDED_PREFIX));
   if (!tagged.length) return null;
-  const markers = tagged.filter((b) => b.id.endsWith(":form"));
-  if (markers.length !== 1) throw Error("GUIDED_FORM_MARKER_REQUIRED");
-  const id = markers[0].id.slice(GUIDED_PREFIX.length, -":form".length) as GuidedTemplateId;
+  const [marker, ...otherMarkers] = tagged.filter((b) => b.id.endsWith(":form"));
+  if (!marker || otherMarkers.length) throw Error("GUIDED_FORM_MARKER_REQUIRED");
+  const id = marker.id.slice(GUIDED_PREFIX.length, -":form".length) as GuidedTemplateId;
   const spec = GUIDED_SPECS_V1[id];
-  if (!spec || markers[0].type !== "paragraph" || markers[0].text !== spec.title)
+  if (!spec || marker.type !== "paragraph" || marker.text !== spec.title)
     throw Error("UNSUPPORTED_GUIDED_VERSION");
   const prefix = `${GUIDED_PREFIX}${id}:`,
     data = emptyGuidedData(id),
@@ -226,23 +229,24 @@ export function guidedDataFromBlocks(blocks: readonly GuidedBlock[]): GuidedData
   for (const field of spec.fields) {
     const key = prefix + "field:" + field.id;
     allowed.add(key);
-    const matches = tagged.filter((b) => b.id === key);
+    const [match, ...others] = tagged.filter((b) => b.id === key);
     if (
-      matches.length !== 1 ||
-      matches[0].type !== "paragraph" ||
-      !matches[0].text.startsWith(field.label + "\n") ||
-      matches[0].rows.length
+      !match ||
+      others.length ||
+      match.type !== "paragraph" ||
+      !match.text.startsWith(field.label + "\n") ||
+      match.rows.length
     )
       throw Error("GUIDED_FIELD_STRUCTURE_CHANGED");
-    data.values[field.id] = matches[0].text.slice(field.label.length + 1);
+    data.values[field.id] = match.text.slice(field.label.length + 1);
   }
   for (const table of spec.tables) {
     const key = prefix + "table:" + table.id;
     allowed.add(key);
-    const matches = tagged.filter((b) => b.id === key),
-      b = matches[0];
+    const [b, ...others] = tagged.filter((b) => b.id === key);
     if (
-      matches.length !== 1 ||
+      !b ||
+      others.length ||
       b.type !== "table" ||
       b.text !== table.label ||
       JSON.stringify(b.rows[0]) !== JSON.stringify(table.columns.map((c) => c.label)) ||
@@ -250,12 +254,13 @@ export function guidedDataFromBlocks(blocks: readonly GuidedBlock[]): GuidedData
       b.rows.slice(1).some((r) => r.length !== table.columns.length)
     )
       throw Error("GUIDED_TABLE_STRUCTURE_CHANGED");
+    // Every row was checked above to hold one cell per column.
     data.tables[table.id] = b.rows
       .slice(1)
-      .map((row) => Object.fromEntries(table.columns.map((c, i) => [c.id, row[i]])));
+      .map((row) => Object.fromEntries(table.columns.map((c, i) => [c.id, row[i]!])));
   }
-  for (const key of Object.keys(data.values))
-    if (data.values[key].length > 4400) throw Error("GUIDED_ANSWER_TOO_LONG");
+  for (const value of Object.values(data.values))
+    if (value.length > 4400) throw Error("GUIDED_ANSWER_TOO_LONG");
   for (const b of tagged)
     if (!allowed.has(b.id) && !b.id.startsWith(prefix + "calc:")) throw Error("UNKNOWN_GUIDED_BLOCK");
   return data;
@@ -281,13 +286,11 @@ export function compileGuidedContent(data: GuidedData, previous?: ContentInput):
   }
   const v = data.values,
     plain = (k: string, max = 160) => ((v[k] ?? "").length <= max ? (v[k] ?? "") : "");
-  const issueDate = guidedCalendarDate(v.issueDate ?? "") ? v.issueDate : "",
+  const issued = v.issueDate ?? "",
+    due = v.dueDate ?? "",
+    issueDate = guidedCalendarDate(issued) ? issued : "",
     dueDate =
-      data.templateId === "TPL-01" &&
-      guidedCalendarDate(v.dueDate ?? "") &&
-      (!issueDate || v.dueDate >= issueDate)
-        ? v.dueDate
-        : "";
+      data.templateId === "TPL-01" && guidedCalendarDate(due) && (!issueDate || due >= issueDate) ? due : "";
   const generated = [...questionBlocks(data), ...calculations],
     byId = new Map(generated.map((b) => [b.id, b]));
   const seen = new Set<string>(),
@@ -348,8 +351,9 @@ export function guidedRenderableBlocks(content: ContentInput): GuidedBlock[] {
     if (b.id === prefix + "form") return [];
     const field = s.fields.find((f) => b.id === prefix + "field:" + f.id);
     if (field) {
-      if (!guidedVisible(field, data.values) || !data.values[field.id]?.trim()) return [];
-      let value = data.values[field.id];
+      const answer = data.values[field.id];
+      if (!guidedVisible(field, data.values) || !answer?.trim()) return [];
+      let value = answer;
       if (field.type === "money_kobo" && !guidedFieldIssue(field, value))
         value = `${formatKobo(value.trim())} (${value.trim()} kobo entered)`;
       if (field.type === "select") value = field.options?.find((o) => o.value === value)?.label ?? value;
@@ -373,7 +377,8 @@ export function guidedRenderableBlocks(content: ContentInput): GuidedBlock[] {
           ...b,
           rows: b.rows.map((row, index) =>
             columns.map(({ c, i }) => {
-              const value = row[i];
+              // guidedDataFromBlocks above checked that every row holds one cell per column.
+              const value = row[i]!;
               if (index === 0)
                 return c.type === "money_kobo"
                   ? value.replace(/whole kobo/g, "NGN displayed from supplied kobo")

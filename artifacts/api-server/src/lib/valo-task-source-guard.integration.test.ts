@@ -46,7 +46,7 @@ test(
       valoWorkspaces,
       valoRuleReleases,
     } = await import("@workspace/db");
-    const assessments = await import("./valo-assessments");
+    const assessments = await import("../modules/rules/valo-assessments");
     type Registry = Awaited<ReturnType<typeof assessments.releasedRegistry>>;
     const now = new Date(),
       day = assessments.currentAssessmentDate(now);
@@ -107,7 +107,7 @@ test(
       registryReads = 0;
     // No application option or HTTP field can install this dependency. Node
     // replaces the module export only for this isolated test process.
-    t.mock.module(new URL("./valo-assessments.ts", import.meta.url), {
+    t.mock.module(new URL("../modules/rules/valo-assessments.ts", import.meta.url), {
       cache: true,
       namedExports: {
         ...assessments,

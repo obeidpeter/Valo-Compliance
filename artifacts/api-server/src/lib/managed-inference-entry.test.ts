@@ -318,7 +318,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
       }),
     }),
   };
-  t.mock.module(new URL("./valo-assessments.ts", import.meta.url).href, {
+  t.mock.module(new URL("../modules/rules/valo-assessments.ts", import.meta.url).href, {
     namedExports: {
       workspaceTransaction: async (current: unknown, fn: (t: typeof tx) => Promise<unknown>) => {
         assert.deepEqual(current, { workspaceId: actor.workspaceId, identityId: actor.identityId });

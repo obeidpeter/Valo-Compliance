@@ -4,6 +4,8 @@ import {
   GetSourceControlsResponse,
   ActOnSourceControlsResponse,
   GetCorrectionNoticesResponse,
+  GetEditorialRecordParams,
+  GetEditorialRecordResponse,
 } from "@workspace/api-zod";
 import { sameOriginMutation } from "../middlewares/valo-identity";
 import { verifiedStaffSession } from "./valo-customer-access";
@@ -13,6 +15,8 @@ import {
   correctionNotices,
   type SourceStaffActor,
 } from "../lib/valo-source-controls";
+import { editorialRecord } from "../lib/valo-editorial-record";
+import { ValoProblem } from "../lib/valo-problem";
 const page = (value: unknown) => z.coerce.number().int().min(1).max(10000).default(1).parse(value);
 export function createSourceControlsRouter(
   authenticate: (req: Request) => Promise<SourceStaffActor> = verifiedStaffSession,
@@ -26,6 +30,15 @@ export function createSourceControlsRouter(
     const actor = await authenticate(req),
       area = z.enum(["content", "system"]).parse(req.query.area);
     res.json(GetSourceControlsResponse.parse(await sourceControls(actor, area, page(req.query.page))));
+  });
+  router.get("/admin/editorial-records/:kind/:id", async (req, res) => {
+    const actor = await authenticate(req);
+    // A malformed kind or id names no version, whoever asks.
+    const params = GetEditorialRecordParams.safeParse(req.params);
+    if (!params.success) throw new ValoProblem(404, "No such version.");
+    res.json(
+      GetEditorialRecordResponse.parse(await editorialRecord(actor, params.data.kind, params.data.id)),
+    );
   });
   router.post("/admin/source-controls/action", sameOriginMutation, async (req, res) => {
     res.json(ActOnSourceControlsResponse.parse(await actOnSourceControls(await authenticate(req), req.body)));

@@ -288,6 +288,20 @@
       "when": 1794920084996,
       "tag": "20261117125444_workspace_row_security",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794961335012,
+      "tag": "20261118002215_security_signals",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794965923412,
+      "tag": "20261118013843_price_change_log",
+      "breakpoints": true
     }
   ]
 }

@@ -14,7 +14,7 @@ import {
   SaveReminderPreferencesResponse,
   CompareAssessmentsResponse,
 } from "@workspace/api-zod";
-import * as assessments from "../lib/valo-assessments";
+import * as assessments from "../modules/rules";
 import * as tasks from "../lib/valo-tasks";
 import { consumeQuota } from "../lib/valo-quota";
 import { quotaSubjectHash } from "../lib/valo-quota-policy";
