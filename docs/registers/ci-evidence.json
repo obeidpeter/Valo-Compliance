@@ -336,6 +336,27 @@
       "file": "artifacts/api-server/src/editorial/editorial-lifecycle.integration.test.ts",
       "test": "actual isolated PostgreSQL reviewer denies release/policy and retained sources reject mutation",
       "proves": "The drafting and review database roles are each refused when they call the publisher, change a content version's status or change the publication policy; the version stays a candidate and all six refusals are kept in an append-only audit."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-catalogue-visibility.integration.test.ts",
+      "test": "public search finds service pages but never unpublished versions or customer drafts",
+      "proves": "Candidate and held versions and a customer's draft that all carry the searched word never appear in public search, for any result type, while the same search finds the public service pages."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-catalogue-discovery.test.ts",
+      "test": "50 curated searches retrieve the expected controlled item in the first three results",
+      "proves": "Each of 50 curated searches over the 40 synthetic template entries finds the expected template in its first three results; none of the searches is for guidance, industries or services."
+    },
+    {
+      "requirement": "WEB-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-catalogue-discovery.test.ts",
+      "test": "combined filters, ordering, later pages, reset, empty query and no matches",
+      "proves": "Type, industry, access and category filters combine, name and recency sorts order the results, and an unknown query or filter returns nothing."
     }
   ]
 }
