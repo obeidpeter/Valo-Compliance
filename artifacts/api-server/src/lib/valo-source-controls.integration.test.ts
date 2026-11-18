@@ -591,10 +591,63 @@ test(
         assert.deepEqual(await counts(), before);
       },
     );
+    await t.test(
+      "content staff read a version's publication record, and the access is recorded (ADM-002)",
+      async () => {
+        const { editorialRecord } = await import("./valo-editorial-record");
+        await assert.rejects(editorialRecord(fresh(system), "content", contentId), /active role/);
+        await assert.rejects(
+          editorialRecord({ ...fresh(staff), recentMfa: false }, "content", contentId),
+          /fresh multi-factor verification \(MFA\)/,
+        );
+        await assert.rejects(editorialRecord(fresh(staff), "content", randomUUID()), /No such version/);
+        const reads = async () =>
+          Number(
+            (
+              await db.execute(
+                sql`select count(*)::int as n from valo_staff_access_audit where actor_id=${staff.identityId} and reason like 'Read the publication record%'`,
+              )
+            ).rows[0]!.n,
+          );
+        const before = await reads();
+        const at = new Date();
+        const record = await editorialRecord(fresh(staff), "content", contentId, at);
+        assert.equal(await reads(), before + 1, "each read is recorded");
+        assert.deepEqual(
+          { key: record.key, version: record.version, candidateHash: record.candidateHash },
+          { key: prefix, version: 1, candidateHash: b.candidate.hash },
+        );
+        // The record shows the stored bundle's own check: this fixture is held, with its reasons.
+        assert.deepEqual(record.check, {
+          checkedAt: at.toISOString(),
+          ...evaluatePublication(b, at),
+        });
+        assert.equal(record.check.decision, "hold");
+        assert.ok(record.check.reasons.length > 0);
+        assert.deepEqual(record.draftRun, {
+          runId: b.draftRun.runId,
+          model: b.draftRun.model,
+          promptVersion: b.draftRun.promptVersion,
+        });
+        assert.deepEqual(record.reviews, []);
+        const impacts = (
+          await db.execute(
+            sql`select reason from valo_source_impacts where target_kind='content' and target_id=${contentId}::uuid order by created_at,id`,
+          )
+        ).rows.map((r) => r.reason);
+        assert.deepEqual(
+          record.safetyHolds.map((h) => h.reason),
+          impacts,
+        );
+        const rule = await editorialRecord(fresh(staff), "rule", ruleId, at);
+        assert.deepEqual([rule.kind, rule.key, rule.status, rule.audit], ["rule", prefix, "held", []]);
+        assert.equal(rule.check.decision, "hold");
+      },
+    );
     await t.test("actual staff routes enforce origin, area authority and generated responses", async () => {
       const { default: express } = await import("express");
       const { createSourceControlsRouter } = await import("../routes/valo-source-controls");
-      const { GetSourceControlsResponse } = await import("@workspace/api-zod");
+      const { GetSourceControlsResponse, GetEditorialRecordResponse } = await import("@workspace/api-zod");
       let mfa = true;
       const app = express();
       app.use(express.json());
@@ -637,6 +690,18 @@ test(
         const replay = await post(watch);
         assert.equal(replay.status, 200);
         assert.equal(((await replay.json()) as { replayed: boolean }).replayed, true);
+        const record = await fetch(`${url}/admin/editorial-records/content/${contentId}`);
+        assert.equal(record.status, 200);
+        assert.equal(GetEditorialRecordResponse.parse(await record.json()).id, contentId);
+        assert.match(record.headers.get("cache-control") ?? "", /no-store/);
+        for (const path of [
+          `/admin/editorial-records/content/${randomUUID()}`,
+          "/admin/editorial-records/policy/x",
+        ])
+          assert.equal((await fetch(url + path)).status, 404, path);
+        mfa = false;
+        assert.equal((await fetch(`${url}/admin/editorial-records/content/${contentId}`)).status, 403);
+        mfa = true;
       } finally {
         if (origin === undefined) delete process.env.VALO_TRUSTED_ORIGIN;
         else process.env.VALO_TRUSTED_ORIGIN = origin;

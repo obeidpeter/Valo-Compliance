@@ -6890,6 +6890,72 @@ export const ActOnSourceControlsResponse = zod.object({
 })
 
 
+/**
+ * The stored bundle's current check, the drafting and review runs, check counts, safety holds and publication audit of one content or rule version (ADM-002). Read-only: it approves, publishes and holds nothing.
+ * @summary One version's publication record, for content staff
+ */
+export const GetEditorialRecordParams = zod.object({
+  "kind": zod.enum(['content', 'rule']),
+  "id": zod.uuid()
+})
+
+export const GetEditorialRecordResponse = zod.object({
+  "kind": zod.enum(['content', 'rule']),
+  "id": zod.uuid(),
+  "key": zod.string(),
+  "version": zod.int(),
+  "status": zod.string(),
+  "reviewBy": zod.string().nullable(),
+  "publishedAt": zod.string().nullable(),
+  "withdrawnReason": zod.string().nullable(),
+  "candidateHash": zod.string().nullable(),
+  "manifestStatus": zod.string().nullable(),
+  "check": zod.object({
+  "checkedAt": zod.coerce.date(),
+  "decision": zod.enum(['eligible', 'hold']),
+  "reasons": zod.array(zod.string())
+}).describe('What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release.'),
+  "draftRun": zod.union([zod.object({
+  "runId": zod.string(),
+  "model": zod.string(),
+  "promptVersion": zod.string()
+}),zod.null()]),
+  "reviews": zod.array(zod.object({
+  "role": zod.enum(['factual', 'challenge']),
+  "runId": zod.string(),
+  "model": zod.string(),
+  "promptVersion": zod.string(),
+  "verdict": zod.enum(['pass', 'hold']),
+  "findings": zod.array(zod.string()).describe('The review\'s findings, at most 20, each cut to 600 characters.'),
+  "receivedOtherVerdict": zod.boolean()
+})),
+  "mechanicalChecks": zod.object({
+  "passed": zod.int(),
+  "failed": zod.int(),
+  "notRun": zod.int()
+}),
+  "enhancedChecks": zod.object({
+  "passed": zod.int(),
+  "failed": zod.int(),
+  "notRun": zod.int()
+}),
+  "audit": zod.array(zod.object({
+  "action": zod.string(),
+  "actor": zod.string(),
+  "reason": zod.string(),
+  "at": zod.coerce.date()
+})),
+  "safetyHolds": zod.array(zod.object({
+  "action": zod.string(),
+  "reason": zod.string(),
+  "phase": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "completedAt": zod.string().nullable()
+})),
+  "notice": zod.string()
+})
+
+
 export const getCorrectionNoticesQueryPageDefault = 1;
 export const getCorrectionNoticesQueryPageMax = 10000;
 

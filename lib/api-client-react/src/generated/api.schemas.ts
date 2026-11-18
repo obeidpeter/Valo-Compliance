@@ -2865,6 +2865,113 @@ export interface SourceControls {
   sourceChoices: SourceControlChoice[];
 }
 
+export interface EditorialRun {
+  runId: string;
+  model: string;
+  promptVersion: string;
+}
+
+export type EditorialReviewRole = typeof EditorialReviewRole[keyof typeof EditorialReviewRole];
+
+
+export const EditorialReviewRole = {
+  factual: 'factual',
+  challenge: 'challenge',
+} as const;
+
+export type EditorialReviewVerdict = typeof EditorialReviewVerdict[keyof typeof EditorialReviewVerdict];
+
+
+export const EditorialReviewVerdict = {
+  pass: 'pass',
+  hold: 'hold',
+} as const;
+
+export interface EditorialReview {
+  role: EditorialReviewRole;
+  runId: string;
+  model: string;
+  promptVersion: string;
+  verdict: EditorialReviewVerdict;
+  /** The review's findings, at most 20, each cut to 600 characters. */
+  findings: string[];
+  receivedOtherVerdict: boolean;
+}
+
+export interface EditorialCheckCounts {
+  passed: number;
+  failed: number;
+  notRun: number;
+}
+
+export type EditorialRecordKind = typeof EditorialRecordKind[keyof typeof EditorialRecordKind];
+
+
+export const EditorialRecordKind = {
+  content: 'content',
+  rule: 'rule',
+} as const;
+
+export type EditorialRecordCheckDecision = typeof EditorialRecordCheckDecision[keyof typeof EditorialRecordCheckDecision];
+
+
+export const EditorialRecordCheckDecision = {
+  eligible: 'eligible',
+  hold: 'hold',
+} as const;
+
+/**
+ * What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release.
+ */
+export type EditorialRecordCheck = {
+  checkedAt: string;
+  decision: EditorialRecordCheckDecision;
+  reasons: string[];
+};
+
+export type EditorialRecordAuditItem = {
+  action: string;
+  actor: string;
+  reason: string;
+  at: string;
+};
+
+export type EditorialRecordSafetyHoldsItem = {
+  action: string;
+  reason: string;
+  phase: string;
+  createdAt: string;
+  /** @nullable */
+  completedAt: string | null;
+};
+
+export interface EditorialRecord {
+  kind: EditorialRecordKind;
+  id: string;
+  key: string;
+  version: number;
+  status: string;
+  /** @nullable */
+  reviewBy: string | null;
+  /** @nullable */
+  publishedAt: string | null;
+  /** @nullable */
+  withdrawnReason: string | null;
+  /** @nullable */
+  candidateHash: string | null;
+  /** @nullable */
+  manifestStatus: string | null;
+  /** What the stored bundle passes or holds on at checkedAt. The publisher rechecks every gate before a release. */
+  check: EditorialRecordCheck;
+  draftRun: EditorialRun | null;
+  reviews: EditorialReview[];
+  mechanicalChecks: EditorialCheckCounts;
+  enhancedChecks: EditorialCheckCounts;
+  audit: EditorialRecordAuditItem[];
+  safetyHolds: EditorialRecordSafetyHoldsItem[];
+  notice: string;
+}
+
 export interface CorrectionNotice {
   id: string;
   entityKind: string;
