@@ -1,8 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { unzipSync, strFromU8 } from "fflate";
-import { controlledHtml, renderDocument, DRAFT_NOTICE } from "./valo-render";
+import { compileGuidedContent } from "@workspace/valo-core/guided-runtime";
+import { controlledHtml, renderDocument, DRAFT_NOTICE, PURCHASE_NOTICE } from "./valo-render";
 import { syntheticDocument } from "./valo-test-fixtures";
+import { completeGuidedTestData } from "./valo-guided-test-fixtures";
 import { readerContainsText } from "./valo-reader-checks";
 
 test("reader comparison tolerates extraction spacing, never changed parties, currency or money", () => {
@@ -146,4 +148,60 @@ test("no PDF line is cut in two at a page break", async () => {
     await closeRenderer();
   }
   assert.deepEqual(cut, [], "lines cut at a page break");
+});
+
+// PAY-009: "a generated business invoice is never confused with proof of payment or an official
+// government tax invoice."
+test("every page of a generated invoice and of a purchase receipt says it is not proof of payment or a government tax invoice", async () => {
+  const { closeRenderer } = await import("./valo-render");
+  const { execFile } = await import("node:child_process");
+  const { mkdtemp, rm, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { promisify } = await import("node:util");
+  assert.match(
+    DRAFT_NOTICE,
+    /^INCOMPLETE BUSINESS DRAFT .* Not verified payment proof, a government tax invoice,/,
+  );
+  assert.match(
+    PURCHASE_NOTICE,
+    /^VALO DEVELOPMENT PURCHASE RECEIPT .* Not proof of delivery, bank outcome, a government tax invoice/,
+  );
+  const words = (text: string) => text.replace(/\s+/g, " ").trim();
+  // The invoice template (TPL-01) with its 40 line items, the most it takes, so it runs over pages.
+  const data = completeGuidedTestData("TPL-01");
+  data.tables.items = Array.from({ length: 40 }, (_, i) => ({
+    ...data.tables.items![0]!,
+    description: `Synthetic line item ${i + 1}, described at length so the invoice runs over several pages`,
+  }));
+  const invoice = { title: "Synthetic invoice", content: compileGuidedContent(data) };
+  const receipt = { title: "Synthetic purchase receipt", content: syntheticDocument.content };
+  const directory = await mkdtemp(join(tmpdir(), "valo-render-notices-"));
+  try {
+    for (const [name, input, mode, notice] of [
+      ["invoice", invoice, "business_draft", DRAFT_NOTICE],
+      ["receipt", receipt, "purchase_receipt", PURCHASE_NOTICE],
+    ] as const) {
+      // The DOCX starts with the notice and repeats it in the header every page carries.
+      const parts = unzipSync(await renderDocument(input, "docx", 1, mode));
+      const headers = Object.keys(parts).filter((part) => /^word\/header\d*\.xml$/.test(part));
+      assert.ok(headers.length > 0, `${name} DOCX has a page header`);
+      for (const part of ["word/document.xml", ...headers])
+        assert.ok(strFromU8(parts[part]!).includes(notice), `${name} DOCX ${part} carries its notice`);
+      const path = join(directory, `${name}.pdf`);
+      await writeFile(path, await renderDocument(input, "pdf", 1, mode));
+      const text = (await promisify(execFile)("pdftotext", ["-layout", path, "-"], { maxBuffer: 1 << 24 }))
+        .stdout;
+      const pages = text.split("\f").filter((page) => page.trim());
+      if (name === "invoice") assert.ok(pages.length >= 2, `the invoice runs over ${pages.length} pages`);
+      for (const [index, page] of pages.entries())
+        assert.ok(words(page).includes(notice), `${name} PDF page ${index + 1} carries its notice`);
+      // Nothing else in the file calls it a tax invoice or proof of payment.
+      const rest = words(text).split(notice).join(" ");
+      assert.doesNotMatch(rest, /tax invoice|proof of payment|payment proof|paid in full/i, name);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+    await closeRenderer();
+  }
 });
