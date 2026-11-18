@@ -7,7 +7,7 @@ import { z } from "zod";
 import { documentInput, profileInput } from "./valo-validation";
 import { serializeRevisionV1 } from "./valo-revision-codec";
 import { parseBoundedProviderJSON } from "../modules/ai/provider-output-budget";
-import { publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { publicationWorkspaceRoot } from "../modules/publication/operational-policy";
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
 const legacy = JSON.parse(
   await readFile(

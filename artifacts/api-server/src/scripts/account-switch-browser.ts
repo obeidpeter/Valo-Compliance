@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
-import { developmentPublicationOnly, publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { developmentPublicationOnly, publicationWorkspaceRoot } from "../modules/publication";
 developmentPublicationOnly();
 if (process.env.VALO_RUN_ACCOUNT_SCOPE_BROWSER !== "synthetic-development-only")
   throw Error("EXPLICIT_CONTROLLED_BROWSER_FLAG_REQUIRED");

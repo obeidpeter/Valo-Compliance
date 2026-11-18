@@ -47,7 +47,7 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
       { validateCustomerEvaluationWork },
       { assertCustomerEvaluationActor },
     ] = await Promise.all([
-      import("../editorial/publication-artifacts"),
+      import("../modules/publication"),
       import("./inference-customer-evaluation"),
       import("./inference-customer-runtime"),
     ]);
@@ -76,9 +76,9 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
         { readOperationalInferenceReadiness },
         { operationalReviewRequests },
       ] = await Promise.all([
-        import("../editorial/publication-artifacts"),
+        import("../modules/publication"),
         import("./inference-operational-ready"),
-        import("../editorial/operational-review"),
+        import("../modules/editorial"),
       ]);
       const retained = JSON.parse((await getPublicationArtifact(b.operationalPlan)).toString());
       const current = await readOperationalInferenceReadiness(b.candidateVersionId);

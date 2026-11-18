@@ -7,7 +7,7 @@ import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
-import { developmentPublicationOnly, publicationWorkspaceRoot } from "../editorial/operational-policy";
+import { developmentPublicationOnly, publicationWorkspaceRoot } from "../modules/publication";
 developmentPublicationOnly();
 if (process.env.VALO_RUN_PRIVACY_BROWSER !== "synthetic-development-only")
   throw Error("EXPLICIT_CONTROLLED_PRIVACY_BROWSER_FLAG_REQUIRED");

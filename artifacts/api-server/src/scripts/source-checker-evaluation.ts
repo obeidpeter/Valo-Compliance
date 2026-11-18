@@ -9,8 +9,7 @@ import {
   evaluateSourceCandidateOffline,
   remainingSourceCandidateIds,
 } from "@workspace/valo-core/checker-source-candidates";
-import { bindBusinessNameCandidate } from "../editorial/business-name-candidate-binding";
-import { bindRemainingSourceCandidates } from "../editorial/source-candidate-bindings";
+import { bindBusinessNameCandidate, bindRemainingSourceCandidates } from "../modules/sources";
 
 const { binding, provenance, corpus } = bindBusinessNameCandidate();
 const families = bindRemainingSourceCandidates();
@@ -125,11 +124,11 @@ if (controlsPath) {
 }
 const harnessFiles = [
   import.meta.url,
-  new URL("../editorial/business-name-candidate-binding.ts", import.meta.url).href,
-  new URL("../editorial/source-candidate-bindings.ts", import.meta.url).href,
-  new URL("../editorial/business-name-candidate-evaluation.test.ts", import.meta.url).href,
-  new URL("../editorial/source-candidate-evaluation.test.ts", import.meta.url).href,
-  new URL("../editorial/source-review-clarifications.test.ts", import.meta.url).href,
+  new URL("../modules/sources/business-name-candidate-binding.ts", import.meta.url).href,
+  new URL("../modules/sources/source-candidate-bindings.ts", import.meta.url).href,
+  new URL("../modules/sources/business-name-candidate-evaluation.test.ts", import.meta.url).href,
+  new URL("../modules/sources/source-candidate-evaluation.test.ts", import.meta.url).href,
+  new URL("../modules/sources/source-review-clarifications.test.ts", import.meta.url).href,
 ].map((url) => ({
   path: relative(fileURLToPath(new URL("../../../../", import.meta.url)), fileURLToPath(url)),
   hash: createHash("sha256")

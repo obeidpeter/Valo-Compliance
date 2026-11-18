@@ -14,7 +14,7 @@ import {
   type HistoricalArtifactInput,
   type HistoricalPublicationAttempt,
 } from "../modules/ai";
-import { getPublicationArtifact, type ArtifactRef } from "../editorial/publication-artifacts";
+import { getPublicationArtifact, type ArtifactRef } from "../modules/publication";
 const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
 /** Read-only history preparation. This command never creates migrations,

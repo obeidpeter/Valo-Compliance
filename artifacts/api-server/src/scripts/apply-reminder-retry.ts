@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { db, pool } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { sha256 } from "@workspace/valo-core";
-import { publicationWorkspaceRoot, developmentPublicationOnly } from "../editorial/operational-policy";
+import { publicationWorkspaceRoot, developmentPublicationOnly } from "../modules/publication";
 async function main() {
   developmentPublicationOnly();
   if (process.env.VALO_APPLY_REMINDER_RETRY !== "reviewed-additive-development-only")

@@ -6,7 +6,7 @@ import {
   chatGPTSourcePath,
   assertPermissionRoute,
   verifiedRightsApplicability,
-} from "../editorial/rights-applicability";
+} from "../modules/publication/rights-applicability";
 
 // Synthetic text tests the predicate, not actual provider permission/publication.
 const now = new Date("2026-11-14T00:00:00Z");

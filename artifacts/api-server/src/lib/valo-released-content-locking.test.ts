@@ -81,25 +81,18 @@ test("template downloads read storage outside the transaction that holds the sou
       evaluatePublication: () => ({ decision: "eligible" }),
     },
   });
-  t.mock.module(new URL("../editorial/operational-policy.ts", import.meta.url).href, {
+  // The publication module, at the boundary the released content reads it through.
+  t.mock.module(new URL("../modules/publication/index.ts", import.meta.url).href, {
     namedExports: {
       developmentPublicationOnly: () => undefined,
       operationalPolicy: async () => {
         record("policy files");
         return { policy: { hash: "policy-hash" } };
       },
-    },
-  });
-  t.mock.module(new URL("../editorial/operational-read-permission.ts", import.meta.url).href, {
-    namedExports: {
       currentOperationalPermission: async () => {
         record("rights evidence");
         return permitted;
       },
-    },
-  });
-  t.mock.module(new URL("../editorial/publication-artifacts.ts", import.meta.url).href, {
-    namedExports: {
       getPublicationArtifact: async (ref: { id: string }) => {
         record(`storage ${ref.id}`);
         return Buffer.from("master bytes");

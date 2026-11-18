@@ -2,9 +2,11 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { db, pool, valoContentVersions } from "@workspace/db";
 import { sha256 } from "@workspace/valo-core";
-import { getPublicationArtifact } from "../editorial/publication-artifacts";
-import { publicationWorkspaceRoot } from "../editorial/operational-policy";
-import type { ReleaseAttestations } from "../editorial/publication-publisher";
+import {
+  getPublicationArtifact,
+  publicationWorkspaceRoot,
+  type ReleaseAttestations,
+} from "../modules/publication";
 async function main() {
   if (process.env.NODE_ENV !== "development" || process.env.REPLIT_DEPLOYMENT)
     throw Error("DEVELOPMENT_ONLY");

@@ -128,8 +128,8 @@ capability, each with a single public entry file:
 artifacts/api-server/src/
   platform/      settings, database, identity context, queue, storage, logging, errors
   modules/
-    identity/  workspaces/  documents/  exports/  catalogue/  editorial/
-    rules/  tasks/  commerce/  ai/  support/  privacy/  staff/
+    identity/  workspaces/  documents/  exports/  catalogue/  sources/
+    publication/  editorial/  rules/  tasks/  commerce/  ai/  support/  privacy/  staff/
   api.ts         HTTP entry point
   worker.ts      background entry point
 ```
@@ -162,21 +162,28 @@ merchant transports, the dispute schema and the test fixtures stay internal. The
 
 `modules/rules` holds the released-rule registry the checker uses, saved assessments, their
 comparison and the admission check for a rule release. The rule release command itself lives in
-`src/editorial`, because it binds sources through the editorial source storage, which the rules
+`modules/editorial`, because it binds sources through the sources module's storage, which the rules
 module must not load into every reader of assessments.
 
-`src/editorial` is not a module yet. Split three ways, into sources, publication (which the
-catalogue reads) and the pipeline with the editorial lifecycle, its files already depend on one
-another in one direction: the three indexes would add no import cycle, and no AI code would reach
-the catalogue's request path. What blocks the move is what an index loads. Importing one function
-through a module's `index.ts` loads every file the index re-exports, so code that now imports
-single editorial files would load far more: the inference work-binding checks would load the
-editorial lifecycle and pipeline, and the content-intake preparation would load the database
-client through the publisher. Unit tests that run without a database, or that mock only the tables
-and policy functions their file uses, then fail; five test groups did in a trial move. The move
-needs one of two changes first: a split by what callers load (for example the publisher and the
-read permission apart from the publication rules), or the files that use the database loading it
-lazily, as `modules/ai` does, so that importing an index loads no database client.
+The editorial code is three modules, each depending only on the ones after it:
+`modules/editorial`, then `modules/publication`, then `modules/sources`.
+
+- `modules/sources` fetches, extracts and stores official source snapshots, keeps their identities
+  and registers, and holds the source bindings a rule release uses and the business-name source
+  evidence.
+- `modules/publication` holds the operational publication policy and its restrictions, release
+  artifacts, the intake and content of original operational templates, their mechanical, export,
+  rights and final checks, and the publisher. The catalogue reads published content through it,
+  and it loads no AI code.
+- `modules/editorial` holds the AI pipeline and its model adapter, operational authoring and review,
+  release preparation, the editorial lifecycle with its dispatch and sandbox, evaluation evidence
+  and the rule release command.
+
+Importing a module's index loads every file it re-exports, so these modules load the database
+client only inside the functions that query it, as `modules/ai` does (the source state and source
+correction files in `src/lib` that the publisher uses do the same). Code and tests that need one
+editorial function therefore load no database client, and tests that stand in for a dependency
+mock the module's index, the boundary the code imports it through.
 
 The proposed R2 team access model (roles, grants, invitations and the migration path)
 is in [r2-team-access.md](r2-team-access.md).

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { paginateReleasedItems } from "./valo-catalogue";
-import { verifiedRightsApplicability } from "../editorial/rights-applicability";
+import { verifiedRightsApplicability } from "../modules/publication/rights-applicability";
 test("synthetic already-eligible catalogue metadata produces nonzero counts, filters and pagination", () => {
   const rows = Array.from({ length: 23 }, (_, i) => ({
     id: `synthetic-${i}`,

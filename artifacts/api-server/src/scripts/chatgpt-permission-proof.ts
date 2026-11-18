@@ -4,11 +4,14 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { eq, sql } from "drizzle-orm";
 import { db, pool, valoContentVersions, valoPublicationAudit } from "@workspace/db";
-import { loadChatGPTPermission } from "../editorial/rights-applicability";
-import { prepareInventoryRelease } from "../editorial/operational-preparation";
-import { publishOperationalVersion } from "../editorial/publication-publisher";
-import { publicationWorkspaceRoot, developmentPublicationOnly } from "../editorial/operational-policy";
-import { getPublicationArtifact } from "../editorial/publication-artifacts";
+import {
+  loadChatGPTPermission,
+  publishOperationalVersion,
+  publicationWorkspaceRoot,
+  developmentPublicationOnly,
+  getPublicationArtifact,
+} from "../modules/publication";
+import { prepareInventoryRelease } from "../modules/editorial";
 
 async function reservations() {
   const rows = await db.execute(sql`select count(*)::int as total from valo_publication_ai_attempts

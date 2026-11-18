@@ -228,7 +228,7 @@
     {
       "requirement": "EDP-008",
       "job": "foundation",
-      "file": "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
+      "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
       "test": "actual DOCX and Chromium PDF preserve the complete exact candidate and required notices",
       "proves": "A template's DOCX and PDF exports keep its complete text together with the AI-review disclosure, scope, limitations and source-check date, checked against the text read back from both files."
     },
@@ -333,7 +333,7 @@
     {
       "requirement": "CMP-008",
       "job": "postgres",
-      "file": "artifacts/api-server/src/editorial/editorial-lifecycle.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-lifecycle.integration.test.ts",
       "test": "actual isolated PostgreSQL reviewer denies release/policy and retained sources reject mutation",
       "proves": "The drafting and review database roles are each refused when they call the publisher, change a content version's status or change the publication policy; the version stays a candidate and all six refusals are kept in an append-only audit."
     },
@@ -445,21 +445,21 @@
     {
       "requirement": "ADM-004",
       "job": "foundation",
-      "file": "artifacts/api-server/src/editorial/valo-rule-release.test.ts",
+      "file": "artifacts/api-server/src/modules/editorial/valo-rule-release.test.ts",
       "test": "a rule version is ready only with a valid condition, the next version and passing critical scenarios",
       "proves": "Planning a rule release refuses a condition the schema rejects, a skipped or repeated version, a candidate without a critical scenario and any failed critical scenario, reports other failed scenarios without blocking, and previews which saved profiles' results would change and how."
     },
     {
       "requirement": "ADM-004",
       "job": "foundation",
-      "file": "artifacts/api-server/src/editorial/valo-rule-release.test.ts",
+      "file": "artifacts/api-server/src/modules/editorial/valo-rule-release.test.ts",
       "test": "restoring a prior rule version releases it again as the next version and changes no saved result",
       "proves": "Restoring a prior rule version gives its content the next version number, leaves the earlier versions unchanged so a result saved under one still reproduces exactly, and goes through the same release plan."
     },
     {
       "requirement": "ADM-004",
       "job": "postgres",
-      "file": "artifacts/api-server/src/editorial/valo-rule-release.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/editorial/valo-rule-release.integration.test.ts",
       "test": "a rule version is released only after its plan, source check and confirmation, and replaces the one before",
       "proves": "A synthetic rule version is released only with the operator's confirming manifest hash, after its plan passes and its source's stored text holds the quoted passage, and the checker then admits it; a failed critical scenario, a bundle the registry would refuse, a missing passage or a stale version writes nothing; each new version supersedes the one before, and version 1 is restored as version 3."
     },
@@ -536,14 +536,14 @@
     {
       "requirement": "NFR-004",
       "job": "foundation",
-      "file": "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
+      "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
       "test": "actual DOCX and Chromium PDF preserve the complete exact candidate and required notices",
       "proves": "Read back from each file, a template's DOCX and PDF exports both hold its complete text and required notices, so the two formats are compared with the source and each other."
     },
     {
       "requirement": "NFR-004",
       "job": "foundation",
-      "file": "artifacts/api-server/src/editorial/operational-export-inspection.test.ts",
+      "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
       "test": "both formats must be readable; a claimed pass cannot replace re-execution",
       "proves": "An export inspection fails when either file cannot be read, and a recorded pass does not replace reading the files again."
     },

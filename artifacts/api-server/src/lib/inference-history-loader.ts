@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import type { PoolClient } from "pg";
-import { getPublicationArtifact } from "../editorial/publication-artifacts";
+import { getPublicationArtifact } from "../modules/publication";
 import type { HistoryEvidence, HistoryRow, HistoricalPublicationAttempt } from "../modules/ai";
 import { requestDigest } from "../modules/ai";
 const root = resolve(import.meta.dirname, "../../../..");
@@ -168,7 +168,7 @@ export async function loadInferenceHistory(c: PoolClient): Promise<HistoryEviden
       });
     }
   }
-  const path = "artifacts/api-server/src/editorial/pipeline.ts";
+  const path = "artifacts/api-server/src/modules/editorial/pipeline.ts";
   e.sourceReferences.push({ path, sha256: sha(await readFile(resolve(root, path))) });
   return e;
 }

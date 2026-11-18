@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { pool } from "@workspace/db";
-import { captureReference } from "../editorial/source-capture";
+import { captureReference } from "../modules/sources";
 import { logger } from "../lib/logger";
 if (
   process.env.NODE_ENV !== "development" ||

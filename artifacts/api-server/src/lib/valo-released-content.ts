@@ -8,8 +8,13 @@ import {
   valoEntitlements,
 } from "@workspace/db";
 import { evaluatePublication, publicationSchema, coveragePlan } from "@workspace/valo-core";
-import { developmentPublicationOnly, operationalPolicy } from "../editorial/operational-policy";
-import { getPublicationArtifact, type ArtifactRef } from "../editorial/publication-artifacts";
+import {
+  developmentPublicationOnly,
+  operationalPolicy,
+  getPublicationArtifact,
+  type ArtifactRef,
+  currentOperationalPermission,
+} from "../modules/publication";
 import {
   createDocumentInTransaction,
   getDocument,
@@ -25,7 +30,6 @@ import {
   type CatalogueQuery,
   type ReleasedLibraryItem,
 } from "./valo-catalogue";
-import { currentOperationalPermission } from "../editorial/operational-read-permission";
 import { setting } from "../platform/settings";
 import { lockSourceState, sourceTargetAllowed } from "./valo-source-state";
 export function releaseVisible(

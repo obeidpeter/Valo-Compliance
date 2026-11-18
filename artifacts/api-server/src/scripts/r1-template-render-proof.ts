@@ -5,8 +5,11 @@ import { resolve } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { sha256, digest } from "@workspace/valo-core";
-import { readTemplateIntake } from "../editorial/operational-intake";
-import { publicationWorkspaceRoot, developmentPublicationOnly } from "../editorial/operational-policy";
+import {
+  readTemplateIntake,
+  publicationWorkspaceRoot,
+  developmentPublicationOnly,
+} from "../modules/publication";
 import { renderDocument, TEMPLATE_NOTICE } from "../lib/valo-render";
 const exec = promisify(execFile),
   normal = (s: string) => s.normalize("NFKC").replace(/\s+/g, "");

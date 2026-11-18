@@ -17,7 +17,7 @@ import {
   projectReleasedCatalogue,
 } from "./valo-released-content";
 import { recommendTemplates } from "./valo-catalogue";
-import { developmentPublicationOnly } from "../editorial/operational-policy";
+import { developmentPublicationOnly } from "../modules/publication";
 import { singleRow } from "../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 async function owner(tx: Tx, actor: WorkspaceActor) {

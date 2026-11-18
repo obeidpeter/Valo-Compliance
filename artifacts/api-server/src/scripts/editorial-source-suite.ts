@@ -12,20 +12,22 @@ import {
   sha256,
   type PublicationBundle,
 } from "@workspace/valo-core";
-import { readTemplateIntake } from "../editorial/operational-intake";
-import { templateCandidate } from "../editorial/operational-content";
-import { candidateArithmetic } from "../editorial/candidate-arithmetic";
-import { assertPermissionRoute } from "../editorial/rights-applicability";
-import { assertPublicAddress, assertSourceUrl, referenceFor } from "../editorial/source-fetch";
-import { instrumentIdentity } from "../editorial/source-identity";
-import { getPublicationArtifact, type ArtifactRef } from "../editorial/publication-artifacts";
-import { assertBlindReviewInputs } from "../editorial/operational-review-contract";
-import { renderDocument } from "../lib/valo-render";
-import { inspectOperationalExports } from "../editorial/operational-export-inspection";
-import { dispatchEditorialExternalAction } from "../editorial/external-action-boundary";
-import { evaluateEditorialPermissionDenials } from "../editorial/editorial-permission-evaluation";
-import { dispatchEditorialLifecycle } from "../editorial/editorial-lifecycle-dispatch";
 import {
+  readTemplateIntake,
+  templateCandidate,
+  candidateArithmetic,
+  assertPermissionRoute,
+  getPublicationArtifact,
+  type ArtifactRef,
+  assertBlindReviewInputs,
+  inspectOperationalExports,
+} from "../modules/publication";
+import { assertPublicAddress, assertSourceUrl, referenceFor, instrumentIdentity } from "../modules/sources";
+import { renderDocument } from "../lib/valo-render";
+import {
+  dispatchEditorialExternalAction,
+  evaluateEditorialPermissionDenials,
+  dispatchEditorialLifecycle,
   reviewedBaselineEvidence,
   publicationHoldTransition,
   editorialDeniedActions,
@@ -33,7 +35,7 @@ import {
   verifyCurrentEditorialDenials,
   type EditorialDenialReceipt,
   type EditorialDenialAuditRow,
-} from "../editorial/editorial-evaluation-evidence";
+} from "../modules/editorial";
 type Case = { id: string; scenario: string; inputMutation: string; requiresProviderRun: boolean };
 class Blocked extends Error {}
 async function main() {

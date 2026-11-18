@@ -2,8 +2,12 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { and, eq } from "drizzle-orm";
 import { db, pool, valoSourceSnapshots } from "@workspace/db";
-import { readSourceText, probePrivateSource } from "../editorial/source-storage";
-import { buildBusinessNameEvidence, type CapturedText } from "../editorial/business-name-evidence";
+import {
+  readSourceText,
+  probePrivateSource,
+  buildBusinessNameEvidence,
+  type CapturedText,
+} from "../modules/sources";
 
 if (
   process.env.NODE_ENV !== "development" ||

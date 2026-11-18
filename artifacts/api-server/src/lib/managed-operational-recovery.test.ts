@@ -15,8 +15,8 @@ import {
 } from "../modules/ai/inference-budget";
 import type { FiniteManifest, FiniteWork } from "../modules/ai/inference-batch-dispatch";
 import type { ManagedCompletionResult, ManagedRequest } from "../modules/ai/managed-inference";
-import type { ArtifactRef } from "../editorial/publication-artifacts";
-import type { OperationalServerEvidence } from "../editorial/operational-review";
+import type { ArtifactRef } from "../modules/publication/publication-artifacts";
+import type { OperationalServerEvidence } from "../modules/editorial/operational-review";
 
 test("actual operational caller recovers an artifact failure from settled receipts without new attempts or SDK calls", async (t) => {
   // The database adapters, native artifact store, SDK and content-binding
@@ -215,7 +215,7 @@ test("actual operational caller recovers an artifact failure from settled receip
   t.mock.module(new URL("../modules/ai/inference-budget-store.ts", import.meta.url).href, {
     namedExports: { InferenceBudgetStore: MemoryBudgetStore },
   });
-  t.mock.module(new URL("../editorial/publication-artifacts.ts", import.meta.url).href, {
+  t.mock.module(new URL("../modules/publication/publication-artifacts.ts", import.meta.url).href, {
     namedExports: {
       putPublicationArtifact: put,
       getPublicationArtifact: get,
@@ -272,7 +272,7 @@ test("actual operational caller recovers an artifact failure from settled receip
     },
   });
   const { saveOperationalReviewPlan, executeOperationalReviewPlan } =
-    await import("../editorial/operational-review");
+    await import("../modules/editorial/operational-review");
   const { withApprovedInferencePair, provideFiniteWorkBindings } =
     await import("../modules/ai/managed-inference");
   // As the operator command does, the test composes the dispatcher with its binding checks.

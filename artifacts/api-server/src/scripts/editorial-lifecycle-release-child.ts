@@ -1,7 +1,7 @@
 /** Isolated crash probe. Its IPC marker is test coordination, not an application acknowledgement. */
 import { pool } from "@workspace/db";
-import { publishOperationalVersion } from "../editorial/publication-publisher";
-import { assertLifecycleRunDatabase } from "../editorial/editorial-lifecycle-sandbox";
+import { publishOperationalVersion } from "../modules/publication";
+import { assertLifecycleRunDatabase } from "../modules/editorial";
 try {
   assertLifecycleRunDatabase(
     process.env.DATABASE_URL,

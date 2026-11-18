@@ -10,9 +10,9 @@ import {
   type AuthoredCustomerCase,
 } from "./valo-customer-case-binding";
 import { customerProviderPayload } from "./valo-customer-ai-domain";
-import { candidateArithmetic } from "../editorial/candidate-arithmetic";
-import { readTemplateIntake, readGuidanceIntake } from "../editorial/operational-intake";
-import { templateCandidate } from "../editorial/operational-content";
+import { candidateArithmetic } from "../modules/publication/candidate-arithmetic";
+import { readTemplateIntake, readGuidanceIntake } from "../modules/publication/operational-intake";
+import { templateCandidate } from "../modules/publication/operational-content";
 import { serializeRevision, serializeRevisionV1 } from "./valo-revision-codec";
 import { documentInput } from "./valo-validation";
 import { candidateDigest, disclosure, type PublicationBundle } from "@workspace/valo-core";
