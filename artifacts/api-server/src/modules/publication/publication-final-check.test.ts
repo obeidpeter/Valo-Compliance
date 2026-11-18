@@ -5,7 +5,7 @@ import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { operationalPolicy, publicationWorkspaceRoot } from "./operational-policy";
 import { finalOperationalPublicationCheck } from "./publication-final-check";
-import { heldSourceBundle } from "../../lib/valo-source-controls.fixtures";
+import { heldSourceBundle } from "../sources/valo-source-controls.fixtures";
 
 test("final check observes evidence expiry after earlier work and refuses backdating", async () => {
   const bundle = heldSourceBundle(new Date()),

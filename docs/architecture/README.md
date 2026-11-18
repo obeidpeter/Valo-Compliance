@@ -151,8 +151,8 @@ and its ledger, history reconciliation, approved manifests and allocation packag
 and the dispatcher with its provider transport. `index.ts` does not export the
 transport, so disabled inference never loads it. The customer AI and operational
 review lanes, the history loader and the work-binding checks stay in `src/lib` for
-now: they depend on customer documents, the editorial pipeline or the database,
-and move with the modules that own those.
+now: they depend on customer documents, the editorial pipeline or the database.
+[Decision 0013](decisions/0013-move-the-ai-lanes.md) proposes where they go.
 
 `modules/commerce` is the second. It holds one-time purchases, payment events and their
 reconciliation, receipts and their recovery, refunds, payment concerns, disputes and the Paystack
@@ -170,9 +170,9 @@ The editorial code is three modules, each depending only on the ones after it:
 
 - `modules/sources` fetches, extracts and stores official source snapshots, keeps their identities
   and registers, and holds the source bindings a rule release uses, the business-name source
-  evidence, and the current-source state with its lock and the source corrections that change it.
-  The staff source controls and the daily source check stay in `src/lib`: they import the database
-  client and the staff code at the top, and every reader of this module's index would load them.
+  evidence, the current-source state with its lock and the source corrections that change it, the
+  staff source controls and the daily source check. The controls load the staff checks, like the
+  database client, only when a staff request runs.
 - `modules/publication` holds the operational publication policy and its restrictions, release
   artifacts, the intake and content of original operational templates, their mechanical, export,
   rights and final checks, and the publisher. The catalogue reads published content through it,

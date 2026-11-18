@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { sql } from "drizzle-orm";
 import { allSourceLeads, checkerFactsSchema, digest, evaluatePublication } from "@workspace/valo-core";
 import { heldSourceBundle } from "./valo-source-controls.fixtures";
-import { workspaceActorFromRecord } from "../platform/workspace-context";
+import { workspaceActorFromRecord } from "../../platform/workspace-context";
 
 /** Drizzle reports database errors as "Failed query: ..." with the database's own error
  * as the cause; match the database message anywhere in that chain. */
@@ -26,7 +26,7 @@ test(
     timeout: 90000,
   },
   async (t) => {
-    const { assertDevelopmentRuntime } = await import("../platform/valo-development-runtime");
+    const { assertDevelopmentRuntime } = await import("../../platform/valo-development-runtime");
     assertDevelopmentRuntime();
     assert.ok(
       process.env.DATABASE_URL &&
@@ -35,8 +35,8 @@ test(
     const { db, pool } = await import("@workspace/db");
     const controls = await import("./valo-source-controls"),
       monitor = await import("./valo-source-monitor");
-    const state = await import("../modules/sources/valo-source-state"),
-      corrections = await import("../modules/sources/valo-source-corrections");
+    const state = await import("./valo-source-state"),
+      corrections = await import("./valo-source-corrections");
     const now = new Date(),
       prefix = `synthetic-source-${randomUUID()}`,
       contentId = randomUUID(),
@@ -385,7 +385,7 @@ test(
     await t.test(
       "a checkout pause stops checkout but not AI or free guidance, and records its reason, actor and customer impact",
       async () => {
-        const released = await import("../modules/catalogue/valo-released-content");
+        const released = await import("../catalogue/valo-released-content");
         const catalogue = await released.releasedCatalogue(),
           resources = await released.releasedResources();
         const paused = await controls.actOnSourceControls(fresh(system), {
@@ -515,8 +515,8 @@ test(
     await t.test(
       "actual task and assessment mutations recheck queued revocation and privacy tombstones",
       async () => {
-        const { createTask } = await import("../modules/tasks/valo-tasks"),
-          { createAssessment } = await import("../modules/rules/valo-assessments");
+        const { createTask } = await import("../tasks/valo-tasks"),
+          { createAssessment } = await import("../rules/valo-assessments");
         const actor = actors[2]!,
           task = {
             title: "A personal task",
@@ -574,7 +574,7 @@ test(
         // Record it under the current pinned signing key, as real erasure does. A row
         // left on the legacy default version with no signed legacy event would make
         // every later workspace resolution in this shared database fail closed.
-        const { privacySigner } = await import("./valo-privacy-keys");
+        const { privacySigner } = await import("../../lib/valo-privacy-keys");
         await db.transaction(async (tx) => {
           const { version } = await privacySigner(tx);
           await tx.execute(sql`insert into valo_privacy_tombstones(id,workspace_id,case_id,identity_hash,phase,key_version)
@@ -594,7 +594,7 @@ test(
     await t.test(
       "content staff read a version's publication record, and the access is recorded (ADM-002)",
       async () => {
-        const { editorialRecord } = await import("./valo-editorial-record");
+        const { editorialRecord } = await import("../../lib/valo-editorial-record");
         await assert.rejects(editorialRecord(fresh(system), "content", contentId), /active role/);
         await assert.rejects(
           editorialRecord({ ...fresh(staff), recentMfa: false }, "content", contentId),
@@ -646,7 +646,7 @@ test(
     );
     await t.test("actual staff routes enforce origin, area authority and generated responses", async () => {
       const { default: express } = await import("express");
-      const { createSourceControlsRouter } = await import("../routes/valo-source-controls");
+      const { createSourceControlsRouter } = await import("../../routes/valo-source-controls");
       const { GetSourceControlsResponse, GetEditorialRecordResponse } = await import("@workspace/api-zod");
       let mfa = true;
       const app = express();

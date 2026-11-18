@@ -592,7 +592,7 @@ export async function actOnContentSupportEscalation(actor: SupportStaffActor, id
     return { ...prepared, notice: "Previously saved content triage; no action repeated." };
   let impactId: string | null = null;
   if (input.action === "hold_and_reassess") {
-    const { actOnSourceControls } = await import("../../lib/valo-source-controls");
+    const { actOnSourceControls } = await import("../sources");
     // The source service owns its transaction, current role/MFA, exclusive
     // source lock, exact-version hold, idempotency and correction-review queue.
     // It retains a request digest, never raw customer/support text in its audit.

@@ -7,7 +7,7 @@ import { allSourceLeads, assess, checkerFactsSchema, restoredRuleVersion } from 
 import { syntheticRuleRelease } from "../../test-support/synthetic-rule-release";
 import { currentAssessmentDate, releasedRegistry } from "../rules/valo-assessments";
 import { applyStoredRuleRelease, planStoredRuleRelease, type RuleReleaseRequest } from "./valo-rule-release";
-import { registerSourceWatch } from "../../lib/valo-source-monitor";
+import { registerSourceWatch } from "../sources/valo-source-monitor";
 
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
 const facts = checkerFactsSchema.parse({

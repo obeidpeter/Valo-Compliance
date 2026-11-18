@@ -1,17 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
-import { db } from "@workspace/db";
+import { referenceFor } from "./source-fetch";
+import { lockSourceState, sourceTime, type SourceTx } from "./valo-source-state";
 import {
-  referenceFor,
-  lockSourceState,
-  sourceTime,
-  type SourceTx,
   impactSourceDependants,
   processSourceDependencyJob,
   processSourceImpact,
   queueExpiredSourceReviews,
-} from "../modules/sources";
-import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
+} from "./valo-source-corrections";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 export async function registerSourceWatch(tx: SourceTx, id: string) {
   const source = referenceFor(id); // No request URL or newly discovered domain is fetched.
   await tx.execute(
@@ -19,6 +16,8 @@ export async function registerSourceWatch(tx: SourceTx, id: string) {
   );
 }
 export async function scheduleSourceChecks(now = new Date()) {
+  // The database client loads when a check runs, not with every reader of the source code.
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     const sources = await tx.execute(
       sql`select source_id from valo_source_watches where next_check_at<=${now} order by next_check_at,source_id for update skip locked limit 10`,
@@ -35,6 +34,7 @@ export async function scheduleSourceChecks(now = new Date()) {
 }
 type Claim = { id: string; source_id: string; token: string };
 export async function claimSourceCheck(now = new Date()): Promise<Claim | null> {
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(7502602)`);
     if (
@@ -69,6 +69,7 @@ export async function claimSourceCheck(now = new Date()): Promise<Claim | null> 
   });
 }
 export async function completeSourceCheck(claim: Claim, snapshotId: string | null, now = new Date()) {
+  const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     await lockSourceState(tx, true);
     const job = (
@@ -129,7 +130,7 @@ export async function reconcileSourceMonitoring() {
     let id: string | null = null,
       timer: ReturnType<typeof setTimeout> | undefined;
     const capture = (async () =>
-      (await (await import("../modules/sources")).captureReference(claim.source_id)).id)();
+      (await (await import("./source-capture")).captureReference(claim.source_id)).id)();
     captureInFlight = capture;
     // The race below handles the capture's outcome; this chain only clears the in-flight marker.
     void capture

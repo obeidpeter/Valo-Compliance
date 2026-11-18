@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { Client, Pool } from "pg";
 import { sql } from "drizzle-orm";
 import { digest, evaluatePublication } from "@workspace/valo-core";
-import { heldSourceBundle } from "../../lib/valo-source-controls.fixtures";
+import { heldSourceBundle } from "../sources/valo-source-controls.fixtures";
 import { createLifecycleSandbox } from "./editorial-lifecycle-sandbox";
 
 /** Drizzle reports database errors as "Failed query: ..." with the database's own error

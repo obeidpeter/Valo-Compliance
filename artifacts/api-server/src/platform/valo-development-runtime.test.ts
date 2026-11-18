@@ -89,10 +89,8 @@ test("actual export entries and worker startup reject before database, queue or 
       export const processPaymentEvents=hit,reconcilePayments=hit,processRefundQueue=hit,
       reconcileKnownDisputes=hit,reconcileDisputeActions=hit;`,
     ],
-    [
-      "valo-source-monitor",
-      "export const reconcileSourceMonitoring=async()=>{globalThis.guardEffects.services++};",
-    ],
+    // The worker reaches the daily source check through the sources module's index.
+    ["sources", "export const reconcileSourceMonitoring=async()=>{globalThis.guardEffects.services++};"],
     [
       "valo-operations",
       `const hit=async()=>{globalThis.guardEffects.services++;};

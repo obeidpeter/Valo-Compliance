@@ -17,3 +17,4 @@ never edited after acceptance; a later record supersedes an earlier one.
 | [0010](0010-ci-test-results-as-requirement-evidence.md) | Cite CI test results as requirement evidence | Accepted |
 | [0011](0011-server-rendered-public-pages.md) | Server-render the public pages | Proposed |
 | [0012](0012-split-the-store.md) | Split the store into workspaces, documents and support tickets | Proposed |
+| [0013](0013-move-the-ai-lanes.md) | Move the AI lanes into a module of their own | Proposed |

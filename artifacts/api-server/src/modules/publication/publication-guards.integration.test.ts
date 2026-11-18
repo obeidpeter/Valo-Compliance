@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { digest, evaluatePublication } from "@workspace/valo-core";
-import { heldSourceBundle } from "../../lib/valo-source-controls.fixtures";
+import { heldSourceBundle } from "../sources/valo-source-controls.fixtures";
 
 /**
  * The publication guards that operational-publication.integration.test.ts checks against the
