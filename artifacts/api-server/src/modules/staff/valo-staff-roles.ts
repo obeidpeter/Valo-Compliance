@@ -12,7 +12,7 @@ import {
   requireFreshStaffSession,
   type StaffActor,
 } from "./valo-staff-authority";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 import { singleRow } from "../../platform/rows";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Assignment = typeof valoStaffAssignments.$inferSelect;

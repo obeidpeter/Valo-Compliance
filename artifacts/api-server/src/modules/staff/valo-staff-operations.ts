@@ -12,7 +12,7 @@ import {
   valoStaffAssignments,
   valoSupportTickets,
 } from "@workspace/db";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 import {
   activeStaffAssignment,
   assertStaffAssignmentCurrent,

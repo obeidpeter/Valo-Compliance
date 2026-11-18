@@ -23,7 +23,7 @@ const securityQueries = [
   readinessQueries.paymentActivity,
   readinessQueries.aiActivity,
 ];
-import { WorkerHealth } from "./valo-worker-health";
+import { WorkerHealth } from "../platform/valo-worker-health";
 test("operator report names reject traversal and non-integer versions", () => {
   for (const version of [
     "../../private",

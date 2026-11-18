@@ -1,6 +1,6 @@
 import { db, pool, valoWorkspaceExports } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { prepareWorkspaceExport } from "../modules/privacy";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
 assertDevelopmentRuntime();

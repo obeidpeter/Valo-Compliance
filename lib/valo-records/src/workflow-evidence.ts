@@ -341,7 +341,7 @@ const groups = [
     ids: ["SEC-003", "SEC-007", "NFR-009", "OPS-007"],
     paths: [
       "artifacts/api-server/src/app.ts",
-      "artifacts/api-server/src/lib/request-complexity.test.ts",
+      "artifacts/api-server/src/platform/request-complexity.test.ts",
       "artifacts/api-server/src/scripts/parser-regression-checkpoint.ts",
     ],
     record: {
@@ -867,7 +867,7 @@ export function partialWorkflowEvidence(id: string) {
         "artifacts/api-server/src/lib/valo-revision-codec.ts",
         "artifacts/api-server/src/lib/valo-revision-codec.test.ts",
         "artifacts/api-server/src/scripts/zod-upgrade-proof.ts",
-        "artifacts/api-server/src/lib/valo-problem.ts",
+        "artifacts/api-server/src/platform/valo-problem.ts",
         "artifacts/api-server/src/modules/commerce/valo-contract-runtime.test.ts",
         "artifacts/api-server/src/modules/commerce/valo-paystack-contract.ts",
         "lib/api-spec/orval.config.ts",
@@ -919,8 +919,8 @@ export function partialWorkflowEvidence(id: string) {
     {
       ids: ["OPS-005", "SEC-003", "SEC-007", "NFR-011"],
       paths: [
-        "artifacts/api-server/src/lib/http-errors.ts",
-        "artifacts/api-server/src/lib/http-logging.test.ts",
+        "artifacts/api-server/src/platform/http-errors.ts",
+        "artifacts/api-server/src/platform/http-logging.test.ts",
         "scripts/src/valo/merge-static.sh",
         "scripts/src/valo/merge-static.test.ts",
         ".github/workflows/valo-foundation.yml",
@@ -952,8 +952,8 @@ export function partialWorkflowEvidence(id: string) {
         ".github/workflows/valo-foundation.yml",
         "scripts/src/valo/merge-security.ts",
         "scripts/src/valo/merge-static.sh",
-        "artifacts/api-server/src/lib/http-logging.ts",
-        "artifacts/api-server/src/lib/logger.ts",
+        "artifacts/api-server/src/platform/http-logging.ts",
+        "artifacts/api-server/src/platform/logger.ts",
       ],
       record: {
         kind: "test" as const,
@@ -1037,7 +1037,7 @@ export function partialWorkflowEvidence(id: string) {
         "NFR-009",
       ],
       paths: [
-        "artifacts/api-server/src/lib/valo-development-runtime.ts",
+        "artifacts/api-server/src/platform/valo-development-runtime.ts",
         "artifacts/api-server/src/modules/exports/valo-export-queue.ts",
         "artifacts/api-server/src/modules/exports/valo-export-recovery.ts",
         "artifacts/api-server/src/workers/export-worker.ts",

@@ -26,7 +26,7 @@ import {
   type ExportStage,
 } from "./valo-exports";
 import { recoverAbandonedExports, reconcileExportOrphans, EXPORT_LEASE_MS } from "./valo-export-recovery";
-import { deletePrivateFile, readPrivateFile, writePrivateFile } from "../../lib/valo-private-storage";
+import { deletePrivateFile, readPrivateFile, writePrivateFile } from "../../platform/valo-private-storage";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 
 const enabled = process.env.VALO_RUN_EXPORT_CRASH_TESTS === "synthetic-development-only";

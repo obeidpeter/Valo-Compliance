@@ -4,7 +4,7 @@ import express, { type Request } from "express";
 import { createCheckAuthorization } from "@clerk/shared/authorization";
 import { makeVerifiedStaffSession, hasRecentBothFactors } from "./valo-managed-session";
 import { createSessionVerificationRouter } from "../routes/valo-session-verification";
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../platform/valo-problem";
 
 function fixture() {
   const state = {

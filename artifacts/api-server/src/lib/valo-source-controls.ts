@@ -5,8 +5,8 @@ import { z } from "zod";
 import { allSourceLeads } from "@workspace/valo-core";
 import { lockSourceState, sourceTime, type SourceTx, recordSourceImpact } from "../modules/sources";
 import { registerSourceWatch } from "./valo-source-monitor";
-import { ValoProblem } from "./valo-problem";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { ValoProblem } from "../platform/valo-problem";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   activeStaffAssignment,
   assertStaffAssignmentCurrent,

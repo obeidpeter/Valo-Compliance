@@ -13,7 +13,7 @@ import { inferenceProposal, requestDigest, emptyBudget } from "../modules/ai/inf
 import { createManagedSDKTransport } from "../modules/ai/managed-sdk-transport";
 import type { ArtifactRef } from "../modules/publication/publication-artifacts";
 import type { ManagedRequest, ManagedCompletionResult } from "../modules/ai/managed-inference";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
 
 test(

@@ -2,7 +2,7 @@ import { runtimePrivateScope } from "./valo-runtime-activation";
 import { createHash } from "node:crypto";
 import { Client } from "@replit/object-storage";
 import { privateStorageScope, privateObjectName, type StorageScope } from "./valo-storage-scope";
-import { environment } from "../platform/settings";
+import { environment } from "./settings";
 export const fileChecksum = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 function object(key: string, scope = runtimePrivateScope()) {
   const name = privateObjectName(scope, key);

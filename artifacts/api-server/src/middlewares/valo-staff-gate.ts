@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db, valoStaffAssignments } from "@workspace/db";
 import { verifiedStaffSession } from "../lib/valo-managed-session";
 import { activeStaffAssignment } from "../modules/staff";
-import { ValoProblem } from "../lib/valo-problem";
+import { ValoProblem } from "../platform/valo-problem";
 
 /**
  * Every staff route first requires a verified session that holds at least one active

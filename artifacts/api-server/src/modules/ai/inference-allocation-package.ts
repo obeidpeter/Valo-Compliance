@@ -9,7 +9,7 @@ import {
 } from "./inference-budget";
 import type { FiniteManifest, FiniteWork } from "./inference-types";
 import type { InferenceBudgetStore } from "./inference-budget-store";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import {
   operationalInferenceTemplateIds,
   supportsOperationalInferenceTemplate,

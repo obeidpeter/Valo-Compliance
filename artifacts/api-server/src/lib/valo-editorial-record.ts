@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { evaluatePublication, publicationSchema } from "@workspace/valo-core";
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../platform/valo-problem";
 import { requireSourceStaff, type SourceStaffActor } from "./valo-source-controls";
 import { sourceTime } from "../modules/sources";
 

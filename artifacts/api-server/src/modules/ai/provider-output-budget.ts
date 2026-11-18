@@ -1,4 +1,4 @@
-import { assertInputBudget, InputComplexityError } from "../../lib/request-complexity";
+import { assertInputBudget, InputComplexityError } from "../../platform/request-complexity";
 /** Tokens requested from a provider are not a validation budget. Apply this to
  * actual output before invoking any schema, including constrained collections. */
 export function parseBoundedProviderJSON(text: string): unknown {

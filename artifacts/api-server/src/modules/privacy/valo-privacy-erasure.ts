@@ -2,7 +2,7 @@ import { ErasureInventoryAttestations, inventoryGuardStamp } from "./valo-erasur
 import { randomUUID } from "node:crypto";
 import { rm } from "node:fs/promises";
 import { Pool } from "pg";
-import { logger } from "../../lib/logger";
+import { logger } from "../../platform/logger";
 import { withPrivacyCaseLock, ErasureLockBusyError } from "./valo-erasure-lock";
 import { and, eq, ne, sql, lte, asc } from "drizzle-orm";
 import {
@@ -16,8 +16,8 @@ import {
   valoExportObjects,
 } from "@workspace/db";
 import { ActOnStaffPrivacyCaseBody } from "@workspace/api-zod";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
-import { deletePrivateFile } from "../../lib/valo-private-storage";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
+import { deletePrivateFile } from "../../platform/valo-private-storage";
 import { privacyKey, privacySigner } from "../../lib/valo-privacy-keys";
 import { quotaSubjectHash } from "../../lib/valo-quota";
 import {
@@ -33,7 +33,7 @@ import {
   type ErasureSeal,
   type ReplayState,
 } from "./valo-erasure-seal";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 import { cancelUnsentDisputeWork } from "../commerce";
 import { retireWorkspaceExports, workspaceExportScratch } from "./valo-workspace-export-jobs";
 import { copyPhases, erasePrivateCopyPhase, fencePrivateCopies } from "./valo-private-copy-inventory";

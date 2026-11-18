@@ -1,7 +1,7 @@
 import { Client } from "pg";
 import { assignEmptyRehearsalDatabase, prepareEmptyRehearsalQueue } from "../lib/valo-production-bootstrap";
 import { readFile } from "node:fs/promises";
-import { rehearsalConfiguration, verifyRehearsalDatabase } from "../lib/valo-runtime-activation";
+import { rehearsalConfiguration, verifyRehearsalDatabase } from "../platform/valo-runtime-activation";
 import { environment, setting } from "../platform/settings";
 let client: Client | undefined;
 try {

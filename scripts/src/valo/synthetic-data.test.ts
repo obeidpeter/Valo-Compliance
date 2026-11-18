@@ -36,7 +36,7 @@ function seedingFiles() {
  * by file and domain. This file names the domain alone, so the scan never matches itself.
  */
 const NOT_ADDRESSES: Record<string, string> = {
-  "artifacts/api-server/src/lib/valo-external-monitor.test.ts hc-ping.com":
+  "artifacts/api-server/src/platform/valo-external-monitor.test.ts hc-ping.com":
     "a monitor URL carrying credentials, which the external monitor check must refuse",
 };
 

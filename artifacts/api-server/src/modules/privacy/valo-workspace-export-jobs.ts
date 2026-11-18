@@ -26,7 +26,7 @@ import {
   type WorkspaceExportStorage,
 } from "./valo-workspace-export-storage";
 import { abortable } from "../../lib/valo-abort";
-import { assertApplicationRuntime, runtimeEnvironment } from "../../lib/valo-runtime-activation";
+import { assertApplicationRuntime, runtimeEnvironment } from "../../platform/valo-runtime-activation";
 import { privateCleanupAuthority } from "./valo-private-cleanup-authority";
 import { workspaceActorFromRecord } from "../../platform/workspace-context";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];

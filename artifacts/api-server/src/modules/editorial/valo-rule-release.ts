@@ -10,7 +10,7 @@ import {
 } from "@workspace/valo-core";
 import { bindVerifiedSources, verifyReleasedSources, readSourceText, lockSourceState } from "../sources";
 import { currentAssessmentDate, releasedRegistry, ruleReleaseEligible } from "../rules";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 
 /** A new version of a rule, as the editorial pipeline hands it over for release (ADM-004). */
 export type RuleReleaseRequest = {

@@ -17,7 +17,7 @@ import { z } from "zod";
 import { syntheticDocument } from "../lib/valo-test-fixtures";
 import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
 import { runGuidedCustomerJourneys } from "./customer-guided-journeys";
-import { deletePrivateFile } from "../lib/valo-private-storage";
+import { deletePrivateFile } from "../platform/valo-private-storage";
 const checks: { name: string; status: string; diagnostic?: string }[] = [];
 const run = randomUUID(),
   email = `valo-ux-${run}+clerk_test@example.com`;

@@ -33,7 +33,7 @@ test(
       };
     };
     reset();
-    t.mock.module(new URL("../../lib/valo-private-storage.ts", import.meta.url).href, {
+    t.mock.module(new URL("../../platform/valo-private-storage.ts", import.meta.url).href, {
       namedExports: {
         privateWorkspaceObject: () => ({
           name: "synthetic",

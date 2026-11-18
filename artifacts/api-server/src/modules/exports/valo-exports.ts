@@ -19,10 +19,10 @@ import { CreateDocumentExportBody, CreateDocumentExportResponse } from "@workspa
 import { sha256 } from "@workspace/valo-core";
 import { ValoProblem, authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
 import { RENDER_VERSION, renderDocument, exportMime } from "../../lib/valo-render";
-import { readPrivateFile, writePrivateFile, deletePrivateFile } from "../../lib/valo-private-storage";
+import { readPrivateFile, writePrivateFile, deletePrivateFile } from "../../platform/valo-private-storage";
 import { documentInput } from "../../lib/valo-validation";
 import { EXPORT_HEARTBEAT_MS, EXPORT_LEASE_MS, recoverAbandonedExports } from "./valo-export-recovery";
-import { assertApplicationRuntime, runtimeEnvironment } from "../../lib/valo-runtime-activation";
+import { assertApplicationRuntime, runtimeEnvironment } from "../../platform/valo-runtime-activation";
 import {
   EXPORT_EXPIRED,
   exportIsExpired,

@@ -1,8 +1,8 @@
 import { mkdir, open, readFile, rename, unlink, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
-import { assertApplicationRuntime, runtimeEnvironment } from "./valo-runtime-activation";
-import { workerReadiness, type WorkerHeartbeat } from "./valo-worker-health";
+import { assertApplicationRuntime, runtimeEnvironment } from "../platform/valo-runtime-activation";
+import { workerReadiness, type WorkerHeartbeat } from "../platform/valo-worker-health";
 import { quotaPolicy, type QuotaBucket } from "./valo-quota-policy";
 export const operationsDirectory = resolve("generated-artifacts/valo-operations");
 /** Live windows of the named quota buckets that reached their limit: one caller using all of it. */

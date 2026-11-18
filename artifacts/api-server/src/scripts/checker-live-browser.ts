@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { writeFile, mkdir } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 assertDevelopmentRuntime();
 assert.equal(process.env.VALO_RUN_CHECKER_BROWSER, "synthetic-development-only");
 const { chromium } = createRequire(import.meta.url)("playwright");

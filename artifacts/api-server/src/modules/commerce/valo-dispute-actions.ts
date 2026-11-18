@@ -20,7 +20,7 @@ import {
 } from "@workspace/api-zod";
 import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
 import { assertFinanceActor, requireFinance, type FinanceActor } from "./valo-refunds";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 import {
   disputeInformation,
   disputeTransport,

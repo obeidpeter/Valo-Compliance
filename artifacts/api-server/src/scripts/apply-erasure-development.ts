@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { db, pool } from "@workspace/db";
 import { sql } from "drizzle-orm";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 try {
   assertDevelopmentRuntime();
   if (process.env.VALO_APPLY_ERASURE !== "reviewed-additive-development-only")

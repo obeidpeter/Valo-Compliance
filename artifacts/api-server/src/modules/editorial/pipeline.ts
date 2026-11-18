@@ -17,7 +17,7 @@ import {
   type EditorialRole,
   type EvidenceBundle,
 } from "./pipeline-contract";
-import { logger } from "../../lib/logger";
+import { logger } from "../../platform/logger";
 import { editorialDraftInput } from "./citation-selection";
 import { setting } from "../../platform/settings";
 

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 import { verifiedDispute } from "./valo-dispute-schema";
 import { paystackRequest, sandboxPaymentsConfigured } from "./valo-paystack-contract";
 import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";

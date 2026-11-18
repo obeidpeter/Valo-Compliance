@@ -24,7 +24,7 @@ import type { Request, RequestHandler } from "express";
 import { createProxyServer } from "httpxy";
 import { trustedSiteOrigin } from "../lib/valo-site-origin";
 import { clientAddress } from "../lib/valo-proxy-boundary";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 import { setting } from "../platform/settings";
 
 const CLERK_FAPI = "https://frontend-api.clerk.dev";

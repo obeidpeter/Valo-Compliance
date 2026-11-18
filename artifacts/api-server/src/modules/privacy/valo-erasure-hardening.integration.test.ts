@@ -48,8 +48,8 @@ import {
 import { requestExport, executeExport } from "../exports/valo-exports";
 import { reconcileExportOrphans } from "../exports/valo-export-recovery";
 import { privacyKeys, privacySigner } from "../../lib/valo-privacy-keys";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
-import { writePrivateFile, readPrivateFile, deletePrivateFile } from "../../lib/valo-private-storage";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
+import { writePrivateFile, readPrivateFile, deletePrivateFile } from "../../platform/valo-private-storage";
 import { erasureProofMode } from "../../test-support/erasure-proof-storage";
 
 const reason = "Controlled synthetic erasure race and recovery proof; no production or provider deletion.";

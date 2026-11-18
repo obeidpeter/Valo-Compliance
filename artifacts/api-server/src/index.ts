@@ -1,6 +1,6 @@
-import { initializeApplicationRuntime } from "./lib/valo-runtime-activation";
+import { initializeApplicationRuntime } from "./platform/valo-runtime-activation";
 import app from "./app";
-import { logger } from "./lib/logger";
+import { logger } from "./platform/logger";
 import { setting } from "./platform/settings";
 
 const rawPort = setting("PORT");

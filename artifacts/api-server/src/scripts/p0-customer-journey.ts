@@ -7,7 +7,7 @@ import { unzipSync, strFromU8 } from "fflate";
 import { chromium, expect, request, type Page, type Browser } from "@playwright/test";
 import { clerkSetup, setupClerkTestingToken } from "@clerk/testing/playwright";
 import { clerkClient } from "@clerk/express";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 import { nigerianStates } from "../lib/valo-validation";
 import {
   GetWorkspaceResponse,

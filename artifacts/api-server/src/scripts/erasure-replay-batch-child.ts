@@ -1,6 +1,6 @@
 import { pool } from "@workspace/db";
 import { z } from "zod";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   replayErasedApplication,
   erasureReplayVerificationCounts,

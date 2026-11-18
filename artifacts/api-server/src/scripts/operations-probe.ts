@@ -1,6 +1,6 @@
 import { pool } from "@workspace/db";
 import { collectOperationalSample, recordOperationalAlerts } from "../lib/valo-operations";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 try {
   const sample = await collectOperationalSample((text) => {
     const config = { text, query_timeout: 1500 };

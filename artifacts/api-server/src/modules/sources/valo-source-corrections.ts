@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { type SourceTx, type SourceTarget, lockSourceState } from "./valo-source-state";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 export type ImpactInput = {
   kind: SourceTarget;
   id: string;

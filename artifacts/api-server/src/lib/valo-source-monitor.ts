@@ -11,7 +11,7 @@ import {
   processSourceImpact,
   queueExpiredSourceReviews,
 } from "../modules/sources";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 export async function registerSourceWatch(tx: SourceTx, id: string) {
   const source = referenceFor(id); // No request URL or newly discovered domain is fetched.
   await tx.execute(

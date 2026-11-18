@@ -21,7 +21,7 @@ import { workspaceTransaction, workspaceEvent, type WorkspaceTx } from "../modul
 import { createDocumentInTransaction, getDocument, ValoProblem, type WorkspaceActor } from "./valo-store";
 import { documentInput } from "./valo-validation";
 import { hasApprovedInferenceContext } from "../modules/ai";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 const workspaceDailyLimit = 30;
 /** Customer AI reservations allowed per day across every workspace. */
 export const globalDailyLimit = 120;

@@ -11,7 +11,7 @@ import { staffOperations } from "./valo-staff-operations";
 import { createStaffRoleRouter } from "../../routes/valo-staff-roles";
 import { makeVerifiedStaffSession } from "../../routes/valo-customer-access";
 import { activeStaffAssignment } from "./valo-staff-authority";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 
 test(
   "staff role governance: disposable PostgreSQL, managed-session boundary and no real role mutations",

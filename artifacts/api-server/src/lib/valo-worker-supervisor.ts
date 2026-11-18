@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { performance } from "node:perf_hooks";
-import { workerReadiness, WORKER_FRESH_MS, type WorkerHeartbeat } from "./valo-worker-health";
+import { workerReadiness, WORKER_FRESH_MS, type WorkerHeartbeat } from "../platform/valo-worker-health";
 import { environment } from "../platform/settings";
 
 export const supervisorTiming = Object.freeze({

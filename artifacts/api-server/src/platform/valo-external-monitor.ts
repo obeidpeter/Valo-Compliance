@@ -1,5 +1,5 @@
 import { workerReadiness, type WorkerHeartbeat } from "./valo-worker-health";
-import { environment } from "../platform/settings";
+import { environment } from "./settings";
 
 type Environment = Record<string, string | undefined>;
 export type MonitorCheck = "worker" | "operations";

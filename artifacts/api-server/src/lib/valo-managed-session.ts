@@ -1,6 +1,6 @@
 import { clerkClient, getAuth } from "@clerk/express";
 import type { Request } from "express";
-import { ValoProblem } from "./valo-problem";
+import { ValoProblem } from "../platform/valo-problem";
 
 export type ManagedSessionDependencies = {
   auth: (req: Request) => {

@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { desc } from "drizzle-orm";
 import { publicationSchema } from "@workspace/valo-core";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   operationalInferenceTemplateIds,
   supportsOperationalInferenceTemplate,

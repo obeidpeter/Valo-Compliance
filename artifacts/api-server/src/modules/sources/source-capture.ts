@@ -3,7 +3,7 @@ import { fetchOfficialSource, referenceFor, sourceBodyLimit, SourceFailure } fro
 import { extractSource, EXTRACTION_VERSION } from "./source-extract";
 import { storeSourceSnapshot } from "./source-storage";
 import { instrumentIdentity } from "./source-identity";
-import { assertDevelopmentRuntime } from "../../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 export async function captureReference(id: string) {
   const { db, valoSourceSnapshots } = await import("@workspace/db");
   assertDevelopmentRuntime();

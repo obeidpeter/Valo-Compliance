@@ -26,7 +26,7 @@ import {
   cancelWorkspaceExport,
 } from "./valo-workspace-export-jobs";
 import { workspaceExportStorage } from "./valo-workspace-export-storage";
-import { anonymousPrivateFileStatus } from "../../lib/valo-private-storage";
+import { anonymousPrivateFileStatus } from "../../platform/valo-private-storage";
 const bounded = <T>(p: Promise<T>, ms = 15000) =>
   Promise.race([
     p,

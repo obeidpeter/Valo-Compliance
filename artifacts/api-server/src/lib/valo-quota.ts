@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import type { db } from "@workspace/db";
-import { logger } from "./logger";
+import { logger } from "../platform/logger";
 import { quotaPolicy, type QuotaBucket, type QuotaDecision } from "./valo-quota-policy";
 export { quotaPolicy, quotaSubjectHash } from "./valo-quota-policy";
 

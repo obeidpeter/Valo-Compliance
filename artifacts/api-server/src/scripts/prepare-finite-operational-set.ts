@@ -2,7 +2,7 @@ import { desc } from "drizzle-orm";
 import { mkdir, mkdtemp, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { db, pool, valoContentVersions } from "@workspace/db";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { operationalInferenceTemplateIds } from "../lib/inference-operational-coverage";
 import { readOperationalInferenceReadiness } from "../lib/inference-operational-ready";
 import { prepareOperationalCandidateRelease } from "../modules/editorial";

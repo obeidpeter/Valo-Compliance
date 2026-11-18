@@ -7,7 +7,7 @@ import { join, resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import { Client } from "pg";
 import assert from "node:assert/strict";
-import { rehearsalConfiguration, verifyRehearsalDatabase } from "../lib/valo-runtime-activation";
+import { rehearsalConfiguration, verifyRehearsalDatabase } from "../platform/valo-runtime-activation";
 import { assignEmptyRehearsalDatabase, prepareEmptyRehearsalQueue } from "../lib/valo-production-bootstrap";
 const exec = promisify(execFile),
   root = resolve(import.meta.dirname, "../../../..");

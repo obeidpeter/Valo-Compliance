@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import type { db } from "@workspace/db";
 import { publicationSchema } from "@workspace/valo-core";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 export type SourceTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type SourceReader = Pick<SourceTx, "execute">;
 export const sourceTime = (value: unknown) =>

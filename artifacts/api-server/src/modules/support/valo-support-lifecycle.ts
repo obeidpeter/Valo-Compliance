@@ -18,7 +18,7 @@ import {
   valoContentVersions,
   valoRuleReleases,
 } from "@workspace/db";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";

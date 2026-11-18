@@ -1,4 +1,4 @@
-import { initializeApplicationRuntime, verifyRehearsalDatabase } from "../lib/valo-runtime-activation";
+import { initializeApplicationRuntime, verifyRehearsalDatabase } from "../platform/valo-runtime-activation";
 import { reconcileSourceMonitoring } from "../lib/valo-source-monitor";
 import { z } from "zod";
 import {
@@ -13,7 +13,7 @@ import { eq } from "drizzle-orm";
 import { exportQueue, EXPORT_QUEUE } from "../modules/exports";
 import { executeExport, developmentExportsOnly } from "../modules/exports";
 import { closeRenderer } from "../lib/valo-render";
-import { logger } from "../lib/logger";
+import { logger } from "../platform/logger";
 import { reconcileDueReminders } from "../modules/tasks";
 import { recoverAbandonedExports, reconcileExportOrphans } from "../modules/exports";
 import { expireGeneratedExports } from "../modules/exports";
@@ -38,7 +38,7 @@ import {
   collectOperationalSample,
   recordOperationalAlerts,
 } from "../lib/valo-operations";
-import { WorkerHealth, workerHealthServer, drainWithDeadline } from "../lib/valo-worker-health";
+import { WorkerHealth, workerHealthServer, drainWithDeadline } from "../platform/valo-worker-health";
 import { environment, setting } from "../platform/settings";
 
 await initializeApplicationRuntime();

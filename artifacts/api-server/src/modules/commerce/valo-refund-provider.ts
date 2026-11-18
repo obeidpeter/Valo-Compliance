@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { paystackRequest, sandboxPaymentsConfigured } from "./valo-paystack-contract";
-import { ValoProblem } from "../../lib/valo-problem";
+import { ValoProblem } from "../../platform/valo-problem";
 import { setting } from "../../platform/settings";
 const providerId = z
   .union([z.string().regex(/^\d{1,40}$/), z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)])

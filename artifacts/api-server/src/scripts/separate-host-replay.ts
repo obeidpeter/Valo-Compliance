@@ -4,7 +4,7 @@ import { readFile, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
-import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   assertIsolatedRecoveryTarget,
   replayRecoveryControls,

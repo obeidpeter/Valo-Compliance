@@ -1,11 +1,11 @@
 import express, { type Express } from "express";
-import { requestLogging } from "./lib/http-logging";
+import { requestLogging } from "./platform/http-logging";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
-import { requestComplexityLimit } from "./lib/request-complexity";
-import { onError } from "./lib/http-errors";
+import { requestComplexityLimit } from "./platform/request-complexity";
+import { onError } from "./platform/http-errors";
 import { setting } from "./platform/settings";
-export { onError } from "./lib/http-errors";
+export { onError } from "./platform/http-errors";
 import {
   CLERK_PROXY_PATH,
   clerkProxyMiddleware,
@@ -14,7 +14,7 @@ import {
 import valoRouter from "./routes/valo";
 import valoExportsRouter from "./routes/valo-exports";
 import router from "./routes";
-import { logger } from "./lib/logger";
+import { logger } from "./platform/logger";
 import { requestReadQuota } from "./middlewares/valo-quota";
 import { paystackWebhookRouter } from "./routes/valo-paystack-webhook";
 import { securitySignals } from "./middlewares/valo-security-signals";

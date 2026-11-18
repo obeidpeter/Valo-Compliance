@@ -3,7 +3,7 @@ import { assertDevelopmentRuntime } from "./valo-development-runtime";
 import { externalMonitorConfiguration } from "./valo-external-monitor";
 import { productionPreflight } from "./valo-production-readiness";
 import { privateStorageScope, privateObjectName } from "./valo-storage-scope";
-import { environment, setting } from "../platform/settings";
+import { environment, setting } from "./settings";
 
 type Environment = Record<string, string | undefined>;
 type Query = (sql: string) => Promise<{ rows: Record<string, unknown>[] }>;

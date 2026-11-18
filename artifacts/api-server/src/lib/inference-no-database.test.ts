@@ -87,7 +87,7 @@ test("disabled managed inference imports no runtime composition and dispatches n
 test("portable storage detector fails even if an accidental native call is caught", () => {
   const env = { ...process.env, NODE_ENV: "development", VALO_ERASURE_STORAGE_PROOF: "portable" };
   delete (env as Record<string, string | undefined>).NODE_TEST_CONTEXT;
-  const code = `const {writePrivateFile}=await import('./src/lib/valo-private-storage.ts');
+  const code = `const {writePrivateFile}=await import('./src/platform/valo-private-storage.ts');
     try{await writePrivateFile('never-sent',Buffer.from('controlled detector'));}catch(error){
       if(error.message!=='NATIVE_STORAGE_FORBIDDEN_IN_PORTABLE_PROOF')throw error;
       console.log('PORTABLE_NATIVE_DETECTOR_REACHED');
