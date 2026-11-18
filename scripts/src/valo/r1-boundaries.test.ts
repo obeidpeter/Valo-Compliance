@@ -164,3 +164,147 @@ test("R1 calls Paystack only for one-time charges, refunds and disputes and keep
     [],
   );
 });
+
+type Contract = {
+  paths: Record<string, Record<string, Operation>>;
+  components: { schemas: Record<string, { additionalProperties?: unknown; properties?: Schema }> };
+};
+const contract = () => parse(read("lib/api-spec/openapi.yaml")) as Contract;
+const pathSegments = (spec: Contract) => [
+  ...new Set(Object.keys(spec.paths).flatMap((path) => path.split("/").filter(Boolean))),
+];
+function tableNames() {
+  const tables = new Set<string>();
+  for (const file of sourceFiles("lib/db/src/schema", /\.ts$/))
+    for (const m of read(file).matchAll(/pgTable\(\s*["']([a-z_0-9]+)["']/g)) tables.add(m[1]!);
+  assert.ok(tables.size > 50, "the schema's tables were read");
+  return [...tables];
+}
+function webRoutes() {
+  const routes = [...read("artifacts/valo/src/App.tsx").matchAll(/<Route path="([^"]+)"/g)].map((m) => m[1]!);
+  assert.ok(routes.length > 20, "the web app's routes were read");
+  return routes;
+}
+const webSource = () => [
+  ...sourceFiles("artifacts/valo/src", /\.tsx?$/),
+  ...sourceFiles("artifacts/valo/app", /\.tsx?$/),
+];
+
+/** Sentences in `file` that match `claim` and do not deny it, as in release-notices.test.tsx. */
+function undeniedClaims(file: string, claim: RegExp): string[] {
+  const text = read(file);
+  const denial = /\b(not|no|never|nor|without|isn't|aren't|doesn't|don't|cannot)\b/i;
+  const found: string[] = [];
+  for (const match of text.matchAll(claim)) {
+    const before = text.slice(0, match.index);
+    const start = Math.max(...[". ", ".\n", ">", "{", "}", '"', "`"].map((end) => before.lastIndexOf(end)));
+    const rest = text.slice(match.index);
+    const end = Math.min(...[".", "<", "{", "}", '"', "`"].map((e) => rest.indexOf(e)).filter((i) => i >= 0));
+    const sentence = text
+      .slice(start + 1, match.index + end)
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!denial.test(sentence)) found.push(`${file}: ${sentence}`);
+  }
+  return found;
+}
+
+// SRV-003: "Publish providers only after identity, relevant credentials, permission and service
+// descriptions are checked; show the scope/date of verification", accepted when "no fictional
+// provider, fabricated rating or unsupported 'accredited' claim reaches production". R1 lists no
+// providers at all: a service enquiry goes to Valo's own support, so nothing claims a vetted provider.
+test("R1 lists no service providers: no provider directory, profile or rating, and no accreditation claim", () => {
+  const spec = contract();
+  const providerWords =
+    /^(providers?|professionals?|experts?|consultants?|partners?|directory|listings?|ratings?|reviews?|marketplace)$/i;
+  assert.deepEqual(
+    pathSegments(spec).filter((segment) => providerWords.test(segment)),
+    [],
+    "no API path lists or describes providers",
+  );
+  assert.deepEqual(
+    Object.keys(spec.components.schemas).filter((name) =>
+      /provider|professional|expert|consultant|partner|rating/i.test(name),
+    ),
+    [],
+    "no API schema describes a provider or a rating",
+  );
+  assert.deepEqual(
+    tableNames().filter((name) =>
+      /provider|professional|expert|consultant|partner|directory|listing|rating/.test(name),
+    ),
+    [],
+    "no table holds providers, listings or ratings",
+  );
+  assert.deepEqual(
+    webRoutes().filter((route) =>
+      /provider|professional|expert|consultant|partner|director|listing|marketplace/i.test(route),
+    ),
+    [],
+    "no web page lists providers",
+  );
+  const web = webSource();
+  assert.ok(web.length > 50, "the web app source was read");
+  const claim =
+    /\baccredit\w*|\bcertified\b|\bvetted\b|\blicensed (?:providers?|professionals?|experts?|accountants?|lawyers?|partners?|firms?)\b|\bverified (?:providers?|partners?|professionals?|experts?|firms?)\b|\btop[- ]rated\b/gi;
+  assert.deepEqual(
+    web.flatMap((file) => undeniedClaims(file, claim)),
+    [],
+    "no sentence claims an accredited, certified, licensed, verified or vetted provider",
+  );
+});
+
+// SRV-004: "R2 enables quote and availability requests. R3 paid booking requires a separately gated
+// cancellation, refund, dispute and settlement flow", accepted when "booking or payment controls
+// remain feature-disabled until that gate is approved". R1 has neither, and an enquiry takes no payment.
+test("R1 offers no booking: no booking, appointment, availability or quote request, and an enquiry takes no payment", () => {
+  const spec = contract();
+  const bookingWords = /book|appointment|availab|reservation|quote|slot|calendar|schedul/i;
+  assert.deepEqual(
+    pathSegments(spec).filter((segment) => bookingWords.test(segment)),
+    [],
+    "no API path books, schedules or quotes a service",
+  );
+  assert.deepEqual(
+    Object.keys(spec.components.schemas).filter((name) =>
+      /booking|appointment|availability|reservation|quote|timeslot/i.test(name),
+    ),
+    [],
+    "no API schema describes a booking or a quote request",
+  );
+  assert.deepEqual(
+    tableNames().filter((name) =>
+      /booking|appointment|availability|reservation|quote|slot|calendar/.test(name),
+    ),
+    [],
+    "no table holds bookings, appointments or quote requests",
+  );
+  assert.deepEqual(
+    webRoutes().filter((route) => bookingWords.test(route)),
+    [],
+    "no web page books or schedules a service",
+  );
+  // A service enquiry and a reply carry only their text, contact and consent, and accept nothing else.
+  for (const [name, fields] of [
+    ["TicketInput", ["category", "contactEmail", "scope", "sharingConsent"]],
+    ["SupportReplyInput", ["body", "expectedVersion", "idempotencyKey"]],
+  ] as const) {
+    const schema = spec.components.schemas[name]!;
+    assert.equal(schema.additionalProperties, false, `${name} accepts no other fields`);
+    assert.deepEqual(
+      Object.keys(schema.properties ?? {}).sort(),
+      fields,
+      `${name} changed: keep it payment-free`,
+    );
+  }
+  // The support case code never reaches the payment code.
+  const support = sourceFiles("artifacts/api-server/src", /\.ts$/).filter((file) =>
+    /\/valo-support-[^/]+$/.test(file),
+  );
+  assert.ok(support.length >= 3, "the support case code was read");
+  assert.deepEqual(
+    support.filter((file) => /modules\/commerce|paystack|checkout/i.test(read(file))),
+    [],
+    "support case code imports or calls no payment code",
+  );
+});

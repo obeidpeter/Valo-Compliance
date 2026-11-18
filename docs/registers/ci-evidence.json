@@ -462,6 +462,48 @@
       "file": "artifacts/api-server/src/editorial/valo-rule-release.integration.test.ts",
       "test": "a rule version is released only after its plan, source check and confirmation, and replaces the one before",
       "proves": "A synthetic rule version is released only with the operator's confirming manifest hash, after its plan passes and its source's stored text holds the quoted passage, and the checker then admits it; a failed critical scenario, a bundle the registry would refuse, a missing passage or a stale version writes nothing; each new version supersedes the one before, and version 1 is restored as version 3."
+    },
+    {
+      "requirement": "SRV-003",
+      "job": "foundation",
+      "file": "scripts/src/valo/r1-boundaries.test.ts",
+      "test": "R1 lists no service providers: no provider directory, profile or rating, and no accreditation claim",
+      "proves": "No API path or schema, database table or web page lists, describes or rates a provider, and no sentence in the web app claims an accredited, certified, licensed, verified or vetted provider unless it denies it: R1 lists no providers, so none can be fictional or unverified."
+    },
+    {
+      "requirement": "SRV-004",
+      "job": "foundation",
+      "file": "scripts/src/valo/r1-boundaries.test.ts",
+      "test": "R1 offers no booking: no booking, appointment, availability or quote request, and an enquiry takes no payment",
+      "proves": "No API path or schema, database table or web page books, schedules or quotes a service; a service enquiry and a reply accept only their category, scope, text, contact and consent fields; and the support case code reaches no payment code."
+    },
+    {
+      "requirement": "OPS-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-paystack-contract.test.ts",
+      "test": "no merchant call is made with a live key, in production, in a deployment or in a recovery run",
+      "proves": "A checkout with a live key, no key, production mode, a deployment, sandbox checkout off or an isolated recovery run is refused before any request reaches Paystack, while the same call in the development sandbox with a test key does reach the controlled transport."
+    },
+    {
+      "requirement": "OPS-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/commerce/valo-refund-provider.test.ts",
+      "test": "native Paystack refund adapter: controlled transport only, no payment credentials",
+      "proves": "The refund adapter reports itself not configured when its key is a live key or when it runs inside a deployment."
+    },
+    {
+      "requirement": "OPS-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/synthetic-data.test.ts",
+      "test": "development data is synthetic: every address in tests, fixtures, operator scripts and migrations uses a reserved domain",
+      "proves": "Every email address in the tests, fixtures, test support, operator scripts and migrations is at a domain reserved for testing, which no real mailbox uses; the one exception is a URL credential a test must see refused."
+    },
+    {
+      "requirement": "OPS-001",
+      "job": "foundation",
+      "file": "scripts/src/valo/synthetic-data.test.ts",
+      "test": "the operator journeys that sign customers in refuse to run without a Clerk test key",
+      "proves": "Each operator journey that signs customers in through Clerk throws unless it runs in development, outside a deployment, with a Clerk test key."
     }
   ]
 }

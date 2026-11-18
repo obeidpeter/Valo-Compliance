@@ -153,6 +153,72 @@ test("checkout asks Paystack only for a one-time charge, with no plan, split, su
   }
 });
 
+// OPS-001: "integration tests cannot charge production accounts". Every merchant call goes through
+// paystackRequest (r1-boundaries.test.ts), which refuses before sending anything unless it runs in
+// development, outside a deployment and a recovery run, with sandbox checkout enabled and a test key.
+test("no merchant call is made with a live key, in production, in a deployment or in a recovery run", async () => {
+  const saved = { ...process.env };
+  const realFetch = globalThis.fetch;
+  let requests = 0;
+  globalThis.fetch = async (_input, init) => {
+    requests++;
+    const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    return Response.json({
+      status: true,
+      data: { authorization_url: "https://checkout.paystack.com/synthetic", reference: body.reference },
+    });
+  };
+  const restore = () => {
+    for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
+    Object.assign(process.env, saved);
+  };
+  const configure = (change: Record<string, string | undefined>) => {
+    restore();
+    Object.assign(process.env, {
+      NODE_ENV: "development",
+      VALO_SANDBOX_CHECKOUT_ENABLED: "true",
+      PAYSTACK_SECRET_KEY: "sk_test_synthetic_control_not_a_credential",
+    });
+    delete process.env.REPLIT_DEPLOYMENT;
+    delete process.env.VALO_ISOLATED_RECOVERY;
+    for (const [key, value] of Object.entries(change))
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+  };
+  const charge = () =>
+    paystack.initialise(
+      { reference: "synthetic-order-ref", amountKobo: 150000, id: randomUUID(), workspaceId: randomUUID() },
+      "synthetic-buyer@example.invalid",
+      "https://valo.example.invalid/return",
+    );
+  try {
+    const refused = { status: 503 };
+    for (const [why, change, refusal] of [
+      ["a live key", { PAYSTACK_SECRET_KEY: "sk_live_synthetic_control_not_a_credential" }, refused],
+      ["no key", { PAYSTACK_SECRET_KEY: undefined }, refused],
+      ["production", { NODE_ENV: "production" }, refused],
+      ["a deployment", { REPLIT_DEPLOYMENT: "1" }, refused],
+      ["sandbox checkout not enabled", { VALO_SANDBOX_CHECKOUT_ENABLED: undefined }, refused],
+      [
+        "an isolated recovery run",
+        { VALO_ISOLATED_RECOVERY: "1" },
+        { code: "RECOVERY_EXTERNAL_EFFECTS_DISABLED" },
+      ],
+    ] as const) {
+      configure(change);
+      await assert.rejects(charge(), refusal, why);
+    }
+    assert.equal(requests, 0, "no request reached the merchant");
+    // The same call in the sandbox does reach the controlled transport, so each refusal above is real.
+    configure({});
+    assert.equal(await charge(), "https://checkout.paystack.com/synthetic");
+    assert.equal(requests, 1);
+  } finally {
+    globalThis.fetch = realFetch;
+    restore();
+  }
+});
+
 test("only one-time charge, refund and dispute events are processed; subscription, invoice and transfer events are not", () => {
   const processed = {
     "charge.success": "charge",
