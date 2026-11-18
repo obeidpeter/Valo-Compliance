@@ -16,6 +16,7 @@ import {
   type Citation,
   type TestRecord,
 } from "./ci-evidence";
+import { readAreaCoverage } from "./code-coverage";
 
 const reporter = fileURLToPath(new URL("./test-results-reporter.mjs", import.meta.url));
 
@@ -195,6 +196,57 @@ test("CI must record, check and collect the results of every job the register ci
     assert.match(problems.join("\n"), /foundation does not upload test-results-foundation/);
     assert.match(problems.join("\n"), /does not wait for the foundation job/);
     assert.match(problems.join("\n"), /does not check every citation/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("after a re-run, each job's latest attempt is the one counted, and a job not re-run keeps its own", () => {
+  const root = mkdtempSync(join(tmpdir(), "valo-ci-attempts-"));
+  const record = (folder: string, test: string, status: TestRecord["status"]) => {
+    mkdirSync(join(root, folder), { recursive: true });
+    const line: TestRecord = {
+      file: "scripts/src/valo/ci-evidence.test.ts",
+      path: [test],
+      status,
+      kind: "test",
+    };
+    writeFileSync(join(root, folder, `${test}-${status}.jsonl`), `${JSON.stringify(line)}\n`, { flag: "a" });
+  };
+  const coverage = (folder: string, area: string, covered: number) => {
+    mkdirSync(join(root, folder), { recursive: true });
+    const counts = [covered, 10];
+    const summary = { area, branches: counts, lines: counts, functions: counts, files: [] };
+    writeFileSync(join(root, folder, `code-coverage-${area}.json`), JSON.stringify(summary));
+  };
+  try {
+    // Attempt 1 of the foundation job was cancelled after one test; attempt 2 ran them all.
+    record("test-results-foundation-attempt-1", "early", "pass");
+    record("test-results-foundation-attempt-2", "early", "pass");
+    record("test-results-foundation-attempt-2", "late", "pass");
+    // A later attempt that fails is not rescued by an earlier pass.
+    record("test-results-postgres-attempt-1", "flaky", "pass");
+    record("test-results-postgres-attempt-3", "flaky", "fail");
+    coverage("test-results-postgres-attempt-1", "payments", 9);
+    coverage("test-results-postgres-attempt-3", "payments", 7);
+    // The phone job was not re-run: its first attempt still counts.
+    record("test-results-web-performance-attempt-1", "phone", "pass");
+    const records = readTestRecords(root);
+    const result = (name: string) =>
+      citationResult(cite("scripts/src/valo/ci-evidence.test.ts", name), records);
+    assert.equal(result("late"), "pass");
+    assert.equal(result("early"), "pass");
+    assert.equal(
+      records.filter((r) => r.path[0] === "early").length,
+      1,
+      "the superseded attempt is not read",
+    );
+    assert.equal(result("flaky"), "fail");
+    assert.equal(result("phone"), "pass");
+    assert.deepEqual(
+      readAreaCoverage(root).map((a) => [a.area, a.branches[0]]),
+      [["payments", 7]],
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

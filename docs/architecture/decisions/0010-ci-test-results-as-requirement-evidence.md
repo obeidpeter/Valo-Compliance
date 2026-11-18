@@ -19,7 +19,9 @@ security or architecture checks counted toward a requirement, and nothing new wo
 - In CI, every job with citations loads `scripts/src/valo/test-results-reporter.mjs`
   through `NODE_OPTIONS`, next to the usual `spec` output. It records how every test
   ended (passed, failed, skipped or todo, and the same for the tests inside it), and
-  the job uploads the records as `test-results-<job>`.
+  the job uploads the records as `test-results-<job>-attempt-<n>`, n being the run attempt.
+  The evidence job reads each job's latest attempt, so re-running a job replaces its earlier
+  results.
 - Each such job ends by checking its citations (`valo:ci-evidence --job <job>`). A
   cited test counts only when it ran and passed and nothing inside it failed, was
   skipped or is a todo. Otherwise the job fails, so green CI on a commit means every

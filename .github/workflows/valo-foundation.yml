@@ -71,7 +71,9 @@ jobs:
     # PostgreSQL 16 recovery tooling is part of the supported CI target.
     # ubuntu-latest advanced to 26.04, which no longer supplies that package.
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    # The job takes about six minutes, but the Playwright browser download alone has taken from
+    # 16 seconds to 6 minutes, which pushed the job past a 10-minute limit. 20 still stops a hang.
+    timeout-minutes: 20
     env:
       # How each test ends, for the requirement evidence register (decision 0010). NODE_OPTIONS
       # is set for the whole job here because the runner refuses it through $GITHUB_ENV.
@@ -264,15 +266,16 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: test-results-foundation
+          name: test-results-foundation-attempt-${{ github.run_attempt }}
           path: generated-artifacts/test-results/foundation
           if-no-files-found: ignore
   postgres:
     name: Synthetic PostgreSQL isolation and concurrency
     runs-on: ubuntu-24.04
     # The NFR-011 coverage steps run the payment, auth and rules tests a second time and fail an
-    # area below 80% branch coverage.
-    timeout-minutes: 15
+    # area below 80% branch coverage. The job takes 10 to 13 minutes, of which the Chromium
+    # download has taken up to 5, so 15 left too little room; 25 still stops a hang.
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:16
@@ -441,7 +444,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: test-results-postgres
+          name: test-results-postgres-attempt-${{ github.run_attempt }}
           path: generated-artifacts/test-results/postgres
           if-no-files-found: ignore
   container-images:
@@ -498,7 +501,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: test-results-web-performance
+          name: test-results-web-performance-attempt-${{ github.run_attempt }}
           path: generated-artifacts/test-results/web-performance
           if-no-files-found: ignore
   evidence:
@@ -522,6 +525,9 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
       - name: Collect the test results each job recorded
+        # Every attempt's upload lands in a folder of its own, and the readers count only each
+        # job's latest attempt, so re-running a job replaces its earlier results
+        # (scripts/src/valo/result-attempts.ts).
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: test-results-*

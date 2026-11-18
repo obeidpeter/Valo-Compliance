@@ -1,11 +1,12 @@
 import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { repositoryRoot } from "./architecture-check";
 import { COVERAGE_AREAS, NFR_011_MINIMUM_BRANCH_PERCENT, type CoverageAreaName } from "./code-coverage-areas";
+import { currentResultFiles } from "./result-attempts";
 
 /**
  * NFR-011's coverage report. Runs an area's tests (code-coverage-areas.ts) in one Node test run with
@@ -163,19 +164,14 @@ export function runArea(area: CoverageAreaName, resultsDirectory: string) {
   return { ...run, summary: { ...run.summary, notRerun: definition.notRerun } };
 }
 
-/** The area summaries the database job wrote, wherever they sit under the results folder. */
+/**
+ * The area summaries the database job wrote, wherever they sit under the results folder, from
+ * its latest attempt (result-attempts.ts).
+ */
 export function readAreaCoverage(directory: string): AreaCoverage[] {
-  const found: AreaCoverage[] = [];
-  const walk = (folder: string) => {
-    for (const entry of readdirSync(folder, { withFileTypes: true })) {
-      const path = join(folder, entry.name);
-      if (entry.isDirectory()) walk(path);
-      else if (/^code-coverage-[a-z]+\.json$/.test(entry.name))
-        found.push(JSON.parse(readFileSync(path, "utf8")) as AreaCoverage);
-    }
-  };
-  if (existsSync(directory)) walk(directory);
-  return found.sort((a, b) => a.area.localeCompare(b.area));
+  return currentResultFiles(directory, (name) => /^code-coverage-[a-z]+\.json$/.test(name))
+    .map((path) => JSON.parse(readFileSync(path, "utf8")) as AreaCoverage)
+    .sort((a, b) => a.area.localeCompare(b.area));
 }
 
 /** NFR-011's part of the readiness report. */
