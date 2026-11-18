@@ -417,9 +417,15 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-catalogue-visibility-db
       - name: Prove refusals and signature failures are counted for the security alerts (SEC-008)
         run: pnpm --filter @workspace/api-server test:valo-security-signals-db
-      # Publishes synthetic rule versions, so it runs last, after every suite that reads the registry.
+      # Publishes synthetic rule versions, so it runs after every suite that reads the registry.
       - name: Prove a rule version is released only after its plan, source check and confirmation (ADM-004)
         run: pnpm --filter @workspace/api-server test:valo-rule-release-db
+      # Adds many synthetic workspaces and request counts, so it runs after every other suite. The
+      # requirement's 30-minute run is the same test with VALO_LOAD_SECONDS=1800.
+      - name: Measure ordinary requests and catalogue search at 20 requests per second (NFR-003)
+        run: pnpm --filter @workspace/api-server test:valo-load-db
+      - name: Measure export times under five parallel jobs, queue time included (NFR-004)
+        run: pnpm --filter @workspace/api-server test:valo-export-timing-db
       - name: Check that no transaction took a second pooled connection
         run: node artifacts/api-server/src/test-support/nested-connection-report.mjs
       - name: Check every test the evidence register cites for this job passed
