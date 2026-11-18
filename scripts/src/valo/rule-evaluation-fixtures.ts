@@ -389,7 +389,7 @@ export function executeRuleFixture(f: RuleFixture) {
   );
   assert.equal("complianceScore" in result, false);
   if (actual === "held") assert.equal(result.sourceBackedRecommendations, 0);
-  if (actual === "unknown") assert.ok(result.items[0].missingFacts.length > 0);
+  if (actual === "unknown") assert.ok((result.items[0]?.missingFacts.length ?? 0) > 0);
   assert.equal(
     assess(f.facts, [...f.rules].reverse(), f.asOfDate, evaluationDate, { fixtureMode: f.fixtureMode })
       .resultHash,

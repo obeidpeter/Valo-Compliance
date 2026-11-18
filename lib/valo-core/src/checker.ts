@@ -419,7 +419,7 @@ export function assess(
       missingFacts: truth === "unknown" ? uniq([...scopeMissing, ...results.flatMap((p) => p.missing)]) : [],
       matchedFacts:
         truth === "true"
-          ? uniq(condition.predicates.filter((_, i) => results[i].truth === "true").map((p) => p.field))
+          ? uniq(condition.predicates.filter((_, i) => results[i]!.truth === "true").map((p) => p.field))
           : [],
       nextStep:
         truth === "unknown"

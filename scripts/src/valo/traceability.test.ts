@@ -9,6 +9,9 @@ import {
 } from "@workspace/valo-core";
 import { readiness, requirements, requirementStatus } from "@workspace/valo-records";
 
+const [firstRequirement] = requirements;
+assert.ok(firstRequirement, "a requirement is registered");
+
 test("baseline preserves all 40 original identifiers and exact capability counts", () => {
   assert.equal(baselineTemplates.length, 40);
   assert.equal(new Set(baselineTemplates.map((t) => t.id)).size, 40);
@@ -101,12 +104,12 @@ test("27 mappings, 79 held source rows and the SCUML alias remain distinct from 
   );
 });
 test("implementation path alone never verifies a requirement", () => {
-  assert.equal(requirementStatus({ ...requirements[0], blockers: [] }), "in_progress");
+  assert.equal(requirementStatus({ ...firstRequirement, blockers: [] }), "in_progress");
 });
 test("passing test alone never verifies a requirement", () => {
   assert.equal(
     requirementStatus({
-      ...requirements[0],
+      ...firstRequirement,
       blockers: [],
       evidence: [{ kind: "test", result: "pass", path: "synthetic", hash: sha256("synthetic") }],
     }),
@@ -120,11 +123,11 @@ test("a blocked gate cannot be accepted even with passing evidence", () => {
     path: "synthetic",
     hash: sha256("synthetic"),
   }));
-  assert.equal(requirementStatus({ ...requirements[0], evidence }), "blocked");
-  assert.equal(requirementStatus({ ...requirements[0], evidence, blockers: [] }), "verified");
+  assert.equal(requirementStatus({ ...firstRequirement, evidence }), "blocked");
+  assert.equal(requirementStatus({ ...firstRequirement, evidence, blockers: [] }), "verified");
   assert.equal(
     requirementStatus({
-      ...requirements[0],
+      ...firstRequirement,
       blockers: [],
       evidence: evidence.map((e) => ({ ...e, hash: "" })),
     }),
