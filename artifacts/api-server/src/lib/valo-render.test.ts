@@ -100,3 +100,50 @@ test("PDFs share one browser, render in isolated contexts and never exceed five 
   assert.ok(after.peakParallel <= 5, `peak ${after.peakParallel}`);
   await closeRenderer();
 });
+
+test("no PDF line is cut in two at a page break", async () => {
+  // Chromium prints the part of a line that crosses a page's content edge again at the top of
+  // the next page, as a sliver of glyphs a reader extracts as text. With the font's own line
+  // height this happened at some breaks (TPL-22 among the operational forms). Each document here
+  // starts with one more short paragraph, so its page breaks fall somewhere else in its lines.
+  const { closeRenderer } = await import("./valo-render");
+  const { execFile } = await import("node:child_process");
+  const { mkdtemp, rm, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { promisify } = await import("node:util");
+  const contentTop = (25 / 25.4) * 72; // the 25 mm top margin, in points
+  const text =
+    "Agreed quarterly payments [gross, in naira] apply by typed request; any query goes to the supplying party in writing.";
+  const directory = await mkdtemp(join(tmpdir(), "valo-render-breaks-"));
+  const cut: string[] = [];
+  try {
+    for (let extra = 0; extra < 20; extra++) {
+      const input = structuredClone(syntheticDocument);
+      input.content.blocks = Array.from({ length: 70 + extra }, (_, i) => ({
+        id: `section-${i + 1}`,
+        type: "paragraph" as const,
+        text:
+          i < extra
+            ? "Short line."
+            : [text, `${text} ${text}`, "Signed for the supplying party [typed]."][i % 3]!,
+        rows: [],
+      }));
+      const path = join(directory, `${extra}.pdf`);
+      await writeFile(path, await renderDocument(input, "pdf", 1));
+      const layout = (
+        await promisify(execFile)("pdftotext", ["-bbox-layout", path, "-"], { maxBuffer: 1 << 24 })
+      ).stdout;
+      for (const [index, page] of layout.split("<page ").slice(1).entries())
+        for (const word of page.matchAll(
+          /<word xMin="[\d.]+" yMin="([\d.]+)" xMax="[\d.]+" yMax="([\d.]+)">([^<]*)</g,
+        ))
+          if (Number(word[1]) < contentTop - 0.5 && Number(word[2]) > contentTop - 0.5)
+            cut.push(`document ${extra}, page ${index + 1}: "${word[3]}"`);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+    await closeRenderer();
+  }
+  assert.deepEqual(cut, [], "lines cut at a page break");
+});
