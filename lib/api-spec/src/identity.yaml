@@ -1,0 +1,24 @@
+# The staff session's second-factor check.
+paths:
+  /session/mfa:
+    get:
+      operationId: verifySessionMfa
+      tags: [staff]
+      summary: Check that the signed-in staff session recently verified both factors
+      description: A read-only provider check. It grants no application role and returns no identity, token or session identifier.
+      responses:
+        "200":
+          description: Both factors were verified recently.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionMfaVerification" }
+        "403":
+          description: A second factor must be set up (MFA_ENROLLMENT_REQUIRED) or both factors verified again (MFA_REVERIFICATION_REQUIRED).
+schemas:
+  SessionMfaVerification:
+    type: object
+    additionalProperties: false
+    required: [verified, checkedAt]
+    properties:
+      verified: { type: boolean, enum: [true] }
+      checkedAt: { type: string, format: date-time }

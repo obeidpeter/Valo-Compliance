@@ -1,0 +1,105 @@
+# Document exports and their files.
+paths:
+  /v1/documents/{id}/exports:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: listDocumentExports
+      tags: [workspace]
+      responses:
+        "200":
+          description: Authorised saved-revision export jobs; private keys are never returned.
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ExportJob" } }
+    post:
+      operationId: createDocumentExport
+      tags: [workspace]
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ExportInput" }
+      responses:
+        "202":
+          description: "Durably recorded export request, or the existing matching job."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExportJob" }
+        "409": { description: Key reused for different content or conflicting operation. }
+        "422": { description: Invalid fields or missing deliberate draft acknowledgement. }
+  /v1/exports/{id}/retry:
+    post:
+      operationId: retryDocumentExport
+      tags: [workspace]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ExportRetryInput" }
+      responses:
+        "202":
+          description: "Retry or expired-file regeneration recorded, or the existing job state."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExportJob" }
+        "409":
+          description: "Retry limit reached or regeneration is held for privacy review."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
+  /v1/exports/{id}/file:
+    get:
+      operationId: downloadDocumentExport
+      tags: [workspace]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: "Authorised integrity-checked private file, never publicly cached."
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema: { type: string, format: binary }
+        "404": { description: "Missing, unavailable or unauthorised file." }
+        "410":
+          description: "Export expired or its availability changed during retrieval. Regenerate from the saved revision."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiProblem" }
+schemas:
+  ExportInput:
+    type: object
+    additionalProperties: false
+    required: [revisionId, format, acknowledgeDraft]
+    properties:
+      revisionId: { type: string, format: uuid }
+      format: { type: string, enum: [docx, pdf] }
+      acknowledgeDraft: { type: boolean }
+  ExportRetryInput: { type: object, additionalProperties: false }
+  ExportJob:
+    type: object
+    additionalProperties: false
+    required: [id, documentId, revisionId, revision, format, renderVersion, sourceHash, status, attempts, errorCode, checksum, size, downloadUrl, createdAt, updatedAt]
+    properties:
+      id: { type: string, format: uuid }
+      documentId: { type: string, format: uuid }
+      revisionId: { type: string, format: uuid }
+      revision: { type: integer }
+      format: { type: string, enum: [docx, pdf] }
+      renderVersion: { type: string }
+      sourceHash: { type: string }
+      status: { type: string, enum: [queued, running, retrying, ready, failed] }
+      attempts: { type: integer }
+      errorCode: { type: [string, "null"] }
+      checksum: { type: [string, "null"] }
+      size: { type: [integer, "null"] }
+      downloadUrl: { type: [string, "null"] }
+      expiresAt: { type: [string, "null"], format: date-time }
+      createdAt: { type: string, format: date-time }
+      updatedAt: { type: string, format: date-time }

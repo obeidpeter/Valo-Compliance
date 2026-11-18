@@ -106,7 +106,7 @@ jobs:
       - name: Check the generated API client matches the contract
         run: |
           pnpm --filter @workspace/api-spec run codegen
-          git diff --exit-code -- lib/api-zod lib/api-client-react
+          git diff --exit-code -- lib/api-spec/openapi.yaml lib/api-zod lib/api-client-react
       - name: Check the database schema matches its migrations and the guarded push
         run: |
           pnpm --filter @workspace/db test:schema-drift

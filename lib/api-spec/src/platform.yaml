@@ -1,0 +1,45 @@
+# Health and the factual release status.
+paths:
+  /public/status:
+    get:
+      operationId: getBuildStatus
+      responses:
+        "200":
+          description: Factual development release status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuildStatus"
+        "429": { $ref: "#/components/responses/QuotaError" }
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+schemas:
+  BuildStatus:
+    type: object
+    required: [receivedRequirements, expectedRequirements, publishedTemplates, p0Passed, r2Unlocked, livePaymentsEnabled, notice]
+    properties:
+      receivedRequirements: { type: integer }
+      expectedRequirements: { type: integer }
+      publishedTemplates: { type: integer }
+      p0Passed: { type: boolean }
+      r2Unlocked: { type: boolean }
+      livePaymentsEnabled: { type: boolean }
+      notice: { type: string }
+  HealthStatus:
+    type: object
+    properties:
+      status:
+        type: string
+    required:
+      - status

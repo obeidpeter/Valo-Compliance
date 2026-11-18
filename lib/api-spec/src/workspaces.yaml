@@ -1,0 +1,78 @@
+# The signed-in workspace and its business profile.
+paths:
+  /workspace:
+    get:
+      operationId: getWorkspace
+      responses:
+        "200":
+          description: Server resolved owner workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
+  /workspace/profile:
+    put:
+      operationId: saveBusinessProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileInput"
+      responses:
+        "200":
+          description: Versioned business profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
+schemas:
+  Profile:
+    type: object
+    additionalProperties: false
+    required: [businessName, legalForm, registrationStatus, activities, state, lga, employees, turnoverBand, turnoverYear, turnoverMetric, turnoverCurrency, premises, manufacturing, importing, personalData, marketingConsent]
+    properties:
+      businessName: { type: string, minLength: 1, maxLength: 160 }
+      legalForm: { type: string, enum: [unknown, sole_proprietor, partnership, limited_company, incorporated_trustees, company_limited_by_guarantee] }
+      registrationStatus: { type: string, enum: [unknown, registered, unregistered, pending] }
+      activities: { type: array, minItems: 1, maxItems: 10, items: { type: string, minLength: 1, maxLength: 120 } }
+      state:
+        type: string
+        enum: [unknown, unanswered, Abia, Adamawa, Akwa Ibom, Anambra, Bauchi, Bayelsa, Benue, Borno, Cross River, Delta, Ebonyi, Edo, Ekiti, Enugu, FCT, Gombe, Imo, Jigawa, Kaduna, Kano, Katsina, Kebbi, Kogi, Kwara, Lagos, Nasarawa, Niger, Ogun, Ondo, Osun, Oyo, Plateau, Rivers, Sokoto, Taraba, Yobe, Zamfara]
+      lga: { type: string, maxLength: 100 }
+      employees: { type: string, pattern: "^(unknown|unanswered|not_applicable|[0-9]{1,7})$" }
+      turnoverBand: { type: string, enum: [unknown, unanswered, not_applicable, under_5m, 5m_to_25m, 25m_to_100m, over_100m] }
+      turnoverYear: { type: string, pattern: "^(unknown|[0-9]{4})$" }
+      turnoverMetric: { type: string, enum: [unknown, gross_revenue] }
+      turnoverCurrency: { type: string, enum: [unknown, NGN] }
+      premises: { $ref: "#/components/schemas/Answer" }
+      manufacturing: { $ref: "#/components/schemas/Answer" }
+      importing: { $ref: "#/components/schemas/Answer" }
+      personalData: { $ref: "#/components/schemas/Answer" }
+      marketingConsent: { type: boolean }
+  ProfileInput:
+    type: object
+    additionalProperties: false
+    required: [expectedRevision, profile]
+    properties:
+      expectedRevision: { type: integer, minimum: 0 }
+      profile: { $ref: "#/components/schemas/Profile" }
+  Workspace:
+    type: object
+    required: [id, profileRevision, profile, documentCount]
+    properties:
+      id: { type: string }
+      profileRevision: { type: integer }
+      profile:
+        oneOf:
+          - { $ref: "#/components/schemas/Profile" }
+          - { type: "null" }
+      documentCount: { type: integer }

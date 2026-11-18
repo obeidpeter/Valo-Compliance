@@ -53,7 +53,7 @@ everything else. This is deliberate: no production launch is approved.
 
 | Package | Responsibility |
 | --- | --- |
-| `lib/api-spec` | The OpenAPI contract, the single source of truth for HTTP shapes. |
+| `lib/api-spec` | The OpenAPI contract, the single source of truth for HTTP shapes: one file per module in `src/`, which `bundle.mjs` joins into `openapi.yaml`. |
 | `lib/api-zod`, `lib/api-client-react` | Generated validation and React Query client. Never edited by hand. |
 | `lib/db` | Drizzle schema, append-only SQL migrations, guarded schema tooling. |
 | `lib/valo-core` | Logic shared by API and web: guided forms, money, checker, publication rules, content catalogue and inventory. |
