@@ -5,9 +5,9 @@ import { eq, sql } from "drizzle-orm";
 import { db, valoRuleReleases } from "@workspace/db";
 import { allSourceLeads, assess, checkerFactsSchema, restoredRuleVersion } from "@workspace/valo-core";
 import { syntheticRuleRelease } from "../test-support/synthetic-rule-release";
-import { currentAssessmentDate, releasedRegistry } from "./valo-assessments";
+import { currentAssessmentDate, releasedRegistry } from "../lib/valo-assessments";
 import { applyStoredRuleRelease, planStoredRuleRelease, type RuleReleaseRequest } from "./valo-rule-release";
-import { registerSourceWatch } from "./valo-source-monitor";
+import { registerSourceWatch } from "../lib/valo-source-monitor";
 
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
 const facts = checkerFactsSchema.parse({

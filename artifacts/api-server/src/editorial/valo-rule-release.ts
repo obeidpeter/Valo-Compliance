@@ -8,11 +8,11 @@ import {
   type RuleReleasePlan,
   type RuleScenario,
 } from "@workspace/valo-core";
-import { bindVerifiedSources, verifyReleasedSources } from "../editorial/source-release-bindings";
-import { readSourceText } from "../editorial/source-storage";
-import { currentAssessmentDate, releasedRegistry, ruleReleaseEligible } from "./valo-assessments";
-import { assertDevelopmentRuntime } from "./valo-development-runtime";
-import { lockSourceState } from "./valo-source-state";
+import { bindVerifiedSources, verifyReleasedSources } from "./source-release-bindings";
+import { readSourceText } from "./source-storage";
+import { currentAssessmentDate, releasedRegistry, ruleReleaseEligible } from "../lib/valo-assessments";
+import { assertDevelopmentRuntime } from "../lib/valo-development-runtime";
+import { lockSourceState } from "../lib/valo-source-state";
 
 /** A new version of a rule, as the editorial pipeline hands it over for release (ADM-004). */
 export type RuleReleaseRequest = {

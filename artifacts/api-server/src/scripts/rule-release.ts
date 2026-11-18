@@ -4,7 +4,7 @@ import {
   applyStoredRuleRelease,
   planStoredRuleRelease,
   type RuleReleaseRequest,
-} from "../lib/valo-rule-release";
+} from "../editorial/valo-rule-release";
 
 /**
  * Operator command, development only (ADM-004). Plans or applies the release of a rule version from
