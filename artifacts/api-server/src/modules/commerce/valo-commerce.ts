@@ -15,7 +15,7 @@ import {
   valoWorkspaces,
 } from "@workspace/db";
 import { z } from "zod";
-import { liveOperationalVersions } from "../../lib/valo-released-content";
+import { liveOperationalVersions } from "../catalogue";
 import { authorizeWorkspaceWrite, ValoProblem, type WorkspaceActor } from "../../lib/valo-store";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
 import {

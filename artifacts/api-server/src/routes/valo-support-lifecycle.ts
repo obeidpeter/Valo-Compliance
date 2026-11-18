@@ -33,7 +33,7 @@ import {
   contentSupportEscalations,
   actOnContentSupportEscalation,
   type SupportStaffActor,
-} from "../lib/valo-support-lifecycle";
+} from "../modules/support";
 
 // Responses are parsed with the contract's schemas, so a customer reply can never carry
 // the staff-only fields (assignment, internal events, content referrals).

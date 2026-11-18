@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { eq, inArray, sql } from "drizzle-orm";
-import { workspaceActorFromRecord } from "../platform/workspace-context";
+import { workspaceActorFromRecord } from "../../platform/workspace-context";
 
 /** Drizzle reports database errors as "Failed query: ..." with the database's own error
  * as the cause; match the database message anywhere in that chain. */
@@ -22,7 +22,7 @@ test(
     timeout: 60000,
   },
   async (t) => {
-    const { assertDevelopmentRuntime } = await import("./valo-development-runtime");
+    const { assertDevelopmentRuntime } = await import("../../lib/valo-development-runtime");
     assertDevelopmentRuntime();
     assert.ok(
       ["localhost", "127.0.0.1"].includes(new URL(process.env.DATABASE_URL!).hostname),
@@ -42,11 +42,11 @@ test(
       valoWorkspaces,
       valoEvents,
     } = await import("@workspace/db");
-    const { resolveWorkspace, createTicket, ValoProblem } = await import("./valo-store");
-    const { saveAccessSupport, workspaceDataExport } = await import("./valo-customer-access");
+    const { resolveWorkspace, createTicket, ValoProblem } = await import("../../lib/valo-store");
+    const { saveAccessSupport, workspaceDataExport } = await import("../../lib/valo-customer-access");
     const api = await import("./valo-support-lifecycle");
     const { digest } = await import("@workspace/valo-core");
-    const { heldSourceBundle } = await import("./valo-source-controls.fixtures");
+    const { heldSourceBundle } = await import("../../lib/valo-source-controls.fixtures");
     const prefix = `synthetic-support-${randomUUID()}`,
       a = await resolveWorkspace(`${prefix}-a`),
       b = await resolveWorkspace(`${prefix}-b`);
@@ -492,7 +492,7 @@ test(
         async () => {
           const { default: express } = await import("express");
           const { makeSupportOperationsRouter, supportCustomerRouter } =
-            await import("../routes/valo-support-lifecycle");
+            await import("../../routes/valo-support-lifecycle");
           const app = express();
           app.use(express.json());
           app.use(

@@ -19,8 +19,8 @@ test(
     assert.equal(process.env.NODE_ENV, "development");
     assert.ok(!process.env.REPLIT_DEPLOYMENT);
     const { db, pool, valoEntitlements, valoOrders, valoPrices } = await import("@workspace/db");
-    const { resolveWorkspace } = await import("./valo-store");
-    const { financeHeldFixture } = await import("../modules/commerce/valo-finance-test-fixture");
+    const { resolveWorkspace } = await import("../../lib/valo-store");
+    const { financeHeldFixture } = await import("../commerce/valo-finance-test-fixture");
     const { requirePurchaseForPricedMaster } = await import("./valo-released-content");
     try {
       const tag = randomUUID();

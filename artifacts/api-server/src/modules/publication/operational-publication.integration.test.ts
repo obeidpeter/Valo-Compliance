@@ -4,7 +4,7 @@ import { pool, db, valoContentVersions, valoPublicationPolicies } from "@workspa
 import { desc, eq } from "drizzle-orm";
 import { evaluatePublication } from "@workspace/valo-core";
 import { publishOperationalVersion, withdrawOperationalVersion } from "./publication-publisher";
-import { liveOperationalVersions, readReleasedMaster } from "../../lib/valo-released-content";
+import { liveOperationalVersions, readReleasedMaster } from "../catalogue/valo-released-content";
 const enabled =
   process.env.VALO_PUBLICATION_DB_TESTS === "synthetic-development-only" &&
   process.env.NODE_ENV === "development" &&

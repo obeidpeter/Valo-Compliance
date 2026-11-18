@@ -1,12 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import {
-  db,
-  valoContentVersions,
-  valoPublicationPolicies,
-  valoDocuments,
-  valoPrices,
-  valoEntitlements,
-} from "@workspace/db";
+import type { db, valoContentVersions } from "@workspace/db";
 import { evaluatePublication, publicationSchema, coveragePlan } from "@workspace/valo-core";
 import {
   developmentPublicationOnly,
@@ -14,15 +7,15 @@ import {
   getPublicationArtifact,
   type ArtifactRef,
   currentOperationalPermission,
-} from "../modules/publication";
+} from "../publication";
 import {
   createDocumentInTransaction,
   getDocument,
   ValoProblem,
   authorizeWorkspaceWrite,
   type WorkspaceActor,
-} from "./valo-store";
-import { documentInput } from "./valo-validation";
+} from "../../lib/valo-store";
+import { documentInput } from "../../lib/valo-validation";
 import {
   paginateReleasedItems,
   templateCategory,
@@ -30,8 +23,8 @@ import {
   type CatalogueQuery,
   type ReleasedLibraryItem,
 } from "./valo-catalogue";
-import { setting } from "../platform/settings";
-import { lockSourceState, sourceTargetAllowed } from "./valo-source-state";
+import { setting } from "../../platform/settings";
+import { lockSourceState, sourceTargetAllowed } from "../../lib/valo-source-state";
 export function releaseVisible(
   row: typeof valoContentVersions.$inferSelect,
   policyHash: string,
@@ -48,6 +41,7 @@ export function releaseVisible(
   );
 }
 export async function liveReleasedVersions() {
+  const { db, valoContentVersions, valoPublicationPolicies } = await import("@workspace/db");
   if (setting("NODE_ENV") !== "development" || setting("REPLIT_DEPLOYMENT")) return [];
   const currentPolicy = await operationalPolicy();
   const rows = await db
@@ -288,6 +282,7 @@ const evidenceUnresolved = () =>
  * only its status to change), so evidence read here still applies under the lock.
  */
 export async function checkReleaseEvidence(id: string): Promise<CheckedRelease> {
+  const { db, valoContentVersions, valoPublicationPolicies } = await import("@workspace/db");
   let operationalEvidence = false;
   const [row] = await db.select().from(valoContentVersions).where(eq(valoContentVersions.id, id));
   if (row) {
@@ -315,6 +310,7 @@ export async function lockedLiveVersion(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   release: CheckedRelease,
 ) {
+  const { valoContentVersions, valoPublicationPolicies } = await import("@workspace/db");
   await lockSourceState(tx);
   const [row] = await tx
     .select()
@@ -347,6 +343,7 @@ export async function requirePurchaseForPricedMaster(
   actor: WorkspaceActor,
   row: typeof valoContentVersions.$inferSelect,
 ) {
+  const { valoEntitlements, valoPrices } = await import("@workspace/db");
   // Baseline TPL-01..12 are always free; a price record cannot silently change that contract.
   if (/^TPL-(0[1-9]|1[0-2])$/.test(row.templateId)) return;
   const [price] = await tx
@@ -374,6 +371,7 @@ export async function requirePurchaseForPricedMaster(
     throw new ValoProblem(403, "This workspace does not have an active purchase for this template version.");
 }
 export async function createReleasedTemplateDraft(actor: WorkspaceActor, id: string) {
+  const { db, valoDocuments } = await import("@workspace/db");
   developmentPublicationOnly();
   const release = await checkReleaseEvidence(id);
   const documentId = await db.transaction(async (tx) => {
@@ -391,6 +389,7 @@ export async function createReleasedTemplateDraft(actor: WorkspaceActor, id: str
   return getDocument(actor, documentId);
 }
 export async function readReleasedMaster(id: string, format: "docx" | "pdf", actor?: WorkspaceActor) {
+  const { db } = await import("@workspace/db");
   developmentPublicationOnly();
   const release = await checkReleaseEvidence(id);
   const row = await db.transaction(async (tx) => {

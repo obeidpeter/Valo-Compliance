@@ -9,12 +9,12 @@ import {
   valoReminderPreferences,
   type ValoReminderOutbox,
 } from "@workspace/db";
-import { ValoProblem } from "./valo-store";
-import { releasedRegistry, workspaceTransaction } from "../modules/rules";
+import { ValoProblem } from "../../lib/valo-store";
+import { releasedRegistry, workspaceTransaction } from "../rules";
 import { reminderInstant } from "./valo-tasks";
 import { configuredReminderSender } from "./valo-reminder-resend";
 import type { ReminderSender } from "./valo-reminder-sender";
-import { workspaceActorFromRecord } from "../platform/workspace-context";
+import { workspaceActorFromRecord } from "../../platform/workspace-context";
 
 export type { ReminderSender } from "./valo-reminder-sender";
 export const reminderAttemptLimit = 5;

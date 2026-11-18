@@ -14,12 +14,12 @@ import {
   valoEvents,
   valoWorkspaces,
 } from "@workspace/db";
-import { resolveWorkspace, saveProfile } from "./valo-store";
-import * as assessments from "../modules/rules/valo-assessments";
+import { resolveWorkspace, saveProfile } from "../../lib/valo-store";
+import * as assessments from "../rules/valo-assessments";
 import * as tasks from "./valo-tasks";
 import { processReminder } from "./valo-reminder-worker";
-import { syntheticProfile } from "./valo-test-fixtures";
-import { workspaceActorFromRecord } from "../platform/workspace-context";
+import { syntheticProfile } from "../../lib/valo-test-fixtures";
+import { workspaceActorFromRecord } from "../../platform/workspace-context";
 test(
   "development saved assessments, task isolation, concurrency and reminder outbox",
   {

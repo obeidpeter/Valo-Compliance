@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { db } from "@workspace/db";
+import type { db } from "@workspace/db";
 import { logger } from "./logger";
 import { quotaPolicy, type QuotaBucket, type QuotaDecision } from "./valo-quota-policy";
 export { quotaPolicy, quotaSubjectHash } from "./valo-quota-policy";
@@ -10,7 +10,7 @@ export async function consumeQuota(
   subjectHash: string,
   limit: number = quotaPolicy[bucket],
   window: "minute" | "day" = "minute",
-  executor: Pick<typeof db, "execute"> = db,
+  executor?: Pick<typeof db, "execute">,
 ): Promise<QuotaDecision> {
   if (
     !Object.hasOwn(quotaPolicy, bucket) ||
@@ -23,7 +23,9 @@ export async function consumeQuota(
   if (!["minute", "day"].includes(window)) throw new Error("InvalidQuotaConfiguration");
   const duration = window === "day" ? sql`interval '1 day'` : sql`interval '1 minute'`;
   const retention = window === "day" ? sql`interval '2 days'` : sql`interval '2 minutes'`;
-  const result = await executor.execute<{
+  // The shared database unless the caller passes its own transaction.
+  const run = executor ?? (await import("@workspace/db")).db;
+  const result = await run.execute<{
     allowed: boolean;
     used: number;
     retryAfter: number;
@@ -50,6 +52,7 @@ export async function consumeQuota(
 
 /** Request-driven expiry only; not a claim of an independently running scheduler. */
 export async function purgeExpiredQuotaBuckets(): Promise<void> {
+  const { db } = await import("@workspace/db");
   await db.execute(sql`DELETE FROM valo_rate_buckets WHERE expires_at < CURRENT_TIMESTAMP`);
 }
 

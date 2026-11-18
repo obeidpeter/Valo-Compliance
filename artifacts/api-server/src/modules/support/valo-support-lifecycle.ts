@@ -18,16 +18,16 @@ import {
   valoContentVersions,
   valoRuleReleases,
 } from "@workspace/db";
-import { ValoProblem } from "./valo-problem";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "./valo-store";
-import { consumeQuota, quotaSubjectHash } from "./valo-quota";
-import { setting } from "../platform/settings";
+import { ValoProblem } from "../../lib/valo-problem";
+import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
+import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
+import { setting } from "../../platform/settings";
 import {
   activeStaffAssignment,
   assertStaffAssignmentCurrent,
   requireFreshStaffSession,
   type StaffActor,
-} from "./valo-staff-authority";
+} from "../../lib/valo-staff-authority";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Case = typeof valoSupportCases.$inferSelect;
 export type SupportStaffActor = StaffActor;
@@ -592,7 +592,7 @@ export async function actOnContentSupportEscalation(actor: SupportStaffActor, id
     return { ...prepared, notice: "Previously saved content triage; no action repeated." };
   let impactId: string | null = null;
   if (input.action === "hold_and_reassess") {
-    const { actOnSourceControls } = await import("./valo-source-controls");
+    const { actOnSourceControls } = await import("../../lib/valo-source-controls");
     // The source service owns its transaction, current role/MFA, exclusive
     // source lock, exact-version hold, idempotency and correction-review queue.
     // It retains a request digest, never raw customer/support text in its audit.

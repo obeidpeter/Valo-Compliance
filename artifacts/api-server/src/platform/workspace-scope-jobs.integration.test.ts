@@ -42,8 +42,8 @@ import { syntheticDocument, syntheticProfile } from "../lib/valo-test-fixtures";
 import { requestExport, getExport, executeExport } from "../lib/valo-exports";
 import { createWorkspaceExport, executeWorkspaceExport } from "../lib/valo-workspace-export-jobs";
 import { fixtureWorkspaceStorage } from "../lib/test-support/workspace-export-storage";
-import { createTask, saveReminderPreferences, reminderInstant } from "../lib/valo-tasks";
-import { processReminder } from "../lib/valo-reminder-worker";
+import { createTask, saveReminderPreferences, reminderInstant } from "../modules/tasks/valo-tasks";
+import { processReminder } from "../modules/tasks/valo-reminder-worker";
 import { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } from "../lib/valo-privacy";
 import { processPrivacyAction } from "../lib/valo-privacy-processing";
 

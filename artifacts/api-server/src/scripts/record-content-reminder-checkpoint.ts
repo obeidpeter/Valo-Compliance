@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { sha256 } from "@workspace/valo-core";
 import { publicationWorkspaceRoot } from "../modules/publication";
-import { reminderEmailConfiguration } from "../lib/valo-reminder-resend";
+import { reminderEmailConfiguration } from "../modules/tasks";
 const root = publicationWorkspaceRoot(),
   from = resolve(root, "generated-artifacts/valo-completion"),
   to = resolve(root, "docs/valo/evidence");

@@ -123,7 +123,7 @@
     {
       "requirement": "SRV-002",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/support/valo-support-lifecycle.integration.test.ts",
       "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
       "proves": "A saved request opens exactly one support case with the same reference and full scope, which its own workspace can read and another workspace cannot."
     },
@@ -144,28 +144,28 @@
     {
       "requirement": "ADM-007",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/support/valo-support-lifecycle.integration.test.ts",
       "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
       "proves": "A hold placed by content staff from a support referral records one source impact and one audit row, and staff without the content role are refused."
     },
     {
       "requirement": "DOC-009",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-saved-templates.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-saved-templates.integration.test.ts",
       "test": "actual PostgreSQL saved-template ownership, durable state and blocked-release boundaries",
       "proves": "A workspace owner's save is stored once and seen by every new read; other workspaces, non-owners and revoked members are refused; and a saved template that is no longer available keeps only its saved title, is reported as unavailable and can still be removed."
     },
     {
       "requirement": "DOC-009",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-catalogue-discovery.test.ts",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-discovery.test.ts",
       "test": "recommendations use supplied activity/category and omit saved or absent releases",
       "proves": "Recommendations follow the workspace's activity and category, leave out templates already saved and templates that are not released, and are empty when nothing is released."
     },
     {
       "requirement": "ADM-008",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-support-lifecycle.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/support/valo-support-lifecycle.integration.test.ts",
       "test": "actual durable support intake, assignment, replies, triage, privacy and HTTP authority",
       "proves": "Support and content work are kept apart by role: content staff cannot use the support queue and support staff cannot act on content referrals; a content hold from a referral records a review-work item and claims no AI review."
     },
@@ -207,14 +207,14 @@
     {
       "requirement": "EDP-011",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-task-source-guard.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/tasks/valo-task-source-guard.integration.test.ts",
       "test": "new source-linked tasks recheck current eligibility before any insert",
       "proves": "New tasks and reminders for a withdrawn or expired rule are refused, and the assessment they came from is unchanged."
     },
     {
       "requirement": "EDP-011",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-requirements.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/tasks/valo-requirements.integration.test.ts",
       "test": "development saved assessments, task isolation, concurrency and reminder outbox",
       "proves": "A source withdrawal flags a historical task for review without changing what the customer completed."
     },
@@ -340,21 +340,21 @@
     {
       "requirement": "WEB-003",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-catalogue-visibility.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-visibility.integration.test.ts",
       "test": "public search finds service pages but never unpublished versions or customer drafts",
       "proves": "Candidate and held versions and a customer's draft that all carry the searched word never appear in public search, for any result type, while the same search finds the public service pages."
     },
     {
       "requirement": "WEB-003",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-catalogue-discovery.test.ts",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-discovery.test.ts",
       "test": "50 curated searches retrieve the expected controlled item in the first three results",
       "proves": "Each of 50 curated searches over the 40 synthetic template entries finds the expected template in its first three results; none of the searches is for guidance, industries or services."
     },
     {
       "requirement": "WEB-003",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-catalogue-discovery.test.ts",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-catalogue-discovery.test.ts",
       "test": "combined filters, ordering, later pages, reset, empty query and no matches",
       "proves": "Type, industry, access and category filters combine, name and recency sorts order the results, and an unknown query or filter returns nothing."
     },

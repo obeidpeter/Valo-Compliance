@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { assess, checkerFactsSchema, digest, ruleSchema, type ReleasedRule } from "@workspace/valo-core";
-import { workspaceActorFromRecord } from "../platform/workspace-context";
+import { workspaceActorFromRecord } from "../../platform/workspace-context";
 
 /** Run against an isolated loopback development PostgreSQL database:
  * VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development
  * node --experimental-test-module-mocks --import tsx --test
- *   src/lib/valo-task-source-guard.integration.test.ts
+ *   src/modules/tasks/valo-task-source-guard.integration.test.ts
  *
  * Only the server registry dependency is controlled, in this test process.
  * The real task service, assessment integrity checks, membership transaction,
@@ -46,7 +46,7 @@ test(
       valoWorkspaces,
       valoRuleReleases,
     } = await import("@workspace/db");
-    const assessments = await import("../modules/rules/valo-assessments");
+    const assessments = await import("../rules/valo-assessments");
     type Registry = Awaited<ReturnType<typeof assessments.releasedRegistry>>;
     const now = new Date(),
       day = assessments.currentAssessmentDate(now);
@@ -107,7 +107,7 @@ test(
       registryReads = 0;
     // No application option or HTTP field can install this dependency. Node
     // replaces the module export only for this isolated test process.
-    t.mock.module(new URL("../modules/rules/valo-assessments.ts", import.meta.url), {
+    t.mock.module(new URL("../rules/valo-assessments.ts", import.meta.url), {
       cache: true,
       namedExports: {
         ...assessments,

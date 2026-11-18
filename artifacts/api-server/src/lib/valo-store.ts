@@ -1,24 +1,13 @@
 import { serializeRevision } from "./valo-revision-codec";
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, sql, inArray } from "drizzle-orm";
-import {
-  db,
-  valoWorkspaces,
-  valoMemberships,
-  valoProfileVersions,
-  valoDocuments,
-  valoDocumentRevisions,
-  valoSupportTickets,
-  valoEvents,
-  valoPrivacyTombstones,
-} from "@workspace/db";
+import type { db, valoDocumentRevisions, valoDocuments } from "@workspace/db";
 import { sha256 } from "@workspace/valo-core";
 import { documentInput, documentUpdate, profileInput, ticketInput } from "./valo-validation";
 import { z } from "zod";
 import { guidedDataFromBlocks } from "@workspace/valo-core/guided-runtime";
 import { consumeQuota, quotaPolicy, quotaSubjectHash } from "./valo-quota";
 import { setting } from "../platform/settings";
-
 import { ValoProblem } from "./valo-problem";
 import { privacyIdentityHashes } from "./valo-privacy-keys";
 export { ValoProblem } from "./valo-problem";
@@ -29,6 +18,7 @@ type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 /** Read authorization must not retain a membership SHARE lock during a long
  * snapshot. Call using a current, separate transaction at each page boundary. */
 export async function authorizeWorkspaceRead(tx: Tx, actor: WorkspaceActor) {
+  const { valoMemberships, valoPrivacyTombstones } = await import("@workspace/db");
   const [member] = await tx
     .select()
     .from(valoMemberships)
@@ -51,6 +41,7 @@ export async function authorizeWorkspaceRead(tx: Tx, actor: WorkspaceActor) {
  * Revocation committed while a request waited must win. Holding this row lock
  * makes the eventual write/revocation order linearizable until commit. */
 export async function authorizeWorkspaceWrite(tx: Tx, actor: WorkspaceActor) {
+  const { valoMemberships, valoPrivacyTombstones } = await import("@workspace/db");
   const [member] = await tx
     .select()
     .from(valoMemberships)
@@ -88,7 +79,8 @@ export async function limitWorkspaceWrite(
       );
   }
 }
-function event(tx: Tx, actor: WorkspaceActor, action: string, entityId: string, revision?: number) {
+async function event(tx: Tx, actor: WorkspaceActor, action: string, entityId: string, revision?: number) {
+  const { valoEvents } = await import("@workspace/db");
   return tx.insert(valoEvents).values({
     id: randomUUID(),
     workspaceId: actor.workspaceId,
@@ -100,6 +92,7 @@ function event(tx: Tx, actor: WorkspaceActor, action: string, entityId: string, 
 }
 /** Called only after identity verification; callers cannot choose a workspace. */
 export async function resolveWorkspace(identityId: string): Promise<WorkspaceActor> {
+  const { db, valoMemberships, valoPrivacyTombstones, valoWorkspaces } = await import("@workspace/db");
   return db.transaction(async (tx) => {
     const hashes = await privacyIdentityHashes(tx, identityId);
     const [erasedIdentity] = hashes.length
@@ -156,6 +149,7 @@ export async function resolveWorkspace(identityId: string): Promise<WorkspaceAct
   });
 }
 export async function getWorkspace(actor: WorkspaceActor) {
+  const { db, valoDocuments, valoProfileVersions, valoWorkspaces } = await import("@workspace/db");
   const [workspace] = await db.select().from(valoWorkspaces).where(eq(valoWorkspaces.id, actor.workspaceId));
   if (!workspace) throw new ValoProblem(404, "Workspace not found");
   const [version] = await db
@@ -181,6 +175,7 @@ export async function getWorkspace(actor: WorkspaceActor) {
   };
 }
 export async function saveProfile(actor: WorkspaceActor, raw: unknown) {
+  const { db, valoDocuments, valoProfileVersions, valoWorkspaces } = await import("@workspace/db");
   const input = profileInput.parse(raw);
   return db.transaction(async (tx) => {
     const [workspace] = await tx
@@ -244,6 +239,7 @@ function serialize(
   };
 }
 export async function listDocuments(actor: WorkspaceActor) {
+  const { db, valoDocumentRevisions, valoDocuments } = await import("@workspace/db");
   const rows = await db
     .select({ document: valoDocuments, revision: valoDocumentRevisions })
     .from(valoDocuments)
@@ -261,6 +257,7 @@ export async function listDocuments(actor: WorkspaceActor) {
   return rows.map(({ document, revision }) => serialize(document, revision));
 }
 export async function getDocument(actor: WorkspaceActor, id: string) {
+  const { db, valoDocumentRevisions, valoDocuments } = await import("@workspace/db");
   const [row] = await db
     .select({ document: valoDocuments, revision: valoDocumentRevisions })
     .from(valoDocuments)
@@ -277,6 +274,7 @@ export async function getDocument(actor: WorkspaceActor, id: string) {
   return serialize(row.document, row.revision);
 }
 export async function listRevisions(actor: WorkspaceActor, id: string) {
+  const { db, valoDocumentRevisions, valoDocuments } = await import("@workspace/db");
   const [document] = await db
     .select()
     .from(valoDocuments)
@@ -299,6 +297,7 @@ async function appendRevision(
   input: z.infer<typeof documentInput>,
   origin = "manual",
 ) {
+  const { valoDocumentRevisions } = await import("@workspace/db");
   // The hash binds the title and entire canonical document, not only its visible text.
   await tx.insert(valoDocumentRevisions).values({
     id: randomUUID(),
@@ -314,6 +313,7 @@ async function appendRevision(
   await event(tx, actor, "document.revision_saved", id, revision);
 }
 async function getExactRevision(actor: WorkspaceActor, id: string, revisionNumber: number) {
+  const { db, valoDocumentRevisions, valoDocuments } = await import("@workspace/db");
   const [row] = await db
     .select({ document: valoDocuments, revision: valoDocumentRevisions })
     .from(valoDocuments)
@@ -330,6 +330,7 @@ async function getExactRevision(actor: WorkspaceActor, id: string, revisionNumbe
   return serialize(row.document, row.revision);
 }
 export async function createDocument(actor: WorkspaceActor, raw: unknown) {
+  const { db } = await import("@workspace/db");
   const id = await db.transaction((tx) => createDocumentInTransaction(tx, actor, raw));
   return getExactRevision(actor, id, 1);
 }
@@ -340,6 +341,7 @@ export async function createDocumentInTransaction(
   raw: unknown,
   origin: "manual" | "customer_ai" = "manual",
 ) {
+  const { valoDocuments } = await import("@workspace/db");
   const input = documentInput.parse(raw);
   const id = randomUUID();
   await authorizeWorkspaceWrite(tx, actor);
@@ -349,6 +351,7 @@ export async function createDocumentInTransaction(
   return id;
 }
 export async function saveDocument(actor: WorkspaceActor, id: string, raw: unknown) {
+  const { db, valoDocumentRevisions, valoDocuments } = await import("@workspace/db");
   const { expectedRevision, ...input } = documentUpdate.parse(raw);
   await db.transaction(async (tx) => {
     const [document] = await tx
@@ -396,10 +399,12 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
   return getExactRevision(actor, id, expectedRevision + 1);
 }
 export async function createTicket(actor: WorkspaceActor, raw: unknown) {
+  const { db } = await import("@workspace/db");
   return db.transaction((tx) => createTicketInTransaction(tx, actor, raw));
 }
 /** Shared transaction lets a privacy request and its support reference commit together. */
 export async function createTicketInTransaction(tx: Tx, actor: WorkspaceActor, raw: unknown) {
+  const { valoSupportTickets } = await import("@workspace/db");
   const input = ticketInput.parse(raw);
   const id = randomUUID();
   await authorizeWorkspaceWrite(tx, actor);

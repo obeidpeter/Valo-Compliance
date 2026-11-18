@@ -20,7 +20,7 @@ import {
   createReleasedTemplateDraft,
   readReleasedMaster,
   liveCoverage,
-} from "../lib/valo-released-content";
+} from "../modules/catalogue";
 import { exportMime } from "../lib/valo-render";
 import { GetReleasedTemplateResponse } from "@workspace/api-zod";
 import { GetReleasedResourceResponse as ReleasedResource } from "@workspace/api-zod";
@@ -30,10 +30,10 @@ import {
   staffOperationsRouter,
   createPrivacyRequesterRouter,
 } from "./valo-customer-access";
-import { releasedResources } from "../lib/valo-released-content";
+import { releasedResources } from "../modules/catalogue";
 import { commerceRouter } from "./valo-commerce";
-import { savedTemplateList, saveTemplate, unsaveTemplate } from "../lib/valo-saved-templates";
-import { publicDiscovery } from "../lib/valo-public-discovery";
+import { savedTemplateList, saveTemplate, unsaveTemplate } from "../modules/catalogue";
+import { publicDiscovery } from "../modules/catalogue";
 import { setting } from "../platform/settings";
 import { supportCustomerRouter, supportOperationsRouter } from "./valo-support-lifecycle";
 

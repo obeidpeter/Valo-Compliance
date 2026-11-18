@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { workspaceActorFromRecord } from "../platform/workspace-context";
-import { ValoProblem } from "./valo-problem";
+import { workspaceActorFromRecord } from "../../platform/workspace-context";
+import { ValoProblem } from "../../lib/valo-problem";
 
 /**
  * A template download checks the version's database state under the shared source-state
@@ -82,7 +82,7 @@ test("template downloads read storage outside the transaction that holds the sou
     },
   });
   // The publication module, at the boundary the released content reads it through.
-  t.mock.module(new URL("../modules/publication/index.ts", import.meta.url).href, {
+  t.mock.module(new URL("../publication/index.ts", import.meta.url).href, {
     namedExports: {
       developmentPublicationOnly: () => undefined,
       operationalPolicy: async () => {
@@ -99,13 +99,13 @@ test("template downloads read storage outside the transaction that holds the sou
       },
     },
   });
-  t.mock.module(new URL("./valo-source-state.ts", import.meta.url).href, {
+  t.mock.module(new URL("../../lib/valo-source-state.ts", import.meta.url).href, {
     namedExports: {
       lockSourceState: async () => record("source lock"),
       sourceTargetAllowed: async () => true,
     },
   });
-  t.mock.module(new URL("./valo-store.ts", import.meta.url).href, {
+  t.mock.module(new URL("../../lib/valo-store.ts", import.meta.url).href, {
     namedExports: {
       ValoProblem,
       authorizeWorkspaceWrite: async () => record("membership"),

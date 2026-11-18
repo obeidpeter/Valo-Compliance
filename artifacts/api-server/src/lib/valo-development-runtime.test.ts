@@ -78,10 +78,8 @@ test("actual export entries and worker startup reject before database, queue or 
     ["valo-validation", "export const documentInput={parse:x=>x};"],
     ["valo-revision-codec", "export const serializeRevision=x=>x;"],
     ["logger", "export const logger={info(){},warn(){},error(){}};"],
-    [
-      "valo-reminder-worker",
-      "export const reconcileDueReminders=async()=>{globalThis.guardEffects.services++};",
-    ],
+    // The worker reaches the reminder worker through the tasks module's index.
+    ["tasks", "export const reconcileDueReminders=async()=>{globalThis.guardEffects.services++};"],
     // The worker reaches every payment, refund and dispute service through the commerce module's index.
     [
       "commerce",

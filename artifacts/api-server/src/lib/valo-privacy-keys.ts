@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
-import { db, valoPrivacyEvents, valoPrivacyTombstones } from "@workspace/db";
+import type { db } from "@workspace/db";
 import { privacyAuditHash, privacyAuditEqual } from "./valo-privacy-state";
 import { quotaSubjectHash } from "./valo-quota";
 import { ValoProblem } from "./valo-problem";
@@ -46,6 +46,7 @@ export async function privacyKey(
   ring: PrivacyKeys = privacyKeys(),
   newSigner = false,
 ) {
+  const { valoPrivacyEvents } = await import("@workspace/db");
   const key = ring.keys[version];
   if (!key) throw held();
   let result = await tx.execute<{ fingerprint: string }>(
@@ -75,6 +76,7 @@ export async function privacySigner(tx: Tx, ring: PrivacyKeys = privacyKeys()) {
   return { version: ring.current, key: await privacyKey(tx, ring.current, ring, true) };
 }
 export async function privacyIdentityHashes(tx: Tx, identityId: string, ring: PrivacyKeys = privacyKeys()) {
+  const { valoPrivacyTombstones } = await import("@workspace/db");
   const versions = await tx
     .selectDistinct({ version: valoPrivacyTombstones.keyVersion })
     .from(valoPrivacyTombstones);
