@@ -357,6 +357,13 @@
       "file": "artifacts/api-server/src/lib/valo-catalogue-discovery.test.ts",
       "test": "combined filters, ordering, later pages, reset, empty query and no matches",
       "proves": "Type, industry, access and category filters combine, name and recency sorts order the results, and an unknown query or filter returns nothing."
+    },
+    {
+      "requirement": "SRV-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/service-categories.test.tsx",
+      "test": "the services page explains each kind of help without listing a provider or speaking for an authority",
+      "proves": "The services page lists every service topic in the API contract with a plain description of what someone can ask about and \"No provider yet\", no description promises a provider, booking, fee or outcome or names a government body or regulator, and the page says nothing is booked or forwarded."
     }
   ]
 }
