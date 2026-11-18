@@ -55,6 +55,8 @@ export const PASSED_THROUGH = [
   "TZ",
   "CHROMIUM_EXECUTABLE_PATH",
   "PLAYWRIGHT_BROWSERS_PATH",
+  // How long the NFR-003 load test runs: VALO_LOAD_SECONDS=1800 is the requirement's 30 minutes.
+  "VALO_LOAD_SECONDS",
 ];
 
 /** Conditions that keep a step running after an earlier failure, as GitHub does. */
@@ -391,6 +393,14 @@ async function main(args: string[]) {
   process.stdout.write(
     `database: ${cluster.version}, temporary, removed afterwards\nlogs: ${relative(repositoryRoot, logs)}\n`,
   );
+  // The job's test results must start empty, as on a fresh runner, so its citation check never
+  // reads the results of an earlier run in this checkout.
+  if (job.env.VALO_TEST_RESULTS_DIR) {
+    const records = resolve(job.env.VALO_TEST_RESULTS_DIR);
+    if (!within(join(repositoryRoot, "generated-artifacts"), records))
+      throw Error("DATABASE_JOB_UNSUPPORTED: VALO_TEST_RESULTS_DIR must be inside generated-artifacts");
+    rmSync(records, { recursive: true, force: true });
+  }
   const keepGoing = args.includes("--keep-going");
   const results: { name: string; outcome: string }[] = [];
   let written: Record<string, string> = {};

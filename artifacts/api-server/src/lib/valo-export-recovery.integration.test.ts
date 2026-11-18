@@ -30,14 +30,16 @@ import { deletePrivateFile, readPrivateFile, writePrivateFile } from "./valo-pri
 import { syntheticDocument } from "./valo-test-fixtures";
 
 const enabled = process.env.VALO_RUN_EXPORT_CRASH_TESTS === "synthetic-development-only";
+const storage =
+  process.env.VALO_PORTABLE_WORKER_PRELOADED === "true"
+    ? "portable filesystem (not native storage)"
+    : "native private storage";
+// A fixed name, so the evidence register can cite it; the run's report says which storage it used.
 test(
-  `real process death, PostgreSQL lease fencing and ${
-    process.env.VALO_PORTABLE_WORKER_PRELOADED === "true"
-      ? "portable filesystem (not native storage)"
-      : "native private storage"
-  } recovery`,
+  "real process death, PostgreSQL lease fencing and export recovery",
   { skip: !enabled, timeout: 240000 },
   async (t) => {
+    t.diagnostic(`private files: ${storage}`);
     assert.equal(process.env.NODE_ENV, "development");
     assert.ok(!process.env.REPLIT_DEPLOYMENT);
     const a = await resolveWorkspace("synthetic-export-crash-" + randomUUID());

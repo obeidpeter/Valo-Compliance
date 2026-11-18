@@ -12,6 +12,14 @@ assert.ok(
     ([k, v]) => v && (k === "REPLIT_DEPLOYMENT" || k.startsWith("REPLIT_DEPLOYMENT_")),
   ),
 );
+// The test files to run with portable private files; the export recovery test by default.
+const tests = process.argv.slice(2).length
+  ? process.argv.slice(2)
+  : ["src/lib/valo-export-recovery.integration.test.ts"];
+assert.ok(
+  tests.every((file) => /^src\/[\w/.-]+\.integration\.test\.ts$/.test(file)),
+  "integration tests only",
+);
 const directory = await mkdtemp(join(tmpdir(), "valo-portable-private-"));
 try {
   const child = spawn(
@@ -23,7 +31,7 @@ try {
       "--import",
       new URL("./private-file-process.mts", import.meta.url).href,
       "--test",
-      "src/lib/valo-export-recovery.integration.test.ts",
+      ...tests,
     ],
     {
       env: {
