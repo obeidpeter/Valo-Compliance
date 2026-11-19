@@ -13,7 +13,7 @@
     },
     {
       "id": "KI-003",
-      "summary": "No template or guidance version is published. A template publishes only with two passing AI reviews, which run only inside an owner-approved finite AI allocation, and none is approved. The publish command (decision 0014) saves a reviewed pair's version with its reviews and hands it to the publisher; it has run only on synthetic reviews in a disposable database. Guidance is held for six standing reasons, each waiting for an owner decision or outside evidence. The two reviews of content that is not general run the enhanced high-risk checks, but no preparer yet produces such content, so no enhanced check has run.",
+      "summary": "No template or guidance version is published. A template publishes only with two passing AI reviews, which run only inside an owner-approved finite AI allocation, and none is approved. The publish command (decision 0014) has run only on synthetic reviews in a disposable database. Guidance is held for six standing reasons, each waiting for an owner decision or outside evidence. The reviews of content that is not general run the enhanced high-risk checks, but no preparer yet produces such content, so none has run.",
       "requirements": ["EDP-005"]
     },
     {
