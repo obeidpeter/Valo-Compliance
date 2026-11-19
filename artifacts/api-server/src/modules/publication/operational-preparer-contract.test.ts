@@ -10,7 +10,7 @@ import { chatGPTSourcePath, loadChatGPTPermission } from "./rights-applicability
 import {
   operationalInferenceTemplateIds,
   supportsOperationalInferenceTemplate,
-} from "../../lib/inference-operational-coverage";
+} from "./inference-operational-coverage";
 
 // Predicate fixtures, never retained as actual terms evidence or publication proof.
 export function controlledTermsSnapshot(now = new Date()) {

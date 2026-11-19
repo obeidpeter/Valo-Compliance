@@ -8,10 +8,10 @@ import {
   operationalPolicy,
   operationalMechanicalChecks,
   inspectOperationalExports,
+  supportsOperationalInferenceTemplate,
   type OperationalServerEvidence,
   type ReleaseAttestations,
 } from "../modules/publication";
-import { supportsOperationalInferenceTemplate } from "./inference-operational-coverage";
 
 /** Reconstruct a supported saved original form and recheck all its retained
  * private evidence. Intake coverage alone never establishes readiness. */

@@ -7,7 +7,7 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   operationalInferenceTemplateIds,
   supportsOperationalInferenceTemplate,
-} from "../lib/inference-operational-coverage";
+} from "../modules/publication";
 import { selectPreparedProposal, parseFinitePreparationOptions } from "../lib/inference-prepared-report";
 import {
   requestDigest,

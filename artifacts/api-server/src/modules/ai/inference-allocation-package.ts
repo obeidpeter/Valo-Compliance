@@ -10,10 +10,7 @@ import {
 import type { FiniteManifest, FiniteWork } from "./inference-types";
 import type { InferenceBudgetStore } from "./inference-budget-store";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
-import {
-  operationalInferenceTemplateIds,
-  supportsOperationalInferenceTemplate,
-} from "../../lib/inference-operational-coverage";
+import { operationalInferenceTemplateIds, supportsOperationalInferenceTemplate } from "../publication";
 const root = resolve(import.meta.dirname, "../../../../..");
 const sha = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 type SourceRef = { path: string; sha256: string };

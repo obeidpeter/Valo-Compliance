@@ -4,7 +4,7 @@ import { z } from "zod";
 import { sha256 } from "@workspace/valo-core";
 import { publicationWorkspaceRoot } from "./operational-policy";
 import { readOperationalIntake } from "./operational-intake";
-import { supportsOperationalInferenceTemplate } from "../../lib/inference-operational-coverage";
+import { supportsOperationalInferenceTemplate } from "./inference-operational-coverage";
 const schema = z
   .object({
     version: z.string().min(1),

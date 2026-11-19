@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { digest, sha256 } from "@workspace/valo-core";
 import { documentInput } from "../../lib/valo-validation";
 import { allocationPackageId, validatePackageScope, type FiniteAllocationPackage } from "../ai";
-import { supportsOperationalInferenceTemplate } from "../../lib/inference-operational-coverage";
+import { supportsOperationalInferenceTemplate } from "../publication";
 import { readTemplateIntake, readGuidanceIntake, publicationWorkspaceRoot } from "../publication";
 
 const frozenPath = "docs/valo/evidence/finite-allocation-package-disabled.json";
