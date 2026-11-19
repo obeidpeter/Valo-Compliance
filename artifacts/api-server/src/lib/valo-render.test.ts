@@ -205,3 +205,81 @@ test("every page of a generated invoice and of a purchase receipt says it is not
     await closeRenderer();
   }
 });
+
+// SEC-004: "document text cannot fetch cloud metadata, local files, private URLs or execute embedded
+// script/macros"; EDT-009: "unsupported content cannot trigger remote network fetches or code execution".
+test("document text that tries to fetch a URL, read a local file or run script does none of it in the PDF or DOCX", async () => {
+  const { closeRenderer } = await import("./valo-render");
+  const { createServer } = await import("node:http");
+  const { once } = await import("node:events");
+  const { randomUUID } = await import("node:crypto");
+  const { execFile } = await import("node:child_process");
+  const { mkdtemp, rm, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { promisify } = await import("node:util");
+  // A private address the text points at, which records every request it receives.
+  const requests: string[] = [];
+  const server = createServer((req, res) => {
+    requests.push(req.url ?? "");
+    res.end("synthetic");
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const origin = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  const directory = await mkdtemp(join(tmpdir(), "valo-render-hostile-"));
+  const canary = `synthetic-local-file-${randomUUID()}`;
+  const local = join(directory, "canary.txt");
+  await writeFile(local, canary);
+  const hostile = [
+    `<img src="${origin}/image">`,
+    `<link rel="stylesheet" href="${origin}/style">`,
+    `<style>@import url("${origin}/import");body{background:url("${origin}/background")}</style>`,
+    `<iframe src="file://${local}"></iframe>`,
+    `<object data="file://${local}"></object>`,
+    `<script>fetch("${origin}/script")</script>`,
+    `<img src="http://169.254.169.254/latest/meta-data/">`,
+  ].join(" ");
+  const input = structuredClone(syntheticDocument);
+  input.title = `Synthetic hostile text <img src="${origin}/title">`;
+  input.content.fields.notes = hostile;
+  input.content.blocks.push(
+    { id: "hostile", type: "paragraph", text: hostile, rows: [] },
+    {
+      id: "hostile-list",
+      type: "list",
+      text: `${hostile}\n<script>fetch("${origin}/list")</script>`,
+      rows: [],
+    },
+    {
+      id: "hostile-table",
+      type: "table",
+      text: "",
+      rows: [["Synthetic cell", `<img src="${origin}/cell">`]],
+    },
+  );
+  try {
+    const pdf = await renderDocument(input, "pdf", 1);
+    const docx = await renderDocument(input, "docx", 1);
+    // Time for a late request to arrive, had the renderer sent one.
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    assert.deepEqual(requests, [], "no request reached the address in the text");
+    const path = join(directory, "hostile.pdf");
+    await writeFile(path, pdf);
+    const text = (await promisify(execFile)("pdftotext", ["-layout", path, "-"], { maxBuffer: 1 << 24 }))
+      .stdout;
+    assert.ok(!text.includes(canary), "the local file's content is not in the PDF");
+    assert.ok(text.includes("<script>"), "the markup is printed as text");
+    const parts = unzipSync(docx);
+    const names = Object.keys(parts);
+    assert.ok(!names.some((name) => /vbaProject|vbaData|macro/i.test(name)), names.join(", "));
+    assert.doesNotMatch(strFromU8(parts["[Content_Types].xml"]!), /macroEnabled|vbaProject/i);
+    const xml = strFromU8(parts["word/document.xml"]!);
+    assert.ok(!xml.includes(canary), "the local file's content is not in the DOCX");
+    assert.ok(xml.includes("&lt;script&gt;"), "the DOCX holds the markup as text");
+  } finally {
+    server.close();
+    await rm(directory, { recursive: true, force: true });
+    await closeRenderer();
+  }
+});
