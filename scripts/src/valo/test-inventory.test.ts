@@ -20,7 +20,8 @@ const NOT_IN_CI: Record<string, string> = {
   "@workspace/api-server test:valo-customer-journey": "real managed sign-in against the development preview",
   "@workspace/api-server test:valo-http": "probes a running development preview",
   "@workspace/api-server test:valo-security-http": "probes a running development preview",
-  "@workspace/api-server test:valo-exports": "needs native Replit App Storage",
+  "@workspace/api-server test:valo-exports":
+    "the native-storage run; test:valo-exports-portable-db runs the same file in CI with portable private files",
   "@workspace/api-server test:valo-erasure-native": "needs native Replit App Storage",
   "@workspace/api-server test:valo-erasure-native-db": "needs native Replit App Storage",
   "@workspace/api-server test:valo-workspace-artifact-db": "needs native Replit App Storage",
