@@ -628,6 +628,16 @@ paths:
               schema: { $ref: "#/components/schemas/ExportJob" }
         "409": { description: Key reused for different content or conflicting operation. }
         "422": { description: Invalid fields or missing deliberate draft acknowledgement. }
+  /v1/exports:
+    get:
+      operationId: listWorkspaceExports
+      tags: [workspace]
+      responses:
+        "200":
+          description: "The business library: the workspace's 50 newest ready exports, each with its saved revision and the template version its document was made from. Private keys are never returned."
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/LibraryExport" } }
   /v1/exports/{id}/retry:
     post:
       operationId: retryDocumentExport
@@ -2333,6 +2343,32 @@ components:
         expiresAt: { type: [string, "null"], format: date-time }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+    LibraryExport:
+      type: object
+      additionalProperties: false
+      required: [id, documentId, documentTitle, revisionId, revision, format, readyAt, expiresAt, downloadUrl, template]
+      properties:
+        id: { type: string, format: uuid }
+        documentId: { type: string, format: uuid }
+        documentTitle: { type: string }
+        revisionId: { type: string, format: uuid }
+        revision: { type: integer }
+        format: { type: string, enum: [docx, pdf] }
+        readyAt: { type: string, format: date-time }
+        expiresAt: { type: [string, "null"], format: date-time }
+        downloadUrl: { type: string }
+        template:
+          anyOf:
+            - { $ref: "#/components/schemas/LibraryTemplateVersion" }
+            - { type: "null" }
+    LibraryTemplateVersion:
+      type: object
+      additionalProperties: false
+      required: [versionId, templateId, version]
+      properties:
+        versionId: { type: string, format: uuid }
+        templateId: { type: string }
+        version: { type: integer }
     SessionMfaVerification:
       type: object
       additionalProperties: false

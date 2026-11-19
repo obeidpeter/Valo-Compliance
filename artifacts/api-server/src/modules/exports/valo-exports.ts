@@ -6,6 +6,7 @@ import {
   db,
   runInWorkspaceScope,
   valoMemberships,
+  valoContentVersions,
   valoDocuments,
   valoDocumentRevisions,
   valoExportJobs,
@@ -140,6 +141,60 @@ export async function listExports(
       recovered += await recoverAbandonedExports(job.id);
   if (recovered) return listExports(actor, documentId);
   return rows.map(({ job, asset }) => publicJob(job, asset));
+}
+/** The business library (DOC-005): the workspace's newest ready exports, each with the saved
+ * revision it was made from and the template version its document came from. A document keeps
+ * that link through every later revision, and whether or not the version is still released. Only
+ * files that are ready and unexpired are listed, as only those can be downloaded. */
+export async function listWorkspaceExports(actor: WorkspaceActor) {
+  developmentExportsOnly();
+  await assertExportActor(actor);
+  const rows = await db
+    .select({
+      job: valoExportJobs,
+      asset: valoFileAssets,
+      title: valoDocumentRevisions.title,
+      templateVersionId: valoDocuments.templateVersionId,
+      templateId: valoContentVersions.templateId,
+      templateVersion: valoContentVersions.version,
+    })
+    .from(valoExportJobs)
+    .innerJoin(
+      valoFileAssets,
+      and(eq(valoFileAssets.jobId, valoExportJobs.id), eq(valoFileAssets.workspaceId, actor.workspaceId)),
+    )
+    .innerJoin(
+      valoDocuments,
+      and(eq(valoDocuments.id, valoExportJobs.documentId), eq(valoDocuments.workspaceId, actor.workspaceId)),
+    )
+    .innerJoin(
+      valoDocumentRevisions,
+      and(
+        eq(valoDocumentRevisions.id, valoExportJobs.revisionId),
+        eq(valoDocumentRevisions.workspaceId, actor.workspaceId),
+      ),
+    )
+    .leftJoin(valoContentVersions, eq(valoContentVersions.id, valoDocuments.templateVersionId))
+    .where(and(eq(valoExportJobs.workspaceId, actor.workspaceId), eq(valoExportJobs.status, "ready")))
+    .orderBy(desc(valoFileAssets.createdAt))
+    .limit(50);
+  return rows
+    .filter(({ asset }) => !exportIsExpired(asset))
+    .map(({ job, asset, title, templateVersionId, templateId, templateVersion }) => ({
+      id: job.id,
+      documentId: job.documentId,
+      documentTitle: title,
+      revisionId: job.revisionId,
+      revision: job.revision,
+      format: job.format,
+      readyAt: asset.createdAt.toISOString(),
+      expiresAt: asset.retentionAt?.toISOString() ?? null,
+      downloadUrl: `/api/v1/exports/${job.id}/file`,
+      template:
+        templateVersionId && templateId && templateVersion
+          ? { versionId: templateVersionId, templateId, version: templateVersion }
+          : null,
+    }));
 }
 export async function requestExport(actor: WorkspaceActor, documentId: string, key: string, raw: unknown) {
   developmentExportsOnly();

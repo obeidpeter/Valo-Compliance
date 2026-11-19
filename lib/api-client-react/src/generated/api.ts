@@ -78,6 +78,7 @@ import type {
   GetStaffRoleAdministrationParams,
   GetStaffSupportCaseParams,
   HealthStatus,
+  LibraryExport,
   ListContentEscalationsParams,
   ListCustomerSupportCasesParams,
   ListPublicCatalogueParams,
@@ -4816,6 +4817,100 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getCreateDocumentExportMutationOptions(options), queryClient);
     }
+
+export const getListWorkspaceExportsUrl = () => {
+
+
+
+
+  return `/api/v1/exports`
+}
+
+export const listWorkspaceExports = async ( options?: Parameters<typeof customFetch>[1]): Promise<LibraryExport[]> => {
+
+  return customFetch<LibraryExport[]>(getListWorkspaceExportsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWorkspaceExportsQueryKey = () => {
+    return [
+    "listWorkspaceExports"
+    ] as const;
+    }
+
+
+export const getListWorkspaceExportsQueryOptions = <TData = Awaited<ReturnType<typeof listWorkspaceExports>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorkspaceExportsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkspaceExports>>> = ({ signal }) => listWorkspaceExports({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceExports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListWorkspaceExportsQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkspaceExports>>>
+export type ListWorkspaceExportsQueryError = ErrorType<unknown>
+
+
+export function useListWorkspaceExports<TData = Awaited<ReturnType<typeof listWorkspaceExports>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceExports>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWorkspaceExports>>,
+          TError,
+          Awaited<ReturnType<typeof listWorkspaceExports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWorkspaceExports<TData = Awaited<ReturnType<typeof listWorkspaceExports>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceExports>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWorkspaceExports>>,
+          TError,
+          Awaited<ReturnType<typeof listWorkspaceExports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWorkspaceExports<TData = Awaited<ReturnType<typeof listWorkspaceExports>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListWorkspaceExports<TData = Awaited<ReturnType<typeof listWorkspaceExports>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceExports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListWorkspaceExportsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getRetryDocumentExportUrl = (id: string,) => {
 

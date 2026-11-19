@@ -416,6 +416,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-export-worker-portable-db
       - name: Prove document exports keep their revision, render A4 PDFs and refuse other members, with portable private files
         run: pnpm --filter @workspace/api-server test:valo-exports-portable-db
+      - name: Prove ready exports appear in the business library with the template version used (DOC-005)
+        run: pnpm --filter @workspace/api-server test:valo-export-library-db
       - name: Prove controlled payment settlement and refund lifecycle
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce
