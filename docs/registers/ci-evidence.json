@@ -2296,6 +2296,27 @@
       "file": "artifacts/api-server/src/platform/http-logging.test.ts",
       "test": "real HTTP request, parser and application error logs omit private markers but retain correlation/status",
       "proves": "A synthetic private marker sent in a request's body, path, query, authorization and cookie headers, or carried in an application error's message, name and cause, never appears in the HTTP logs, which keep each request's ID and status."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-export-library.integration.test.ts",
+      "test": "ready exports appear in the business library with their revision and the template version their document came from",
+      "proves": "In PostgreSQL with portable private files, a workspace's export enters its business library only once the file is ready, newest first, with the document's title and revision at export time and the template version the document was made from; a later revision keeps that link, a document not made from a template shows none, another workspace sees none of them and an expired file leaves the list. The template version is a held synthetic fixture that was never released, so the release path is not exercised."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/library-exports.test.tsx",
+      "test": "the business library lists each ready export with its revision, its download and the template version it came from",
+      "proves": "The workspace home's ready-exports list, rendered on the server from synthetic exports, names each file's document, format and revision, links its download and its document, and says which template and version the document was made from, or that it was not made from a template."
+    },
+    {
+      "requirement": "DOC-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-template-entitlement.integration.test.ts",
+      "test": "only the purchasing workspace's active entitlement releases a premium master",
+      "proves": "In PostgreSQL, the purchase check a premium template download runs passes for the workspace holding an active purchase of that version and refuses with 403 another workspace's purchase of the same version and a suspended purchase; the version is a held fixture, so the download itself is not exercised."
     }
   ]
 }
