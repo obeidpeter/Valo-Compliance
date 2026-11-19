@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { and, count, eq, gte, inArray, sql } from "drizzle-orm";
-import { valoAIDrafts, valoSafetySwitches } from "@workspace/db";
+import type { valoAIDrafts as AIDrafts } from "@workspace/db";
 import {
   AcceptCustomerAIDraftBody,
   CreateCustomerAIDraftResponse,
@@ -17,12 +17,26 @@ import {
   type CustomerPreview,
 } from "./valo-customer-ai-domain";
 import { organizeCustomerDraft } from "./valo-customer-ai-model";
-import { workspaceTransaction, workspaceEvent, type WorkspaceTx } from "../modules/rules";
-import { createDocumentInTransaction, getDocument, ValoProblem, type WorkspaceActor } from "./valo-store";
-import { documentInput } from "./valo-validation";
-import { hasApprovedInferenceContext } from "../modules/ai";
-import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
+import type { WorkspaceTx } from "../rules";
+import {
+  createDocumentInTransaction,
+  getDocument,
+  ValoProblem,
+  type WorkspaceActor,
+} from "../../lib/valo-store";
+import { documentInput } from "../../lib/valo-validation";
+import { hasApprovedInferenceContext } from "../ai";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 const workspaceDailyLimit = 30;
+/** The database schema and the workspace transaction load when a customer AI request runs, not
+ * with every reader of this file: both load the database client. */
+async function runtime() {
+  const [{ valoAIDrafts, valoSafetySwitches }, { workspaceTransaction, workspaceEvent }] = await Promise.all([
+    import("@workspace/db"),
+    import("../rules"),
+  ]);
+  return { valoAIDrafts, valoSafetySwitches, workspaceTransaction, workspaceEvent };
+}
 /** Customer AI reservations allowed per day across every workspace. */
 export const globalDailyLimit = 120;
 async function enabled(tx: WorkspaceTx, workspaceId: string) {
@@ -35,6 +49,7 @@ async function enabled(tx: WorkspaceTx, workspaceId: string) {
   }
   // A workspace may be additionally paused; it can never override a global or
   // production pause. Resolving this key uses the authorised server workspace.
+  const { valoSafetySwitches } = await runtime();
   const flags = await tx
     .select()
     .from(valoSafetySwitches)
@@ -44,6 +59,7 @@ async function enabled(tx: WorkspaceTx, workspaceId: string) {
   return flags.every((flag) => flag.enabled);
 }
 async function budget(tx: WorkspaceTx, workspaceId: string, identityId: string, now = new Date()) {
+  const { valoAIDrafts } = await runtime();
   const start = new Date(now);
   start.setUTCHours(0, 0, 0, 0);
   // The shared daily ceiling and each person's per-minute limit count every workspace's
@@ -70,7 +86,7 @@ async function budget(tx: WorkspaceTx, workspaceId: string, identityId: string, 
     userMinuteUsed: totals.identity_last_minute,
   };
 }
-export function serializeAIPreview(row: typeof valoAIDrafts.$inferSelect) {
+export function serializeAIPreview(row: typeof AIDrafts.$inferSelect) {
   const p = CreateCustomerAIDraftResponse.parse(row.preview);
   if (p.id !== row.id || hashAI({ title: p.title, content: p.content }) !== p.previewHash)
     throw new ValoProblem(
@@ -80,6 +96,7 @@ export function serializeAIPreview(row: typeof valoAIDrafts.$inferSelect) {
   return { ...p, acceptedDocumentId: row.acceptedDocumentId };
 }
 export async function customerAIUsage(actor: WorkspaceActor) {
+  const { workspaceTransaction } = await runtime();
   return workspaceTransaction(actor, async (tx) => {
     const b = await budget(tx, actor.workspaceId, actor.identityId);
     return GetCustomerAIUsageResponse.parse({
@@ -102,6 +119,7 @@ export async function createCustomerAIDraft(
   const input = customerAIInput.parse(raw);
   const { idempotencyKey, ...facts } = input,
     inputHash = hashAI(facts);
+  const { valoAIDrafts, workspaceTransaction, workspaceEvent } = await runtime();
   const reserved = await workspaceTransaction(actor, async (tx) => {
     const [old] = await tx
       .select()
@@ -232,6 +250,7 @@ export async function createCustomerAIDraft(
   });
 }
 export async function getCustomerAIDraft(actor: WorkspaceActor, id: string) {
+  const { valoAIDrafts, workspaceTransaction } = await runtime();
   return workspaceTransaction(actor, async (tx) => {
     const [row] = await tx
       .select()
@@ -274,6 +293,7 @@ export async function acceptCustomerAIDraft(actor: WorkspaceActor, id: string, r
     );
   const input = documentInput.parse({ title: selection.title, content: selection.content }),
     selectionHash = hashAI(input);
+  const { valoAIDrafts, workspaceTransaction, workspaceEvent } = await runtime();
   const documentId = await workspaceTransaction(actor, async (tx) => {
     const [row] = await tx
       .select()

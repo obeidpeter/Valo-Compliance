@@ -11,7 +11,7 @@ import {
   InferenceBudgetStore,
   verifiedPilotImports,
 } from "../modules/ai";
-import { loadInferenceHistory } from "../lib/inference-history-loader";
+import { loadInferenceHistory } from "../modules/ai-lanes";
 async function main() {
   if (process.env.NODE_ENV !== "development" || process.env.REPLIT_DEPLOYMENT)
     throw Error("DEVELOPMENT_ONLY");

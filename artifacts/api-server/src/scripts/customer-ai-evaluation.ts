@@ -5,10 +5,10 @@ import { fileURLToPath } from "node:url";
 import { and, eq } from "drizzle-orm";
 import { db, pool, valoAIDrafts } from "@workspace/db";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
-import { customerAICases } from "../lib/valo-customer-ai-fixtures";
-import { customerProviderPayload, hashAI } from "../lib/valo-customer-ai-domain";
-import { organizeCustomerDraft, type CustomerTransport } from "../lib/valo-customer-ai-model";
-import { createCustomerAIDraft } from "../lib/valo-customer-ai";
+import { customerAICases } from "../modules/ai-lanes";
+import { customerProviderPayload, hashAI } from "../modules/ai-lanes";
+import { organizeCustomerDraft, type CustomerTransport } from "../modules/ai-lanes";
+import { createCustomerAIDraft } from "../modules/ai-lanes";
 import { resolveWorkspace } from "../lib/valo-store";
 import { logger } from "../platform/logger";
 async function main() {

@@ -711,21 +711,21 @@
     {
       "requirement": "AI-001",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "scope and permission injection are blocked across all four tasks",
       "proves": "Across the four drafting tasks, every adversarial note in the fixtures is flagged as unsupported, including requests for a legal opinion or an employment contract."
     },
     {
       "requirement": "AI-002",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "invalid provider structure gets one bounded retry, never fake success",
       "proves": "A model response that does not fit the draft plan schema, from a controlled transport, is tried twice in all and then ends with no plan and a schema failure code."
     },
     {
       "requirement": "AI-002",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.test.ts",
       "test": "all six original fault cases execute the real organizer with declared synthetic clarification and zero network",
       "proves": "With controlled responses and no network, two malformed responses get exactly two attempts and end with no plan and a fallback draft that keeps the supplied names, reference, dates and amounts, while a malformed then valid response gives a draft on the second attempt."
     },
@@ -739,14 +739,14 @@
     {
       "requirement": "AI-003",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "scope and permission injection are blocked across all four tasks",
       "proves": "Notes asking the AI to guess a tax rate and invent a registration number are flagged as unsupported in all four drafting tasks, as are notes asking it to forge payment proof in the invoice and payment reminder tasks."
     },
     {
       "requirement": "AI-003",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.test.ts",
       "test": "all six original fault cases execute the real organizer with declared synthetic clarification and zero network",
       "proves": "A controlled model response that adds fields outside the draft plan, a remote image link and a script, is rejected on both attempts and the link does not reach the draft, and in each of the six fault cases the draft keeps exactly the supplied names, reference, dates and amounts."
     },
@@ -774,14 +774,14 @@
     {
       "requirement": "AI-005",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "only bounded redacted selected notes enter model context",
       "proves": "The payload built for the model has only task, tone and notes fields, and the business name, an email address and the 234 country code of a phone number in a note do not appear in it."
     },
     {
       "requirement": "AI-005",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
       "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider",
       "proves": "A controlled transport receives exactly the redacted payload built from the request's own selected notes, and neither that payload, the preview nor the workspace's event records contain the marker note of another workspace's document, which the workspace cannot open."
     },
@@ -795,7 +795,7 @@
     {
       "requirement": "AI-006",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "scope and permission injection are blocked across all four tasks",
       "proves": "Notes telling the AI to ignore its system instructions and reveal other workspaces' drafts and secrets are flagged as unsupported in all four drafting tasks."
     },
@@ -816,7 +816,7 @@
     {
       "requirement": "AI-007",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
       "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider",
       "proves": "On a development database with a synthetic workspace at its daily AI limit while AI is otherwise enabled through a stubbed spending-approval check, a new draft request ends as a manual fallback and never reaches the provider adapter, and a manual edit to a saved document still saves and the workspace's data download still includes the document."
     },
@@ -830,21 +830,21 @@
     {
       "requirement": "AI-008",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/inference-customer-evaluation.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-evaluation.test.ts",
       "test": "preparation preserves all original60 identities, full oracles and actual numeric checks without invented follow-ups",
       "proves": "All 60 authored customer drafting cases keep their identities, expected checks and critical-failure conditions, integer-kobo arithmetic built on the application's money functions reproduces all 45 expected amounts in them, and no case is marked as accepted for output quality."
     },
     {
       "requirement": "AI-009",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
       "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider",
       "proves": "Under an injected provider outage, a draft request makes one attempt and ends as a manual fallback that is not saved as a document, while a concurrent manual edit saves exactly one new revision that keeps the document's earlier text, and the workspace's data download still works."
     },
     {
       "requirement": "AI-009",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.test.ts",
       "test": "all six original fault cases execute the real organizer with declared synthetic clarification and zero network",
       "proves": "Controlled timeout, rate-limit and outage errors each get one attempt through the real draft organizer, with no network, and end with no plan and a fallback draft that keeps the supplied names, reference, dates and amounts."
     },
@@ -961,6 +961,20 @@
       "proves": "With a controlled stand-in for the released-rule registry, creating a task from a saved recommendation is refused with a conflict, writing no task, reminder or event, when the rule's review has expired, its source check lies in the future or another active version conflicts with it, and an expired review is refused the same way when the task has a confirmed due date and reminders are on."
     },
     {
+      "requirement": "CMP-007",
+      "job": "foundation",
+      "file": "scripts/src/valo/checker-held-evidence.test.ts",
+      "test": "a rule held for stale or conflicting evidence gives no recommendation, says why it is held and keeps the official route",
+      "proves": "In the rule-evaluation scenarios where a rule is held for stale evidence (three) or for conflicting released versions (one), the checker gives that rule no result, no source-backed recommendation and no suggested template, names the hold reason among the gaps, keeps a .gov.ng official route and says it is not legal certification."
+    },
+    {
+      "requirement": "CMP-007",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/assessment-result.test.tsx",
+      "test": "the result page shows why a held rule gives no result and links each official route",
+      "proves": "The checker's result page, rendered on the server from a synthetic result with no items, lists a held rule's stale-evidence reason among the coverage gaps, says no released rules cover these answers yet and links the official route to open in a new tab."
+    },
+    {
       "requirement": "DOC-001",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
@@ -1054,7 +1068,7 @@
     {
       "requirement": "DOC-007",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.integration.test.ts",
       "test": "development AI persistence, private ownership, atomic acceptance and quotas",
       "proves": "Two concurrent acceptances of one synthetic AI draft, made without any provider call, create a single document, and accepting that draft again with a different title is refused with a conflict."
     },
@@ -1369,7 +1383,7 @@
     {
       "requirement": "EDT-005",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "missing facts are named, never invented",
       "proves": "For AI drafting input with no issuer name and no document number, the missing-information check names exactly those two fields."
     },
@@ -1472,6 +1486,13 @@
       "proves": "The server's document checks refuse a section of type html holding a script tag, a selected clause, two sections with the same ID and an extra workspace field."
     },
     {
+      "requirement": "EDT-009",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "document text that tries to fetch a URL, read a local file or run script does none of it in the PDF or DOCX",
+      "proves": "Markup in a synthetic document's text that would fetch a URL or run a script is printed as text in the rendered PDF and DOCX, and no request reaches the local test server it points at."
+    },
+    {
       "requirement": "IAM-001",
       "job": "foundation",
       "file": "artifacts/api-server/src/platform/session-verification.test.ts",
@@ -1521,6 +1542,20 @@
       "proves": "Rendered on the server, the web app's loading shell carries aria-busy=\"true\" and aria-label=\"Loading Valo\"."
     },
     {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "on a phone, each primary public page fits the screen, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure",
+      "proves": "axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing on ten compiled primary public pages at phone width, whose keyboard focus moves only to visible elements with a focus outline; no manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "a public page whose data fails to load shows an alert with a retry button, and retrying recovers",
+      "proves": "When the API fails, the compiled library, compliance, industries and resources pages announce the failure in a role=\"alert\" element with a retry button, and axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing in that state."
+    },
+    {
       "requirement": "NFR-007",
       "job": "foundation",
       "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",
@@ -1544,9 +1579,16 @@
     {
       "requirement": "NFR-008",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "organisation instructions remain bounded and cannot populate missing fields",
       "proves": "When a customer's AI draft request leaves the issue date blank, the issue date is reported missing and the draft built from the request leaves it blank, even though the drafting instruction names a date."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/tasks/valo-reminder-time.test.ts",
+      "test": "a reminder is due at 09:00 in Lagos on the chosen day, across month, year and leap-day boundaries",
+      "proves": "A reminder for a confirmed due date is scheduled for 09:00 Lagos time on the intended calendar day and stored as 08:00 UTC across a year end, a leap day, a non-leap February and a mid-year date, and an impossible date (29 February 2027) or an unsupported reminder offset is refused."
     },
     {
       "requirement": "NFR-009",
@@ -1803,7 +1845,7 @@
     {
       "requirement": "PRV-001",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "AI requires separate notice acceptance; manual drafting remains independent",
       "proves": "An AI drafting request without its separate processing consent is refused, while a manual draft is still built from the same details without that consent."
     },
@@ -1987,7 +2029,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/routes/valo-checker-http.integration.test.ts",
       "test": "rich checker HTTP preview, consented save, history and isolation",
-      "proves": "Over HTTP, a signed-in preview saves no assessment, saving one without explicit consent is refused, a saved assessment reads back with the same answers and result hash, and comparing two saved assessments names the changed business-name answer."
+      "proves": "Over HTTP, an anonymous visitor's checker answers appear in no text, array or JSON column of any database table afterwards and the reply is marked no-store, a signed-in preview saves no assessment, saving one without explicit consent is refused, a saved assessment reads back with the same answers and result hash, and comparing two saved assessments names the changed business-name answer."
     },
     {
       "requirement": "RUL-007",
@@ -2029,7 +2071,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
       "test": "real PostgreSQL source correction, staff boundaries, abandoned jobs and final-dispatch ordering",
-      "proves": "When the captured source behind a synthetic rule changes, the rule is blocked at once and all 202 tasks linked to it in two workspaces are kept and flagged for review with no reminder left pending, while a task for an unaffected rule is not flagged, saved assessments are unchanged, the workspace holding 201 of those tasks gets correction notices and the workspace holding only the unaffected task gets none."
+      "proves": "When the captured source behind a synthetic rule changes, the rule is blocked at once and all 202 tasks linked to it in two workspaces are kept, not deleted, and flagged for review with the due date their user confirmed unchanged with no reminder left pending, while a task for an unaffected rule is not flagged, saved assessments are unchanged, the workspace holding 201 of those tasks gets correction notices and the workspace holding only the unaffected task gets none."
     },
     {
       "requirement": "RUL-009",
@@ -2072,6 +2114,13 @@
       "file": "artifacts/api-server/src/lib/valo-render.test.ts",
       "test": "renderer rejects unknown formatting, arbitrary clause inputs and invalid dates",
       "proves": "The renderer refuses a document whose font setting is a URL to the cloud metadata address instead of one of its fixed fonts, and one that selects an unreleased clause."
+    },
+    {
+      "requirement": "SEC-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-render.test.ts",
+      "test": "document text that tries to fetch a URL, read a local file or run script does none of it in the PDF or DOCX",
+      "proves": "A synthetic document whose title, notes, paragraph, list and table cell hold markup that would load from a local test server, frame a local file and run a script renders to a PDF and a DOCX without any request reaching that server; neither file holds the local file's content, both print the markup as text, and the DOCX has no macro part or macro content type."
     },
     {
       "requirement": "SEC-005",
@@ -2142,6 +2191,27 @@
       "file": "artifacts/valo/src/client-app.test.tsx",
       "test": "browser-only app server-renders a deterministic accessible loading shell",
       "proves": "Rendered on the server, the web app is exactly a loading shell with aria-busy=\"true\" and aria-label=\"Loading Valo\", with no client-side rendering bailout, template element or window.location reference."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "on a phone, each primary public page fits the screen, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure",
+      "proves": "On an emulated phone 360 pixels wide, the compiled library, compliance, industries, resources, services, pricing, support, help, privacy and terms pages do not scroll sideways, and eight Tab presses on each move focus only to visible elements with a focus outline."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "a public page waiting for its data shows a loading placeholder, then an empty state when nothing is published",
+      "proves": "On an emulated phone, the compiled library, compliance and resources pages show a loading placeholder and no error while their data is held back, then the empty state once the API answers with nothing published."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
+      "test": "a public page whose data fails to load shows an alert with a retry button, and retrying recovers",
+      "proves": "On an emulated phone, when the API fails, the compiled library, compliance, industries and resources pages show an alert with a retry button, and retrying once the API answers removes every alert."
     },
     {
       "requirement": "WRK-001",

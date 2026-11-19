@@ -10,7 +10,7 @@ import {
 import { documentInput } from "../../lib/valo-validation";
 import { candidateArithmetic } from "./candidate-arithmetic";
 import { claimLocatorMatches } from "./claim-locator";
-import { supportsOperationalInferenceTemplate } from "../../lib/inference-operational-coverage";
+import { supportsOperationalInferenceTemplate } from "./inference-operational-coverage";
 type Provenance = {
   hash: string;
   sourceText: string;

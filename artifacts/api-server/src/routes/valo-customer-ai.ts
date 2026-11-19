@@ -6,7 +6,7 @@ import {
   getCustomerAIDraft,
   acceptCustomerAIDraft,
   customerAIUsage,
-} from "../lib/valo-customer-ai";
+} from "../modules/ai-lanes";
 import { consumeQuota } from "../lib/valo-quota";
 import { quotaSubjectHash } from "../lib/valo-quota-policy";
 import { setting } from "../platform/settings";

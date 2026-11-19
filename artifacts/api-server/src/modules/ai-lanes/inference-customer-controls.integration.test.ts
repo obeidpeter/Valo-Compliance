@@ -10,7 +10,7 @@ test(
     skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only",
   },
   async (t) => {
-    const { assertDevelopmentRuntime } = await import("../platform/valo-development-runtime");
+    const { assertDevelopmentRuntime } = await import("../../platform/valo-development-runtime");
     assertDevelopmentRuntime();
     let realProviderCalls = 0;
     const forbidden = async () => {
@@ -21,7 +21,7 @@ test(
     // quota/kill-switch failures cannot pass because spending is already disabled.
     // Real approval/admission/settlement are tested independently; never write an
     // enabled approval row, and fail if the default transport is attempted.
-    t.mock.module(new URL("../modules/ai/managed-inference.ts", import.meta.url).href, {
+    t.mock.module(new URL("../ai/managed-inference.ts", import.meta.url).href, {
       namedExports: {
         hasApprovedInferenceContext: () => true,
         managedCompletion: forbidden,
@@ -40,15 +40,16 @@ test(
       valoMemberships,
       valoWorkspaces,
     } = await import("@workspace/db");
-    const { resolveWorkspace, createDocument, getDocument, saveDocument } = await import("./valo-store");
+    const { resolveWorkspace, createDocument, getDocument, saveDocument } =
+      await import("../../lib/valo-store");
     const { createCustomerAIDraft, customerAIUsage } = await import("./valo-customer-ai");
     const { prepareCustomerEvaluationPlan } = await import("./inference-customer-evaluation");
     const { controlledCustomerFault } = await import("./inference-customer-controls");
     const { organizeCustomerDraft } = await import("./valo-customer-ai-model");
     const { hashAI, customerProviderPayload, customerPreview } = await import("./valo-customer-ai-domain");
     const { buildBusinessDraft } = await import("@workspace/valo-core/customer-document");
-    const { documentInput } = await import("./valo-validation");
-    const { withWorkspaceDataFile } = await import("../modules/privacy/valo-data-download");
+    const { documentInput } = await import("../../lib/valo-validation");
+    const { withWorkspaceDataFile } = await import("../privacy/valo-data-download");
     const run = randomUUID(),
       a = await resolveWorkspace(`synthetic-customer-control-a-${run}`),
       b = await resolveWorkspace(`synthetic-customer-control-b-${run}`),

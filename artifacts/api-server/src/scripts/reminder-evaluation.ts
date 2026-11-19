@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { and, eq } from "drizzle-orm";
 import { db, pool, valoAIDrafts, valoDocumentRevisions } from "@workspace/db";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
-import { createCustomerAIDraft, acceptCustomerAIDraft, getCustomerAIDraft } from "../lib/valo-customer-ai";
+import { createCustomerAIDraft, acceptCustomerAIDraft, getCustomerAIDraft } from "../modules/ai-lanes";
 import { resolveWorkspace, saveDocument, getDocument } from "../lib/valo-store";
 import { requestExport, getExport, downloadExport } from "../modules/exports";
 import { recordedBalance, formatKobo } from "@workspace/valo-core/money";
@@ -18,7 +18,7 @@ import {
   customerNoticeVersion,
   customerProviderPayload,
   hashAI,
-} from "../lib/valo-customer-ai-domain";
+} from "../modules/ai-lanes";
 const exec = promisify(execFile),
   root = fileURLToPath(new URL("../../../../", import.meta.url));
 const hash = (data: Buffer | string) => createHash("sha256").update(data).digest("hex");

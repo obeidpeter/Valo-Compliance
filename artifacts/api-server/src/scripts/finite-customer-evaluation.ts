@@ -10,14 +10,14 @@ import {
 } from "../modules/ai";
 import {
   prepareCustomerEvaluationPlan,
-  prepareCustomerFiniteManifest,
+  prepareCustomerEvaluationManifest,
   validateCustomerEvaluationWork,
-} from "../lib/inference-customer-evaluation";
+} from "../modules/ai-lanes";
 import {
   existingCustomerEvaluationActor,
   assertCustomerEvaluationActor,
   executePreparedCustomerCase,
-} from "../lib/inference-customer-runtime";
+} from "../modules/ai-lanes";
 import type { FiniteManifest } from "../modules/ai";
 import type { ArtifactRef } from "../modules/publication";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
@@ -45,7 +45,7 @@ async function main() {
       throw Error("EXPLICIT_SYNTHETIC_FOLLOWUPS_REQUIRED");
     const plan = await prepareCustomerEvaluationPlan(null, new Date(), followupFile.values);
     const [{ runCustomerFaultControls }, { putPublicationArtifact }] = await Promise.all([
-      import("../lib/inference-customer-controls"),
+      import("../modules/ai-lanes"),
       import("../modules/publication"),
     ]);
     const report = await runCustomerFaultControls(plan),
@@ -73,7 +73,7 @@ async function main() {
   ] = await Promise.all([
     import("@workspace/db"),
     import("../modules/publication"),
-    import("../lib/inference-work-bindings"),
+    import("../modules/ai-lanes"),
     import("../modules/ai"),
   ]);
   try {
@@ -99,7 +99,7 @@ async function main() {
         }
         try {
           await assertCustomerEvaluationActor(plan, entry);
-          const manifest = prepareCustomerFiniteManifest(plan, artifact, entry.caseId, packageId);
+          const manifest = prepareCustomerEvaluationManifest(plan, artifact, entry.caseId, packageId);
           for (const work of manifest.works) await assertFiniteWorkBindings(work);
           const expiry = new Date(
             Math.min(Date.parse(plan.expiresAt), existing ? Date.parse(existing.expiresAt) : Infinity),
@@ -177,7 +177,7 @@ async function main() {
       primary = manifest.works.find((w) => !w.retryOf);
     if (!primary?.bindings.customerPlan || !manifest.packageId) throw Error("CUSTOMER_RUNNER_SCOPE_INVALID");
     const { plan, entry } = await validateCustomerEvaluationWork(primary, getPublicationArtifact);
-    const expected = prepareCustomerFiniteManifest(
+    const expected = prepareCustomerEvaluationManifest(
       plan,
       primary.bindings.customerPlan,
       entry.caseId,
@@ -190,8 +190,8 @@ async function main() {
       { organizeCustomerDraft },
     ] = await Promise.all([
       import("../modules/ai"),
-      import("../lib/valo-customer-ai"),
-      import("../lib/valo-customer-ai-model"),
+      import("../modules/ai-lanes"),
+      import("../modules/ai-lanes"),
     ]);
     // This command is the composition root: the dispatcher checks approved work with these.
     provideFiniteWorkBindings(assertFiniteWorkBindings);

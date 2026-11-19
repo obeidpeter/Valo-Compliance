@@ -8,8 +8,8 @@ import {
   expectedSourceNumbers,
   explicitBoundaryFollowup,
   type AuthoredCustomerCase,
-} from "./valo-customer-case-binding";
-import { customerProviderPayload } from "./valo-customer-ai-domain";
+} from "../modules/ai-lanes/valo-customer-case-binding";
+import { customerProviderPayload } from "../modules/ai-lanes/valo-customer-ai-domain";
 import { candidateArithmetic } from "../modules/publication/candidate-arithmetic";
 import { readTemplateIntake, readGuidanceIntake } from "../modules/publication/operational-intake";
 import { templateCandidate } from "../modules/publication/operational-content";

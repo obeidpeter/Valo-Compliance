@@ -3,7 +3,7 @@ import { CreateCustomerAIDraftBody, CreateCustomerAIDraftResponse } from "@works
 import { canonical } from "@workspace/valo-core";
 import { buildBusinessDraft, type CustomerPlan } from "@workspace/valo-core/customer-document";
 import { financialBlocks, recordedBalance } from "@workspace/valo-core/money";
-import { calendarDate } from "./valo-validation";
+import { calendarDate } from "../../lib/valo-validation";
 import { z } from "zod";
 export const customerPromptVersion = "customer-extractive-v3";
 export const customerNoticeVersion = "customer-ai-development-notice-v2";

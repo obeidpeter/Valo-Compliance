@@ -1045,7 +1045,7 @@ test(
         // Customer requests act as a database role that may run only the commands they use
         // (decision 0008), so a missing grant would answer here as a server error. Read from
         // the contract, so a new private operation fails until it has a request below.
-        const { customerAICases } = await import("../lib/valo-customer-ai-fixtures");
+        const { customerAICases } = await import("../modules/ai-lanes/valo-customer-ai-fixtures");
         const today = new Date().toISOString().slice(0, 10);
         const profileRevision = async () =>
           Number(

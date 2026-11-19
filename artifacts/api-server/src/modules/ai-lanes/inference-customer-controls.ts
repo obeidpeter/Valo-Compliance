@@ -1,7 +1,7 @@
 import { organizeCustomerDraft, type CustomerTransport } from "./valo-customer-ai-model";
 import { customerPreview, hashAI } from "./valo-customer-ai-domain";
-import { requestDigest } from "../modules/ai";
-import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
+import { requestDigest } from "../ai";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import type { CustomerEvaluationPlan, CustomerCasePreparation } from "./inference-customer-evaluation";
 
 /** Only a controlled response generator, never a provider transport. The callback

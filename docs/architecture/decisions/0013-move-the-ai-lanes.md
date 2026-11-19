@@ -1,6 +1,7 @@
 # 0013 — Move the AI lanes into a module of their own
 
-Date: 2026-11-18. Status: **proposed**. Nothing is moved yet.
+Date: 2026-11-18. Status: accepted (owner instruction "implement all", given in reply to the
+proposal to carry out this move) and implemented in the four commits below.
 
 ## Context
 
@@ -62,7 +63,7 @@ Two lane files load the database client when imported:
 - `valo-customer-ai.ts`, both directly and through `modules/rules`, whose `valo-assessments.ts`
   imports `@workspace/db` at the top.
 
-## Decision (proposed)
+## Decision
 
 Move the lanes into a module of their own, `modules/ai-lanes`, above `modules/ai`, in four
 commits.

@@ -150,8 +150,8 @@ test(
       for (let j = 0; j < count; j++) {
         const taskId = randomUUID();
         taskIds.push(taskId);
-        await db.execute(sql`insert into valo_tasks(id,workspace_id,title,notes,assessment_id,rule_id,rule_version,actor_id)
-    values(${taskId}::uuid,${actor.workspaceId}::uuid,'Controlled task','No legal recommendation',${id}::uuid,${n < 2 ? prefix : prefix + "-unaffected"},1,${actor.identityId})`);
+        await db.execute(sql`insert into valo_tasks(id,workspace_id,title,notes,assessment_id,rule_id,rule_version,actor_id,due_date,date_confirmed)
+    values(${taskId}::uuid,${actor.workspaceId}::uuid,'Controlled task','No legal recommendation',${id}::uuid,${n < 2 ? prefix : prefix + "-unaffected"},1,${actor.identityId},'2027-03-15',true)`);
         await db.execute(
           sql`insert into valo_reminder_outbox(id,workspace_id,task_id,idempotency_key,scheduled_at,status) values(${randomUUID()}::uuid,${actor.workspaceId}::uuid,${taskId}::uuid,${taskId},${now},'pending')`,
         );
@@ -208,6 +208,17 @@ test(
             .rows[0]!.n,
         );
         assert.equal(marked, 202);
+        // RUL-009: flagging neither deletes a task nor moves the date its user confirmed.
+        assert.equal(
+          Number(
+            (
+              await db.execute(
+                sql`select count(*) n from valo_tasks where rule_id=${prefix} and needs_review and due_date='2027-03-15' and date_confirmed and deleted_at is null`,
+              )
+            ).rows[0]!.n,
+          ),
+          202,
+        );
         assert.equal(
           (await db.execute(sql`select needs_review from valo_tasks where id=${taskIds.at(-1)!}::uuid`))
             .rows[0]!.needs_review,

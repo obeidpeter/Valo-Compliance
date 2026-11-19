@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { sha256 } from "@workspace/valo-core";
 import { publicationWorkspaceRoot } from "./operational-policy";
 import { operationalDocument, type OriginalSection } from "./original-content-adapter";
-import { supportsOperationalInferenceTemplate } from "../../lib/inference-operational-coverage";
+import { supportsOperationalInferenceTemplate } from "./inference-operational-coverage";
 /** Extract ID boundaries, not arbitrary ## headings: customer forms contain
  * legitimate ## subsections. Field specifications/examples are never masters. */
 export function extractOperationalBody(

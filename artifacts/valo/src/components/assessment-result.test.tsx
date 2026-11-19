@@ -109,3 +109,30 @@ test("the result page shows every coverage gap and the excluded sectors, and no 
   assert.ok(html.includes(result.notice));
   assert.doesNotMatch(html, /score|\d\s*%|percent/i);
 });
+
+// CMP-007: a rule held for stale evidence "show[s] an uncertainty notice and official route".
+test("the result page shows why a held rule gives no result and links each official route", () => {
+  const held: AssessmentResult = {
+    ...result,
+    items: [],
+    gaps: [...result.gaps, "SYN-HELD: Evidence is stale or not yet checked"],
+    officialRoutes: [{ title: "Synthetic official route", url: "https://example.test/route" }],
+    sourceBackedRecommendations: 0,
+  };
+  const page = renderToStaticMarkup(
+    React.createElement(
+      QueryClientProvider,
+      { client: new QueryClient() },
+      React.createElement(AssessmentResultView, { result: held }),
+    ),
+  );
+  assert.ok(page.includes("SYN-HELD: Evidence is stale or not yet checked</li>"), "the held rule's reason");
+  assert.ok(
+    page.includes("No released rules cover these answers yet."),
+    "no result is presented as a finding",
+  );
+  assert.match(
+    page,
+    /<a href="https:\/\/example\.test\/route" target="_blank" rel="noreferrer noopener"[^>]*>Synthetic official route/,
+  );
+});

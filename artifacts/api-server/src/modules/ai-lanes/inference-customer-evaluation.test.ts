@@ -4,15 +4,15 @@ import { readFile } from "node:fs/promises";
 import { sha256 } from "@workspace/valo-core";
 import {
   prepareCustomerEvaluationPlan,
-  prepareCustomerFiniteManifest,
+  prepareCustomerEvaluationManifest,
   validateCustomerEvaluationWork,
 } from "./inference-customer-evaluation";
 import {
   prepareFiniteAllocationPackage,
   allocationPackageId,
   assertWorkPackageMembership,
-} from "../modules/ai/inference-allocation-package";
-import { requestDigest } from "../modules/ai/inference-budget";
+} from "../ai/inference-allocation-package";
+import { requestDigest } from "../ai/inference-budget";
 import { buildBusinessDraft } from "@workspace/valo-core/customer-document";
 const actor = {
   workspaceId: "11111111-1111-4111-8111-111111111111",
@@ -28,7 +28,7 @@ test("preparation preserves all original60 identities, full oracles and actual n
   const plan = await prepareCustomerEvaluationPlan(null),
     corpus = JSON.parse(
       await readFile(
-        new URL("../../../../docs/evaluation-candidates/customer-ai.json", import.meta.url),
+        new URL("../../../../../docs/evaluation-candidates/customer-ai.json", import.meta.url),
         "utf8",
       ),
     );
@@ -60,7 +60,12 @@ test("preparation preserves all original60 identities, full oracles and actual n
   const bytes = Buffer.from(JSON.stringify(plan));
   assert.throws(
     () =>
-      prepareCustomerFiniteManifest(plan, ref(bytes), "CAI-CAND-INV-01", "finite-package:" + "a".repeat(64)),
+      prepareCustomerEvaluationManifest(
+        plan,
+        ref(bytes),
+        "CAI-CAND-INV-01",
+        "finite-package:" + "a".repeat(64),
+      ),
     /PREPARATION_HELD/,
   );
 });
@@ -95,7 +100,12 @@ test("genuine customer submanifest binds current input, code, source, case and e
     bytes = Buffer.from(JSON.stringify(plan)),
     artifact = ref(bytes),
     pkg = await prepareFiniteAllocationPackage();
-  const manifest = prepareCustomerFiniteManifest(plan, artifact, "CAI-CAND-INV-01", allocationPackageId(pkg));
+  const manifest = prepareCustomerEvaluationManifest(
+    plan,
+    artifact,
+    "CAI-CAND-INV-01",
+    allocationPackageId(pkg),
+  );
   assert.equal(manifest.works.length, 2);
   assert.notEqual(manifest.works[0]!.key, manifest.works[1]!.key);
   assert.equal(manifest.works[1]!.retryOf, manifest.works[0]!.key);
@@ -129,7 +139,7 @@ test("genuine customer submanifest binds current input, code, source, case and e
     );
   }
   assert.throws(
-    () => prepareCustomerFiniteManifest(plan, artifact, "CAI-CAND-PRO-06", allocationPackageId(pkg)),
+    () => prepareCustomerEvaluationManifest(plan, artifact, "CAI-CAND-PRO-06", allocationPackageId(pkg)),
     /PREPARATION_HELD/,
   );
   const expired = { ...plan, expiresAt: new Date(0).toISOString() };

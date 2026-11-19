@@ -6,11 +6,6 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { candidateDigest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import type { ArtifactRef } from "../modules/publication/publication-artifacts";
-import {
-  prepareFiniteAllocationPackage,
-  allocationPackageId,
-} from "../modules/ai/inference-allocation-package";
-import { selectPreparedProposal } from "./inference-prepared-report";
 import type { finiteManifestProposal } from "../modules/ai/inference-manifest";
 
 test("actual preparation and saved-readiness callers bind another form without authoring, review, approval or publication", async (t) => {
@@ -135,7 +130,8 @@ test("actual preparation and saved-readiness callers bind another form without a
     },
   });
   const { prepareOperationalCandidateRelease } = await import("../modules/editorial/operational-preparation");
-  const { readOperationalInferenceReadiness } = await import("./inference-operational-ready");
+  const { readOperationalInferenceReadiness } =
+    await import("../modules/ai-lanes/inference-operational-ready");
   const now = new Date(),
     quote = "We hereby assign to you all our right, title, and interest, if any, in and to Output.";
   const snapshot = {
@@ -228,6 +224,11 @@ test("actual preparation and saved-readiness callers bind another form without a
   assert.equal(networkCalls, 0);
 });
 test("multi-candidate reports require exact selection and retain old single-pair compatibility", async () => {
+  // Loaded here, not at the top: the AI module reads the publication index, and the test above
+  // stands in for parts of publication before anything loads it.
+  const { prepareFiniteAllocationPackage, allocationPackageId } =
+    await import("../modules/ai/inference-allocation-package");
+  const { selectPreparedProposal } = await import("../modules/ai-lanes/inference-prepared-report");
   const pkg = await prepareFiniteAllocationPackage(),
     id = allocationPackageId(pkg);
   const proposal = (candidateVersionId: string) =>

@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm";
-import { db, valoContentVersions } from "@workspace/db";
 import { candidateDigest, digest, publicationSchema } from "@workspace/valo-core";
 import {
   getPublicationArtifact,
@@ -9,15 +8,17 @@ import {
   operationalPolicy,
   operationalMechanicalChecks,
   inspectOperationalExports,
+  supportsOperationalInferenceTemplate,
   type OperationalServerEvidence,
   type ReleaseAttestations,
-} from "../modules/publication";
-import { supportsOperationalInferenceTemplate } from "./inference-operational-coverage";
+} from "../publication";
 
 /** Reconstruct a supported saved original form and recheck all its retained
  * private evidence. Intake coverage alone never establishes readiness. */
 export async function readOperationalInferenceReadiness(candidateVersionId: string) {
   if (!/^[a-f0-9-]{36}$/.test(candidateVersionId)) throw Error("CANDIDATE_VERSION_REQUIRED");
+  // The database client loads when a readiness check runs, not with every reader of this file.
+  const { db, valoContentVersions } = await import("@workspace/db");
   const [row] = await db
     .select()
     .from(valoContentVersions)

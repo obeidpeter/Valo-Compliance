@@ -3,8 +3,8 @@ import { mkdir, mkdtemp, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { db, pool, valoContentVersions } from "@workspace/db";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
-import { operationalInferenceTemplateIds } from "../lib/inference-operational-coverage";
-import { readOperationalInferenceReadiness } from "../lib/inference-operational-ready";
+import { operationalInferenceTemplateIds } from "../modules/publication";
+import { readOperationalInferenceReadiness } from "../modules/ai-lanes";
 import { prepareOperationalCandidateRelease } from "../modules/editorial";
 import {
   getPublicationArtifact,
