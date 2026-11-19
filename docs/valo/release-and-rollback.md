@@ -69,7 +69,17 @@ Everything that runs is tied to that SHA.
    `backup_cycle.py` receipt with both read-backs). Record both snapshot IDs.
 4. The release notes list requirement IDs touched, new or changed settings (the
    `.env.example` diff), new operator commands and the migrations.
-5. The owner has approved the deployment.
+5. The release record is kept with them (OPS-005). Run
+   `pnpm --filter @workspace/api-server exec tsx src/scripts/release-record.ts <sha>`
+   in the clean checkout of the release commit against the database the release runs on.
+   It records:
+   - the commit;
+   - the migrations the release ships and those the database has applied, and whether they match;
+   - every content and rule version with its status;
+   - the known issues in `docs/valo/known-issues.json` as committed.
+
+   It only reads. Update the known issues before the release commit.
+6. The owner has approved the deployment.
 
 ## Schema compatibility rule: expand, then contract
 

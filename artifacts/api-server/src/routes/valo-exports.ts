@@ -4,17 +4,24 @@ import {
   CreateDocumentExportParams,
   ListDocumentExportsParams,
   ListDocumentExportsResponse,
+  ListWorkspaceExportsResponse,
   RetryDocumentExportParams,
   RetryDocumentExportBody,
   RetryDocumentExportResponse,
   DownloadDocumentExportParams,
 } from "@workspace/api-zod";
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
-import { requestExport, listExports, retryExport, downloadExport } from "../modules/exports";
+import {
+  requestExport,
+  listExports,
+  listWorkspaceExports,
+  retryExport,
+  downloadExport,
+} from "../modules/exports";
 import { consumeQuota, quotaSubjectHash } from "../lib/valo-quota";
 import { setting } from "../platform/settings";
 const router = Router();
-const paths = ["/v1/documents/:id/exports", "/v1/exports/:id/retry", "/v1/exports/:id/file"];
+const paths = ["/v1/documents/:id/exports", "/v1/exports", "/v1/exports/:id/retry", "/v1/exports/:id/file"];
 router.use(paths, sameOriginMutation, verifiedWorkspace);
 router.use(paths, async (req, res, next) => {
   if (req.method === "POST") {
@@ -38,6 +45,10 @@ router.post("/v1/documents/:id/exports", async (req, res) => {
   const { id } = CreateDocumentExportParams.parse(req.params);
   const headers = CreateDocumentExportHeader.parse({ "Idempotency-Key": req.get("Idempotency-Key") });
   res.status(202).json(await requestExport(res.locals.valoActor, id, headers["Idempotency-Key"], req.body));
+});
+// The business library (DOC-005): the workspace's ready exports and the template version of each.
+router.get("/v1/exports", async (_req, res) => {
+  res.json(ListWorkspaceExportsResponse.parse(await listWorkspaceExports(res.locals.valoActor)));
 });
 router.post("/v1/exports/:id/retry", async (req, res) => {
   const { id } = RetryDocumentExportParams.parse(req.params);

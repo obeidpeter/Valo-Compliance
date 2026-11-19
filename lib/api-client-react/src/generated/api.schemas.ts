@@ -1427,6 +1427,34 @@ export interface ExportJob {
   updatedAt: string;
 }
 
+export type LibraryExportFormat = typeof LibraryExportFormat[keyof typeof LibraryExportFormat];
+
+
+export const LibraryExportFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+} as const;
+
+export interface LibraryTemplateVersion {
+  versionId: string;
+  templateId: string;
+  version: number;
+}
+
+export interface LibraryExport {
+  id: string;
+  documentId: string;
+  documentTitle: string;
+  revisionId: string;
+  revision: number;
+  format: LibraryExportFormat;
+  readyAt: string;
+  /** @nullable */
+  expiresAt: string | null;
+  downloadUrl: string;
+  template: LibraryTemplateVersion | null;
+}
+
 export interface SessionMfaVerification {
   verified: true;
   checkedAt: string;

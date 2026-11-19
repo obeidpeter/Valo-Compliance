@@ -1058,6 +1058,7 @@ test(
           );
         const { businessName: _name, marketingConsent: _consent, ...facts } = syntheticProfile;
         const withoutIdentifier: Record<string, { query?: string; body?: () => unknown }> = {
+          "GET /v1/exports": {},
           "GET /workspace": {},
           "GET /workspace/account": {},
           "GET /workspace/ai-usage": {},

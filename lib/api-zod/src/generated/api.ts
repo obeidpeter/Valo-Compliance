@@ -3217,6 +3217,25 @@ export const CreateDocumentExportResponse = zod.object({
 })
 
 
+export const ListWorkspaceExportsResponseItem = zod.object({
+  "id": zod.uuid(),
+  "documentId": zod.uuid(),
+  "documentTitle": zod.string(),
+  "revisionId": zod.uuid(),
+  "revision": zod.int(),
+  "format": zod.enum(['docx', 'pdf']),
+  "readyAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date().nullable(),
+  "downloadUrl": zod.string(),
+  "template": zod.union([zod.object({
+  "versionId": zod.uuid(),
+  "templateId": zod.string(),
+  "version": zod.int()
+}),zod.null()])
+})
+export const ListWorkspaceExportsResponse = zod.array(ListWorkspaceExportsResponseItem)
+
+
 export const RetryDocumentExportParams = zod.object({
   "id": zod.uuid()
 })

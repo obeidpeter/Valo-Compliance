@@ -31,7 +31,7 @@ test("actual export entries and worker startup reject before database, queue or 
       "@workspace/db",
       `const hit=()=>{globalThis.guardEffects.database++;throw Error("DATABASE_EFFECT")};
       export const db=new Proxy({},{get:()=>hit});export const pool={end:hit};export const runInWorkspaceScope=hit;
-      export const valoMemberships={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
+      export const valoMemberships={},valoContentVersions={},valoDocuments={},valoDocumentRevisions={},valoExportJobs={},
       valoExportRequests={},valoFileAssets={},valoExportObjects={},valoEvents={},valoPrivacyTombstones={},
       valoWorkspaceExports={},valoWorkspaceExportAttempts={},valoWorkspaces={},valoPrivacyCases={},valoPrivacyEvents={},valoProfileVersions={};`,
     ],

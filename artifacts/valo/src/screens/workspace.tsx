@@ -15,6 +15,7 @@ import { blankContent, describeError, formatDate, missingFields } from "@/lib/ap
 import { CorrectionNotices } from "@/components/correction-notices";
 import { GuidedDraftStarter } from "@/components/guided-draft-starter";
 import { SavedTemplates } from "@/components/saved-templates";
+import { LibraryExports } from "@/components/library-exports";
 
 export default function WorkspaceHome() {
   const { user } = useUser();
@@ -185,6 +186,7 @@ export default function WorkspaceHome() {
                 your own document.
               </EmptyState>
             )}
+            <LibraryExports />
             <Notice className="mt-4" tone="ink" title="Development workspace">
               Use synthetic test details only. Open a saved draft to request private, visibly marked DOCX or
               PDF exports. Production recovery and release approval remain unproved.

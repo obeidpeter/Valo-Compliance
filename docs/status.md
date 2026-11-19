@@ -28,7 +28,7 @@ No recorded implementation evidence: WEB-003, WEB-004, DOC-008, DOC-009, EDT-010
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 328 citations of 195 tests for 123 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 332 citations of 198 tests for 125 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -65,6 +65,7 @@ A citation is partial evidence: it never accepts a requirement.
 | DOC-002 | 2 | foundation |
 | DOC-003 | 2 | foundation |
 | DOC-004 | 2 | postgres |
+| DOC-005 | 3 | foundation, postgres |
 | DOC-006 | 3 | foundation, postgres |
 | DOC-007 | 2 | postgres |
 | DOC-008 | 1 | foundation |
@@ -108,6 +109,7 @@ A citation is partial evidence: it never accepts a requirement.
 | OPS-002 | 2 | postgres |
 | OPS-003 | 1 | foundation |
 | OPS-004 | 3 | foundation, postgres |
+| OPS-005 | 1 | postgres |
 | OPS-006 | 1 | foundation |
 | OPS-008 | 2 | foundation |
 | PAY-001 | 2 | foundation, postgres |
@@ -160,7 +162,7 @@ A citation is partial evidence: it never accepts a requirement.
 
 Neither recorded implementation evidence nor a cited test: none.
 
-No test is cited yet for 4 of the 126 R1 requirements: DOC-005, EDP-010, OPS-005, OPS-007.
+No test is cited yet for 2 of the 126 R1 requirements: EDP-010, OPS-007.
 
 ## Release gates
 
