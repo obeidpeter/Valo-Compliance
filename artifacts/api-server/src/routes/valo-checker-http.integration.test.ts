@@ -149,6 +149,45 @@ test(
             assert.ok(item.label && item.reason && item.nextStep && item.sources.length > 0, item.label);
         },
       );
+      // RUL-007: "anonymous answers are cleared unless they explicitly choose to save".
+      await t.test(
+        "an anonymous visitor's checker answers are answered but stored nowhere, and the reply is not cached",
+        async () => {
+          const { sql } = await import("drizzle-orm");
+          const marker = `synthetic-anonymous-${randomUUID()}`;
+          const basic = Object.fromEntries(
+            Object.entries({ ...facts, lga: marker }).filter(
+              ([key]) => key !== "factsVersion" && key !== "rich",
+            ),
+          );
+          const response = await request("/checker/preview", { facts: basic, asOfDate: day }, "");
+          assert.equal(response.status, 200);
+          assert.equal(response.headers.get("cache-control"), "no-store");
+          // Every text, array and JSON column of every table, searched for this visit's answer.
+          const columns = (
+            await db.execute(sql`select table_schema, table_name, column_name from information_schema.columns
+              join information_schema.tables using (table_schema, table_name)
+              where table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
+              and data_type in ('text', 'character varying', 'json', 'jsonb', 'ARRAY')`)
+          ).rows as { table_schema: string; table_name: string; column_name: string }[];
+          assert.ok(columns.length > 50, `${columns.length} columns searched`);
+          const holding = async (value: string) => {
+            const found: string[] = [];
+            for (const c of columns) {
+              const [row] = (
+                await db.execute(
+                  sql`select count(*)::int as n from ${sql.identifier(c.table_schema)}.${sql.identifier(c.table_name)} where ${sql.identifier(c.column_name)}::text like ${"%" + value + "%"}`,
+                )
+              ).rows as { n: number }[];
+              if (row!.n) found.push(`${c.table_schema}.${c.table_name}.${c.column_name}`);
+            }
+            return found;
+          };
+          // The search does find what is stored: the signed-in visitor's own identity.
+          assert.ok((await holding(identities[0]!)).length > 0, "the search reaches stored rows");
+          assert.deepEqual(await holding(marker), []);
+        },
+      );
       await t.test(
         "anonymous name facts, unverified accounts and hostile origins cannot enter private preview",
         async () => {
