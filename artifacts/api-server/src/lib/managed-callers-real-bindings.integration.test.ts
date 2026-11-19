@@ -8,7 +8,7 @@ import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as database from "@workspace/db";
 import { InferenceBudgetStore } from "../modules/ai/inference-budget-store";
-import { FiniteInferenceDispatcher, type FiniteManifest } from "../modules/ai/inference-batch-dispatch";
+import type { FiniteManifest } from "../modules/ai/inference-batch-dispatch";
 import { inferenceProposal, requestDigest, emptyBudget } from "../modules/ai/inference-budget";
 import { createManagedSDKTransport } from "../modules/ai/managed-sdk-transport";
 import type { ArtifactRef } from "../modules/publication/publication-artifacts";
@@ -180,6 +180,8 @@ test(
       });
       // Everything below is the real entry, real callers, real binding checker and real SQL store.
       // Only the model SDK and private file adapter are controlled; no checker is stubbed.
+      // The dispatcher loads the publication index, so it too loads only after the stand-ins.
+      const { FiniteInferenceDispatcher } = await import("../modules/ai/inference-batch-dispatch");
       const { assertFiniteWorkBindings } = await import("../modules/ai-lanes/inference-work-bindings");
       const { readOperationalInferenceReadiness } =
         await import("../modules/ai-lanes/inference-operational-ready");
