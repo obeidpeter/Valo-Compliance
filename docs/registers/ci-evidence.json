@@ -2317,6 +2317,13 @@
       "file": "artifacts/api-server/src/modules/catalogue/valo-template-entitlement.integration.test.ts",
       "test": "only the purchasing workspace's active entitlement releases a premium master",
       "proves": "In PostgreSQL, the purchase check a premium template download runs passes for the workspace holding an active purchase of that version and refuses with 403 another workspace's purchase of the same version and a suspended purchase; the version is a held fixture, so the download itself is not exercised."
+    },
+    {
+      "requirement": "OPS-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/valo-release-record.integration.test.ts",
+      "test": "the release record names the commit, the migrations shipped and applied, every content and rule version and the known issues",
+      "proves": "Against PostgreSQL, the release record names the commit it is given; the latest migration the release ships and the latest the database has applied, and whether they match; every content and rule version with its status, a held synthetic content version as held; and the known issues exactly as committed. A database behind the shipped migrations is recorded as not matching, a malformed commit or a repeated known-issue ID is refused, and the command refuses a checkout that is not the named commit. It does not cover OPS-005's private repository, branch protection or human approval."
     }
   ]
 }
