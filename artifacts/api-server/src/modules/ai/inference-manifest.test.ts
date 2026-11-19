@@ -19,6 +19,12 @@ function input(): OperationalFiniteInput {
   });
   return {
     candidateVersionId: "11111111-1111-4111-8111-111111111111",
+    candidateArtifact: {
+      id: "44444444-4444-4444-8444-444444444444",
+      hash: "9".repeat(64),
+      extension: "json",
+      templateId: "TPL-12",
+    },
     candidateHash: "a".repeat(64),
     bundleHash: "b".repeat(64),
     sourceHashes: [],
@@ -49,6 +55,8 @@ test("preparation binds distinct exact requests to one pair and fixed additional
   assert.notEqual(manifest.works[0]!.key, manifest.works[1]!.key);
   assert.equal(manifest.works[0]!.bindings.candidateVersionId, value.candidateVersionId);
   assert.deepEqual(manifest.works[0]!.bindings.operationalPlan, value.plan.artifact);
+  for (const work of manifest.works)
+    assert.deepEqual(work.bindings.candidateArtifact, value.candidateArtifact);
   assert.equal(manifest.works[1]!.caseHash, value.bundleHash);
   assert.notEqual(requestDigest(manifest.works[0]!.request), requestDigest(manifest.works[1]!.request));
 });
@@ -146,4 +154,36 @@ test("authorship file digests join the source set and changing those bytes chang
   const changed = prepareOperationalFiniteManifest(value, now);
   assert.notEqual(changed.works[0]!.key, first.works[0]!.key);
   assert.deepEqual(changed.works[0]!.sourceHashes, ["d".repeat(64), "f".repeat(64)]);
+});
+test("the prepared candidate's artifact is required, exact and part of work identity", () => {
+  for (const mutate of [
+    (x: OperationalFiniteInput) => {
+      delete (x as Partial<OperationalFiniteInput>).candidateArtifact;
+    },
+    (x: OperationalFiniteInput) => {
+      x.candidateArtifact.id = "not-an-artifact";
+    },
+    (x: OperationalFiniteInput) => {
+      x.candidateArtifact.hash = "short";
+    },
+    (x: OperationalFiniteInput) => {
+      (x.candidateArtifact as { extension: string }).extension = "pdf";
+    },
+    (x: OperationalFiniteInput) => {
+      x.candidateArtifact.templateId = "GUIDE-01";
+    },
+  ]) {
+    const value = input();
+    mutate(value);
+    assert.throws(() => prepareOperationalFiniteManifest(value, now), /FINITE_PREPARATION_BINDING_INVALID/);
+  }
+  const value = input(),
+    first = prepareOperationalFiniteManifest(value, now);
+  value.candidateArtifact.hash = "8".repeat(64);
+  const changed = prepareOperationalFiniteManifest(value, now);
+  assert.notEqual(changed.works[0]!.key, first.works[0]!.key);
+  assert.notEqual(changed.works[0]!.pair, first.works[0]!.pair);
+  // The manifest keeps its own copy of the binding.
+  value.candidateArtifact.templateId = "TPL-13";
+  assert.equal(changed.works[0]!.bindings.candidateArtifact!.templateId, "TPL-12");
 });

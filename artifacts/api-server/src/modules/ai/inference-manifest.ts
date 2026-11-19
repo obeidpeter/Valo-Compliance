@@ -12,8 +12,12 @@ export type PreparedOperationalPlan = {
   artifact: OperationalPlanRef;
   entries: { role: "factual" | "challenge"; request: ManagedRequest }[];
 };
+export type CandidateArtifactRef = { id: string; hash: string; extension: "json"; templateId: string };
 export type OperationalFiniteInput = {
+  /** The ID the version is saved under once its reviews pass. */
   candidateVersionId: string;
+  /** The prepared candidate the reviews read (decision 0014). */
+  candidateArtifact: CandidateArtifactRef;
   candidateHash: string;
   bundleHash: string;
   sourceHashes: string[];
@@ -35,7 +39,17 @@ export function prepareOperationalFiniteManifest(
   if (
     !Number.isFinite(timestamp) ||
     !/^[a-f0-9-]{36}$/.test(input.candidateVersionId) ||
-    ![input.candidateHash, input.bundleHash, p.artifact.hash, ...input.sourceHashes].every(hex) ||
+    !input.candidateArtifact ||
+    !/^[a-f0-9-]{36}$/.test(input.candidateArtifact.id) ||
+    input.candidateArtifact.extension !== "json" ||
+    !/^TPL-\d{2,3}$/.test(input.candidateArtifact.templateId) ||
+    ![
+      input.candidateHash,
+      input.bundleHash,
+      input.candidateArtifact.hash,
+      p.artifact.hash,
+      ...input.sourceHashes,
+    ].every(hex) ||
     !/^[a-f0-9-]{36}$/.test(p.artifact.id) ||
     p.artifact.extension !== "json" ||
     p.manifest.candidateHash !== input.candidateHash ||
@@ -71,6 +85,7 @@ export function prepareOperationalFiniteManifest(
   ].sort();
   const planKey = requestDigest({
     candidateVersionId: input.candidateVersionId,
+    candidateArtifact: input.candidateArtifact,
     candidateHash: input.candidateHash,
     bundleHash: input.bundleHash,
     plan: p.artifact,
@@ -104,6 +119,7 @@ export function prepareOperationalFiniteManifest(
         sourceFiles: structuredClone(input.sourceFiles),
         historicalCutoff: now.toISOString(),
         operationalPlan: { ...p.artifact },
+        candidateArtifact: { ...input.candidateArtifact },
       },
     };
   });

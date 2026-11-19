@@ -113,6 +113,7 @@ export function buildFiniteDecisionPacket(
         lane: w.lane,
         requestHash: requestDigest(w.request),
         candidateVersionId: w.bindings.candidateVersionId,
+        candidateArtifact: w.bindings.candidateArtifact ?? null,
         candidateHash: w.candidateHash,
         publicationBundleHash: customer ? null : w.caseHash,
         evaluationCase: customer

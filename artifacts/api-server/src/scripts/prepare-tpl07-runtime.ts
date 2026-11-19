@@ -8,14 +8,17 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 async function main() {
   assertDevelopmentRuntime();
   assert.equal(process.argv[2], "--prepare-disabled");
-  assert.equal(process.argv.length, 3);
+  assert.equal(process.argv.length, 4);
+  // The prepared TPL-07 candidate, by its exact artifact (decision 0014): --candidate=<id>:<sha256>.
+  const named = /^--candidate=([a-f0-9-]{36}):([a-f0-9]{64})$/.exec(process.argv[3] ?? "");
+  if (!named) throw Error("PREPARED_INVENTORY_CANDIDATE_REQUIRED");
+  const ref = { id: named[1]!, hash: named[2]!, extension: "json" as const };
   // Existing storage/database configuration remains available. Model credentials
   // must be absent from this preparation process, not changed in the workspace.
   for (const key of ["AI_INTEGRATIONS_OPENAI_API_KEY", "OPENAI_API_KEY"])
     assert.ok(!process.env[key], "MODEL_KEYS_MUST_BE_ABSENT");
   const [
-    { db, pool, valoContentVersions },
-    { eq, desc },
+    { pool },
     { readOperationalInferenceReadiness },
     { saveOperationalReviewPlan },
     {
@@ -28,11 +31,10 @@ async function main() {
       InferenceBudgetStore,
     },
     { assertFiniteWorkBindings },
-    { putPublicationArtifact },
+    { putPublicationArtifact, readPreparedCandidate },
     { publicationWorkspaceRoot },
   ] = await Promise.all([
     import("@workspace/db"),
-    import("drizzle-orm"),
     import("../modules/ai-lanes"),
     import("../modules/editorial"),
     import("../modules/ai"),
@@ -52,19 +54,17 @@ async function main() {
     publicationAccepted: false,
   };
   try {
-    const [row] = await db
-      .select()
-      .from(valoContentVersions)
-      .where(eq(valoContentVersions.templateId, "TPL-07"))
-      .orderBy(desc(valoContentVersions.version))
-      .limit(1);
-    if (!row) throw Error("SAVED_INVENTORY_CANDIDATE_REQUIRED");
+    const saved = await readPreparedCandidate(ref);
+    if (saved.templateId !== "TPL-07") throw Error("PREPARED_INVENTORY_CANDIDATE_REQUIRED");
+    const candidateArtifact = { ...ref, templateId: saved.templateId };
+    const row = { id: saved.versionId, candidateHash: saved.candidateHash };
     report.candidate = {
-      id: row.id,
-      templateId: row.templateId,
-      version: row.version,
-      hash: row.candidateHash,
-      status: row.status,
+      id: saved.versionId,
+      templateId: saved.templateId,
+      version: saved.version,
+      hash: saved.candidateHash,
+      status: "awaiting_reviews",
+      artifact: candidateArtifact,
     };
     const attempts = async () =>
       Number(
@@ -77,18 +77,24 @@ async function main() {
       );
     const before = await attempts();
     try {
-      const current = await readOperationalInferenceReadiness(row.id);
+      const current = await readOperationalInferenceReadiness({
+        candidateVersionId: row.id,
+        candidateArtifact,
+      });
       const plan = await saveOperationalReviewPlan(
         current.candidate,
         current.rightsInput,
         current.provenanceInput,
         current.exportReport,
         current.serverEvidence,
+        undefined,
+        current.bundle.sources,
       );
       const pkg = await prepareFiniteAllocationPackage(),
         packageId = allocationPackageId(pkg);
       const manifest = prepareOperationalFiniteManifest({
         candidateVersionId: row.id,
+        candidateArtifact,
         candidateHash: row.candidateHash,
         bundleHash: requestDigest(current.bundle),
         sourceHashes: current.bundle.sources.map((s) => s.hash),

@@ -11,7 +11,7 @@ import type { db } from "@workspace/db";
 import { digest, evaluatePublication, publicationSchema, sha256 } from "@workspace/valo-core";
 import { getPublicationArtifact, type ArtifactRef } from "./publication-artifacts";
 import { developmentPublicationOnly, operationalPolicy } from "./operational-policy";
-import { operationalReviewSchema } from "./operational-review-contract";
+import { enhancedChecksFromReviews, operationalReviewSchemaFor } from "./operational-review-contract";
 import { templateCandidate } from "./operational-content";
 import { originalFormSchema, formMarkdown } from "./operational-authoring-contract";
 import { operationalMechanicalChecks } from "./operational-mechanical";
@@ -167,9 +167,10 @@ export async function validateOperationalVersionInTransaction(
     throw Error("MECHANICAL_EXECUTION_ATTESTATION_INVALID");
   if (a.reviews.length !== 2) throw Error("INDEPENDENT_REVIEWS_MISSING");
   const providerIds = new Set<string>();
+  const outputs: Parameters<typeof enhancedChecksFromReviews>[1] = [];
   for (const ref of a.reviews) {
     const record = JSON.parse((await getPublicationArtifact(ref)).toString());
-    const output = operationalReviewSchema.parse(record.output);
+    const output = operationalReviewSchemaFor(bundle.candidate).parse(record.output);
     const bound = bundle.reviews.find((r) => r.role === record.role);
     const checked = record.serverEvidence;
     if (
@@ -198,8 +199,16 @@ export async function validateOperationalVersionInTransaction(
     )
       throw Error("REVIEW_ATTESTATION_INVALID");
     providerIds.add(record.providerResponseId);
+    outputs.push({ role: record.role, output });
   }
   if (providerIds.size !== 2) throw Error("REVIEWS_NOT_INDEPENDENT");
+  // Content that is not general carries the enhanced checks its two reviews ran (decision 0014):
+  // they are derived again from the attested reviews, never taken from the bundle alone.
+  if (
+    bundle.candidate.risk !== "general" &&
+    digest(enhancedChecksFromReviews(bundle, outputs)) !== digest(bundle.enhancedChecks)
+  )
+    throw Error("ENHANCED_CHECK_ATTESTATION_INVALID");
   const exportReport = JSON.parse((await getPublicationArtifact(a.exportReport)).toString());
   if (exportReport.candidateHash !== row.candidateHash || exportReport.passed !== true)
     throw Error("EXPORT_REPORT_INVALID");

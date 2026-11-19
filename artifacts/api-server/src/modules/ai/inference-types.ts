@@ -40,6 +40,9 @@ export type FiniteWork = {
     sourceFiles: { path: string; sha256: string }[];
     historicalCutoff?: string;
     operationalPlan?: { id: string; hash: string; extension: "json" };
+    /** A publication review's candidate: the private artifact holding the version that is saved,
+     * with its reviews, only once they pass (decision 0014), and the template it is a version of. */
+    candidateArtifact?: { id: string; hash: string; extension: "json"; templateId: string };
     customerPlan?: { id: string; hash: string; extension: "json" };
   };
 };
