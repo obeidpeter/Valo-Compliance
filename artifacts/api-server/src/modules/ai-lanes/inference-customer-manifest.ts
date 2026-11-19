@@ -14,10 +14,10 @@ import {
   requestDigest,
   inferenceProposal,
   additionalInferenceAllocation,
-} from "../modules/ai";
-import type { FiniteManifest, FiniteWork } from "../modules/ai";
+} from "../ai";
+import type { FiniteManifest, FiniteWork } from "../ai";
 
-const root = resolve(import.meta.dirname, "../../../..");
+const root = resolve(import.meta.dirname, "../../../../..");
 const path = "docs/evaluation-candidates/customer-ai.json";
 /** Read original facts only. Missing facts and unresolved oracle/mapping issues
  * hold this preparer; it cannot manufacture a follow-up or author new content. */

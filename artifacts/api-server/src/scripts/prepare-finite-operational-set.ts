@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { db, pool, valoContentVersions } from "@workspace/db";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { operationalInferenceTemplateIds } from "../modules/publication";
-import { readOperationalInferenceReadiness } from "../lib/inference-operational-ready";
+import { readOperationalInferenceReadiness } from "../modules/ai-lanes";
 import { prepareOperationalCandidateRelease } from "../modules/editorial";
 import {
   getPublicationArtifact,

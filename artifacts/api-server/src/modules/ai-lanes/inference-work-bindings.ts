@@ -3,9 +3,9 @@ import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import { candidateDigest, publicationSchema } from "@workspace/valo-core";
-import { requestDigest, assertFiniteWorkShape } from "../modules/ai";
-import type { FiniteWork } from "../modules/ai";
-const root = resolve(import.meta.dirname, "../../../..");
+import { requestDigest, assertFiniteWorkShape } from "../ai";
+import type { FiniteWork } from "../ai";
+const root = resolve(import.meta.dirname, "../../../../..");
 const hash = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 /** Bindings are read from the approved durable allowlist, not from request
  * headers. Held source candidates may be challenged in isolation: this is NOT
@@ -47,7 +47,7 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
       { validateCustomerEvaluationWork },
       { assertCustomerEvaluationActor },
     ] = await Promise.all([
-      import("../modules/publication"),
+      import("../publication"),
       import("./inference-customer-evaluation"),
       import("./inference-customer-runtime"),
     ]);
@@ -76,9 +76,9 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
         { readOperationalInferenceReadiness },
         { operationalReviewRequests },
       ] = await Promise.all([
-        import("../modules/publication"),
+        import("../publication"),
         import("./inference-operational-ready"),
-        import("../modules/editorial"),
+        import("../editorial"),
       ]);
       const retained = JSON.parse((await getPublicationArtifact(b.operationalPlan)).toString());
       const current = await readOperationalInferenceReadiness(b.candidateVersionId);

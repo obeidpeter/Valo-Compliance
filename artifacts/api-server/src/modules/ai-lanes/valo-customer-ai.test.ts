@@ -12,7 +12,7 @@ import {
   hashAI,
 } from "./valo-customer-ai-domain";
 import { organizeCustomerDraft } from "./valo-customer-ai-model";
-import { documentInput } from "./valo-validation";
+import { documentInput } from "../../lib/valo-validation";
 const input = () => structuredClone(customerAICases[0]!.input);
 test("manual drafting preserves notes withheld from AI instead of silently dropping them", () => {
   const lines = [
@@ -179,7 +179,7 @@ test("fixture source hash identifies exactly sixty separate customer cases", () 
 test("retained real-provider payloads remain byte-reproducible after redaction hardening", async () => {
   const report = JSON.parse(
     await readFile(
-      new URL("../../../../docs/valo/evidence/customer-ai-60-evaluation.json", import.meta.url),
+      new URL("../../../../../docs/valo/evidence/customer-ai-60-evaluation.json", import.meta.url),
       "utf8",
     ),
   ) as {

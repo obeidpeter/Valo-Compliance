@@ -33,10 +33,10 @@ async function main() {
   ] = await Promise.all([
     import("@workspace/db"),
     import("drizzle-orm"),
-    import("../lib/inference-operational-ready"),
+    import("../modules/ai-lanes"),
     import("../modules/editorial"),
     import("../modules/ai"),
-    import("../lib/inference-work-bindings"),
+    import("../modules/ai-lanes"),
     import("../modules/publication"),
     import("../modules/publication"),
   ]);

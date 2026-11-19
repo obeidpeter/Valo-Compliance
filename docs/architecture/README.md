@@ -129,7 +129,8 @@ artifacts/api-server/src/
   platform/      settings, database, identity context, queue, storage, logging, errors
   modules/
     identity/  workspaces/  documents/  exports/  catalogue/  sources/
-    publication/  editorial/  rules/  tasks/  commerce/  ai/  support/  privacy/  staff/
+    publication/  editorial/  rules/  tasks/  commerce/  ai/  ai-lanes/
+    support/  privacy/  staff/
   api.ts         HTTP entry point
   worker.ts      background entry point
 ```
@@ -149,10 +150,19 @@ for the order of work and what is already done.
 `modules/ai` is the first module. It holds the finite inference core: the budget
 and its ledger, history reconciliation, approved manifests and allocation packages,
 and the dispatcher with its provider transport. `index.ts` does not export the
-transport, so disabled inference never loads it. The customer AI and operational
-review lanes, the history loader and the work-binding checks stay in `src/lib` for
-now: they depend on customer documents, the editorial pipeline or the database.
-[Decision 0013](decisions/0013-move-the-ai-lanes.md) proposes where they go.
+transport, so disabled inference never loads it.
+
+`modules/ai-lanes` holds the work that runs through that dispatcher
+([decision 0013](decisions/0013-move-the-ai-lanes.md)):
+- the customer AI lane, with its drafts, model contract, case bindings and evaluation cases;
+- the operational review lane;
+- the history loader;
+- the work-binding checks that the operator commands hand the dispatcher.
+
+The lanes are clients of `modules/ai`, so the dependency runs one way: nothing in `modules/`
+imports `modules/ai-lanes`; the customer AI route and the operator commands do. Like `modules/ai`,
+its index loads no database client, model SDK or provider transport, and
+`inference-no-database.test.ts` imports both indexes to check it.
 
 `modules/commerce` is the second. It holds one-time purchases, payment events and their
 reconciliation, receipts and their recovery, refunds, payment concerns, disputes and the Paystack
@@ -174,8 +184,9 @@ The editorial code is three modules, each depending only on the ones after it:
   staff source controls and the daily source check. The controls load the staff checks, like the
   database client, only when a staff request runs.
 - `modules/publication` holds the operational publication policy and its restrictions, release
-  artifacts, the intake and content of original operational templates, their mechanical, export,
-  rights and final checks, and the publisher. The catalogue reads published content through it,
+  artifacts, the intake and content of original operational templates and the list of those whose
+  AI preparation is supported, their mechanical, export, rights and final checks, and the
+  publisher. The catalogue reads published content through it,
   and it loads no AI code.
 - `modules/editorial` holds the AI pipeline and its model adapter, operational authoring and review,
   release preparation, the editorial lifecycle with its dispatch and sandbox, evaluation evidence

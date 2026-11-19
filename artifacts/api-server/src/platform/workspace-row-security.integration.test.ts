@@ -170,7 +170,7 @@ test(
     });
 
     await t.test("limits shared by every workspace still count every workspace", async () => {
-      const { customerAIUsage, globalDailyLimit } = await import("../lib/valo-customer-ai");
+      const { customerAIUsage, globalDailyLimit } = await import("../modules/ai-lanes/valo-customer-ai");
       // Another workspace has used the whole shared daily ceiling, partly for this person.
       const drafts = Array.from({ length: globalDailyLimit }, () => ({
         id: randomUUID(),

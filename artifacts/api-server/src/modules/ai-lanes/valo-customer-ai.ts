@@ -17,18 +17,23 @@ import {
   type CustomerPreview,
 } from "./valo-customer-ai-domain";
 import { organizeCustomerDraft } from "./valo-customer-ai-model";
-import type { WorkspaceTx } from "../modules/rules";
-import { createDocumentInTransaction, getDocument, ValoProblem, type WorkspaceActor } from "./valo-store";
-import { documentInput } from "./valo-validation";
-import { hasApprovedInferenceContext } from "../modules/ai";
-import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
+import type { WorkspaceTx } from "../rules";
+import {
+  createDocumentInTransaction,
+  getDocument,
+  ValoProblem,
+  type WorkspaceActor,
+} from "../../lib/valo-store";
+import { documentInput } from "../../lib/valo-validation";
+import { hasApprovedInferenceContext } from "../ai";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 const workspaceDailyLimit = 30;
 /** The database schema and the workspace transaction load when a customer AI request runs, not
  * with every reader of this file: both load the database client. */
 async function runtime() {
   const [{ valoAIDrafts, valoSafetySwitches }, { workspaceTransaction, workspaceEvent }] = await Promise.all([
     import("@workspace/db"),
-    import("../modules/rules"),
+    import("../rules"),
   ]);
   return { valoAIDrafts, valoSafetySwitches, workspaceTransaction, workspaceEvent };
 }

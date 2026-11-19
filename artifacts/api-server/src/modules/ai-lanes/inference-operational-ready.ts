@@ -11,7 +11,7 @@ import {
   supportsOperationalInferenceTemplate,
   type OperationalServerEvidence,
   type ReleaseAttestations,
-} from "../modules/publication";
+} from "../publication";
 
 /** Reconstruct a supported saved original form and recheck all its retained
  * private evidence. Intake coverage alone never establishes readiness. */

@@ -1,5 +1,5 @@
-import { allocationPackageId, type FiniteAllocationPackage } from "../modules/ai";
-import type { finiteManifestProposal } from "../modules/ai";
+import { allocationPackageId, type FiniteAllocationPackage } from "../ai";
+import type { finiteManifestProposal } from "../ai";
 type Proposal = ReturnType<typeof finiteManifestProposal>;
 /** A package identifier is a selector, not authority. Callers must load and
  * verify its durable owner approval before using the returned identifier. */

@@ -11,8 +11,8 @@ import {
   prepareFiniteAllocationPackage,
   allocationPackageId,
   assertWorkPackageMembership,
-} from "../modules/ai/inference-allocation-package";
-import { requestDigest } from "../modules/ai/inference-budget";
+} from "../ai/inference-allocation-package";
+import { requestDigest } from "../ai/inference-budget";
 import { buildBusinessDraft } from "@workspace/valo-core/customer-document";
 const actor = {
   workspaceId: "11111111-1111-4111-8111-111111111111",
@@ -28,7 +28,7 @@ test("preparation preserves all original60 identities, full oracles and actual n
   const plan = await prepareCustomerEvaluationPlan(null),
     corpus = JSON.parse(
       await readFile(
-        new URL("../../../../docs/evaluation-candidates/customer-ai.json", import.meta.url),
+        new URL("../../../../../docs/evaluation-candidates/customer-ai.json", import.meta.url),
         "utf8",
       ),
     );

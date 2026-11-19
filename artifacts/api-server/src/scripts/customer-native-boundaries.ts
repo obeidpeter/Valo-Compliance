@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, pool, valoAIDrafts, valoSafetySwitches } from "@workspace/db";
 import { sha256 } from "@workspace/valo-core";
-import { createCustomerAIDraft, customerAIUsage } from "../lib/valo-customer-ai";
+import { createCustomerAIDraft, customerAIUsage } from "../modules/ai-lanes";
 import {
   customerPreview,
   hashAI,
@@ -13,12 +13,8 @@ import {
   unsupportedCustomerInput,
   customerPromptVersion,
   customerNoticeVersion,
-} from "../lib/valo-customer-ai-domain";
-import {
-  bindCustomerCase,
-  explicitBoundaryFollowup,
-  type AuthoredCustomerCase,
-} from "../lib/valo-customer-case-binding";
+} from "../modules/ai-lanes";
+import { bindCustomerCase, explicitBoundaryFollowup, type AuthoredCustomerCase } from "../modules/ai-lanes";
 import { getDocument, saveDocument } from "../lib/valo-store";
 import { documentInput } from "../lib/valo-validation";
 import { downloadExport } from "../modules/exports";
@@ -267,9 +263,9 @@ async function main() {
   }
   assert.equal(records.length, 2);
   const codePaths = [
-    "artifacts/api-server/src/lib/valo-customer-ai.ts",
-    "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
-    "artifacts/api-server/src/lib/valo-customer-case-binding.ts",
+    "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.ts",
+    "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai-domain.ts",
+    "artifacts/api-server/src/modules/ai-lanes/valo-customer-case-binding.ts",
     "artifacts/api-server/src/scripts/customer-native-boundaries.ts",
   ];
   const codeHashes = Object.fromEntries(

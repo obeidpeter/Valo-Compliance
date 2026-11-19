@@ -7,8 +7,8 @@
  * inference-no-database.test.ts fails if it does. So the provider transport
  * (managed-sdk-transport.ts) is not re-exported: managed-inference.ts loads it, with the database
  * and the SDK, only when approved work runs. The customer AI and operational review lanes, which
- * call the dispatcher, live outside the module, and so do the work-binding checks, which the
- * operator commands hand to the dispatcher (provideFiniteWorkBindings).
+ * call the dispatcher, and the work-binding checks, which the operator commands hand to it
+ * (provideFiniteWorkBindings), are in modules/ai-lanes, which this module never imports.
  */
 export * from "./inference-allocation-package";
 export * from "./inference-batch-dispatch";

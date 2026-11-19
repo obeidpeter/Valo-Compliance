@@ -19,9 +19,9 @@ import {
   customerAIUsage,
 } from "./valo-customer-ai";
 import { customerAICases } from "./valo-customer-ai-fixtures";
-import { resolveWorkspace, createDocument, saveDocument } from "./valo-store";
+import { resolveWorkspace, createDocument, saveDocument } from "../../lib/valo-store";
 import { buildBusinessDraft } from "@workspace/valo-core/customer-document";
-import { documentInput } from "./valo-validation";
+import { documentInput } from "../../lib/valo-validation";
 test(
   "development AI persistence, private ownership, atomic acceptance and quotas",
   {

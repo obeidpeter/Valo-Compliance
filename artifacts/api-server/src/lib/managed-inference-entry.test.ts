@@ -437,11 +437,11 @@ test("default managed entry and customer organizer use actual finite dispatch an
     provideFiniteWorkBindings,
   } = await import("../modules/ai/managed-inference");
   // As the operator commands do, the test composes the default dispatcher with the real checks.
-  const { assertFiniteWorkBindings } = await import("./inference-work-bindings");
+  const { assertFiniteWorkBindings } = await import("../modules/ai-lanes/inference-work-bindings");
   provideFiniteWorkBindings(assertFiniteWorkBindings);
-  const { organizeCustomerDraft } = await import("./valo-customer-ai-model");
+  const { organizeCustomerDraft } = await import("../modules/ai-lanes/valo-customer-ai-model");
   const { prepareCustomerEvaluationPlan, prepareCustomerEvaluationManifest } =
-    await import("./inference-customer-evaluation");
+    await import("../modules/ai-lanes/inference-customer-evaluation");
   const plan = await prepareCustomerEvaluationPlan(actor, new Date(Date.now() - 10000));
   const entry = plan.cases.find((c) => c.caseId === "CAI-CAND-INV-01")!,
     input = entry.input!,
@@ -740,9 +740,9 @@ test("default managed entry and customer organizer use actual finite dispatch an
   await t.test(
     "prepared evaluation invokes the actual customer service and organizer, then replays without another paid attempt",
     async () => {
-      const { createCustomerAIDraft, customerAIUsage } = await import("./valo-customer-ai");
+      const { createCustomerAIDraft, customerAIUsage } = await import("../modules/ai-lanes/valo-customer-ai");
       const { executePreparedCustomerCase, assertCustomerEvaluationActor } =
-        await import("./inference-customer-runtime");
+        await import("../modules/ai-lanes/inference-customer-runtime");
       const batch = prepare({ retry: true }),
         manifest = batches.get(batch.id)!.manifest;
       const workspaceActor = workspaceActorFromRecord({

@@ -9,15 +9,15 @@ import {
   expectedSourceNumbers,
   explicitBoundaryFollowup,
   type AuthoredCustomerCase,
-} from "../lib/valo-customer-case-binding";
+} from "../modules/ai-lanes";
 import {
   hashAI,
   customerPromptVersion,
   customerNoticeVersion,
   customerProviderPayload,
-} from "../lib/valo-customer-ai-domain";
-import { organizeCustomerDraft, type CustomerTransport } from "../lib/valo-customer-ai-model";
-import { createCustomerAIDraft, customerAIUsage, getCustomerAIDraft } from "../lib/valo-customer-ai";
+} from "../modules/ai-lanes";
+import { organizeCustomerDraft, type CustomerTransport } from "../modules/ai-lanes";
+import { createCustomerAIDraft, customerAIUsage, getCustomerAIDraft } from "../modules/ai-lanes";
 import { sha256 } from "@workspace/valo-core";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
 type NativeRecord = {
@@ -93,9 +93,9 @@ async function main() {
     assert.equal(native.identitiesCreated, 0);
     assert.equal(native.quotaLimitsChanged, false);
     const expected = [
-      "artifacts/api-server/src/lib/valo-customer-ai.ts",
-      "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
-      "artifacts/api-server/src/lib/valo-customer-case-binding.ts",
+      "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.ts",
+      "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai-domain.ts",
+      "artifacts/api-server/src/modules/ai-lanes/valo-customer-case-binding.ts",
       "artifacts/api-server/src/scripts/customer-native-boundaries.ts",
     ];
     assert.deepEqual(Object.keys(native.codeHashes).sort(), expected.sort());

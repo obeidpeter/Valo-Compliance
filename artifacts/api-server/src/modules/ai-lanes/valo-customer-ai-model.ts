@@ -11,7 +11,7 @@ import {
   managedCompletion,
   InferenceHeld,
   withApprovedInferenceAttempt,
-} from "../modules/ai";
+} from "../ai";
 export type CustomerProviderRun = {
   attempt: number;
   outboundAttempted: boolean;

@@ -6,13 +6,13 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { and, asc, count, eq, gte, like } from "drizzle-orm";
 import { db, pool, valoAIDrafts } from "@workspace/db";
-import { createCustomerAIDraft, acceptCustomerAIDraft, customerAIUsage } from "../lib/valo-customer-ai";
+import { createCustomerAIDraft, acceptCustomerAIDraft, customerAIUsage } from "../modules/ai-lanes";
 import {
   customerPromptVersion,
   customerNoticeVersion,
   hashAI,
   customerProviderPayload,
-} from "../lib/valo-customer-ai-domain";
+} from "../modules/ai-lanes";
 import { getDocument, listRevisions, saveDocument } from "../lib/valo-store";
 import { requestExport, getExport, downloadExport } from "../modules/exports";
 import { documentInput } from "../lib/valo-validation";

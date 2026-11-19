@@ -180,8 +180,9 @@ test(
       });
       // Everything below is the real entry, real callers, real binding checker and real SQL store.
       // Only the model SDK and private file adapter are controlled; no checker is stubbed.
-      const { assertFiniteWorkBindings } = await import("./inference-work-bindings");
-      const { readOperationalInferenceReadiness } = await import("./inference-operational-ready");
+      const { assertFiniteWorkBindings } = await import("../modules/ai-lanes/inference-work-bindings");
+      const { readOperationalInferenceReadiness } =
+        await import("../modules/ai-lanes/inference-operational-ready");
       const { prepareOperationalCandidateRelease } =
         await import("../modules/editorial/operational-preparation");
       const { saveOperationalReviewPlan, executeOperationalReviewPlan } =
@@ -189,7 +190,7 @@ test(
       const { prepareOperationalFiniteManifest } = await import("../modules/ai/inference-manifest");
       const { withBoundInferenceDispatcher, withApprovedInferencePair, withApprovedInferenceWork } =
         await import("../modules/ai/managed-inference");
-      const { organizeCustomerDraft } = await import("./valo-customer-ai-model");
+      const { organizeCustomerDraft } = await import("../modules/ai-lanes/valo-customer-ai-model");
       const store = new InferenceBudgetStore(scoped, schema, "additional-new");
       const state = () => store.mutate("controlled-state-observation", (s) => ({ state: s, value: s }));
       const reset = () =>
@@ -406,7 +407,7 @@ test(
         },
       );
       const { prepareCustomerFiniteManifest, executeApprovedCustomerManifest } =
-        await import("./inference-customer-manifest");
+        await import("../modules/ai-lanes/inference-customer-manifest");
       const { input } = await prepareCustomerFiniteManifest("CAI-CAND-INV-01");
       const customer = async (retry: boolean, wrongCase = false) => {
         const { manifest } = await prepareCustomerFiniteManifest("CAI-CAND-INV-01", {
@@ -470,7 +471,7 @@ test(
         },
       );
       const runnerActor = await resolveWorkspace(`valo-ai-eval-invoice-controlled-${randomUUID()}`);
-      const { createCustomerAIDraft } = await import("./valo-customer-ai");
+      const { createCustomerAIDraft } = await import("../modules/ai-lanes/valo-customer-ai");
       await createCustomerAIDraft(runnerActor, { ...input, idempotencyKey: randomUUID() });
       await t.test(
         "actual approved customer runner selects its distinct retry and rejects a revoked batch",
@@ -540,7 +541,7 @@ test(
         "real persisted customer service keeps default hold but admits an approved finite context",
         async () => {
           const { resolveWorkspace } = await import("./valo-store");
-          const { createCustomerAIDraft } = await import("./valo-customer-ai");
+          const { createCustomerAIDraft } = await import("../modules/ai-lanes/valo-customer-ai");
           const actor = await resolveWorkspace(`controlled-finite-customer-${randomUUID()}`);
           await reset();
           const before = calls;

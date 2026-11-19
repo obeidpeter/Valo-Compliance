@@ -12,7 +12,7 @@ import {
   classifyHistoricalInference,
   applyHistoricalClassifications,
 } from "../modules/ai";
-import { loadInferenceHistory } from "../lib/inference-history-loader";
+import { loadInferenceHistory } from "../modules/ai-lanes";
 
 async function main() {
   assertDevelopmentRuntime();

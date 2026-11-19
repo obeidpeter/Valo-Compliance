@@ -8,7 +8,7 @@ import {
   operationalInferenceTemplateIds,
   supportsOperationalInferenceTemplate,
 } from "../modules/publication";
-import { selectPreparedProposal, parseFinitePreparationOptions } from "../lib/inference-prepared-report";
+import { selectPreparedProposal, parseFinitePreparationOptions } from "../modules/ai-lanes";
 import {
   requestDigest,
   prepareOperationalFiniteManifest,
@@ -68,8 +68,8 @@ async function main() {
     { publicationWorkspaceRoot },
   ] = await Promise.all([
     import("@workspace/db"),
-    import("../lib/inference-operational-ready"),
-    import("../lib/inference-work-bindings"),
+    import("../modules/ai-lanes"),
+    import("../modules/ai-lanes"),
     import("../modules/ai"),
     import("../modules/editorial"),
     import("../modules/publication"),
@@ -100,7 +100,7 @@ async function main() {
     if (mode === "--prepare-customer") {
       if (!batchId) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
-      const { prepareCustomerFiniteManifest } = await import("../lib/inference-customer-manifest");
+      const { prepareCustomerFiniteManifest } = await import("../modules/ai-lanes");
       const existing = options.packageId
         ? await readApprovedFiniteAllocationPackage(pool, options.packageId)
         : null;
@@ -182,7 +182,7 @@ async function main() {
           throw Error("PREPARED_MANIFEST_EXPIRED");
         const pkg = await prepareFiniteAllocationPackage(new Date(report.package.preparedAt));
         if (requestDigest(pkg) !== requestDigest(report.package)) throw Error("PREPARED_PACKAGE_CHANGED");
-        const { prepareCustomerFiniteManifest } = await import("../lib/inference-customer-manifest");
+        const { prepareCustomerFiniteManifest } = await import("../modules/ai-lanes");
         const exact = await prepareCustomerFiniteManifest(work.bindings.caseId, {
           retry: manifest.works.length === 2,
           now: new Date(manifest.preparedAt),
@@ -235,7 +235,7 @@ async function main() {
         const manifest = proposal.manifest as FiniteManifest,
           first = manifest.works[0]!;
         if (manifest.works.every((w) => w.lane === "customer")) {
-          const { prepareCustomerFiniteManifest } = await import("../lib/inference-customer-manifest");
+          const { prepareCustomerFiniteManifest } = await import("../modules/ai-lanes");
           const actual = await prepareCustomerFiniteManifest(first.bindings.caseId!, {
             retry: manifest.works.length === 2,
             now: new Date(manifest.preparedAt),
@@ -373,7 +373,7 @@ async function main() {
       }
       if (selection) {
         try {
-          const { prepareCustomerFiniteManifest } = await import("../lib/inference-customer-manifest");
+          const { prepareCustomerFiniteManifest } = await import("../modules/ai-lanes");
           const customer = await prepareCustomerFiniteManifest(batchId!, {
             retry: selectionOptions!.retry,
             now: new Date(allocationPackage.preparedAt),
@@ -475,7 +475,7 @@ async function main() {
       manifest.works.length > 0 &&
       manifest.works.every((w) => w.lane === "customer")
     ) {
-      const { executeApprovedCustomerManifest } = await import("../lib/inference-customer-manifest");
+      const { executeApprovedCustomerManifest } = await import("../modules/ai-lanes");
       const result = await executeApprovedCustomerManifest(batchId!, manifest);
       const artifact = await putPublicationArtifact(Buffer.from(JSON.stringify(result)), "json");
       console.log(

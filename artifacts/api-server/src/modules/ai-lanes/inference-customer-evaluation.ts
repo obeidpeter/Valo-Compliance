@@ -14,20 +14,20 @@ import {
   type CustomerAIInput,
 } from "./valo-customer-ai-domain";
 import { customerCompletionRequest } from "./valo-customer-ai-model";
-import { additionalInferenceAllocation, inferenceProposal, requestDigest } from "../modules/ai";
-import type { FiniteManifest, FiniteWork } from "../modules/ai";
-import type { ArtifactRef } from "../modules/publication";
+import { additionalInferenceAllocation, inferenceProposal, requestDigest } from "../ai";
+import type { FiniteManifest, FiniteWork } from "../ai";
+import type { ArtifactRef } from "../publication";
 
-const root = resolve(import.meta.dirname, "../../../.."),
+const root = resolve(import.meta.dirname, "../../../../.."),
   corpusPath = "docs/evaluation-candidates/customer-ai.json";
 export const customerEvaluationCodePaths = [
-  "artifacts/api-server/src/lib/valo-customer-case-binding.ts",
-  "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
-  "artifacts/api-server/src/lib/valo-customer-ai-model.ts",
-  "artifacts/api-server/src/lib/valo-customer-ai.ts",
-  "artifacts/api-server/src/lib/inference-customer-evaluation.ts",
-  "artifacts/api-server/src/lib/inference-customer-runtime.ts",
-  "artifacts/api-server/src/lib/inference-customer-controls.ts",
+  "artifacts/api-server/src/modules/ai-lanes/valo-customer-case-binding.ts",
+  "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai-domain.ts",
+  "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai-model.ts",
+  "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.ts",
+  "artifacts/api-server/src/modules/ai-lanes/inference-customer-evaluation.ts",
+  "artifacts/api-server/src/modules/ai-lanes/inference-customer-runtime.ts",
+  "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.ts",
   "artifacts/api-server/src/scripts/finite-customer-evaluation.ts",
   "lib/valo-core/src/customer-document.ts",
   "lib/valo-core/src/money.ts",

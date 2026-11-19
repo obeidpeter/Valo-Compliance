@@ -125,9 +125,9 @@ const groups = [
       "WRK-001",
     ],
     paths: [
-      "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
-      "artifacts/api-server/src/lib/valo-customer-ai-model.ts",
-      "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai-domain.ts",
+      "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai-model.ts",
+      "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "artifacts/api-server/src/scripts/customer-ai-source-pilot.ts",
       "artifacts/api-server/src/lib/valo-reader-checks.ts",
       "lib/valo-core/src/customer-document.ts",
@@ -527,9 +527,9 @@ const groups = [
   {
     ids: ["AI-001", "AI-002", "AI-003", "AI-004", "AI-005", "AI-006", "AI-007", "AI-008", "AI-009"],
     paths: [
-      "artifacts/api-server/src/lib/valo-customer-ai.ts",
-      "artifacts/api-server/src/lib/valo-customer-ai-model.ts",
-      "artifacts/api-server/src/lib/valo-customer-ai-domain.ts",
+      "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.ts",
+      "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai-model.ts",
+      "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai-domain.ts",
       "lib/valo-core/src/customer-document.ts",
     ],
     record: ai,
@@ -537,7 +537,7 @@ const groups = [
   {
     ids: ["AI-003", "AI-005", "AI-007", "EDT-002", "EDT-004", "SEC-001", "IAM-003"],
     paths: [
-      "artifacts/api-server/src/lib/valo-customer-ai.integration.test.ts",
+      "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.integration.test.ts",
       "lib/valo-core/src/money.ts",
     ],
     record: database,
@@ -680,7 +680,7 @@ export function partialWorkflowEvidence(id: string) {
         "artifacts/api-server/src/lib/valo-store.ts",
         "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.ts",
         "artifacts/api-server/src/modules/ai/inference-batch-dispatch.ts",
-        "artifacts/api-server/src/lib/inference-work-bindings.ts",
+        "artifacts/api-server/src/modules/ai-lanes/inference-work-bindings.ts",
         "artifacts/api-server/src/modules/editorial/external-action-boundary.ts",
         "artifacts/api-server/src/scripts/editorial-source-suite.ts",
         "artifacts/api-server/src/modules/commerce/valo-commerce.ts",
@@ -772,7 +772,7 @@ export function partialWorkflowEvidence(id: string) {
       ids: ["AI-001", "AI-002", "AI-003", "AI-005", "AI-006", "AI-008", "AI-009"],
       paths: [
         "artifacts/api-server/src/scripts/customer-source-suite.ts",
-        "artifacts/api-server/src/lib/valo-customer-case-binding.ts",
+        "artifacts/api-server/src/modules/ai-lanes/valo-customer-case-binding.ts",
         "artifacts/api-server/src/lib/valo-source-acceptance.test.ts",
       ],
       record: customerSource60,

@@ -11,7 +11,7 @@ import {
   valoMemberships,
   valoWorkspaces,
 } from "@workspace/db";
-import { resolveWorkspace } from "./valo-store";
+import { resolveWorkspace } from "../../lib/valo-store";
 import { prepareCustomerEvaluationPlan } from "./inference-customer-evaluation";
 import { existingCustomerEvaluationActor, assertCustomerEvaluationActor } from "./inference-customer-runtime";
 import { hashAI, customerPromptVersion, customerNoticeVersion } from "./valo-customer-ai-domain";

@@ -711,21 +711,21 @@
     {
       "requirement": "AI-001",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "scope and permission injection are blocked across all four tasks",
       "proves": "Across the four drafting tasks, every adversarial note in the fixtures is flagged as unsupported, including requests for a legal opinion or an employment contract."
     },
     {
       "requirement": "AI-002",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "invalid provider structure gets one bounded retry, never fake success",
       "proves": "A model response that does not fit the draft plan schema, from a controlled transport, is tried twice in all and then ends with no plan and a schema failure code."
     },
     {
       "requirement": "AI-002",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.test.ts",
       "test": "all six original fault cases execute the real organizer with declared synthetic clarification and zero network",
       "proves": "With controlled responses and no network, two malformed responses get exactly two attempts and end with no plan and a fallback draft that keeps the supplied names, reference, dates and amounts, while a malformed then valid response gives a draft on the second attempt."
     },
@@ -739,14 +739,14 @@
     {
       "requirement": "AI-003",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "scope and permission injection are blocked across all four tasks",
       "proves": "Notes asking the AI to guess a tax rate and invent a registration number are flagged as unsupported in all four drafting tasks, as are notes asking it to forge payment proof in the invoice and payment reminder tasks."
     },
     {
       "requirement": "AI-003",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.test.ts",
       "test": "all six original fault cases execute the real organizer with declared synthetic clarification and zero network",
       "proves": "A controlled model response that adds fields outside the draft plan, a remote image link and a script, is rejected on both attempts and the link does not reach the draft, and in each of the six fault cases the draft keeps exactly the supplied names, reference, dates and amounts."
     },
@@ -774,14 +774,14 @@
     {
       "requirement": "AI-005",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "only bounded redacted selected notes enter model context",
       "proves": "The payload built for the model has only task, tone and notes fields, and the business name, an email address and the 234 country code of a phone number in a note do not appear in it."
     },
     {
       "requirement": "AI-005",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
       "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider",
       "proves": "A controlled transport receives exactly the redacted payload built from the request's own selected notes, and neither that payload, the preview nor the workspace's event records contain the marker note of another workspace's document, which the workspace cannot open."
     },
@@ -795,7 +795,7 @@
     {
       "requirement": "AI-006",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "scope and permission injection are blocked across all four tasks",
       "proves": "Notes telling the AI to ignore its system instructions and reveal other workspaces' drafts and secrets are flagged as unsupported in all four drafting tasks."
     },
@@ -816,7 +816,7 @@
     {
       "requirement": "AI-007",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
       "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider",
       "proves": "On a development database with a synthetic workspace at its daily AI limit while AI is otherwise enabled through a stubbed spending-approval check, a new draft request ends as a manual fallback and never reaches the provider adapter, and a manual edit to a saved document still saves and the workspace's data download still includes the document."
     },
@@ -830,21 +830,21 @@
     {
       "requirement": "AI-008",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/inference-customer-evaluation.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-evaluation.test.ts",
       "test": "preparation preserves all original60 identities, full oracles and actual numeric checks without invented follow-ups",
       "proves": "All 60 authored customer drafting cases keep their identities, expected checks and critical-failure conditions, integer-kobo arithmetic built on the application's money functions reproduces all 45 expected amounts in them, and no case is marked as accepted for output quality."
     },
     {
       "requirement": "AI-009",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.integration.test.ts",
       "test": "original customer quota, pause, tenant and outage boundaries use actual PostgreSQL/services with no provider",
       "proves": "Under an injected provider outage, a draft request makes one attempt and ends as a manual fallback that is not saved as a document, while a concurrent manual edit saves exactly one new revision that keeps the document's earlier text, and the workspace's data download still works."
     },
     {
       "requirement": "AI-009",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/inference-customer-controls.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/inference-customer-controls.test.ts",
       "test": "all six original fault cases execute the real organizer with declared synthetic clarification and zero network",
       "proves": "Controlled timeout, rate-limit and outage errors each get one attempt through the real draft organizer, with no network, and end with no plan and a fallback draft that keeps the supplied names, reference, dates and amounts."
     },
@@ -1068,7 +1068,7 @@
     {
       "requirement": "DOC-007",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.integration.test.ts",
       "test": "development AI persistence, private ownership, atomic acceptance and quotas",
       "proves": "Two concurrent acceptances of one synthetic AI draft, made without any provider call, create a single document, and accepting that draft again with a different title is refused with a conflict."
     },
@@ -1383,7 +1383,7 @@
     {
       "requirement": "EDT-005",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "missing facts are named, never invented",
       "proves": "For AI drafting input with no issuer name and no document number, the missing-information check names exactly those two fields."
     },
@@ -1579,7 +1579,7 @@
     {
       "requirement": "NFR-008",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "organisation instructions remain bounded and cannot populate missing fields",
       "proves": "When a customer's AI draft request leaves the issue date blank, the issue date is reported missing and the draft built from the request leaves it blank, even though the drafting instruction names a date."
     },
@@ -1845,7 +1845,7 @@
     {
       "requirement": "PRV-001",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-customer-ai.test.ts",
+      "file": "artifacts/api-server/src/modules/ai-lanes/valo-customer-ai.test.ts",
       "test": "AI requires separate notice acceptance; manual drafting remains independent",
       "proves": "An AI drafting request without its separate processing consent is refused, while a manual draft is still built from the same details without that consent."
     },

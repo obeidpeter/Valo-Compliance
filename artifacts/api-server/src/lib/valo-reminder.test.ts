@@ -9,7 +9,7 @@ import {
   customerProviderPayload,
   hashAI,
   missingCustomerFields,
-} from "./valo-customer-ai-domain";
+} from "../modules/ai-lanes/valo-customer-ai-domain";
 import { documentInput } from "./valo-validation";
 import { reminderCandidates, candidateReminder, exactKobo } from "../scripts/reminder-candidate-inputs";
 for (const c of reminderCandidates)

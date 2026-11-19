@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { recordedBalance } from "@workspace/valo-core/money";
-import { customerAIInput } from "../lib/valo-customer-ai-domain";
+import { customerAIInput } from "../modules/ai-lanes";
 type Case = {
   caseID: string;
   task: string;

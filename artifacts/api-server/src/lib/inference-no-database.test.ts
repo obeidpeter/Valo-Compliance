@@ -23,7 +23,7 @@ test("actual budget/customer unit files run without a database or native storage
       "--test",
       "--test-concurrency=1",
       "src/modules/ai/inference-budget.test.ts",
-      "src/lib/valo-customer-ai.test.ts",
+      "src/modules/ai-lanes/valo-customer-ai.test.ts",
     ],
     {
       cwd: fileURLToPath(new URL("../..", import.meta.url)),
@@ -60,7 +60,10 @@ test("disabled managed inference imports no runtime composition and dispatches n
     const {managedCompletion,InferenceHeld}=await import('./src/modules/ai/managed-inference.ts');
     assert.equal(ai.managedCompletion,managedCompletion);
     assert.equal('createManagedSDKTransport' in ai,false);
-    const {customerCompletionRequest}=await import('./src/lib/valo-customer-ai-model.ts');
+    const lanes=await import('./src/modules/ai-lanes/index.ts');
+    const {customerCompletionRequest}=await import('./src/modules/ai-lanes/valo-customer-ai-model.ts');
+    assert.equal(lanes.customerCompletionRequest,customerCompletionRequest);
+    assert.equal('createManagedSDKTransport' in lanes,false);
     assert.equal(typeof customerCompletionRequest,'function');
     assert.equal(Object.hasOwn(process.env,'DATABASE_URL'),false);
     await assert.rejects(()=>managedCompletion('customer',{

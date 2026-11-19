@@ -130,7 +130,8 @@ test("actual preparation and saved-readiness callers bind another form without a
     },
   });
   const { prepareOperationalCandidateRelease } = await import("../modules/editorial/operational-preparation");
-  const { readOperationalInferenceReadiness } = await import("./inference-operational-ready");
+  const { readOperationalInferenceReadiness } =
+    await import("../modules/ai-lanes/inference-operational-ready");
   const now = new Date(),
     quote = "We hereby assign to you all our right, title, and interest, if any, in and to Output.";
   const snapshot = {
@@ -227,7 +228,7 @@ test("multi-candidate reports require exact selection and retain old single-pair
   // stands in for parts of publication before anything loads it.
   const { prepareFiniteAllocationPackage, allocationPackageId } =
     await import("../modules/ai/inference-allocation-package");
-  const { selectPreparedProposal } = await import("./inference-prepared-report");
+  const { selectPreparedProposal } = await import("../modules/ai-lanes/inference-prepared-report");
   const pkg = await prepareFiniteAllocationPackage(),
     id = allocationPackageId(pkg);
   const proposal = (candidateVersionId: string) =>

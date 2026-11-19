@@ -81,7 +81,7 @@ test("all four current application dispatch sites use the shared held transport"
     "../editorial/model-adapter.ts",
     "../editorial/operational-review.ts",
     "../editorial/operational-authoring.ts",
-    "../../lib/valo-customer-ai-model.ts",
+    "../ai-lanes/valo-customer-ai-model.ts",
   ];
   for (const path of paths) {
     const source = await readFile(new URL(path, import.meta.url), "utf8");
