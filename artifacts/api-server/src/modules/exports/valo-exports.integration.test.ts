@@ -40,10 +40,29 @@ import {
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 
 const enabled = process.env.VALO_RUN_EXPORT_TESTS === "synthetic-development-only";
+// CI keeps private files in a local folder (test-support/run-private-file-tests.mjs); Replit uses
+// its native storage. Only the native store has an anonymous address to try.
+const portable = process.env.VALO_PORTABLE_WORKER_PRELOADED === "true";
+// A fixed name, so the evidence register can cite it; the run's report says which storage it used.
 test(
-  "real development PostgreSQL, private App Storage and renderer integration",
+  "real development PostgreSQL, private file storage and renderer integration",
   { skip: !enabled, timeout: 180000 },
   async (t) => {
+    t.diagnostic(
+      `private files: ${portable ? "portable filesystem (not native storage)" : "native private storage"}`,
+    );
+    // A worker started here uses the same private files as this process.
+    const workerImports = [
+      "--import",
+      "tsx",
+      ...(portable
+        ? [
+            "--experimental-test-module-mocks",
+            "--import",
+            new URL("../../test-support/private-file-process.mts", import.meta.url).href,
+          ]
+        : []),
+    ];
     const a = await resolveWorkspace("synthetic-export-a-" + randomUUID());
     const b = await resolveWorkspace("synthetic-export-b-" + randomUUID());
     const workspaces = [a.workspaceId, b.workspaceId];
@@ -158,11 +177,12 @@ test(
         assert.equal((await getDocument(a, doc.id)).revision, 2);
       });
       await t.test(
-        "private object denies anonymous access, has a verified checksum and is never returned as a raw key",
+        `private object ${portable ? "" : "denies anonymous access, "}has a verified checksum, is never returned as a raw key and is never overwritten`,
         async () => {
           const row = await getExport(a, docxId);
           assert.ok(row.asset);
-          assert.ok([401, 403, 404].includes(await anonymousPrivateFileStatus(row.asset!.objectKey)));
+          if (!portable)
+            assert.ok([401, 403, 404].includes(await anonymousPrivateFileStatus(row.asset!.objectKey)));
           const file = await downloadExport(a, docxId);
           assert.equal(fileChecksum(file.bytes), row.asset!.checksum);
           assert.equal(file.bytes.length, row.asset!.size);
@@ -254,7 +274,7 @@ test(
       await t.test(
         "actual worker process can stop abruptly; jobs committed while it is absent survive restart",
         async () => {
-          worker = spawn(process.execPath, ["--import", "tsx", "src/workers/export-worker.ts"], {
+          worker = spawn(process.execPath, [...workerImports, "src/workers/export-worker.ts"], {
             cwd: process.cwd(),
             env: { ...process.env, NODE_ENV: "development" },
             stdio: "ignore",
@@ -272,7 +292,7 @@ test(
             acknowledgeDraft: true,
           });
           assert.equal((await getExport(a, job.id)).job.status, "queued");
-          worker = spawn(process.execPath, ["--import", "tsx", "src/workers/export-worker.ts"], {
+          worker = spawn(process.execPath, [...workerImports, "src/workers/export-worker.ts"], {
             cwd: process.cwd(),
             env: { ...process.env, NODE_ENV: "development" },
             stdio: "ignore",

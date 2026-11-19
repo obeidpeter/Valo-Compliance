@@ -1325,6 +1325,13 @@
       "proves": "For ten operational templates, the DOCX and the A4 PDF rendered from one canonical document both hold its complete text and required notices when read back, and the same files fail the comparison once the record's scope is changed."
     },
     {
+      "requirement": "EDT-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-exports.integration.test.ts",
+      "test": "real development PostgreSQL, private file storage and renderer integration",
+      "proves": "After a synthetic draft is changed and saved as revision 2, its DOCX and PDF exports both hold revision 1's text and naira amount, the PDF names saved revision 1, and the DOCX job records revision 1's content hash; the on-screen preview is not compared."
+    },
+    {
       "requirement": "EDT-003",
       "job": "postgres",
       "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
@@ -1367,6 +1374,13 @@
       "proves": "For AI drafting input with no issuer name and no document number, the missing-information check names exactly those two fields."
     },
     {
+      "requirement": "EDT-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-exports.integration.test.ts",
+      "test": "real development PostgreSQL, private file storage and renderer integration",
+      "proves": "An export request for a synthetic draft without the incomplete-draft acknowledgement is refused with 422, and the acknowledged PDF export carries the INCOMPLETE BUSINESS DRAFT notice."
+    },
+    {
       "requirement": "EDT-006",
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
@@ -1388,6 +1402,13 @@
       "proves": "The inventory register template's DOCX and its A4 PDF of at least two pages both hold every paragraph and table cell with the disclosure, scope, limitations and source-check date when read back, after the renderer's own page-number footer lines are set aside."
     },
     {
+      "requirement": "EDT-006",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-exports.integration.test.ts",
+      "test": "real development PostgreSQL, private file storage and renderer integration",
+      "proves": "Through the export job, a synthetic document with a long title, a long issuer name and a 65-row table renders to a DOCX whose document part holds its naira amount and to an A4 PDF of at least two pages from which pdftotext reads the naira amount; opening in Word is not tested."
+    },
+    {
       "requirement": "EDT-007",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/exports/valo-export-recovery.integration.test.ts",
@@ -1402,6 +1423,13 @@
       "proves": "With an in-memory file store, two concurrent retry requests for one expired export give the job a new delivery, the superseded delivery does nothing when run, and the new delivery makes the export ready again from the same saved revision."
     },
     {
+      "requirement": "EDT-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-exports.integration.test.ts",
+      "test": "real development PostgreSQL, private file storage and renderer integration",
+      "proves": "Six parallel export requests for one synthetic revision and format under six request keys resolve to one job, a key reused for another format is refused with 409 without adding a job, rendering a ready job again records no second ready event, and a job committed while the export worker process is stopped is completed by a newly started worker."
+    },
+    {
       "requirement": "EDT-008",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/exports/valo-export-retention.integration.test.ts",
@@ -1414,6 +1442,13 @@
       "file": "artifacts/api-server/src/lib/valo-workspace-download.integration.test.ts",
       "test": "real paged workspace download, final authorization and disconnect cleanup",
       "proves": "Over real HTTP with a controlled identity provider, a workspace data download whose session is revoked, account locked, email unverified or membership revoked after the file is prepared is refused with no attachment and none of the private data, and the prepared file is deleted."
+    },
+    {
+      "requirement": "EDT-008",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/exports/valo-exports.integration.test.ts",
+      "test": "real development PostgreSQL, private file storage and renderer integration",
+      "proves": "With private files in a local folder, a synthetic workspace whose membership is suspended is refused its ready export and a new export with 404, another workspace gets 404 for the same export, and the export listing never shows a file's storage key; cache headers are not checked."
     },
     {
       "requirement": "EDT-009",

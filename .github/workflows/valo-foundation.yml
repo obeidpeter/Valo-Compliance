@@ -414,6 +414,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-write-security
       - name: Prove export crash recovery with shared portable private files and real worker processes
         run: pnpm --filter @workspace/api-server test:valo-export-worker-portable-db
+      - name: Prove document exports keep their revision, render A4 PDFs and refuse other members, with portable private files
+        run: pnpm --filter @workspace/api-server test:valo-exports-portable-db
       - name: Prove controlled payment settlement and refund lifecycle
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce

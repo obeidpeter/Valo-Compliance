@@ -1,7 +1,7 @@
 /** Portable process proof only; never a native-storage implementation. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile, writeFile, unlink, realpath } from "node:fs/promises";
+import { readFile, writeFile, unlink, realpath, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { mock } from "node:test";
 assert.equal(process.env.NODE_ENV, "development");
@@ -28,9 +28,24 @@ mock.module(url, {
   namedExports: {
     fileChecksum: checksum,
     writePrivateFile: async (key: string, bytes: Buffer, onUploading?: () => Promise<void>) => {
-      const writing = writeFile(target(key), bytes, { flag: "wx", mode: 0o600 });
+      const path = target(key);
+      // As the native store does: a key already written is refused, before any upload starts.
+      if (
+        await stat(path).then(
+          () => true,
+          () => false,
+        )
+      )
+        throw Error("PRIVATE_FILE_KEY_ALREADY_WRITTEN");
+      const writing = writeFile(path, bytes, { flag: "wx", mode: 0o600 });
       await onUploading?.();
-      await writing;
+      try {
+        await writing;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "EEXIST")
+          throw Error("PRIVATE_FILE_KEY_ALREADY_WRITTEN");
+        throw error;
+      }
       return { checksum: checksum(bytes), size: bytes.length };
     },
     readPrivateFile: async (key: string, expected: string) => {
