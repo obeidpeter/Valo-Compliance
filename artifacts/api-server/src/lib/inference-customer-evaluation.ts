@@ -225,7 +225,7 @@ export async function prepareCustomerEvaluationPlan(
     formalAcceptance: false,
   };
 }
-export function prepareCustomerFiniteManifest(
+export function prepareCustomerEvaluationManifest(
   plan: CustomerEvaluationPlan,
   artifact: ArtifactRef,
   caseId: string,
@@ -300,7 +300,7 @@ export async function validateCustomerEvaluationWork(
     throw Error("CUSTOMER_PLAN_EXPIRED_OR_INVALID");
   const actual = await prepareCustomerEvaluationPlan(plan.actor, new Date(plan.preparedAt), plan.followups);
   if (requestDigest(actual) !== requestDigest(plan)) throw Error("CUSTOMER_PLAN_INPUT_CHANGED");
-  const expected = prepareCustomerFiniteManifest(
+  const expected = prepareCustomerEvaluationManifest(
     actual,
     ref,
     work.bindings.caseId,

@@ -440,7 +440,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
   const { assertFiniteWorkBindings } = await import("./inference-work-bindings");
   provideFiniteWorkBindings(assertFiniteWorkBindings);
   const { organizeCustomerDraft } = await import("./valo-customer-ai-model");
-  const { prepareCustomerEvaluationPlan, prepareCustomerFiniteManifest } =
+  const { prepareCustomerEvaluationPlan, prepareCustomerEvaluationManifest } =
     await import("./inference-customer-evaluation");
   const plan = await prepareCustomerEvaluationPlan(actor, new Date(Date.now() - 10000));
   const entry = plan.cases.find((c) => c.caseId === "CAI-CAND-INV-01")!,
@@ -456,7 +456,7 @@ test("default managed entry and customer organizer use actual finite dispatch an
       extension: "json" as const,
     };
     artifacts.set(artifact.id, bytes);
-    const manifest = prepareCustomerFiniteManifest(
+    const manifest = prepareCustomerEvaluationManifest(
       plan,
       artifact,
       entry.caseId,

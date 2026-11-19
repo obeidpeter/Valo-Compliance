@@ -10,7 +10,7 @@ import {
 } from "../modules/ai";
 import {
   prepareCustomerEvaluationPlan,
-  prepareCustomerFiniteManifest,
+  prepareCustomerEvaluationManifest,
   validateCustomerEvaluationWork,
 } from "../lib/inference-customer-evaluation";
 import {
@@ -99,7 +99,7 @@ async function main() {
         }
         try {
           await assertCustomerEvaluationActor(plan, entry);
-          const manifest = prepareCustomerFiniteManifest(plan, artifact, entry.caseId, packageId);
+          const manifest = prepareCustomerEvaluationManifest(plan, artifact, entry.caseId, packageId);
           for (const work of manifest.works) await assertFiniteWorkBindings(work);
           const expiry = new Date(
             Math.min(Date.parse(plan.expiresAt), existing ? Date.parse(existing.expiresAt) : Infinity),
@@ -177,7 +177,7 @@ async function main() {
       primary = manifest.works.find((w) => !w.retryOf);
     if (!primary?.bindings.customerPlan || !manifest.packageId) throw Error("CUSTOMER_RUNNER_SCOPE_INVALID");
     const { plan, entry } = await validateCustomerEvaluationWork(primary, getPublicationArtifact);
-    const expected = prepareCustomerFiniteManifest(
+    const expected = prepareCustomerEvaluationManifest(
       plan,
       primary.bindings.customerPlan,
       entry.caseId,
