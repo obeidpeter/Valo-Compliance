@@ -1745,6 +1745,27 @@
       "proves": "A reminder for a confirmed due date is scheduled for 09:00 Lagos time on the intended calendar day and stored as 08:00 UTC across a year end, a leap day, a non-leap February and a mid-year date, and an impossible date (29 February 2027) or an unsupported reminder offset is refused."
     },
     {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/format.test.ts",
+      "test": "an instant is written as its day and time on a Lagos clock, the month as a word, whatever the time zone it was given in (NFR-008)",
+      "proves": "The web app's formatter writes an instant as its day and time in Lagos with the month as a word, such as 18 Nov 2026, 09:00, whether the instant was given in UTC or with an offset, and across midnight and a year end."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/format.test.ts",
+      "test": "an amount of kobo is written in naira with the naira sign, grouped thousands and two decimal places (NFR-008)",
+      "proves": "The web app's formatter writes an amount of kobo in naira with the naira sign, grouped thousands and two decimal places, loses no digit of an amount larger than a number holds exactly, and leaves an amount that is not whole kobo as written instead of rounding it."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "scripts/src/valo/architecture-check.test.ts",
+      "test": "the web app writes dates, times, amounts and counts only through its formatter (NFR-008)",
+      "proves": "A web app file that writes a date, time, amount or count with the viewer's own locale and time zone fails the repository rule, and the formatter's own file and a screen that uses it pass."
+    },
+    {
       "requirement": "NFR-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/commerce/valo-commerce.integration.test.ts",

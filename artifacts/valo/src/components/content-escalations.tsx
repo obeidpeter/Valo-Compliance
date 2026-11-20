@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccountEpoch } from "./account-state-boundary";
 import { ErrorState } from "./states";
 import { SupportDraftGuard } from "./support-cases";
-import { formatDate } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import {
   actOnContentEscalation,
   listContentEscalations,
@@ -175,7 +175,7 @@ export function ContentEscalations({ onDirtyChange }: { onDirtyChange?: (dirty: 
                 <h3 className="break-all font-mono text-sm">{item.reference}</h3>
                 <p className="mt-2 text-sm">
                   <strong>{item.status}</strong> · {item.targetKind} version {item.targetVersion} ·{" "}
-                  {formatDate(item.createdAt)}
+                  {formatDateTime(item.createdAt)}
                 </p>
                 <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
                   Target {item.targetId}

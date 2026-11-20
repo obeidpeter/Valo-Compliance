@@ -11,7 +11,8 @@ import {
 } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
-import { blankContent, describeError, formatDate, missingFields } from "@/lib/api";
+import { blankContent, describeError, missingFields } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import { CorrectionNotices } from "@/components/correction-notices";
 import { GuidedDraftStarter } from "@/components/guided-draft-starter";
 import { SavedTemplates } from "@/components/saved-templates";
@@ -160,7 +161,7 @@ export default function WorkspaceHome() {
                           <span className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                             <span>Business draft</span>
                             <span className="font-mono">rev {d.revision}</span>
-                            <span>{formatDate(d.updatedAt)}</span>
+                            <span>{formatDateTime(d.updatedAt)}</span>
                           </span>
                         </span>
                         {miss > 0 && (

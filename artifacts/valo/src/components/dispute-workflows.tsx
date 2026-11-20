@@ -20,7 +20,8 @@ import {
   type FinanceDispute,
 } from "@workspace/api-client-react";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
-import { describeError, formatDate } from "@/lib/api";
+import { describeError } from "@/lib/api";
+import { formatDateTime, formatNaira } from "@/lib/format";
 
 const DirtyContext = createContext<((id: string, dirty: boolean) => void) | null>(null);
 export function useDisputeDirty(dirty: boolean) {
@@ -71,8 +72,6 @@ export function DisputeFormsBoundary({ children }: { children: ReactNode }) {
   );
 }
 const wrapButton = { maxWidth: "100%", whiteSpace: "normal", overflowWrap: "anywhere" } as const;
-const money = (value: number) =>
-  new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(value / 100);
 const record = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 const text = (value: unknown) =>
@@ -91,7 +90,7 @@ function InformationFacts({ row }: { row: Record<string, unknown> }) {
     <article className="rounded-lg border p-3 text-sm">
       <p className="break-all font-medium">Statement {text(row.id) ?? "Reference unavailable"}</p>
       <p className="my-1 break-all">Selected dispute: {text(row.disputeId) ?? "Not supplied"}</p>
-      {text(row.createdAt) && <p className="my-1">Saved {formatDate(String(row.createdAt))}</p>}
+      {text(row.createdAt) && <p className="my-1">Saved {formatDateTime(String(row.createdAt))}</p>}
       <p className="my-1">Consent version: {text(row.consentVersion) ?? "Not supplied"}</p>
       <dl className="space-y-2">
         {Object.entries(factLabels).map(([key, label]) =>
@@ -112,7 +111,7 @@ function ActionFacts({ action }: { action: DisputeActionRecord }) {
   const fields: [string, unknown][] = [
     ["Reason / provider message", payload.message],
     ["Merchant response", payload.resolution],
-    ["Accepted amount", typeof payload.amountKobo === "number" ? money(payload.amountKobo) : null],
+    ["Accepted amount", typeof payload.amountKobo === "number" ? formatNaira(payload.amountKobo) : null],
     ["Saved upload reference", payload.uploadedFilename],
     ["Saved evidence reference", payload.evidenceId],
     ["Provider file reference", result.filename],
@@ -324,7 +323,7 @@ export function FinanceDisputeCard({ id }: { id: string }) {
         </div>
         <div>
           <dt className="font-medium">Original payment</dt>
-          <dd>{money(d.amountKobo)}</dd>
+          <dd>{formatNaira(d.amountKobo)}</dd>
         </div>
         <div>
           <dt className="font-medium">Verified category</dt>
@@ -598,7 +597,7 @@ export function FinanceDisputeCard({ id }: { id: string }) {
               <li key={text(r.id) ?? i} className="border-l pl-3">
                 <p>
                   {text(r.status) ?? text(r.action) ?? "Recorded action"}
-                  {text(r.createdAt) ? " · " + formatDate(String(r.createdAt)) : ""}
+                  {text(r.createdAt) ? " · " + formatDateTime(String(r.createdAt)) : ""}
                 </p>
                 {text(r.reason) && <p className="whitespace-pre-wrap break-words">{text(r.reason)}</p>}
                 {text(r.actionId) && (

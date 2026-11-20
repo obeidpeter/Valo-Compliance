@@ -6,6 +6,7 @@ import {
   useRetryDocumentExport,
 } from "@workspace/api-client-react";
 import { describeError } from "@/lib/api";
+import { formatCount, formatDateTime } from "@/lib/format";
 import { ErrorState } from "./states";
 
 function ExportButton({
@@ -142,11 +143,11 @@ export function DocumentExports({
               </p>
               <p className="text-xs text-muted-foreground">
                 Attempts: {job.attempts}
-                {job.size !== null ? ` · ${job.size.toLocaleString("en-NG")} bytes` : ""}
+                {job.size !== null ? ` · ${formatCount(job.size)} bytes` : ""}
               </p>
               {job.expiresAt && job.downloadUrl && (
                 <p className="text-xs text-muted-foreground">
-                  Download available until {new Date(job.expiresAt).toLocaleString()}.
+                  Download available until {formatDateTime(job.expiresAt)}.
                 </p>
               )}
               {job.errorCode && (

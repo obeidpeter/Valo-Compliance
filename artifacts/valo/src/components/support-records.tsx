@@ -1,16 +1,11 @@
+import { formatDateTime } from "@/lib/format";
+
 /** Only mount with the support area's server-authorised response. Native
  * disclosures keep the complete message available without hiding fields behind
  * an arbitrary union of columns from different request types. */
 export function SupportRecords({ records }: { records: Record<string, unknown>[] }) {
   const text = (v: unknown) =>
     v === undefined || v === null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v);
-  function received(v: unknown) {
-    const raw = text(v),
-      date = new Date(raw);
-    return Number.isNaN(date.valueOf())
-      ? raw
-      : `${new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Lagos" }).format(date)} · Africa/Lagos`;
-  }
   return (
     <ul className="mt-6 grid min-w-0 gap-4" aria-label="Saved support requests" data-testid="support-records">
       {records.map((r, index) => {
@@ -51,7 +46,9 @@ export function SupportRecords({ records }: { records: Record<string, unknown>[]
               {text(r.category ?? r.topic) || "Category not recorded"}
             </p>
             {r.createdAt !== undefined && (
-              <p className="mt-1 text-xs text-muted-foreground">Received {received(r.createdAt)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Received {formatDateTime(text(r.createdAt))}
+              </p>
             )}
             <details className="mt-4 min-w-0 border-t border-border pt-4">
               <summary

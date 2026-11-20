@@ -15,6 +15,9 @@ import {
   publicServerViolations,
   silentCatchReport,
   silentCatchViolations,
+  WEB_FORMATTER,
+  webFormattingReport,
+  webFormattingViolations,
   WORKSPACE_SCOPE_ENTRIES,
   workspaceActorReport,
   workspaceActorViolations,
@@ -240,6 +243,40 @@ test("public pages' server code never holds the visitor's identity, and their is
   }
 });
 
+test("the web app writes dates, times, amounts and counts only through its formatter (NFR-008)", () => {
+  const screen = "artifacts/valo/src/screens/example.tsx";
+  for (const [code, what] of [
+    ["const shown = new Date(row.createdAt).toLocaleString();", "toLocaleString()"],
+    ['const shown = new Date(row.reviewBy).toLocaleDateString("en-GB");', "toLocaleDateString()"],
+    ["const shown = new Date(row.at).toLocaleTimeString();", "toLocaleTimeString()"],
+    ['const shown = size.toLocaleString("en-NG");', "toLocaleString()"],
+    [
+      'const shown = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(1);',
+      "Intl.NumberFormat",
+    ],
+    ['const clock = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Lagos" });', "Intl.DateTimeFormat"],
+    ['const ago = new Intl.RelativeTimeFormat("en");', "Intl.RelativeTimeFormat"],
+  ] as const) {
+    const flagged = webFormattingViolations(screen, code + "\n");
+    assert.equal(flagged.length, 1, code);
+    assert.ok(flagged[0]!.startsWith(`${screen}:1 web-formatting ${what} `), flagged[0]);
+  }
+  // The formatter's own calls, and a screen that writes through it, are what the rule asks for.
+  assert.deepEqual(webFormattingViolations(WEB_FORMATTER, 'new Intl.DateTimeFormat("en-GB");\n'), []);
+  assert.deepEqual(
+    webFormattingViolations(
+      screen,
+      'import { formatDay, formatNaira } from "@/lib/format";\nconst shown = formatDay(row.dueDate) + formatNaira(row.amountKobo);\n',
+    ),
+    [],
+  );
+  // Other locale-aware calls write no date, amount or count.
+  assert.deepEqual(
+    webFormattingViolations(screen, "const first = a.localeCompare(b); const up = a.toLocaleUpperCase();\n"),
+    [],
+  );
+});
+
 test("the repository has no silent catches, no import cycles and no unreviewed binding checks", () => {
   assert.deepEqual(silentCatchReport(), []);
   assert.deepEqual(workspaceActorReport(), []);
@@ -250,6 +287,7 @@ test("the repository has no silent catches, no import cycles and no unreviewed b
   assert.deepEqual(cycleViolations(graph), []);
   assert.deepEqual(moduleBoundaryViolations(graph), []);
   assert.deepEqual(publicServerViolations(), []);
+  assert.deepEqual(webFormattingReport(), []);
   assert.ok(
     publicServerEntries().includes("artifacts/valo/src/server/public-api.ts"),
     "the public pages' server code was read",

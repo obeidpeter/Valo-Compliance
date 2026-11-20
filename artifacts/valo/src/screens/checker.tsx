@@ -47,13 +47,13 @@ import {
   nairaToKobo,
   koboToNaira,
   isMarker,
-  lagosToday,
   live,
   valueLabel,
   factLabel,
   displayFact,
   type Marker,
 } from "@/lib/checker";
+import { lagosToday } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useAccountEpoch } from "@/components/account-state-boundary";
 

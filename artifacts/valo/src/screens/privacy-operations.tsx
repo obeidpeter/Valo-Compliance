@@ -10,7 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { ErrorState } from "@/components/states";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
-import { formatDate } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 const actions: { value: PrivacyStaffAction["action"]; label: string }[] = [
   { value: "claim", label: "Claim verified request" },
   { value: "request_information", label: "Request more information" },
@@ -132,7 +132,7 @@ export default function PrivacyOperations() {
                 <h2 className="break-words font-medium">{row.reference}</h2>
                 <p className="mt-1 text-sm">
                   {row.kind} · {row.status.replaceAll("_", " ")} · version {row.version} ·{" "}
-                  {formatDate(row.createdAt)}
+                  {formatDateTime(row.createdAt)}
                 </p>
                 <p className="mt-3 whitespace-pre-wrap break-words text-sm">{row.message}</p>
                 <button
@@ -202,7 +202,7 @@ export default function PrivacyOperations() {
               <ol className="grid gap-2" aria-label="Case history">
                 {inspection.events.map((e) => (
                   <li key={e.sequence}>
-                    <strong>{e.action.replaceAll("_", " ")}</strong> · {formatDate(e.createdAt)}
+                    <strong>{e.action.replaceAll("_", " ")}</strong> · {formatDateTime(e.createdAt)}
                     <p className="whitespace-pre-wrap break-words">{e.reason}</p>
                   </li>
                 ))}
@@ -210,7 +210,7 @@ export default function PrivacyOperations() {
               <ul className="grid gap-2" aria-label="Customer information">
                 {inspection.messages.map((m) => (
                   <li key={m.id}>
-                    <p className="text-xs">{formatDate(m.createdAt)}</p>
+                    <p className="text-xs">{formatDateTime(m.createdAt)}</p>
                     <p className="whitespace-pre-wrap break-words">{m.body}</p>
                   </li>
                 ))}

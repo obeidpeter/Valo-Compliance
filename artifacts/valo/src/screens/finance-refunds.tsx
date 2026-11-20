@@ -8,7 +8,8 @@ import {
   type RefundRecord,
 } from "@workspace/api-client-react";
 import { ErrorState, Skel } from "@/components/states";
-import { describeError, formatDate } from "@/lib/api";
+import { describeError } from "@/lib/api";
+import { formatDateTime, formatNaira } from "@/lib/format";
 function RefundCard({ row, refresh }: { row: RefundRecord; refresh: () => Promise<unknown> }) {
   const [reason, setReason] = useState(""),
     [busy, setBusy] = useState(false),
@@ -30,17 +31,13 @@ function RefundCard({ row, refresh }: { row: RefundRecord; refresh: () => Promis
     <article className="rounded-xl border bg-card p-4">
       <h3 className="break-all font-semibold">{row.reference}</h3>
       <p className="my-2 text-sm">
-        {row.amountKobo === null
-          ? "Legacy amount unconfirmed"
-          : new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(
-              row.amountKobo / 100,
-            )}{" "}
-        · {row.status.replaceAll("_", " ")}
+        {row.amountKobo === null ? "Legacy amount unconfirmed" : formatNaira(row.amountKobo)} ·{" "}
+        {row.status.replaceAll("_", " ")}
       </p>
       <p className="whitespace-pre-wrap text-sm">{row.reason}</p>
       <p className="my-2 text-xs text-muted-foreground">
         Revision {row.version} · Attempts {row.attempts}/5 · Checked{" "}
-        {row.checkedAt ? formatDate(row.checkedAt) : "not yet"}
+        {row.checkedAt ? formatDateTime(row.checkedAt) : "not yet"}
       </p>
       {row.decisionReason && <p className="my-2 text-sm">Decision reason: {row.decisionReason}</p>}
       {row.failure && (

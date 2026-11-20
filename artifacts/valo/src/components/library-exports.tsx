@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Download } from "lucide-react";
 import { useListWorkspaceExports, getListWorkspaceExportsQueryKey } from "@workspace/api-client-react";
-import { formatDate } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import { ErrorState, Skel } from "./states";
 
 /** The business library's files (DOC-005): each ready export with the saved revision it was made
@@ -33,7 +33,8 @@ export function LibraryExports() {
                   {file.documentTitle}
                 </Link>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {file.format.toUpperCase()} · revision {file.revision} · ready {formatDate(file.readyAt)}
+                  {file.format.toUpperCase()} · revision {file.revision} · ready{" "}
+                  {formatDateTime(file.readyAt)}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {file.template

@@ -18,7 +18,8 @@ import { WorkspaceNav } from "@/components/workspace-nav";
 import { AssessmentResultView } from "@/components/assessment-result";
 import { TaskForm, emptyDraft, type TaskDraft } from "@/components/task-form";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
-import { describeError, formatDate } from "@/lib/api";
+import { describeError } from "@/lib/api";
+import { formatDateTime, formatDay } from "@/lib/format";
 import { describeAssessmentChange } from "@/lib/assessment-changes";
 import { reviewFacts, displayFact, factLabel, live } from "@/lib/checker";
 import { RESULT_LABELS, RESULT_TONES, factAtPath, canCreateSourceTask } from "@/lib/rich-checker";
@@ -90,9 +91,9 @@ export function AssessmentsList() {
                     data-testid={"link-assessment-" + a.id}
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block font-medium">{formatDate(a.createdAt)}</span>
+                      <span className="block font-medium">{formatDateTime(a.createdAt)}</span>
                       <span className="mt-1 flex flex-wrap gap-x-3 font-mono text-xs text-muted-foreground">
-                        <span>as of {a.result.asOfDate}</span>
+                        <span>as of {formatDay(a.result.asOfDate)}</span>
                         <span>ruleset {a.result.rulesetVersion}</span>
                         <span>
                           {a.profileRevision ? "profile rev " + a.profileRevision : "questionnaire snapshot"}
@@ -161,7 +162,7 @@ export function AssessmentDetail({ id }: { id: string }) {
         <ArrowLeft className="h-4 w-4" />
         All assessments
       </Link>
-      <h1 className="font-display mt-3 text-4xl">Assessment of {formatDate(s.createdAt)}</h1>
+      <h1 className="font-display mt-3 text-4xl">Assessment of {formatDateTime(s.createdAt)}</h1>
       <p className="mt-2 font-mono text-xs text-muted-foreground">
         {s.profileRevision
           ? "From saved profile revision " + s.profileRevision
@@ -236,7 +237,7 @@ export function AssessmentDetail({ id }: { id: string }) {
               </option>
               {others.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {formatDate(o.createdAt)}
+                  {formatDateTime(o.createdAt)}
                 </option>
               ))}
             </select>

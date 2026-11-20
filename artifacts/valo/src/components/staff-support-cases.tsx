@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccountEpoch } from "./account-state-boundary";
 import { ErrorState } from "./states";
 import { SupportDraftGuard, SupportMessages } from "./support-cases";
-import { formatDate } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import {
   actOnSupportCase,
   getSupportCase,
@@ -215,7 +215,7 @@ export function StaffSupportCases({ onDirtyChange }: { onDirtyChange?: (dirty: b
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground [overflow-wrap:anywhere]">
                   {item.assignedTo ? `Assigned to ${item.assignedTo}` : "Unassigned"} · Updated{" "}
-                  {formatDate(item.updatedAt)}
+                  {formatDateTime(item.updatedAt)}
                 </p>
                 <button
                   type="button"
@@ -359,7 +359,7 @@ export function StaffSupportCases({ onDirtyChange }: { onDirtyChange?: (dirty: b
                           {item.targetId}
                         </p>
                         <p className="mt-2 whitespace-pre-wrap [overflow-wrap:anywhere]">{item.reason}</p>
-                        <p className="mt-2 text-xs text-muted-foreground">{formatDate(item.createdAt)}</p>
+                        <p className="mt-2 text-xs text-muted-foreground">{formatDateTime(item.createdAt)}</p>
                       </li>
                     ))}
                   </ul>
@@ -377,7 +377,7 @@ export function StaffSupportCases({ onDirtyChange }: { onDirtyChange?: (dirty: b
                   <ol className="mt-3 grid gap-3 text-sm" aria-label="Support operation history">
                     {detail.data.events.map((item) => (
                       <li key={item.id}>
-                        <strong>{item.action.replaceAll("_", " ")}</strong> · {formatDate(item.createdAt)}
+                        <strong>{item.action.replaceAll("_", " ")}</strong> · {formatDateTime(item.createdAt)}
                         <p className="mt-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">
                           Recorded actor: {item.actorId}
                         </p>

@@ -12,7 +12,8 @@ import {
 } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { ErrorState, Notice, Skel } from "@/components/states";
-import { describeError, formatDate } from "@/lib/api";
+import { describeError } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import { PurchaseHistoryPage } from "./purchase-history";
 import { PrivacyCases } from "@/components/privacy-cases";
 import { getListPrivacyCasesQueryKey } from "@workspace/api-client-react";
@@ -263,7 +264,7 @@ export function PrivacyPage() {
                   <div>
                     <p className="font-medium capitalize">{p.request.replace(/_/g, " ")}</p>
                     <p className="font-mono text-xs text-muted-foreground">
-                      {p.reference} · {formatDate(p.createdAt)}
+                      {p.reference} · {formatDateTime(p.createdAt)}
                     </p>
                   </div>
                   <span className="pill pill-ochre">

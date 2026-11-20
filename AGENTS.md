@@ -118,6 +118,11 @@ Rules that apply now:
   `artifacts/api-server/src/modules/`. Code outside a module imports it only through
   its `index.ts`; the `module-boundary` repository rule enforces this, and tests may
   import a module's files directly.
+- The web app writes dates, times, amounts and counts only through
+  `artifacts/valo/src/lib/format.ts`: on a Lagos clock, the month as a word
+  ("18 Nov 2026, 09:00"), amounts in naira ("₦1,500.00"). The `web-formatting`
+  repository rule fails any other `toLocaleString`, `toLocaleDateString`,
+  `toLocaleTimeString` or `Intl` date or number format in the web app.
 
 ## 5. Checks
 

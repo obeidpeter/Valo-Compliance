@@ -10,8 +10,9 @@ import {
 } from "@workspace/api-client-react";
 import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
-import { KIND_LABEL, PlainText, ResourceCard, fmtDay, liveContent } from "@/components/resource-parts";
+import { KIND_LABEL, PlainText, ResourceCard, liveContent } from "@/components/resource-parts";
 import { describeError } from "@/lib/describe-error";
+import { formatDay } from "@/lib/format";
 import { fromServer } from "@/lib/server-data";
 
 /** The released resources, starting from what the server read; the browser reads them itself when
@@ -138,7 +139,7 @@ export function ResourceDetail({
             <div className="min-w-0">
               <div className="flex flex-wrap gap-2">
                 <span className="pill pill-forest">{KIND_LABEL[r.kind] ?? r.kind}</span>
-                <span className="pill pill-ink">Reviewed {fmtDay(r.reviewedAt)}</span>
+                <span className="pill pill-ink">Reviewed {formatDay(r.reviewedAt)}</span>
               </div>
               <h1
                 className="font-display mt-4 text-4xl leading-tight sm:text-5xl"

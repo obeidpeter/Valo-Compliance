@@ -6,6 +6,7 @@ import {
 } from "@workspace/api-client-react";
 import { ErrorState, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
+import { formatDateTime, formatDay } from "@/lib/format";
 import { EditorialRecordPanel } from "@/components/editorial-record";
 export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
   const [page, setPage] = useState(1),
@@ -151,7 +152,7 @@ export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {v.safetyHeld ? "Safety held" : v.status}
-                        {v.reviewBy ? ` · Review by ${new Date(v.reviewBy).toLocaleDateString()}` : ""}
+                        {v.reviewBy ? ` · Review by ${formatDay(v.reviewBy)}` : ""}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -220,11 +221,11 @@ export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
                     {s.failureCode
                       ? "Check unavailable"
                       : s.checkedAt
-                        ? `Checked ${new Date(s.checkedAt).toLocaleString()}`
+                        ? `Checked ${formatDateTime(s.checkedAt)}`
                         : "First check pending"}
                     <p className="mt-1 text-muted-foreground">
-                      Next check: {new Date(s.nextCheckAt).toLocaleString()}. Successful retrieval does not
-                      approve legal claims.
+                      Next check: {formatDateTime(s.nextCheckAt)}. Successful retrieval does not approve legal
+                      claims.
                     </p>
                   </li>
                 ))}

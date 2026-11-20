@@ -9,7 +9,7 @@ import {
   type PrivacyCase,
 } from "@workspace/api-client-react";
 import { ErrorState } from "./states";
-import { formatDate } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 export function PrivacyCases() {
   const cases = useListPrivacyCases();
@@ -138,7 +138,8 @@ function PrivacyCaseCard({
             {row.kind} · <strong>{row.status.replaceAll("_", " ")}</strong> · version {row.version}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatDate(row.createdAt)} · {row.assigned ? "Assigned to privacy operations" : "Not assigned"}
+            {formatDateTime(row.createdAt)} ·{" "}
+            {row.assigned ? "Assigned to privacy operations" : "Not assigned"}
           </p>
         </div>
         <button
@@ -216,7 +217,7 @@ function PrivacyCaseCard({
             <ul className="grid gap-3 text-sm" aria-label="Information you supplied">
               {detail.data.messages.map((m) => (
                 <li key={m.id} className="rounded-xl border border-border p-3">
-                  <p className="text-xs text-muted-foreground">{formatDate(m.createdAt)}</p>
+                  <p className="text-xs text-muted-foreground">{formatDateTime(m.createdAt)}</p>
                   <p className="mt-2 whitespace-pre-wrap break-words">{m.body}</p>
                 </li>
               ))}
@@ -288,7 +289,7 @@ function PrivacyCaseCard({
               {detail.data.events.map((event) => (
                 <li key={event.sequence}>
                   <strong>{event.action.replaceAll("_", " ")}</strong> · {event.actorType} ·{" "}
-                  {formatDate(event.createdAt)}
+                  {formatDateTime(event.createdAt)}
                   <p className="mt-1 whitespace-pre-wrap break-words text-muted-foreground">{event.reason}</p>
                 </li>
               ))}

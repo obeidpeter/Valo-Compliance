@@ -16,6 +16,7 @@ import ts from "typescript";
  * - inference-bindings: see inferenceBindingViolations.
  * - module-boundary: see moduleBoundaryViolations.
  * - public-server: see publicServerViolations.
+ * - web-formatting: see webFormattingViolations.
  */
 
 export const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -456,6 +457,54 @@ export function publicServerViolations(root = repositoryRoot): string[] {
   return [...violations].sort();
 }
 
+/** The one file of the web app that writes dates, times, amounts and counts. */
+export const WEB_FORMATTER = `${WEB}src/lib/format.ts`;
+const LOCALE_METHODS = new Set(["toLocaleString", "toLocaleDateString", "toLocaleTimeString"]);
+const INTL_FORMATS = new Set(["DateTimeFormat", "NumberFormat", "RelativeTimeFormat"]);
+
+/**
+ * web-formatting (NFR-008): the web app writes dates, times, amounts and counts through
+ * src/lib/format.ts alone: on a Lagos clock, the month as a word, amounts in naira. A file that calls
+ * toLocaleString, toLocaleDateString or toLocaleTimeString, or uses Intl.DateTimeFormat,
+ * Intl.NumberFormat or Intl.RelativeTimeFormat, writes them its own way: in the viewer's own locale
+ * and time zone, or differently on the server and in the browser.
+ */
+export function webFormattingViolations(path: string, text: string): string[] {
+  if (path === WEB_FORMATTER) return [];
+  const source = ts.createSourceFile(
+    path,
+    text,
+    ts.ScriptTarget.Latest,
+    true,
+    path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+  const violations: string[] = [];
+  const flag = (node: ts.Node, what: string) =>
+    violations.push(
+      `${path}:${lineOf(source, node.getStart())} web-formatting ${what} writes a date, amount or count its own way; use src/lib/format.ts`,
+    );
+  const visit = (node: ts.Node) => {
+    if (ts.isPropertyAccessExpression(node)) {
+      const name = node.name.text;
+      if (LOCALE_METHODS.has(name) && ts.isCallExpression(node.parent) && node.parent.expression === node)
+        flag(node.name, `${name}()`);
+      else if (INTL_FORMATS.has(name) && ts.isIdentifier(node.expression) && node.expression.text === "Intl")
+        flag(node, `Intl.${name}`);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return violations;
+}
+
+export function webFormattingReport(root = repositoryRoot): string[] {
+  return ["src", "app"].flatMap((dir) =>
+    sourceFiles(join(root, WEB, dir), isProductSource).flatMap((file) =>
+      webFormattingViolations(relative(root, file), readFileSync(file, "utf8")),
+    ),
+  );
+}
+
 export function silentCatchReport(root = repositoryRoot): string[] {
   const roots = [
     "artifacts/api-server/src",
@@ -481,6 +530,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     ...inferenceBindingReport(),
     ...moduleBoundaryViolations(),
     ...publicServerViolations(),
+    ...webFormattingReport(),
   ];
   for (const violation of violations) process.stdout.write(`${violation}\n`);
   process.stdout.write(`architecture check: ${violations.length} violation(s)\n`);
