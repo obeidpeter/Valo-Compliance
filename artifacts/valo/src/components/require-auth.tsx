@@ -1,18 +1,13 @@
 import { useEffect, type ReactNode } from "react";
 import { Redirect } from "wouter";
 import { Show } from "@clerk/react";
+import { holdDocumentTitle } from "@/lib/document-title";
 
 /** Names the open screen in the document title, which browsers and screen readers announce. The
  * title names the screen, never the account's own records. Leaving the screen puts back the title
  * it found. */
 function Titled({ title, children }: { title: string; children: ReactNode }) {
-  useEffect(() => {
-    const previous = document.title;
-    document.title = `${title} — Valo`;
-    return () => {
-      document.title = previous;
-    };
-  }, [title]);
+  useEffect(() => holdDocumentTitle(`${title} — Valo`, { restore: true }), [title]);
   return children;
 }
 
