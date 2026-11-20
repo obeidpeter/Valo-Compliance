@@ -17,7 +17,7 @@ const paths = [
   "artifacts/valo/src/screens/document-editor.tsx",
   "artifacts/valo/src/lib/api.ts",
   "artifacts/api-server/src/lib/valo-validation.ts",
-  "artifacts/api-server/src/lib/valo-store.ts",
+  "artifacts/api-server/src/modules/documents/valo-documents.ts",
   "artifacts/api-server/package.json",
   "artifacts/api-server/src/lib/valo-render.ts",
   "artifacts/api-server/src/modules/documents/valo-revision-codec.ts",

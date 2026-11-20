@@ -14,16 +14,10 @@ import {
   valoSupportTickets,
   valoWorkspaces,
 } from "@workspace/db";
-import * as store from "./valo-store";
-import {
-  listDocuments,
-  getDocument,
-  listRevisions,
-  createDocument,
-  saveDocument,
-} from "../modules/documents";
-import { resolveWorkspace, getWorkspace, saveProfile } from "../modules/workspaces";
-import { syntheticDocument, syntheticProfile } from "./valo-test-fixtures";
+import { createTicket } from "../support";
+import { listDocuments, getDocument, listRevisions, createDocument, saveDocument } from "./valo-documents";
+import { resolveWorkspace, getWorkspace, saveProfile } from "../workspaces";
+import { syntheticDocument, syntheticProfile } from "../../lib/valo-test-fixtures";
 
 test(
   "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
@@ -111,7 +105,7 @@ test(
       await t.test(
         "enquiry acknowledgement follows a durable save, not an appointment or email claim",
         async () => {
-          const receipt = await store.createTicket(a, {
+          const receipt = await createTicket(a, {
             category: "support",
             scope: "Synthetic durability test",
             contactEmail: "synthetic@example.test",
@@ -142,10 +136,10 @@ test(
             contactEmail: "synthetic-enquiry@example.test",
           };
           await assert.rejects(
-            store.createTicket(a, { ...enquiry, sharingConsent: false }),
+            createTicket(a, { ...enquiry, sharingConsent: false }),
             /explicit contact-sharing consent/,
           );
-          const receipt = await store.createTicket(a, { ...enquiry, sharingConsent: true });
+          const receipt = await createTicket(a, { ...enquiry, sharingConsent: true });
           assert.match(receipt.message, /^Enquiry received and saved\./);
           assert.doesNotMatch(
             receipt.message,

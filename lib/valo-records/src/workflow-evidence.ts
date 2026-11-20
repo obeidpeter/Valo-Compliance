@@ -447,7 +447,9 @@ const groups = [
     ids: ["IAM-003", "SEC-001", "SEC-003", "SEC-005", "EDT-004", "PRO-003", "WRK-006", "NFR-009"],
     paths: [
       "artifacts/api-server/src/lib/valo-site-origin.ts",
-      "artifacts/api-server/src/lib/valo-store.ts",
+      "artifacts/api-server/src/modules/workspaces/valo-workspaces.ts",
+      "artifacts/api-server/src/modules/documents/valo-documents.ts",
+      "artifacts/api-server/src/modules/support/valo-support-tickets.ts",
       "artifacts/api-server/src/lib/valo-quota.ts",
       "artifacts/api-server/src/lib/valo-write-security.integration.test.ts",
       "artifacts/api-server/src/lib/valo-proxy-security.test.ts",
@@ -677,7 +679,8 @@ export function partialWorkflowEvidence(id: string) {
       ],
       paths: [
         "artifacts/api-server/src/routes/valo-customer-access.ts",
-        "artifacts/api-server/src/lib/valo-store.ts",
+        "artifacts/api-server/src/modules/workspaces/valo-workspaces.ts",
+        "artifacts/api-server/src/modules/documents/valo-documents.ts",
         "artifacts/api-server/src/modules/privacy/valo-privacy-erasure.ts",
         "artifacts/api-server/src/modules/ai/inference-batch-dispatch.ts",
         "artifacts/api-server/src/modules/ai-lanes/inference-work-bindings.ts",
@@ -792,7 +795,7 @@ export function partialWorkflowEvidence(id: string) {
       paths: [
         "artifacts/api-server/src/scripts/source-quotation-journey.ts",
         "artifacts/api-server/src/modules/documents/valo-revision-codec.ts",
-        "artifacts/api-server/src/lib/valo-store.ts",
+        "artifacts/api-server/src/modules/documents/valo-documents.ts",
         "artifacts/api-server/src/modules/exports/valo-exports.ts",
         "artifacts/valo/src/components/financial-fields.tsx",
       ],

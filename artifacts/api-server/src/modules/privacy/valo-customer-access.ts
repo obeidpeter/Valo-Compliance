@@ -102,7 +102,7 @@ export async function saveAccessSupport(raw: unknown, remoteAddress: string) {
           );
       }
     }
-    const { openSupportCase } = await import("../../lib/valo-support-intake");
+    const { openSupportCase } = await import("../support");
     await openSupportCase(tx, "access", id, null);
     return ack(id);
   });

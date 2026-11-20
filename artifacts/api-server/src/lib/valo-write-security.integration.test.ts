@@ -14,7 +14,7 @@ import {
   valoEvents,
   valoRateBuckets,
 } from "@workspace/db";
-import { createTicket } from "./valo-store";
+import { createTicket } from "../modules/support";
 import { createDocument, saveDocument } from "../modules/documents";
 import { resolveWorkspace, saveProfile, type WorkspaceActor } from "../modules/workspaces";
 import { quotaSubjectHash, quotaPolicy } from "./valo-quota";

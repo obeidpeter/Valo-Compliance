@@ -11,7 +11,7 @@ import {
 import { contentReadiness, contentTraceRows, expansionReadiness } from "@workspace/valo-core";
 import { readiness } from "@workspace/valo-records";
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
-import * as store from "../lib/valo-store";
+import { createTicket } from "../modules/support";
 import {
   listDocuments,
   getDocument,
@@ -205,7 +205,7 @@ router.get("/workspace/documents/:id/revisions", async (req, res) => {
   res.json(await listRevisions(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
 });
 router.post("/workspace/support", async (req, res) => {
-  res.status(201).json(await store.createTicket(res.locals.valoActor, req.body));
+  res.status(201).json(await createTicket(res.locals.valoActor, req.body));
 });
 // Mounted after the shared server identity, workspace and CSRF boundary above.
 router.use(requirementsRouter);

@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { db } from "@workspace/db";
-import { ticketInput } from "./valo-validation";
+import { ticketInput } from "../../lib/valo-validation";
 import {
   authorizeWorkspaceWrite,
   limitWorkspaceWrite,
   recordWorkspaceEvent,
   type WorkspaceActor,
-} from "../modules/workspaces";
+} from "../workspaces";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export async function createTicket(actor: WorkspaceActor, raw: unknown) {
   const { db } = await import("@workspace/db");
