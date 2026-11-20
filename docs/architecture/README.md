@@ -185,8 +185,11 @@ Every change must keep these true. Each has tests; none may be weakened.
 10. **One connection per transaction.** Code inside a transaction uses only that
     transaction's connection, so concurrent requests cannot exhaust the pool while
     each waits for a second one. The CI database job fails on any other pooled
-    connection taken inside a transaction, apart from the reviewed exceptions in
-    `nested-connection-report.mjs`.
+    connection taken inside a transaction opened with `db.transaction`, apart from
+    the reviewed exceptions in `nested-connection-report.mjs`. It does not see
+    transactions opened with `BEGIN` on a pooled client, so that code keeps the
+    rule itself: the inference dispatcher, for one, runs its binding checks before
+    each ledger transaction.
 11. **The schema describes the database.** Every primary key, unique constraint,
     foreign key, check constraint and index on a table in the Drizzle schema
     exists in a migrated database with the name and shape the latest snapshot
