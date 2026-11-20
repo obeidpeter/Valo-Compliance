@@ -5,48 +5,19 @@ import {
   useListPublicCatalogue,
   getListPublicCatalogueQueryKey,
   useGetPublicCoverage,
-  ListPublicCatalogueType,
-  type ListPublicCatalogueParams,
 } from "@workspace/api-client-react";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
-
-const TYPES: { v: ListPublicCatalogueType; l: string }[] = [
-  { v: "all", l: "Everything" },
-  { v: "template", l: "Templates" },
-  { v: "guidance", l: "Guidance" },
-  { v: "article", l: "Articles" },
-  { v: "industry", l: "Industry pages" },
-  { v: "service", l: "Service enquiries" },
-];
+import { catalogueParams, LIBRARY_TYPES as TYPES, libraryFilters, libraryHref } from "@/lib/library-filters";
 
 export default function Library() {
   const search = useSearch();
   const [, setLocation] = useLocation();
-  const sp = new URLSearchParams(search);
-  const q = sp.get("q") ?? "";
-  const typeRaw = sp.get("type") ?? "all";
-  const type = (TYPES.some((t) => t.v === typeRaw) ? typeRaw : "all") as ListPublicCatalogueType;
-  const industry = sp.get("industry") ?? "";
-  const pageValue = Number(sp.get("page"));
-  const page = Number.isSafeInteger(pageValue) && pageValue > 0 ? pageValue : 1;
-  const category = sp.get("category") ?? "";
-  const access = (["free", "premium"].includes(sp.get("access") ?? "") ? sp.get("access") : "all") as
-    "all" | "free" | "premium";
-  const sort = (
-    ["name", "recently_checked"].includes(sp.get("sort") ?? "") ? sp.get("sort") : "relevance"
-  ) as "relevance" | "name" | "recently_checked";
+  const filters = libraryFilters(new URLSearchParams(search));
+  const { q, type, industry, page, category, access, sort } = filters;
   const [draft, setDraft] = useState(q);
   useEffect(() => setDraft(q), [q]);
 
-  const params: ListPublicCatalogueParams = {
-    type,
-    page,
-    ...(category ? { category } : {}),
-    access,
-    sort,
-    ...(q ? { q } : {}),
-    ...(industry ? { industry } : {}),
-  };
+  const params = catalogueParams(filters);
   const cat = useListPublicCatalogue(params, {
     query: {
       enabled: true,
@@ -59,24 +30,7 @@ export default function Library() {
   const unknownIndustry = !!industry && !coverage.data?.industries.some((i) => i.slug === industry);
 
   function go(next: Record<string, string | number | undefined>) {
-    const merged = new URLSearchParams();
-    const all = { q, type, industry, category, access, sort, page: 1, ...next } as Record<
-      string,
-      string | number | undefined
-    >;
-    Object.entries(all).forEach(([k, v]) => {
-      if (
-        v === undefined ||
-        v === "" ||
-        (["type", "access"].includes(k) && v === "all") ||
-        (k === "sort" && v === "relevance") ||
-        (k === "page" && v === 1)
-      )
-        return;
-      merged.set(k, String(v));
-    });
-    const s = merged.toString();
-    setLocation("/library" + (s ? "?" + s : ""));
+    setLocation(libraryHref(filters, next));
   }
   function submit(e: FormEvent) {
     e.preventDefault();
