@@ -28,7 +28,7 @@ No recorded implementation evidence: WEB-003, WEB-004, DOC-008, DOC-009, EDT-010
 
 ## Tests cited as evidence
 
-`docs/registers/ci-evidence.json` holds 348 citations of 214 tests for 126 requirements (decision 0010).
+`docs/registers/ci-evidence.json` holds 349 citations of 215 tests for 126 requirements (decision 0010).
 A CI job fails when a test cited for it does not pass, and each run's `readiness-report` artifact lists every citation's result.
 A citation is partial evidence: it never accepts a requirement.
 
@@ -96,7 +96,7 @@ A citation is partial evidence: it never accepts a requirement.
 | IAM-002 | 1 | foundation |
 | IAM-003 | 3 | postgres |
 | NFR-001 | 3 | foundation |
-| NFR-002 | 1 | web-performance |
+| NFR-002 | 2 | web-performance |
 | NFR-003 | 1 | postgres |
 | NFR-004 | 5 | foundation, postgres |
 | NFR-005 | 3 | foundation |

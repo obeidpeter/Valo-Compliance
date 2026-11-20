@@ -14,6 +14,7 @@ import { Wordmark } from "@/components/brand";
 import { basePath } from "@/lib/env";
 import { useDocumentTitle } from "@/lib/document-title";
 import { publicPages } from "@/lib/public-pages";
+import { isServerPage } from "@/lib/server-pages";
 import NotFound from "@/screens/not-found";
 
 // Each screen is its own chunk, so a page downloads only the screens it shows, not the whole
@@ -224,26 +225,20 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 function ShellRoutes() {
+  const [location] = useLocation();
+  // The pages the server renders (decision 0011) are handed to it, from the one list in
+  // lib/server-pages.ts; the browser app keeps routes only for its own pages.
+  if (isServerPage(location))
+    return (
+      <Shell>
+        <ServerPage />
+      </Shell>
+    );
   return (
     <Shell>
       <Switch>
-        <Route path="/" component={ServerPage} />
-        <Route path="/library" component={ServerPage} />
-        <Route path="/library/:slug" component={ServerPage} />
-        <Route path="/compliance" component={ServerPage} />
-        <Route path="/industries" component={ServerPage} />
-        <Route path="/industries/:slug" component={ServerPage} />
-        <Route path="/resources" component={ServerPage} />
-        <Route path="/resources/:slug" component={ServerPage} />
-        <Route path="/about" component={ServerPage} />
-        <Route path="/contact" component={ServerPage} />
         <Route path="/account-access" component={AccountAccess} />
-        <Route path="/services" component={ServerPage} />
-        <Route path="/pricing" component={ServerPage} />
-        <Route path="/help" component={ServerPage} />
         <Route path="/support" component={Support} />
-        <Route path="/privacy" component={ServerPage} />
-        <Route path="/terms" component={ServerPage} />
         <Route path="/development" component={Development} />
         <Route path="/checker" component={Checker} />
         <Route path="/workspace/assessments">

@@ -15,8 +15,6 @@ import { readTestRecords, type TestRecord } from "./ci-evidence";
 export const SKIPPED_IN_CI: Record<string, string> = {
   "artifacts/api-server/src/modules/privacy/valo-erasure-hardening.integration.test.ts :: erasure holds, bounded recovery and accepted-upload process death > native private upload spans complete erasure and is removed by automatic maintenance":
     "needs native Replit App Storage; CI runs the portable storage lane, and test:valo-erasure-native-db runs this one on Replit",
-  "artifacts/api-server/src/scripts/public-page-performance.test.ts :: public pages reach NFR-002's LCP target on an emulated mid-range phone":
-    "a todo until hosted CI shows every server-rendered page within the LCP target (decision 0011, step 6)",
 };
 
 /** The key SKIPPED_IN_CI uses for a test: its file, then its name inside the tests it sits in. */

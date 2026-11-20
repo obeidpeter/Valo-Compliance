@@ -183,7 +183,12 @@ function tableNames() {
 function webRoutes() {
   const routes = [...read("artifacts/valo/src/App.tsx").matchAll(/<Route path="([^"]+)"/g)].map((m) => m[1]!);
   assert.ok(routes.length > 20, "the web app's routes were read");
-  return routes;
+  // The pages the server renders (decision 0011): each page.tsx under app/(public), at its address.
+  const server = sourceFiles("artifacts/valo/app/(public)", /^page\.tsx$/).map(
+    (file) => file.replace(/^artifacts\/valo\/app\/\(public\)/, "").replace(/\/page\.tsx$/, "") || "/",
+  );
+  assert.ok(server.includes("/library/[slug]"), "the server's routes were read");
+  return [...routes, ...server];
 }
 const webSource = () => [
   ...sourceFiles("artifacts/valo/src", /\.tsx?$/),
