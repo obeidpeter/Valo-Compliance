@@ -183,6 +183,10 @@ export function validateAllocationPackage(value: FiniteAllocationPackage) {
   )
     throw Error("ALLOCATION_PACKAGE_INVALID");
 }
+/** The template a publication work reviews, from its prepared candidate's binding (decision 0014). */
+function workContentId(work: FiniteWork) {
+  return work.lane === "publication" ? (work.bindings.candidateArtifact?.templateId ?? null) : null;
+}
 export function assertWorkPackageMembership(
   work: FiniteWork,
   pkg: FiniteAllocationPackage,
@@ -321,14 +325,7 @@ export async function assertDelegatedBatchAuthority(
     throw Error("DELEGATED_APPROVAL_BINDING_INVALID");
   if (admitting) {
     for (const work of child.manifest.works) {
-      const content = work.bindings.candidateVersionId
-        ? (
-            await c.query(`SELECT template_id FROM "${schema}".valo_content_versions WHERE id=$1`, [
-              work.bindings.candidateVersionId,
-            ])
-          ).rows[0]?.template_id
-        : null;
-      assertWorkPackageMembership(work, pkg, content ?? null);
+      assertWorkPackageMembership(work, pkg, workContentId(work));
     }
   }
   return pkg;
@@ -352,16 +349,9 @@ export async function registerPreparedInferenceSubmanifest(
     if (!Number.isFinite(expiry) || expiry <= Date.now() || expiry > inferenceTimestamp(row.expires_at))
       throw Error("SUBMANIFEST_EXPIRY_INVALID");
     for (const work of manifest.works) {
-      const content = work.bindings.candidateVersionId
-        ? (
-            await c.query(
-              `SELECT template_id FROM "${store.schemaName()}".valo_content_versions WHERE id=$1`,
-              [work.bindings.candidateVersionId],
-            )
-          ).rows[0]?.template_id
-        : null;
-      assertWorkPackageMembership(work, pkg, content ?? null);
+      // The binding checks confirm the candidate artifact holds a version of this template.
       await recheck(work);
+      assertWorkPackageMembership(work, pkg, workContentId(work));
     }
     const reference = `delegate:${requestDigest({ packageId: manifest.packageId, packageHash: row.manifest_hash, manifestHash })}`;
     await c.query(

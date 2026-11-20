@@ -1,7 +1,7 @@
 # 0014 — Publish reviewed pairs, and who runs the enhanced checks
 
-Date: 2026-11-19. Status: **proposed**, waiting for the product owner's review. Nothing in it is
-built.
+Date: 2026-11-19. Status: **accepted** on 2026-11-19. The product owner chose both recommendations
+("Go with your recommendations on 0014"). The decision below describes what was built.
 
 ## Context
 
@@ -50,58 +50,98 @@ The gate already checks part of the evidence itself, from the bundle's sources:
 A "pass" written by code for those would repeat the gate's own checks. For exceptions and
 controlling text, it would claim a judgment that no one made.
 
-## Decision (proposed)
+## Decision
 
 ### 1. Review the candidate before saving its version
 
-The preparer would keep the candidate and its evidence as a private publication artifact instead of
-a held row. The finite manifest would bind that artifact's hash where it now binds
-`candidateVersionId`, and the readiness and work-binding checks would read the artifact.
+The preparer (`prepareOperationalCandidateRelease`) keeps a candidate that passes its rights,
+mechanical and export checks as a private, hash-bound publication artifact
+(`valo-prepared-candidate-v1`, in `modules/publication/prepared-candidate.ts`). The artifact holds
+the bundle with no reviews, the attestations of its evidence, and the version ID and number it will
+be saved under. A candidate that fails a check is still saved and held, as before.
 
-A new operator command would publish a reviewed pair. It would read the approved run's result
-artifact and check each review record against three things: the candidate artifact, the plan the
-owner approved, and the provider responses the ledger settled for that batch. Then, in one
-transaction, it would save the version with its reviews and pass it to the existing publisher, which
-rechecks every gate. If any gate fails, it would record the hold instead.
+The finite manifest keeps `candidateVersionId` and adds `candidateArtifact`: the artifact's ID,
+hash and template. The work-shape check requires it for publication work and refuses it on every
+other lane. Package membership reads the template from it. The readiness check
+(`readOperationalInferenceReadiness`) and the work-binding check read the artifact. They refuse it
+when its version ID, or its template and version number, are already saved, so a saved version ends
+the candidate's review.
 
-This needs no migration and weakens no constraint. `held` stays final, and a published version
-carries its reviews in its own immutable bundle, as TPL-07's does.
+`publish-reviewed-pair.ts` (`publishReviewedOperationalCandidate`, in `modules/ai-lanes`) reads the
+batch and the review records the finite run saved, and checks each record against:
+- the batch's settled ledger entry for its work, and the provider response the batch recorded;
+- the candidate, its plan and request, and its server evidence;
+- an independent second review in the other role.
+
+It saves the version with its reviews under the drafter role. It then hands the version to the
+existing publisher, which rechecks every gate. If a gate fails, it records the hold instead.
+
+This is two transactions, not one, as in TPL-07's one-step path: the drafter role saves and the
+publisher role publishes. A rerun after a stop finishes a saved candidate's publication, or reports
+its saved status. No migration was needed and no constraint was weakened. `held` stays final, and a
+published version carries its reviews in its own immutable bundle.
 
 ### 2. The two reviews run the enhanced checks
 
-For an item that is not `general`, the factual and challenge review prompts would ask each reviewer
-for a structured result for each enhanced check, with the passage it relied on. An enhanced check
-would pass only when both blind reviews pass it. It would be recorded as an AI check, never as
-legal, tax or regulatory review.
+For an item that is not `general`, both review requests:
+- use their own strict schema (`operational_enhanced_review`, prompt `operational-<role>-enhanced-1`);
+- carry the bundle's sources;
+- ask for one result for each enhanced check, with the passage the reviewer relied on.
+
+`enhancedChecksFromReviews` passes a check only when both blind reviews pass it, each with one
+result whose passage (at most 2,000 characters) occurs word for word in the candidate or one of its
+sources. The publisher derives the checks again from the attested reviews and refuses a bundle whose
+checks differ. Each is recorded as an AI check, never as legal, tax or regulatory review.
+
+A `general` item's review requests are unchanged: a test pins their digest from before this change.
 
 EDP-010's evaluation cases (misquoted citations, conflicting dates, omitted exceptions, wrong
-jurisdiction) would then measure exactly these checks.
+jurisdiction) can then measure exactly these checks.
 
-## How it will be checked
+## How it is checked
 
-- Each refusal of the publish command, tested with synthetic records:
+- The publish command, in the managed callers database test, with the real preparer, plan,
+  dispatcher, binding checks and publisher, a zero-network SDK and a disposable schema. Each
+  refusal is tested:
   - a review of another candidate;
-  - a review whose provider response the approved batch did not settle;
-  - a failing or incomplete review;
-  - a changed candidate or evidence artifact;
-  - a stale candidate.
-- Its success path, tested only in a disposable database with synthetic reviews labelled as such,
-  as the synthetic rule release is. Never against the development database.
-- The finite manifest, decision packet and work-binding tests, rebuilt for the artifact binding.
-  The managed callers test, run with the real binding checks.
-- For the enhanced checks:
-  - the review schema refuses a result without its passage;
+  - a review whose provider response the batch did not settle, or whose ledger entry is not
+    settled;
+  - a changed review: other server evidence, or another plan;
+  - an incomplete pair, or one review twice;
+  - a missing batch;
+  - a stale candidate;
+  - another candidate saved under the same version number.
+- In the same test: a failing pair is saved with its reviews and held, and stays held on a rerun.
+  Two passing synthetic reviews, labelled as controlled fixtures, publish the version through the
+  real publisher. This runs only in the disposable schema; the test checks that no shared row
+  changes.
+- The preparation test: a passing candidate is not saved, and readiness refuses a changed or stale
+  artifact and a saved version.
+- The finite manifest, decision packet, work-shape and package tests, rebuilt for the artifact
+  binding. The managed callers and batch dispatch database tests run with it.
+- For the enhanced checks (`operational-enhanced-review.test.ts`):
+  - the enhanced schema refuses a result without its passage;
+  - a check fails when either review fails, omits or repeats it, or quotes a passage found nowhere;
   - the gate holds an item when either review fails a check;
-  - a `general` item's reviews do not change.
+  - a `general` item's review requests do not change.
 
 ## Consequences
 
-- An unreviewed candidate no longer appears as a held row, so the staff Content area lists
-  candidates from their artifacts until they are reviewed.
-- Manifests prepared before the change would be refused. None is approved today.
-- Review requests for non-`general` items grow, and their worst-case cost enters the allocation
-  package the owner approves.
-- TPL-07's one-step path could become a special case of the new command, or stay as it is.
+- An unreviewed candidate no longer appears as a held row. The staff Content area lists saved
+  versions only, so the preparation command's report names each prepared candidate until its reviews
+  are checked (known issue KI-010).
+- Candidates prepared for the same template take the same version number. The first one saved ends
+  the others' reviews; prepare again for a later version.
+- Manifests prepared before the change are refused (`PUBLICATION_CANDIDATE_REQUIRED`). None was
+  approved.
+- Review requests for non-`general` items grow with their sources, and their worst-case cost enters
+  the allocation package the owner approves.
+- No preparer yet produces non-`general` content. The operational lane prepares only `general`
+  original templates, and the guidance pipeline builds no publication bundle. So no enhanced check
+  has run on real content. Guidance stays held for its six standing reasons.
+- TPL-07's one-step path stays as it is.
+- The publish command's success path on real content still needs an owner-approved allocation
+  (KI-003).
 
 ## Alternatives considered
 
@@ -126,10 +166,10 @@ MFA, would record each check with a note, bound to the candidate and audited. It
 to judge controlling text and exceptions, and the platform does not create one. It could be added on
 top of the reviews' checks, as a confirmation.
 
-## Decisions for the product owner
+## Owner decision
 
-1. How reviewed pairs reach publication: review before saving (recommended), a reviewed copy at the
-   same version, or reviews attached to the held row.
-2. Who runs the enhanced checks: the two AI reviews (recommended), a content reviewer, or both.
-3. Both choices change what the AI budget pays for. The publish command's success path on real
-   content still needs an approved allocation.
+On 2026-11-19 the product owner chose:
+- review before saving;
+- the two AI reviews run the enhanced checks.
+
+Both change what the AI budget pays for. Spending still needs its own approval.

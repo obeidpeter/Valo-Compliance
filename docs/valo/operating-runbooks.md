@@ -70,6 +70,37 @@ clarified allocation boundary, so the command refuses it: the approval names the
 against its cap. Approval admits only work that passes its own preparation and readiness checks;
 it does not waive a publication gate, approve content or authorize a launch.
 
+## Reviewing and publishing a prepared template (decision 0014)
+
+A template candidate is saved as a content version only after its two finite reviews, with those
+reviews in its bundle. Steps 1, 2 and 5 call no model. Step 4 spends from an approved allocation,
+so it runs only under an approval recorded as above. Run each command as in that section, from
+the repository root with `NODE_ENV=development`; each refuses a deployment.
+
+1. `pnpm --filter @workspace/api-server exec tsx src/scripts/prepare-finite-operational-set.ts <official terms snapshot.json>`
+   prepares each supported template from its original intake and runs its rights, mechanical and
+   export checks. A candidate that passes is kept as a private artifact awaiting its reviews. A
+   candidate that fails a check is saved and held. The command prints `prepareOptions`: one
+   `--candidate=<artifact id>:<sha256>` for each candidate it kept.
+2. `... finite-inference-run.ts --prepare new <--candidate=… options>` plans both reviews of each
+   named candidate and writes the private report. To plan under an approved package, use
+   `--prepare finite-package:<hash> <--candidate=… options>`. Each pair binds the candidate's
+   artifact, the version ID it will be saved under, and the plan.
+3. The owner approves the package (previous section). `... finite-inference-run.ts --admit <report id> <sha256> [<version id>]`
+   registers one pair under it.
+4. `... finite-inference-run.ts --execute <batch id>` runs the two reviews and prints the result
+   artifact, with `publicationAccepted: false`.
+5. `... src/scripts/publish-reviewed-pair.ts <batch id> <result artifact id> <sha256>` checks each
+   review against the batch's settled ledger entry and provider response, the candidate, plan,
+   request and server evidence. It saves the version with its reviews, then hands it to the
+   publisher, which rechecks every gate. If a gate fails, it records the hold instead. Run again
+   after a stop, it finishes a saved candidate's publication or reports its saved status.
+
+A candidate past its review date, or one whose version ID or version number is already saved, is
+refused from step 2 on; prepare it again. For content that is not general, the two reviews also
+answer EDP-005's enhanced checks. A check passes only when both reviews pass it and quote a passage
+found in the candidate or its sources. These are AI checks, not legal, tax or regulatory review.
+
 ## Recovery/launch/handover
 
 Use development checkpoints or the supported production recovery pane, never

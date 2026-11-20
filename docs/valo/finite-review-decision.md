@@ -1,5 +1,12 @@
 # Exact finite review preparation — disabled, pending independent review
 
+> **Superseded, 19 November 2026.** This records the 15 November preparation. Its packet binds
+> saved, held candidate versions. Under [decision 0014](../architecture/decisions/0014-publish-reviewed-pairs.md)
+> the finite run reviews only a candidate kept as a private artifact, so it refuses this packet
+> (`PREPARED_CANDIDATE_REQUIRED`, `PUBLICATION_CANDIDATE_REQUIRED`). A saved version also ends its
+> candidate's review. To review these templates, prepare them again as the operating runbook
+> describes.
+
 This application unit prepares **real requests**, not invented reviews or an
 approval record. Eleven supplied original operational forms (TPL-01–TPL-11)
 have immutable candidate versions, rights/provenance records, actual DOCX/PDF

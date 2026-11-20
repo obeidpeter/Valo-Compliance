@@ -53,7 +53,13 @@ test(
     }
     const store = new InferenceBudgetStore(pool, schema, "additional-new");
     const candidateVersionId = randomUUID(),
-      planId = randomUUID();
+      planId = randomUUID(),
+      candidateArtifact = {
+        id: randomUUID(),
+        hash: requestDigest("controlled-prepared-candidate"),
+        extension: "json" as const,
+        templateId: "TPL-07",
+      };
     const work = (
       key: string,
       lane: FiniteWork["lane"] = "customer",
@@ -86,6 +92,7 @@ test(
                 hash: requestDigest("controlled-plan"),
                 extension: "json" as const,
               },
+              candidateArtifact: { ...candidateArtifact },
             }
           : {}),
       },
@@ -570,13 +577,9 @@ test(
           const oldMode = process.env.NODE_ENV;
           process.env.NODE_ENV = "development";
           try {
-            await pool.query(
-              `CREATE TABLE IF NOT EXISTS "${schema}".valo_content_versions(id uuid PRIMARY KEY,template_id text)`,
-            );
+            // The package admits a review by the template its prepared candidate names; the
+            // dispatcher's binding check confirms that candidate before any reservation.
             const candidateId = randomUUID();
-            await pool.query(`INSERT INTO "${schema}".valo_content_versions VALUES($1,'TPL-07')`, [
-              candidateId,
-            ]);
             const pkg = await prepareFiniteAllocationPackage(),
               packageId = allocationPackageId(pkg),
               expires = new Date(Date.now() + 3600000).toISOString();
@@ -606,6 +609,7 @@ test(
                     hash: requestDigest("controlled-plan"),
                     extension: "json" as const,
                   },
+                  candidateArtifact: { ...candidateArtifact },
                 },
               }));
             const first = pair("first"),
@@ -617,6 +621,20 @@ test(
                 packageId,
                 works: first,
               };
+            const outside = pair("outside").map((w) => ({
+              ...w,
+              bindings: { ...w.bindings, candidateArtifact: { ...candidateArtifact, templateId: "TPL-999" } },
+            }));
+            await assert.rejects(
+              () =>
+                registerPreparedInferenceSubmanifest(
+                  store,
+                  { ...manifest, works: outside },
+                  expires,
+                  async () => {},
+                ),
+              /WORK_OUTSIDE_PACKAGE/,
+            );
             const admitted = await registerPreparedInferenceSubmanifest(
               store,
               manifest,

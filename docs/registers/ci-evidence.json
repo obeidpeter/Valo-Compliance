@@ -1178,6 +1178,27 @@
       "proves": "A synthetic publication bundle whose candidate records an unresolved termination clause is held, with a material-uncertainty reason."
     },
     {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/operational-enhanced-review.test.ts",
+      "test": "a review of content that is not general asks for every enhanced check and its passage",
+      "proves": "Both AI review requests for tax, employment, privacy, governance, contracts and regulated-sector content carry the content's sources and ask for a result on each of the five enhanced checks, with the passage relied on, under a strict schema."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/operational-enhanced-review.test.ts",
+      "test": "an enhanced check passes only when both reviews pass it with a passage found word for word",
+      "proves": "An enhanced check fails when either AI review fails, omits or repeats it, or quotes a passage found in neither the candidate nor its sources."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/operational-enhanced-review.test.ts",
+      "test": "the publication gate holds an item when either review fails an enhanced check",
+      "proves": "Contract content is eligible when both AI reviews pass all five enhanced checks, and is held, naming the failed check, when either review fails the exceptions check."
+    },
+    {
       "requirement": "EDP-006",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-mechanical.test.ts",
@@ -1253,6 +1274,13 @@
       "file": "scripts/src/valo/publication.test.ts",
       "test": "holds policy changed after binding",
       "proves": "A synthetic publication bundle whose publication policy changes after its manifest was bound is held, with a reason naming the policy-hash mismatch."
+    },
+    {
+      "requirement": "EDP-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
+      "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
+      "proves": "A reviewed pair reaches a saved version only when each review is the one the approved batch settled for that exact candidate, plan and server evidence: another candidate's, an unsettled or a changed review and a stale candidate are refused, and a pair that fails a gate is saved and held."
     },
     {
       "requirement": "EDP-009",

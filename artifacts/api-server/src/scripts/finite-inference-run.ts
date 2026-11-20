@@ -1,11 +1,11 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
-import { desc } from "drizzle-orm";
 import { publicationSchema } from "@workspace/valo-core";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   operationalInferenceTemplateIds,
+  readPreparedCandidate,
   supportsOperationalInferenceTemplate,
 } from "../modules/publication";
 import { selectPreparedProposal, parseFinitePreparationOptions } from "../modules/ai-lanes";
@@ -59,7 +59,7 @@ async function main() {
   if (mode.startsWith("--prepare"))
     console.error(JSON.stringify({ event: "finite-preparation-loading", inferenceCalls: 0 }));
   const [
-    { db, pool, valoContentVersions },
+    { pool },
     { readOperationalInferenceReadiness },
     { assertFiniteWorkBindings },
     { withApprovedInferencePair, provideFiniteWorkBindings, InferenceBudgetStore },
@@ -100,6 +100,7 @@ async function main() {
     if (mode === "--prepare-customer") {
       if (!batchId) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
+      if (options.candidates.length) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareCustomerFiniteManifest } = await import("../modules/ai-lanes");
       const existing = options.packageId
         ? await readApprovedFiniteAllocationPackage(pool, options.packageId)
@@ -243,7 +244,14 @@ async function main() {
           });
           if (requestDigest(actual.manifest) !== proposal.manifestHash)
             throw Error("PREPARED_CUSTOMER_CHANGED");
-        } else await readOperationalInferenceReadiness(first.bindings.candidateVersionId!);
+        } else {
+          if (!first.bindings.candidateVersionId || !first.bindings.candidateArtifact)
+            throw Error("PREPARED_CANDIDATE_REQUIRED");
+          await readOperationalInferenceReadiness({
+            candidateVersionId: first.bindings.candidateVersionId,
+            candidateArtifact: first.bindings.candidateArtifact,
+          });
+        }
       }
       const live = await new InferenceBudgetStore(pool, "public", "additional-new").inspect();
       console.log(
@@ -290,57 +298,65 @@ async function main() {
       return;
     }
     const selection = mode === "--prepare-selection";
-    const selectionOptions = selection ? parseFinitePreparationOptions(extra) : null;
+    // Prepared candidates are named by their exact artifacts (decision 0014): --candidate=<id>:<sha256>.
+    const preparationOptions =
+      mode === "--prepare" || selection ? parseFinitePreparationOptions(extra) : null;
+    const selectionOptions = selection ? preparationOptions : null;
     if (
-      (extra.length && !selection) ||
+      (extra.length && !preparationOptions) ||
       !["--prepare", "--prepare-selection", "--execute"].includes(mode ?? "") ||
       (selection && (!batchId || !/^CAI-CAND-[A-Z]{3}-[0-9]{2}$/.test(batchId))) ||
-      (mode === "--prepare" && batchId && !/^finite-package:[a-f0-9]{64}$/.test(batchId)) ||
+      (mode === "--prepare" &&
+        (!batchId ||
+          !/^(?:new|finite-package:[a-f0-9]{64})$/.test(batchId) ||
+          preparationOptions!.retry ||
+          preparationOptions!.packageId ||
+          !preparationOptions!.candidates.length)) ||
       (mode === "--execute" && (!batchId || !/^[-a-zA-Z0-9_:]{1,160}$/.test(batchId)))
     )
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");
     if (mode === "--prepare" || selection) {
-      const parentId = selection ? selectionOptions?.packageId : batchId;
+      const parentId = selection ? selectionOptions?.packageId : batchId === "new" ? undefined : batchId;
       const existingPackage = parentId ? await readApprovedFiniteAllocationPackage(pool, parentId) : null;
       const allocationPackage = existingPackage?.pkg ?? (await prepareFiniteAllocationPackage()),
         packageId = allocationPackageId(allocationPackage);
-      const latest = new Map<string, typeof valoContentVersions.$inferSelect>();
-      for (const row of await db
-        .select()
-        .from(valoContentVersions)
-        .orderBy(desc(valoContentVersions.version)))
-        if (!latest.has(row.templateId)) latest.set(row.templateId, row);
-      const holds: { candidateVersionId: string; templateId: string; reason: string }[] = [];
+      const holds: { candidateVersionId: string | null; templateId: string | null; reason: string }[] = [];
       const prepared: ReturnType<typeof finiteManifestProposal>[] = [];
       const customerHolds: { caseId: string; reason: string }[] = [];
-      for (const row of latest.values()) {
-        if (!supportsOperationalInferenceTemplate(row.templateId)) {
-          holds.push({
-            candidateVersionId: row.id,
-            templateId: row.templateId,
-            reason: "CANDIDATE_REQUEST_PREPARER_UNAVAILABLE",
-          });
-          continue;
-        }
+      for (const ref of preparationOptions!.candidates) {
+        let candidateVersionId: string | null = null,
+          templateId: string | null = null;
         try {
+          const saved = await readPreparedCandidate(ref);
+          candidateVersionId = saved.versionId;
+          templateId = saved.templateId;
+          if (!supportsOperationalInferenceTemplate(saved.templateId))
+            throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
           console.error(
             JSON.stringify({
               event: "finite-preparation-template",
-              templateId: row.templateId,
+              templateId: saved.templateId,
               inferenceCalls: 0,
             }),
           );
-          const current = await readOperationalInferenceReadiness(row.id);
+          const candidateArtifact = { ...ref, templateId: saved.templateId };
+          const current = await readOperationalInferenceReadiness({
+            candidateVersionId: saved.versionId,
+            candidateArtifact,
+          });
           const plan = await saveOperationalReviewPlan(
             current.candidate,
             current.rightsInput,
             current.provenanceInput,
             current.exportReport,
             current.serverEvidence,
+            undefined,
+            current.bundle.sources,
           );
           const manifest = prepareOperationalFiniteManifest({
-            candidateVersionId: row.id,
-            candidateHash: row.candidateHash,
+            candidateVersionId: saved.versionId,
+            candidateArtifact,
+            candidateHash: current.row.candidateHash,
             bundleHash: requestDigest(current.bundle),
             sourceHashes: current.bundle.sources.map((s) => s.hash),
             sourceFiles: [
@@ -362,8 +378,8 @@ async function main() {
           );
         } catch (error) {
           holds.push({
-            candidateVersionId: row.id,
-            templateId: row.templateId,
+            candidateVersionId,
+            templateId,
             reason:
               error instanceof Error && /^[A-Z_]{3,100}$/.test(error.message)
                 ? error.message
@@ -421,9 +437,9 @@ async function main() {
         ownerApproved: !!existingPackage,
         executableScope: selection
           ? "Exact operational pairs and explicitly listed supported customer attempts under one package"
-          : "one exact operational review pair per verified saved candidate",
+          : "one exact operational review pair per verified prepared candidate",
         supportedTemplateIds: operationalInferenceTemplateIds,
-        latestCandidatesInspected: latest.size,
+        candidatesInspected: preparationOptions!.candidates.length,
         proposals: prepared,
         proposal: prepared.length === 1 ? prepared[0] : null,
         decisionPacket,
@@ -500,11 +516,16 @@ async function main() {
       first.pair !== second.pair ||
       !first.bindings.candidateVersionId ||
       first.bindings.candidateVersionId !== second.bindings.candidateVersionId ||
+      !first.bindings.candidateArtifact ||
+      requestDigest(first.bindings.candidateArtifact) !== requestDigest(second.bindings.candidateArtifact) ||
       !first.bindings.operationalPlan ||
       requestDigest(first.bindings.operationalPlan) !== requestDigest(second.bindings.operationalPlan)
     )
       throw Error("RUNNER_PAIR_BINDING_INVALID");
-    const current = await readOperationalInferenceReadiness(first.bindings.candidateVersionId);
+    const current = await readOperationalInferenceReadiness({
+      candidateVersionId: first.bindings.candidateVersionId,
+      candidateArtifact: first.bindings.candidateArtifact,
+    });
     const artifact = first.bindings.operationalPlan;
     const retained = JSON.parse((await getPublicationArtifact(artifact)).toString());
     const plan = { manifest: retained.manifest, entries: retained.entries, artifact } as Awaited<
@@ -515,6 +536,7 @@ async function main() {
     const expected = prepareOperationalFiniteManifest(
       {
         candidateVersionId: current.row.id,
+        candidateArtifact: first.bindings.candidateArtifact,
         candidateHash: current.row.candidateHash,
         bundleHash: requestDigest(publicationSchema.parse(current.row.bundle)),
         sourceHashes: current.bundle.sources.map((s) => s.hash),
@@ -543,6 +565,9 @@ async function main() {
       expectedIndependentReviews: 2,
       complete: reviews.length === 2,
       publicationAccepted: false,
+      // The candidate is saved as a version only by publish-reviewed-pair.ts, which checks these
+      // reviews against this batch and the publisher's gates (decision 0014).
+      candidateVersionId: current.row.id,
     };
     const resultArtifact = await putPublicationArtifact(Buffer.from(JSON.stringify(report)), "json");
     console.log(JSON.stringify({ ...report, resultArtifact }));

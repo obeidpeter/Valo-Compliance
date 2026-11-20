@@ -8,7 +8,7 @@ import { candidateDigest, sha256, type PublicationBundle } from "@workspace/valo
 import type { ArtifactRef } from "../modules/publication/publication-artifacts";
 import type { finiteManifestProposal } from "../modules/ai/inference-manifest";
 
-test("actual preparation and saved-readiness callers bind another form without authoring, review, approval or publication", async (t) => {
+test("actual preparation and prepared-candidate readiness bind another form without authoring, review, approval or publication", async (t) => {
   // Native storage, DB and rendering are controlled. Source extraction,
   // permission predicates, mechanical gates, preparation and readiness are real.
   // These fixtures do not establish actual runtime rights/export readiness.
@@ -34,7 +34,7 @@ test("actual preparation and saved-readiness callers bind another form without a
   });
   const versions = Symbol("versions"),
     policies = Symbol("policies");
-  const contentTable = { table: versions, id: "id", templateId: "templateId" },
+  const contentTable = { table: versions, id: "id", templateId: "templateId", version: "version" },
     policyTable = { table: policies, id: "id" };
   const saved: any[] = [],
     savedPolicies: any[] = [],
@@ -45,7 +45,12 @@ test("actual preparation and saved-readiness callers bind another form without a
     holdCalls = 0;
   const database = {
     select: () => ({
-      from: (table: unknown) => ({ where: async () => (table === contentTable ? saved : savedPolicies) }),
+      from: (table: unknown) => ({
+        where: () => {
+          const rows = table === contentTable ? saved : savedPolicies;
+          return Object.assign(Promise.resolve(rows), { limit: async () => rows });
+        },
+      }),
     }),
     insert: (table: unknown) => ({
       values: (row: any) => {
@@ -163,45 +168,96 @@ test("actual preparation and saved-readiness callers bind another form without a
   assert.equal(saved.length, 0);
   const prepared = await prepareOperationalCandidateRelease("TPL-12", path);
   assert.equal(prepared.providerFailure, "FINITE_REVIEW_NOT_RUN");
-  assert.equal(prepared.release.decision, "held");
+  assert.equal(prepared.release.decision, "awaiting_reviews");
   assert.equal(prepared.reviews.length, 0);
-  assert.equal(holdCalls, 1);
-  assert.equal(saved.length, 1);
-  assert.equal(saved[0].templateId, "TPL-12");
-  assert.equal(saved[0].slug, "tpl-12");
-  const ready = await readOperationalInferenceReadiness(prepared.id);
+  // Decision 0014: a candidate awaiting its reviews is a private artifact, not a saved version.
+  assert.equal(holdCalls, 0);
+  assert.equal(saved.length, 0);
+  assert.ok(prepared.candidateArtifact);
+  const binding = { candidateVersionId: prepared.id, candidateArtifact: prepared.candidateArtifact };
+  const stored = JSON.parse((await get(prepared.candidateArtifact)).toString());
+  assert.equal(stored.kind, "valo-prepared-candidate-v1");
+  assert.equal(stored.versionId, prepared.id);
+  assert.equal(stored.templateId, "TPL-12");
+  assert.equal(stored.slug, "tpl-12");
+  assert.equal(stored.candidateHash, prepared.candidateHash);
+  assert.deepEqual(stored.bundle.reviews, []);
+  assert.deepEqual(stored.attestations.reviews, []);
+  assert.equal(prepared.candidateArtifact.templateId, "TPL-12");
+  const ready = await readOperationalInferenceReadiness(binding);
   assert.equal(ready.candidate.id, "TPL-12");
   assert.equal(ready.candidate.hash, prepared.candidateHash);
+  assert.equal(ready.row.id, prepared.id);
   assert.ok(ready.checks.every((c) => c.result === "pass"));
-  const row = saved[0],
-    original = structuredClone(row);
-  row.templateId = "TPL-02";
-  await assert.rejects(() => readOperationalInferenceReadiness(prepared.id), /BINDING_CHANGED/);
-  Object.assign(row, structuredClone(original));
-  row.bundle.candidate.body = row.bundle.candidate.body.replace("Payment reminder letter", "Altered form");
-  row.bundle.candidate.hash = candidateDigest(row.bundle.candidate);
-  row.candidateHash = row.bundle.candidate.hash;
-  await assert.rejects(() => readOperationalInferenceReadiness(prepared.id), /BODY_NOT_EXACT/);
-  Object.assign(row, structuredClone(original));
-  row.reviewBy = new Date(0);
-  await assert.rejects(() => readOperationalInferenceReadiness(prepared.id), /UNAVAILABLE_OR_STALE/);
-  Object.assign(row, structuredClone(original));
+  // Each change is kept as a new artifact, as any edit to a stored artifact would be.
+  const changed = async (edit: (candidate: any) => void, templateId = "TPL-12") => {
+    const candidate = structuredClone(stored);
+    edit(candidate);
+    const ref = await put(Buffer.from(JSON.stringify(candidate)), "json");
+    return {
+      candidateVersionId: prepared.id,
+      candidateArtifact: { id: ref.id, hash: ref.hash, extension: "json" as const, templateId },
+    };
+  };
+  await assert.rejects(
+    async () => readOperationalInferenceReadiness(await changed((c) => (c.templateId = "TPL-02"))),
+    /BINDING_CHANGED/,
+  );
+  await assert.rejects(
+    async () => readOperationalInferenceReadiness(await changed(() => undefined, "TPL-02")),
+    /BINDING_CHANGED/,
+  );
+  await assert.rejects(
+    () => readOperationalInferenceReadiness({ ...binding, candidateVersionId: randomUUID() }),
+    /BINDING_CHANGED/,
+  );
+  await assert.rejects(
+    async () =>
+      readOperationalInferenceReadiness(
+        await changed((c) => {
+          c.bundle.candidate.body = c.bundle.candidate.body.replace(
+            "Payment reminder letter",
+            "Altered form",
+          );
+          c.bundle.candidate.hash = candidateDigest(c.bundle.candidate);
+          c.candidateHash = c.bundle.candidate.hash;
+        }),
+      ),
+    /BODY_NOT_EXACT/,
+  );
+  await assert.rejects(
+    async () =>
+      readOperationalInferenceReadiness(await changed((c) => (c.reviewBy = new Date(0).toISOString()))),
+    /UNAVAILABLE_OR_STALE/,
+  );
   const bad = await put(Buffer.from(JSON.stringify({ body: "different canonical document" })), "pdf");
-  row.attestations.exports.pdf = bad;
-  await assert.rejects(() => readOperationalInferenceReadiness(prepared.id), /EXPORT_HOLD/);
-  Object.assign(row, structuredClone(original));
-  row.bundle.candidate.risk = "contracts";
-  row.bundle.candidate.hash = candidateDigest(row.bundle.candidate);
-  row.candidateHash = row.bundle.candidate.hash;
-  await assert.rejects(() => readOperationalInferenceReadiness(prepared.id), /MECHANICAL_HOLD/);
-  Object.assign(row, structuredClone(original));
+  await assert.rejects(
+    async () => readOperationalInferenceReadiness(await changed((c) => (c.attestations.exports.pdf = bad))),
+    /EXPORT_HOLD/,
+  );
+  await assert.rejects(
+    async () =>
+      readOperationalInferenceReadiness(
+        await changed((c) => {
+          c.bundle.candidate.risk = "contracts";
+          c.bundle.candidate.hash = candidateDigest(c.bundle.candidate);
+          c.candidateHash = c.bundle.candidate.hash;
+        }),
+      ),
+    /MECHANICAL_HOLD/,
+  );
+  // Once a version is saved under the candidate's ID or number, its review is over.
+  saved.push({ id: prepared.id });
+  await assert.rejects(() => readOperationalInferenceReadiness(binding), /CANDIDATE_ALREADY_SAVED/);
+  saved.length = 0;
+  assert.equal((await readOperationalInferenceReadiness(binding)).row.id, prepared.id);
   process.env.REPLIT_DEPLOYMENT_ID = "0";
   try {
     await assert.rejects(() => prepareOperationalCandidateRelease("TPL-01", path), /development/);
   } finally {
     delete process.env.REPLIT_DEPLOYMENT_ID;
   }
-  assert.equal(saved.length, 1);
+  assert.equal(saved.length, 0);
   assert.equal(reviewCalls, 0);
   assert.equal(authoringCalls, 0);
   assert.equal(publishCalls, 0);
@@ -209,15 +265,21 @@ test("actual preparation and saved-readiness callers bind another form without a
   for (const id of ["TPL-22", "TPL-24", "TPL-34", "TPL-35", "TPL-38"]) {
     saved.length = 0;
     savedPolicies.length = 0;
-    const prepared = await prepareOperationalCandidateRelease(id, path),
-      current = await readOperationalInferenceReadiness(prepared.id);
-    assert.equal(prepared.release.decision, "held");
+    const prepared = await prepareOperationalCandidateRelease(id, path);
+    assert.ok(prepared.candidateArtifact);
+    const current = await readOperationalInferenceReadiness({
+      candidateVersionId: prepared.id,
+      candidateArtifact: prepared.candidateArtifact,
+    });
+    assert.equal(prepared.release.decision, "awaiting_reviews");
     assert.equal(prepared.providerFailure, "FINITE_REVIEW_NOT_RUN");
     assert.equal(prepared.reviews.length, 0);
+    assert.equal(prepared.candidateArtifact.templateId, id);
+    assert.equal(saved.length, 0);
     assert.equal(current.candidate.id, id);
     assert.ok(current.checks.every((c) => c.result === "pass"));
   }
-  assert.equal(holdCalls, 6);
+  assert.equal(holdCalls, 0);
   assert.equal(reviewCalls, 0);
   assert.equal(authoringCalls, 0);
   assert.equal(publishCalls, 0);

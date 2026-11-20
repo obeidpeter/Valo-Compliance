@@ -13,7 +13,7 @@
     },
     {
       "id": "KI-003",
-      "summary": "No template or guidance version is published. A template publishes only with two passing AI reviews, which need an owner-approved AI budget, and no command yet turns a reviewed pair into a published version (decision 0014). Guidance is held for six standing reasons, each waiting for an owner decision or outside evidence, and no enhanced high-risk check runs.",
+      "summary": "No template or guidance version is published. A template publishes only with two passing AI reviews, which run only inside an owner-approved finite AI allocation, and none is approved. The publish command (decision 0014) has run only on synthetic reviews in a disposable database. Guidance is held for six standing reasons, each waiting for an owner decision or outside evidence. The reviews of content that is not general run the enhanced high-risk checks, but no preparer yet produces such content, so none has run.",
       "requirements": ["EDP-005"]
     },
     {
@@ -44,6 +44,11 @@
     {
       "id": "KI-009",
       "summary": "No requirement is accepted. Cited CI tests are partial evidence, and acceptance needs the owner's review of each requirement.",
+      "requirements": []
+    },
+    {
+      "id": "KI-010",
+      "summary": "A template candidate awaiting its two reviews is a private artifact, saved as a version only once they are checked (decision 0014). The staff Content area lists saved versions only, so a prepared candidate is named by the preparation command's report until then. Candidates prepared for the same template take the same version number, and the first one saved ends the others' reviews.",
       "requirements": []
     }
   ]

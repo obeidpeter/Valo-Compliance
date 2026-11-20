@@ -83,7 +83,8 @@ test(
       assert.match(ref.id, /^[a-f0-9-]{36}$/);
       assert.ok(["json", "pdf", "docx"].includes(ref.extension));
       const bytes = await readFile(join(directory, `${ref.id}.${ref.extension}`));
-      assert.equal(sha(bytes), ref.hash);
+      // As the private store does, a file whose bytes no longer match its reference is refused.
+      if (sha(bytes) !== ref.hash) throw Error("PUBLICATION_ASSET_HASH_MISMATCH");
       return bytes;
     };
     const put = async (bytes: Buffer, extension: ArtifactRef["extension"]) => {
@@ -141,6 +142,20 @@ test(
       );
       await scoped.query(
         `GRANT SELECT,INSERT ON "${schema}".valo_publication_audit TO valo_content_publisher_dev`,
+      );
+      // The publisher's remaining reads and writes, as migrations 0007 and 0009 grant them, so the
+      // publish command's success path runs the real publisher in this disposable schema only.
+      await scoped.query(
+        `GRANT SELECT ON "${schema}".valo_publication_policies TO valo_content_publisher_dev,valo_content_drafter_dev`,
+      );
+      await scoped.query(
+        `GRANT SELECT ON "${schema}".valo_source_watches,"${schema}".valo_source_snapshots,"${schema}".valo_source_release_bindings,"${schema}".valo_source_impacts,"${schema}".valo_source_review_work TO valo_content_publisher_dev`,
+      );
+      await scoped.query(
+        `GRANT INSERT ON "${schema}".valo_source_release_bindings TO valo_content_publisher_dev`,
+      );
+      await scoped.query(
+        `GRANT UPDATE(status,replacement_kind,replacement_id,completed_at) ON "${schema}".valo_source_review_work TO valo_content_publisher_dev`,
       );
       // LIKE does not retarget a serial's default. Never consume a genuine ledger sequence.
       await scoped.query(`CREATE SEQUENCE "${schema}".fixture_attempt_ids`);
@@ -249,8 +264,16 @@ test(
         return id;
       };
       const operational = async () => {
+        // A prepared candidate is not saved until its reviews pass (decision 0014), so each
+        // fixture takes the same version number; preparing each at its own moment keeps every
+        // fixture a distinct candidate with its own attempts.
+        t.mock.timers.tick(1000);
         const saved = await prepareOperationalCandidateRelease("TPL-07", snapshotPath.pathname);
-        const current = await readOperationalInferenceReadiness(saved.id);
+        assert.ok(saved.candidateArtifact, "a prepared candidate awaits its reviews as an artifact");
+        const current = await readOperationalInferenceReadiness({
+          candidateVersionId: saved.id,
+          candidateArtifact: saved.candidateArtifact,
+        });
         const plan = await saveOperationalReviewPlan(
           current.candidate,
           current.rightsInput,
@@ -260,6 +283,7 @@ test(
         );
         const manifest = prepareOperationalFiniteManifest({
           candidateVersionId: saved.id,
+          candidateArtifact: saved.candidateArtifact,
           candidateHash: current.candidate.hash,
           bundleHash: requestDigest(current.bundle),
           sourceHashes: current.bundle.sources.map((s) => s.hash),
@@ -388,15 +412,37 @@ test(
           await reset();
           const fixture = await operational(),
             before = calls;
-          await scoped.query("UPDATE valo_content_versions SET candidate_hash=$1 WHERE id=$2", [
-            "e".repeat(64),
-            fixture.current.row.id,
-          ]);
-          await assert.rejects(fixture.execute, /CANDIDATE_BINDING_CHANGED/);
-          await scoped.query("UPDATE valo_content_versions SET candidate_hash=$1 WHERE id=$2", [
-            fixture.current.candidate.hash,
-            fixture.current.row.id,
-          ]);
+          // The candidate under review is a private artifact (decision 0014): a change to its file
+          // is refused, and so is a version saved under its ID while its reviews are pending.
+          const candidateFile = join(
+            directory,
+            `${fixture.manifest.works[0]!.bindings.candidateArtifact!.id}.json`,
+          );
+          const candidateBytes = await readFile(candidateFile);
+          const altered = JSON.parse(candidateBytes.toString());
+          altered.slug = "altered-slug";
+          await writeFile(candidateFile, JSON.stringify(altered));
+          await assert.rejects(fixture.execute, /PUBLICATION_ASSET_HASH_MISMATCH/);
+          await writeFile(candidateFile, candidateBytes);
+          const row = fixture.current.row;
+          await scoped.query(
+            `INSERT INTO valo_content_versions
+            (id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,review_by)
+            VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+            [
+              row.id,
+              row.templateId,
+              row.version,
+              row.slug,
+              row.policyId,
+              row.candidateHash,
+              JSON.stringify(row.bundle),
+              JSON.stringify(row.attestations),
+              row.reviewBy,
+            ],
+          );
+          await assert.rejects(fixture.execute, /CANDIDATE_ALREADY_SAVED/);
+          await scoped.query("DELETE FROM valo_content_versions WHERE id=$1", [row.id]);
           const modified = structuredClone(fixture.manifest);
           for (const work of modified.works) work.bindings.sourceFiles[0]!.sha256 = "e".repeat(64);
           const id = await seed(modified);
@@ -406,6 +452,242 @@ test(
           );
           assert.equal(calls, before);
           assert.equal((await state()).entries.length, 0);
+        },
+      );
+      // Decision 0014's publish command, on reviews the real caller ran in this disposable schema
+      // through the zero-network SDK. Each review is a controlled fixture, never a genuine review.
+      const { publishReviewedOperationalCandidate } =
+        await import("../modules/ai-lanes/inference-reviewed-publication");
+      const passing = () =>
+        response(
+          JSON.stringify({
+            verdict: "pass",
+            findings: [],
+            missingEvidence: [],
+            observations: ["Controlled fixture; not a genuine review"],
+          }),
+        );
+      const publish = (batchId: string, reviews: ArtifactRef[]) =>
+        publishReviewedOperationalCandidate({ batchId, reviews });
+      const savedVersion = async (id: string) =>
+        (
+          await scoped.query(
+            "SELECT status,version,bundle,attestations FROM valo_content_versions WHERE id=$1",
+            [id],
+          )
+        ).rows[0];
+      const versionOf = (fixture: Awaited<ReturnType<typeof operational>>) =>
+        fixture.manifest.works[0]!.bindings.candidateVersionId!;
+      const copy = (record: object) => put(Buffer.from(JSON.stringify(record)), "json");
+      await t.test(
+        "the publish command accepts only the reviews its approved batch settled for the candidate",
+        async () => {
+          await reset();
+          answer = async () => passing();
+          const a = await operational(),
+            b = await operational();
+          const reviews = await a.execute(),
+            others = await b.execute();
+          assert.equal(reviews.length, 2);
+          assert.equal(others.length, 2);
+          const before = calls,
+            [factual, challenge] = reviews as [(typeof reviews)[0], (typeof reviews)[0]];
+          await assert.rejects(
+            () =>
+              publish(
+                a.id,
+                others.map((r) => r.artifact),
+              ),
+            /REVIEW_NOT_SETTLED_BY_APPROVED_BATCH/,
+          );
+          await assert.rejects(
+            async () =>
+              publish(a.id, [
+                await copy({
+                  ...factual.record,
+                  providerResponseId: `controlled-no-network-${randomUUID()}`,
+                }),
+                challenge.artifact,
+              ]),
+            /REVIEW_NOT_SETTLED_BY_APPROVED_BATCH/,
+          );
+          await assert.rejects(
+            async () =>
+              publish(a.id, [
+                await copy({
+                  ...factual.record,
+                  serverEvidence: { ...factual.record.serverEvidence, sourceHash: "e".repeat(64) },
+                }),
+                challenge.artifact,
+              ]),
+            /REVIEW_BINDING_CHANGED/,
+          );
+          await assert.rejects(
+            async () =>
+              publish(a.id, [
+                await copy({ ...factual.record, reviewPlanHash: "e".repeat(64) }),
+                challenge.artifact,
+              ]),
+            /REVIEW_BINDING_CHANGED/,
+          );
+          await assert.rejects(() => publish(a.id, [factual.artifact]), /REVIEWED_PAIR_ARGUMENTS_INVALID/);
+          await assert.rejects(
+            () => publish(a.id, [factual.artifact, factual.artifact]),
+            /REVIEWS_NOT_INDEPENDENT/,
+          );
+          await assert.rejects(
+            () => publish(`isolated-control-${randomUUID()}`, [factual.artifact, challenge.artifact]),
+            /INFERENCE_MANIFEST_INVALID/,
+          );
+          // A review counts only once the ledger settled its work.
+          await store.mutate("controlled-unsettled-entry", (s) => ({
+            state: {
+              ...s,
+              entries: s.entries.map((e) =>
+                e.runKey === `${a.id}:${a.manifest.works[0]!.key}` ? { ...e, status: "unknown" as const } : e,
+              ),
+            },
+            value: null,
+          }));
+          await assert.rejects(
+            () => publish(a.id, [factual.artifact, challenge.artifact]),
+            /REVIEW_NOT_SETTLED_BY_APPROVED_BATCH/,
+          );
+          // A candidate past its review date is not published.
+          const now = Date.now();
+          t.mock.timers.setTime(Date.parse(b.current.candidate.reviewBy!) + 1000);
+          try {
+            await assert.rejects(
+              () =>
+                publish(
+                  b.id,
+                  others.map((r) => r.artifact),
+                ),
+              /CANDIDATE_UNAVAILABLE_OR_STALE/,
+            );
+          } finally {
+            t.mock.timers.setTime(now);
+          }
+          assert.equal(calls, before);
+          for (const fixture of [a, b]) assert.equal(await savedVersion(versionOf(fixture)), undefined);
+        },
+      );
+      await t.test(
+        "a reviewed pair that fails a gate is saved with its reviews and held, and held stays final",
+        async () => {
+          await reset();
+          answer = async () => response();
+          const fixture = await operational(),
+            sameNumber = await operational();
+          const reviews = await fixture.execute(),
+            others = await sameNumber.execute(),
+            before = calls,
+            id = versionOf(fixture);
+          const result = await publish(
+            fixture.id,
+            reviews.map((r) => r.artifact),
+          );
+          assert.equal(result.eligibility?.decision, "hold");
+          assert.equal(result.status, "held");
+          const row = await savedVersion(id);
+          assert.equal(row.status, "held");
+          assert.equal(row.version, fixture.current.row.version);
+          assert.deepEqual(
+            row.bundle.reviews.map((r: { role: string; verdict: string }) => [r.role, r.verdict]),
+            [
+              ["factual", "hold"],
+              ["challenge", "hold"],
+            ],
+          );
+          assert.deepEqual(
+            row.attestations.reviews,
+            reviews.map((r) => r.artifact),
+          );
+          const again = await publish(
+            fixture.id,
+            reviews.map((r) => r.artifact),
+          );
+          assert.equal(again.decision, "held");
+          assert.equal(again.rerun, true);
+          assert.equal((await savedVersion(id)).status, "held");
+          // Another candidate prepared under the same version number can no longer be published.
+          await assert.rejects(
+            () =>
+              publish(
+                sameNumber.id,
+                others.map((r) => r.artifact),
+              ),
+            /CANDIDATE_ALREADY_SAVED/,
+          );
+          assert.equal(calls, before);
+          // A run that stopped after saving a candidate, before its outcome: the rerun records the
+          // hold the saved bundle fails on, as the first run would have.
+          const stopped = await operational(),
+            stoppedReviews = await stopped.execute(),
+            stoppedRow = stopped.current.row;
+          await scoped.query(
+            `INSERT INTO valo_content_versions
+            (id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,review_by)
+            VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+            [
+              stoppedRow.id,
+              stoppedRow.templateId,
+              stoppedRow.version,
+              stoppedRow.slug,
+              stoppedRow.policyId,
+              stoppedRow.candidateHash,
+              JSON.stringify(stoppedRow.bundle),
+              JSON.stringify(stoppedRow.attestations),
+              stoppedRow.reviewBy,
+            ],
+          );
+          const resumed = await publish(
+            stopped.id,
+            stoppedReviews.map((r) => r.artifact),
+          );
+          assert.equal(resumed.decision, "held");
+          assert.equal(resumed.rerun, true);
+          assert.equal((await savedVersion(stoppedRow.id)).status, "held");
+        },
+      );
+      await t.test(
+        "two passing synthetic reviews publish the saved version through the real publisher, in this disposable schema",
+        async () => {
+          await reset();
+          answer = async () => passing();
+          const fixture = await operational();
+          const reviews = await fixture.execute(),
+            before = calls,
+            id = versionOf(fixture);
+          assert.equal(reviews.length, 2);
+          assert.equal(await savedVersion(id), undefined, "nothing is saved before the reviews are checked");
+          const result = await publish(
+            fixture.id,
+            reviews.map((r) => r.artifact),
+          );
+          assert.equal(result.eligibility?.decision, "eligible");
+          assert.equal(result.status, "published");
+          const row = await savedVersion(id);
+          assert.equal(row.status, "published");
+          assert.equal(row.bundle.manifest.status, "eligible");
+          assert.deepEqual(row.bundle.enhancedChecks, []);
+          assert.deepEqual(
+            row.bundle.reviews.map((r: { runId: string }) => r.runId),
+            reviews.map((r) => r.record.providerResponseId),
+          );
+          assert.deepEqual(
+            (
+              await scoped.query("SELECT action FROM valo_publication_audit WHERE version_id=$1", [id])
+            ).rows.map((r) => r.action),
+            ["published"],
+          );
+          const again = await publish(
+            fixture.id,
+            reviews.map((r) => r.artifact),
+          );
+          assert.equal(again.decision, "published");
+          assert.equal(again.rerun, true);
+          assert.equal(calls, before);
         },
       );
       const { prepareCustomerFiniteManifest, executeApprovedCustomerManifest } =

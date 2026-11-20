@@ -12,8 +12,17 @@ export function assertFiniteWorkShape(work: FiniteWork) {
     throw Error("WORK_LANE_CORPUS_MISMATCH");
   if (work.lane === "publication") {
     if (binding.caseId !== null || !binding.operationalPlan) throw Error("PUBLICATION_PLAN_REQUIRED");
-  } else if (typeof binding.caseId !== "string" || !binding.caseId.trim())
-    throw Error("CASE_BINDING_REQUIRED");
+    const candidate = binding.candidateArtifact;
+    if (
+      !candidate ||
+      !/^[a-f0-9-]{36}$/.test(candidate.id) ||
+      !/^[a-f0-9]{64}$/.test(candidate.hash) ||
+      candidate.extension !== "json" ||
+      !/^TPL-\d{2,3}$/.test(candidate.templateId)
+    )
+      throw Error("PUBLICATION_CANDIDATE_REQUIRED");
+  } else if (binding.candidateArtifact) throw Error("CANDIDATE_ARTIFACT_OUTSIDE_PUBLICATION");
+  else if (typeof binding.caseId !== "string" || !binding.caseId.trim()) throw Error("CASE_BINDING_REQUIRED");
   if (work.lane === "customer") {
     if (
       work.role !== "customer" ||

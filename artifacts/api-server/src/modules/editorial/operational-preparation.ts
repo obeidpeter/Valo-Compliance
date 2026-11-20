@@ -25,6 +25,7 @@ import {
   operationalMechanicalChecks,
   inspectOperationalExports,
   readOperationalIntake,
+  savePreparedCandidate,
 } from "../publication";
 import { recordOriginalAuthoring } from "./operational-authoring";
 import { reviewOperationalCandidate } from "./operational-review";
@@ -35,7 +36,8 @@ import { singleRow } from "../../platform/rows";
 export async function prepareInventoryRelease(snapshotPath: string) {
   return prepareRelease("TPL-07", snapshotPath, true);
 }
-/** Saves actual canonical candidate/export evidence and a publication hold.
+/** Prepares the actual canonical candidate and its export evidence for its two finite reviews, as a
+ * private artifact (decision 0014); a candidate that fails a check is saved and held instead.
  * This entry never authors, requests AI reviews, approves inference or publishes. */
 export async function prepareOperationalCandidateRelease(templateId: string, snapshotPath: string) {
   assertDevelopmentRuntime();
@@ -315,6 +317,7 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
     exportsHash: digest(bundle.exports),
   });
   const id = randomUUID(),
+    slug = templateId === "TPL-07" ? "inventory-register" : templateId.toLowerCase(),
     attestations: ReleaseAttestations = {
       provenance,
       rights: rightsRef,
@@ -323,13 +326,48 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
       exports,
       exportReport: reportRef,
     };
+  const eligibility = evaluatePublication(bundle);
+  // A candidate that passed its checks and waits for its two finite reviews stays a private
+  // artifact: a saved version can never gain reviews, so it is saved, with them, only once they
+  // pass (decision 0014). A candidate that failed a check is saved and held as before.
+  if (!requestReviews && providerFailure === "FINITE_REVIEW_NOT_RUN") {
+    const candidateArtifact = await savePreparedCandidate({
+      kind: "valo-prepared-candidate-v1",
+      versionId: id,
+      templateId,
+      version,
+      slug,
+      policyId: policy.version,
+      candidateHash: candidate.hash,
+      bundle,
+      attestations,
+      reviewBy: new Date(content.reviewBy).toISOString(),
+      preparedAt: now.toISOString(),
+    });
+    return {
+      id,
+      version,
+      candidateHash: candidate.hash,
+      policyHash: policy.hash,
+      eligibility,
+      release: { id, status: "awaiting_reviews" as const, decision: "awaiting_reviews" as const },
+      candidateArtifact,
+      reviewPlan,
+      reviews: [],
+      exportReport,
+      attestations,
+      rightsScope: rights.conclusion,
+      commercialLicenceAccepted: false,
+      providerFailure,
+    };
+  }
   await db.transaction(async (tx) => {
     await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
     await tx.insert(valoContentVersions).values({
       id,
       templateId,
       version,
-      slug: templateId === "TPL-07" ? "inventory-register" : templateId.toLowerCase(),
+      slug,
       policyId: policy.version,
       candidateHash: candidate.hash,
       bundle,
@@ -337,7 +375,6 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
       reviewBy: new Date(content.reviewBy),
     });
   });
-  const eligibility = evaluatePublication(bundle);
   const release =
     requestReviews && eligibility.decision === "eligible"
       ? await publishOperationalVersion(id)
@@ -349,6 +386,7 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
     policyHash: policy.hash,
     eligibility,
     release,
+    candidateArtifact: null,
     reviewPlan,
     reviews: reviewed.map((r) => ({
       role: r.record.role,

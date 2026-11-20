@@ -16,6 +16,12 @@ const now = new Date("2026-11-15T05:00:00Z"),
 function prepared() {
   const input: OperationalFiniteInput = {
     candidateVersionId: "11111111-1111-4111-8111-111111111111",
+    candidateArtifact: {
+      id: "44444444-4444-4444-8444-444444444444",
+      hash: "9".repeat(64),
+      extension: "json",
+      templateId: "TPL-12",
+    },
     candidateHash: "a".repeat(64),
     bundleHash: "b".repeat(64),
     sourceHashes: [],
@@ -65,11 +71,27 @@ async function mixed(retry = true) {
 }
 test("preparation options preserve explicit retries and never accept approval or quota assertions", () => {
   const packageId = `finite-package:${"e".repeat(64)}`;
-  assert.deepEqual(parseFinitePreparationOptions([]), { retry: false, packageId: undefined });
-  assert.deepEqual(parseFinitePreparationOptions([`--package=${packageId}`]), { retry: false, packageId });
+  assert.deepEqual(parseFinitePreparationOptions([]), { retry: false, packageId: undefined, candidates: [] });
+  assert.deepEqual(parseFinitePreparationOptions([`--package=${packageId}`]), {
+    retry: false,
+    packageId,
+    candidates: [],
+  });
   assert.deepEqual(parseFinitePreparationOptions(["--with-schema-retry", `--package=${packageId}`]), {
     retry: true,
     packageId,
+    candidates: [],
+  });
+  // Prepared candidates are named by their exact private artifact (decision 0014).
+  const one = `55555555-5555-4555-8555-555555555555:${"1".repeat(64)}`,
+    two = `66666666-6666-4666-8666-666666666666:${"2".repeat(64)}`;
+  assert.deepEqual(parseFinitePreparationOptions([`--candidate=${one}`, `--candidate=${two}`]), {
+    retry: false,
+    packageId: undefined,
+    candidates: [
+      { id: "55555555-5555-4555-8555-555555555555", hash: "1".repeat(64), extension: "json" },
+      { id: "66666666-6666-4666-8666-666666666666", hash: "2".repeat(64), extension: "json" },
+    ],
   });
   for (const args of [
     ["--approved=true"],
@@ -77,6 +99,17 @@ test("preparation options preserve explicit retries and never accept approval or
     ["--package=anything"],
     ["--with-schema-retry", "--with-schema-retry"],
     [`--package=${packageId}`, `--package=finite-package:${"f".repeat(64)}`],
+    ["--candidate=55555555-5555-4555-8555-555555555555"],
+    [`--candidate=55555555-5555-4555-8555-555555555555:${"1".repeat(63)}`],
+    [`--candidate=TPL-12:${"1".repeat(64)}`],
+    [
+      `--candidate=55555555-5555-4555-8555-555555555555:${"1".repeat(64)}`,
+      `--candidate=55555555-5555-4555-8555-555555555555:${"2".repeat(64)}`,
+    ],
+    Array.from(
+      { length: 21 },
+      (_, i) => `--candidate=${String(i).padStart(8, "0")}-5555-4555-8555-555555555555:${"1".repeat(64)}`,
+    ),
   ]) {
     assert.throws(() => parseFinitePreparationOptions(args), /FINITE_PREPARATION_OPTIONS_INVALID/);
   }

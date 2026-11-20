@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { candidateDigest, digest, publicationSchema } from "@workspace/valo-core";
 import {
   getPublicationArtifact,
+  readPreparedCandidate,
   readOperationalIntake,
   templateCandidate,
   loadChatGPTPermission,
@@ -13,20 +14,54 @@ import {
   type ReleaseAttestations,
 } from "../publication";
 
-/** Reconstruct a supported saved original form and recheck all its retained
- * private evidence. Intake coverage alone never establishes readiness. */
-export async function readOperationalInferenceReadiness(candidateVersionId: string) {
-  if (!/^[a-f0-9-]{36}$/.test(candidateVersionId)) throw Error("CANDIDATE_VERSION_REQUIRED");
-  // The database client loads when a readiness check runs, not with every reader of this file.
-  const { db, valoContentVersions } = await import("@workspace/db");
-  const [row] = await db
-    .select()
-    .from(valoContentVersions)
-    .where(eq(valoContentVersions.id, candidateVersionId));
-  if (!row || ["withdrawn", "superseded"].includes(row.status) || row.reviewBy.getTime() <= Date.now())
-    throw Error("CANDIDATE_UNAVAILABLE_OR_STALE");
-  if (!supportsOperationalInferenceTemplate(row.templateId))
+export type OperationalCandidateBinding = {
+  candidateVersionId: string;
+  candidateArtifact: { id: string; hash: string; extension: "json"; templateId: string };
+};
+
+/** Reconstruct a supported prepared original form and recheck all its retained private evidence.
+ * The candidate is the private artifact a review reads before its version is saved (decision 0014).
+ * Intake coverage alone never establishes readiness. */
+export async function readOperationalInferenceReadiness(binding: OperationalCandidateBinding) {
+  if (!/^[a-f0-9-]{36}$/.test(binding.candidateVersionId)) throw Error("CANDIDATE_VERSION_REQUIRED");
+  const prepared = await readPreparedCandidate(binding.candidateArtifact);
+  if (
+    prepared.versionId !== binding.candidateVersionId ||
+    prepared.templateId !== binding.candidateArtifact.templateId
+  )
+    throw Error("CANDIDATE_BINDING_CHANGED");
+  if (Date.parse(prepared.reviewBy) <= Date.now()) throw Error("CANDIDATE_UNAVAILABLE_OR_STALE");
+  if (!supportsOperationalInferenceTemplate(prepared.templateId))
     throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
+  // A saved version ends a candidate's review: this one, published or held, or another saved under
+  // the same version number. The database client loads only when a readiness check runs.
+  const { db, valoContentVersions } = await import("@workspace/db");
+  const saved = await db
+    .select({ id: valoContentVersions.id })
+    .from(valoContentVersions)
+    .where(
+      or(
+        eq(valoContentVersions.id, prepared.versionId),
+        and(
+          eq(valoContentVersions.templateId, prepared.templateId),
+          eq(valoContentVersions.version, prepared.version),
+        ),
+      ),
+    )
+    .limit(1);
+  if (saved.length) throw Error("CANDIDATE_ALREADY_SAVED");
+  const row = {
+    id: prepared.versionId,
+    templateId: prepared.templateId,
+    version: prepared.version,
+    slug: prepared.slug,
+    policyId: prepared.policyId,
+    candidateHash: prepared.candidateHash,
+    bundle: prepared.bundle,
+    attestations: prepared.attestations,
+    reviewBy: new Date(prepared.reviewBy),
+    preparedAt: prepared.preparedAt,
+  };
   const bundle = publicationSchema.parse(row.bundle),
     candidate = bundle.candidate,
     a = row.attestations as ReleaseAttestations;

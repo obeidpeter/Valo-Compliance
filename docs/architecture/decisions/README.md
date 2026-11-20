@@ -18,4 +18,4 @@ never edited after acceptance; a later record supersedes an earlier one.
 | [0011](0011-server-rendered-public-pages.md) | Server-render the public pages | Proposed |
 | [0012](0012-split-the-store.md) | Split the store into workspaces, documents and support tickets | Proposed |
 | [0013](0013-move-the-ai-lanes.md) | Move the AI lanes into a module of their own | Accepted |
-| [0014](0014-publish-reviewed-pairs.md) | Publish reviewed pairs, and who runs the enhanced checks | Proposed |
+| [0014](0014-publish-reviewed-pairs.md) | Publish reviewed pairs, and who runs the enhanced checks | Accepted |

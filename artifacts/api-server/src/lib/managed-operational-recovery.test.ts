@@ -337,6 +337,13 @@ test("actual operational caller recovers an artifact failure from settled receip
       caseId: null,
       sourceFiles: [],
       operationalPlan: plan.artifact,
+      // The binding check is controlled here; the prepared candidate is never read.
+      candidateArtifact: {
+        id: "55555555-5555-4555-8555-555555555555",
+        hash: requestDigest({ synthetic: "prepared candidate" }),
+        extension: "json",
+        templateId: "TPL-07",
+      },
     },
   }));
   const manifest: FiniteManifest = {
