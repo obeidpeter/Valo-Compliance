@@ -1,6 +1,6 @@
 import { AlertTriangle, CloudOff, Lock, RefreshCw, ShieldAlert } from "lucide-react";
 import { Link } from "wouter";
-import { describeError } from "@/lib/api";
+import { describeError } from "@/lib/describe-error";
 export { EmptyState, Notice, PageHeader, Skel } from "./page-parts";
 
 export function ErrorState({

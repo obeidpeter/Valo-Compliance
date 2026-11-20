@@ -5,7 +5,7 @@ import {
   type AccessSupportAck,
   type AccessSupportInputTopic,
 } from "@workspace/api-client-react";
-import { describeError } from "@/lib/api";
+import { describeError } from "@/lib/describe-error";
 
 const TOPICS: { v: AccessSupportInputTopic; l: string; d: string }[] = [
   {
