@@ -36,6 +36,9 @@ export function renderStatus(): string {
   const unverified = register.requirements
     .filter((r) => r.implementation_status === "unverified")
     .map((r) => r.id);
+  const citedOnly = register.requirements
+    .filter((r) => r.implementation_status === "partial_development_with_ci_evidence")
+    .map((r) => r.id);
   const citations = readCitations();
   const cited = new Map<string, { tests: Set<string>; jobs: Set<string> }>();
   for (const c of citations) {
@@ -79,7 +82,9 @@ export function renderStatus(): string {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([status, count]) => `| ${status} | ${count} |`),
     "",
-    `No recorded implementation evidence: ${unverified.join(", ") || "none"}.`,
+    `No evidence file, only tests cited in CI (decision 0010): ${citedOnly.join(", ") || "none"}.`,
+    "",
+    `No recorded evidence at all: ${unverified.join(", ") || "none"}.`,
     "",
     "## Tests cited as evidence",
     "",
