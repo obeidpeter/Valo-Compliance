@@ -1,6 +1,5 @@
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
-import { setTimeout as delay } from "node:timers/promises";
 import { phoneProblems, ready, settled, startApp } from "../test-support/app-in-browser";
 import { answer, industry, items, resources } from "../test-support/public-answers";
 
@@ -9,8 +8,9 @@ import { answer, industry, items, resources } from "../test-support/public-answe
  * errors and reflow", checked by "Automated checks plus manual keyboard and assistive-technology
  * review".
  *
- * The public screens the primary-page checks (public-page-states.test.ts) leave out, and the page
- * titles a visitor meets moving between public pages in the app. The app is bundled with a
+ * The public screens the primary-page checks (public-page-states.test.ts) leave out. Moving between
+ * public pages, which can now be server-rendered (decision 0011), is checked against the compiled web
+ * server in public-server-pages.test.ts. The app is bundled with a
  * stand-in for the identity library that reports a signed-out visitor (see app-in-browser.ts), on
  * an emulated phone, with the API answered in the page by synthetic data its contract accepts. The
  * automated check is axe-core with the WCAG 2.0, 2.1 and 2.2 A and AA rules. It is not a manual or
@@ -87,63 +87,6 @@ test("on a phone, each public screen the primary-page checks leave out names its
     } finally {
       await close();
     }
-  }
-  assert.deepEqual(problems, []);
-});
-
-/** Each public page the footer links to, and the title it gives the page. */
-const FOOTER: [string, string][] = [
-  ["/library", "Document library — Valo"],
-  ["/pricing", "Pricing — Valo"],
-  ["/checker", "Business requirements checker — Valo"],
-  ["/resources", "Business resources — Valo"],
-  ["/industries", "Industry coverage — Valo"],
-  ["/compliance", "Business requirements — Valo"],
-  ["/services", "Service enquiries — Valo"],
-  ["/about", "About Valo"],
-  ["/help", "Help — Valo"],
-  ["/contact", "Contact Valo"],
-  ["/support", "Support — Valo"],
-  ["/account-access", "Account access help — Valo"],
-  ["/privacy", "Privacy — Valo"],
-  ["/terms", "Terms — Valo"],
-  ["/development", "Build status — Valo"],
-];
-
-test("moving between public pages in the app, from the footer and from a library card, titles each page for itself", async () => {
-  const problems: string[] = [];
-  const { page, unknown, errors, close } = await app.phone("/terms", answer);
-  /** Follows a link with the keyboard, as a visitor using Tab and Enter would, and reads the title. */
-  const follow = async (selector: string, path: string, title: string) => {
-    const link = page.locator(selector).first();
-    // A list's links appear once its data has loaded.
-    if (
-      !(await link.waitFor({ state: "attached", timeout: 10_000 }).then(
-        () => true,
-        () => false,
-      ))
-    ) {
-      problems.push(`no link to ${path} (${selector})`);
-      return;
-    }
-    await link.focus();
-    await page.keyboard.press("Enter");
-    await page.waitForURL(app.origin + path).catch(() => problems.push(`${selector} did not open ${path}`));
-    for (let poll = 0; poll < 50 && (await page.title()) !== title; poll++) await delay(100);
-    const shown = await page.title();
-    if (shown !== title) problems.push(`${path}: titled "${shown}" after moving to it in the app`);
-  };
-  try {
-    await ready(page);
-    for (const [path, title] of FOOTER) await follow(`footer a[href="${path}"]`, path, title);
-    // A released item's page is titled for the item, and its section again on the way back.
-    await follow(`footer a[href="/library"]`, "/library", "Document library — Valo");
-    await follow(`main a[href="${items[0]!.href}"]`, items[0]!.href, `${items[0]!.title} — Valo`);
-    await follow(`main a[href="/library"]`, "/library", "Document library — Valo");
-    problems.push(...unknown.map((call) => `no test answer for ${call}`));
-    problems.push(...errors.map((error) => `page error ${error}`));
-  } finally {
-    await close();
   }
   assert.deepEqual(problems, []);
 });

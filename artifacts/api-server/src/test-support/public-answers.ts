@@ -135,6 +135,29 @@ answers["GET /development/proof"] = api.GetProofRegisterResponse.parse({
   publicLaunchEnabled: false,
 });
 
+answers["GET /public/discovery"] = api.GetPublicDiscoveryResponse.parse({
+  items: [
+    ...items.map((item) => ({
+      path: item.href,
+      title: item.title,
+      description: item.summary,
+      modifiedAt: null,
+    })),
+    ...resources.map((resource) => ({
+      path: `/resources/${resource.slug}`,
+      title: resource.title,
+      description: resource.summary,
+      modifiedAt: null,
+    })),
+  ],
+});
+
+/** Answers the web server's API calls, from the synthetic API (test-support/synthetic-api.ts). */
+export const serverAnswer = (method: string, url: URL) => {
+  const body = answers[`${method} ${url.pathname.replace(/^\/api/, "")}`];
+  return body === undefined ? undefined : { status: 200, body };
+};
+
 /** Answers the browser app's API calls in the page. */
 export const answer: Api = async (route, method, path) => {
   const body = answers[`${method} ${path}`];

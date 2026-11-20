@@ -5,7 +5,32 @@ import { FileText, LogOut, Menu, Scale, X } from "lucide-react";
 import { Wordmark } from "@/components/brand";
 import { DevBanner, NAV, SiteFooter } from "@/components/site-chrome";
 import { basePath } from "@/lib/env";
+import { isServerPage } from "@/lib/server-pages";
 import { cn } from "@/lib/utils";
+
+/** A link in the browser app's shell: within the app, its router; to a page the server renders, a
+ * plain link that loads that page in full (decision 0011). */
+function ShellLink({
+  href,
+  className,
+  children,
+  "data-testid": testId,
+}: {
+  href: string;
+  className?: string;
+  children?: ReactNode;
+  "data-testid"?: string;
+}) {
+  return isServerPage(href) ? (
+    <a href={basePath + href} className={className} data-testid={testId}>
+      {children}
+    </a>
+  ) : (
+    <Link href={href} className={className} data-testid={testId}>
+      {children}
+    </Link>
+  );
+}
 
 function UserMenu() {
   const { user } = useUser();
@@ -65,7 +90,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <Wordmark />
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
             {NAV.map((n) => (
-              <Link
+              <ShellLink
                 key={n.href}
                 href={n.href}
                 className={cn(
@@ -77,7 +102,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 data-testid={"link-nav-" + n.label.toLowerCase()}
               >
                 {n.label}
-              </Link>
+              </ShellLink>
             ))}
           </nav>
           <div className="hidden items-center gap-2 lg:flex">
@@ -107,13 +132,13 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <div className="reveal border-t border-border bg-background px-5 pb-6 pt-3 lg:hidden">
             <nav className="grid gap-1" aria-label="Mobile">
               {NAV.map((n) => (
-                <Link
+                <ShellLink
                   key={n.href}
                   href={n.href}
                   className="rounded-xl px-3 py-3 text-base hover:bg-secondary"
                 >
                   {n.label}
-                </Link>
+                </ShellLink>
               ))}
             </nav>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -133,7 +158,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         )}
       </header>
       <main className="flex-1 pb-24 lg:pb-0">{children}</main>
-      <SiteFooter LinkTo={Link} wordmark={<Wordmark />} />
+      <SiteFooter LinkTo={ShellLink} wordmark={<Wordmark />} />
       <MobileDock />
     </div>
   );
