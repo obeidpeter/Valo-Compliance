@@ -182,22 +182,60 @@ export class FiniteInferenceDispatcher {
       inputs[1]!,
     ).state;
   }
+  /**
+   * The binding checks read retained files, saved versions and private artifacts, and take pooled
+   * connections of their own, so each runs before the ledger transaction that acts on it: none
+   * waits while that transaction is open and holds the allocation lock. The works are read from
+   * the batch's approved manifest in a read that rolls back; the transaction then reads the batch
+   * again and acts only on works exactly as checked (assertChecked).
+   */
+  private async checkBindings(
+    batchId: string,
+    pick: (manifest: FiniteManifest, row: { manifest_hash: string }) => FiniteWork[],
+  ) {
+    const works = await this.store.read(async (c) => {
+      const { row, manifest } = await this.batch(c, batchId);
+      return pick(manifest, row);
+    });
+    for (const work of works) await this.recheckBindings(work);
+    return new Set(works.map((w) => requestDigest(w)));
+  }
+  private assertChecked(checked: Set<string>, works: FiniteWork[]) {
+    if (works.some((w) => !checked.has(requestDigest(w)))) throw Error("WORK_CHANGED_AFTER_BINDING_CHECK");
+  }
+  private primaryWork(manifest: FiniteManifest, key: string) {
+    const work = manifest.works.find((w) => w.key === key);
+    if (!work) throw Error("WORK_NOT_ALLOWLISTED");
+    if (work.retryOf) throw Error("RETRY_REQUIRES_PRIMARY_CONTEXT");
+    return work;
+  }
+  private retryWork(manifest: FiniteManifest, rootKey: string | undefined) {
+    const work = manifest.works.find((w) => w.retryOf === rootKey);
+    if (!work) throw Error("RETRY_NOT_ALLOWLISTED");
+    return work;
+  }
+  private requestedWork(manifest: FiniteManifest, key: string, lane: BudgetLane, request: ManagedRequest) {
+    const work = manifest.works.find((w) => w.key === key);
+    if (!work || work.lane !== lane || requestDigest(work.request) !== requestDigest(request))
+      throw Error("WORK_REQUEST_MISMATCH");
+    return work;
+  }
   async withWork<T>(batchId: string, key: string, fn: () => Promise<T>) {
+    const checked = await this.checkBindings(batchId, (m) => [this.primaryWork(m, key)]);
     const lane = await this.store.mutate("batch-authority-checked", async (s, c) => {
       const { manifest } = await this.batch(c, batchId),
-        work = manifest.works.find((w) => w.key === key);
-      if (!work) throw Error("WORK_NOT_ALLOWLISTED");
-      if (work.retryOf) throw Error("RETRY_REQUIRES_PRIMARY_CONTEXT");
-      await this.recheckBindings(work);
+        work = this.primaryWork(manifest, key);
+      this.assertChecked(checked, [work]);
       return { state: s, value: work.lane };
     });
     return this.context.run({ batchId, key, rootKey: key, lane }, fn);
   }
   async withPair<T>(batchId: string, pairKey: string, fn: () => Promise<T>) {
+    const checked = await this.checkBindings(batchId, (m) => this.pair(m, pairKey));
     const lane = await this.store.mutate("batch-pair-authority-checked", async (s, c) => {
       const { manifest } = await this.batch(c, batchId),
         pair = this.pair(manifest, pairKey);
-      for (const work of pair) await this.recheckBindings(work);
+      this.assertChecked(checked, pair);
       // The actual caller performs its plan/quota preflight first. The first
       // complete() atomically reserves both roles just before dispatch.
       return { state: s, value: pair[0]!.lane };
@@ -207,10 +245,13 @@ export class FiniteInferenceDispatcher {
   async withRole<T>(role: "factual" | "challenge", fn: () => Promise<T>) {
     const ctx = this.current();
     if (!ctx?.pair) throw Error("APPROVED_REVIEW_PAIR_REQUIRED");
+    const pairKey = ctx.pair,
+      roleWork = (m: FiniteManifest) => this.pair(m, pairKey).find((w) => w.role === role)!;
+    const checked = await this.checkBindings(ctx.batchId, (m) => [roleWork(m)]);
     const key = await this.store.mutate("batch-review-role-checked", async (s, c) => {
       const { manifest } = await this.batch(c, ctx.batchId),
-        work = this.pair(manifest, ctx.pair!).find((w) => w.role === role)!;
-      await this.recheckBindings(work);
+        work = roleWork(manifest);
+      this.assertChecked(checked, [work]);
       return { state: s, value: work.key };
     });
     return this.context.run({ ...ctx, key }, fn);
@@ -220,15 +261,15 @@ export class FiniteInferenceDispatcher {
     if (!ctx?.key || ctx.lane !== "customer") throw Error("APPROVED_CUSTOMER_WORK_REQUIRED");
     if (attempt === 1) return fn();
     if (attempt !== 2) throw Error("RETRY_NOT_ALLOWLISTED");
+    const checked = await this.checkBindings(ctx.batchId, (m) => [this.retryWork(m, ctx.rootKey)]);
     const key = await this.store.mutate("batch-retry-checked", async (s, c) => {
       const { manifest } = await this.batch(c, ctx.batchId),
-        work = manifest.works.find((w) => w.retryOf === ctx.rootKey);
-      if (!work) throw Error("RETRY_NOT_ALLOWLISTED");
+        work = this.retryWork(manifest, ctx.rootKey);
       // Only a received/settled schema failure can use the separately approved
       // retry. A timeout or unknown provider completion is never retried here.
       if (s.entries.find((e) => e.runKey === `${ctx.batchId}:${ctx.rootKey}`)?.status !== "settled")
         throw Error("RETRY_REQUIRES_SETTLED_PRIOR_ATTEMPT");
-      await this.recheckBindings(work);
+      this.assertChecked(checked, [work]);
       return { state: s, value: work.key };
     });
     return this.context.run({ ...ctx, key }, fn);
@@ -251,6 +292,12 @@ export class FiniteInferenceDispatcher {
     // The caller must not be able to alter the approved payload while source
     // verification or lazy SDK loading is awaiting another task.
     request = structuredClone(request);
+    const workKey = ctx.key;
+    // A pair's first admission reserves both of its roles, so both are checked.
+    const checked = await this.checkBindings(ctx.batchId, (m) => {
+      const work = this.requestedWork(m, workKey, lane, request);
+      return work.pair ? this.pair(m, work.pair) : [work];
+    });
     const admission = await this.store.mutate<{
       key: string;
       reused: ManagedCompletionResult | null;
@@ -258,10 +305,8 @@ export class FiniteInferenceDispatcher {
       expiresAt: number;
     }>("batch-reserve-dispatch", async (s, c) => {
       const { row, manifest } = await this.batch(c, ctx.batchId),
-        work = manifest.works.find((w) => w.key === ctx.key);
-      if (!work || work.lane !== lane || requestDigest(work.request) !== requestDigest(request))
-        throw Error("WORK_REQUEST_MISMATCH");
-      await this.recheckBindings(work);
+        work = this.requestedWork(manifest, workKey, lane, request);
+      this.assertChecked(checked, [work]);
       const input = this.input(work, ctx.batchId, row.manifest_hash),
         key = input.runKey;
       const existing = s.entries.find((e) => e.runKey === key);
@@ -295,7 +340,7 @@ export class FiniteInferenceDispatcher {
       if (!existing) {
         if (work.pair) {
           const pair = this.pair(manifest, work.pair);
-          for (const w of pair) await this.recheckBindings(w);
+          this.assertChecked(checked, pair);
           s = this.reservePair(s, pair, ctx.batchId, row.manifest_hash);
         } else
           s = reserveBudget(
@@ -326,19 +371,22 @@ export class FiniteInferenceDispatcher {
     });
     if (admission.reused) return admission.reused;
     try {
-      const beforeOutbound = () =>
-        this.store.mutate("batch-outbound-revalidated", async (s, c) => {
+      const beforeOutbound = async () => {
+        const outbound = await this.checkBindings(ctx.batchId, (m, row) => {
+          if (row.manifest_hash !== admission.manifestHash) throw Error("INFERENCE_MANIFEST_CHANGED");
+          return [this.requestedWork(m, workKey, lane, request)];
+        });
+        await this.store.mutate("batch-outbound-revalidated", async (s, c) => {
           const { row, manifest } = await this.batch(c, ctx.batchId);
           if (row.manifest_hash !== admission.manifestHash) throw Error("INFERENCE_MANIFEST_CHANGED");
-          const work = manifest.works.find((w) => w.key === ctx.key);
-          if (!work || work.lane !== lane || requestDigest(work.request) !== requestDigest(request))
-            throw Error("WORK_REQUEST_MISMATCH");
+          const work = this.requestedWork(manifest, workKey, lane, request);
           if (s.entries.find((e) => e.runKey === admission.key)?.status !== "dispatched")
             throw Error("ATTEMPT_ALREADY_DISPATCHED_OR_UNKNOWN");
-          await this.recheckBindings(work);
+          this.assertChecked(outbound, [work]);
           assertFinancialDispatchAllowed(s);
           return { state: s, value: undefined };
         });
+      };
       // All transports get a last check at invocation. The real SDK adapter
       // repeats it after its asynchronous load, immediately before SDK create.
       await beforeOutbound();

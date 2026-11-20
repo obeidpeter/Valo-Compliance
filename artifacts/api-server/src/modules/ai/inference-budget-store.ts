@@ -51,6 +51,28 @@ export class InferenceBudgetStore {
     }
   }
   /**
+   * Reads in a short transaction that always rolls back and never takes the allocation lock, so a
+   * caller can act on what it read before it locks the allocation with mutate. The dispatcher reads
+   * an approved batch here and checks its works' bindings, which wait on files, saved versions and
+   * private artifacts, with no transaction open. Nothing read here is trusted inside mutate without
+   * reading it again there.
+   */
+  async read<T>(fn: (c: import("pg").PoolClient) => Promise<T>) {
+    const c = await this.pool.connect();
+    try {
+      // Row locks (FOR SHARE) need an ordinary transaction; rolling back keeps it a read.
+      await c.query("BEGIN");
+      const value = await fn(c);
+      await c.query("ROLLBACK");
+      return value;
+    } catch (error) {
+      await c.query("ROLLBACK");
+      throw error;
+    } finally {
+      c.release();
+    }
+  }
+  /**
    * The ledger is changed only through its database functions, which run as their owner:
    * customer requests hold no write privilege on it, and the commit refuses any change a
    * customer AI attempt does not make (migration 20261117125444_workspace_row_security).

@@ -182,6 +182,19 @@ test("default managed entry and customer organizer use actual finite dispatch an
     allocationId() {
       return additionalInferenceAllocation.id;
     }
+    // Like the real store's read: no allocation lock, and nothing it reads is kept.
+    async read<T>(fn: (c: SQLClient) => Promise<T>) {
+      const copies = new Map([...batches].map(([key, value]) => [key, structuredClone(value)]));
+      return fn({
+        query: async (sql, values = []) => {
+          if (sql.startsWith('SELECT * FROM "public".valo_inference_batches')) {
+            const row = copies.get(String(values[0]));
+            return { rows: row ? [row] : [] };
+          }
+          throw Error("UNEXPECTED_TEST_SQL");
+        },
+      });
+    }
     async mutate<T>(
       _action: string,
       fn: (
