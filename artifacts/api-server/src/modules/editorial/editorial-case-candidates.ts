@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { candidateDigest, disclosure, sha256, type PublicationBundle } from "@workspace/valo-core";
+import { candidateDigest, digest, disclosure, sha256, type PublicationBundle } from "@workspace/valo-core";
 import { requestDigest } from "../ai";
 
 /**
@@ -136,6 +136,10 @@ export type EditorialCaseCandidate = {
   change: string;
   /** A real result the case needs before its candidate may be reviewed, or null. */
   prerequisite: string | null;
+  /** Whether the candidate's content (its version aside) differs from its retained base. */
+  candidateEdited: boolean;
+  /** Whether the case altered a source record of its base. Adding a retained page is not altering. */
+  evidenceEdited: boolean;
   candidate: Candidate;
   sources: Source[];
 };
@@ -167,6 +171,13 @@ function once(text: string, part: string, code: string) {
 function replaceOnce(text: string, from: string, to: string) {
   once(text, from, "EDITORIAL_CASE_CHANGE_ANCHOR");
   return text.replace(from, to);
+}
+/** An exact part of a retained passage under its own name and locator, such as one page of it or
+ * the definition a claim relies on. A request carries only what its claims cite, which keeps it
+ * within the lane's input bound. */
+function part(passage: Passage, id: string, locator: string, text: string): Passage {
+  once(passage.text, text, `EDITORIAL_CASE_PART_NOT_IN_PASSAGE:${id}`);
+  return { id, locator, text, hash: sha256(text) };
 }
 /** The exact retained text from one unique anchor to the end of the next occurrence of another. */
 function quote(passage: Passage, from: string, to: string) {
@@ -352,7 +363,8 @@ type Built = { candidate: Omit<Candidate, "hash">; sources: Source[] };
 function gud01(r: Retained): Built {
   const item = guidanceItem(r, "GUD-01");
   const s814 = r.passage("CAMA-814"),
-    s868 = r.passage("CAMA-868-NAMING"),
+    forename = r.passage("CAMA-868-forename"),
+    initials = r.passage("CAMA-868-initials"),
     s863 = r.passage("CAMA-863"),
     route = r.passage("CAC-BN-PROCESS");
   const b = item.body;
@@ -407,7 +419,7 @@ function gud01(r: Retained): Built {
       b,
       "The Act includes patronymics within surnames and recognised forename abbreviations within initials; spelling alone should not decide the result.",
       "source_statement",
-      s868,
+      forename,
       "“surname” includes a",
       "patronymic",
       "CAMA 2020 section 868(1), printed page A436",
@@ -416,7 +428,7 @@ function gud01(r: Retained): Built {
       b,
       "The Act includes patronymics within surnames and recognised forename abbreviations within initials; spelling alone should not decide the result.",
       "source_statement",
-      s868,
+      initials,
       "“initials” includes any recognised",
       "abbreviation of a forename",
       "CAMA 2020 section 868(1), printed page A436",
@@ -478,7 +490,8 @@ function gud01(r: Retained): Built {
   ];
   const sources = [
     sourceRecord(s814, r.instruments.cama),
-    sourceRecord(s868, r.instruments.cama),
+    sourceRecord(forename, r.instruments.cama),
+    sourceRecord(initials, r.instruments.cama),
     sourceRecord(s863, r.instruments.cama),
     sourceRecord(route, r.instruments.cacProcess),
   ];
@@ -510,7 +523,17 @@ function gud09(r: Retained): Built {
   const item = guidanceItem(r, "GUD-09");
   const s11 = r.passage("NTAA-11"),
     s33 = r.passage("NTAA-33"),
-    s147 = r.passage("NTAA-147-DEFINITIONS");
+    definitions = r.passage("NTAA-147-DEFINITIONS"),
+    s147 = part(
+      definitions,
+      "NTAA-147-NIGERIAN-COMPANY",
+      "section147, “Nigerian Company”; printed page A331 (excerpt)",
+      quote(
+        definitions,
+        '"Nigerian Company" means —',
+        "constitutes effective place of management or control ;",
+      ),
+    );
   const b = item.body;
   rightsGapPresent(r);
   const claims: Claim[] = [
@@ -778,6 +801,12 @@ function guide01(r: Retained): Built {
 }
 
 type Case = { id: string; inputMutation: string; requiresProviderRun: boolean };
+const bases: Record<(typeof buildableEditorialCases)[EditorialCaseId], (r: Retained) => Built> = {
+  "GUD-01": gud01,
+  "GUD-09": gud09,
+  "CAMA 814 rule candidate": ruleCandidate,
+  "GUIDE-C01": guide01,
+};
 type Change = { built: Built; change: string; prerequisite?: string };
 
 /** Each buildable case's change to its base: the corpus's input mutation and nothing else. */
@@ -826,17 +855,25 @@ const changes: Record<EditorialCaseId, (r: Retained) => Change> = {
   },
   "EVAL-EDP-C017": (r) => {
     const built = gud01(r);
-    const s868 = r.passage("CAMA-868-NAMING");
+    const naming = r.passage("CAMA-868-NAMING");
+    // The full retained page A434, the first of the three section 868 pages, with its context.
+    const page = part(
+      naming,
+      "CAMA-868-A434",
+      "section868(1); printed page A434 (full page)",
+      naming.text.split("\f")[0]!,
+    );
+    built.sources.push(sourceRecord(page, r.instruments.cama));
     const target = built.candidate.claims[0]!;
     Object.assign(target, {
-      sourceId: s868.id,
-      quote: quote(s868, "“business name” means", "whether in partnership or otherwise"),
+      sourceId: page.id,
+      quote: quote(page, "“business name” means", "whether in partnership or otherwise"),
       locator: "CAMA 2020 section 868(1), printed page A434",
     });
     return {
       built,
       change:
-        "The claim that section 814 applies to a business with a place of business in Nigeria now cites the retained section 868 pages, quoting the definition of “business name”, which does not establish that duty. The body is unchanged.",
+        "The claim that section 814 applies to a business with a place of business in Nigeria now cites the full retained page A434 of section 868, quoting the definition of “business name”, which does not establish that duty. The body is unchanged.",
     };
   },
   "EVAL-EDP-C018": (r) => {
@@ -1029,6 +1066,8 @@ export function buildEditorialCaseCandidates(read: Read = readRepository): {
     }
     const caseId = row.id as EditorialCaseId;
     const { built: b, change, prerequisite } = changes[caseId](r);
+    const base = bases[buildableEditorialCases[caseId]](r);
+    const content = (c: Built["candidate"]) => digest({ ...c, version: 0 });
     built.push({
       caseId,
       caseHash,
@@ -1036,6 +1075,11 @@ export function buildEditorialCaseCandidates(read: Read = readRepository): {
       inputMutation: row.inputMutation,
       change,
       prerequisite: prerequisite ?? null,
+      candidateEdited: content(b.candidate) !== content(base.candidate),
+      evidenceEdited: b.sources.some((source) => {
+        const retained = base.sources.find((other) => other.id === source.id);
+        return retained !== undefined && digest(retained) !== digest(source);
+      }),
       candidate: { ...b.candidate, hash: candidateDigest(b.candidate) },
       sources: b.sources,
     });

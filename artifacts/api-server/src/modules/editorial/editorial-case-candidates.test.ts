@@ -115,7 +115,12 @@ test("the base candidates are the retained items, each claim its own sentence an
       "outstanding returns when a company permanently ceases",
     );
   assert.equal(restored, gud09);
-  for (const s of c030.sources) assert.equal(retainedTexts.get(s.hash), s.text, `${s.id} is retained text`);
+  const definitions = c030.sources.find((s) => s.id === "NTAA-147-NIGERIAN-COMPANY")!;
+  assert.ok(
+    definitions.title.endsWith("(excerpt)") && definitions.text.startsWith('"Nigerian Company" means'),
+  );
+  for (const s of c030.sources.filter((s) => s !== definitions))
+    assert.equal(retainedTexts.get(s.hash), s.text, `${s.id} is retained text`);
 
   // GUIDE-C01 as the frozen content package's section extracts it, with only C034's sentence added.
   const pkg = await readFrozenContentPackage();
@@ -167,9 +172,10 @@ test("each case changes its base exactly as the corpus's input mutation describe
   // C017: the place-of-business claim cites a definition that does not establish the duty.
   const c017 = byId("EVAL-EDP-C017");
   const retargeted = c017.candidate.claims[0]!;
-  assert.equal(retargeted.sourceId, "CAMA-868-NAMING");
+  assert.equal(retargeted.sourceId, "CAMA-868-A434");
   assert.ok(retargeted.quote.startsWith("“business name” means") && !retargeted.quote.includes("registered"));
-  assert.ok(source(c017, "CAMA-868-NAMING").text.includes(retargeted.quote));
+  assert.ok(source(c017, "CAMA-868-A434").text.includes(retargeted.quote));
+  assert.ok(source(c017, "CAMA-868-A434").title.endsWith("printed page A434 (full page)"));
   assert.equal(c017.candidate.body, base.candidate.body);
 
   // C018: an unmapped section 815 deadline; section 815 is not bound.
@@ -228,9 +234,36 @@ test("each case changes its base exactly as the corpus's input mutation describe
   assert.match(c060.prerequisite ?? "", /EVAL-EDP-C018/);
   assert.ok(built.filter((c) => c.prerequisite).every((c) => c.caseId === "EVAL-EDP-C060"));
 
-  // Apart from the two cases whose change is the evidence itself, every source is retained text.
+  // Apart from the two cases whose change is the evidence itself, every source is retained text or
+  // an exact, labelled part of a retained passage: a full page, or the definition a claim cites.
+  const retained = [...retainedTexts.values()];
   for (const c of built.filter((c) => !["EVAL-EDP-C013", "EVAL-EDP-C035"].includes(c.caseId)))
-    for (const s of c.sources) assert.equal(retainedTexts.get(s.hash), s.text, `${c.caseId} ${s.id}`);
+    for (const s of c.sources)
+      if (retainedTexts.get(s.hash) !== s.text) {
+        assert.ok(
+          retained.some((text) => text.includes(s.text)),
+          `${c.caseId} ${s.id} is part of a passage`,
+        );
+        assert.match(s.title, /\((?:excerpt|full page)\)$/, `${c.caseId} ${s.id} says it is a part`);
+      }
+});
+
+test("each case says whether its candidate or its evidence differs from the retained base", () => {
+  const unchangedCandidate = [
+    "EVAL-EDP-C004",
+    "EVAL-EDP-C013",
+    "EVAL-EDP-C035",
+    "EVAL-EDP-C041",
+    "EVAL-EDP-C060",
+  ];
+  for (const c of built) {
+    assert.equal(c.candidateEdited, !unchangedCandidate.includes(c.caseId), `${c.caseId} candidate`);
+    assert.equal(
+      c.evidenceEdited,
+      ["EVAL-EDP-C013", "EVAL-EDP-C035"].includes(c.caseId),
+      `${c.caseId} evidence`,
+    );
+  }
 });
 
 test("the build is deterministic", () => {
