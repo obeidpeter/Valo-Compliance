@@ -40,7 +40,7 @@ flowchart LR
 
 | Process | Entry point | Responsibility |
 | --- | --- | --- |
-| Web | `artifacts/valo/app/[[...slug]]/page.tsx` | Serves the site. Public pages and the private workspace render client-side today; the public pages move to the server one at a time (decision 0011). |
+| Web | `artifacts/valo/app` | Serves the site. The server renders the public pages, each a route under `app/(public)` (decision 0011); the workspace and the other private and account screens render in the browser, behind `app/[...slug]/page.tsx`. |
 | API | `artifacts/api-server/src/index.ts` | All reads and writes, authentication, authorization, webhooks. |
 | Worker | `artifacts/api-server/src/workers/export-worker.ts` | DOCX/PDF exports, workspace data exports, retention, payments, refunds, disputes, reminders. |
 | Supervisor | `artifacts/api-server/src/workers/export-supervisor.ts` | Restarts the worker within limits and reports health. |
@@ -68,9 +68,10 @@ the API and web images; no environment runs them yet.
 
 ## Public pages on the server
 
-The public pages are moving from the browser to the server, one step at a time
-([decision 0011](decisions/0011-server-rendered-public-pages.md)). A page renders in the browser,
-as before, until its own route lands.
+The server renders the pages anyone may read without signing in
+([decision 0011](decisions/0011-server-rendered-public-pages.md)): the home page, the pages with
+fixed content, pricing, and the catalogue pages with their released items. The checker, support,
+account access, sign-in and the private workspace render in the browser, as before.
 
 The web server reads the API only through `artifacts/valo/src/server/public-api.ts`, as an anonymous
 visitor:
@@ -103,7 +104,10 @@ shell, from the same parts (`site-chrome.tsx`). Islands in `src/islands` add wha
 
 A page that needs data reads it while the server renders it. When that read fails, is refused or
 times out, the page still renders, and an island asks the API for the missing part from the browser:
-the pricing page's payments status is the first.
+the pricing page's payments status is the first. The home page reads only the number of templates in
+the catalogue, and leaves it out when it cannot read it. A signed-in visitor sees the home page for a
+moment, then goes on to the workspace once the identity provider has loaded
+(`src/islands/signed-in-redirect.tsx`).
 
 The catalogue pages (the library and its template pages, the resources, the industries, the
 compliance page and the services page) need more of the browser, so each renders a client screen in
@@ -122,7 +126,10 @@ compliance page and the services page) need more of the browser, so each renders
 If an island fails while it renders, the page says it could not be shown and keeps the site's frame
 (`app/(public)/error.tsx`). The web server serves no API: a request for `/api` that reaches it gets a
 JSON 404 (`app/api/[...path]/route.ts`), never a page an island would try to read. Dates are shown
-in Lagos time, so the server and the browser show the same day.
+in Lagos time, so the server and the browser show the same day. Each web font has a fallback face
+with its metrics (`src/fonts.css`), so text the server renders keeps its place when the font arrives.
+Nothing is cached between page views, so an item the API stops listing is gone from the next one, and
+its own page says it is not available.
 
 Moving between a server-rendered page and the browser app loads the new page in full: each side
 links to the other with a plain link. When the browser app reaches a server-rendered address some

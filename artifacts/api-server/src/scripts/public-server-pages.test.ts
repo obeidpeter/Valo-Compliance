@@ -36,32 +36,62 @@ let browserGarbled = false;
 /** While a test sets it, the catalogue is answered from these items, filtered, sorted and paged as
  * the API's own catalogue code does. */
 let catalogueItems: ReleasedLibraryItem[] | null = null;
+/** While a test sets it, the API no longer lists the first released template and guidance entry, as
+ * after their withdrawal: the lists and discovery leave them out, and reading either is not found. */
+let withdrawn = false;
+const [gone, goneGuidance] = [items[0]!, resources[0]!];
+/** The API paths of a withdrawn entry the browser has read. */
+const browserReadsOfWithdrawn: string[] = [];
+
+/** The synthetic API's answer to the web server or to the browser, as the test's settings say. */
+function answerFor(method: string, url: URL, from: "server" | "browser") {
+  if (from === "server" && serverFailure !== null)
+    return serverFailure === "silent"
+      ? { status: 200, body: {}, delayMs: 5000 }
+      : { status: serverFailure, body: { error: "Synthetic refusal" } };
+  if (from === "browser" && browserGarbled && url.pathname.startsWith("/api/public/"))
+    return { status: 200, body: { unexpected: "synthetic answer of the wrong shape" } };
+  if (
+    withdrawn &&
+    [`/api/public/templates/${gone.slug}`, `/api/public/resources/${goneGuidance.slug}`].includes(
+      url.pathname,
+    )
+  ) {
+    if (from === "browser") browserReadsOfWithdrawn.push(url.pathname);
+    return { status: 404, body: { error: "Not found" } };
+  }
+  if (withdrawn && url.pathname === "/api/public/resources")
+    return { status: 200, body: resources.filter((resource) => resource.id !== goneGuidance.id) };
+  const listed = catalogueItems ?? (withdrawn ? items.filter((item) => item.id !== gone.id) : null);
+  if (listed && url.pathname === "/api/public/catalogue")
+    return {
+      status: 200,
+      body: paginateReleasedItems(listed, {
+        ...Object.fromEntries(url.searchParams),
+        page: Number(url.searchParams.get("page") ?? 1),
+      }),
+    };
+  const found = serverAnswer(method, url);
+  if (withdrawn && found && url.pathname === "/api/public/discovery") {
+    const discovery = found.body as { items: { path: string }[] };
+    const left = discovery.items.filter(
+      (item) => ![gone.href, `/resources/${goneGuidance.slug}`].includes(item.path),
+    );
+    return { ...found, body: { items: left } };
+  }
+  return found;
+}
 
 let web: Awaited<ReturnType<typeof startWebServer>>;
 before(async () => {
-  web = await startWebServer((method, url, from) =>
-    from === "server" && serverFailure !== null
-      ? serverFailure === "silent"
-        ? { status: 200, body: {}, delayMs: 5000 }
-        : { status: serverFailure, body: { error: "Synthetic refusal" } }
-      : from === "browser" && browserGarbled && url.pathname.startsWith("/api/public/")
-        ? { status: 200, body: { unexpected: "synthetic answer of the wrong shape" } }
-        : catalogueItems && url.pathname === "/api/public/catalogue"
-          ? {
-              status: 200,
-              body: paginateReleasedItems(catalogueItems, {
-                ...Object.fromEntries(url.searchParams),
-                page: Number(url.searchParams.get("page") ?? 1),
-              }),
-            }
-          : serverAnswer(method, url),
-  );
+  web = await startWebServer(answerFor);
 });
 after(() => web.close());
 
 /** The heading each server-rendered page's own content starts with: every fixed page the server
  * renders, and one released item's page of each kind. */
 const HEADINGS: Record<string, string> = {
+  "/": "The documents you need. The business rules you should know.",
   "/terms": "Terms of use, not yet approved",
   "/about": "Two shelves, kept apart on purpose.",
   "/help": "Straight answers",
@@ -395,6 +425,94 @@ test("when the API answers the web server as its production gate does, refuses o
       }
     }
   assert.deepEqual(problems, []);
+});
+
+test("when the API answers the web server as its production gate does, refuses or does not answer, the home page still renders its headline and both shelves within the time limit, leaving out only the template count", async () => {
+  const shown = /\d+(?:<!-- -->)? catalogue templates/;
+  const problems: string[] = [];
+  for (const failure of [404, 429, "silent"] as const) {
+    serverFailure = failure;
+    try {
+      const started = performance.now();
+      const html = await (await fetch(web.origin + "/")).text();
+      const took = performance.now() - started;
+      if (took > 4000) problems.push(`${failure}: the page took ${took.toFixed(0)} ms`);
+      for (const part of [
+        'data-testid="text-headline"',
+        'data-testid="card-shelf-documents"',
+        'data-testid="card-shelf-compliance"',
+      ])
+        if (!html.includes(part)) problems.push(`${failure}: the page left out ${part}`);
+      if (shown.test(html)) problems.push(`${failure}: the page showed a template count it could not read`);
+    } finally {
+      serverFailure = null;
+    }
+  }
+  // With the API answering, the server shows the count it read.
+  assert.match(await (await fetch(web.origin + "/")).text(), shown);
+  assert.deepEqual(problems, []);
+});
+
+test("a template or guidance entry the API stops listing is gone from the next page view: its list leaves it out, and its own page says it is not available and does not name it (EDP-011)", async () => {
+  const page = async (path: string) => (await fetch(web.origin + path)).text();
+  const cases = [
+    {
+      list: "/library",
+      entry: `data-testid="card-item-${gone.id}"`,
+      other: `data-testid="card-item-${items[1]!.id}"`,
+      path: gone.href,
+      api: `/api/public/templates/${gone.slug}`,
+      shown: /data-testid="text-title"/,
+      title: gone.title,
+      unavailable: /This template is not available/,
+    },
+    {
+      list: "/resources",
+      entry: `data-testid="card-resource-${goneGuidance.id}"`,
+      other: `data-testid="card-resource-${resources[1]!.id}"`,
+      path: `/resources/${goneGuidance.slug}`,
+      api: `/api/public/resources/${goneGuidance.slug}`,
+      shown: /data-testid="text-resource-title"/,
+      title: goneGuidance.title,
+      unavailable: /This resource is not available/,
+    },
+  ];
+  for (const c of cases) {
+    assert.ok((await page(c.list)).includes(c.entry), `${c.list} lists the entry`);
+    assert.match(await page(c.path), c.shown, `${c.path} shows it`);
+  }
+  withdrawn = true;
+  try {
+    // Nothing is cached between page views (decision 0011, point 5): the next view reads the API again.
+    for (const c of cases) {
+      const list = await page(c.list);
+      assert.ok(!list.includes(c.entry), `${c.list}'s next view leaves the entry out`);
+      assert.ok(list.includes(c.other), `${c.list} still lists the others`);
+      const detail = await page(c.path);
+      assert.match(detail, c.unavailable, `${c.path} says it is not available`);
+      assert.doesNotMatch(detail, c.shown, `${c.path} shows none of it`);
+      assert.doesNotMatch(detail, new RegExp(`<title>${c.title}`), `${c.path} does not name it in its title`);
+      // In the browser the page hydrates as the server rendered it and stays unavailable once the
+      // browser's own read is not found either.
+      const { page: phone, errors, messages, close } = await web.phone(c.path);
+      try {
+        await phone.getByText(c.unavailable).waitFor({ state: "visible" });
+        for (let poll = 0; poll < 100 && !browserReadsOfWithdrawn.includes(c.api); poll++) await delay(100);
+        assert.ok(browserReadsOfWithdrawn.includes(c.api), `the browser read ${c.api} again`);
+        assert.equal(await phone.getByText(c.unavailable).count(), 1, `${c.path} stays unavailable`);
+        assert.deepEqual(
+          [...errors, ...messages].filter((m) => HYDRATION.test(m)),
+          [],
+          `${c.path} hydrates without a mismatch`,
+        );
+        assert.deepEqual(errors, [], `${c.path} reports no error`);
+      } finally {
+        await close();
+      }
+    }
+  } finally {
+    withdrawn = false;
+  }
 });
 
 test("when a page's island cannot use what the API sent, the page says it could not be shown and keeps the site's frame", async () => {

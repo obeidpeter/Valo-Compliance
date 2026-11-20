@@ -70,8 +70,8 @@ try {
     await delay(250);
   }
   assert.ok(ready, "compiled Next server starts");
-  // The browser app's page, and each page the server renders itself (decision 0011).
-  const paths = ["/", ...SERVER_PAGES];
+  // A page the browser app renders, and each page the server renders itself (decision 0011).
+  const paths = ["/checker", ...SERVER_PAGES];
   for (const path of paths) {
     const first = await fetch(origin + path, {
       headers: {

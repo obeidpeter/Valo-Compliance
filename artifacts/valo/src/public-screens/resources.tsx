@@ -99,6 +99,9 @@ export function ResourceDetail({
   const r = q.data;
   const notFound =
     (q.isError && describeError(q.error).kind === "notFound") || (initial === "missing" && q.isLoading);
+  // A resource the server found missing is shown unavailable while the browser checks again, in the
+  // server's render too, rather than as loading.
+  const unavailable = notFound || (!q.isLoading && !q.isError && !r);
   return (
     <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8">
       <Link
@@ -109,13 +112,7 @@ export function ResourceDetail({
         <ArrowLeft className="h-4 w-4" aria-hidden /> Resources
       </Link>
       <div className="mt-6">
-        {q.isLoading ? (
-          <div className="grid gap-4" aria-busy="true">
-            <Skel className="h-10 w-2/3" />
-            <Skel className="h-5 w-1/2" />
-            <Skel className="h-64" />
-          </div>
-        ) : notFound || (!q.isError && !r) ? (
+        {unavailable ? (
           <EmptyState
             mark={<FileX className="h-5 w-5 text-muted-foreground" />}
             title="This resource is not available"
@@ -128,6 +125,12 @@ export function ResourceDetail({
             It may have been withdrawn, or the link is wrong. Withdrawn guidance is removed from public view
             straight away.
           </EmptyState>
+        ) : q.isLoading ? (
+          <div className="grid gap-4" aria-busy="true">
+            <Skel className="h-10 w-2/3" />
+            <Skel className="h-5 w-1/2" />
+            <Skel className="h-64" />
+          </div>
         ) : q.isError ? (
           <ErrorState error={q.error} title="Resource could not be loaded" onRetry={() => q.refetch()} />
         ) : r ? (

@@ -6,6 +6,7 @@
  * the server with a reload (components/server-page.tsx).
  */
 export const SERVER_PAGES: readonly string[] = [
+  "/",
   "/terms",
   "/about",
   "/help",

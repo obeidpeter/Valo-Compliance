@@ -1,14 +1,26 @@
 import type { ReactNode } from "react";
-import { Link } from "wouter";
 import { ArrowRight, FileText, Scale } from "lucide-react";
-import { useGetBuildStatus } from "@workspace/api-client-react";
-import { Skel } from "@/components/states";
+import type { BuildStatus } from "@workspace/api-client-react";
+import { GetBuildStatusResponse } from "@workspace/api-zod";
+import { Skel } from "@/components/page-parts";
+import { PublicLink as Link } from "@/components/public-link";
+import { SignedInRedirect } from "@/islands/signed-in-redirect";
+import { readForPage } from "@/server/page-api";
+import { fixedPageMetadata } from "@/server/page-metadata";
 
-export default function Home() {
-  const status = useGetBuildStatus();
-  const s = status.data;
+export const generateMetadata = () => fixedPageMetadata("/");
+
+/**
+ * The home page, which the server renders for everyone (decision 0011, point 7). A signed-in visitor
+ * sees it for a moment, then goes on to the workspace once the identity provider has loaded. The
+ * catalogue's template count shows when the server could read it.
+ */
+export default async function Home() {
+  const status = await readForPage<BuildStatus>("/public/status", GetBuildStatusResponse);
+  const s = status.ok ? status.data : undefined;
   return (
     <div>
+      <SignedInRedirect />
       <section className="mx-auto max-w-7xl px-5 pb-16 pt-14 sm:pt-20 lg:px-8">
         <p className="eyebrow reveal">For owners of Nigerian small businesses</p>
         <h1
@@ -30,16 +42,14 @@ export default function Home() {
             title="Business documents"
             body="Write and save your own drafts in a private workspace, with every save kept as a revision you can return to."
             meta={
-              status.isLoading ? null : (
-                <>
-                  <span className="pill pill-forest">
-                    <span className="dot" /> Private drafting and export
-                  </span>
-                  {s && s.publishedTemplates > 0 && (
-                    <span className="pill pill-ink">{s.publishedTemplates} catalogue templates</span>
-                  )}
-                </>
-              )
+              <>
+                <span className="pill pill-forest">
+                  <span className="dot" /> Private drafting and export
+                </span>
+                {s && s.publishedTemplates > 0 && (
+                  <span className="pill pill-ink">{s.publishedTemplates} catalogue templates</span>
+                )}
+              </>
             }
             href="/sign-up"
             cta="Start a business draft"
@@ -52,14 +62,12 @@ export default function Home() {
             title="Compliance guidance"
             body="Answer a few questions about your business and see which official routes may apply. Published guidance always names its source."
             meta={
-              status.isLoading ? null : (
-                <>
-                  <span className="pill pill-ink">
-                    <span className="dot" /> Requirements checker
-                  </span>
-                  <span className="pill pill-ink">Sources shown</span>
-                </>
-              )
+              <>
+                <span className="pill pill-ink">
+                  <span className="dot" /> Requirements checker
+                </span>
+                <span className="pill pill-ink">Sources shown</span>
+              </>
             }
             href="/checker"
             cta="Check what may apply"

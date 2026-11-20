@@ -152,14 +152,16 @@ export function TemplateDetail({
         <ArrowLeft className="h-4 w-4" aria-hidden /> Library
       </Link>
       <div className="mt-6">
-        {q.isLoading ? (
+        {/* A template the server found missing is shown unavailable while the browser checks again,
+            in the server's render too, rather than as loading. */}
+        {notFound ? (
+          <Unavailable />
+        ) : q.isLoading ? (
           <div className="grid gap-4" aria-busy="true">
             <Skel className="h-10 w-2/3" />
             <Skel className="h-5 w-1/2" />
             <Skel className="h-64" />
           </div>
-        ) : notFound ? (
-          <Unavailable />
         ) : q.isError ? (
           <ErrorState error={q.error} title="Template could not be loaded" onRetry={() => q.refetch()} />
         ) : t ? (
