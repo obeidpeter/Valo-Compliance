@@ -33,7 +33,7 @@
     },
     {
       "id": "KI-007",
-      "summary": "Accessibility has automated checks only: axe-core on ten public pages at phone width. No manual keyboard or assistive-technology review is recorded.",
+      "summary": "Accessibility has automated checks only: axe-core, keyboard focus and phone-width layout on ten public pages and the signed-in workspace and staff screens, with the identity provider's own sign-in and account widgets not checked. No manual keyboard or assistive-technology review is recorded.",
       "requirements": ["NFR-006"]
     },
     {

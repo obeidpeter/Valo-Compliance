@@ -270,112 +270,112 @@ function ShellRoutes() {
         <Route path="/checker" component={Checker} />
         <Route path="/workspace/assessments">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Assessment history">
               <AssessmentsList />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/assessments/:id">
           {(p) => (
-            <RequireAuth>
+            <RequireAuth title="Assessment">
               <AssessmentDetail id={p.id} />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/ai">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Drafting assistant">
               <AIDraftCompose />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/ai/:id">
           {(p) => (
-            <RequireAuth>
+            <RequireAuth title="Draft preview">
               <AIDraftPreview id={p.id} />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/tasks">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Tasks">
               <TasksPage />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/reminders">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Reminders">
               <RemindersPage />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Your workspace">
               <WorkspaceHome />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/profile">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Business profile">
               <ProfilePage />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/checker">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Business requirements checker">
               <Checker />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/notifications">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Reminders">
               <RemindersPage />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/purchases">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Purchases and licences">
               <PurchasesPage />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/account">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Sign-in and security">
               <AccountPage />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/privacy">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Your data and privacy requests">
               <PrivacyPage />
             </RequireAuth>
           )}
         </Route>
         <Route path="/staff/privacy">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Privacy request operations">
               <PrivacyOperations />
             </RequireAuth>
           )}
         </Route>
         <Route path="/staff">
           {() => (
-            <RequireAuth>
+            <RequireAuth title="Staff operations">
               <StaffPage />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/documents/:id">
           {(p) => (
-            <RequireAuth>
+            <RequireAuth title="Document editor">
               <DocumentEditor id={p.id} />
             </RequireAuth>
           )}

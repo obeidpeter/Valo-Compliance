@@ -516,6 +516,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-page-performance
       - name: Check the public pages' keyboard, loading, empty, error and phone states and automated accessibility (WEB-002, NFR-006)
         run: pnpm --filter @workspace/api-server test:valo-public-states
+      - name: Check the signed-in screens' keyboard, title, empty, error and phone states and automated accessibility (NFR-006)
+        run: pnpm --filter @workspace/api-server test:valo-workspace-accessibility
       - name: Check every test the evidence register cites for this job passed
         run: pnpm --filter @workspace/scripts valo:ci-evidence --job web-performance
       - name: Retain this job's test results for the evidence job
