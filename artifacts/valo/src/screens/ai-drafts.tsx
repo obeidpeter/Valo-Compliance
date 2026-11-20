@@ -892,6 +892,9 @@ function Shell({ children }: { children: ReactNode }) {
         <ArrowLeft className="h-4 w-4" />
         Drafting assistant
       </Link>
+      {/* The draft's title is an editable field, so the page's heading is for assistive technology
+          only, as in the document editor. */}
+      <h1 className="sr-only">Draft preview</h1>
       {children}
     </div>
   );
@@ -900,8 +903,8 @@ function Shell({ children }: { children: ReactNode }) {
 function Meta({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex justify-between gap-3">
-      <dt className="text-muted-foreground">{k}</dt>
-      <dd className="truncate font-mono">{v}</dd>
+      <dt className="shrink-0 text-muted-foreground">{k}</dt>
+      <dd className="min-w-0 break-words text-right font-mono">{v}</dd>
     </div>
   );
 }
