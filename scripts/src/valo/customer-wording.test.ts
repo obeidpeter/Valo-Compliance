@@ -72,7 +72,7 @@ test("losing access is never described as taking back a downloaded copy, and sav
     /Saved drafts and previously downloaded files are not deleted\./,
   );
   says(
-    "artifacts/valo/src/screens/template-detail.tsx",
+    "artifacts/valo/src/public-screens/template-detail.tsx",
     /Drafts you already created stay in your workspace\./,
   );
   says("artifacts/valo/src/components/workspace-export-jobs.tsx", /downloaded copies are not removed\./);

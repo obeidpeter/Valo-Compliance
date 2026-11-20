@@ -149,6 +149,13 @@ answers["GET /public/discovery"] = api.GetPublicDiscoveryResponse.parse({
       description: resource.summary,
       modifiedAt: null,
     })),
+    // The industries' directory pages, which the API lists as well.
+    ...industries.map((industry) => ({
+      path: `/industries/${encodeURIComponent(industry.slug)}`,
+      title: industry.title,
+      description: "Synthetic test fixture describing an industry's directory page.",
+      modifiedAt: null,
+    })),
   ],
 });
 

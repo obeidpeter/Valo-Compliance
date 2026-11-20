@@ -14,6 +14,9 @@ import { metadataOrigin } from "@/lib/public-metadata";
  * - It checks every answer with the contract's schema, refuses redirects, caps the answer's size and
  *   gives up after READ_TIMEOUT_MS. A failure is returned, not thrown, so the page renders its
  *   unavailable or error state and the browser can try again.
+ * - An answer the schema accepts is returned as the API sent it, which is the form the browser's API
+ *   client receives too. (The schemas also turn date-time strings into dates; the browser's types,
+ *   and so the islands a page hands the answer to, keep them as strings.)
  *
  * The repository rule `public-server` keeps the identity SDK and the browser client out of this
  * folder and the public routes' server code.
@@ -70,11 +73,13 @@ export function segment(value: string) {
  * passed on. */
 const FORWARDED_FOR = /^[0-9A-Fa-f.:[\], ]{1,512}$/;
 
-type Schema<T> = { parse: (value: unknown) => T };
+/** The contract's schema for an answer; only its check is used. */
+type Schema = { parse: (value: unknown) => unknown };
 
+/** Reads a public endpoint. `T` is the answer's type as the API sends it, the browser client's type. */
 export async function readPublic<T>(
   path: string,
-  schema: Schema<T>,
+  schema: Schema,
   options: {
     /** The X-Forwarded-For header the web server received, passed on unchanged. */
     forwardedFor?: string | null | undefined;
@@ -105,7 +110,9 @@ export async function readPublic<T>(
     }
     const text = await boundedText(response, MAX_ANSWER_BYTES);
     if (text === null) return { ok: false, reason: "failed" };
-    return { ok: true, data: schema.parse(JSON.parse(text)) };
+    const answer: unknown = JSON.parse(text);
+    schema.parse(answer);
+    return { ok: true, data: answer as T };
   } catch {
     // A network error, timeout, refused redirect, malformed JSON or an answer the schema rejects:
     // the page shows its error state, and nothing about the visitor is in the error to log.

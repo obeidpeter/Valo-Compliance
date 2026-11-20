@@ -1,7 +1,15 @@
-import { Link } from "wouter";
+"use client";
+
 import { ExternalLink, Scale } from "lucide-react";
-import { useListPublicCatalogue, getListPublicCatalogueQueryKey } from "@workspace/api-client-react";
+import {
+  useListPublicCatalogue,
+  getListPublicCatalogueQueryKey,
+  type CataloguePage,
+} from "@workspace/api-client-react";
+import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
+import { guidanceParams } from "@/lib/catalogue-requests";
+import { fromServer } from "@/lib/server-data";
 
 export const OFFICIAL_SOURCES = [
   {
@@ -20,10 +28,15 @@ export const OFFICIAL_SOURCES = [
   { name: "NAFDAC", topic: "Food, drugs and regulated products", url: "https://www.nafdac.gov.ng" },
 ];
 
-export default function Compliance() {
-  const params = { type: "guidance" as const };
-  const guidance = useListPublicCatalogue(params, {
-    query: { enabled: true, queryKey: getListPublicCatalogueQueryKey(params) },
+/** Released guidance and the official sources, starting from what the server read; the browser
+ * reads the guidance itself when the server could not (decision 0011). */
+export function Compliance({ initial }: { initial?: CataloguePage | undefined }) {
+  const guidance = useListPublicCatalogue(guidanceParams, {
+    query: {
+      enabled: true,
+      queryKey: getListPublicCatalogueQueryKey(guidanceParams),
+      ...fromServer(initial),
+    },
   });
 
   return (

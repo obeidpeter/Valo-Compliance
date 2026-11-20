@@ -1,5 +1,5 @@
 import type { TicketInputCategory } from "@workspace/api-client-react";
-import { CATEGORY_LABELS } from "./ticket-form";
+import { CATEGORY_LABELS } from "@/lib/ticket-categories";
 
 /**
  * SRV-001: the kinds of help a person can ask Valo staff about, each explained in plain words, so

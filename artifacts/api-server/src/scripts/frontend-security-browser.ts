@@ -113,13 +113,12 @@ try {
     assert.equal(response?.status(), 200, path);
     await expect(page.getByRole("link", { name: "Library", exact: true }).first()).toBeVisible();
     await expect(page.getByText("Loading Valo", { exact: true })).toHaveCount(0);
-    // Webpack loads a lazy chunk with a script element it removes once the chunk has run; the
-    // policy's 'strict-dynamic' trusts it because a nonced script created it. Once the network is
-    // idle, the scripts left are the ones the server sent and must each carry the response nonce.
-    await page.waitForLoadState("networkidle");
     const liveNonce = response!.headers()["content-security-policy"]!.match(/'nonce-([^']+)'/)![1];
+    // Webpack loads a lazy chunk, such as an island's, with a script element it marks data-webpack
+    // and removes once the chunk has run. The policy's 'strict-dynamic' trusts it because a nonced
+    // script created it. Every other script must carry the response nonce.
     const scripts = await page
-      .locator("script")
+      .locator("script:not([data-webpack])")
       .evaluateAll((elements) =>
         elements
           .filter((e) => !e.getAttribute("type") || e.getAttribute("type") === "text/javascript")

@@ -28,7 +28,10 @@ test("the services page explains each kind of help without listing a provider or
   for (const c of SERVICE_CATEGORIES) assert.doesNotMatch(SERVICE_DESCRIPTIONS[c], promise, c);
 
   // The page renders the list and says nothing is booked or forwarded while no provider exists.
-  const page = readFileSync(fileURLToPath(new URL("../screens/services.tsx", import.meta.url)), "utf8");
+  const page = readFileSync(
+    fileURLToPath(new URL("../../app/(public)/services/page.tsx", import.meta.url)),
+    "utf8",
+  );
   assert.match(page, /<ServiceCategories \/>/);
   assert.match(page, /No professional providers are listed\s+yet, so nothing is booked or forwarded\./);
 });

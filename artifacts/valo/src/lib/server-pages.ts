@@ -12,9 +12,18 @@ export const SERVER_PAGES: readonly string[] = [
   "/contact",
   "/privacy",
   "/pricing",
+  "/library",
+  "/resources",
+  "/industries",
+  "/compliance",
+  "/services",
 ];
+
+/** The released items' own pages, which the server renders too. */
+const SERVER_ITEM_PAGE = /^\/(library|resources|industries)\/[^/]+$/;
 
 /** Whether the server renders the page at this address, ignoring its query and fragment. */
 export function isServerPage(href: string) {
-  return SERVER_PAGES.includes(href.split(/[?#]/)[0] ?? "");
+  const path = href.split(/[?#]/)[0] ?? "";
+  return SERVER_PAGES.includes(path) || SERVER_ITEM_PAGE.test(path);
 }

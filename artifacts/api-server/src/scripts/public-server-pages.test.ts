@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { expect } from "@playwright/test";
+import { paginateReleasedItems, type ReleasedLibraryItem } from "../modules/catalogue/valo-catalogue";
 import { phoneProblems, ready } from "../test-support/app-in-browser";
-import { items, serverAnswer } from "../test-support/public-answers";
+import { industry, items, resources, serverAnswer } from "../test-support/public-answers";
 import { HYDRATION, startWebServer } from "../test-support/web-server";
 
 /**
@@ -18,7 +20,10 @@ import { HYDRATION, startWebServer } from "../test-support/web-server";
 // title. Loaded at run time, since this package's build cannot import another package's source.
 const webSource = (file: string) =>
   pathToFileURL(resolve(import.meta.dirname, "../../../valo/src/lib", file)).href;
-const { SERVER_PAGES } = (await import(webSource("server-pages.ts"))) as { SERVER_PAGES: readonly string[] };
+const { SERVER_PAGES, isServerPage } = (await import(webSource("server-pages.ts"))) as {
+  SERVER_PAGES: readonly string[];
+  isServerPage: (href: string) => boolean;
+};
 const { publicPages } = (await import(webSource("public-pages.ts"))) as {
   publicPages: Record<string, { title: string }>;
 };
@@ -26,6 +31,11 @@ const { publicPages } = (await import(webSource("public-pages.ts"))) as {
 /** How the synthetic API answers the web server while a test sets it: as the production gate does
  * (not found), with its rate limit's refusal, or not at all. The browser is always answered. */
 let serverFailure: 404 | 429 | "silent" | null = null;
+/** While a test sets it, the browser's own reads get an answer of the wrong shape. */
+let browserGarbled = false;
+/** While a test sets it, the catalogue is answered from these items, filtered, sorted and paged as
+ * the API's own catalogue code does. */
+let catalogueItems: ReleasedLibraryItem[] | null = null;
 
 let web: Awaited<ReturnType<typeof startWebServer>>;
 before(async () => {
@@ -34,12 +44,23 @@ before(async () => {
       ? serverFailure === "silent"
         ? { status: 200, body: {}, delayMs: 5000 }
         : { status: serverFailure, body: { error: "Synthetic refusal" } }
-      : serverAnswer(method, url),
+      : from === "browser" && browserGarbled && url.pathname.startsWith("/api/public/")
+        ? { status: 200, body: { unexpected: "synthetic answer of the wrong shape" } }
+        : catalogueItems && url.pathname === "/api/public/catalogue"
+          ? {
+              status: 200,
+              body: paginateReleasedItems(catalogueItems, {
+                ...Object.fromEntries(url.searchParams),
+                page: Number(url.searchParams.get("page") ?? 1),
+              }),
+            }
+          : serverAnswer(method, url),
   );
 });
 after(() => web.close());
 
-/** The heading each server-rendered page's own content starts with. */
+/** The heading each server-rendered page's own content starts with: every fixed page the server
+ * renders, and one released item's page of each kind. */
 const HEADINGS: Record<string, string> = {
   "/terms": "Terms of use, not yet approved",
   "/about": "Two shelves, kept apart on purpose.",
@@ -47,7 +68,18 @@ const HEADINGS: Record<string, string> = {
   "/contact": "Write to the people building Valo.",
   "/privacy": "How this build handles data",
   "/pricing": "Prices have not been set.",
+  "/library": "Find the right starting point",
+  "/resources": "Guidance that names its sources.",
+  "/industries": "Find what fits your trade.",
+  "/compliance": "No rule is shown until it can name its source.",
+  "/services": "Need a person, not a page?",
+  [items[0]!.href]: items[0]!.title,
+  [`/resources/${resources[0]!.slug}`]: resources[0]!.title,
+  [`/industries/${industry.slug}`]: industry.title,
 };
+const PAGES = Object.keys(HEADINGS);
+/** The title each of those pages gives itself. */
+const title = (path: string) => publicPages[path]?.title ?? `${HEADINGS[path]} — Valo`;
 
 const text = (html: string) =>
   html
@@ -61,11 +93,16 @@ const text = (html: string) =>
 
 test("each server-rendered public page is in the server's HTML, with its heading, content and the site's frame, before any script runs", async () => {
   assert.deepEqual(
-    Object.keys(HEADINGS).sort(),
-    [...SERVER_PAGES].sort(),
-    "every server-rendered page is checked",
+    SERVER_PAGES.filter((path) => !PAGES.includes(path)),
+    [],
+    "every fixed page the server renders is checked",
   );
-  for (const path of SERVER_PAGES) {
+  assert.deepEqual(
+    PAGES.filter((path) => !isServerPage(path)),
+    [],
+    "each checked page is one the server renders",
+  );
+  for (const path of PAGES) {
     const response = await fetch(web.origin + path);
     assert.equal(response.status, 200, path);
     assert.equal(
@@ -128,7 +165,7 @@ test("the web server renders a page the same for every visitor and reads the API
 });
 
 test("every script on a server-rendered page carries its response's own nonce, which no other response shares", async () => {
-  for (const path of SERVER_PAGES) {
+  for (const path of PAGES) {
     const nonces = [];
     for (let i = 0; i < 2; i++) {
       const response = await fetch(web.origin + path);
@@ -146,11 +183,11 @@ test("every script on a server-rendered page carries its response's own nonce, w
 
 test("on a phone, each server-rendered page hydrates without a mismatch, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements, has no automated WCAG 2.2 AA failure, and its menu opens and closes", async () => {
   const problems: string[] = [];
-  for (const path of SERVER_PAGES) {
+  for (const path of PAGES) {
     const { page, unknown, errors, messages, close } = await web.phone(path);
     try {
       await ready(page);
-      assert.equal(await page.title(), publicPages[path]!.title, `${path} names itself`);
+      assert.equal(await page.title(), title(path), `${path} names itself`);
       const button = page.getByRole("button", { name: "Open menu" });
       await button.click();
       const menu = page.getByRole("navigation", { name: "Mobile" });
@@ -230,7 +267,8 @@ test("moving between public pages in the app, from the footer and from a library
 });
 
 test("a server-rendered page reached inside the browser app without a full load is handed to the server", async () => {
-  const { page, errors, close } = await web.phone("/library");
+  // The support page is one the browser app renders.
+  const { page, errors, close } = await web.phone("/support");
   try {
     await ready(page);
     // As a link in one of the app's own screens would: the app's router moves to the address.
@@ -259,32 +297,117 @@ test("a server-rendered page reached inside the browser app without a full load 
   }
 });
 
-test("when the API answers the web server as its production gate does, refuses or does not answer, the pricing page still renders within the time limit and the browser asks the API itself", async () => {
-  const problems: string[] = [];
-  for (const failure of [404, 429, "silent"] as const) {
-    serverFailure = failure;
+test("the library's filters, sort and page live in its address: the server renders the results an address asks for, a reload keeps them, a new search starts again from the first page, and clearing the filters empties the address", async () => {
+  // Twenty-three released templates of one kind: a full first page of 20 and three on the second.
+  catalogueItems = Array.from({ length: 23 }, (_, i) => ({
+    ...items[0]!,
+    id: `00000000-0000-4000-a000-${String(i + 1).padStart(12, "0")}`,
+    slug: `synthetic-filter-template-${i + 1}`,
+    title: `Synthetic filter template ${String(i + 1).padStart(2, "0")}`,
+    href: `/library/synthetic-filter-template-${i + 1}`,
+    category: "Finance and operations",
+    access: "free",
+    industry: industry.slug,
+  }));
+  const cards = 'li[data-testid^="card-item-"]';
+  try {
+    // The server renders the second page of the filtered, sorted results from the address alone.
+    const query = new URLSearchParams({
+      category: "Finance and operations",
+      access: "free",
+      industry: industry.slug,
+      sort: "name",
+      page: "2",
+    });
+    const address = `/library?${query.toString()}`;
+    const html = await (await fetch(web.origin + address)).text();
+    assert.equal(html.match(/data-testid="card-item-/g)?.length, 3, "the server rendered the second page");
+
+    const { page, unknown, errors, close } = await web.phone("/library");
     try {
-      const started = performance.now();
-      const html = await (await fetch(web.origin + "/pricing")).text();
-      const took = performance.now() - started;
-      if (took > 4000) problems.push(`${failure}: the page took ${took.toFixed(0)} ms`);
-      if (!html.includes(HEADINGS["/pricing"]!)) problems.push(`${failure}: no heading in the server's HTML`);
-      if (html.includes('data-testid="text-payments-status"'))
-        problems.push(`${failure}: the server rendered a payments status it could not read`);
-      // The browser is answered, so the island fills in what the server could not.
-      const { page, errors, close } = await web.phone("/pricing");
-      try {
-        const status = page.getByTestId("text-payments-status");
-        await status.waitFor({ state: "visible", timeout: 10_000 });
-        if ((await status.textContent()) !== "Switched off")
-          problems.push(`${failure}: payments shown as ${await status.textContent()}`);
-        problems.push(...errors.map((error) => `${failure}: page error ${error}`));
-      } finally {
-        await close();
-      }
+      await ready(page);
+      await page.getByTestId("select-category").selectOption("Finance and operations");
+      await page.getByTestId("select-access").selectOption("free");
+      await page.getByTestId("select-industry").selectOption(industry.slug);
+      await page.getByTestId("select-sort").selectOption("name");
+      await page.reload();
+      await ready(page);
+      assert.equal(await page.getByTestId("select-category").inputValue(), "Finance and operations");
+      assert.equal(await page.getByTestId("select-access").inputValue(), "free");
+      assert.equal(await page.getByTestId("select-industry").inputValue(), industry.slug);
+      assert.equal(await page.getByTestId("select-sort").inputValue(), "name");
+      await page.getByTestId("button-next").click();
+      await page.waitForURL(/[?&]page=2\b/);
+      // The page's policy allows no eval, so the cards are counted with a locator.
+      await expect(page.locator(cards)).toHaveCount(3);
+      await page.getByTestId("input-search").fill("not-found-fixture");
+      await page.getByTestId("button-search").click();
+      await page.getByTestId("status-empty").waitFor();
+      assert.ok(!new URL(page.url()).searchParams.has("page"), "a new search starts from the first page");
+      await page.getByTestId("button-clear-filters").click();
+      await expect(page.locator(cards)).toHaveCount(20);
+      assert.equal(new URL(page.url()).search, "", "clearing the filters empties the address");
+      assert.deepEqual(unknown, [], "every API call the page made has a test answer");
+      assert.deepEqual(errors, []);
     } finally {
-      serverFailure = null;
+      await close();
     }
+  } finally {
+    catalogueItems = null;
   }
+});
+
+test("when the API answers the web server as its production gate does, refuses or does not answer, each page still renders within the time limit and the browser reads what the server could not", async () => {
+  /** Each page, what the server could not render without the API, and what shows once the browser
+   * has read it. */
+  const cases = [
+    { path: "/pricing", missing: 'data-testid="text-payments-status"', shown: "text-payments-status" },
+    { path: "/library", missing: 'data-testid="card-item-', shown: `card-item-${items[0]!.id}` },
+    { path: items[0]!.href, missing: 'data-testid="section-preview"', shown: "section-preview" },
+  ];
+  const problems: string[] = [];
+  for (const failure of [404, 429, "silent"] as const)
+    for (const { path, missing, shown } of cases) {
+      serverFailure = failure;
+      try {
+        const started = performance.now();
+        const html = await (await fetch(web.origin + path)).text();
+        const took = performance.now() - started;
+        if (took > 4000) problems.push(`${path} ${failure}: the page took ${took.toFixed(0)} ms`);
+        if (html.includes(missing))
+          problems.push(`${path} ${failure}: the server rendered what it could not read`);
+        // The browser is answered, so the page fills in what the server could not.
+        const { page, errors, close } = await web.phone(path);
+        try {
+          await page.getByTestId(shown).first().waitFor({ state: "visible", timeout: 15_000 });
+          if (path === "/pricing" && (await page.getByTestId(shown).textContent()) !== "Switched off")
+            problems.push(
+              `${path} ${failure}: payments shown as ${await page.getByTestId(shown).textContent()}`,
+            );
+          problems.push(...errors.map((error) => `${path} ${failure}: page error ${error}`));
+        } catch (error) {
+          problems.push(`${path} ${failure}: ${String(error).split("\n")[0]}`);
+        } finally {
+          await close();
+        }
+      } finally {
+        serverFailure = null;
+      }
+    }
   assert.deepEqual(problems, []);
+});
+
+test("when a page's island cannot use what the API sent, the page says it could not be shown and keeps the site's frame", async () => {
+  serverFailure = 404;
+  browserGarbled = true;
+  const { page, close } = await web.phone("/library");
+  try {
+    await page.getByTestId("status-page-error").waitFor({ state: "visible", timeout: 15_000 });
+    assert.equal(await page.locator("footer").count(), 1, "the footer stays");
+    assert.equal(await page.getByRole("button", { name: "Open menu" }).count(), 1, "the header stays");
+  } finally {
+    serverFailure = null;
+    browserGarbled = false;
+    await close();
+  }
 });

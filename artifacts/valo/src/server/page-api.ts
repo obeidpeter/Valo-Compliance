@@ -11,13 +11,13 @@ import { readPublic, type PublicRead } from "./public-api";
  * schema in a request: a page and its metadata share it.
  */
 export const readForPage = cache(
-  async <T>(path: string, schema: { parse: (value: unknown) => T }): Promise<PublicRead<T>> =>
-    readPublic(path, schema, { forwardedFor: (await headers()).get("x-forwarded-for") }),
+  async <T>(path: string, schema: { parse: (value: unknown) => unknown }): Promise<PublicRead<T>> =>
+    readPublic<T>(path, schema, { forwardedFor: (await headers()).get("x-forwarded-for") }),
 );
 
 /** The released items and directory pages the API lists for metadata and the sitemap, with every
  * path checked again (parsePublicMetadata). Empty when the API gives no usable answer. */
 export async function publicDiscovery(): Promise<PublicMetadataItem[]> {
-  const read = await readForPage("/public/discovery", GetPublicDiscoveryResponse);
+  const read = await readForPage<unknown>("/public/discovery", GetPublicDiscoveryResponse);
   return read.ok ? parsePublicMetadata(read.data) : [];
 }

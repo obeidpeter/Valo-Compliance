@@ -12,9 +12,11 @@ mock.module("next/headers", {
   namedExports: { headers: async () => new Headers({ "x-forwarded-for": forwardedFor }) },
 });
 let generateMetadata: (typeof import("../../app/[[...slug]]/page"))["generateMetadata"];
+let templateMetadata: (typeof import("../../app/(public)/library/[slug]/page"))["generateMetadata"];
 let sitemap: (typeof import("../../app/sitemap"))["default"];
 before(async () => {
   ({ generateMetadata } = await import("../../app/[[...slug]]/page"));
+  ({ generateMetadata: templateMetadata } = await import("../../app/(public)/library/[slug]/page"));
   ({ default: sitemap } = await import("../../app/sitemap"));
 });
 
@@ -102,18 +104,19 @@ test("public pages get a title, description and canonical URL; private or unknow
     // Support and account access help are public pages too, so each is titled for what it is.
     assert.equal((await page("support")).title, "Support — Valo");
     assert.equal((await page("account-access")).title, "Account access help — Valo");
-    assert.deepEqual(await page("library", "synthetic-invoice"), {
+    // A released item's page is its own server-rendered route, titled as the API's discovery lists it.
+    const template = (slug: string) => templateMetadata({ params: Promise.resolve({ slug }) });
+    assert.deepEqual(await template("synthetic-invoice"), {
       title: "Synthetic invoice — Valo",
       description: "A released synthetic template.",
       alternates: { canonical: `${origin}/library/synthetic-invoice` },
       robots: { index: false, follow: false },
     });
-    for (const slug of [
-      ["workspace", "drafts"],
-      ["staff", "users"],
-      ["account"],
-      ["library", "not-released"],
-    ])
+    assert.deepEqual(await template("not-released"), {
+      title: "Page unavailable or private — Valo",
+      robots: { index: false, follow: false },
+    });
+    for (const slug of [["workspace", "drafts"], ["staff", "users"], ["account"]])
       assert.deepEqual(await page(...slug), {
         title: "Page unavailable or private — Valo",
         robots: { index: false, follow: false },
