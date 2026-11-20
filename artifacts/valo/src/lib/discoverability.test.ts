@@ -83,6 +83,9 @@ test("public pages get a title, description and canonical URL; private or unknow
       alternates: { canonical: `${origin}/library` },
       robots: { index: false, follow: false },
     });
+    // Support and account access help are public pages too, so each is titled for what it is.
+    assert.equal((await page("support")).title, "Support — Valo");
+    assert.equal((await page("account-access")).title, "Account access help — Valo");
     assert.deepEqual(await page("library", "synthetic-invoice"), {
       title: "Synthetic invoice — Valo",
       description: "A released synthetic template.",

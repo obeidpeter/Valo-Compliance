@@ -29,6 +29,15 @@ export const publicPages: Record<string, { title: string; description: string }>
   },
   "/contact": { title: "Contact Valo", description: "Contact Valo about the platform or access support." },
   "/help": { title: "Help — Valo", description: "Help using Valo’s workspace, documents and guidance." },
+  "/support": {
+    title: "Support — Valo",
+    description:
+      "Save a support request for staff review and get a reference at once. No response time is promised.",
+  },
+  "/account-access": {
+    title: "Account access help — Valo",
+    description: "Ask for help signing in, verifying your email or using a suspended account.",
+  },
   "/compliance": {
     title: "Business requirements — Valo",
     description:
