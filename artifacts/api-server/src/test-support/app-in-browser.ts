@@ -217,8 +217,24 @@ export async function ready(page: Page) {
   await settled(page);
 }
 
-/** The axe-core WCAG A and AA rules that fail on the page. */
+/** Waits until the page has stopped scrolling. The site scrolls smoothly, so after keyboard focus
+ * moves the page is still on its way for a moment, and what is measured meanwhile is true of no one
+ * place: a small control passing under the phone's bar reads as a target too small to tap. */
+export async function atRest(page: Page) {
+  let last = Number.NaN,
+    still = 0;
+  for (let poll = 0; poll < 100 && still < 3; poll++) {
+    const at = await page.evaluate<number>("window.scrollY");
+    still = at === last ? still + 1 : 0;
+    last = at;
+    await delay(100);
+  }
+  if (still < 3) throw Error("the page kept scrolling");
+}
+
+/** The axe-core WCAG A and AA rules that fail on the page, once it is at rest. */
 export async function wcagFailures(page: Page) {
+  await atRest(page);
   if (!(await page.evaluate("typeof window.axe !== 'undefined'")))
     await page.addScriptTag({ content: axe.source });
   return (await page.evaluate(
