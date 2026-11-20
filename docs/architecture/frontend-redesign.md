@@ -231,6 +231,18 @@ The pages' own headings and text still use the old words, such as "Compliance gu
 
 Not built yet: the workspace's five sections and its account menu.
 
+### Found on the way: keyboard focus rests clear of the bars
+
+On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
+screen, and Shift+Tab could leave it behind the header. Before the fix this happened at 173 focus
+stops across 36 of the screens the tests visit. WCAG 2.2 asks that a focused control is never
+hidden this way (Focus Not Obscured, part of NFR-006).
+
+The page now brings a focused control to rest clear of both bars, and of the business profile's
+own Save button, which is held at the bottom of that screen. The keyboard checks that already ran
+on every screen now also fail when a focused control comes to rest behind a bar that stays on
+screen, going forward with Tab and back with Shift+Tab.
+
 ## How the ten heuristics are applied
 
 1. **Visibility of system status.** Keep "Saved"; add progress in the checker and on downloads.
