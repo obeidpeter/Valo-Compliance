@@ -17,14 +17,16 @@ Do not edit by hand. A test fails if this file is out of date.
 ## Requirements
 
 127 of 127 formal requirements are registered.
-Implementation evidence register dated 2026-11-15T01:03:00.000Z at `c6bca11`.
+Implementation evidence register dated 2026-11-20T16:46:25.741Z at `47d34ea`.
 
 | Implementation status | Requirements |
 | --- | ---: |
+| partial_development_with_ci_evidence | 28 |
 | partial_development_with_execution_evidence | 99 |
-| unverified | 28 |
 
-No recorded implementation evidence: WEB-003, WEB-004, DOC-008, DOC-009, EDT-010, CMP-001, CMP-005, CMP-008, CMP-009, WRK-005, SRV-001, SRV-002, SRV-003, SRV-004, PAY-010, ADM-004, ADM-006, ADM-007, ADM-008, EDP-008, EDP-011, OPS-001, OPS-006, PRV-002, NFR-001, NFR-002, NFR-003, NFR-004.
+No evidence file, only tests cited in CI (decision 0010): WEB-003, WEB-004, DOC-008, DOC-009, EDT-010, CMP-001, CMP-005, CMP-008, CMP-009, WRK-005, SRV-001, SRV-002, SRV-003, SRV-004, PAY-010, ADM-004, ADM-006, ADM-007, ADM-008, EDP-008, EDP-011, OPS-001, OPS-006, PRV-002, NFR-001, NFR-002, NFR-003, NFR-004.
+
+No recorded evidence at all: none.
 
 ## Tests cited as evidence
 
