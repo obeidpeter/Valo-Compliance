@@ -23,7 +23,7 @@ const pgTool = (name) =>
 if (process.argv[2] === "--probe") {
   const fixtures = JSON.parse(await readFile(process.argv[3], "utf8"));
   const { listExports, downloadExport } = await import(app("modules/exports/valo-exports.ts"));
-  const { getDocument } = await import(app("lib/valo-store.ts"));
+  const { getDocument } = await import(app("modules/documents/valo-documents.ts"));
   const { pool } = await import(pathToFileURL(join(root, "lib/db/src/index.ts")).href);
   try {
     for (const [i, f] of fixtures.entries()) {
@@ -60,7 +60,8 @@ if (process.argv[2] === "--probe") {
     const source = new Pool({ connectionString: url("valo_retention_source"), options: "-c timezone=UTC" });
     await migrate(drizzle(source), { migrationsFolder: join(root, "lib/db/drizzle") });
     process.env.DATABASE_URL = url("valo_retention_source");
-    const { resolveWorkspace, createDocument } = await import(app("lib/valo-store.ts"));
+    const { resolveWorkspace } = await import(app("modules/workspaces/valo-workspaces.ts"));
+    const { createDocument } = await import(app("modules/documents/valo-documents.ts"));
     const { syntheticDocument } = await import(app("lib/valo-test-fixtures.ts"));
     const { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } = await import(
       app("modules/privacy/valo-privacy.ts")

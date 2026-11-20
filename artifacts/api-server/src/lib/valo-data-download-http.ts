@@ -5,7 +5,7 @@ import { pipeline } from "node:stream/promises";
 import { getAuth, clerkClient } from "@clerk/express";
 import { withWorkspaceDataFile } from "../modules/privacy";
 import { assertWorkspaceDownloadSession } from "./valo-download-session";
-import type { WorkspaceActor } from "./valo-store";
+import type { WorkspaceActor } from "../modules/workspaces";
 
 const liveSession = async (req: Request, actor: WorkspaceActor, _phase?: "preparation" | "release") =>
   assertWorkspaceDownloadSession(actor, getAuth(req), {

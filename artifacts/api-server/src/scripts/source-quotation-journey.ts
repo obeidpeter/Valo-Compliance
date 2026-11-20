@@ -7,7 +7,7 @@ import { eq } from "drizzle-orm";
 import { db, pool, valoAIDrafts } from "@workspace/db";
 import { digest, sha256 } from "@workspace/valo-core";
 import { getCustomerAIDraft, acceptCustomerAIDraft } from "../modules/ai-lanes";
-import { getDocument, listRevisions, saveDocument } from "../lib/valo-store";
+import { getDocument, listRevisions, saveDocument } from "../modules/documents";
 import { requestExport, getExport, downloadExport } from "../modules/exports";
 import { documentInput } from "../lib/valo-validation";
 import { readerContainsText } from "../lib/valo-reader-checks";

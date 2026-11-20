@@ -16,7 +16,7 @@ import {
 } from "@workspace/valo-core/guided-runtime";
 import { completeGuidedTestData } from "./valo-guided-test-fixtures";
 import { documentInput } from "./valo-validation";
-import { serializeRevisionV1 } from "./valo-revision-codec";
+import { serializeRevisionV1 } from "../modules/documents/valo-revision-codec";
 import { renderDocument, DRAFT_NOTICE, controlledHtml } from "./valo-render";
 
 test("all twelve bound question models survive parser and frozen-codec JSONB reconstruction", async (t) => {

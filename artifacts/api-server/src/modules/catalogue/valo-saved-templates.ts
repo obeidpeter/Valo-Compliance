@@ -2,12 +2,8 @@ import { randomUUID } from "node:crypto";
 import { and, eq, desc, sql } from "drizzle-orm";
 import type { db } from "@workspace/db";
 import { publicationSchema } from "@workspace/valo-core";
-import {
-  authorizeWorkspaceWrite,
-  limitWorkspaceWrite,
-  ValoProblem,
-  type WorkspaceActor,
-} from "../../lib/valo-store";
+import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../workspaces";
+import { ValoProblem } from "../../platform/valo-problem";
 import {
   checkReleaseEvidence,
   liveReleasedVersions,

@@ -18,12 +18,8 @@ import {
   ActOnStaffPrivacyCaseBody,
   RespondPrivacyCaseBody,
 } from "@workspace/api-zod";
-import {
-  authorizeWorkspaceWrite,
-  createTicketInTransaction,
-  limitWorkspaceWrite,
-  type WorkspaceActor,
-} from "../../lib/valo-store";
+import { createTicketInTransaction } from "../support";
+import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { quotaSubjectHash } from "../../lib/valo-quota";
 import { ValoProblem } from "../../platform/valo-problem";
 import { privacyKey, privacySigner } from "../../lib/valo-privacy-keys";

@@ -17,7 +17,8 @@ import {
   valoWorkspaceExportAttempts as attempts,
 } from "@workspace/db";
 import { makeWorkspaceExportRouter } from "../../lib/valo-workspace-export-http";
-import { resolveWorkspace, ValoProblem } from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
+import { ValoProblem } from "../../platform/valo-problem";
 import { assertWorkspaceDownloadSession } from "../../lib/valo-download-session";
 import {
   createWorkspaceExport,

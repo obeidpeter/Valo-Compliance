@@ -12,7 +12,7 @@ import {
   valoStaffAssignments,
   valoStaffAccessAudit,
 } from "@workspace/db";
-import { resolveWorkspace } from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import { cleanupWorkspaceExports } from "./valo-workspace-export-jobs";
 import { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } from "./valo-privacy";
 import { readinessQueries } from "../operations/valo-operations";

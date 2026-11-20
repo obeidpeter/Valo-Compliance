@@ -13,7 +13,7 @@ import { customerProviderPayload } from "../modules/ai-lanes/valo-customer-ai-do
 import { candidateArithmetic } from "../modules/publication/candidate-arithmetic";
 import { readTemplateIntake, readGuidanceIntake } from "../modules/publication/operational-intake";
 import { templateCandidate } from "../modules/publication/operational-content";
-import { serializeRevision, serializeRevisionV1 } from "./valo-revision-codec";
+import { serializeRevision, serializeRevisionV1 } from "../modules/documents/valo-revision-codec";
 import { documentInput } from "./valo-validation";
 import { candidateDigest, disclosure, type PublicationBundle } from "@workspace/valo-core";
 const root = resolve(import.meta.dirname, "../../../..");

@@ -11,7 +11,8 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
 import { and, eq, inArray } from "drizzle-orm";
 import { db, pool, valoEvents } from "@workspace/db";
-import { resolveWorkspace, createDocument } from "../../lib/valo-store";
+import { createDocument } from "../documents";
+import { resolveWorkspace } from "../workspaces";
 import { requestExport, getExport, downloadExport } from "./valo-exports";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 

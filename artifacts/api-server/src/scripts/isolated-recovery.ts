@@ -48,7 +48,8 @@ async function independentControlKey() {
 }
 async function fixtureSeed() {
   const { pool } = await import("@workspace/db");
-  const store = await import("../lib/valo-store");
+  const { resolveWorkspace, saveProfile } = await import("../modules/workspaces");
+  const { createDocument } = await import("../modules/documents");
   const { syntheticDocument, syntheticProfile } = await import("../lib/valo-test-fixtures");
   const directory = process.argv[3];
   assert.ok(directory);
@@ -59,9 +60,9 @@ async function fixtureSeed() {
     assert.equal(dbName, "valo_restore_source");
     for (const name of ["a", "b", "c"]) {
       const identityId = `synthetic-recovery-${name}-${randomUUID()}`,
-        actor = await store.resolveWorkspace(identityId);
-      await store.saveProfile(actor, { expectedRevision: 0, profile: syntheticProfile });
-      const document = await store.createDocument(actor, {
+        actor = await resolveWorkspace(identityId);
+      await saveProfile(actor, { expectedRevision: 0, profile: syntheticProfile });
+      const document = await createDocument(actor, {
         ...syntheticDocument,
         title: `Synthetic recovery ${name}`,
       });
@@ -288,7 +289,8 @@ async function fixtureReplay() {
 async function verifyAccess() {
   assertFixtureTargetEnvironment();
   const { db, pool } = await import("@workspace/db"),
-    store = await import("../lib/valo-store");
+    { resolveWorkspace } = await import("../modules/workspaces"),
+    { getDocument } = await import("../modules/documents");
   const { privacyKeys, privacyKey } = await import("../lib/valo-privacy-keys");
   const { quotaSubjectHash } = await import("../lib/valo-quota-policy");
   const fixtures = JSON.parse(await readFile(process.argv[3]!, "utf8")) as Fixture[];
@@ -316,17 +318,17 @@ async function verifyAccess() {
       )
     ).rows;
     // A missing historical key (503) is not a successful authorization denial.
-    await assert.rejects(() => store.resolveWorkspace(fixtures[0]!.identityId), {
+    await assert.rejects(() => resolveWorkspace(fixtures[0]!.identityId), {
       status: 403,
       message: "Identity deletion is recorded. Access cannot be recreated.",
     });
-    await assert.rejects(() => store.resolveWorkspace(fixtures[1]!.identityId), {
+    await assert.rejects(() => resolveWorkspace(fixtures[1]!.identityId), {
       status: 403,
       message: "Workspace membership is suspended",
     });
-    const c = await store.resolveWorkspace(fixtures[2]!.identityId);
-    assert.equal((await store.getDocument(c, fixtures[2]!.documentId)).id, fixtures[2]!.documentId);
-    await assert.rejects(() => store.getDocument(c, fixtures[0]!.documentId), {
+    const c = await resolveWorkspace(fixtures[2]!.identityId);
+    assert.equal((await getDocument(c, fixtures[2]!.documentId)).id, fixtures[2]!.documentId);
+    await assert.rejects(() => getDocument(c, fixtures[0]!.documentId), {
       status: 404,
       message: "Document not found",
     });

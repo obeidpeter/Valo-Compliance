@@ -411,7 +411,7 @@ test(
     });
     const { default: app } = await import("../app");
     const { db, pool, valoAIDrafts, valoOrders, valoPrices } = await import("@workspace/db");
-    const { resolveWorkspace, saveProfile } = await import("../lib/valo-store");
+    const { resolveWorkspace, saveProfile } = await import("../modules/workspaces");
     const { syntheticDocument, syntheticProfile } = await import("../lib/valo-test-fixtures");
     const { financeHeldFixture } = await import("../modules/commerce/valo-finance-test-fixture");
     const { createPrivacyCase } = await import("../modules/privacy/valo-privacy");

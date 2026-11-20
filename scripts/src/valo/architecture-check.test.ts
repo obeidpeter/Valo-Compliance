@@ -82,7 +82,7 @@ test("only resolveWorkspace issues actors from memberships, and no code redirect
   assert.equal(workspaceActorViolations(lib, "workspaceActorFromMembership(row);").length, 1);
   assert.equal(
     workspaceActorViolations(
-      "artifacts/api-server/src/lib/valo-store.ts",
+      "artifacts/api-server/src/modules/workspaces/valo-workspaces.ts",
       "workspaceActorFromMembership(row);",
     ).length,
     0,

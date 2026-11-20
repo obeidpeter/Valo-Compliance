@@ -23,7 +23,8 @@ import {
   valoAIDrafts,
   valoDocumentRevisions,
 } from "@workspace/db";
-import { resolveWorkspace, saveProfile, createDocument } from "../../lib/valo-store";
+import { createDocument } from "../documents";
+import { resolveWorkspace, saveProfile } from "../workspaces";
 import { syntheticProfile, syntheticDocument } from "../../lib/valo-test-fixtures";
 import {
   createPrivacyCase,

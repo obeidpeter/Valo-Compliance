@@ -34,7 +34,8 @@ import {
   valoWorkspaceExportAttempts,
 } from "@workspace/db";
 import { cleanupWorkspaceExports, workspaceExportScratch } from "./valo-workspace-export-jobs";
-import { resolveWorkspace, createDocument, saveProfile } from "../../lib/valo-store";
+import { createDocument } from "../documents";
+import { resolveWorkspace, saveProfile } from "../workspaces";
 import { syntheticDocument, syntheticProfile } from "../../lib/valo-test-fixtures";
 import { RENDER_VERSION } from "../../lib/valo-render";
 import { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } from "./valo-privacy";

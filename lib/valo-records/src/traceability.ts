@@ -109,8 +109,9 @@ const partialImplementations: Record<string, string[]> = {
   "IAM-001": ["artifacts/valo/src/App.tsx", "artifacts/api-server/src/middlewares/valo-identity.ts"],
   "IAM-002": ["artifacts/api-server/src/middlewares/valo-identity.ts"],
   "IAM-003": [
-    "artifacts/api-server/src/lib/valo-store.ts",
-    "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+    "artifacts/api-server/src/modules/workspaces/valo-workspaces.ts",
+    "artifacts/api-server/src/modules/documents/valo-documents.ts",
+    "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
   ],
   "SEC-003": [
     "artifacts/api-server/src/app.ts",
@@ -124,11 +125,17 @@ const partialImplementations: Record<string, string[]> = {
     "artifacts/api-server/src/lib/valo-quota.integration.test.ts",
   ],
   "PRO-001": ["artifacts/valo/src/screens/profile.tsx", "artifacts/api-server/src/lib/valo-validation.ts"],
-  "PRO-002": ["lib/db/src/schema/valo-profiles.ts", "artifacts/api-server/src/lib/valo-store.ts"],
+  "PRO-002": [
+    "lib/db/src/schema/valo-profiles.ts",
+    "artifacts/api-server/src/modules/workspaces/valo-workspaces.ts",
+  ],
   "PRO-003": ["lib/db/src/schema/valo-profiles.ts"],
   "EDT-002": ["lib/db/src/schema/valo-document-revisions.ts"],
   "EDT-003": ["artifacts/valo/src/screens/document-editor.tsx"],
-  "EDT-004": ["artifacts/api-server/src/lib/valo-store.ts", "artifacts/valo/src/screens/document-editor.tsx"],
+  "EDT-004": [
+    "artifacts/api-server/src/modules/documents/valo-documents.ts",
+    "artifacts/valo/src/screens/document-editor.tsx",
+  ],
   "EDT-005": [
     "artifacts/api-server/src/lib/valo-validation.ts",
     "artifacts/valo/src/screens/document-editor.tsx",
@@ -159,7 +166,11 @@ const partialImplementations: Record<string, string[]> = {
   "OPS-007": ["docs/valo/part5-architecture-and-exports.md"],
   "WRK-001": ["artifacts/valo/src/screens/workspace.tsx"],
   "WRK-005": ["artifacts/valo/src/screens/workspace.tsx"],
-  "WRK-006": ["artifacts/api-server/src/lib/valo-store.ts", "lib/db/src/schema/valo-support.ts"],
+  "WRK-006": [
+    "artifacts/api-server/src/modules/support/valo-support-tickets.ts",
+    "artifacts/api-server/src/modules/workspaces/valo-workspaces.ts",
+    "lib/db/src/schema/valo-support.ts",
+  ],
   "SRV-001": ["artifacts/valo/src/screens/services.tsx"],
   "SRV-002": ["artifacts/valo/src/components/ticket-form.tsx", "lib/db/src/schema/valo-support.ts"],
   "EDP-002": [

@@ -9,7 +9,7 @@ import { customerAICases } from "../modules/ai-lanes";
 import { customerProviderPayload, hashAI } from "../modules/ai-lanes";
 import { organizeCustomerDraft, type CustomerTransport } from "../modules/ai-lanes";
 import { createCustomerAIDraft } from "../modules/ai-lanes";
-import { resolveWorkspace } from "../lib/valo-store";
+import { resolveWorkspace } from "../modules/workspaces";
 import { logger } from "../platform/logger";
 async function main() {
   assert.equal(process.env.NODE_ENV, "development");

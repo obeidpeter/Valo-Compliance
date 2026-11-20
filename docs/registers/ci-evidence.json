@@ -123,7 +123,7 @@
     {
       "requirement": "SRV-002",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
       "proves": "A service enquiry without consent is refused; with consent, its topic, scope, reply email and consent are saved, exactly one open support case is created for staff, and the receipt says “Enquiry received”, never that anything is booked."
     },
@@ -1089,7 +1089,7 @@
     {
       "requirement": "DOC-007",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
       "proves": "Saving a synthetic document adds revision 2 and leaves revision 1's content hash unchanged, one of two concurrent saves from revision 1 is refused with a conflict, and restoring revision 1's title and content adds revision 3 with revision 1's content hash, leaving three revisions."
     },
@@ -1404,14 +1404,14 @@
     {
       "requirement": "EDT-003",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
       "proves": "After a change to a synthetic document is saved, a later read of the document reports revision 2, and its history still holds revision 1 with its original content hash."
     },
     {
       "requirement": "EDT-004",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
       "proves": "Two concurrent saves of one synthetic document from the same revision, as from two open tabs, produce exactly one new revision and one conflict (409), and the earlier revision keeps its content hash."
     },
@@ -1908,7 +1908,7 @@
     {
       "requirement": "PRO-002",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
       "proves": "A synthetic workspace's first profile save with marketing declined succeeds and returns marketing declined, a correction is stored as a second profile version while the first version still shows the original state, and a save from a stale profile revision is refused with a conflict."
     },
@@ -1943,7 +1943,7 @@
     {
       "requirement": "PRV-001",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
       "proves": "A synthetic business profile with marketing consent declined is saved as the workspace's first profile version, and the save's response still shows marketing declined."
     },
@@ -2307,7 +2307,7 @@
     {
       "requirement": "WRK-001",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
       "proves": "A synthetic workspace's profile and document edits are kept in PostgreSQL with their history: each profile save adds a version, a stale save is refused, two concurrent saves of one document from the same revision give one new revision and one conflict instead of a silent overwrite, and restoring an old revision adds a new one."
     },
@@ -2370,7 +2370,7 @@
     {
       "requirement": "WRK-006",
       "job": "postgres",
-      "file": "artifacts/api-server/src/lib/valo-store.integration.test.ts",
+      "file": "artifacts/api-server/src/modules/documents/valo-workspace-documents.integration.test.ts",
       "test": "development PostgreSQL tenant, concurrency, history and durable-ticket proof",
       "proves": "The reference in a support receipt names a ticket saved in the workspace and awaiting staff, and the workspace's activity event records read after its profile, document and support saves have no content, scope or profile field."
     },

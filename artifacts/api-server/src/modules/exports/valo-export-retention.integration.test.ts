@@ -20,7 +20,8 @@ import {
   valoStaffAssignments,
   valoStaffAccessAudit,
 } from "@workspace/db";
-import { resolveWorkspace, createDocument } from "../../lib/valo-store";
+import { createDocument } from "../documents";
+import { resolveWorkspace } from "../workspaces";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 import {
   createPrivacyCase,

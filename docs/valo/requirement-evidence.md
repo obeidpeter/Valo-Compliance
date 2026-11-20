@@ -29,7 +29,7 @@ actually cover, not a claim that the full acceptance criterion has passed.
 
 Tests: `scripts/src/valo/*.test.ts`,
 `artifacts/api-server/src/lib/valo-validation.test.ts`,
-`valo-store.integration.test.ts`, `valo-http.test.ts`.
+`valo-workspace-documents.integration.test.ts` (the store's, before decision 0012 split it), `valo-http.test.ts`.
 Actual outputs and source hashes are retained in
 `evidence/p0-persistence-checks.json`. A source inventory title or model pass statement
 never clears a row. No per-item professional sign-off has been fabricated or required.

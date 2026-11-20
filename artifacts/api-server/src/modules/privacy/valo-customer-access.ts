@@ -25,12 +25,8 @@ import {
 } from "@workspace/db";
 import { RequestAccessSupportBody } from "@workspace/api-zod";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
-import {
-  authorizeWorkspaceWrite,
-  authorizeWorkspaceRead,
-  ValoProblem,
-  type WorkspaceActor,
-} from "../../lib/valo-store";
+import { authorizeWorkspaceWrite, authorizeWorkspaceRead, type WorkspaceActor } from "../workspaces";
+import { ValoProblem } from "../../platform/valo-problem";
 import {
   valoOrders,
   valoEntitlements,
@@ -106,7 +102,7 @@ export async function saveAccessSupport(raw: unknown, remoteAddress: string) {
           );
       }
     }
-    const { openSupportCase } = await import("../../lib/valo-support-intake");
+    const { openSupportCase } = await import("../support");
     await openSupportCase(tx, "access", id, null);
     return ack(id);
   });

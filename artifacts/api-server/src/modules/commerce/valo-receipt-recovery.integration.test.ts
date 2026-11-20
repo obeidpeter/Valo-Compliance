@@ -12,7 +12,7 @@ import {
   valoEvents,
 } from "@workspace/db";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
-import { resolveWorkspace } from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import { recoverSyntheticPurchaseReceipt, purchaseReceipt, purchases } from "./valo-commerce";
 
 test(

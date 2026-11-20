@@ -7,7 +7,7 @@ import {
   redactDisputeAction,
 } from "./valo-privacy-redactions";
 import { cancelUnsentDisputeWork } from "../commerce";
-import { ValoProblem } from "../../lib/valo-store";
+import { ValoProblem } from "../../platform/valo-problem";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export const copyPhases = [
   "financial_contact",

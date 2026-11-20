@@ -18,7 +18,9 @@ import {
   valoDocumentRevisions,
   valoDocuments,
 } from "@workspace/db";
-import * as store from "../../lib/valo-store";
+import { createDocument } from "../documents";
+import { resolveWorkspace } from "../workspaces";
+import { ValoProblem } from "../../platform/valo-problem";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 import {
   requestOrderRefund,
@@ -40,8 +42,8 @@ test(
     assert.equal(process.env.NODE_ENV, "development");
     assert.equal(Boolean(process.env.PAYSTACK_SECRET_KEY), false);
     process.env.VALO_RUN_REFUND_TESTS = "synthetic-development-only";
-    const a = await store.resolveWorkspace(`synthetic-refund-${randomUUID()}`),
-      b = await store.resolveWorkspace(`synthetic-refund-${randomUUID()}`);
+    const a = await resolveWorkspace(`synthetic-refund-${randomUUID()}`),
+      b = await resolveWorkspace(`synthetic-refund-${randomUUID()}`);
     const staff: FinanceActor = {
       identityId: `synthetic-finance-${randomUUID()}`,
       recentMfa: true,
@@ -77,7 +79,7 @@ test(
       grantedBy: "synthetic-fixture",
       reason: "Controlled support-only role must not authorize refunds.",
     });
-    const draft = await store.createDocument(a, {
+    const draft = await createDocument(a, {
       ...syntheticDocument,
       title: "Private draft must survive all refund outcomes",
     });
@@ -624,7 +626,7 @@ test(
         do update set used_count=greatest(valo_rate_buckets.used_count,10)`);
           await assert.rejects(
             requestOrderRefund(a, order, payload(1)),
-            (e: unknown) => e instanceof store.ValoProblem && e.status === 429 && Boolean(e.retryAfter),
+            (e: unknown) => e instanceof ValoProblem && e.status === 429 && Boolean(e.retryAfter),
           );
           assert.equal(
             (await purchases(a)).orders.reduce((n, o) => n + o.refunds.length, 0),

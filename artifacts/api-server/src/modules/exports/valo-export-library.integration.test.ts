@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { db, pool, valoDocuments, valoFileAssets } from "@workspace/db";
-import { resolveWorkspace, createDocument, saveDocument } from "../../lib/valo-store";
+import { createDocument, saveDocument } from "../documents";
+import { resolveWorkspace } from "../workspaces";
 import {
   requestExport,
   getExport,

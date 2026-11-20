@@ -75,7 +75,7 @@ try {
   } else if (mode === "quarantine") {
     await replayRecoveryControls(client, saved.controls, saved.signature, key, saved.snapshotHash);
     await replayRecoveryControls(client, saved.controls, saved.signature, key, saved.snapshotHash);
-    const { resolveWorkspace } = await import("../lib/valo-store");
+    const { resolveWorkspace } = await import("../modules/workspaces");
     await assert.rejects(resolveWorkspace(fixtures[0].identityId), { status: 403 });
     await assert.rejects(resolveWorkspace(fixtures[1].identityId), { status: 403 });
     const third = await resolveWorkspace(fixtures[2].identityId);
@@ -133,7 +133,7 @@ try {
         join(bundle, "objects", fixtures[2].workspaceId, fixtures[2].documentId + ".docx"),
       );
       assert.equal(hash(bytes), fixtures[2].checksum);
-      const { resolveWorkspace } = await import("../lib/valo-store");
+      const { resolveWorkspace } = await import("../modules/workspaces");
       await assert.rejects(resolveWorkspace(fixtures[0].identityId), { status: 403 });
       await assert.rejects(resolveWorkspace(fixtures[1].identityId), { status: 403 });
     }

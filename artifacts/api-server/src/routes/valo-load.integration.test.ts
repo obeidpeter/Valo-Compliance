@@ -97,7 +97,7 @@ test(
     const previousProxies = process.env.VALO_TRUSTED_PROXY_CIDRS;
     process.env.VALO_TRUSTED_PROXY_CIDRS = "127.0.0.1/32";
     const { default: app } = await import("../app");
-    const { resolveWorkspace, saveProfile } = await import("../lib/valo-store");
+    const { resolveWorkspace, saveProfile } = await import("../modules/workspaces");
     const { syntheticDocument, syntheticProfile } = await import("../lib/valo-test-fixtures");
     const { pool } = await import("@workspace/db");
 

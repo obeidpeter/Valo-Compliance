@@ -742,7 +742,7 @@ test(
           assert.equal((await state()).entries.length, 0);
         },
       );
-      const { resolveWorkspace } = await import("./valo-store");
+      const { resolveWorkspace } = await import("../modules/workspaces");
       await t.test(
         "the default runner cannot create or substitute a missing evaluation identity",
         async () => {
@@ -827,7 +827,7 @@ test(
       await t.test(
         "real persisted customer service keeps default hold but admits an approved finite context",
         async () => {
-          const { resolveWorkspace } = await import("./valo-store");
+          const { resolveWorkspace } = await import("../modules/workspaces");
           const { createCustomerAIDraft } = await import("../modules/ai-lanes/valo-customer-ai");
           const actor = await resolveWorkspace(`controlled-finite-customer-${randomUUID()}`);
           await reset();

@@ -18,7 +18,7 @@ import {
   HoldFinanceDisputeBody,
   LinkFinanceDisputeBody,
 } from "@workspace/api-zod";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
+import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { assertFinanceActor, requireFinance, type FinanceActor } from "./valo-refunds";
 import { ValoProblem } from "../../platform/valo-problem";
 import {

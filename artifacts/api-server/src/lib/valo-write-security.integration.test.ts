@@ -14,14 +14,9 @@ import {
   valoEvents,
   valoRateBuckets,
 } from "@workspace/db";
-import {
-  resolveWorkspace,
-  saveProfile,
-  createDocument,
-  saveDocument,
-  createTicket,
-  type WorkspaceActor,
-} from "./valo-store";
+import { createTicket } from "../modules/support";
+import { createDocument, saveDocument } from "../modules/documents";
+import { resolveWorkspace, saveProfile, type WorkspaceActor } from "../modules/workspaces";
 import { quotaSubjectHash, quotaPolicy } from "./valo-quota";
 import { syntheticProfile, syntheticDocument } from "./valo-test-fixtures";
 const enabled = process.env.VALO_RUN_DB_TESTS === "synthetic-development-only";

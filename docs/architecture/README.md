@@ -128,7 +128,7 @@ capability, each with a single public entry file:
 artifacts/api-server/src/
   platform/      settings, database, identity context, queue, storage, logging, errors
   modules/
-    identity/  workspaces/  documents/  exports/  catalogue/  sources/
+    workspaces/  documents/  exports/  catalogue/  sources/
     publication/  editorial/  rules/  tasks/  commerce/  ai/  ai-lanes/
     support/  privacy/  staff/  operations/  recovery/
   api.ts         HTTP entry point
@@ -215,8 +215,9 @@ account and access requests, the data download, and the workspace data export wi
 storage. Five files stay outside:
 
 - The privacy keys and their audit state (`src/lib/valo-privacy-keys.ts`, `valo-privacy-state.ts`).
-  The store hashes identities with the keys, and the privacy code reads the store, so reaching the
-  keys through the module's index would make an import cycle.
+  Workspace resolution checks erased identities with the keys, and the privacy code checks
+  workspace access, so reaching the keys through the privacy module's index would make an import
+  cycle.
 - The recovery erasure (`src/modules/recovery/valo-recovery-erasure.ts`) stays with the other
   recovery tools. Only the guarded recovery child loads it, and it brings its own database driver.
 - The HTTP side of the data download and the workspace export (`src/lib/valo-data-download-http.ts`,
@@ -231,11 +232,22 @@ of each staff area. The identity SDK loads only when a
 role change looks up its target account, so code that only checks staff authority never loads it.
 
 `modules/tasks` holds customer tasks and their pages, reminder preferences, the reminder worker and
-the development reminder email. `modules/support` holds the support lifecycle: cases, their
-messages, staff assignment and escalations. The intake that opens a support case from an access
-or privacy request stays in `src/lib/valo-support-intake.ts`: the store opens cases through it and
-the support lifecycle reads the store, so reaching it through the support module's index would make
-an import cycle.
+the development reminder email. `modules/support` holds support tickets, the intake that opens a
+support case from a ticket or an access or privacy request, and the support lifecycle: cases, their
+messages, staff assignment and escalations.
+
+The store that held workspaces, documents and support tickets together is split
+([decision 0012](decisions/0012-split-the-store.md)):
+- `modules/workspaces` holds the workspace access checks and write limits every workspace's
+  records go through, the audit trail they write, workspace resolution and the workspace with its
+  profile. Workspace resolution is the only place an identity's membership becomes a workspace
+  actor (repository rule `workspace-actor`).
+- `modules/documents` holds a workspace's business drafts, their revisions and the revision codec.
+  It depends on `modules/workspaces`, never the other way.
+- Support tickets joined `modules/support` above.
+
+There is no `identity` module: session verification and the workspace context are the identity
+context in `platform/`.
 
 `modules/operations` holds the scheduled queue the development worker runs the operational tasks
 on, the worker heartbeat, the operational sample and the internal alerts with the runbook each

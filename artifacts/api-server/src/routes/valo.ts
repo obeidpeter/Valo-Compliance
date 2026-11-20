@@ -11,7 +11,15 @@ import {
 import { contentReadiness, contentTraceRows, expansionReadiness } from "@workspace/valo-core";
 import { readiness } from "@workspace/valo-records";
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
-import * as store from "../lib/valo-store";
+import { createTicket } from "../modules/support";
+import {
+  listDocuments,
+  getDocument,
+  listRevisions,
+  createDocument,
+  saveDocument,
+} from "../modules/documents";
+import { getWorkspace, saveProfile } from "../modules/workspaces";
 import requirementsRouter from "./valo-requirements";
 import customerAIRouter from "./valo-customer-ai";
 import {
@@ -176,28 +184,28 @@ router.delete("/workspace/saved-templates/by-template/:templateId", async (req, 
 });
 router.use(customerPaymentConcernsRouter);
 router.get("/workspace", async (_req, res) => {
-  res.json(await store.getWorkspace(res.locals.valoActor));
+  res.json(await getWorkspace(res.locals.valoActor));
 });
 router.put("/workspace/profile", async (req, res) => {
-  res.json(await store.saveProfile(res.locals.valoActor, req.body));
+  res.json(await saveProfile(res.locals.valoActor, req.body));
 });
 router.get("/workspace/documents", async (_req, res) => {
-  res.json(await store.listDocuments(res.locals.valoActor));
+  res.json(await listDocuments(res.locals.valoActor));
 });
 router.post("/workspace/documents", async (req, res) => {
-  res.status(201).json(await store.createDocument(res.locals.valoActor, req.body));
+  res.status(201).json(await createDocument(res.locals.valoActor, req.body));
 });
 router.get("/workspace/documents/:id", async (req, res) => {
-  res.json(await store.getDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
+  res.json(await getDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
 });
 router.patch("/workspace/documents/:id", async (req, res) => {
-  res.json(await store.saveDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id), req.body));
+  res.json(await saveDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id), req.body));
 });
 router.get("/workspace/documents/:id/revisions", async (req, res) => {
-  res.json(await store.listRevisions(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
+  res.json(await listRevisions(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
 });
 router.post("/workspace/support", async (req, res) => {
-  res.status(201).json(await store.createTicket(res.locals.valoActor, req.body));
+  res.status(201).json(await createTicket(res.locals.valoActor, req.body));
 });
 // Mounted after the shared server identity, workspace and CSRF boundary above.
 router.use(requirementsRouter);
