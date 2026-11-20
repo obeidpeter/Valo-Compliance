@@ -1,10 +1,10 @@
 import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { z } from "zod";
-import { quotaSubjectHash } from "./valo-quota-policy";
-import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
+import { quotaSubjectHash } from "../../lib/valo-quota-policy";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { assertWindowsRecoveryTarget } from "./valo-recovery-target";
-import { setting } from "../platform/settings";
+import { setting } from "../../platform/settings";
 const controlsSchema = z
   .object({
     snapshotHash: z.string().regex(/^[a-f0-9]{64}$/),
@@ -99,7 +99,7 @@ export async function replayRecoveryControls(
       { recoveryErasureReceiptSchema, importRecoveryErasureReceipt },
     ] = await Promise.all([
       import("drizzle-orm/node-postgres"),
-      import("./valo-privacy-keys"),
+      import("../../lib/valo-privacy-keys"),
       import("@workspace/db"),
       import("./valo-recovery-erasure"),
     ]);

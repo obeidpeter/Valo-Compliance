@@ -31,13 +31,11 @@ import {
   operationalJobRunner,
   operationsHealthy,
   type OperationalDomain,
-} from "../lib/valo-operations-queue";
-import { assertRecoveryEffectsAllowed } from "../lib/valo-recovery-effects";
-import {
   recordWorkerHeartbeat,
   collectOperationalSample,
   recordOperationalAlerts,
-} from "../lib/valo-operations";
+} from "../modules/operations";
+import { assertRecoveryEffectsAllowed } from "../platform/valo-recovery-effects";
 import { WorkerHealth, workerHealthServer, drainWithDeadline } from "../platform/valo-worker-health";
 import { environment, setting } from "../platform/settings";
 

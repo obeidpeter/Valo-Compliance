@@ -1,5 +1,5 @@
 import { pool } from "@workspace/db";
-import { collectOperationalSample, recordOperationalAlerts } from "../lib/valo-operations";
+import { collectOperationalSample, recordOperationalAlerts } from "../modules/operations";
 import { logger } from "../platform/logger";
 try {
   const sample = await collectOperationalSample((text) => {

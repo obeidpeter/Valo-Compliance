@@ -367,7 +367,7 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-workspace-download-db
       - name: Prove saved-template ownership, concurrency and withdrawal
         run: pnpm --filter @workspace/api-server test:valo-saved-templates
-      - name: Prove durable source corrections, staff authority and dispatch races
+      - name: Prove durable source corrections, review due dates, staff authority and dispatch races
         run: pnpm --filter @workspace/api-server test:valo-source-controls-db
       - name: Prove concrete editorial reviewer denial, retained snapshots and isolated lifecycle copies
         run: pnpm --filter @workspace/api-server test:valo-editorial-lifecycle-db

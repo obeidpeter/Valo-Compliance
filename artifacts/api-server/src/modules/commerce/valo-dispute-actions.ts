@@ -31,7 +31,7 @@ import {
   type DisputeContext,
 } from "./valo-dispute-provider";
 import { storeVerifiedDispute, disputeSnapshotHash } from "./valo-payment-disputes";
-import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
+import { assertRecoveryEffectsAllowed } from "../../platform/valo-recovery-effects";
 import { renderDocument } from "../../lib/valo-render";
 import { setting } from "../../platform/settings";
 import { singleRow } from "../../platform/rows";

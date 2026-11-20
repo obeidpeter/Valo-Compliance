@@ -254,6 +254,13 @@
       "proves": "The checker leaves out a rule that is withdrawn or whose review has expired."
     },
     {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-review-due.integration.test.ts",
+      "test": "a version is due for review when its review date passes, or 30 days after its source check (90 for general content)",
+      "proves": "The conditions the source monitor queues reviews by count a content version or rule release as due once its review date passes, or 30 days after its source check for high-impact content and 90 days for general content."
+    },
+    {
       "requirement": "EDP-008",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
@@ -319,14 +326,14 @@
     {
       "requirement": "NFR-010",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
       "test": "every alert names its accountable roles and a runbook from the operating runbooks",
       "proves": "Every internal operational alert the probes can raise names its runbook and accountable roles exactly as the operating runbooks list them, and the alert journal records both with each alert."
     },
     {
       "requirement": "NFR-010",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
       "test": "internal probes measure failures independently and persist/deduplicate/recover alerts without transports",
       "proves": "Synthetic probe failures raise alerts once however many writers race, the alerts resolve when the condition clears, a corrupt journal does not poison later writes, and no private error text or outside message leaves the process."
     },
@@ -473,7 +480,7 @@
     {
       "requirement": "SEC-008",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
       "test": "security signals raise their own alerts, owned by the security and payment runbooks",
       "proves": "Twenty refusals of one address in ten minutes raise no alert and twenty-one do; any signature failure, staff role change, bulk export or payment or AI quota limit raises its own alert under the security-incident or payment runbook, and each resolves when the signals stop."
     },
@@ -725,7 +732,7 @@
     {
       "requirement": "ADM-009",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
       "test": "security signals raise their own alerts, owned by the security and payment runbooks",
       "proves": "With stubbed probe readings, twenty refusals of one address in ten minutes raise no alert while twenty-one do, one staff role change raises its own alert, both under the security/privacy incident runbook, and the alerts resolve when the readings return to zero."
     },
@@ -1565,7 +1572,7 @@
     {
       "requirement": "NFR-005",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-recovery-effects.test.ts",
+      "file": "artifacts/api-server/src/platform/valo-recovery-effects.test.ts",
       "test": "recovery blocks actual charge/refund provider boundaries before transport or credential lookup",
       "proves": "With the isolated-recovery marker set to any of five values, including “1”, “true”, an arbitrary word and a single space, Paystack transaction-initialisation and refund calls are refused with no request sent."
     },
@@ -2181,7 +2188,7 @@
     {
       "requirement": "SEC-005",
       "job": "foundation",
-      "file": "artifacts/api-server/src/lib/valo-operations.test.ts",
+      "file": "artifacts/api-server/src/modules/operations/valo-operations.test.ts",
       "test": "security signals raise their own alerts, owned by the security and payment runbooks",
       "proves": "With stubbed payment-activity and AI-activity readings at zero no alert is raised; a reading of one raises its own alert, under the payment/entitlement failure runbook and the security/privacy incident runbook respectively, with its accountable roles; and the alert resolves when the reading returns to zero."
     },

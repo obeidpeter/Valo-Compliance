@@ -96,8 +96,8 @@ const groups = [
       "artifacts/api-server/src/modules/tasks/valo-reminder-delivery.integration.test.ts",
       "artifacts/api-server/src/modules/tasks/valo-reminder-resend.ts",
       "artifacts/api-server/src/modules/tasks/valo-reminder-resend.test.ts",
-      "artifacts/api-server/src/lib/valo-operations-queue.ts",
-      "artifacts/api-server/src/lib/valo-operations-queue.test.ts",
+      "artifacts/api-server/src/modules/operations/valo-operations-queue.ts",
+      "artifacts/api-server/src/modules/operations/valo-operations-queue.test.ts",
       "artifacts/api-server/src/scripts/customer-experience-journey.ts",
       "scripts/src/valo/customer-safety-checkpoint.ts",
     ],
@@ -936,8 +936,8 @@ export function partialWorkflowEvidence(id: string) {
       ids: ["OPS-003", "OPS-007", "OPS-008", "PRV-003", "NFR-005", "SEC-001"],
       paths: [
         "artifacts/api-server/src/scripts/isolated-recovery.ts",
-        "artifacts/api-server/src/lib/valo-recovery-controls.ts",
-        "artifacts/api-server/src/lib/valo-recovery-effects.ts",
+        "artifacts/api-server/src/modules/recovery/valo-recovery-controls.ts",
+        "artifacts/api-server/src/platform/valo-recovery-effects.ts",
       ],
       record: {
         kind: "test" as const,
@@ -965,7 +965,7 @@ export function partialWorkflowEvidence(id: string) {
     {
       ids: ["OPS-002", "PAY-007", "SEC-008", "NFR-010"],
       paths: [
-        "artifacts/api-server/src/lib/valo-operations.ts",
+        "artifacts/api-server/src/modules/operations/valo-operations.ts",
         "artifacts/api-server/src/scripts/operations-probe.ts",
         "artifacts/api-server/src/workers/export-worker.ts",
       ],
