@@ -114,8 +114,8 @@
   --ochre: 38 58% 42%;
   --ochre-soft: 40 60% 93%;
 
-  --app-font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-  --app-font-serif: 'Newsreader', Georgia, serif;
+  --app-font-sans: 'Instrument Sans', 'Instrument Sans Fallback', ui-sans-serif, system-ui, sans-serif;
+  --app-font-serif: 'Newsreader', 'Newsreader Fallback', Georgia, serif;
   --app-font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --radius: 0.75rem;
   --shadow-2xs: 0 1px 0 0 hsl(30 10% 20% / 0.03);
