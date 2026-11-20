@@ -1612,6 +1612,27 @@
       "proves": "When the API fails, the compiled library, compliance, industries and resources pages announce the failure in a role=\"alert\" element with a retry button, and axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing in that state."
     },
     {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "on a phone, each signed-in screen names itself in the page title, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure",
+      "proves": "Signed in through a stand-in identity with synthetic data, each of the 16 signed-in workspace and staff routes, and the staff screen in each of its four areas, names itself in the page title, does not scroll sideways at 360 or 320 pixels, moves keyboard focus only to visible outlined elements and shows no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; no manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a signed-in list with nothing in it shows its empty state, with no automated WCAG 2.2 AA failure",
+      "proves": "With nothing saved, the workspace overview, tasks and assessment history show their empty states, and axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing in them."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a signed-in screen whose data fails to load shows an alert with a retry button, with no automated WCAG 2.2 AA failure, and retrying recovers",
+      "proves": "When the API fails, ten signed-in screens announce the failure in a role=\"alert\" element with a retry button that recovers once the API answers, and axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing in that state."
+    },
+    {
       "requirement": "NFR-007",
       "job": "foundation",
       "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",
