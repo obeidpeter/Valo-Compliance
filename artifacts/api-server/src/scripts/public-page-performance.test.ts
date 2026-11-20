@@ -28,9 +28,8 @@ import { startSyntheticApi } from "../test-support/synthetic-api";
  * screen, four times slower processor) over a slow 4G connection (150 ms round trip, 1.6 Mbit/s
  * down), five fresh loads of each public page. Each load records the largest contentful paint, the
  * layout shift and the slowest response to a tap on the menu button; the p75 of the five is
- * compared with the targets: INP and CLS must meet them. Every page measured is rendered by the
- * server (decision 0011); LCP stays a todo test until hosted CI shows every page within its target
- * (decision 0011, step 6). The API is answered with synthetic data the contract's schemas accept:
+ * compared with the targets, which LCP, INP and CLS must all meet. Every page measured is rendered
+ * by the server (decision 0011). The API is answered with synthetic data the contract's schemas accept:
  * in the page after the slow connection's round trip, and for the web server by a synthetic API on
  * this machine (decision 0011), at once; the API's own time is measured by NFR-003. The identity
  * provider's script cannot load in the lab, so every page is measured as a signed-out visitor sees
@@ -401,17 +400,11 @@ test("public pages answer a tap within NFR-002's INP target and keep CLS within 
   }
 });
 
-test(
-  "public pages reach NFR-002's LCP target on an emulated mid-range phone",
-  {
-    todo: "Every page measured is rendered by the server; this becomes a normal test once hosted CI shows each page within the target (decision 0011, step 6).",
-  },
-  () => {
-    assert.equal(rows.length, PAGES.length, "every page was measured");
-    for (const row of rows)
-      assert.ok(
-        row.lcp <= TARGETS.lcp,
-        `${row.path} p75 LCP ${row.lcp.toFixed(0)} ms exceeds ${TARGETS.lcp} ms`,
-      );
-  },
-);
+test("public pages reach NFR-002's LCP target on an emulated mid-range phone", () => {
+  assert.equal(rows.length, PAGES.length, "every page was measured");
+  for (const row of rows)
+    assert.ok(
+      row.lcp <= TARGETS.lcp,
+      `${row.path} p75 LCP ${row.lcp.toFixed(0)} ms exceeds ${TARGETS.lcp} ms`,
+    );
+});
