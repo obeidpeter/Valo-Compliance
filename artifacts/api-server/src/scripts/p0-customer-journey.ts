@@ -15,6 +15,7 @@ import {
   ListDocumentRevisionsResponse,
   ListDocumentExportsResponse,
 } from "@workspace/api-zod";
+import { chromiumLaunchPath } from "../platform/chromium";
 
 // Browser callbacks are serialised by Playwright. Keep DOM types out of the Node service.
 type BrowserProbe = {
@@ -85,7 +86,7 @@ try {
   // derive it from the configured publishable key; don't assume the production proxy.
   await clerkSetup({ dotenv: false, debug: false });
   browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || "/repl/tools/bin/chromium",
+    ...chromiumLaunchPath(),
     headless: true,
     args: ["--no-sandbox"],
   });

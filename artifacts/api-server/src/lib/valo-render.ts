@@ -14,7 +14,7 @@ import {
 import { chromium, type Browser, type BrowserContext } from "playwright";
 import { documentInput } from "./valo-validation";
 import { GUIDED_PREFIX, guidedRenderableBlocks } from "@workspace/valo-core/guided-runtime";
-import { setting } from "../platform/settings";
+import { chromiumLaunchPath } from "../platform/chromium";
 
 export const RENDER_VERSION = "manual-draft-3";
 export const DRAFT_NOTICE =
@@ -208,7 +208,7 @@ function sharedBrowser(): Promise<Browser> {
   if (browserPromise) return browserPromise;
   statistics.launches++;
   const launching = chromium.launch({
-    executablePath: setting("CHROMIUM_EXECUTABLE_PATH") || "/repl/tools/bin/chromium",
+    ...chromiumLaunchPath(),
     headless: true,
     timeout: 15000,
   });

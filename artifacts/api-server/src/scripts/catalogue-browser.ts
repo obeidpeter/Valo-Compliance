@@ -8,6 +8,7 @@ import { createServer } from "node:http";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { createRequire } from "node:module";
+import { chromiumLaunchPath } from "../platform/chromium";
 assert.equal(process.env.NODE_ENV, "development");
 assert.equal(process.env.VALO_RUN_CATALOGUE_BROWSER, "synthetic-development-only");
 const require = createRequire(import.meta.url),
@@ -106,7 +107,7 @@ const origin = "http://127.0.0.1:" + address.port,
 let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
 try {
   browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? "/usr/bin/chromium",
+    ...chromiumLaunchPath(),
     headless: true,
     args: ["--no-sandbox"],
   });

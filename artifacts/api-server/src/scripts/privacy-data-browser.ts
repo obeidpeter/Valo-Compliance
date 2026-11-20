@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
 import { developmentPublicationOnly, publicationWorkspaceRoot } from "../modules/publication";
+import { chromiumLaunchPath } from "../platform/chromium";
 developmentPublicationOnly();
 if (process.env.VALO_RUN_PRIVACY_BROWSER !== "synthetic-development-only")
   throw Error("EXPLICIT_CONTROLLED_PRIVACY_BROWSER_FLAG_REQUIRED");
@@ -146,7 +147,7 @@ if (!address || typeof address === "string") throw Error("NO_FIXTURE_PORT");
 const origin = `http://127.0.0.1:${address.port}`;
 const browser = await chromium.launch({
   headless: true,
-  executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || "/repl/tools/bin/chromium",
+  ...chromiumLaunchPath(),
 });
 const context = await browser.newContext({ viewport: { width: 360, height: 800 }, acceptDownloads: true });
 const page = await context.newPage(),

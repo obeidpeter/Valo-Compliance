@@ -18,6 +18,7 @@ import {
 } from "@workspace/api-zod";
 import { syntheticProfile } from "../lib/valo-test-fixtures";
 import { logger } from "../platform/logger";
+import { chromiumLaunchPath } from "../platform/chromium";
 let browser: Browser | undefined,
   page: Page | undefined,
   identityId: string | undefined,
@@ -85,7 +86,7 @@ try {
     throw Error("SYNTHETIC_DEVELOPMENT_INSTANCE_REQUIRED");
   await clerkSetup({ dotenv: false, debug: false });
   browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || "/repl/tools/bin/chromium",
+    ...chromiumLaunchPath(),
     headless: true,
     args: ["--no-sandbox"],
   });

@@ -4,12 +4,13 @@ import assert from "node:assert/strict";
 import { writeFile, mkdir } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
+import { chromiumLaunchPath } from "../platform/chromium";
 assertDevelopmentRuntime();
 assert.equal(process.env.VALO_RUN_CHECKER_BROWSER, "synthetic-development-only");
 const { chromium } = createRequire(import.meta.url)("playwright");
 const browser = await chromium.launch({
   headless: true,
-  executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? "/repl/tools/bin/chromium",
+  ...chromiumLaunchPath(),
   args: ["--no-sandbox"],
 });
 const evidence: unknown[] = [];

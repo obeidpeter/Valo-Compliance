@@ -9,6 +9,7 @@ import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
 import { developmentPublicationOnly, publicationWorkspaceRoot } from "../modules/publication";
 import type { WorkspaceExportJob as WorkspaceExportModel } from "@workspace/api-zod";
+import { chromiumLaunchPath } from "../platform/chromium";
 // JSON transport dates are ISO strings; the generated server model uses Date.
 type WorkspaceDataExportJob = Omit<WorkspaceExportModel, "createdAt" | "expiresAt"> & {
   createdAt: string;
@@ -273,7 +274,7 @@ if (!address || typeof address === "string") throw Error("NO_FIXTURE_PORT");
 const origin = `http://127.0.0.1:${address.port}`;
 const browser = await chromium.launch({
   headless: true,
-  executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
+  ...chromiumLaunchPath(),
 });
 const context = await browser.newContext({ viewport: { width: 360, height: 800 }, acceptDownloads: true });
 await context.addInitScript(() => {

@@ -5,7 +5,7 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { MAX_SOURCE_BYTES, MAX_INSTRUMENT_BYTES, SourceFailure } from "./source-fetch";
-import { setting } from "../../platform/settings";
+import { chromiumLaunchPath } from "../../platform/chromium";
 const execute = promisify(execFile);
 export const EXTRACTION_VERSION = "source-text-3";
 export function checkExtractedText(text: string) {
@@ -53,7 +53,7 @@ export async function extractSource(bytes: Buffer, mime: string, maximumBytes = 
     }
   } else if (mime === "text/html" || mime === "application/xhtml+xml") {
     const browser = await chromium.launch({
-      executablePath: setting("CHROMIUM_EXECUTABLE_PATH") ?? "/repl/tools/bin/chromium",
+      ...chromiumLaunchPath(),
       headless: true,
       timeout: 15000,
       args: ["--no-sandbox", "--disable-dev-shm-usage"],
