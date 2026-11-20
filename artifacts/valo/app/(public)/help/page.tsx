@@ -1,5 +1,6 @@
-import { Link } from "wouter";
-import { PageHeader } from "@/components/states";
+import { PageHeader } from "@/components/page-parts";
+import { PublicLink } from "@/components/public-link";
+import { fixedPageMetadata } from "@/server/page-metadata";
 
 const QA = [
   [
@@ -36,18 +37,20 @@ const QA = [
   ],
 ];
 
+export const generateMetadata = () => fixedPageMetadata("/help");
+
 export default function Help() {
   return (
     <div className="mx-auto max-w-4xl px-5 py-14 lg:px-8">
       <PageHeader eyebrow="Help" title="Straight answers">
         Locked out?{" "}
-        <Link href="/account-access" className="text-primary underline underline-offset-4">
+        <PublicLink href="/account-access" className="text-primary underline underline-offset-4">
           Account access help
-        </Link>
+        </PublicLink>
         . Anything else?{" "}
-        <Link href="/contact" className="text-primary underline underline-offset-4">
+        <PublicLink href="/contact" className="text-primary underline underline-offset-4">
           Contact us
-        </Link>
+        </PublicLink>
         .
       </PageHeader>
       <div className="divide-y divide-border border-y border-border">

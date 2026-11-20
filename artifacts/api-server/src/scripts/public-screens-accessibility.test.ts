@@ -29,8 +29,6 @@ const SCREENS: { path: string; title: string; ready?: string; minimumStops?: num
   { path: `/library/${items[0]!.slug}`, title: `${items[0]!.title} — Valo` },
   { path: `/resources/${resources[0]!.slug}`, title: `${resources[0]!.title} — Valo` },
   { path: `/industries/${industry.slug}`, title: `${industry.title} — Valo` },
-  { path: "/about", title: "About Valo" },
-  { path: "/contact", title: "Contact Valo" },
   { path: "/account-access", title: "Account access help — Valo" },
   // The sign-in pages draw no site shell; the provider's card holds their heading and form. Their own
   // focusable elements are the wordmark and the access help link.

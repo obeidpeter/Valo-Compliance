@@ -144,7 +144,7 @@ test("the web app shows no testimonials, customer counts, ratings or regulator e
   // Saying Valo has no such backing is the point, so a sentence that denies the claim passes.
   const denial = /\b(not|no|never|nor|without|isn't|aren't|doesn't|don't|cannot)\b/i;
   // The About page lists what Valo is not, under that heading; its items deny by position.
-  const about = join(source, "screens/about.tsx");
+  const about = fileURLToPath(new URL("../../app/(public)/about/page.tsx", import.meta.url));
   const aboutText = readFileSync(about, "utf8");
   assert.match(aboutText, /<p className="eyebrow">What Valo is not<\/p>\s*<ul[^>]*>\s*\{NOT\.map\(/);
   const notStart = aboutText.indexOf("const NOT = [");

@@ -28,8 +28,6 @@ const IndustryDetail = lazy(() =>
 );
 const Resources = lazy(() => import("@/screens/resources"));
 const ResourceDetail = lazy(() => import("@/screens/resources").then((m) => ({ default: m.ResourceDetail })));
-const About = lazy(() => import("@/screens/about"));
-const Contact = lazy(() => import("@/screens/contact").then((m) => ({ default: m.Contact })));
 const AccountAccess = lazy(() => import("@/screens/contact").then((m) => ({ default: m.AccountAccess })));
 const AccountPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.AccountPage })));
 const PrivacyPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.PrivacyPage })));
@@ -37,10 +35,7 @@ const PurchasesPage = lazy(() => import("@/screens/account").then((m) => ({ defa
 const StaffPage = lazy(() => import("@/screens/staff"));
 const PrivacyOperations = lazy(() => import("@/screens/privacy-operations"));
 const Services = lazy(() => import("@/screens/services"));
-const Pricing = lazy(() => import("@/screens/pricing"));
-const Help = lazy(() => import("@/screens/help"));
 const Support = lazy(() => import("@/screens/support"));
-const Privacy = lazy(() => import("@/screens/privacy"));
 const Development = lazy(() => import("@/screens/development"));
 const WorkspaceHome = lazy(() => import("@/screens/workspace"));
 const ProfilePage = lazy(() => import("@/screens/profile"));
@@ -264,14 +259,14 @@ function ShellRoutes() {
         <Route path="/industries/:slug">{(p) => <IndustryDetail slug={p.slug} />}</Route>
         <Route path="/resources" component={Resources} />
         <Route path="/resources/:slug">{(p) => <ResourceDetail slug={p.slug} />}</Route>
-        <Route path="/about" component={About} />
-        <Route path="/contact" component={Contact} />
+        <Route path="/about" component={ServerPage} />
+        <Route path="/contact" component={ServerPage} />
         <Route path="/account-access" component={AccountAccess} />
         <Route path="/services" component={Services} />
-        <Route path="/pricing" component={Pricing} />
-        <Route path="/help" component={Help} />
+        <Route path="/pricing" component={ServerPage} />
+        <Route path="/help" component={ServerPage} />
         <Route path="/support" component={Support} />
-        <Route path="/privacy" component={Privacy} />
+        <Route path="/privacy" component={ServerPage} />
         <Route path="/terms" component={ServerPage} />
         <Route path="/development" component={Development} />
         <Route path="/checker" component={Checker} />

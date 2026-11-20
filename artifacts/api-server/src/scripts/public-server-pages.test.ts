@@ -23,15 +23,30 @@ const { publicPages } = (await import(webSource("public-pages.ts"))) as {
   publicPages: Record<string, { title: string }>;
 };
 
+/** How the synthetic API answers the web server while a test sets it: as the production gate does
+ * (not found), with its rate limit's refusal, or not at all. The browser is always answered. */
+let serverFailure: 404 | 429 | "silent" | null = null;
+
 let web: Awaited<ReturnType<typeof startWebServer>>;
 before(async () => {
-  web = await startWebServer(serverAnswer);
+  web = await startWebServer((method, url, from) =>
+    from === "server" && serverFailure !== null
+      ? serverFailure === "silent"
+        ? { status: 200, body: {}, delayMs: 5000 }
+        : { status: serverFailure, body: { error: "Synthetic refusal" } }
+      : serverAnswer(method, url),
+  );
 });
 after(() => web.close());
 
 /** The heading each server-rendered page's own content starts with. */
 const HEADINGS: Record<string, string> = {
   "/terms": "Terms of use, not yet approved",
+  "/about": "Two shelves, kept apart on purpose.",
+  "/help": "Straight answers",
+  "/contact": "Write to the people building Valo.",
+  "/privacy": "How this build handles data",
+  "/pricing": "Prices have not been set.",
 };
 
 const text = (html: string) =>
@@ -93,23 +108,23 @@ test("the web server renders a page the same for every visitor and reads the API
     const nonce = /'nonce-([^']+)'/.exec(response.headers.get("content-security-policy") ?? "")![1]!;
     return (await response.text()).replaceAll(nonce, "response-nonce");
   };
+  const before = web.api.requests.length;
   for (const path of SERVER_PAGES)
     assert.equal(await page(path, visitor), await page(path), `${path} is the same with a session`);
   // A released item's metadata is read from the API while the server renders its page.
-  const before = web.api.requests.length;
   const detail = await (await fetch(web.origin + items[0]!.href, { headers: visitor })).text();
   assert.match(detail, new RegExp(`<title>${items[0]!.title} — Valo</title>`));
   const reads = web.api.requests.slice(before);
-  assert.ok(reads.length > 0, "the server read the API");
   for (const read of reads) {
     assert.equal(read.cookie, undefined, `${read.path} carried no cookie`);
     assert.equal(read.authorization, undefined, `${read.path} carried no Authorization header`);
-    assert.equal(
-      read.forwardedFor,
-      visitor["x-forwarded-for"],
-      `${read.path} passed the address on unchanged`,
-    );
   }
+  // The visitor's reads carry the address their proxy forwarded, unchanged.
+  const passedOn = reads
+    .filter((read) => read.forwardedFor === visitor["x-forwarded-for"])
+    .map((r) => r.path);
+  assert.ok(passedOn.includes("/api/public/status"), "the pricing page's read passed the address on");
+  assert.ok(passedOn.includes("/api/public/discovery"), "the item's metadata read passed the address on");
 });
 
 test("every script on a server-rendered page carries its response's own nonce, which no other response shares", async () => {
@@ -242,4 +257,34 @@ test("a server-rendered page reached inside the browser app without a full load 
   } finally {
     await close();
   }
+});
+
+test("when the API answers the web server as its production gate does, refuses or does not answer, the pricing page still renders within the time limit and the browser asks the API itself", async () => {
+  const problems: string[] = [];
+  for (const failure of [404, 429, "silent"] as const) {
+    serverFailure = failure;
+    try {
+      const started = performance.now();
+      const html = await (await fetch(web.origin + "/pricing")).text();
+      const took = performance.now() - started;
+      if (took > 4000) problems.push(`${failure}: the page took ${took.toFixed(0)} ms`);
+      if (!html.includes(HEADINGS["/pricing"]!)) problems.push(`${failure}: no heading in the server's HTML`);
+      if (html.includes('data-testid="text-payments-status"'))
+        problems.push(`${failure}: the server rendered a payments status it could not read`);
+      // The browser is answered, so the island fills in what the server could not.
+      const { page, errors, close } = await web.phone("/pricing");
+      try {
+        const status = page.getByTestId("text-payments-status");
+        await status.waitFor({ state: "visible", timeout: 10_000 });
+        if ((await status.textContent()) !== "Switched off")
+          problems.push(`${failure}: payments shown as ${await status.textContent()}`);
+        problems.push(...errors.map((error) => `${failure}: page error ${error}`));
+      } finally {
+        await close();
+      }
+    } finally {
+      serverFailure = null;
+    }
+  }
+  assert.deepEqual(problems, []);
 });

@@ -2,27 +2,6 @@ import { Link } from "wouter";
 import { PageHeader } from "@/components/states";
 import { AccessSupportForm } from "@/components/access-support-form";
 
-export function Contact() {
-  return (
-    <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-      <div>
-        <PageHeader eyebrow="Contact" title="Write to the people building Valo.">
-          No account needed. Your message is saved for a staff member with a reference you can quote. It is
-          not emailed anywhere, and we do not promise a response time.
-        </PageHeader>
-        <p className="text-sm text-muted-foreground">
-          Locked out? Use{" "}
-          <Link href="/account-access" className="text-primary underline underline-offset-4">
-            account access help
-          </Link>
-          .
-        </p>
-      </div>
-      <AccessSupportForm defaultTopic="general" />
-    </div>
-  );
-}
-
 export function AccountAccess() {
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">

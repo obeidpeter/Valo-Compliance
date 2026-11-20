@@ -10,9 +10,11 @@ import { startSyntheticApi, type SyntheticAnswer } from "./synthetic-api";
 
 const front = resolve(import.meta.dirname, "../../../valo");
 
+/** Answers an API request from the web server or from the browser, as `from` says. */
 type Answer = (
   method: string,
   url: URL,
+  from: "server" | "browser",
 ) => SyntheticAnswer | undefined | Promise<SyntheticAnswer | undefined>;
 
 /**
@@ -23,7 +25,7 @@ type Answer = (
  * first: pnpm --filter @workspace/valo run build.
  */
 export async function startWebServer(answer: Answer) {
-  const api = await startSyntheticApi(answer);
+  const api = await startSyntheticApi((method, url) => answer(method, url, "server"));
   const reservation = createServer().listen(0, "127.0.0.1");
   await once(reservation, "listening");
   const port = (reservation.address() as { port: number }).port;
@@ -76,7 +78,7 @@ export async function startWebServer(answer: Answer) {
     await page.route(`${origin}/api/**`, async (route) => {
       const request = route.request(),
         url = new URL(request.url());
-      const found = await answer(request.method(), url);
+      const found = await answer(request.method(), url, "browser");
       if (!found) unknown.push(`${request.method()} ${url.pathname}`);
       await route.fulfill({
         status: found?.status ?? 404,

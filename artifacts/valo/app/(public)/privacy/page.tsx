@@ -1,4 +1,7 @@
-import { Notice, PageHeader } from "@/components/states";
+import { Notice, PageHeader } from "@/components/page-parts";
+import { fixedPageMetadata } from "@/server/page-metadata";
+
+export const generateMetadata = () => fixedPageMetadata("/privacy");
 
 export default function Privacy() {
   return (
