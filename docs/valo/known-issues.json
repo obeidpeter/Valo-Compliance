@@ -23,7 +23,7 @@
     },
     {
       "id": "KI-005",
-      "summary": "The 60-case editorial evaluation has not run against a model; it needs the owner's AI budget approval.",
+      "summary": "The 60-case editorial evaluation (EDP-010) has not run against a model. In its last retained run 14 of the 26 deterministic controls passed and 46 cases were blocked, a score of 14 of 60. The rest need real reviews under an owner-approved AI budget, a first template published with them, an independent check of the expected outcomes and, for 11 cases, official source texts not yet retained (decision 0015).",
       "requirements": ["EDP-010"]
     },
     {

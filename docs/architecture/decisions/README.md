@@ -19,3 +19,4 @@ never edited after acceptance; a later record supersedes an earlier one.
 | [0012](0012-split-the-store.md) | Split the store into workspaces, documents and support tickets | Proposed |
 | [0013](0013-move-the-ai-lanes.md) | Move the AI lanes into a module of their own | Accepted |
 | [0014](0014-publish-reviewed-pairs.md) | Publish reviewed pairs, and who runs the enhanced checks | Accepted |
+| [0015](0015-run-the-editorial-cases.md) | Run the 60 editorial evaluation cases (EDP-010) | Proposed |
