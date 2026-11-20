@@ -13,7 +13,7 @@ import {
   recordWorkerHeartbeat,
   readinessQueries,
 } from "./valo-operations";
-import { versionedEvidencePath } from "./versioned-evidence-path";
+import { versionedEvidencePath } from "../../lib/versioned-evidence-path";
 
 const securityQueries = [
   readinessQueries.deniedAccess,
@@ -23,7 +23,7 @@ const securityQueries = [
   readinessQueries.paymentActivity,
   readinessQueries.aiActivity,
 ];
-import { WorkerHealth } from "../platform/valo-worker-health";
+import { WorkerHealth } from "../../platform/valo-worker-health";
 test("operator report names reject traversal and non-integer versions", () => {
   for (const version of [
     "../../private",
@@ -167,7 +167,7 @@ test("every alert names its accountable roles and a runbook from the operating r
 
     // Each runbook is a row of the operating runbooks, with the same accountable roles.
     const runbooks = readFileSync(
-      fileURLToPath(new URL("../../../../docs/valo/operating-runbooks.md", import.meta.url)),
+      fileURLToPath(new URL("../../../../../docs/valo/operating-runbooks.md", import.meta.url)),
       "utf8",
     );
     const rows = new Map(

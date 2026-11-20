@@ -10,7 +10,7 @@ import {
   replayRecoveryControls,
   signRecoveryControls,
   type RecoveryControls,
-} from "../lib/valo-recovery-controls";
+} from "../modules/recovery";
 const hash = (b: Buffer) => createHash("sha256").update(b).digest("hex");
 assertDevelopmentRuntime();
 assert.equal(process.platform, "win32");

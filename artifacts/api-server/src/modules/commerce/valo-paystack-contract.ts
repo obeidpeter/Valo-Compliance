@@ -1,4 +1,4 @@
-import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
+import { assertRecoveryEffectsAllowed } from "../../platform/valo-recovery-effects";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { ValoProblem } from "../../platform/valo-problem";

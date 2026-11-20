@@ -15,7 +15,7 @@ import {
 import { resolveWorkspace } from "../../lib/valo-store";
 import { cleanupWorkspaceExports } from "./valo-workspace-export-jobs";
 import { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } from "./valo-privacy";
-import { readinessQueries } from "../../lib/valo-operations";
+import { readinessQueries } from "../operations/valo-operations";
 import type { WorkspaceExportStorage } from "./valo-workspace-export-storage";
 const deferred = () => {
   let resolve!: () => void;

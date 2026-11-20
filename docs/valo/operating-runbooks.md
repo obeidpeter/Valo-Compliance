@@ -4,7 +4,7 @@ Exact owner/action contracts remain in CTX-24/25 of the engineering register.
 These are role assignments, **not named staffed responders or exercised drills**.
 Business-hours support is proposed; no 24/7 human-support claim is authorised.
 Each internal operational alert names its runbook and accountable roles from this table
-(`ALERT_RUNBOOKS` in `artifacts/api-server/src/lib/valo-operations.ts`); a test fails when
+(`ALERT_RUNBOOKS` in `artifacts/api-server/src/modules/operations/valo-operations.ts`); a test fails when
 they differ.
 
 | Runbook | Accountable roles | Minimum response and proof still required |

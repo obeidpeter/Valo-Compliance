@@ -35,7 +35,7 @@ import {
   expireGeneratedExports,
   retireExpiredExport,
 } from "./valo-export-retention";
-import { readinessQueries } from "../../lib/valo-operations";
+import { readinessQueries } from "../operations/valo-operations";
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const files = new Map<string, Buffer>();
 let onRead: (() => Promise<void>) | undefined;

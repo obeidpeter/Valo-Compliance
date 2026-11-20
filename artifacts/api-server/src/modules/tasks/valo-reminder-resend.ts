@@ -1,4 +1,4 @@
-import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
+import { assertRecoveryEffectsAllowed } from "../../platform/valo-recovery-effects";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { ReplitConnectors } from "@replit/connectors-sdk";
 import { clerkClient } from "@clerk/express";

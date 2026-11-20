@@ -5,7 +5,7 @@ import express from "express";
 import { sql } from "drizzle-orm";
 import { currentWorkspaceScope, db, runInWorkspaceScope } from "@workspace/db";
 import { securitySignals } from "../middlewares/valo-security-signals";
-import { readinessQueries } from "./valo-operations";
+import { readinessQueries } from "../modules/operations/valo-operations";
 import { quotaSubjectHash } from "./valo-quota-policy";
 import {
   purgeExpiredSecuritySignals,

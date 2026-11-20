@@ -1,4 +1,4 @@
-import { environment } from "../platform/settings";
+import { environment } from "./settings";
 /** Set only by the isolated recovery operator. A nonempty marker is fail-closed. */
 export function assertRecoveryEffectsAllowed(env: NodeJS.ProcessEnv = environment()) {
   if (env.VALO_ISOLATED_RECOVERY)

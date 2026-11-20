@@ -130,7 +130,7 @@ artifacts/api-server/src/
   modules/
     identity/  workspaces/  documents/  exports/  catalogue/  sources/
     publication/  editorial/  rules/  tasks/  commerce/  ai/  ai-lanes/
-    support/  privacy/  staff/
+    support/  privacy/  staff/  operations/  recovery/
   api.ts         HTTP entry point
   worker.ts      background entry point
 ```
@@ -217,8 +217,8 @@ storage. Five files stay outside:
 - The privacy keys and their audit state (`src/lib/valo-privacy-keys.ts`, `valo-privacy-state.ts`).
   The store hashes identities with the keys, and the privacy code reads the store, so reaching the
   keys through the module's index would make an import cycle.
-- The recovery erasure (`src/lib/valo-recovery-erasure.ts`) stays with the other recovery tools.
-  Only the guarded recovery child loads it, and it brings its own database driver.
+- The recovery erasure (`src/modules/recovery/valo-recovery-erasure.ts`) stays with the other
+  recovery tools. Only the guarded recovery child loads it, and it brings its own database driver.
 - The HTTP side of the data download and the workspace export (`src/lib/valo-data-download-http.ts`,
   `valo-workspace-export-http.ts`). Only the customer-access routes use them. They load Express and
   the identity SDK, which the export worker, reaching privacy through the index, does not need. And
@@ -236,6 +236,16 @@ messages, staff assignment and escalations. The intake that opens a support case
 or privacy request stays in `src/lib/valo-support-intake.ts`: the store opens cases through it and
 the support lifecycle reads the store, so reaching it through the support module's index would make
 an import cycle.
+
+`modules/operations` holds the scheduled queue the development worker runs the operational tasks
+on, the worker heartbeat, the operational sample and the internal alerts with the runbook each
+names. `modules/recovery` holds the signed recovery controls that the isolated recovery and the
+separate-host replay apply, the checks that their target is a disposable recovery database, and the
+recovery erasure. Its index does not load the erasure, which brings its own database driver and the
+privacy module: the guarded recovery child loads it through `loadRecoveryErasure` when it runs. The
+guard that refuses Paystack, dispute and reminder email calls during an isolated recovery, and stops
+the worker starting, is `platform/valo-recovery-effects.ts`: commerce, the reminders and the worker
+all check it, and it reads only the settings.
 
 The proposed R2 team access model (roles, grants, invitations and the migration path)
 is in [r2-team-access.md](r2-team-access.md).

@@ -14,10 +14,11 @@ import { Document, Paragraph, Packer } from "docx";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   assertIsolatedRecoveryTarget,
+  loadRecoveryErasure,
   replayRecoveryControls,
   signRecoveryControls,
   type RecoveryControls,
-} from "../lib/valo-recovery-controls";
+} from "../modules/recovery";
 import { logger } from "../platform/logger";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
 const exec = promisify(execFile),
@@ -119,7 +120,7 @@ async function captureErasure() {
   const { createPrivacyCase, confirmPrivacyCase, simpleStaffPrivacyAction } =
     await import("../modules/privacy");
   const { processPrivacyErasure, closePrivacyErasureLocks } = await import("../modules/privacy");
-  const { captureRecoveryErasureReceipt } = await import("../lib/valo-recovery-erasure");
+  const { captureRecoveryErasureReceipt } = await loadRecoveryErasure();
   const [fixture] = JSON.parse(await readFile(process.argv[3]!, "utf8")) as Fixture[];
   assert.ok(fixture);
   const objects = process.argv[4];

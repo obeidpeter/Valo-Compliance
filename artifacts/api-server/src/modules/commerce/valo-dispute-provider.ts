@@ -3,7 +3,7 @@ import { z } from "zod";
 import { ValoProblem } from "../../platform/valo-problem";
 import { verifiedDispute } from "./valo-dispute-schema";
 import { paystackRequest, sandboxPaymentsConfigured } from "./valo-paystack-contract";
-import { assertRecoveryEffectsAllowed } from "../../lib/valo-recovery-effects";
+import { assertRecoveryEffectsAllowed } from "../../platform/valo-recovery-effects";
 import { setting } from "../../platform/settings";
 
 const providerId = z.string().regex(/^\d{1,40}$/);

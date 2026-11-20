@@ -1,7 +1,7 @@
 import { realpath, lstat } from "node:fs/promises";
 import { resolve, basename, join } from "node:path";
 import type { PoolClient } from "pg";
-import { setting } from "../platform/settings";
+import { setting } from "../../platform/settings";
 /** Windows is an additional disposable target, never a generic remote-DB override. */
 export function windowsRecoveryBinding(
   state: { name: string; directory: string; port: string; address: string; user: string },
