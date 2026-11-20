@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { readFile } from "node:fs/promises";
@@ -20,6 +20,8 @@ import {
   allocationPackageId,
   registerPreparedInferenceSubmanifest,
   readApprovedFiniteAllocationPackage,
+  finitePackagePreparers,
+  type FiniteAllocationPackage,
 } from "./inference-allocation-package";
 import type { ManagedCompletionResult } from "./managed-inference";
 import { createManagedSDKTransport } from "./managed-sdk-transport";
@@ -933,6 +935,115 @@ test(
             ),
             /permission denied/,
           );
+        },
+      );
+      await t.test(
+        "an editorial-case package admits and runs a real editorial case pair, and the template package refuses it",
+        async () => {
+          await reset();
+          const oldMode = process.env.NODE_ENV;
+          process.env.NODE_ENV = "development";
+          try {
+            const [
+              { prepareEditorialCaseManifest, executeEditorialCaseReviews },
+              { assertFiniteWorkBindings },
+            ] = await Promise.all([import("../editorial"), import("../ai-lanes")]);
+            const expires = new Date(Date.now() + 3600000).toISOString();
+            const approve = async (pkg: FiniteAllocationPackage) => {
+              const id = allocationPackageId(pkg);
+              await pool.query(
+                `INSERT INTO "${schema}".valo_inference_batches
+          (id,policy_hash,manifest_hash,manifest,enabled,approved_by,approval_reference,approved_at,expires_at)
+          VALUES($1,$2,$3,$4,true,'controlled-owner-fixture','controlled-package-approval',now(),$5)`,
+                [id, requestDigest(inferenceProposal), requestDigest(pkg), JSON.stringify(pkg), expires],
+              );
+              return id;
+            };
+            const editorialId = await approve(
+                await prepareFiniteAllocationPackage(new Date(), finitePackagePreparers.editorialCases),
+              ),
+              templateId = await approve(await prepareFiniteAllocationPackage(new Date()));
+            const manifest = prepareEditorialCaseManifest("EVAL-EDP-C019", { packageId: editorialId });
+            await assert.rejects(
+              () =>
+                registerPreparedInferenceSubmanifest(
+                  store,
+                  { ...manifest, packageId: templateId },
+                  expires,
+                  assertFiniteWorkBindings,
+                ),
+              /WORK_OUTSIDE_PACKAGE/,
+            );
+            const admitted = await registerPreparedInferenceSubmanifest(
+              store,
+              manifest,
+              expires,
+              assertFiniteWorkBindings,
+            );
+            // A controlled transport answers each role with a schema-valid hold; nothing leaves the test.
+            const answer = {
+              verdict: "hold",
+              findings: ["Synthetic controlled finding"],
+              missingEvidence: [],
+              observations: [],
+              enhancedChecks: [
+                "controlling_text",
+                "amendments",
+                "effective_dates",
+                "exceptions",
+                "jurisdiction",
+              ].map((name) => ({
+                name,
+                result: "fail",
+                passage: "",
+                note: "Synthetic controlled transport",
+              })),
+            };
+            let editorialSends = 0;
+            const d = new FiniteInferenceDispatcher(
+              store,
+              async () => {
+                editorialSends++;
+                return {
+                  ...response(),
+                  choices: [{ finish_reason: "stop", message: { content: JSON.stringify(answer) } }],
+                };
+              },
+              assertFiniteWorkBindings,
+            );
+            const kept: Buffer[] = [];
+            const put = async (bytes: Buffer, extension: "json" | "pdf" | "docx") => {
+              kept.push(bytes);
+              return { id: randomUUID(), hash: createHash("sha256").update(bytes).digest("hex"), extension };
+            };
+            const reviews = await withBoundInferenceDispatcher(d, () =>
+              d.withPair(admitted.batchId, manifest.works[0]!.pair!, () =>
+                executeEditorialCaseReviews(manifest.works, put),
+              ),
+            );
+            assert.deepEqual(
+              reviews.map((r) => [r.role, r.outcome]),
+              [
+                ["factual", "completed"],
+                ["challenge", "completed"],
+              ],
+            );
+            assert.equal(editorialSends, 2);
+            const entries = (await state()).entries.filter((e) =>
+              e.runKey.startsWith(`${admitted.batchId}:`),
+            );
+            assert.equal(entries.length, 2);
+            assert.ok(entries.every((e) => e.status === "settled" && e.lane === "editorial_evaluation"));
+            for (const record of kept.map((bytes) => JSON.parse(bytes.toString()))) {
+              assert.equal(record.kind, "editorial-case-review-v1");
+              assert.equal(record.caseId, "EVAL-EDP-C019");
+              assert.equal(record.output.verdict, "hold");
+              assert.equal(record.receivedOtherVerdict, false);
+              assert.equal(record.formalCaseAccepted, false);
+            }
+          } finally {
+            process.env.NODE_ENV = oldMode;
+          }
         },
       );
     } finally {

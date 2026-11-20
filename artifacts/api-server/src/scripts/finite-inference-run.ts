@@ -18,6 +18,7 @@ import {
   allocationPackageId,
   registerPreparedInferenceSubmanifest,
   readApprovedFiniteAllocationPackage,
+  finitePackagePreparers,
 } from "../modules/ai";
 import type { FiniteManifest } from "../modules/ai";
 
@@ -29,6 +30,7 @@ const finiteRunCommands = [
   "--prepare",
   "--prepare-selection",
   "--prepare-customer",
+  "--prepare-editorial-case",
   "--prepare-template-candidate",
   "--verify-prepared",
   "--admit",
@@ -136,6 +138,59 @@ async function main() {
           manifestHash: proposal.manifestHash,
           caseId: prepared.caseId,
           caseHash: prepared.caseHash,
+          attemptCount: proposal.attemptCount,
+          worstCaseReservationNanoUsd: proposal.worstCaseReservationNanoUsd,
+          enabled: false,
+          ownerApproved: false,
+          providerCalls: 0,
+          approvalRowsWritten: 0,
+        }),
+      );
+      return;
+    }
+    if (mode === "--prepare-editorial-case") {
+      // One case-bound editorial case's review pair (decision 0015, point 4), under an editorial-case
+      // package: the case is named by its corpus id, as in --prepare-editorial-case EVAL-EDP-C019.
+      if (!batchId || !/^EVAL-EDP-C\d{3}$/.test(batchId)) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const options = parseFinitePreparationOptions(extra);
+      if (options.candidates.length || options.retry) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const { prepareEditorialCaseManifest } = await import("../modules/editorial");
+      const existing = options.packageId
+        ? await readApprovedFiniteAllocationPackage(pool, options.packageId)
+        : null;
+      const pkg =
+        existing?.pkg ??
+        (await prepareFiniteAllocationPackage(new Date(), finitePackagePreparers.editorialCases));
+      if (requestDigest(pkg.supportedPreparers) !== requestDigest(finitePackagePreparers.editorialCases))
+        throw Error("EDITORIAL_CASE_PACKAGE_REQUIRED");
+      const manifest = prepareEditorialCaseManifest(batchId, { packageId: allocationPackageId(pkg) });
+      for (const work of manifest.works) await assertFiniteWorkBindings(work);
+      const proposal = finiteManifestProposal(
+        manifest,
+        new Date(
+          Math.min(Date.now() + 3600000, existing ? Date.parse(existing.expiresAt) : Infinity),
+        ).toISOString(),
+      );
+      const artifact = await putPublicationArtifact(
+        Buffer.from(
+          JSON.stringify({
+            kind: "editorial-case-finite-preparation-v1",
+            proposals: [proposal],
+            package: pkg,
+            ownerApproved: false,
+            providerCalls: 0,
+            approvalRowsWritten: 0,
+          }),
+        ),
+        "json",
+      );
+      console.log(
+        JSON.stringify({
+          proposal: artifact,
+          manifestHash: proposal.manifestHash,
+          caseId: batchId,
+          candidateVersionId: manifest.works[0]!.bindings.candidateVersionId,
+          packageId: allocationPackageId(pkg),
           attemptCount: proposal.attemptCount,
           worstCaseReservationNanoUsd: proposal.worstCaseReservationNanoUsd,
           enabled: false,
@@ -503,6 +558,49 @@ async function main() {
           providerQualityAccepted: false,
         }),
       );
+      return;
+    }
+    if (
+      manifest.version === 2 &&
+      manifest.works.length === 2 &&
+      manifest.works.every((w) => w.lane === "editorial_evaluation")
+    ) {
+      const { prepareEditorialCaseManifest, executeEditorialCaseReviews } =
+        await import("../modules/editorial");
+      const [first, second] = manifest.works as [
+        FiniteManifest["works"][number],
+        FiniteManifest["works"][number],
+      ];
+      if (!first.pair || first.pair !== second.pair || !first.bindings.caseId)
+        throw Error("RUNNER_PAIR_BINDING_INVALID");
+      // Rebuild at the original moment: the owner approved this exact roster, never fresh requests.
+      const expected = prepareEditorialCaseManifest(
+        first.bindings.caseId,
+        manifest.packageId ? { packageId: manifest.packageId } : {},
+        new Date(manifest.preparedAt),
+      );
+      if (requestDigest(expected) !== row.manifest_hash) throw Error("RUNNER_MANIFEST_CHANGED");
+      for (const work of manifest.works) await assertFiniteWorkBindings(work);
+      const reviews = await withApprovedInferencePair(batchId!, first.pair, () =>
+        executeEditorialCaseReviews(manifest.works),
+      );
+      const report = {
+        kind: "editorial-case-run-v1",
+        completedAt: new Date().toISOString(),
+        batchId,
+        manifestHash: row.manifest_hash,
+        caseId: first.bindings.caseId,
+        caseHash: first.caseHash,
+        candidateHash: first.candidateHash,
+        reviews,
+        expectedIndependentReviews: 2,
+        complete: reviews.filter((r) => r.outcome === "completed").length === 2,
+        // An independent reviewer confirms the expected outcome before the case counts (decision 0015).
+        formalCaseAccepted: false,
+        evaluatorDecision: null,
+      };
+      const resultArtifact = await putPublicationArtifact(Buffer.from(JSON.stringify(report)), "json");
+      console.log(JSON.stringify({ ...report, resultArtifact }));
       return;
     }
     if (manifest.version !== 2 || manifest.works.length !== 2) throw Error("RUNNER_SCOPE_UNSUPPORTED");
