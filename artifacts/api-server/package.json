@@ -66,7 +66,7 @@
     "sources:retrieve-instruments": "tsx src/scripts/retrieve-instruments.ts",
     "editorial:proof-development": "tsx src/scripts/editorial-proof.ts",
     "test:valo-editorial": "tsx --test src/modules/editorial/pipeline-contract.test.ts src/modules/editorial/citation-selection.test.ts",
-    "test:valo-editorial-provenance": "node --experimental-test-module-mocks --import tsx --test src/modules/editorial/editorial-evaluation-evidence.test.ts src/modules/editorial/external-action-boundary.test.ts",
+    "test:valo-editorial-provenance": "node --experimental-test-module-mocks --import tsx --test src/modules/editorial/editorial-evaluation-evidence.test.ts src/modules/editorial/editorial-evaluation-score.test.ts src/modules/editorial/external-action-boundary.test.ts",
     "test:valo-publication": "tsx --test src/modules/publication/operational-publication.integration.test.ts",
     "test:valo-editorial-proof": "tsx --test src/modules/editorial/pipeline-proof.integration.test.ts",
     "test:valo-customer-journey": "tsx src/scripts/p0-customer-journey.ts",
