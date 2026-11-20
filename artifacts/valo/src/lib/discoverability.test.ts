@@ -171,7 +171,7 @@ test("the web app shows no testimonials, customer counts, ratings or regulator e
   assert.deepEqual(claims, []);
   // The site footer says so on every page.
   assert.match(
-    readFileSync(join(source, "components/site-shell.tsx"), "utf8"),
+    readFileSync(join(source, "components/site-chrome.tsx"), "utf8"),
     /Valo does not provide legal, tax or accounting advice, and no regulator endorses it\./,
   );
 });

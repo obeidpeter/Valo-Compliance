@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SiteShell } from "@/components/site-shell";
+import { ServerPage } from "@/components/server-page";
 import { RequireAuth } from "@/components/require-auth";
 import { Wordmark } from "@/components/brand";
 import { basePath } from "@/lib/env";
@@ -40,7 +41,6 @@ const Pricing = lazy(() => import("@/screens/pricing"));
 const Help = lazy(() => import("@/screens/help"));
 const Support = lazy(() => import("@/screens/support"));
 const Privacy = lazy(() => import("@/screens/privacy"));
-const Terms = lazy(() => import("@/screens/terms"));
 const Development = lazy(() => import("@/screens/development"));
 const WorkspaceHome = lazy(() => import("@/screens/workspace"));
 const ProfilePage = lazy(() => import("@/screens/profile"));
@@ -272,7 +272,7 @@ function ShellRoutes() {
         <Route path="/help" component={Help} />
         <Route path="/support" component={Support} />
         <Route path="/privacy" component={Privacy} />
-        <Route path="/terms" component={Terms} />
+        <Route path="/terms" component={ServerPage} />
         <Route path="/development" component={Development} />
         <Route path="/checker" component={Checker} />
         <Route path="/workspace/assessments">

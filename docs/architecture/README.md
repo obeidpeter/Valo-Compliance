@@ -86,11 +86,29 @@ visitor:
   serves the API under `/api`. Outside development it must be https, or plain http to this
   machine's loopback address. A set but unusable value is refused, never replaced.
 
-The metadata and the sitemap read discovery through it (`src/server/page-api.ts`). The repository
-rule `public-server` keeps the identity SDK and the browser's API client out of the code a public
-page runs on the server, and lets the islands it renders load the identity SDK only with `import()`.
+The metadata and the sitemap read discovery through it (`src/server/page-api.ts`). When a request
+carries no `X-Forwarded-For`, Next supplies the address of the connection it came from. The
+repository rule `public-server` keeps the identity SDK and the browser's API client out of the code
+a public page runs on the server, and lets the islands it renders load the identity SDK only with
+`import()`.
+
+Each server-rendered page is a route under `artifacts/valo/app/(public)`, listed in
+`src/lib/server-pages.ts`. Their layout renders the site's frame on the server
+(`src/components/public-shell.tsx`): the same banner, header, footer and dock as the browser app's
+shell, from the same parts (`site-chrome.tsx`). Islands in `src/islands` add what needs the browser:
+- the menu button, and the current section in the header;
+- the account links and the dock, which show the signed-out links until the identity provider has
+  loaded. `IdentityLoader` loads it once the page is interactive and the browser is idle, and the
+  islands read what it reports (`identity-store.ts`). The content never waits for it.
+
+Moving between a server-rendered page and the browser app loads the new page in full: each side
+links to the other with a plain link. When the browser app reaches a server-rendered address some
+other way, such as a link inside one of its screens, it reloads the address so the server renders
+it (`src/components/server-page.tsx`); if the server sent the address back to the browser app, it
+says so instead of reloading again.
+
 Checks that run the compiled web app point it at a synthetic API on the loopback address
-(`artifacts/api-server/src/test-support/synthetic-api.ts`).
+(`artifacts/api-server/src/test-support/synthetic-api.ts`, `web-server.ts`).
 
 ## Invariants
 

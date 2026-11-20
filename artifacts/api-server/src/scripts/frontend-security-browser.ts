@@ -8,11 +8,17 @@ import { createRequire } from "node:module";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
+import { pathToFileURL } from "node:url";
 import { chromium, expect } from "@playwright/test";
 
 const root = resolve(import.meta.dirname, "../../../.."),
   front = resolve(root, "artifacts/valo");
 const require = createRequire(resolve(front, "package.json"));
+// The pages the web app server-renders, from its source; loaded at run time, since this package's
+// build cannot import another package's source.
+const { SERVER_PAGES } = (await import(pathToFileURL(resolve(front, "src/lib/server-pages.ts")).href)) as {
+  SERVER_PAGES: readonly string[];
+};
 const reservation = createServer().listen(0, "127.0.0.1");
 await once(reservation, "listening");
 const port = (reservation.address() as { port: number }).port;
@@ -64,24 +70,33 @@ try {
     await delay(250);
   }
   assert.ok(ready, "compiled Next server starts");
-  const first = await fetch(origin, {
-    headers: {
-      "x-valo-nonce": "attacker-chosen-nonce",
-      "content-security-policy": "script-src * 'unsafe-inline'",
-    },
-  });
-  const policy = first.headers.get("content-security-policy") ?? "",
-    nonce = policy.match(/'nonce-([^']+)'/)?.[1];
-  assert.ok(nonce);
-  assert.notEqual(nonce, "attacker-chosen-nonce");
-  assert.match(policy, /script-src [^;]*'strict-dynamic'/);
-  assert.doesNotMatch(policy, /script-src[^;]*'unsafe-(?:inline|eval)'/);
-  assert.match(policy, /frame-ancestors 'none'/);
-  assert.match(first.headers.get("cache-control") ?? "", /no-store/);
-  const second = await fetch(origin);
-  assert.notEqual(second.headers.get("content-security-policy")?.match(/'nonce-([^']+)'/)?.[1], nonce);
+  // The browser app's page, and each page the server renders itself (decision 0011).
+  const paths = ["/", ...SERVER_PAGES];
+  for (const path of paths) {
+    const first = await fetch(origin + path, {
+      headers: {
+        "x-valo-nonce": "attacker-chosen-nonce",
+        "content-security-policy": "script-src * 'unsafe-inline'",
+      },
+    });
+    const policy = first.headers.get("content-security-policy") ?? "",
+      nonce = policy.match(/'nonce-([^']+)'/)?.[1];
+    assert.ok(nonce, path);
+    assert.notEqual(nonce, "attacker-chosen-nonce", path);
+    assert.ok(!(await first.text()).includes("attacker-chosen-nonce"), `${path} never uses a supplied nonce`);
+    assert.match(policy, /script-src [^;]*'strict-dynamic'/);
+    assert.doesNotMatch(policy, /script-src[^;]*'unsafe-(?:inline|eval)'/);
+    assert.match(policy, /frame-ancestors 'none'/);
+    assert.match(first.headers.get("cache-control") ?? "", /no-store/);
+    const second = await fetch(origin + path);
+    assert.notEqual(
+      second.headers.get("content-security-policy")?.match(/'nonce-([^']+)'/)?.[1],
+      nonce,
+      path,
+    );
+  }
   checks.push(
-    "Actual Next responses enforce unique server-generated nonces, reject supplied policy/nonce, disallow framing and prevent HTML caching",
+    "Actual Next responses enforce unique server-generated nonces, reject supplied policy/nonce, disallow framing and prevent HTML caching, on the browser app's page and every server-rendered page",
   );
   const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH;
   browser = await chromium.launch({
@@ -93,47 +108,55 @@ try {
   await context.route("**/*", (route) =>
     new URL(route.request().url()).origin === origin ? route.continue() : route.abort(),
   );
-  const response = await page.goto(origin);
-  assert.equal(response?.status(), 200);
-  await expect(page.getByRole("link", { name: "Library", exact: true }).first()).toBeVisible();
-  await expect(page.getByText("Loading Valo", { exact: true })).toHaveCount(0);
-  const liveNonce = response!.headers()["content-security-policy"]!.match(/'nonce-([^']+)'/)![1];
-  const scripts = await page
-    .locator("script")
-    .evaluateAll((elements) =>
-      elements
-        .filter((e) => !e.getAttribute("type") || e.getAttribute("type") === "text/javascript")
-        .map((e) => (e as unknown as { nonce: string }).nonce),
+  for (const path of paths) {
+    const response = await page.goto(origin + path);
+    assert.equal(response?.status(), 200, path);
+    await expect(page.getByRole("link", { name: "Library", exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Loading Valo", { exact: true })).toHaveCount(0);
+    // Webpack loads a lazy chunk with a script element it removes once the chunk has run; the
+    // policy's 'strict-dynamic' trusts it because a nonced script created it. Once the network is
+    // idle, the scripts left are the ones the server sent and must each carry the response nonce.
+    await page.waitForLoadState("networkidle");
+    const liveNonce = response!.headers()["content-security-policy"]!.match(/'nonce-([^']+)'/)![1];
+    const scripts = await page
+      .locator("script")
+      .evaluateAll((elements) =>
+        elements
+          .filter((e) => !e.getAttribute("type") || e.getAttribute("type") === "text/javascript")
+          .map((e) => (e as unknown as { nonce: string }).nonce),
+      );
+    assert.ok(scripts.length > 0, path);
+    assert.ok(
+      scripts.every((n) => n === liveNonce),
+      `${path}: Next bootstrap and inline flight scripts carry the response nonce`,
     );
-  assert.ok(scripts.length > 0);
-  assert.ok(
-    scripts.every((n) => n === liveNonce),
-    "Next bootstrap and inline flight scripts carry the response nonce",
-  );
+  }
   checks.push(
-    "Compiled application hydrates under production CSP with all Next executable script elements nonced",
+    "Compiled application hydrates under production CSP with all Next executable script elements nonced, on the browser app's page and every server-rendered page",
   );
   // Inject at the HTML/parser boundary. DevTools evaluation is privileged and
   // does not model an attacker inserting untrusted HTML into a response.
-  await page.route(origin + "/?csp-canary=1", async (route) => {
-    const upstream = await route.fetch(),
-      nonce = upstream.headers()["content-security-policy"]!.match(/'nonce-([^']+)'/)![1];
-    const canaries =
-      '<script>document.documentElement.setAttribute("data-csp-denied","ran")</script>' +
-      `<script nonce="${nonce}">document.documentElement.setAttribute("data-csp-allowed","ran")</script>`;
-    await route.fulfill({
-      response: upstream,
-      body: (await upstream.text()).replace("<head>", "<head>" + canaries),
+  for (const path of paths) {
+    await page.route(origin + path + "?csp-canary=1", async (route) => {
+      const upstream = await route.fetch(),
+        nonce = upstream.headers()["content-security-policy"]!.match(/'nonce-([^']+)'/)![1];
+      const canaries =
+        '<script>document.documentElement.setAttribute("data-csp-denied","ran")</script>' +
+        `<script nonce="${nonce}">document.documentElement.setAttribute("data-csp-allowed","ran")</script>`;
+      await route.fulfill({
+        response: upstream,
+        body: (await upstream.text()).replace("<head>", "<head>" + canaries),
+      });
     });
-  });
-  await page.goto(origin + "/?csp-canary=1");
-  const result = await page.evaluate(() => ({
-    denied: (globalThis as any).document.documentElement.getAttribute("data-csp-denied") === null,
-    allowed: (globalThis as any).document.documentElement.getAttribute("data-csp-allowed") === "ran",
-  }));
-  assert.deepEqual(result, { denied: true, allowed: true });
+    await page.goto(origin + path + "?csp-canary=1");
+    const result = await page.evaluate(() => ({
+      denied: (globalThis as any).document.documentElement.getAttribute("data-csp-denied") === null,
+      allowed: (globalThis as any).document.documentElement.getAttribute("data-csp-allowed") === "ran",
+    }));
+    assert.deepEqual(result, { denied: true, allowed: true }, path);
+  }
   checks.push(
-    "Chromium actually blocks injected non-nonced JavaScript while allowing a script bearing the server nonce",
+    "Chromium actually blocks injected non-nonced JavaScript while allowing a script bearing the server nonce, on the browser app's page and every server-rendered page",
   );
   report.status = "passed_compiled_frontend_security_not_real_mfa";
 } catch (error) {
