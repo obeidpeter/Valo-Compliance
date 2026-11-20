@@ -55,15 +55,3 @@ export function parsePublicMetadata(raw: unknown): PublicMetadataItem[] {
     })
     .slice(0, 5000);
 }
-export async function fetchPublicMetadata(origin: string) {
-  try {
-    const r = await fetch(origin + "/api/public/discovery", {
-      cache: "no-store",
-      redirect: "error",
-      signal: AbortSignal.timeout(3000),
-    });
-    return r.ok ? parsePublicMetadata(await r.json()) : [];
-  } catch {
-    return [];
-  }
-}
