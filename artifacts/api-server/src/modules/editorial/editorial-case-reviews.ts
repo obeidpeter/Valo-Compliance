@@ -35,8 +35,8 @@ import { meterReviewRequest } from "./review-meter";
  * the corpus or the expected outcome. Nothing here calls a model, reserves budget or saves anything.
  */
 
-/** The case pairs this preparer can build now for a provider run. C041 is prepared only for a
- * controlled failure (below), and C060 needs C018's candidate held by its real reviews. */
+/** The case pairs this preparer can build for a provider run at any time. C041 is prepared only
+ * for a controlled failure, and C060 only after C018's real hold (both below). */
 export const preparableEditorialCases = [
   "EVAL-EDP-C004",
   "EVAL-EDP-C013",
@@ -62,7 +62,21 @@ export const controlledFailureEditorialCases = [
 ] as const satisfies readonly EditorialCaseId[];
 export const isControlledFailureEditorialCase = (id: string) =>
   (controlledFailureEditorialCases as readonly string[]).includes(id);
-const isBuiltCasePair = (id: string) => isPreparableEditorialCase(id) || isControlledFailureEditorialCase(id);
+/** C060 revises C018's candidate after a real hold: it starts from a held real candidate and keeps
+ * its failed evidence. Its pair is built like the others, but the runner prepares, admits and runs
+ * it only while C018's latest admitted pair has both reviews and at least one holds, and its reviews
+ * count only after such a pair prepared before its own (assertEditorialCasePrerequisite). */
+export const followUpEditorialCases = [
+  { caseId: "EVAL-EDP-C060", follows: "EVAL-EDP-C018" },
+] as const satisfies readonly { caseId: EditorialCaseId; follows: EditorialCaseId }[];
+/** The case whose real hold this case follows, or null. */
+export const editorialCasePrerequisite = (caseId: string): EditorialCaseId | null =>
+  followUpEditorialCases.find((f) => f.caseId === caseId)?.follows ?? null;
+/** Every case whose review pair this preparer builds, whatever may run it. */
+export const hasEditorialCasePair = (id: string) =>
+  isPreparableEditorialCase(id) ||
+  isControlledFailureEditorialCase(id) ||
+  editorialCasePrerequisite(id) !== null;
 
 /** The package preparer name that admits these pairs (decision 0015, point 4). */
 export const editorialCasePreparer = "editorial-case-pair-v1";
@@ -193,7 +207,7 @@ export function prepareEditorialCaseManifest(
   options: { packageId?: string } = {},
   now = new Date(),
 ): FiniteManifest & { works: FiniteWork[] } {
-  if (!isBuiltCasePair(caseId)) throw Error("EDITORIAL_CASE_NOT_PREPARABLE");
+  if (!hasEditorialCasePair(caseId)) throw Error("EDITORIAL_CASE_NOT_PREPARABLE");
   if (!Number.isFinite(now.getTime())) throw Error("EDITORIAL_CASE_PREPARATION_TIME_INVALID");
   const c = buildEditorialCaseCandidates().built.find((b) => b.caseId === caseId)!;
   const reviewAsOf = now.toISOString();
@@ -246,6 +260,6 @@ export function prepareEditorialCaseManifest(
 
 /** The case's candidate as built, for the runner's records. */
 export function editorialCaseCandidate(caseId: string) {
-  if (!isBuiltCasePair(caseId)) throw Error("EDITORIAL_CASE_NOT_PREPARABLE");
+  if (!hasEditorialCasePair(caseId)) throw Error("EDITORIAL_CASE_NOT_PREPARABLE");
   return buildEditorialCaseCandidates().built.find((b) => b.caseId === caseId)!;
 }

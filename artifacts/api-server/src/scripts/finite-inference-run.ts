@@ -79,6 +79,15 @@ async function main() {
   ]);
   // This command is the composition root: the dispatcher checks approved work with these.
   provideFiniteWorkBindings(assertFiniteWorkBindings);
+  // A follow-up editorial case (C060) is prepared, admitted and run only while the case it follows
+  // is held by its real reviews. Read outside any transaction, at each of those steps.
+  const editorialPrerequisite = async (caseId: string) => {
+    const { assertEditorialCasePrerequisite, editorialCasePrerequisite, readEditorialCaseBatches } =
+      await import("../modules/editorial");
+    const prior = editorialCasePrerequisite(caseId);
+    if (!prior) return null;
+    return assertEditorialCasePrerequisite(caseId, await readEditorialCaseBatches(pool, [prior]));
+  };
   try {
     if (mode === "--inspect") {
       if (batchId || extra.length) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
@@ -158,6 +167,8 @@ async function main() {
         await import("../modules/editorial");
       // C041's review must fail under control; it never goes to the provider.
       if (isControlledFailureEditorialCase(batchId)) throw Error("EDITORIAL_CASE_CONTROLLED_FAILURE_ONLY");
+      // C060 follows C018's real hold, and names the batch that keeps C018's failed evidence.
+      const prerequisite = await editorialPrerequisite(batchId);
       const existing = options.packageId
         ? await readApprovedFiniteAllocationPackage(pool, options.packageId)
         : null;
@@ -179,6 +190,7 @@ async function main() {
           JSON.stringify({
             kind: "editorial-case-finite-preparation-v1",
             proposals: [proposal],
+            prerequisite,
             package: pkg,
             ownerApproved: false,
             providerCalls: 0,
@@ -192,6 +204,7 @@ async function main() {
           proposal: artifact,
           manifestHash: proposal.manifestHash,
           caseId: batchId,
+          prerequisite,
           candidateVersionId: manifest.works[0]!.bindings.candidateVersionId,
           packageId: allocationPackageId(pkg),
           attemptCount: proposal.attemptCount,
@@ -346,6 +359,13 @@ async function main() {
         (await getPublicationArtifact({ id: batchId, hash: artifactHash, extension: "json" })).toString(),
       );
       const proposal = selectPreparedProposal(report, candidateVersionId);
+      const editorialWorks = proposal.manifest.works.filter((w) => w.lane === "editorial_evaluation");
+      if (editorialWorks.length) {
+        const { isControlledFailureEditorialCase } = await import("../modules/editorial");
+        const caseId = editorialWorks[0]!.bindings.caseId ?? "";
+        if (isControlledFailureEditorialCase(caseId)) throw Error("EDITORIAL_CASE_CONTROLLED_FAILURE_ONLY");
+        await editorialPrerequisite(caseId);
+      }
       const admitted = await registerPreparedInferenceSubmanifest(
         new InferenceBudgetStore(pool, "public", "additional-new"),
         proposal.manifest,
@@ -578,6 +598,7 @@ async function main() {
         throw Error("RUNNER_PAIR_BINDING_INVALID");
       if (isControlledFailureEditorialCase(first.bindings.caseId))
         throw Error("EDITORIAL_CASE_CONTROLLED_FAILURE_ONLY");
+      const prerequisite = await editorialPrerequisite(first.bindings.caseId);
       // Rebuild at the original moment: the owner approved this exact roster, never fresh requests.
       const expected = prepareEditorialCaseManifest(
         first.bindings.caseId,
@@ -597,6 +618,7 @@ async function main() {
         caseId: first.bindings.caseId,
         caseHash: first.caseHash,
         candidateHash: first.candidateHash,
+        prerequisite,
         reviews,
         expectedIndependentReviews: 2,
         complete: reviews.filter((r) => r.outcome === "completed").length === 2,

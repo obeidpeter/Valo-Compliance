@@ -41,8 +41,10 @@ import {
   templateCaseOutcome,
   templateEvaluationCases,
   editorialCaseOutcome,
-  isPreparableEditorialCase,
+  editorialCasePrerequisite,
+  hasEditorialCasePair,
   isControlledFailureEditorialCase,
+  readEditorialCaseBatches,
 } from "../modules/editorial";
 type Case = { id: string; scenario: string; inputMutation: string; requiresProviderRun: boolean };
 class Blocked extends Error {}
@@ -184,14 +186,12 @@ async function main() {
       continue;
     }
     // The case-bound cases with a prepared review pair read that pair's reviews from the ledger
-    // (decision 0015, point 4); this suite makes no provider call for them either.
-    if (isPreparableEditorialCase(c.id) || isControlledFailureEditorialCase(c.id)) {
-      const batches = await pool.query(
-        `SELECT id, manifest, results FROM valo_inference_batches
-         WHERE manifest->'works'->0->'bindings'->>'caseId' = $1`,
-        [c.id],
-      );
-      const outcome = editorialCaseOutcome(c.id, batches.rows);
+    // (decision 0015, point 4); this suite makes no provider call for them either. A follow-up case
+    // also reads the pairs of the case it follows, whose real hold it needs.
+    if (hasEditorialCasePair(c.id)) {
+      const prerequisite = editorialCasePrerequisite(c.id);
+      const batches = await readEditorialCaseBatches(pool, prerequisite ? [c.id, prerequisite] : [c.id]);
+      const outcome = editorialCaseOutcome(c.id, batches);
       // C041's review fails at a controlled destination in CI, never at the provider, so its
       // evidence is that run's retained result rather than this database's ledger.
       Object.assign(
