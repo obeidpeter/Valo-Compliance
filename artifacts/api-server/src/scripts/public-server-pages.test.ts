@@ -31,6 +31,8 @@ const { publicPages } = (await import(webSource("public-pages.ts"))) as {
 /** How the synthetic API answers the web server while a test sets it: as the production gate does
  * (not found), with its rate limit's refusal, or not at all. The browser is always answered. */
 let serverFailure: 404 | 429 | "silent" | null = null;
+/** While a test sets it, the browser's own reads get an answer of the wrong shape. */
+let browserGarbled = false;
 /** While a test sets it, the catalogue is answered from these items, filtered, sorted and paged as
  * the API's own catalogue code does. */
 let catalogueItems: ReleasedLibraryItem[] | null = null;
@@ -42,15 +44,17 @@ before(async () => {
       ? serverFailure === "silent"
         ? { status: 200, body: {}, delayMs: 5000 }
         : { status: serverFailure, body: { error: "Synthetic refusal" } }
-      : catalogueItems && url.pathname === "/api/public/catalogue"
-        ? {
-            status: 200,
-            body: paginateReleasedItems(catalogueItems, {
-              ...Object.fromEntries(url.searchParams),
-              page: Number(url.searchParams.get("page") ?? 1),
-            }),
-          }
-        : serverAnswer(method, url),
+      : from === "browser" && browserGarbled && url.pathname.startsWith("/api/public/")
+        ? { status: 200, body: { unexpected: "synthetic answer of the wrong shape" } }
+        : catalogueItems && url.pathname === "/api/public/catalogue"
+          ? {
+              status: 200,
+              body: paginateReleasedItems(catalogueItems, {
+                ...Object.fromEntries(url.searchParams),
+                page: Number(url.searchParams.get("page") ?? 1),
+              }),
+            }
+          : serverAnswer(method, url),
   );
 });
 after(() => web.close());
@@ -390,4 +394,19 @@ test("when the API answers the web server as its production gate does, refuses o
       }
     }
   assert.deepEqual(problems, []);
+});
+
+test("when a page's island cannot use what the API sent, the page says it could not be shown and keeps the site's frame", async () => {
+  serverFailure = 404;
+  browserGarbled = true;
+  const { page, close } = await web.phone("/library");
+  try {
+    await page.getByTestId("status-page-error").waitFor({ state: "visible", timeout: 15_000 });
+    assert.equal(await page.locator("footer").count(), 1, "the footer stays");
+    assert.equal(await page.getByRole("button", { name: "Open menu" }).count(), 1, "the header stays");
+  } finally {
+    serverFailure = null;
+    browserGarbled = false;
+    await close();
+  }
 });
