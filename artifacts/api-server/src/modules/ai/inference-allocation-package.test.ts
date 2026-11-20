@@ -6,6 +6,7 @@ import {
   validateAllocationPackage,
   validatePackageScope,
   assertWorkPackageMembership,
+  finitePackagePreparers,
 } from "./inference-allocation-package";
 import { additionalInferenceAllocation, requestDigest } from "./inference-budget";
 import type { FiniteWork } from "./inference-batch-dispatch";
@@ -145,4 +146,67 @@ test("historical disabled artifact retains exact source pins but cannot authoriz
   assert.deepEqual(frozen.package.corpora, actual.corpora);
   assert.deepEqual(frozen.package.contentIds, actual.contentIds);
   assert.deepEqual(frozen.package.namedContentSections, actual.namedContentSections);
+});
+
+test("an editorial-case package admits only editorial case pairs, and no other package admits them", async () => {
+  const at = new Date();
+  const templates = await prepareFiniteAllocationPackage(at),
+    editorial = await prepareFiniteAllocationPackage(at, finitePackagePreparers.editorialCases);
+  validateAllocationPackage(editorial);
+  assert.deepEqual(editorial.supportedPreparers, ["editorial-case-pair-v1"]);
+  assert.notEqual(allocationPackageId(editorial), allocationPackageId(templates));
+  const row = editorial.corpora
+    .find((c) => c.name === "editorial")!
+    .cases.find((c) => c.id === "EVAL-EDP-C019")!;
+  const evaluation: FiniteWork = {
+    ...work(),
+    lane: "editorial_evaluation",
+    caseHash: row.hash,
+    bindings: {
+      candidateVersionId: "702d4a86-27de-5ff7-8d76-d590426594ec",
+      corpus: "editorial",
+      caseId: row.id,
+      sourceFiles: [],
+      historicalCutoff: at.toISOString(),
+    },
+  };
+  assert.doesNotThrow(() => assertWorkPackageMembership(evaluation, editorial, null));
+  assert.throws(() => assertWorkPackageMembership(evaluation, templates, null), /WORK_OUTSIDE_PACKAGE/);
+  assert.throws(() => assertWorkPackageMembership(work(), editorial, "TPL-07"), /WORK_OUTSIDE_PACKAGE/);
+  assert.throws(
+    () => assertWorkPackageMembership({ ...evaluation, caseHash: "f".repeat(64) }, editorial, null),
+    /WORK_OUTSIDE_PACKAGE/,
+  );
+  assert.throws(
+    () => assertWorkPackageMembership({ ...evaluation, pair: null }, editorial, null),
+    /PREPARER_UNAVAILABLE/,
+  );
+  const customer: FiniteWork = {
+    ...work(),
+    lane: "customer",
+    role: "customer",
+    pair: null,
+    caseHash: editorial.corpora.find((c) => c.name === "customer-ai")!.cases[0]!.hash,
+    bindings: {
+      candidateVersionId: null,
+      corpus: "customer-ai",
+      caseId: editorial.corpora.find((c) => c.name === "customer-ai")!.cases[0]!.id,
+      sourceFiles: [],
+    },
+  };
+  assert.doesNotThrow(() => assertWorkPackageMembership(customer, templates, null));
+  assert.throws(() => assertWorkPackageMembership(customer, editorial, null), /WORK_OUTSIDE_PACKAGE/);
+});
+
+test("a package names one known preparer set", async () => {
+  await assert.rejects(
+    () => prepareFiniteAllocationPackage(new Date(), ["another-preparer"] as never),
+    /PACKAGE_PREPARERS_INVALID/,
+  );
+  const pkg = await prepareFiniteAllocationPackage();
+  for (const supportedPreparers of [[], ["editorial-case-pair-v1", "operational-template-pair-v1"], ["x"]])
+    assert.throws(
+      () => validateAllocationPackage({ ...pkg, supportedPreparers } as never),
+      /ALLOCATION_PACKAGE_INVALID/,
+    );
 });

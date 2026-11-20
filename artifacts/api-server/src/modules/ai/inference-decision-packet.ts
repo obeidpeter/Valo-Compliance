@@ -23,7 +23,8 @@ export function buildFiniteDecisionPacket(
     packages = new Set<string>();
   const laneAttempts = { publication: 0, editorial_evaluation: 0, checker_challenge: 0, customer: 0 };
   let independentPairs = 0,
-    customerCases = 0;
+    customerCases = 0,
+    editorialCases = 0;
   const attempts = proposals.reduce((n, p) => n + p.manifest.works.length, 0);
   const perAttempt = tokenCost(
     inferenceProposal.fallback.inputTokens,
@@ -56,6 +57,9 @@ export function buildFiniteDecisionPacket(
     if (!p.packageId || p.packageId !== p.manifest.packageId) throw Error("PREPARED_PACKAGE_REQUIRED");
     packages.add(p.packageId);
     const customer = p.manifest.works.length > 0 && p.manifest.works.every((w) => w.lane === "customer");
+    // An editorial case's manifest is its own factual and challenge review pair (decision 0015).
+    const editorial =
+      p.manifest.works.length > 0 && p.manifest.works.every((w) => w.lane === "editorial_evaluation");
     if (customer) {
       const [first, second] = p.manifest.works;
       if (
@@ -93,13 +97,16 @@ export function buildFiniteDecisionPacket(
       )
         throw Error("PREPARED_INDEPENDENT_PAIR_REQUIRED");
       independentPairs++;
+      if (editorial) editorialCases++;
     }
     const works = p.manifest.works.map((w) => {
       assertFiniteWorkShape(w);
       if (
         (customer
           ? w.lane !== "customer" || w.role !== "customer"
-          : w.lane !== "publication" || !["factual", "challenge"].includes(w.role) || !!w.retryOf) ||
+          : w.lane !== (editorial ? "editorial_evaluation" : "publication") ||
+            !["factual", "challenge"].includes(w.role) ||
+            !!w.retryOf) ||
         keys.has(w.key) ||
         w.request.model !== inferenceProposal.model ||
         w.request.max_completion_tokens !== 8192
@@ -115,10 +122,12 @@ export function buildFiniteDecisionPacket(
         candidateVersionId: w.bindings.candidateVersionId,
         candidateArtifact: w.bindings.candidateArtifact ?? null,
         candidateHash: w.candidateHash,
-        publicationBundleHash: customer ? null : w.caseHash,
+        publicationBundleHash: w.lane === "publication" ? w.caseHash : null,
         evaluationCase: customer
           ? { id: w.bindings.caseId, hash: w.caseHash, corpus: "customer-ai" }
-          : { id: null, reason: "Publication preparation is not an authored evaluation-corpus case." },
+          : editorial
+            ? { id: w.bindings.caseId, hash: w.caseHash, corpus: "editorial" }
+            : { id: null, reason: "Publication preparation is not an authored evaluation-corpus case." },
         ...(customer ? { retryOf: w.retryOf ?? null } : {}),
         sourceHashes: w.sourceHashes,
         sourceFiles: w.bindings.sourceFiles,
@@ -131,13 +140,13 @@ export function buildFiniteDecisionPacket(
     });
     return { manifestHash: p.manifestHash, artifact, expiresAt: p.expiresAt, works };
   });
-  if (laneAttempts.publication > 216 || laneAttempts.customer > 94)
+  if (laneAttempts.publication > 216 || laneAttempts.customer > 94 || laneAttempts.editorial_evaluation > 68)
     throw Error("PREPARED_LANE_LIMIT_EXCEEDED");
   if (packages.size !== 1) throw Error("PREPARED_PACKAGES_DIFFER");
   const room = capacity.uncommittedCapacityNanoUsd;
   if (room !== null && !/^\d+$/.test(room)) throw Error("CAPACITY_INSPECTION_INVALID");
   return {
-    version: customerCases ? 2 : 1,
+    version: customerCases || editorialCases ? 2 : 1,
     status:
       room !== null && cost <= BigInt(room)
         ? "prepared-awaiting-approval-and-independent-review"
@@ -149,6 +158,7 @@ export function buildFiniteDecisionPacket(
     attemptCount: attempts,
     independentPairs,
     ...(customerCases ? { customerCases, laneAttempts } : {}),
+    ...(editorialCases ? { editorialCases, laneAttempts } : {}),
     worstCaseReservationNanoUsd: cost.toString(),
     allocationCapNanoUsd: additionalInferenceAllocation.capNanoUsd,
     capacityObservation: capacity,
@@ -171,8 +181,10 @@ export function buildFiniteDecisionPacket(
       "A further attempt requires a new explicitly permitted work item and reservation",
       "A missing preparer or held source never becomes a fabricated request",
     ],
-    excludedWork: customerCases
-      ? "Only the listed customer cases and publication pairs are executable; editorial/checker evaluation, new authoring and unsupported work remain excluded."
-      : "No evaluation-case, regulatory-guidance or other unsupported request is implied by this actual roster.",
+    excludedWork: editorialCases
+      ? "Only the listed editorial case pairs are executable; template review pairs, customer and checker evaluation, new authoring and unsupported work remain excluded."
+      : customerCases
+        ? "Only the listed customer cases and publication pairs are executable; editorial/checker evaluation, new authoring and unsupported work remain excluded."
+        : "No evaluation-case, regulatory-guidance or other unsupported request is implied by this actual roster.",
   };
 }

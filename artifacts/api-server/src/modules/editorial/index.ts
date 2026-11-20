@@ -1,8 +1,8 @@
 /**
  * The editorial module's public entry: the editorial pipeline and its model adapter, operational
  * authoring and review, release preparation, the editorial lifecycle with its dispatch and sandbox,
- * evaluation evidence, the 60-case evaluation's score, template cases and case-bound candidates, and
- * the rule release command. Code outside
+ * evaluation evidence, the 60-case evaluation's score, template cases, case-bound candidates and their
+ * review pairs, and the rule release command. Code outside
  * artifacts/api-server/src/modules/editorial imports only this file (repository rule `module-boundary`);
  * tests may import the module's files directly.
  *
@@ -10,6 +10,7 @@
  */
 export * from "./content-intake-preparation";
 export * from "./editorial-case-candidates";
+export * from "./editorial-case-reviews";
 export * from "./editorial-evaluation-evidence";
 export * from "./editorial-evaluation-score";
 export * from "./editorial-lifecycle-dispatch";
