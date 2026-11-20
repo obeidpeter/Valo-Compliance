@@ -117,11 +117,13 @@ window and a restore point, reviewed before merge.
 During any rollback keep older backups, the restic password and the signing keys
 unchanged.
 
-## Backup retention (proposed, needs owner approval)
+## Backup retention (policy approved; removal not built)
 
 Backups are never pruned today. Retention decides how long erased customer data
-survives in backups, so it is an owner decision; the preflight lists it as
-`RETENTION_POLICY_AND_RELEASE_APPROVAL`. The proposal:
+survives in backups, so it is an owner decision. The product owner approved the
+policy below on 2026-11-20, in the instruction "I approve everything that needs
+approval". The preflight's `RETENTION_POLICY_AND_RELEASE_APPROVAL` stays unmet:
+it also asks for a release approval, and no launch is approved. The policy:
 
 - keep every snapshot from the last 48 hours;
 - keep the newest snapshot of each UTC day for 35 days;
