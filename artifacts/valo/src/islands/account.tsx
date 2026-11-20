@@ -50,7 +50,7 @@ export function AccountLinks({ place }: { place: "header" | "menu" }) {
         className={"btn btn-primary" + size}
         {...(place === "header" ? { "data-testid": "link-signup" } : {})}
       >
-        Open a workspace
+        Create account
       </a>
     </>
   );

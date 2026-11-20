@@ -12,19 +12,23 @@ export function PublicLink({
   href,
   className,
   children,
+  current,
   "data-testid": testId,
 }: {
   href: string;
   className?: string;
   children?: ReactNode;
+  /** The link leads to the page being read, or to the section it belongs to. */
+  current?: boolean;
   "data-testid"?: string;
 }) {
+  const mark = current ? ({ "aria-current": "page" } as const) : {};
   return isServerPage(href) ? (
-    <NextLink href={href} prefetch={false} className={className} data-testid={testId}>
+    <NextLink href={href} prefetch={false} className={className} data-testid={testId} {...mark}>
       {children}
     </NextLink>
   ) : (
-    <a href={basePath + href} className={className} data-testid={testId}>
+    <a href={basePath + href} className={className} data-testid={testId} {...mark}>
       {children}
     </a>
   );

@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
+import { basePath } from "@/lib/env";
 
 /**
  * The site's header links, footer and development banner, shared by the browser app's shell and the
@@ -12,50 +13,66 @@ export type SiteLink = ComponentType<{
   "data-testid"?: string;
 }>;
 
+/**
+ * The header's links: what a visitor can do, in the customer's words. `under` lists the addresses a
+ * link's section covers, so every page of the section marks it as the current one.
+ */
 export const NAV = [
-  { href: "/checker", label: "Checker" },
-  { href: "/library", label: "Library" },
-  { href: "/resources", label: "Resources" },
-  { href: "/industries", label: "Industries" },
-  { href: "/compliance", label: "Compliance" },
-  { href: "/about", label: "About" },
-  { href: "/help", label: "Help" },
-];
+  { id: "documents", href: "/library", label: "Documents", under: ["/library"] },
+  { id: "checker", href: "/checker", label: "Check requirements", under: ["/checker"] },
+  {
+    id: "guidance",
+    href: "/compliance",
+    label: "Guidance",
+    under: ["/compliance", "/resources", "/industries"],
+  },
+  { id: "pricing", href: "/pricing", label: "Pricing", under: ["/pricing"] },
+  { id: "help", href: "/help", label: "Help", under: ["/help", "/contact", "/support", "/account-access"] },
+] as const;
+
+/** Whether the page at this address belongs to the section a header link opens. */
+export const inSection = (section: { under: readonly string[] }, path: string) =>
+  section.under.some((start) => path === start || path.startsWith(start + "/"));
+
+/** The pages the header's Guidance link groups, with the name each has on the guidance tabs. */
+export const GUIDANCE_PAGES = [
+  { href: "/compliance", label: "Overview" },
+  { href: "/resources", label: "Guides" },
+  { href: "/industries", label: "By industry" },
+] as const;
 
 export const FOOTER_COLUMNS = [
   {
-    title: "Documents",
+    title: "Product",
     links: [
-      ["/library", "Library"],
-      ["/workspace", "Your workspace"],
-      ["/workspace/privacy", "Privacy and data"],
+      ["/library", "Documents"],
+      ["/checker", "Check requirements"],
+      ["/compliance", "Guidance"],
       ["/pricing", "Pricing"],
     ],
   },
   {
-    title: "Compliance",
+    title: "Help",
     links: [
-      ["/checker", "Requirements checker"],
-      ["/resources", "Resources"],
-      ["/industries", "Industries"],
-      ["/compliance", "Official sources"],
-      ["/services", "Services"],
+      ["/help", "Help centre"],
+      ["/contact", "Contact us"],
+      ["/account-access", "Trouble signing in"],
     ],
   },
   {
-    title: "Valo",
+    title: "Company",
     links: [
-      ["/about", "About"],
-      ["/help", "Help"],
-      ["/support", "Support"],
-      ["/contact", "Contact"],
-      ["/account-access", "Account access"],
-      ["/privacy", "Privacy policy"],
+      ["/about", "About Valo"],
+      ["/services", "Services"],
+      ["/privacy", "Privacy"],
       ["/terms", "Terms"],
-      ["/development", "Developer notes"],
     ],
   },
 ] as const;
+
+/** A button of the phone's bar. Its words may wrap, so the two buttons fit side by side on the
+ * narrowest phone. */
+export const DOCK_BUTTON = "btn w-full px-2 text-center text-sm leading-tight whitespace-normal";
 
 export function DevBanner() {
   return (
@@ -65,7 +82,14 @@ export function DevBanner() {
     >
       <span className="font-mono uppercase tracking-wider text-background">Development build</span>
       <span className="mx-2 opacity-40">/</span>
-      Not launched. Use synthetic test details only — no real customer or confidential data.
+      Not launched. Use synthetic test details only — no real customer or confidential data.{" "}
+      <a
+        href={`${basePath}/development`}
+        className="whitespace-nowrap text-background underline underline-offset-2"
+        data-testid="link-dev-notes"
+      >
+        Developer notes
+      </a>
     </div>
   );
 }
@@ -77,8 +101,7 @@ export function SiteFooter({ LinkTo, wordmark }: { LinkTo: SiteLink; wordmark: R
         <div>
           {wordmark}
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            Your business drafts and source-governed guidance, kept on separate shelves. Built for owners of
-            Nigerian small businesses.
+            Business documents and source-backed guidance for Nigerian small businesses.
           </p>
         </div>
         {FOOTER_COLUMNS.map((column) => (

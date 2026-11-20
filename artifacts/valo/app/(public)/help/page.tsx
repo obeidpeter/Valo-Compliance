@@ -47,6 +47,10 @@ export default function Help() {
         <PublicLink href="/account-access" className="text-primary underline underline-offset-4">
           Account access help
         </PublicLink>
+        . Something not working?{" "}
+        <PublicLink href="/support" className="text-primary underline underline-offset-4">
+          Report a problem
+        </PublicLink>
         . Anything else?{" "}
         <PublicLink href="/contact" className="text-primary underline underline-offset-4">
           Contact us

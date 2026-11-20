@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Show, useClerk, useUser } from "@clerk/react";
-import { FileText, LogOut, Menu, Scale, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { Wordmark } from "@/components/brand";
-import { DevBanner, NAV, SiteFooter } from "@/components/site-chrome";
+import { DevBanner, DOCK_BUTTON, NAV, SiteFooter, inSection } from "@/components/site-chrome";
 import { basePath } from "@/lib/env";
 import { isServerPage } from "@/lib/server-pages";
 import { cn } from "@/lib/utils";
@@ -14,19 +14,23 @@ function ShellLink({
   href,
   className,
   children,
+  current,
   "data-testid": testId,
 }: {
   href: string;
   className?: string;
   children?: ReactNode;
+  /** The link leads to the section the page belongs to. */
+  current?: boolean;
   "data-testid"?: string;
 }) {
+  const mark = current ? ({ "aria-current": "page" } as const) : {};
   return isServerPage(href) ? (
-    <a href={basePath + href} className={className} data-testid={testId}>
+    <a href={basePath + href} className={className} data-testid={testId} {...mark}>
       {children}
     </a>
   ) : (
-    <Link href={href} className={className} data-testid={testId}>
+    <Link href={href} className={className} data-testid={testId} {...mark}>
       {children}
     </Link>
   );
@@ -91,15 +95,16 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
             {NAV.map((n) => (
               <ShellLink
-                key={n.href}
+                key={n.id}
                 href={n.href}
+                current={inSection(n, location)}
                 className={cn(
                   "rounded-full px-3 py-1.5 text-sm transition-colors hover:bg-secondary",
-                  location.startsWith(n.href)
+                  inSection(n, location)
                     ? "bg-secondary font-medium text-foreground"
                     : "text-muted-foreground",
                 )}
-                data-testid={"link-nav-" + n.label.toLowerCase()}
+                data-testid={"link-nav-" + n.id}
               >
                 {n.label}
               </ShellLink>
@@ -114,7 +119,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 Sign in
               </Link>
               <Link href="/sign-up" className="btn btn-primary btn-sm" data-testid="link-signup">
-                Open a workspace
+                Create account
               </Link>
             </Show>
           </div>
@@ -133,9 +138,10 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <nav className="grid gap-1" aria-label="Mobile">
               {NAV.map((n) => (
                 <ShellLink
-                  key={n.href}
+                  key={n.id}
                   href={n.href}
-                  className="rounded-xl px-3 py-3 text-base hover:bg-secondary"
+                  current={inSection(n, location)}
+                  className="rounded-xl px-3 py-3 text-base hover:bg-secondary aria-[current=page]:bg-secondary aria-[current=page]:font-medium"
                 >
                   {n.label}
                 </ShellLink>
@@ -150,7 +156,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
                   Sign in
                 </Link>
                 <Link href="/sign-up" className="btn btn-primary">
-                  Open a workspace
+                  Create account
                 </Link>
               </Show>
             </div>
@@ -164,7 +170,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   );
 }
 
-/** Mobile one-action dock — documents and compliance given equal weight. */
+/** The phone's bar: one button for documents and one for requirements, of equal weight (WEB-001). */
 function MobileDock() {
   return (
     <div
@@ -173,17 +179,17 @@ function MobileDock() {
     >
       <div className="grid grid-cols-2 gap-2">
         <Show when="signed-in">
-          <Link href="/workspace" className="btn btn-primary w-full" data-testid="link-dock-documents">
-            <FileText className="h-4 w-4" /> My drafts
+          <Link href="/workspace" className={DOCK_BUTTON + " btn-primary"} data-testid="link-dock-documents">
+            My documents
           </Link>
         </Show>
         <Show when="signed-out">
-          <Link href="/sign-up" className="btn btn-primary w-full" data-testid="link-dock-documents">
-            <FileText className="h-4 w-4" /> Start a draft
+          <Link href="/sign-up" className={DOCK_BUTTON + " btn-primary"} data-testid="link-dock-documents">
+            Create a document
           </Link>
         </Show>
-        <Link href="/checker" className="btn btn-ink w-full" data-testid="link-dock-compliance">
-          <Scale className="h-4 w-4" /> Check rules
+        <Link href="/checker" className={DOCK_BUTTON + " btn-ink"} data-testid="link-dock-compliance">
+          Check requirements
         </Link>
       </div>
     </div>

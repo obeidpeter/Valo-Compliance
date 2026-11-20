@@ -68,7 +68,7 @@ export default function About() {
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             <PublicLink href="/sign-up" className="btn btn-primary">
-              Open a workspace <ArrowRight className="h-4 w-4" />
+              Create account <ArrowRight className="h-4 w-4" />
             </PublicLink>
             <PublicLink href="/contact" className="btn btn-ghost">
               Contact us

@@ -335,7 +335,14 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",
       "test": "on a phone, the opened mobile menu and the bottom dock each link to both journeys, and one tap on any of them opens it",
-      "proves": "On an emulated phone, on the home page the compiled web server renders, with the header's own links hidden, one tap on Library, Checker or “Open a workspace” in the opened mobile menu opens /library, /checker or /sign-up, and the bottom dock stays on screen after scrolling, with “Start a draft” opening /sign-up and “Check rules” opening /checker."
+      "proves": "On an emulated phone, on the home page the compiled web server renders, with the header's own links hidden, one tap on Documents, “Check requirements” or “Create account” in the opened mobile menu opens /library, /checker or /sign-up, and the bottom bar stays on screen after scrolling, with “Create a document” opening /sign-up and “Check requirements” opening /checker."
+    },
+    {
+      "requirement": "WEB-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "every server-rendered page has the same five header links and marks its own section, the guidance tabs join their three pages, and the footer has eleven links in three groups",
+      "proves": "On the compiled web server, every server-rendered public page's header lists Documents, “Check requirements”, Guidance, Pricing and Help in that order, and the footer's Product group lists Documents, “Check requirements”, Guidance and Pricing."
     },
     {
       "requirement": "WEB-004",
@@ -1699,8 +1706,8 @@
       "requirement": "NFR-006",
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
-      "test": "moving between public pages in the app, from the footer and from a library card, titles each page for itself",
-      "proves": "On the compiled web server, following each footer link and a library card with the keyboard, between server-rendered pages and the browser app's pages, the page title changes to name the page opened, a released template is titled for itself, and the support page is reachable from the footer."
+      "test": "moving between public pages in the app, from the site's own links and from a library card, titles each page for itself",
+      "proves": "On the compiled web server, following with the keyboard each footer link, the guidance tabs, the help page's link to the support page, the development banner's link and a library card, between server-rendered pages and the browser app's pages, the page title changes to name the page opened, and a released template is titled for itself."
     },
     {
       "requirement": "NFR-006",
@@ -2387,6 +2394,13 @@
       "file": "artifacts/api-server/src/scripts/public-page-states.test.ts",
       "test": "a public page whose data fails to load shows an alert with a retry button, and retrying recovers",
       "proves": "On an emulated phone, when the API fails, the compiled library, compliance, industries and resources pages show an alert with a retry button, and retrying once the API answers removes every alert."
+    },
+    {
+      "requirement": "WEB-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "every server-rendered page has the same five header links and marks its own section, the guidance tabs join their three pages, and the footer has eleven links in three groups",
+      "proves": "On the compiled web server, the library, compliance, industries, resources, services, pricing, support, privacy and terms pages are each one link from the header, the footer, the guidance tabs or the help page, and each server-rendered page marks the header section it belongs to."
     },
     {
       "requirement": "WRK-001",
