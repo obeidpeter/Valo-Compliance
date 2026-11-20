@@ -10,6 +10,8 @@
  */
 export * from "./content-intake-preparation";
 export * from "./editorial-case-candidates";
+export * from "./editorial-case-outcomes";
+export * from "./editorial-case-review-run";
 export * from "./editorial-case-reviews";
 export * from "./editorial-evaluation-evidence";
 export * from "./editorial-evaluation-score";

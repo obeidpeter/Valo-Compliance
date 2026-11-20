@@ -40,6 +40,8 @@ import {
   isTemplateEvaluationCase,
   templateCaseOutcome,
   templateEvaluationCases,
+  editorialCaseOutcome,
+  isPreparableEditorialCase,
 } from "../modules/editorial";
 type Case = { id: string; scenario: string; inputMutation: string; requiresProviderRun: boolean };
 class Blocked extends Error {}
@@ -178,6 +180,17 @@ async function main() {
         .from(valoContentVersions)
         .where(eq(valoContentVersions.templateId, templateEvaluationCases[c.id]));
       Object.assign(record, templateCaseOutcome(c.id, versions), { formalCaseAccepted: false });
+      continue;
+    }
+    // The case-bound cases with a prepared review pair read that pair's reviews from the ledger
+    // (decision 0015, point 4); this suite makes no provider call for them either.
+    if (isPreparableEditorialCase(c.id)) {
+      const batches = await pool.query(
+        `SELECT id, manifest, results FROM valo_inference_batches
+         WHERE manifest->'works'->0->'bindings'->>'caseId' = $1`,
+        [c.id],
+      );
+      Object.assign(record, editorialCaseOutcome(c.id, batches.rows), { formalCaseAccepted: false });
       continue;
     }
     if (c.requiresProviderRun) {

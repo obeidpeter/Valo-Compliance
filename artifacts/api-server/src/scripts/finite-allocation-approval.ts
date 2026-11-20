@@ -6,6 +6,7 @@ import {
   listFiniteAllocationApprovals,
   MAX_PACKAGE_APPROVAL_HOURS,
   prepareFiniteAllocationPackage,
+  finitePackagePreparers,
   revokeFiniteAllocationPackage,
   validateAllocationPackage,
   type FiniteAllocationPackage,
@@ -17,8 +18,10 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * `approve` authorizes spending up to the allocation's cap, so only the product owner runs it, or an
  * operator on their written instruction. Building or testing this command spends nothing.
  *
- *   tsx src/scripts/finite-allocation-approval.ts prepare <package.json>
+ *   tsx src/scripts/finite-allocation-approval.ts prepare <package.json> [--editorial-cases]
  *     Writes the current package to <package.json> and prints its id and limits. Writes nothing else.
+ *     The package admits the template review pairs, or with --editorial-cases only the case-bound
+ *     editorial cases' review pairs (decision 0015): each approval covers one kind of work.
  *   tsx src/scripts/finite-allocation-approval.ts status
  *     Lists every recorded package approval. Read-only.
  *   VALO_RECORD_OWNER_INFERENCE_APPROVAL=owner-approved-exact-finite-package \
@@ -31,7 +34,7 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * Every mode needs NODE_ENV=development and refuses a deployment.
  */
 const usage =
-  "usage: finite-allocation-approval.ts prepare <package.json> | status | approve <package.json> --confirm <id> --approved-by <name> --reference <text> [--hours n] | revoke --confirm <id>";
+  "usage: finite-allocation-approval.ts prepare <package.json> [--editorial-cases] | status | approve <package.json> --confirm <id> --approved-by <name> --reference <text> [--hours n] | revoke --confirm <id>";
 const [mode, ...rest] = process.argv.slice(2);
 const option = (name: string) => {
   const index = rest.indexOf(name);
@@ -54,9 +57,18 @@ const limits = (pkg: FiniteAllocationPackage) => ({
 try {
   assertDevelopmentRuntime();
   if (mode === "prepare") {
-    const out = rest[0];
-    if (!out) throw new Error(usage);
-    const pkg = await prepareFiniteAllocationPackage();
+    const [out, choice, ...more] = rest;
+    if (
+      !out ||
+      out.startsWith("--") ||
+      more.length ||
+      (choice !== undefined && choice !== "--editorial-cases")
+    )
+      throw new Error(usage);
+    const pkg = await prepareFiniteAllocationPackage(
+      new Date(),
+      choice ? finitePackagePreparers.editorialCases : finitePackagePreparers.templatePairs,
+    );
     validateAllocationPackage(pkg);
     // `wx` never overwrites: a package the owner may already have read stays as it was.
     await writeFile(out, `${JSON.stringify(pkg, null, 2)}\n`, { flag: "wx" });
