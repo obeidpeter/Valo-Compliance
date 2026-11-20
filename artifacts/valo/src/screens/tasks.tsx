@@ -17,7 +17,8 @@ import {
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { TaskForm, emptyDraft, type TaskDraft } from "@/components/task-form";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
-import { describeError, formatDate } from "@/lib/api";
+import { describeError } from "@/lib/api";
+import { formatDateTime, formatDay } from "@/lib/format";
 import { live } from "@/lib/checker";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -542,7 +543,7 @@ function TaskRow({
               {task.dueDate && (
                 <span className="pill pill-ink">
                   <CalendarDays className="h-3 w-3" />
-                  {task.dueDate}
+                  {formatDay(task.dueDate)}
                   {task.dateConfirmed ? "" : " (unconfirmed)"}
                 </span>
               )}
@@ -555,7 +556,7 @@ function TaskRow({
                 </Link>
               )}
               <span className="font-mono text-muted-foreground">
-                rev {task.revision} · {formatDate(task.updatedAt)}
+                rev {task.revision} · {formatDateTime(task.updatedAt)}
               </span>
             </div>
             {done && (

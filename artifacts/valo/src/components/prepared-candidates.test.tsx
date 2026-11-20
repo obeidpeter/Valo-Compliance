@@ -37,7 +37,7 @@ test("each prepared template shows where it stands and the reference an operator
   );
   assert.match(html, /Templates awaiting their reviews/);
   assert.match(html, /TPL-12 · version 1/);
-  assert.match(html, /Awaiting its two reviews · Prepared 19\/11\/2026 · Review by 19\/05\/2027/);
+  assert.match(html, /Awaiting its two reviews · Prepared 19 Nov 2026 · Review by 19 May 2027/);
   assert.match(html, /Saved as a published version/);
   assert.match(html, /Review date passed; prepare it again/);
   assert.match(html, /Another candidate was saved under this version number; prepare it again/);

@@ -16,9 +16,8 @@ import {
 } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
-import { describeError, formatDate } from "@/lib/api";
-const money = (n: number) =>
-  new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(n / 100);
+import { describeError } from "@/lib/api";
+import { formatDateTime, formatNaira } from "@/lib/format";
 const labels: Record<string, string> = {
   created: "Order saved — not paid",
   pending: "Awaiting verified payment",
@@ -56,7 +55,7 @@ function OrderCard({ order, changed }: { order: CommerceOrder; changed: () => Pr
           <h2 className="text-lg font-semibold">{order.title}</h2>
           <p className="mt-1 text-sm">{labels[order.status]}</p>
         </div>
-        <p className="font-semibold">{money(order.amountKobo)}</p>
+        <p className="font-semibold">{formatNaira(order.amountKobo)}</p>
       </div>
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
         <div>
@@ -65,11 +64,11 @@ function OrderCard({ order, changed }: { order: CommerceOrder; changed: () => Pr
         </div>
         <div>
           <dt className="text-muted-foreground">Saved</dt>
-          <dd>{formatDate(order.createdAt)}</dd>
+          <dd>{formatDateTime(order.createdAt)}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Last server verification</dt>
-          <dd>{order.lastCheckedAt ? formatDate(order.lastCheckedAt) : "Not yet verified"}</dd>
+          <dd>{order.lastCheckedAt ? formatDateTime(order.lastCheckedAt) : "Not yet verified"}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Tax treatment</dt>
@@ -151,22 +150,22 @@ function OrderCard({ order, changed }: { order: CommerceOrder; changed: () => Pr
         <section className="mt-6 border-t pt-4" aria-label={`Refund history for ${order.reference}`}>
           <h3 className="font-semibold">Refund history</h3>
           <p className="my-2 text-sm">
-            Confirmed processed: {money(order.refundedKobo)}. A provider-processed refund is not confirmation
-            that your bank has credited your account.
+            Confirmed processed: {formatNaira(order.refundedKobo)}. A provider-processed refund is not
+            confirmation that your bank has credited your account.
           </p>
           <ul className="space-y-3">
             {order.refunds.map((r) => (
               <li key={r.id} className="rounded-xl border p-3 text-sm">
                 <p>
-                  {r.amountKobo === null ? "Amount not confirmed" : money(r.amountKobo)} ·{" "}
+                  {r.amountKobo === null ? "Amount not confirmed" : formatNaira(r.amountKobo)} ·{" "}
                   {r.status.replaceAll("_", " ")}
                 </p>
                 <p className="break-all text-xs text-muted-foreground">{r.reference}</p>
                 <p className="my-1 whitespace-pre-wrap">{r.reason}</p>
                 {r.decisionReason && <p>Finance decision: {r.decisionReason}</p>}
                 <p>
-                  Saved {formatDate(r.createdAt)} · Provider checked{" "}
-                  {r.checkedAt ? formatDate(r.checkedAt) : "not yet"}
+                  Saved {formatDateTime(r.createdAt)} · Provider checked{" "}
+                  {r.checkedAt ? formatDateTime(r.checkedAt) : "not yet"}
                 </p>
                 {r.failure && (
                   <p role="status">
@@ -222,7 +221,8 @@ function OrderCard({ order, changed }: { order: CommerceOrder; changed: () => Pr
             onChange={(e) => setAmount(e.target.value)}
           />
           <p className="mb-3 text-sm text-muted-foreground">
-            Unreserved balance: {money(order.refundableKobo)}. Pending or unknown refunds reduce this balance.
+            Unreserved balance: {formatNaira(order.refundableKobo)}. Pending or unknown refunds reduce this
+            balance.
           </p>
           <label className="block text-sm font-medium" htmlFor={`refund-${order.id}`}>
             Reason for refund request
@@ -326,7 +326,7 @@ function PurchaseHistoryContent() {
                 {q.data.products.map((p) => (
                   <li key={p.id} className="rounded-2xl border bg-card p-5">
                     <h3 className="font-semibold">
-                      {p.title} · {money(p.amountKobo)}
+                      {p.title} · {formatNaira(p.amountKobo)}
                     </h3>
                     <p className="my-2 text-sm">{p.taxTreatment}</p>
                     <details className="text-sm">

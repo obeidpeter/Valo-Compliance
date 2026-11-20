@@ -4,6 +4,7 @@ import { ChevronDown, ExternalLink, Quote } from "lucide-react";
 import type { AssessmentItem, AssessmentResult } from "@workspace/api-client-react";
 import { Notice } from "@/components/states";
 import { factLabel } from "@/lib/checker";
+import { formatDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { MISSING_ANSWER_STATE_LABELS, RESULT_LABELS, RESULT_TONES } from "@/lib/rich-checker";
 
@@ -30,7 +31,7 @@ export function AssessmentResultView({
   return (
     <div className="grid min-w-0 gap-6" data-testid="assessment-result">
       <div className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted-foreground">
-        <span>As of {result.asOfDate}</span>
+        <span>As of {formatDay(result.asOfDate)}</span>
         <span className="min-w-0 break-all">Ruleset {result.rulesetVersion}</span>
         <span>{result.sourceBackedRecommendations} source-backed</span>
         <span className="truncate" title={result.resultHash}>

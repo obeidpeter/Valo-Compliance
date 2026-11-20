@@ -8,7 +8,8 @@ import {
   actOnPaymentConcern,
   type PaymentConcern,
 } from "@workspace/api-client-react";
-import { describeError, formatDate } from "@/lib/api";
+import { describeError } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import { useDisputeDirty } from "./dispute-workflows";
 
 const queryKey = ["/api/workspace/disputes"] as const;
@@ -21,7 +22,7 @@ function Concern({ row, refresh }: { row: PaymentConcern; refresh: () => Promise
     <article className="rounded-xl border p-3 text-sm">
       <p className="break-all font-medium">Concern {row.id}</p>
       <p className="my-1">
-        {row.status.replaceAll("_", " ")} · Saved {formatDate(row.createdAt)}
+        {row.status.replaceAll("_", " ")} · Saved {formatDateTime(row.createdAt)}
       </p>
       <p className="whitespace-pre-wrap break-words">{row.message}</p>
       <details className="my-3">
@@ -36,7 +37,7 @@ function Concern({ row, refresh }: { row: PaymentConcern; refresh: () => Promise
             {row.history.map((item) => (
               <li key={item.id} className="border-l pl-3">
                 <p className="text-xs text-muted-foreground">
-                  {item.actorType} · {formatDate(item.createdAt)} · {item.action.replaceAll("_", " ")}
+                  {item.actorType} · {formatDateTime(item.createdAt)} · {item.action.replaceAll("_", " ")}
                 </p>
                 <p className="whitespace-pre-wrap break-words">{item.reason}</p>
               </li>
@@ -236,7 +237,7 @@ function FinanceConcern({ row, refresh }: { row: PaymentConcern; refresh: () => 
           {row.history.map((item) => (
             <li key={item.id}>
               <p className="text-xs text-muted-foreground">
-                {item.actorType} · {formatDate(item.createdAt)} · {item.action.replaceAll("_", " ")}
+                {item.actorType} · {formatDateTime(item.createdAt)} · {item.action.replaceAll("_", " ")}
               </p>
               <p className="whitespace-pre-wrap break-words">{item.reason}</p>
             </li>

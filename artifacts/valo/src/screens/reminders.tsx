@@ -16,7 +16,8 @@ import {
 } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
-import { describeError, formatDate } from "@/lib/api";
+import { describeError } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import { live } from "@/lib/checker";
 import { cn } from "@/lib/utils";
 
@@ -331,8 +332,8 @@ export default function RemindersPage() {
                         {taskTitle.get(r.taskId) ?? "Archived or unavailable task"}
                       </p>
                       <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-                        scheduled {formatDate(r.scheduledAt)}
-                        {r.deliveredAt ? " · delivered " + formatDate(r.deliveredAt) : ""}
+                        scheduled {formatDateTime(r.scheduledAt)}
+                        {r.deliveredAt ? " · delivered " + formatDateTime(r.deliveredAt) : ""}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {r.reason === "EMAIL_ATTEMPT_LIMIT_REACHED"
@@ -353,7 +354,7 @@ export default function RemindersPage() {
                       )}
                       {r.lastAttemptAt && (
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Attempts: {r.attempts} · Last attempt {formatDate(r.lastAttemptAt)}
+                          Attempts: {r.attempts} · Last attempt {formatDateTime(r.lastAttemptAt)}
                         </p>
                       )}
                       {r.nextAttemptAt && (
@@ -361,7 +362,7 @@ export default function RemindersPage() {
                           {r.reason === "EMAIL_DISPATCH_IN_PROGRESS"
                             ? "If interrupted, recovery is available after "
                             : "Retry after "}
-                          {formatDate(r.nextAttemptAt)} if reminders are still enabled.
+                          {formatDateTime(r.nextAttemptAt)} if reminders are still enabled.
                         </p>
                       )}
                     </div>

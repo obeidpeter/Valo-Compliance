@@ -1,5 +1,6 @@
 import { SiteLinkTo as Link } from "./site-link";
 import type { ReleasedResource, ReleasedResourceKind } from "@workspace/api-client-react";
+import { formatDay } from "@/lib/format";
 
 export const KIND_LABEL: Record<ReleasedResourceKind, string> = {
   guidance: "Guidance",
@@ -9,20 +10,6 @@ export const KIND_LABEL: Record<ReleasedResourceKind, string> = {
 };
 
 export const liveContent = { refetchInterval: 15000, refetchOnWindowFocus: true } as const;
-
-/** A day as Nigerian businesses read it: in Lagos time, whatever the viewer's or the server's time
- * zone, so a page the server renders shows the same date once it is in the browser. */
-export function fmtDay(iso: string) {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? iso
-    : d.toLocaleDateString("en-NG", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        timeZone: "Africa/Lagos",
-      });
-}
 
 /** Released text rendered as plaintext paragraphs. Never interpreted as HTML. */
 export function PlainText({ text, className }: { text: string; className?: string }) {
@@ -56,7 +43,7 @@ export function ResourceCard({ r }: { r: ReleasedResource }) {
       </div>
       <p className="font-display mt-3 text-xl">{r.title}</p>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{r.summary}</p>
-      <p className="mt-3 text-xs text-muted-foreground">Reviewed {fmtDay(r.reviewedAt)}</p>
+      <p className="mt-3 text-xs text-muted-foreground">Reviewed {formatDay(r.reviewedAt)}</p>
     </Link>
   );
 }

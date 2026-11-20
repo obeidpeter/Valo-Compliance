@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccountEpoch } from "./account-state-boundary";
 import { ErrorState } from "./states";
-import { formatDate } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import {
   getSupportCase,
@@ -81,7 +81,8 @@ export function SupportMessages({
           {visible.map((message) => (
             <li key={message.id} className="min-w-0 rounded-xl border border-border p-4">
               <p className="text-xs text-muted-foreground">
-                {message.authorKind === "staff" ? "Valo staff" : "Customer"} · {formatDate(message.createdAt)}
+                {message.authorKind === "staff" ? "Valo staff" : "Customer"} ·{" "}
+                {formatDateTime(message.createdAt)}
                 {staff &&
                   ` · ${message.visibility === "internal" ? "Internal record · not sent" : "Customer portal"}`}
               </p>
@@ -210,7 +211,7 @@ export function CustomerSupportCases() {
                 <p className="mt-2 text-sm">
                   {item.category.replaceAll("_", " ")} · <strong>{item.status.replaceAll("_", " ")}</strong>
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">Updated {formatDate(item.updatedAt)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Updated {formatDateTime(item.updatedAt)}</p>
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm mt-4"

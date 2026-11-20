@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useGetCorrectionNotices } from "@workspace/api-client-react";
 import { ErrorState } from "@/components/states";
+import { formatDateTime } from "@/lib/format";
 export function CorrectionNotices() {
   const [page, setPage] = useState(1),
     q = useGetCorrectionNotices({ page }, { query: { retry: false, refetchInterval: 60000 } });
@@ -22,7 +23,7 @@ export function CorrectionNotices() {
         {q.data.notices.map((n) => (
           <li key={n.id} className="text-sm">
             <p>{n.message}</p>
-            <p className="mt-1 text-muted-foreground">{new Date(n.createdAt).toLocaleString()}</p>
+            <p className="mt-1 text-muted-foreground">{formatDateTime(n.createdAt)}</p>
             <Link
               className="mt-2 inline-block underline"
               href={

@@ -1,12 +1,11 @@
 import type { StaffPreparedCandidate } from "@workspace/api-client-react";
+import { formatDay } from "@/lib/format";
 
 const STATES: Record<Exclude<StaffPreparedCandidate["state"], "saved">, string> = {
   awaiting_reviews: "Awaiting its two reviews",
   expired: "Review date passed; prepare it again",
   version_taken: "Another candidate was saved under this version number; prepare it again",
 };
-
-const date = (value: string | Date) => new Date(value).toLocaleDateString("en-GB", { timeZone: "UTC" });
 
 /**
  * Templates prepared for their two AI reviews (decision 0014). Until the reviews are checked, a
@@ -34,7 +33,7 @@ export function PreparedCandidates({ candidates }: { candidates: StaffPreparedCa
               </p>
               <p className="text-sm text-muted-foreground">
                 {c.state === "saved" ? `Saved as a ${c.savedStatus ?? "content"} version` : STATES[c.state]}
-                {` · Prepared ${date(c.preparedAt)} · Review by ${date(c.reviewBy)}`}
+                {` · Prepared ${formatDay(c.preparedAt)} · Review by ${formatDay(c.reviewBy)}`}
               </p>
               <p className="mt-1 font-mono text-xs break-all">
                 --candidate={c.artifactId}:{c.artifactHash}

@@ -6,7 +6,8 @@ import {
   type StaffRoleChangeInput,
   type StaffRoleAssignment,
 } from "@workspace/api-client-react";
-import { describeError, formatDate } from "@/lib/api";
+import { describeError } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 const roles = ["content", "support", "finance", "system", "privacy"] as const;
 export function StaffRoleAdministration() {
   const [identityId, setIdentityId] = useState(""),
@@ -234,7 +235,7 @@ export function StaffRoleAdministration() {
           <p className="sm:col-span-2 text-sm">
             Current assignment:{" "}
             {existing
-              ? `${effective(existing) ? "active" : "inactive or expired"}, ${existing.grantMode.replaceAll("_", " ")}, revision ${existing.version}${existing.expiresAt ? `, expires ${formatDate(existing.expiresAt)}` : ""}`
+              ? `${effective(existing) ? "active" : "inactive or expired"}, ${existing.grantMode.replaceAll("_", " ")}, revision ${existing.version}${existing.expiresAt ? `, expires ${formatDateTime(existing.expiresAt)}` : ""}`
               : "No saved assignment for this identity and permission."}
           </p>
           <label className="sm:col-span-2 text-sm">
@@ -297,7 +298,7 @@ export function StaffRoleAdministration() {
               </p>
               <p>
                 {r.grantMode.replaceAll("_", " ")}
-                {r.expiresAt ? ` until ${formatDate(r.expiresAt)}` : ""} · revision {r.version}
+                {r.expiresAt ? ` until ${formatDateTime(r.expiresAt)}` : ""} · revision {r.version}
               </p>
               <button
                 className="btn btn-ghost btn-sm mt-2"
@@ -329,7 +330,7 @@ export function StaffRoleAdministration() {
                 {c.action} {c.role} · {c.targetIdentityId}
               </p>
               <p>
-                {formatDate(c.createdAt)} · {c.reason}
+                {formatDateTime(c.createdAt)} · {c.reason}
               </p>
               <p className="break-all">
                 Actor {c.actorId} · audit {c.id}

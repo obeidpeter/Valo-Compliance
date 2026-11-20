@@ -4,19 +4,8 @@ import {
   type EditorialRecord,
 } from "@workspace/api-client-react";
 import { ErrorState, Skel } from "@/components/states";
+import { formatDateTime, formatDay } from "@/lib/format";
 
-const when = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? iso
-    : d.toLocaleString("en-NG", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-};
 const checks = (c: EditorialRecord["mechanicalChecks"]) =>
   `${c.passed} passed, ${c.failed} failed, ${c.notRun} not run`;
 
@@ -44,7 +33,7 @@ export function EditorialRecordView({ record }: { record: EditorialRecord }) {
       <section aria-label="Bundle check">
         <h4 className="font-medium">
           {held ? "Held by the bundle check" : "Passes the bundle check"} · checked{" "}
-          {when(record.check.checkedAt)}
+          {formatDateTime(record.check.checkedAt)}
         </h4>
         {record.check.reasons.length > 0 && (
           <ul className="mt-2 grid gap-1" data-testid="list-hold-reasons">
@@ -74,13 +63,13 @@ export function EditorialRecordView({ record }: { record: EditorialRecord }) {
           {record.publishedAt && (
             <div>
               <dt className="text-muted-foreground">Published</dt>
-              <dd>{when(record.publishedAt)}</dd>
+              <dd>{formatDateTime(record.publishedAt)}</dd>
             </div>
           )}
           {record.reviewBy && (
             <div>
               <dt className="text-muted-foreground">Review by</dt>
-              <dd>{when(record.reviewBy)}</dd>
+              <dd>{formatDay(record.reviewBy)}</dd>
             </div>
           )}
           {record.withdrawnReason && (
@@ -135,8 +124,9 @@ export function EditorialRecordView({ record }: { record: EditorialRecord }) {
           <ul className="mt-2 grid gap-2">
             {record.safetyHolds.map((h) => (
               <li key={`${h.createdAt}:${h.reason}`}>
-                {h.action === "withdraw" ? "Withdrawn" : "Held"} {when(h.createdAt)}: {h.reason} · {h.phase}
-                {h.completedAt ? `, completed ${when(h.completedAt)}` : ""}
+                {h.action === "withdraw" ? "Withdrawn" : "Held"} {formatDateTime(h.createdAt)}: {h.reason} ·{" "}
+                {h.phase}
+                {h.completedAt ? `, completed ${formatDateTime(h.completedAt)}` : ""}
               </li>
             ))}
           </ul>
@@ -150,7 +140,8 @@ export function EditorialRecordView({ record }: { record: EditorialRecord }) {
           <ol className="mt-2 grid gap-2">
             {record.audit.map((a) => (
               <li key={`${a.at}:${a.action}`}>
-                {when(a.at)} · {a.action} by {a.actor}: <span className="break-all">{a.reason}</span>
+                {formatDateTime(a.at)} · {a.action} by {a.actor}:{" "}
+                <span className="break-all">{a.reason}</span>
               </li>
             ))}
           </ol>

@@ -31,7 +31,8 @@ import {
   type DocumentBlockType,
 } from "@workspace/api-client-react";
 import { ErrorState, Notice, Skel } from "@/components/states";
-import { FIELD_LABELS, describeError, formatDate, missingFields, newBlockId } from "@/lib/api";
+import { FIELD_LABELS, describeError, missingFields, newBlockId } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { DocumentExports } from "@/components/document-exports";
 import { FinancialFields, FINANCIAL_BLOCK_IDS } from "@/components/financial-fields";
@@ -840,7 +841,7 @@ export default function DocumentEditor({ id }: { id: string }) {
                         <span>
                           <span className="font-mono">rev {r.revision}</span>
                           <span className="block text-xs text-muted-foreground">
-                            {formatDate(r.updatedAt)}
+                            {formatDateTime(r.updatedAt)}
                           </span>
                         </span>
                         {current ? (

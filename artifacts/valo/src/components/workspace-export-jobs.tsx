@@ -12,6 +12,7 @@ import {
   actOnWorkspaceExport,
   type WorkspaceExportJob,
 } from "../lib/workspace-export-jobs";
+import { formatCount, formatDateTime } from "@/lib/format";
 
 const LABELS: Record<WorkspaceExportJob["status"], string> = {
   queued: "Queued",
@@ -22,10 +23,7 @@ const LABELS: Record<WorkspaceExportJob["status"], string> = {
   expired: "Expired",
 };
 const bytesLabel = (bytes: number) =>
-  bytes < 1_000_000
-    ? `${Math.ceil(bytes / 1000).toLocaleString()} KB`
-    : `${(bytes / 1_000_000).toFixed(1)} MB`;
-const dateLabel = (date: string) => new Date(date).toLocaleString();
+  bytes < 1_000_000 ? `${formatCount(Math.ceil(bytes / 1000))} KB` : `${(bytes / 1_000_000).toFixed(1)} MB`;
 
 export function WorkspaceExportJobs({ pollMs = 2000 }: { pollMs?: number }) {
   const [jobs, setJobs] = useState<WorkspaceExportJob[]>([]);
@@ -276,12 +274,14 @@ export function WorkspaceExportJobs({ pollMs = 2000 }: { pollMs?: number }) {
                 <h3 className="font-medium" data-testid={`export-status-${job.id}`}>
                   {expired ? "Expired" : LABELS[job.status]}
                 </h3>
-                <span className="text-xs text-muted-foreground">Requested {dateLabel(job.createdAt)}</span>
+                <span className="text-xs text-muted-foreground">
+                  Requested {formatDateTime(job.createdAt)}
+                </span>
               </div>
               <p className="mt-2 text-xs break-all text-muted-foreground">Reference {job.id}</p>
               {(activeWorkspaceExport(job) || job.status === "ready") && !expired && (
                 <p className="mt-2 text-sm" aria-live="polite">
-                  {job.progress.rows.toLocaleString()} rows read · {bytesLabel(job.progress.bytes)} prepared
+                  {formatCount(job.progress.rows)} rows read · {bytesLabel(job.progress.bytes)} prepared
                   {activeWorkspaceExport(job) ? " so far" : ""}
                 </p>
               )}
@@ -299,7 +299,7 @@ export function WorkspaceExportJobs({ pollMs = 2000 }: { pollMs?: number }) {
                 </p>
               )}
               {job.status === "ready" && !expired && job.expiresAt && (
-                <p className="mt-2 text-sm">Available until {dateLabel(job.expiresAt)}.</p>
+                <p className="mt-2 text-sm">Available until {formatDateTime(job.expiresAt)}.</p>
               )}
               {job.status === "ready" && !expired && !["cancelled", "expired"].includes(job.status) && (
                 <p className="mt-2 text-sm">

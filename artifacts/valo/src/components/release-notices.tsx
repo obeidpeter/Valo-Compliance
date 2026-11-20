@@ -1,4 +1,4 @@
-import { fmtDay } from "./resource-parts";
+import { formatDay } from "@/lib/format";
 
 /**
  * EDP-008: a released template's detail page shows the date its sources were checked, when it is
@@ -24,13 +24,13 @@ export function ReleaseNotices({
         <div>
           <dt className="eyebrow">Sources checked</dt>
           <dd className="mt-1" data-testid="text-reviewed">
-            {fmtDay(reviewedAt)}
+            {formatDay(reviewedAt)}
           </dd>
         </div>
         <div>
           <dt className="eyebrow">Next review due</dt>
           <dd className="mt-1" data-testid="text-review-by">
-            {fmtDay(reviewBy)}
+            {formatDay(reviewBy)}
           </dd>
         </div>
       </dl>

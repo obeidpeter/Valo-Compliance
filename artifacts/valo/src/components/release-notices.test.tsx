@@ -27,10 +27,10 @@ test("a template's detail page shows its source-check and review dates, the AI-r
   assert.ok(html.includes(`data-testid="text-scope">${notices.scope}</p>`), html);
   assert.ok(html.includes(`data-testid="text-limitations">${notices.limitations}</p>`), html);
   assert.ok(
-    html.includes(`Sources checked</dt><dd class="mt-1" data-testid="text-reviewed">2 November 2026</dd>`),
+    html.includes(`Sources checked</dt><dd class="mt-1" data-testid="text-reviewed">2 Nov 2026</dd>`),
     html,
   );
-  assert.ok(html.includes(`data-testid="text-review-by">2 February 2027</dd>`), html);
+  assert.ok(html.includes(`data-testid="text-review-by">2 Feb 2027</dd>`), html);
   // The detail page passes each released template's own notices to this component.
   const page = readFileSync(join(source, "public-screens/template-detail.tsx"), "utf8");
   for (const field of ["reviewedAt", "reviewBy", "disclosure", "scope", "limitations"])

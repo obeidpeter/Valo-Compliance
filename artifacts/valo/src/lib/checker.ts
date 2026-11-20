@@ -8,6 +8,7 @@ import {
   richStringLabel,
   type RichCheckerFacts,
 } from "./rich-checker";
+import { formatNaira } from "./format";
 
 export const MARKERS = ["unknown", "unanswered", "not_applicable"] as const;
 export type Marker = (typeof MARKERS)[number];
@@ -22,10 +23,6 @@ export const MARKER_LABEL: Record<Marker, string> = {
 
 /** Shared query options: short staleness, refresh when the tab regains focus. */
 export const live = { staleTime: 30_000, refetchOnWindowFocus: true } as const;
-
-export function lagosToday(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
-}
 
 export const EMPTY_FACTS: CheckerFacts = {
   legalForm: "unanswered",
@@ -115,15 +112,6 @@ export function koboToNaira(kobo: string | null | undefined): string {
   return k === "00" ? n : n + "." + k;
 }
 
-export function formatKobo(kobo: string): string {
-  const p = kobo.padStart(3, "0");
-  const n = p
-    .slice(0, -2)
-    .replace(/^0+(?=\d)/, "")
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return "NGN " + n + "." + p.slice(-2);
-}
-
 export const FACT_LABELS: Record<string, string> = {
   legalForm: "Legal form",
   registrationStatus: "Registration status",
@@ -182,7 +170,7 @@ export function displayFact(k: string, v: unknown): string {
         .join("; ") || "No details supplied"
     );
   if ((k === "rich" || k.startsWith("rich.")) && typeof v === "string") return richStringLabel(k, v);
-  if (k === "turnoverAmountKobo" && typeof v === "string" && !isMarker(v)) return formatKobo(v);
+  if (k === "turnoverAmountKobo" && typeof v === "string" && !isMarker(v)) return formatNaira(v);
   return valueLabel(String(v));
 }
 

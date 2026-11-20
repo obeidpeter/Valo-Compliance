@@ -2,22 +2,20 @@ import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { Info, Plus, Trash2 } from "lucide-react";
 import type { GuidedData, GuidedField, GuidedSpec, GuidedTable } from "@workspace/valo-core/guided";
 import { guidedDataIssues, guidedFieldIssue, guidedVisible } from "@workspace/valo-core/guided-runtime";
+import { formatNaira } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /**
  * Guided form for a document template. Pure: all values live in `value`.
  * Every input stores the exact typed text, so invalid edits stay visible and are
  * reported as issues rather than silently replaced by an older valid amount.
- * Money is entered as whole kobo (integer string); NGN is shown as a live, decimal-safe reading.
+ * Money is entered as whole kobo (integer string); naira is shown as a live, decimal-safe reading.
  */
 
 const KOBO = /^(0|[1-9]\d{0,23})$/;
 
 export function koboToNgnDisplay(k: string): string | null {
-  if (!KOBO.test(k)) return null;
-  const s = k.padStart(3, "0");
-  const naira = s.slice(0, -2).replace(/^0+(?=\d)/, "");
-  return "NGN " + naira.replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + s.slice(-2);
+  return KOBO.test(k) ? formatNaira(k) : null;
 }
 
 export function checkField(f: GuidedField, raw: string | undefined): string | null {
@@ -341,7 +339,7 @@ function FieldInput({
           data-testid={"text-" + id + "-ngn"}
         >
           {!value.trim()
-            ? "Whole kobo. 100 kobo = NGN 1.00"
+            ? "Whole kobo. 100 kobo = ₦1.00"
             : ngn
               ? "Reads as " + ngn
               : "Not a valid amount yet"}
