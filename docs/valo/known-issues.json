@@ -45,11 +45,6 @@
       "id": "KI-009",
       "summary": "No requirement is accepted. Cited CI tests are partial evidence, and acceptance needs the owner's review of each requirement.",
       "requirements": []
-    },
-    {
-      "id": "KI-010",
-      "summary": "A template candidate awaiting its two reviews is a private artifact, saved as a version only once they are checked (decision 0014). The staff Content area lists saved versions only, so a prepared candidate is named by the preparation command's report until then. Candidates prepared for the same template take the same version number, and the first one saved ends the others' reviews.",
-      "requirements": []
     }
   ]
 }

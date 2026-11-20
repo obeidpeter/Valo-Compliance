@@ -81,7 +81,8 @@ the repository root with `NODE_ENV=development`; each refuses a deployment.
    prepares each supported template from its original intake and runs its rights, mechanical and
    export checks. A candidate that passes is kept as a private artifact awaiting its reviews. A
    candidate that fails a check is saved and held. The command prints `prepareOptions`: one
-   `--candidate=<artifact id>:<sha256>` for each candidate it kept.
+   `--candidate=<artifact id>:<sha256>` for each candidate it kept. The staff Content area lists
+   the same candidates, with that reference and where each stands.
 2. `... finite-inference-run.ts --prepare new <--candidate=… options>` plans both reviews of each
    named candidate and writes the private report. To plan under an approved package, use
    `--prepare finite-package:<hash> <--candidate=… options>`. Each pair binds the candidate's
