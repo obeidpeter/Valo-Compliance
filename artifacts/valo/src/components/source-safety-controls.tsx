@@ -110,13 +110,13 @@ export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
           ) : (
             <>
               <div className="mt-6 flex flex-wrap items-end gap-3">
-                <label className="grid gap-2 text-sm" htmlFor="source-watch-choice">
+                <label className="grid min-w-0 gap-2 text-sm" htmlFor="source-watch-choice">
                   Official source to monitor
                   <select
                     id="source-watch-choice"
                     value={source}
                     onChange={(e) => setSource(e.target.value)}
-                    className="max-w-full rounded-lg border bg-background p-2"
+                    className="min-w-0 max-w-full rounded-lg border bg-background p-2"
                   >
                     <option value="">Select a registered official source</option>
                     {q.data.sourceChoices.map((s) => (
@@ -154,7 +154,7 @@ export function SourceSafetyControls({ area }: { area: "content" | "system" }) {
                         {v.reviewBy ? ` · Review by ${new Date(v.reviewBy).toLocaleDateString()}` : ""}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         className="btn btn-ghost btn-sm"
                         aria-expanded={record === `${v.kind}:${v.id}`}
