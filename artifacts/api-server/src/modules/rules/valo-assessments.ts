@@ -29,7 +29,7 @@ import {
   type CheckerFacts,
 } from "@workspace/valo-core";
 import { z } from "zod";
-import { authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
+import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 
 import { lockSourceState, sourceTargetAllowed } from "../sources";

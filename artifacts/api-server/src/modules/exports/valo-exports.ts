@@ -18,7 +18,7 @@ import {
 } from "@workspace/db";
 import { CreateDocumentExportBody, CreateDocumentExportResponse } from "@workspace/api-zod";
 import { sha256 } from "@workspace/valo-core";
-import { authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
+import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { RENDER_VERSION, renderDocument, exportMime } from "../../lib/valo-render";
 import { readPrivateFile, writePrivateFile, deletePrivateFile } from "../../platform/valo-private-storage";

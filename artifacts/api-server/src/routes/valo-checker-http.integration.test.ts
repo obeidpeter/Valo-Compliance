@@ -57,7 +57,7 @@ test(
     });
     const { db, pool, valoAssessments, valoRuleReleases, valoMemberships } = await import("@workspace/db");
     const { eq } = await import("drizzle-orm");
-    const { resolveWorkspace, saveProfile } = await import("../lib/valo-store");
+    const { resolveWorkspace, saveProfile } = await import("../modules/workspaces");
     const { syntheticProfile } = await import("../lib/valo-test-fixtures");
     const { verifiedWorkspace, sameOriginMutation } = await import("../middlewares/valo-identity");
     const { default: router } = await import("./valo-requirements");

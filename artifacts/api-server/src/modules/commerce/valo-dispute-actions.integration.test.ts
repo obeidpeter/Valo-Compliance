@@ -22,7 +22,7 @@ import {
   valoPaymentConcernEvents,
   valoSupportTickets,
 } from "@workspace/db";
-import { resolveWorkspace } from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
 import { storeVerifiedDispute } from "./valo-payment-disputes";

@@ -1,7 +1,7 @@
 import { clerkClient, getAuth } from "@clerk/express";
 import type { RequestHandler } from "express";
 import { runInWorkspaceScope } from "@workspace/db";
-import { resolveWorkspace, type WorkspaceActor } from "../lib/valo-store";
+import { resolveWorkspace, type WorkspaceActor } from "../modules/workspaces";
 import { trustedSiteOrigin, permittedMutationOrigin } from "../lib/valo-site-origin";
 import { makeSessionVerifier, routeUsesCachedCheck } from "../platform/session-verification";
 

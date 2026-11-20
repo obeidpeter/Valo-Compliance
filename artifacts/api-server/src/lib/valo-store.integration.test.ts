@@ -15,6 +15,7 @@ import {
   valoWorkspaces,
 } from "@workspace/db";
 import * as store from "./valo-store";
+import { resolveWorkspace, getWorkspace, saveProfile } from "../modules/workspaces";
 import { syntheticDocument, syntheticProfile } from "./valo-test-fixtures";
 
 test(
@@ -27,26 +28,26 @@ test(
     const run = randomUUID();
     const identityA = `synthetic-test-a-${run}`,
       identityB = `synthetic-test-b-${run}`;
-    const a = await store.resolveWorkspace(identityA),
-      b = await store.resolveWorkspace(identityB);
+    const a = await resolveWorkspace(identityA),
+      b = await resolveWorkspace(identityB);
     const workspaces = [a.workspaceId, b.workspaceId];
     try {
       await t.test("server membership resolution is idempotent and tenants are separate", async () => {
-        assert.deepEqual(await store.resolveWorkspace(identityA), a);
+        assert.deepEqual(await resolveWorkspace(identityA), a);
         assert.notEqual(a.workspaceId, b.workspaceId);
-        assert.equal((await store.getWorkspace(a)).profile, null);
+        assert.equal((await getWorkspace(a)).profile, null);
       });
       await t.test(
         "profile correction appends history, preserves declined marketing and rejects stale saves",
         async () => {
-          const first = await store.saveProfile(a, { expectedRevision: 0, profile: syntheticProfile });
+          const first = await saveProfile(a, { expectedRevision: 0, profile: syntheticProfile });
           assert.equal(first.profileRevision, 1);
           assert.equal(first.profile.marketingConsent, false);
-          await store.saveProfile(a, {
+          await saveProfile(a, {
             expectedRevision: 1,
             profile: { ...syntheticProfile, state: "Bayelsa" },
           });
-          await assert.rejects(store.saveProfile(a, { expectedRevision: 1, profile: syntheticProfile }), {
+          await assert.rejects(saveProfile(a, { expectedRevision: 1, profile: syntheticProfile }), {
             status: 409,
           });
           const versions = await db
@@ -56,7 +57,7 @@ test(
           assert.equal(versions.length, 2);
           assert.equal(versions.find((v) => v.revision === 1)!.profile.state, "unknown");
           assert.equal(versions.find((v) => v.revision === 2)!.profile.state, "Bayelsa");
-          assert.equal((await store.getWorkspace(b)).profile, null);
+          assert.equal((await getWorkspace(b)).profile, null);
         },
       );
       const document = await store.createDocument(a, syntheticDocument);
@@ -166,7 +167,7 @@ test(
           .update(valoMemberships)
           .set({ active: "no" })
           .where(eq(valoMemberships.identityId, identityB));
-        await assert.rejects(store.resolveWorkspace(identityB), { status: 403 });
+        await assert.rejects(resolveWorkspace(identityB), { status: 403 });
       });
     } finally {
       // Only these UUID-scoped synthetic records are removed. No real data or backups.

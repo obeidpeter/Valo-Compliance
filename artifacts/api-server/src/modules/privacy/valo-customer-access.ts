@@ -25,7 +25,7 @@ import {
 } from "@workspace/db";
 import { RequestAccessSupportBody } from "@workspace/api-zod";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
-import { authorizeWorkspaceWrite, authorizeWorkspaceRead, type WorkspaceActor } from "../../lib/valo-store";
+import { authorizeWorkspaceWrite, authorizeWorkspaceRead, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
   valoOrders,

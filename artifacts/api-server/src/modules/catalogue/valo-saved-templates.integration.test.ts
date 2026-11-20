@@ -12,7 +12,7 @@ import {
   valoContentVersions,
 } from "@workspace/db";
 import { disclosure, publicationSchema } from "@workspace/valo-core";
-import { resolveWorkspace } from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 import { financeHeldFixture } from "../commerce/valo-finance-test-fixture";
 

@@ -8,7 +8,7 @@ import {
   valoStaffAssignments,
   valoEvents,
 } from "@workspace/db";
-import { resolveWorkspace } from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
 import { type FinanceActor } from "./valo-refunds";
 import { makeDisputeTransport } from "./valo-dispute-provider";

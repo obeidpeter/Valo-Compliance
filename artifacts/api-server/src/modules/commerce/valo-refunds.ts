@@ -14,7 +14,7 @@ import {
   valoPaymentDisputes,
 } from "@workspace/db";
 import { RequestCommerceRefundBody, DecideFinanceRefundBody } from "@workspace/api-zod";
-import { authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
+import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
 import {

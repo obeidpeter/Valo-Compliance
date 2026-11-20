@@ -49,10 +49,10 @@ test("actual export entries and worker startup reject before database, queue or 
       "export const CreateDocumentExportBody={strict(){return this},parse(x){return x}},CreateDocumentExportResponse={parse:x=>x},RequestWorkspaceDataExportBody=CreateDocumentExportBody,CancelWorkspaceDataExportBody=CreateDocumentExportBody,ActOnStaffPrivacyCaseBody=CreateDocumentExportBody;",
     ],
     ["@workspace/valo-core", "export const sha256=x=>x;"],
+    // The export and privacy code reach the workspace access checks through the workspaces module's index.
     [
-      "valo-store",
-      `export class ValoProblem extends Error{constructor(status,message){super(message);this.status=status;}}
-      export const authorizeWorkspaceWrite=()=>{globalThis.guardEffects.authorization++;throw Error("AUTHORIZATION_EFFECT")};export const authorizeWorkspaceRead=authorizeWorkspaceWrite;`,
+      "workspaces",
+      `export const authorizeWorkspaceWrite=()=>{globalThis.guardEffects.authorization++;throw Error("AUTHORIZATION_EFFECT")};export const authorizeWorkspaceRead=authorizeWorkspaceWrite;`,
     ],
     [
       "valo-private-storage",
@@ -137,7 +137,7 @@ test("actual export entries and worker startup reject before database, queue or 
     let rejected=0;for(const op of ops){try{await op()}catch(e){if(e.status!==503&&e.code!=="DEVELOPMENT_RUNTIME_REQUIRED"&&e.code!=="PRODUCTION_REHEARSAL_CONFIGURATION_REQUIRED"&&e.code!=="PRODUCTION_RUNTIME_NOT_VERIFIED")throw e;rejected++;}}
     if(rejected!==ops.length)throw Error("UNGUARDED_EXPORT_ENTRY");`;
   try {
-    const authorizationCanary = `import{authorizeWorkspaceWrite}from${JSON.stringify(resolve("src/lib/valo-store.ts"))};
+    const authorizationCanary = `import{authorizeWorkspaceWrite}from${JSON.stringify(resolve("src/modules/workspaces"))};
       try{await authorizeWorkspaceWrite({},{});throw Error("HARNESS_CAPABILITY_NOT_REACHED")}
       catch(e){if(e.message!=="AUTHORIZATION_EFFECT")throw e;}`;
     const entries: [string, BuildOptions][] = [

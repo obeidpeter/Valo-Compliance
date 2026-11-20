@@ -14,7 +14,7 @@ import {
   valoEvents,
   valoWorkspaces,
 } from "@workspace/db";
-import { resolveWorkspace, saveProfile } from "../../lib/valo-store";
+import { resolveWorkspace, saveProfile } from "../workspaces";
 import * as assessments from "../rules/valo-assessments";
 import * as tasks from "./valo-tasks";
 import { processReminder } from "./valo-reminder-worker";

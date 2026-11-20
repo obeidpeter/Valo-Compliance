@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db, runInWorkspaceScope, valoProfileVersions, valoWorkspaces } from "@workspace/db";
 import { ActOnStaffPrivacyCaseBody } from "@workspace/api-zod";
-import { authorizeWorkspaceWrite } from "../../lib/valo-store";
+import { authorizeWorkspaceWrite } from "../workspaces";
 import { workspaceDataExport } from "./valo-customer-access";
 import { ValoProblem } from "../../platform/valo-problem";
 import { assertPrivacyVersion } from "../../lib/valo-privacy-state";

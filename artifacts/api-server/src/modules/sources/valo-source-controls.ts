@@ -253,10 +253,10 @@ export async function actOnSourceControls(actor: SourceStaffActor, raw: unknown)
   });
 }
 export async function correctionNotices(actor: WorkspaceActor, page = 1) {
-  // The store loads here, not with every reader of the sources module's index.
+  // The workspaces module loads here, not with every reader of the sources module's index.
   const [{ db }, { authorizeWorkspaceWrite }] = await Promise.all([
     import("@workspace/db"),
-    import("../../lib/valo-store"),
+    import("../workspaces"),
   ]);
   return db.transaction(async (tx) => {
     await authorizeWorkspaceWrite(tx, actor);

@@ -28,7 +28,8 @@ import {
   valoSavedTemplates,
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
-import { resolveWorkspace, saveProfile, createDocument, authorizeWorkspaceWrite } from "../../lib/valo-store";
+import { createDocument } from "../../lib/valo-store";
+import { resolveWorkspace, saveProfile, authorizeWorkspaceWrite } from "../workspaces";
 import { syntheticProfile, syntheticDocument } from "../../lib/valo-test-fixtures";
 import {
   createPrivacyCase,

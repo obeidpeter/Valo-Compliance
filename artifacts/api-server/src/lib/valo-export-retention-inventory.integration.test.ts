@@ -19,7 +19,8 @@ import {
   valoPrivacyEvents,
   valoSupportTickets,
 } from "@workspace/db";
-import { resolveWorkspace, createDocument } from "./valo-store";
+import { createDocument } from "./valo-store";
+import { resolveWorkspace } from "../modules/workspaces";
 import { syntheticDocument } from "./valo-test-fixtures";
 import { createPrivacyCase } from "../modules/privacy/valo-privacy";
 import { inspectExportRetention, proposeExportRetention } from "./valo-export-retention-inventory";

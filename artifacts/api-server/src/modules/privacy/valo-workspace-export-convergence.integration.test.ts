@@ -36,7 +36,8 @@ import {
   valoSupportEvents,
   valoSupportEscalations,
 } from "@workspace/db";
-import { resolveWorkspace, createDocument } from "../../lib/valo-store";
+import { createDocument } from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
   createWorkspaceExport,

@@ -12,6 +12,7 @@ import { contentReadiness, contentTraceRows, expansionReadiness } from "@workspa
 import { readiness } from "@workspace/valo-records";
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
 import * as store from "../lib/valo-store";
+import { getWorkspace, saveProfile } from "../modules/workspaces";
 import requirementsRouter from "./valo-requirements";
 import customerAIRouter from "./valo-customer-ai";
 import {
@@ -176,10 +177,10 @@ router.delete("/workspace/saved-templates/by-template/:templateId", async (req, 
 });
 router.use(customerPaymentConcernsRouter);
 router.get("/workspace", async (_req, res) => {
-  res.json(await store.getWorkspace(res.locals.valoActor));
+  res.json(await getWorkspace(res.locals.valoActor));
 });
 router.put("/workspace/profile", async (req, res) => {
-  res.json(await store.saveProfile(res.locals.valoActor, req.body));
+  res.json(await saveProfile(res.locals.valoActor, req.body));
 });
 router.get("/workspace/documents", async (_req, res) => {
   res.json(await store.listDocuments(res.locals.valoActor));

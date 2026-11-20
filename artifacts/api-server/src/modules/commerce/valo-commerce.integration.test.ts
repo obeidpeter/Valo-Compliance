@@ -14,7 +14,7 @@ import {
   valoEvents,
   valoMemberships,
 } from "@workspace/db";
-import * as store from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import * as commerce from "./valo-commerce";
 import { verifiedTransaction } from "./valo-paystack-contract";
 import { financeHeldFixture } from "./valo-finance-test-fixture";
@@ -25,8 +25,8 @@ test(
   { timeout: 40000 },
   async (t) => {
     assert.equal(process.env.NODE_ENV, "development");
-    const a = await store.resolveWorkspace(`synthetic-commerce-${randomUUID()}`),
-      b = await store.resolveWorkspace(`synthetic-commerce-${randomUUID()}`);
+    const a = await resolveWorkspace(`synthetic-commerce-${randomUUID()}`),
+      b = await resolveWorkspace(`synthetic-commerce-${randomUUID()}`);
     // Reuse an actual held development version; never insert or forge a release.
     const held = await financeHeldFixture();
     assert.ok(

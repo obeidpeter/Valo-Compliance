@@ -204,7 +204,7 @@ export function workspaceActorViolations(path: string, text: string): string[] {
         report(node, "HTTP code may not create a workspace actor from a record");
       if (
         node.text === "workspaceActorFromMembership" &&
-        path !== "artifacts/api-server/src/lib/valo-store.ts" &&
+        path !== "artifacts/api-server/src/modules/workspaces/valo-workspaces.ts" &&
         path !== "artifacts/api-server/src/platform/workspace-context.ts"
       )
         report(node, "only resolveWorkspace may issue an actor from a membership");

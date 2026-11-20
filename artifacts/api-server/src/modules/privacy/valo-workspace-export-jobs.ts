@@ -11,7 +11,7 @@ import {
   valoPrivacyTombstones,
   type WorkspaceExport,
 } from "@workspace/db";
-import { authorizeWorkspaceRead, authorizeWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
+import { authorizeWorkspaceRead, authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { workspaceDataExport } from "./valo-customer-access";
 import {

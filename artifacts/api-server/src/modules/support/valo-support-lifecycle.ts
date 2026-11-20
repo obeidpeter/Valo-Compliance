@@ -19,7 +19,7 @@ import {
   valoRuleReleases,
 } from "@workspace/db";
 import { ValoProblem } from "../../platform/valo-problem";
-import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../../lib/valo-store";
+import { authorizeWorkspaceWrite, limitWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { consumeQuota, quotaSubjectHash } from "../../lib/valo-quota";
 import { setting } from "../../platform/settings";
 import {

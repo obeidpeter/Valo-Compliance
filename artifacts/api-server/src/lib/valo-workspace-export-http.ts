@@ -16,7 +16,7 @@ import {
   workspaceExportStorage,
   type WorkspaceExportStorage,
 } from "../modules/privacy";
-import { type WorkspaceActor } from "./valo-store";
+import type { WorkspaceActor } from "../modules/workspaces";
 import { ValoProblem } from "../platform/valo-problem";
 import { assertApplicationRuntime } from "../platform/valo-runtime-activation";
 const live = async (req: Request, actor: WorkspaceActor) =>

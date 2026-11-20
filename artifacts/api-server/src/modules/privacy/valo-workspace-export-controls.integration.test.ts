@@ -9,7 +9,7 @@ import {
   valoWorkspaceExports as jobs,
   valoWorkspaceExportAttempts as attempts,
 } from "@workspace/db";
-import { resolveWorkspace } from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import {
   createWorkspaceExport,

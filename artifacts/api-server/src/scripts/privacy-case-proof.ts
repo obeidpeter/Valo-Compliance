@@ -14,7 +14,7 @@ import {
   processPrivacyAction,
   privacyPreparedResult,
 } from "../modules/privacy";
-import { saveProfile } from "../lib/valo-store";
+import { saveProfile } from "../modules/workspaces";
 import { syntheticProfile } from "../lib/valo-test-fixtures";
 import { workspaceActorFromRecord } from "../platform/workspace-context";
 const checks: { name: string; status: "pass" | "fail"; errorType?: string }[] = [],

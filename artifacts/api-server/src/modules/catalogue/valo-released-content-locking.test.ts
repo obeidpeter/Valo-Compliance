@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { workspaceActorFromRecord } from "../../platform/workspace-context";
-import { ValoProblem } from "../../platform/valo-problem";
 
 /**
  * A template download checks the version's database state under the shared source-state
@@ -106,10 +105,14 @@ test("template downloads read storage outside the transaction that holds the sou
       sourceTargetAllowed: async () => true,
     },
   });
+  // The workspace access check comes through the workspaces module's index.
+  t.mock.module(new URL("../workspaces/index.ts", import.meta.url).href, {
+    namedExports: {
+      authorizeWorkspaceWrite: async () => record("membership"),
+    },
+  });
   t.mock.module(new URL("../../lib/valo-store.ts", import.meta.url).href, {
     namedExports: {
-      ValoProblem,
-      authorizeWorkspaceWrite: async () => record("membership"),
       createDocumentInTransaction: async () => "document-1",
       getDocument: async () => ({ id: "document-1" }),
     },

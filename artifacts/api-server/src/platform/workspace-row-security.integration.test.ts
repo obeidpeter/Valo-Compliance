@@ -61,7 +61,8 @@ test(
       valoWorkspaces,
       WORKSPACE_SCOPE_UNAVAILABLE_CODE,
     } = await import("@workspace/db");
-    const { resolveWorkspace, saveProfile, createDocument } = await import("../lib/valo-store");
+    const { createDocument } = await import("../lib/valo-store");
+    const { resolveWorkspace, saveProfile } = await import("../modules/workspaces");
     const { syntheticDocument, syntheticProfile } = await import("../lib/valo-test-fixtures");
     const { verifiedWorkspace } = await import("../middlewares/valo-identity");
 

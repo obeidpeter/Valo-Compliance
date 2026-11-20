@@ -14,7 +14,7 @@ import {
   valoMemberships,
   valoWorkspaces,
 } from "@workspace/db";
-import { resolveWorkspace } from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import { createTask, saveReminderPreferences, reminderInstant } from "./valo-tasks";
 import { processReminder, reminderRetryAt, reconcileDueReminders } from "./valo-reminder-worker";
 test(

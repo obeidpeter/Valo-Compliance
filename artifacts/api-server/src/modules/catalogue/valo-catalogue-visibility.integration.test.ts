@@ -4,7 +4,8 @@ import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import { db, valoContentVersions, valoPublicationPolicies } from "@workspace/db";
 import { liveReleasedVersions, releasedCatalogue } from "./valo-released-content";
-import { createDocument, resolveWorkspace } from "../../lib/valo-store";
+import { createDocument } from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 
 // WEB-003: public search, accepted when "unpublished content and customer drafts never appear".

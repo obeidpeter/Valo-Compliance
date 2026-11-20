@@ -19,6 +19,7 @@ import {
   valoDocuments,
 } from "@workspace/db";
 import * as store from "../../lib/valo-store";
+import { resolveWorkspace } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 import {
@@ -41,8 +42,8 @@ test(
     assert.equal(process.env.NODE_ENV, "development");
     assert.equal(Boolean(process.env.PAYSTACK_SECRET_KEY), false);
     process.env.VALO_RUN_REFUND_TESTS = "synthetic-development-only";
-    const a = await store.resolveWorkspace(`synthetic-refund-${randomUUID()}`),
-      b = await store.resolveWorkspace(`synthetic-refund-${randomUUID()}`);
+    const a = await resolveWorkspace(`synthetic-refund-${randomUUID()}`),
+      b = await resolveWorkspace(`synthetic-refund-${randomUUID()}`);
     const staff: FinanceActor = {
       identityId: `synthetic-finance-${randomUUID()}`,
       recentMfa: true,

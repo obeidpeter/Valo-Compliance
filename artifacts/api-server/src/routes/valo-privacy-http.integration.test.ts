@@ -26,7 +26,7 @@ import {
   customerAccessRouter,
 } from "./valo-customer-access";
 import { createPrivacyCase, confirmPrivacyCase } from "../modules/privacy/valo-privacy";
-import { resolveWorkspace } from "../lib/valo-store";
+import { resolveWorkspace } from "../modules/workspaces";
 import { ValoProblem } from "../platform/valo-problem";
 
 test(
