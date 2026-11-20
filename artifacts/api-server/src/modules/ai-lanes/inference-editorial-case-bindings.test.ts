@@ -84,7 +84,7 @@ test("any change to an editorial case work fails its binding checks", async () =
 });
 
 test("a case the preparer cannot build is refused even with its real case hash", async () => {
-  for (const id of ["EVAL-EDP-C041", "EVAL-EDP-C060", "EVAL-EDP-C005"]) {
+  for (const id of ["EVAL-EDP-C060", "EVAL-EDP-C005"]) {
     const row = corpus.cases.find((c) => c.id === id)!;
     const work = { ...factual, caseHash: requestDigest(row), bindings: { ...factual.bindings, caseId: id } };
     await assert.rejects(() => assertFiniteWorkBindings(work), /EDITORIAL_CASE_NOT_PREPARABLE/, id);

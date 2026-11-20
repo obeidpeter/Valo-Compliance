@@ -35,8 +35,8 @@ import { meterReviewRequest } from "./review-meter";
  * the corpus or the expected outcome. Nothing here calls a model, reserves budget or saves anything.
  */
 
-/** The case pairs this preparer can build now. C041 needs a review that fails at the provider under
- * control, and C060 needs C018's candidate held by its real reviews; neither is built yet. */
+/** The case pairs this preparer can build now for a provider run. C041 is prepared only for a
+ * controlled failure (below), and C060 needs C018's candidate held by its real reviews. */
 export const preparableEditorialCases = [
   "EVAL-EDP-C004",
   "EVAL-EDP-C013",
@@ -53,6 +53,16 @@ export const preparableEditorialCases = [
 ] as const satisfies readonly EditorialCaseId[];
 export const isPreparableEditorialCase = (id: string): id is (typeof preparableEditorialCases)[number] =>
   (preparableEditorialCases as readonly string[]).includes(id);
+
+/** C041 asks for a review that fails at the provider under control. Its pair is prepared like the
+ * others, but only a controlled destination may receive it (editorial-case-controlled-failure
+ * integration test), never the provider: the operator runner refuses to prepare or run it. */
+export const controlledFailureEditorialCases = [
+  "EVAL-EDP-C041",
+] as const satisfies readonly EditorialCaseId[];
+export const isControlledFailureEditorialCase = (id: string) =>
+  (controlledFailureEditorialCases as readonly string[]).includes(id);
+const isBuiltCasePair = (id: string) => isPreparableEditorialCase(id) || isControlledFailureEditorialCase(id);
 
 /** The package preparer name that admits these pairs (decision 0015, point 4). */
 export const editorialCasePreparer = "editorial-case-pair-v1";
@@ -183,7 +193,7 @@ export function prepareEditorialCaseManifest(
   options: { packageId?: string } = {},
   now = new Date(),
 ): FiniteManifest & { works: FiniteWork[] } {
-  if (!isPreparableEditorialCase(caseId)) throw Error("EDITORIAL_CASE_NOT_PREPARABLE");
+  if (!isBuiltCasePair(caseId)) throw Error("EDITORIAL_CASE_NOT_PREPARABLE");
   if (!Number.isFinite(now.getTime())) throw Error("EDITORIAL_CASE_PREPARATION_TIME_INVALID");
   const c = buildEditorialCaseCandidates().built.find((b) => b.caseId === caseId)!;
   const reviewAsOf = now.toISOString();
@@ -236,6 +246,6 @@ export function prepareEditorialCaseManifest(
 
 /** The case's candidate as built, for the runner's records. */
 export function editorialCaseCandidate(caseId: string) {
-  if (!isPreparableEditorialCase(caseId)) throw Error("EDITORIAL_CASE_NOT_PREPARABLE");
+  if (!isBuiltCasePair(caseId)) throw Error("EDITORIAL_CASE_NOT_PREPARABLE");
   return buildEditorialCaseCandidates().built.find((b) => b.caseId === caseId)!;
 }

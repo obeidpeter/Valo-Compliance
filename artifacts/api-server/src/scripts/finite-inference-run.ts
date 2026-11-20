@@ -154,7 +154,10 @@ async function main() {
       if (!batchId || !/^EVAL-EDP-C\d{3}$/.test(batchId)) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
       if (options.candidates.length || options.retry) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
-      const { prepareEditorialCaseManifest } = await import("../modules/editorial");
+      const { prepareEditorialCaseManifest, isControlledFailureEditorialCase } =
+        await import("../modules/editorial");
+      // C041's review must fail under control; it never goes to the provider.
+      if (isControlledFailureEditorialCase(batchId)) throw Error("EDITORIAL_CASE_CONTROLLED_FAILURE_ONLY");
       const existing = options.packageId
         ? await readApprovedFiniteAllocationPackage(pool, options.packageId)
         : null;
@@ -565,7 +568,7 @@ async function main() {
       manifest.works.length === 2 &&
       manifest.works.every((w) => w.lane === "editorial_evaluation")
     ) {
-      const { prepareEditorialCaseManifest, executeEditorialCaseReviews } =
+      const { prepareEditorialCaseManifest, executeEditorialCaseReviews, isControlledFailureEditorialCase } =
         await import("../modules/editorial");
       const [first, second] = manifest.works as [
         FiniteManifest["works"][number],
@@ -573,6 +576,8 @@ async function main() {
       ];
       if (!first.pair || first.pair !== second.pair || !first.bindings.caseId)
         throw Error("RUNNER_PAIR_BINDING_INVALID");
+      if (isControlledFailureEditorialCase(first.bindings.caseId))
+        throw Error("EDITORIAL_CASE_CONTROLLED_FAILURE_ONLY");
       // Rebuild at the original moment: the owner approved this exact roster, never fresh requests.
       const expected = prepareEditorialCaseManifest(
         first.bindings.caseId,
