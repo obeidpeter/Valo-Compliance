@@ -1,7 +1,9 @@
 # 0012 — Split the store into workspaces, documents and support tickets
 
-Date: 2026-11-18. Status: **proposed**, waiting for the product owner's review. Nothing is moved
-yet.
+Date: 2026-11-18. Status: **accepted** on 2026-11-20 by the product owner's instruction "I approve
+everything that needs approval. Then implement all", given in reply to a list of the decisions
+waiting on them. Both decisions below are taken as proposed: the split as described, and no
+`identity` module.
 
 ## Context
 
@@ -26,7 +28,7 @@ also keeps two things out of their modules:
 - The privacy keys stay in `src/lib`: the store hashes identities with them, and the privacy
   code reads the store.
 
-## Decision (proposed)
+## Decision
 
 Split the store along those lines. Each step is a pure move in its own pull request, with
 callers, tests and registers following the new paths, as for the other modules.
