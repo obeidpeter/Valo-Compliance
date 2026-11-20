@@ -312,13 +312,14 @@ test("the library's filters, sort and page live in its address: the server rende
   const cards = 'li[data-testid^="card-item-"]';
   try {
     // The server renders the second page of the filtered, sorted results from the address alone.
-    const address = `/library?${new URLSearchParams({
+    const query = new URLSearchParams({
       category: "Finance and operations",
       access: "free",
       industry: industry.slug,
       sort: "name",
       page: "2",
-    })}`;
+    });
+    const address = `/library?${query.toString()}`;
     const html = await (await fetch(web.origin + address)).text();
     assert.equal(html.match(/data-testid="card-item-/g)?.length, 3, "the server rendered the second page");
 
