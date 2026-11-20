@@ -22,7 +22,7 @@ import {
   valoWorkspaces,
   valoExportObjects,
 } from "@workspace/db";
-import { createDocument, saveDocument, getDocument } from "../../lib/valo-store";
+import { createDocument, saveDocument, getDocument } from "../documents";
 import { resolveWorkspace } from "../workspaces";
 import {
   requestExport,

@@ -12,6 +12,13 @@ import { contentReadiness, contentTraceRows, expansionReadiness } from "@workspa
 import { readiness } from "@workspace/valo-records";
 import { verifiedWorkspace, sameOriginMutation } from "../middlewares/valo-identity";
 import * as store from "../lib/valo-store";
+import {
+  listDocuments,
+  getDocument,
+  listRevisions,
+  createDocument,
+  saveDocument,
+} from "../modules/documents";
 import { getWorkspace, saveProfile } from "../modules/workspaces";
 import requirementsRouter from "./valo-requirements";
 import customerAIRouter from "./valo-customer-ai";
@@ -183,19 +190,19 @@ router.put("/workspace/profile", async (req, res) => {
   res.json(await saveProfile(res.locals.valoActor, req.body));
 });
 router.get("/workspace/documents", async (_req, res) => {
-  res.json(await store.listDocuments(res.locals.valoActor));
+  res.json(await listDocuments(res.locals.valoActor));
 });
 router.post("/workspace/documents", async (req, res) => {
-  res.status(201).json(await store.createDocument(res.locals.valoActor, req.body));
+  res.status(201).json(await createDocument(res.locals.valoActor, req.body));
 });
 router.get("/workspace/documents/:id", async (req, res) => {
-  res.json(await store.getDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
+  res.json(await getDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
 });
 router.patch("/workspace/documents/:id", async (req, res) => {
-  res.json(await store.saveDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id), req.body));
+  res.json(await saveDocument(res.locals.valoActor, z.string().uuid().parse(req.params.id), req.body));
 });
 router.get("/workspace/documents/:id/revisions", async (req, res) => {
-  res.json(await store.listRevisions(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
+  res.json(await listRevisions(res.locals.valoActor, z.string().uuid().parse(req.params.id)));
 });
 router.post("/workspace/support", async (req, res) => {
   res.status(201).json(await store.createTicket(res.locals.valoActor, req.body));

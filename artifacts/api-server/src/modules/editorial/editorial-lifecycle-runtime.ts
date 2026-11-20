@@ -24,7 +24,7 @@ import {
   readReleasedMaster,
   createReleasedTemplateDraft,
 } from "../catalogue";
-import { getDocument } from "../../lib/valo-store";
+import { getDocument } from "../documents";
 import {
   lockSourceState,
   sourceTargetAllowed,

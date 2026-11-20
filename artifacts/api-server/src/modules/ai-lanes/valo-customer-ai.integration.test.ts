@@ -19,7 +19,7 @@ import {
   customerAIUsage,
 } from "./valo-customer-ai";
 import { customerAICases } from "./valo-customer-ai-fixtures";
-import { createDocument, saveDocument } from "../../lib/valo-store";
+import { createDocument, saveDocument } from "../documents";
 import { resolveWorkspace } from "../workspaces";
 import { buildBusinessDraft } from "@workspace/valo-core/customer-document";
 import { documentInput } from "../../lib/valo-validation";

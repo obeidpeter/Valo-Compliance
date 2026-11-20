@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import { db, valoContentVersions, valoPublicationPolicies } from "@workspace/db";
 import { liveReleasedVersions, releasedCatalogue } from "./valo-released-content";
-import { createDocument } from "../../lib/valo-store";
+import { createDocument } from "../documents";
 import { resolveWorkspace } from "../workspaces";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 

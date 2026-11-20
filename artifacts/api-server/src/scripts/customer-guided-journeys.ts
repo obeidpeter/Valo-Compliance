@@ -8,7 +8,7 @@ import { GUIDED_TEMPLATE_IDS, type GuidedField } from "@workspace/valo-core/guid
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { guidedDataFromBlocks, guidedDataIssues, guidedVisible } from "@workspace/valo-core/guided-runtime";
 import { completeGuidedTestData } from "../lib/valo-guided-test-fixtures";
-import { serializeRevisionV1 } from "../lib/valo-revision-codec";
+import { serializeRevisionV1 } from "../modules/documents";
 type Api = (
   path: string,
   method?: string,

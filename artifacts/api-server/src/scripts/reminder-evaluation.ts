@@ -8,7 +8,7 @@ import { and, eq } from "drizzle-orm";
 import { db, pool, valoAIDrafts, valoDocumentRevisions } from "@workspace/db";
 import { batchProcess } from "@workspace/integrations-openai-ai-server/batch";
 import { createCustomerAIDraft, acceptCustomerAIDraft, getCustomerAIDraft } from "../modules/ai-lanes";
-import { saveDocument, getDocument } from "../lib/valo-store";
+import { saveDocument, getDocument } from "../modules/documents";
 import { resolveWorkspace } from "../modules/workspaces";
 import { requestExport, getExport, downloadExport } from "../modules/exports";
 import { recordedBalance, formatKobo } from "@workspace/valo-core/money";

@@ -8,7 +8,7 @@ import {
   type ArtifactRef,
   currentOperationalPermission,
 } from "../publication";
-import { createDocumentInTransaction, getDocument } from "../../lib/valo-store";
+import { createDocumentInTransaction, getDocument } from "../documents";
 import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { documentInput } from "../../lib/valo-validation";

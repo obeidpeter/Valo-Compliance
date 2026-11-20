@@ -15,6 +15,13 @@ import {
   valoWorkspaces,
 } from "@workspace/db";
 import * as store from "./valo-store";
+import {
+  listDocuments,
+  getDocument,
+  listRevisions,
+  createDocument,
+  saveDocument,
+} from "../modules/documents";
 import { resolveWorkspace, getWorkspace, saveProfile } from "../modules/workspaces";
 import { syntheticDocument, syntheticProfile } from "./valo-test-fixtures";
 
@@ -60,24 +67,23 @@ test(
           assert.equal((await getWorkspace(b)).profile, null);
         },
       );
-      const document = await store.createDocument(a, syntheticDocument);
+      const document = await createDocument(a, syntheticDocument);
       await t.test("document and revision identifiers cannot expose a different tenant", async () => {
-        assert.deepEqual(await store.listDocuments(b), []);
-        await assert.rejects(store.getDocument(b, document.id), { status: 404 });
-        await assert.rejects(store.listRevisions(b, document.id), { status: 404 });
-        await assert.rejects(
-          store.saveDocument(b, document.id, { ...syntheticDocument, expectedRevision: 1 }),
-          { status: 404 },
-        );
+        assert.deepEqual(await listDocuments(b), []);
+        await assert.rejects(getDocument(b, document.id), { status: 404 });
+        await assert.rejects(listRevisions(b, document.id), { status: 404 });
+        await assert.rejects(saveDocument(b, document.id, { ...syntheticDocument, expectedRevision: 1 }), {
+          status: 404,
+        });
       });
       await t.test("two concurrent tabs produce exactly one new revision and one conflict", async () => {
         const results = await Promise.allSettled([
-          store.saveDocument(a, document.id, {
+          saveDocument(a, document.id, {
             ...syntheticDocument,
             title: "Tab A synthetic",
             expectedRevision: 1,
           }),
-          store.saveDocument(a, document.id, {
+          saveDocument(a, document.id, {
             ...syntheticDocument,
             title: "Tab B synthetic",
             expectedRevision: 1,
@@ -86,21 +92,21 @@ test(
         assert.equal(results.filter((r) => r.status === "fulfilled").length, 1);
         const rejected = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
         assert.equal(rejected.reason.status, 409);
-        assert.equal((await store.getDocument(a, document.id)).revision, 2);
-        const revisions = await store.listRevisions(a, document.id);
+        assert.equal((await getDocument(a, document.id)).revision, 2);
+        const revisions = await listRevisions(a, document.id);
         assert.equal(revisions.length, 2);
         assert.equal(revisions.find((r) => r.revision === 1)!.contentHash, document.contentHash);
       });
       await t.test("restore appends a new revision without rewriting the original", async () => {
-        const original = (await store.listRevisions(a, document.id)).find((r) => r.revision === 1)!;
-        const restored = await store.saveDocument(a, document.id, {
+        const original = (await listRevisions(a, document.id)).find((r) => r.revision === 1)!;
+        const restored = await saveDocument(a, document.id, {
           title: original.title,
           content: original.content,
           expectedRevision: 2,
         });
         assert.equal(restored.revision, 3);
         assert.equal(restored.contentHash, original.contentHash);
-        assert.equal((await store.listRevisions(a, document.id)).length, 3);
+        assert.equal((await listRevisions(a, document.id)).length, 3);
       });
       await t.test(
         "enquiry acknowledgement follows a durable save, not an appointment or email claim",

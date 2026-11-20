@@ -16,7 +16,7 @@ import {
   valoMemberships,
   valoWorkspaces,
 } from "@workspace/db";
-import { createDocument } from "../../lib/valo-store";
+import { createDocument } from "../documents";
 import { resolveWorkspace } from "../workspaces";
 import {
   requestExport,

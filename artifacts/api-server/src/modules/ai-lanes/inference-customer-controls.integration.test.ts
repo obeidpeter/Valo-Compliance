@@ -40,7 +40,7 @@ test(
       valoMemberships,
       valoWorkspaces,
     } = await import("@workspace/db");
-    const { createDocument, getDocument, saveDocument } = await import("../../lib/valo-store");
+    const { createDocument, getDocument, saveDocument } = await import("../documents");
     const { resolveWorkspace } = await import("../workspaces");
     const { createCustomerAIDraft, customerAIUsage } = await import("./valo-customer-ai");
     const { prepareCustomerEvaluationPlan } = await import("./inference-customer-evaluation");

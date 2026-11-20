@@ -1,5 +1,5 @@
 import { reconcileExportOrphans } from "./valo-export-recovery";
-import { serializeRevision } from "../../lib/valo-revision-codec";
+import { serializeRevision } from "../documents";
 import { randomUUID } from "node:crypto";
 import { and, eq, ne, desc } from "drizzle-orm";
 import {

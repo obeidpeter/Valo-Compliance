@@ -327,16 +327,9 @@ test("default managed entry and customer organizer use actual finite dispatch an
       workspaceEvent: async () => undefined,
     },
   });
-  t.mock.module(new URL("./valo-store.ts", import.meta.url).href, {
+  // The document functions come through the documents module's index.
+  t.mock.module(new URL("../modules/documents/index.ts", import.meta.url).href, {
     namedExports: {
-      ValoProblem: class extends Error {
-        constructor(
-          public status: number,
-          message: string,
-        ) {
-          super(message);
-        }
-      },
       createDocumentInTransaction: async () => {
         throw Error("ACCEPTANCE_NOT_AUTHORIZED_IN_TEST");
       },

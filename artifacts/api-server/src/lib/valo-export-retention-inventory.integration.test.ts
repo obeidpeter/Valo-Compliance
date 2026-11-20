@@ -19,7 +19,7 @@ import {
   valoPrivacyEvents,
   valoSupportTickets,
 } from "@workspace/db";
-import { createDocument } from "./valo-store";
+import { createDocument } from "../modules/documents";
 import { resolveWorkspace } from "../modules/workspaces";
 import { syntheticDocument } from "./valo-test-fixtures";
 import { createPrivacyCase } from "../modules/privacy/valo-privacy";

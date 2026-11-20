@@ -18,7 +18,7 @@ import {
   valoDocumentRevisions,
   valoDocuments,
 } from "@workspace/db";
-import * as store from "../../lib/valo-store";
+import { createDocument } from "../documents";
 import { resolveWorkspace } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
@@ -79,7 +79,7 @@ test(
       grantedBy: "synthetic-fixture",
       reason: "Controlled support-only role must not authorize refunds.",
     });
-    const draft = await store.createDocument(a, {
+    const draft = await createDocument(a, {
       ...syntheticDocument,
       title: "Private draft must survive all refund outcomes",
     });

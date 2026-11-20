@@ -4,10 +4,10 @@ import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { z } from "zod";
-import { documentInput, profileInput } from "./valo-validation";
+import { documentInput, profileInput } from "../../lib/valo-validation";
 import { serializeRevisionV1 } from "./valo-revision-codec";
-import { parseBoundedProviderJSON } from "../modules/ai/provider-output-budget";
-import { publicationWorkspaceRoot } from "../modules/publication/operational-policy";
+import { parseBoundedProviderJSON } from "../ai/provider-output-budget";
+import { publicationWorkspaceRoot } from "../publication/operational-policy";
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
 const legacy = JSON.parse(
   await readFile(

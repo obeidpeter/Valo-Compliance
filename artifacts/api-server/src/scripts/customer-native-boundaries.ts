@@ -15,7 +15,7 @@ import {
   customerNoticeVersion,
 } from "../modules/ai-lanes";
 import { bindCustomerCase, explicitBoundaryFollowup, type AuthoredCustomerCase } from "../modules/ai-lanes";
-import { getDocument, saveDocument } from "../lib/valo-store";
+import { getDocument, saveDocument } from "../modules/documents";
 import { documentInput } from "../lib/valo-validation";
 import { downloadExport } from "../modules/exports";
 import { workspaceActorFromRecord } from "../platform/workspace-context";

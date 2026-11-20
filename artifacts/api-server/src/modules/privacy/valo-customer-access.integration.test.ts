@@ -29,7 +29,7 @@ import {
   MAX_CONCURRENT_WORKSPACE_EXPORTS,
 } from "./valo-customer-access";
 import { staffOperations } from "../staff/valo-staff-operations";
-import { createDocument } from "../../lib/valo-store";
+import { createDocument } from "../documents";
 import { resolveWorkspace } from "../workspaces";
 import { ValoProblem } from "../../platform/valo-problem";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";

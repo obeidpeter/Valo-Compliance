@@ -37,7 +37,7 @@ import {
   valoWorkspaceExports,
   valoWorkspaces,
 } from "@workspace/db";
-import { createDocument } from "../lib/valo-store";
+import { createDocument } from "../modules/documents";
 import { resolveWorkspace, saveProfile } from "../modules/workspaces";
 import { syntheticDocument, syntheticProfile } from "../lib/valo-test-fixtures";
 import { requestExport, getExport, executeExport } from "../modules/exports/valo-exports";

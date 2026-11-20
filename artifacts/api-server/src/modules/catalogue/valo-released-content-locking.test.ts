@@ -111,7 +111,8 @@ test("template downloads read storage outside the transaction that holds the sou
       authorizeWorkspaceWrite: async () => record("membership"),
     },
   });
-  t.mock.module(new URL("../../lib/valo-store.ts", import.meta.url).href, {
+  // The document functions come through the documents module's index.
+  t.mock.module(new URL("../documents/index.ts", import.meta.url).href, {
     namedExports: {
       createDocumentInTransaction: async () => "document-1",
       getDocument: async () => ({ id: "document-1" }),
