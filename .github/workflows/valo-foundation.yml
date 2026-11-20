@@ -518,6 +518,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-public-states
       - name: Check the signed-in screens' keyboard, title, empty, error and phone states and automated accessibility (NFR-006)
         run: pnpm --filter @workspace/api-server test:valo-workspace-accessibility
+      - name: Check the other public screens' keyboard, phone states and automated accessibility, and the titles of pages opened in the app (NFR-006)
+        run: pnpm --filter @workspace/api-server test:valo-public-screens-accessibility
       - name: Check every test the evidence register cites for this job passed
         run: pnpm --filter @workspace/scripts valo:ci-evidence --job web-performance
       - name: Retain this job's test results for the evidence job

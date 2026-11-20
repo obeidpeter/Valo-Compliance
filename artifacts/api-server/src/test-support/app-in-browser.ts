@@ -60,11 +60,14 @@ export function useAuth() { return { isLoaded: true, isSignedIn: false, userId: 
 export function useUser() { return { isLoaded: true, isSignedIn: false, user: null }; }
 export function useClerk() { return { signOut() {} }; }
 export function useReverification(action) { return action; }
+// The provider's sign-in and sign-up cards open with these headings (the app's localisation).
+const card = (heading, form) =>
+  createElement("div", null, createElement("h1", null, heading), createElement("p", null, form));
 export function SignIn() {
-  return createElement("p", null, "The identity provider's sign-in form, not drawn in this test.");
+  return card("Sign in to Valo", "The identity provider's sign-in form, not drawn in this test.");
 }
 export function SignUp() {
-  return createElement("p", null, "The identity provider's sign-up form, not drawn in this test.");
+  return card("Open your workspace", "The identity provider's sign-up form, not drawn in this test.");
 }
 export function UserProfile() { return null; }
 `,
@@ -268,14 +271,15 @@ export async function tabbing(page: Page) {
   return stops;
 }
 
-/** The layout, keyboard and axe-core problems on a page that is ready, at 360 and then 320 pixels wide. */
-export async function phoneProblems(page: Page, path: string) {
+/** The layout, keyboard and axe-core problems on a page that is ready, at 360 and then 320 pixels wide.
+ * Tab must reach at least `minimumStops` elements, which shows the keyboard check ran. */
+export async function phoneProblems(page: Page, path: string, { minimumStops = 3 } = {}) {
   const problems: string[] = [];
   const width = await page.evaluate<number>("document.documentElement.scrollWidth");
   if (width !== 360)
     problems.push(`${path}: ${width} pixels wide on a 360-pixel screen (${await overflowing(page)})`);
   const stops = await tabbing(page);
-  if (stops.length < 3) problems.push(`${path}: Tab reached only ${stops.length} elements`);
+  if (stops.length < minimumStops) problems.push(`${path}: Tab reached only ${stops.length} elements`);
   for (const [i, stop] of stops.entries()) {
     if (!stop.visible) problems.push(`${path}: Tab ${i + 1} focused a hidden element (${stop.name})`);
     else if (!stop.outlined)
