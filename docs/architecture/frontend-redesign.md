@@ -167,6 +167,45 @@ against the compiled app. All four fail on the stylesheet as it was:
 - the search text starts clear of its icon;
 - an error under a field is in the error colour.
 
+### Phase 1: one formatter for dates, times, amounts and counts
+
+`artifacts/valo/src/lib/format.ts` now writes every date, time, amount and count the web app
+shows. The specification asks for Lagos time, dates that cannot be misread and naira formatting
+(NFR-008).
+
+| It writes | As | Before |
+| --- | --- | --- |
+| A day | 18 Nov 2026 | "18 November 2026", "18/11/2026", "11/18/2026" or "2026-11-18", depending on the screen and the browser |
+| A time | 18 Nov 2026, 09:00, on a Lagos clock | The viewer's own time zone on most screens, and the browser's own format in six places |
+| An amount | ₦1,500.00 | "₦1,500.00" in three places and "NGN 1,500.00" in two |
+| A count | 12,345 | The browser's own grouping |
+
+A customer whose device is on Lagos time sees the same clock times as before, in one format. A
+task's due date reads "1 Dec 2026" where it read "2026-12-01". A download's deadline reads
+"25 Nov 2026, 10:00"; on the test machine, set to American English and UTC, it read
+"11/25/2026, 9:00:00 AM".
+
+The text is built from numbers, not from the browser's or the server's own words for a locale, so
+a page the server renders shows the same text once it is in the browser.
+
+Not changed:
+
+- A template's own help text still says "100 kobo = NGN 1.00". It is part of the template and
+  changes with the template's next version.
+- The date boxes in forms are the browser's own, and show a date in the device's format.
+- The developer notes page shows source-check times as they are recorded.
+- Times carry no time zone label. The help page will say that the site's times are Lagos time
+  (phase 6).
+
+The `web-formatting` repository rule, part of the lint, fails any file of the web app that
+formats a date or a number another way. On the code before this change it reports 18 places in 13
+files.
+
+### Phase 1: the word list
+
+The word list is the table under [Words](#words). Each page takes its words as the page is
+rewritten in the later phases. A check that the old words are gone comes with the last of them.
+
 ## How the ten heuristics are applied
 
 1. **Visibility of system status.** Keep "Saved"; add progress in the checker and on downloads.
