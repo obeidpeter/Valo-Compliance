@@ -1,6 +1,8 @@
 import { Link } from "wouter";
+import { useDocumentTitle } from "@/lib/document-title";
 
 export default function NotFound() {
+  useDocumentTitle("Page not found — Valo");
   return (
     <div className="mx-auto max-w-2xl px-5 py-28 text-center">
       <p className="eyebrow">404</p>

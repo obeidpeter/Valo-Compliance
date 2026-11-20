@@ -1,4 +1,5 @@
-/** The title and description of each fixed public page, for its metadata and the sitemap. */
+/** The title and description of each fixed public page: for its metadata and the sitemap, and for
+ * the title the app gives the page when a visitor moves to it in the app. */
 export const publicPages: Record<string, { title: string; description: string }> = {
   "/": {
     title: "Valo — Documents and business requirements",

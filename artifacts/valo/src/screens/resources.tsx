@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { pageTitle, UNAVAILABLE_TITLE, useDocumentTitle } from "@/lib/document-title";
 import { ArrowLeft, BookOpen, ExternalLink, FileX } from "lucide-react";
 import {
   useListReleasedResources,
@@ -80,6 +81,7 @@ export function ResourceDetail({ slug }: { slug: string }) {
   });
   const r = q.data;
   const notFound = q.isError && describeError(q.error).kind === "notFound";
+  useDocumentTitle(r ? pageTitle(r.title) : notFound ? UNAVAILABLE_TITLE : null);
   return (
     <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8">
       <Link

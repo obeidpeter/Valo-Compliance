@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useDocumentTitle } from "@/lib/document-title";
 import { CheckCircle2, CircleDashed } from "lucide-react";
 import {
   useGetBuildStatus,
@@ -12,6 +13,7 @@ import { SourceEvidence } from "@/components/source-evidence";
 import { useSearch } from "wouter";
 
 export default function Development() {
+  useDocumentTitle("Build status — Valo");
   const sourceView = new URLSearchParams(useSearch()).get("view") === "sources";
   const s = useGetBuildStatus();
   const h = useHealthCheck();

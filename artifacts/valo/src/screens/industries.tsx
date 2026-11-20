@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { pageTitle, UNAVAILABLE_TITLE, useDocumentTitle } from "@/lib/document-title";
 import { ArrowLeft, ArrowRight, FileText, Scale } from "lucide-react";
 import {
   useGetPublicCoverage,
@@ -73,6 +74,7 @@ export function IndustryDetail({ slug }: { slug: string }) {
     query: { queryKey: getListPublicCatalogueQueryKey(params), ...liveContent },
   });
   const ind = coverage.data?.industries.find((i) => i.slug === slug);
+  useDocumentTitle(ind ? pageTitle(ind.title) : coverage.data ? UNAVAILABLE_TITLE : null);
   const resources = (res.data ?? []).filter((r) => r.industrySlugs.includes(slug));
   const templates = tpl.data?.items ?? [];
 

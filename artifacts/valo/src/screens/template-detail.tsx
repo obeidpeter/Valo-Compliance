@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { pageTitle, UNAVAILABLE_TITLE, useDocumentTitle } from "@/lib/document-title";
 import { Link, useLocation } from "wouter";
 import { Show } from "@clerk/react";
 import { ArrowLeft, Download, FilePlus2, FileX } from "lucide-react";
@@ -127,6 +128,7 @@ export default function TemplateDetail({ slug }: { slug: string }) {
   const q = useGetReleasedTemplate(slug, { query: { refetchInterval: 15000, refetchOnWindowFocus: true } });
   const t = q.data;
   const notFound = q.isError && describeError(q.error).kind === "notFound";
+  useDocumentTitle(t ? pageTitle(t.title) : notFound ? UNAVAILABLE_TITLE : null);
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8">
