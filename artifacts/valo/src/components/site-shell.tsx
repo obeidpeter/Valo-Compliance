@@ -3,18 +3,9 @@ import { Link, useLocation } from "wouter";
 import { Show, useClerk, useUser } from "@clerk/react";
 import { FileText, LogOut, Menu, Scale, X } from "lucide-react";
 import { Wordmark } from "@/components/brand";
+import { DevBanner, NAV, SiteFooter } from "@/components/site-chrome";
 import { basePath } from "@/lib/env";
 import { cn } from "@/lib/utils";
-
-const NAV = [
-  { href: "/checker", label: "Checker" },
-  { href: "/library", label: "Library" },
-  { href: "/resources", label: "Resources" },
-  { href: "/industries", label: "Industries" },
-  { href: "/compliance", label: "Compliance" },
-  { href: "/about", label: "About" },
-  { href: "/help", label: "Help" },
-];
 
 function UserMenu() {
   const { user } = useUser();
@@ -59,14 +50,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <div
-        className="border-b border-border bg-foreground px-4 py-2 text-center text-[0.78rem] text-background/85"
-        data-testid="text-dev-banner"
-      >
-        <span className="font-mono uppercase tracking-wider text-background">Development build</span>
-        <span className="mx-2 opacity-40">/</span>
-        Not launched. Use synthetic test details only — no real customer or confidential data.
-      </div>
+      <DevBanner />
       {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- Escape from any control in the header closes the menu; the header takes no focus */}
       <header
         className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md"
@@ -149,70 +133,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
         )}
       </header>
       <main className="flex-1 pb-24 lg:pb-0">{children}</main>
-      <footer className="border-t border-border bg-sidebar">
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr] lg:px-8">
-          <div>
-            <Wordmark />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              Your business drafts and source-governed guidance, kept on separate shelves. Built for owners of
-              Nigerian small businesses.
-            </p>
-          </div>
-          <FooterCol
-            title="Documents"
-            links={[
-              ["/library", "Library"],
-              ["/workspace", "Your workspace"],
-              ["/workspace/privacy", "Privacy and data"],
-              ["/pricing", "Pricing"],
-            ]}
-          />
-          <FooterCol
-            title="Compliance"
-            links={[
-              ["/checker", "Requirements checker"],
-              ["/resources", "Resources"],
-              ["/industries", "Industries"],
-              ["/compliance", "Official sources"],
-              ["/services", "Services"],
-            ]}
-          />
-          <FooterCol
-            title="Valo"
-            links={[
-              ["/about", "About"],
-              ["/help", "Help"],
-              ["/support", "Support"],
-              ["/contact", "Contact"],
-              ["/account-access", "Account access"],
-              ["/privacy", "Privacy policy"],
-              ["/terms", "Terms"],
-              ["/development", "Developer notes"],
-            ]}
-          />
-        </div>
-        <div className="mx-auto max-w-7xl border-t border-border px-5 py-5 text-xs text-muted-foreground lg:px-8">
-          Valo does not provide legal, tax or accounting advice, and no regulator endorses it.
-        </div>
-      </footer>
+      <SiteFooter LinkTo={Link} wordmark={<Wordmark />} />
       <MobileDock />
-    </div>
-  );
-}
-
-function FooterCol({ title, links }: { title: string; links: [string, string][] }) {
-  return (
-    <div>
-      <p className="eyebrow mb-4">{title}</p>
-      <ul className="grid gap-2.5 text-sm">
-        {links.map(([href, label]) => (
-          <li key={href}>
-            <Link href={href} className="text-foreground/80 hover:text-foreground">
-              {label}
-            </Link>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
