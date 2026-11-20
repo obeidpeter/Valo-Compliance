@@ -9,16 +9,21 @@ import {
   prepareEditorialCaseManifest,
   preparableEditorialCases,
   controlledFailureEditorialCases,
+  editorialCasePrerequisite,
+  followUpEditorialCases,
+  hasEditorialCasePair,
 } from "./editorial-case-reviews";
 import { reviewEvidenceGuidance, reviewResponseFormat, reviewRoleInstructions } from "./operational-review";
 
 const now = new Date("2026-11-20T18:00:00.000Z");
-const manifests = preparableEditorialCases.map((id) => prepareEditorialCaseManifest(id, {}, now));
+// The cases a provider may review: the 12 preparable at any time, and C060 once C018 is held.
+const providerCases = [...preparableEditorialCases, ...followUpEditorialCases.map((f) => f.caseId)];
+const manifests = providerCases.map((id) => prepareEditorialCaseManifest(id, {}, now));
 
-test("prepares one factual and one challenge request for each of the 12 preparable cases, within the lane's bounds", () => {
-  assert.equal(manifests.length, 12);
+test("prepares one factual and one challenge request for each of the 13 cases a provider may review, within the lane's bounds", () => {
+  assert.equal(manifests.length, 13);
   for (const [i, m] of manifests.entries()) {
-    const id = preparableEditorialCases[i]!;
+    const id = providerCases[i]!;
     assert.equal(m.preparedAt, now.toISOString());
     assert.deepEqual(
       m.works.map((w) => w.role),
@@ -36,13 +41,13 @@ test("prepares one factual and one challenge request for each of the 12 preparab
       assert.equal(w.request.max_completion_tokens, 8192);
     }
   }
-  for (const id of preparableEditorialCases)
+  for (const id of providerCases)
     for (const entry of editorialCaseReviewRequests(editorialCaseCandidate(id), now.toISOString()))
       assert.ok(entry.meter.withinInputCeiling, `${id} ${entry.role} fits the input bound`);
 });
 
 test("each reviewer gets a publication review's instructions and answer schema, with the case's real evidence", () => {
-  for (const id of preparableEditorialCases) {
+  for (const id of providerCases) {
     const c = editorialCaseCandidate(id);
     for (const entry of editorialCaseReviewRequests(c, now.toISOString())) {
       const [system, user] = entry.request.messages as { role: string; content: string }[];
@@ -77,7 +82,7 @@ test("what a reviewer sees never names the case, the corpus or its expected outc
 
 test("a manifest is rebuilt identically at its preparation time, and its pair differs at another", () => {
   for (const [i, m] of manifests.entries()) {
-    const id = preparableEditorialCases[i]!;
+    const id = providerCases[i]!;
     assert.deepEqual(prepareEditorialCaseManifest(id, {}, now), m);
     const later = prepareEditorialCaseManifest(id, {}, new Date(now.getTime() + 60_000));
     assert.notEqual(later.works[0]!.pair, m.works[0]!.pair);
@@ -91,7 +96,7 @@ test("a manifest is rebuilt identically at its preparation time, and its pair di
 test("each work names its candidate by a stable UUID and binds its sources and the pinned files", () => {
   const ids = new Set<string>();
   for (const [i, m] of manifests.entries()) {
-    const c = editorialCaseCandidate(preparableEditorialCases[i]!);
+    const c = editorialCaseCandidate(providerCases[i]!);
     const versionId = editorialCaseVersionId(c);
     assert.match(versionId, /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
     ids.add(versionId);
@@ -107,12 +112,12 @@ test("each work names its candidate by a stable UUID and binds its sources and t
       );
     }
   }
-  assert.equal(ids.size, 12);
+  assert.equal(ids.size, 13);
 });
 
-test("cases that need a real prior hold or unretained text cannot be prepared, and C041 only for a controlled failure", () => {
-  const { notBuilt } = buildEditorialCaseCandidates();
-  for (const id of ["EVAL-EDP-C060", "EVAL-EDP-C001", ...notBuilt.map((c) => c.caseId)])
+test("cases that need unretained text cannot be prepared; C041 is kept for a controlled failure and C060 follows C018's hold", () => {
+  const { built, notBuilt } = buildEditorialCaseCandidates();
+  for (const id of ["EVAL-EDP-C001", "constructor", ...notBuilt.map((c) => c.caseId)])
     assert.throws(() => prepareEditorialCaseManifest(id, {}, now), /EDITORIAL_CASE_NOT_PREPARABLE/);
   // C041's pair is prepared like C004's, its candidate unchanged, but it is listed apart: the
   // operator runner refuses it, and only the controlled-failure test runs it.
@@ -124,5 +129,27 @@ test("cases that need a real prior hold or unretained text cannot be prepared, a
       (id) => !(preparableEditorialCases as readonly string[]).includes(id),
     ),
     ["EVAL-EDP-C041", "EVAL-EDP-C060"],
+  );
+  assert.ok(Object.keys(buildableEditorialCases).every(hasEditorialCasePair));
+  // C060 reviews a new version of C018's candidate with the unmapped deadline removed. It is the
+  // only case whose candidate names a prerequisite, and it follows C018, which follows nothing.
+  assert.deepEqual(followUpEditorialCases, [{ caseId: "EVAL-EDP-C060", follows: "EVAL-EDP-C018" }]);
+  assert.deepEqual(
+    built.filter((b) => b.prerequisite !== null).map((b) => b.caseId),
+    ["EVAL-EDP-C060"],
+  );
+  assert.equal(editorialCasePrerequisite("EVAL-EDP-C018"), null);
+  assert.equal(editorialCasePrerequisite("constructor"), null);
+  const c018 = editorialCaseCandidate("EVAL-EDP-C018").candidate,
+    c060 = editorialCaseCandidate("EVAL-EDP-C060").candidate;
+  assert.equal(c060.version, c018.version + 1);
+  assert.notEqual(c060.hash, c018.hash);
+  assert.ok(c018.body.includes("within 28 days of starting the business"));
+  assert.equal(
+    c060.body,
+    c018.body.replace(
+      " A business that needs to register must send its registration statement to the Registrar within 28 days of starting the business.",
+      "",
+    ),
   );
 });
