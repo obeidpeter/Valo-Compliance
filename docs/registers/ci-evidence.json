@@ -254,6 +254,13 @@
       "proves": "The checker leaves out a rule that is withdrawn or whose review has expired."
     },
     {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/sources/valo-source-review-due.integration.test.ts",
+      "test": "a version is due for review when its review date passes, or 30 days after its source check (90 for general content)",
+      "proves": "The conditions the source monitor queues reviews by count a content version or rule release as due once its review date passes, or 30 days after its source check for high-impact content and 90 days for general content."
+    },
+    {
       "requirement": "EDP-008",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
