@@ -171,7 +171,10 @@ const partialImplementations: Record<string, string[]> = {
     "artifacts/api-server/src/modules/workspaces/valo-workspaces.ts",
     "lib/db/src/schema/valo-support.ts",
   ],
-  "SRV-001": ["artifacts/valo/src/public-screens/services.tsx"],
+  "SRV-001": [
+    "artifacts/valo/app/(public)/services/page.tsx",
+    "artifacts/valo/src/public-screens/services.tsx",
+  ],
   "SRV-002": ["artifacts/valo/src/components/ticket-form.tsx", "lib/db/src/schema/valo-support.ts"],
   "EDP-002": [
     "artifacts/api-server/src/modules/sources/source-capture.ts",

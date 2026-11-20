@@ -1,22 +1,21 @@
+"use client";
+
 import { useState } from "react";
-import { pageTitle, UNAVAILABLE_TITLE, useDocumentTitle } from "@/lib/document-title";
-import { Link, useLocation } from "wouter";
-import { Show } from "@clerk/react";
 import { ArrowLeft, Download, FilePlus2, FileX } from "lucide-react";
 import {
   useGetReleasedTemplate,
   useCreateTemplateDraft,
   downloadReleasedTemplate,
-  getGetDocumentQueryKey,
-  getListDocumentsQueryKey,
-  getGetWorkspaceQueryKey,
   type ReleasedTemplate,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { describeError } from "@/lib/api";
+import { PublicLink as Link } from "@/components/public-link";
+import { describeError } from "@/lib/describe-error";
+import { basePath } from "@/lib/env";
+import { fromServer } from "@/lib/server-data";
 import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { SaveTemplateButton } from "@/components/saved-templates";
 import { ReleaseNotices } from "@/components/release-notices";
+import { useIdentity } from "@/islands/identity-store";
 
 function Unavailable() {
   return (
@@ -36,17 +35,11 @@ function Unavailable() {
 }
 
 function CustomerActions({ t }: { t: ReleasedTemplate }) {
-  const [, setLocation] = useLocation();
-  const cache = useQueryClient();
+  // The new draft opens in the workspace, which is the browser app: a full load (decision 0011).
   const create = useCreateTemplateDraft({
     mutation: {
-      onSuccess: async (doc) => {
-        cache.setQueryData(getGetDocumentQueryKey(doc.id), doc);
-        await Promise.all([
-          cache.invalidateQueries({ queryKey: getListDocumentsQueryKey() }),
-          cache.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() }),
-        ]);
-        setLocation("/workspace/documents/" + doc.id);
+      onSuccess: (doc) => {
+        window.location.assign(`${basePath}/workspace/documents/${encodeURIComponent(doc.id)}`);
       },
     },
   });
@@ -124,11 +117,30 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
   );
 }
 
-export default function TemplateDetail({ slug }: { slug: string }) {
-  const q = useGetReleasedTemplate(slug, { query: { refetchInterval: 15000, refetchOnWindowFocus: true } });
+/**
+ * A released template, starting from what the server read; it is read again every 15 seconds, so a
+ * withdrawal reaches the open page. When the server found none, the page says so at once while the
+ * browser checks again. Creating a draft, saving and downloading need a signed-in visitor, which the
+ * identity island reports once the provider has loaded after the page (decision 0011).
+ */
+export function TemplateDetail({
+  slug,
+  initial,
+}: {
+  slug: string;
+  initial?: ReleasedTemplate | "missing" | undefined;
+}) {
+  const q = useGetReleasedTemplate(slug, {
+    query: {
+      refetchInterval: 15000,
+      refetchOnWindowFocus: true,
+      ...fromServer(initial === "missing" ? undefined : initial),
+    },
+  });
   const t = q.data;
-  const notFound = q.isError && describeError(q.error).kind === "notFound";
-  useDocumentTitle(t ? pageTitle(t.title) : notFound ? UNAVAILABLE_TITLE : null);
+  const notFound =
+    (q.isError && describeError(q.error).kind === "notFound") || (initial === "missing" && q.isLoading);
+  const signedIn = useIdentity().status === "signed-in";
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8">
@@ -208,18 +220,19 @@ export default function TemplateDetail({ slug }: { slug: string }) {
             <aside className="lg:sticky lg:top-24 lg:self-start">
               <div className="surface grid gap-4 p-5">
                 <p className="font-display text-xl">Use this template</p>
-                <Show when="signed-in">
+                {signedIn ? (
                   <CustomerActions t={t} />
-                </Show>
-                <Show when="signed-out">
-                  <p className="text-sm text-muted-foreground">
-                    Sign in to create a private draft or download the blank file. Your drafts are visible only
-                    to you.
-                  </p>
-                  <Link href="/sign-in" className="btn btn-primary w-full" data-testid="link-sign-in">
-                    Sign in to continue
-                  </Link>
-                </Show>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      Sign in to create a private draft or download the blank file. Your drafts are visible
+                      only to you.
+                    </p>
+                    <Link href="/sign-in" className="btn btn-primary w-full" data-testid="link-sign-in">
+                      Sign in to continue
+                    </Link>
+                  </>
+                )}
                 {!t.commercialLicenceAccepted && (
                   <Notice title="Not for sale">
                     Commercial licence terms have not been accepted for this template, so it is not sold or

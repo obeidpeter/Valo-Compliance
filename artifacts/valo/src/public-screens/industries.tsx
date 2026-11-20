@@ -1,5 +1,5 @@
-import { Link } from "wouter";
-import { pageTitle, UNAVAILABLE_TITLE, useDocumentTitle } from "@/lib/document-title";
+"use client";
+
 import { ArrowLeft, ArrowRight, FileText, Scale } from "lucide-react";
 import {
   useGetPublicCoverage,
@@ -7,15 +7,30 @@ import {
   useListPublicCatalogue,
   getListReleasedResourcesQueryKey,
   getListPublicCatalogueQueryKey,
-  type ListPublicCatalogueParams,
+  type CataloguePage,
+  type PublicCoverage,
+  type ReleasedResource,
 } from "@workspace/api-client-react";
+import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
 import { ResourceCard, liveContent } from "@/components/resource-parts";
+import { industryTemplatesParams } from "@/lib/catalogue-requests";
+import { fromServer } from "@/lib/server-data";
 
-export default function Industries() {
-  const coverage = useGetPublicCoverage({ query: { retry: false, staleTime: 60000 } });
+/** What an industry page starts from: the reads the server made, each missing if it failed. */
+export type IndustryReads = {
+  coverage?: PublicCoverage | undefined;
+  resources?: ReleasedResource[] | undefined;
+};
+
+/** The industries and how much released guidance each has, starting from what the server read; the
+ * browser reads what the server could not (decision 0011). */
+export function Industries({ initial }: { initial: IndustryReads }) {
+  const coverage = useGetPublicCoverage({
+    query: { retry: false, staleTime: 60000, ...(initial.coverage ? { initialData: initial.coverage } : {}) },
+  });
   const res = useListReleasedResources({
-    query: { queryKey: getListReleasedResourcesQueryKey(), ...liveContent },
+    query: { queryKey: getListReleasedResourcesQueryKey(), ...liveContent, ...fromServer(initial.resources) },
   });
   const counts = new Map<string, number>();
   (res.data ?? []).forEach((r) => r.industrySlugs.forEach((s) => counts.set(s, (counts.get(s) ?? 0) + 1)));
@@ -64,17 +79,30 @@ export default function Industries() {
   );
 }
 
-export function IndustryDetail({ slug }: { slug: string }) {
-  const coverage = useGetPublicCoverage({ query: { retry: false, staleTime: 60000 } });
-  const res = useListReleasedResources({
-    query: { queryKey: getListReleasedResourcesQueryKey(), ...liveContent },
+/** An industry's released guidance and templates, starting from what the server read; the browser
+ * reads what the server could not (decision 0011). */
+export function IndustryDetail({
+  slug,
+  initial,
+}: {
+  slug: string;
+  initial: IndustryReads & { templates?: CataloguePage | undefined };
+}) {
+  const coverage = useGetPublicCoverage({
+    query: { retry: false, staleTime: 60000, ...(initial.coverage ? { initialData: initial.coverage } : {}) },
   });
-  const params: ListPublicCatalogueParams = { type: "template", industry: slug };
+  const res = useListReleasedResources({
+    query: { queryKey: getListReleasedResourcesQueryKey(), ...liveContent, ...fromServer(initial.resources) },
+  });
+  const params = industryTemplatesParams(slug);
   const tpl = useListPublicCatalogue(params, {
-    query: { queryKey: getListPublicCatalogueQueryKey(params), ...liveContent },
+    query: {
+      queryKey: getListPublicCatalogueQueryKey(params),
+      ...liveContent,
+      ...fromServer(initial.templates),
+    },
   });
   const ind = coverage.data?.industries.find((i) => i.slug === slug);
-  useDocumentTitle(ind ? pageTitle(ind.title) : coverage.data ? UNAVAILABLE_TITLE : null);
   const resources = (res.data ?? []).filter((r) => r.industrySlugs.includes(slug));
   const templates = tpl.data?.items ?? [];
 

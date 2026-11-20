@@ -153,7 +153,7 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo
       - name: Prove template downloads read storage outside the source-state lock
         run: pnpm --filter @workspace/api-server test:valo-released-content
-      - name: Prove catalogue filters and saved-item journeys
+      - name: Prove saved-template journeys
         run: pnpm --filter @workspace/api-server test:valo-catalogue-browser
       - name: Prove additional source freshness and strict staff command boundaries
         run: pnpm --filter @workspace/api-server test:valo-source-controls

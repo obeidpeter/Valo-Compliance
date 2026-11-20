@@ -1,19 +1,41 @@
+"use client";
+
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useLocation, useSearch } from "wouter";
+import { useSearchParams } from "next/navigation";
 import { BookOpen, Search, X } from "lucide-react";
 import {
   useListPublicCatalogue,
   getListPublicCatalogueQueryKey,
   useGetPublicCoverage,
+  type CataloguePage,
+  type PublicCoverage,
 } from "@workspace/api-client-react";
+import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
 import { catalogueParams, LIBRARY_TYPES as TYPES, libraryFilters, libraryHref } from "@/lib/library-filters";
+import { fromServer } from "@/lib/server-data";
 
-export default function Library() {
-  const search = useSearch();
-  const [, setLocation] = useLocation();
+/**
+ * The library. The server renders the results for the address it was asked for; the browser takes
+ * over from there (decision 0011). A filter change moves the address in the page and reads the
+ * catalogue from the browser, without asking the server to render the page again, and the results
+ * are read again every 15 seconds.
+ */
+export function Library({
+  initialSearch,
+  initialCatalogue,
+  initialCoverage,
+}: {
+  initialSearch: string;
+  initialCatalogue?: CataloguePage | undefined;
+  initialCoverage?: PublicCoverage | undefined;
+}) {
+  const search = useSearchParams()?.toString() ?? initialSearch;
+  const setLocation = (href: string) => window.history.pushState(null, "", href);
   const filters = libraryFilters(new URLSearchParams(search));
   const { q, type, industry, page, category, access, sort } = filters;
+  // The server's results are for the address the page was first opened at.
+  const serverResults = search === initialSearch ? initialCatalogue : undefined;
   const [draft, setDraft] = useState(q);
   useEffect(() => setDraft(q), [q]);
 
@@ -24,9 +46,12 @@ export default function Library() {
       queryKey: getListPublicCatalogueQueryKey(params),
       refetchInterval: 15000,
       refetchOnWindowFocus: true,
+      ...fromServer(serverResults),
     },
   });
-  const coverage = useGetPublicCoverage({ query: { retry: false, staleTime: 60000 } });
+  const coverage = useGetPublicCoverage({
+    query: { retry: false, staleTime: 60000, ...(initialCoverage ? { initialData: initialCoverage } : {}) },
+  });
   const unknownIndustry = !!industry && !coverage.data?.industries.some((i) => i.slug === industry);
 
   function go(next: Record<string, string | number | undefined>) {

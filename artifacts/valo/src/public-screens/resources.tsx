@@ -1,19 +1,24 @@
-import { Link } from "wouter";
-import { pageTitle, UNAVAILABLE_TITLE, useDocumentTitle } from "@/lib/document-title";
+"use client";
+
 import { ArrowLeft, BookOpen, ExternalLink, FileX } from "lucide-react";
 import {
   useListReleasedResources,
   useGetReleasedResource,
   getListReleasedResourcesQueryKey,
   getGetReleasedResourceQueryKey,
+  type ReleasedResource,
 } from "@workspace/api-client-react";
+import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
 import { KIND_LABEL, PlainText, ResourceCard, fmtDay, liveContent } from "@/components/resource-parts";
-import { describeError } from "@/lib/api";
+import { describeError } from "@/lib/describe-error";
+import { fromServer } from "@/lib/server-data";
 
-export default function Resources() {
+/** The released resources, starting from what the server read; the browser reads them itself when
+ * the server could not, and every 15 seconds after (decision 0011). */
+export function Resources({ initial }: { initial?: ReleasedResource[] | undefined }) {
   const q = useListReleasedResources({
-    query: { queryKey: getListReleasedResourcesQueryKey(), ...liveContent },
+    query: { queryKey: getListReleasedResourcesQueryKey(), ...liveContent, ...fromServer(initial) },
   });
   const items = q.data ?? [];
   return (
@@ -75,13 +80,25 @@ export default function Resources() {
   );
 }
 
-export function ResourceDetail({ slug }: { slug: string }) {
+/** A released resource, starting from what the server read. When the server found none, the page says
+ * so at once while the browser checks again. */
+export function ResourceDetail({
+  slug,
+  initial,
+}: {
+  slug: string;
+  initial?: ReleasedResource | "missing" | undefined;
+}) {
   const q = useGetReleasedResource(slug, {
-    query: { queryKey: getGetReleasedResourceQueryKey(slug), ...liveContent },
+    query: {
+      queryKey: getGetReleasedResourceQueryKey(slug),
+      ...liveContent,
+      ...fromServer(initial === "missing" ? undefined : initial),
+    },
   });
   const r = q.data;
-  const notFound = q.isError && describeError(q.error).kind === "notFound";
-  useDocumentTitle(r ? pageTitle(r.title) : notFound ? UNAVAILABLE_TITLE : null);
+  const notFound =
+    (q.isError && describeError(q.error).kind === "notFound") || (initial === "missing" && q.isLoading);
   return (
     <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8">
       <Link

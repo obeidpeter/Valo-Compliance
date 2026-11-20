@@ -1,7 +1,7 @@
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { phoneProblems, ready, settled, startApp } from "../test-support/app-in-browser";
-import { answer, industry, items, resources } from "../test-support/public-answers";
+import { answer } from "../test-support/public-answers";
 
 /**
  * NFR-006: "WCAG 2.2 AA target across critical flows; keyboard, visible focus, screen-reader labels,
@@ -26,9 +26,6 @@ after(() => app.close());
 const SCREENS: { path: string; title: string; ready?: string; minimumStops?: number }[] = [
   { path: "/", title: "Valo — Documents and business requirements" },
   { path: "/checker", title: "Business requirements checker — Valo" },
-  { path: `/library/${items[0]!.slug}`, title: `${items[0]!.title} — Valo` },
-  { path: `/resources/${resources[0]!.slug}`, title: `${resources[0]!.title} — Valo` },
-  { path: `/industries/${industry.slug}`, title: `${industry.title} — Valo` },
   { path: "/account-access", title: "Account access help — Valo" },
   // The sign-in pages draw no site shell; the provider's card holds their heading and form. Their own
   // focusable elements are the wordmark and the access help link.

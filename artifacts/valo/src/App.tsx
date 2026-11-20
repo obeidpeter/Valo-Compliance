@@ -19,24 +19,12 @@ import NotFound from "@/screens/not-found";
 // Each screen is its own chunk, so a page downloads only the screens it shows, not the whole
 // workspace and staff app (NFR-002).
 const Home = lazy(() => import("@/screens/home"));
-const Library = lazy(() => import("@/public-screens/library"));
-const TemplateDetail = lazy(() => import("@/public-screens/template-detail"));
-const Compliance = lazy(() => import("@/public-screens/compliance"));
-const Industries = lazy(() => import("@/public-screens/industries"));
-const IndustryDetail = lazy(() =>
-  import("@/public-screens/industries").then((m) => ({ default: m.IndustryDetail })),
-);
-const Resources = lazy(() => import("@/public-screens/resources"));
-const ResourceDetail = lazy(() =>
-  import("@/public-screens/resources").then((m) => ({ default: m.ResourceDetail })),
-);
 const AccountAccess = lazy(() => import("@/screens/contact").then((m) => ({ default: m.AccountAccess })));
 const AccountPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.AccountPage })));
 const PrivacyPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.PrivacyPage })));
 const PurchasesPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.PurchasesPage })));
 const StaffPage = lazy(() => import("@/screens/staff"));
 const PrivacyOperations = lazy(() => import("@/screens/privacy-operations"));
-const Services = lazy(() => import("@/public-screens/services"));
 const Support = lazy(() => import("@/screens/support"));
 const Development = lazy(() => import("@/screens/development"));
 const WorkspaceHome = lazy(() => import("@/screens/workspace"));
@@ -254,17 +242,17 @@ function ShellRoutes() {
     <Shell>
       <Switch>
         <Route path="/" component={HomeRedirect} />
-        <Route path="/library" component={Library} />
-        <Route path="/library/:slug">{(p) => <TemplateDetail slug={p.slug} />}</Route>
-        <Route path="/compliance" component={Compliance} />
-        <Route path="/industries" component={Industries} />
-        <Route path="/industries/:slug">{(p) => <IndustryDetail slug={p.slug} />}</Route>
-        <Route path="/resources" component={Resources} />
-        <Route path="/resources/:slug">{(p) => <ResourceDetail slug={p.slug} />}</Route>
+        <Route path="/library" component={ServerPage} />
+        <Route path="/library/:slug" component={ServerPage} />
+        <Route path="/compliance" component={ServerPage} />
+        <Route path="/industries" component={ServerPage} />
+        <Route path="/industries/:slug" component={ServerPage} />
+        <Route path="/resources" component={ServerPage} />
+        <Route path="/resources/:slug" component={ServerPage} />
         <Route path="/about" component={ServerPage} />
         <Route path="/contact" component={ServerPage} />
         <Route path="/account-access" component={AccountAccess} />
-        <Route path="/services" component={Services} />
+        <Route path="/services" component={ServerPage} />
         <Route path="/pricing" component={ServerPage} />
         <Route path="/help" component={ServerPage} />
         <Route path="/support" component={Support} />

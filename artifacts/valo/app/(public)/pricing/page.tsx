@@ -1,3 +1,4 @@
+import type { BuildStatus } from "@workspace/api-client-react";
 import { GetBuildStatusResponse } from "@workspace/api-zod";
 import { PageHeader } from "@/components/page-parts";
 import { PublicLink } from "@/components/public-link";
@@ -8,7 +9,7 @@ import { fixedPageMetadata } from "@/server/page-metadata";
 export const generateMetadata = () => fixedPageMetadata("/pricing");
 
 export default async function Pricing() {
-  const status = await readForPage("/public/status", GetBuildStatusResponse);
+  const status = await readForPage<BuildStatus>("/public/status", GetBuildStatusResponse);
   return (
     <div className="mx-auto max-w-5xl px-5 py-14 lg:px-8">
       <PageHeader eyebrow="Pricing" title="Prices have not been set.">

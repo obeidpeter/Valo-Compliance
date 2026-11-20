@@ -29,7 +29,7 @@ test("the services page explains each kind of help without listing a provider or
 
   // The page renders the list and says nothing is booked or forwarded while no provider exists.
   const page = readFileSync(
-    fileURLToPath(new URL("../public-screens/services.tsx", import.meta.url)),
+    fileURLToPath(new URL("../../app/(public)/services/page.tsx", import.meta.url)),
     "utf8",
   );
   assert.match(page, /<ServiceCategories \/>/);
