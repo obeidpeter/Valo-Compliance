@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { test } from "node:test";
 import {
   FINITE_WORK_BINDING_ENTRIES,
@@ -8,6 +11,8 @@ import {
   inferenceBindingReport,
   inferenceBindingViolations,
   moduleBoundaryViolations,
+  publicServerEntries,
+  publicServerViolations,
   silentCatchReport,
   silentCatchViolations,
   WORKSPACE_SCOPE_ENTRIES,
@@ -161,6 +166,80 @@ test("code outside a module reaches it only through its index", () => {
   assert.match(flagged[1]!, /modules\/docs\/index\.ts:1 module-boundary imports ai\/inference-budget\.ts/);
 });
 
+test("public pages' server code never holds the visitor's identity, and their islands load the identity SDK only after the page is interactive", () => {
+  const root = mkdtempSync(join(tmpdir(), "public-server-rule-"));
+  const write = (path: string, text: string) => {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), text);
+  };
+  const web = "artifacts/valo/";
+  try {
+    write(`${web}src/server/public-api.ts`, 'import { z } from "@workspace/api-zod";\nexport const x = z;\n');
+    write(
+      `${web}src/server/identity.ts`,
+      'import { auth } from "@clerk/nextjs/server";\nexport const y = auth;\n',
+    );
+    write(
+      `${web}app/(public)/terms/page.tsx`,
+      'import type { User } from "@clerk/react";\nimport { Shell } from "@/components/shell";\nimport { Account } from "@/islands/account";\nimport { Menu } from "@/islands/menu";\nexport default function P() { return null; }\n',
+    );
+    // Server code imported by a route is server code too.
+    write(
+      `${web}src/components/shell.tsx`,
+      '\nimport { getBaseUrl } from "@workspace/api-client-react";\nexport const Shell = getBaseUrl;\n',
+    );
+    // An island may use the browser's API client, but loads the identity SDK only with import().
+    write(
+      `${web}src/islands/account.tsx`,
+      '"use client";\nimport { useQuery } from "@workspace/api-client-react";\nimport { Show } from "@clerk/react";\nexport const Account = [useQuery, Show];\n',
+    );
+    write(
+      `${web}src/islands/menu.tsx`,
+      '"use client";\nimport { helper } from "./helper";\nexport const Menu = () => [helper, import("@clerk/react"), import("./bridge")];\n',
+    );
+    write(
+      `${web}src/islands/helper.ts`,
+      'import { SignIn } from "@clerk/react";\nexport const helper = SignIn;\n',
+    );
+    // Loaded with import() after the page is interactive, so not part of its first render.
+    write(
+      `${web}src/islands/bridge.tsx`,
+      '"use client";\nimport { ClerkProvider } from "@clerk/react";\nexport const b = ClerkProvider;\n',
+    );
+    // Not reached from a public page: the private app may use the identity SDK as it does today.
+    write(
+      `${web}src/screens/workspace.tsx`,
+      'import { useAuth } from "@clerk/react";\nexport const w = useAuth;\n',
+    );
+
+    assert.deepEqual(publicServerEntries(root).sort(), [
+      `${web}app/(public)/terms/page.tsx`,
+      `${web}src/server/identity.ts`,
+      `${web}src/server/public-api.ts`,
+    ]);
+    const flagged = publicServerViolations(root);
+    assert.equal(flagged.length, 4, flagged.join("\n"));
+    assert.match(
+      flagged[0]!,
+      /src\/components\/shell\.tsx:2 public-server server code .* imports @workspace\/api-client-react/,
+    );
+    assert.match(
+      flagged[1]!,
+      /src\/islands\/account\.tsx:3 public-server an island .* imports @clerk\/react as it loads/,
+    );
+    assert.match(
+      flagged[2]!,
+      /src\/islands\/helper\.ts:1 public-server an island .* imports @clerk\/react as it loads/,
+    );
+    assert.match(
+      flagged[3]!,
+      /src\/server\/identity\.ts:1 public-server server code .* imports @clerk\/nextjs\/server/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("the repository has no silent catches, no import cycles and no unreviewed binding checks", () => {
   assert.deepEqual(silentCatchReport(), []);
   assert.deepEqual(workspaceActorReport(), []);
@@ -170,6 +249,11 @@ test("the repository has no silent catches, no import cycles and no unreviewed b
   assert.deepEqual(importCycles(graph), []);
   assert.deepEqual(cycleViolations(graph), []);
   assert.deepEqual(moduleBoundaryViolations(graph), []);
+  assert.deepEqual(publicServerViolations(), []);
+  assert.ok(
+    publicServerEntries().includes("artifacts/valo/src/server/public-api.ts"),
+    "the public pages' server code was read",
+  );
   assert.ok(
     [...graph.keys()].some((file) => file.includes("/modules/ai/")),
     "the ai module was read",
