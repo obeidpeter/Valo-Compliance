@@ -1,28 +1,15 @@
+import { configuredOrigin } from "./configured-origin";
+
 /** Only configuration may choose an origin. Request Host/Forwarded headers and
  * route parameters never choose a metadata fetch destination. */
 export function metadataOrigin(env: NodeJS.ProcessEnv = process.env) {
-  const raw =
+  return configuredOrigin(
     env.VALO_TRUSTED_ORIGIN ??
-    (env.NODE_ENV === "development" && env.REPLIT_DEV_DOMAIN
-      ? `https://${env.REPLIT_DEV_DOMAIN}`
-      : undefined);
-  if (!raw) return null;
-  try {
-    const u = new URL(raw);
-    if (
-      !["http:", "https:"].includes(u.protocol) ||
-      u.username ||
-      u.password ||
-      u.pathname !== "/" ||
-      u.search ||
-      u.hash ||
-      (env.NODE_ENV !== "development" && u.protocol !== "https:")
-    )
-      return null;
-    return u.origin;
-  } catch {
-    return null;
-  }
+      (env.NODE_ENV === "development" && env.REPLIT_DEV_DOMAIN
+        ? `https://${env.REPLIT_DEV_DOMAIN}`
+        : undefined),
+    env,
+  );
 }
 export { publicPages } from "./public-pages";
 export type PublicMetadataItem = {
