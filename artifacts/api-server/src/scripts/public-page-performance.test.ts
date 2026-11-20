@@ -28,14 +28,14 @@ import { startSyntheticApi } from "../test-support/synthetic-api";
  * screen, four times slower processor) over a slow 4G connection (150 ms round trip, 1.6 Mbit/s
  * down), five fresh loads of each public page. Each load records the largest contentful paint, the
  * layout shift and the slowest response to a tap on the menu button; the p75 of the five is
- * compared with the targets: INP and CLS must meet them, and LCP, which every page misses while it
- * renders in the browser after the whole app downloads, is a todo test until server-rendered public
- * pages (plan Phase 4) land. The API is answered with synthetic data the contract's schemas accept:
+ * compared with the targets: INP and CLS must meet them. Every page measured is rendered by the
+ * server (decision 0011); LCP stays a todo test until hosted CI shows every page within its target
+ * (decision 0011, step 6). The API is answered with synthetic data the contract's schemas accept:
  * in the page after the slow connection's round trip, and for the web server by a synthetic API on
- * this machine (decision 0011), at once; the API's own time is measured by NFR-003. The
- * identity provider's script cannot load in the lab, so the home page, which waits for it to know
- * the visitor is signed out, is left to a run against a deployed instance
- * (VALO_PAGE_PERFORMANCE_URL), as is every real-user measurement.
+ * this machine (decision 0011), at once; the API's own time is measured by NFR-003. The identity
+ * provider's script cannot load in the lab, so every page is measured as a signed-out visitor sees
+ * it. Real-user measurements need a deployed instance, as does a run against one
+ * (VALO_PAGE_PERFORMANCE_URL).
  */
 const RUNS = 5;
 const TARGETS = { lcp: 2500, inp: 200, cls: 0.1 } as const;
@@ -44,7 +44,7 @@ const deployed = process.env.VALO_PAGE_PERFORMANCE_URL;
 // A deployed instance has its own released templates, so its run leaves the synthetic one out.
 const PAGES = deployed
   ? ["/", "/library", "/compliance", "/industries", "/services", "/pricing"]
-  : ["/library", "/library/synthetic-template-1", "/compliance", "/industries", "/services", "/pricing"];
+  : ["/", "/library", "/library/synthetic-template-1", "/compliance", "/industries", "/services", "/pricing"];
 
 /** Nearest-rank percentile. */
 const percentile = (values: number[], p: number) => {
@@ -375,7 +375,7 @@ before(
       "| --- | ---: | ---: | ---: |",
       ...rows.map((r) => `| ${r.path} | ${r.lcp.toFixed(0)} | ${r.inp.toFixed(0)} | ${r.cls.toFixed(3)} |`),
       "",
-      `Targets: LCP ${TARGETS.lcp} ms, INP ${TARGETS.inp} ms, CLS ${TARGETS.cls}. ${deployed ? "Measured against a deployed instance." : "API answered with synthetic data, in the page and for the web server; the identity provider's script does not load, so the home page is not measured."} No real-user measurement exists before launch.`,
+      `Targets: LCP ${TARGETS.lcp} ms, INP ${TARGETS.inp} ms, CLS ${TARGETS.cls}. ${deployed ? "Measured against a deployed instance." : "API answered with synthetic data, in the page and for the web server; the identity provider's script does not load."} No real-user measurement exists before launch.`,
       "",
     ].join("\n");
     process.stdout.write(summary + "\n");
@@ -404,7 +404,7 @@ test("public pages answer a tap within NFR-002's INP target and keep CLS within 
 test(
   "public pages reach NFR-002's LCP target on an emulated mid-range phone",
   {
-    todo: "Every public page renders in the browser after the app shell and its screen download; server-rendered public pages (plan Phase 4) come next.",
+    todo: "Every page measured is rendered by the server; this becomes a normal test once hosted CI shows each page within the target (decision 0011, step 6).",
   },
   () => {
     assert.equal(rows.length, PAGES.length, "every page was measured");
