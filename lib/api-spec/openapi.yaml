@@ -4146,6 +4146,33 @@ components:
         area: { type: string, enum: [content, support, finance, system] }
         notice: { type: string }
         records: { type: array, items: { type: object, additionalProperties: true } }
+        preparedCandidates:
+          description: >-
+            Content area only. Template candidates prepared for their two reviews (decision 0014), most
+            recent first. A candidate is a private artifact until its reviews are checked, so it is not
+            among the content versions.
+          type: array
+          items: { $ref: "#/components/schemas/StaffPreparedCandidate" }
+    StaffPreparedCandidate:
+      type: object
+      additionalProperties: false
+      required: [artifactId, artifactHash, versionId, templateId, version, preparedAt, reviewBy, state, savedStatus]
+      properties:
+        artifactId: { type: string, format: uuid }
+        artifactHash: { type: string, pattern: '^[a-f0-9]{64}$' }
+        versionId: { type: string, format: uuid }
+        templateId: { type: string }
+        version: { type: integer, minimum: 1 }
+        preparedAt: { type: string, format: date-time }
+        reviewBy: { type: string, format: date-time }
+        state:
+          description: >-
+            awaiting_reviews until its version is saved; saved once it is, with that version's status;
+            expired after its review date; version_taken when another candidate was saved under its
+            version number first.
+          type: string
+          enum: [awaiting_reviews, saved, expired, version_taken]
+        savedStatus: { type: [string, "null"], enum: [candidate, held, published, withdrawn, null] }
     AccessSupportInput:
       type: object
       additionalProperties: false

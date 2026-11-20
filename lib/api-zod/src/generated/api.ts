@@ -6648,10 +6648,25 @@ export const GetStaffOperationsQueryParams = zod.object({
   "area": zod.enum(['content', 'support', 'finance', 'system'])
 })
 
+export const getStaffOperationsResponsePreparedCandidatesItemArtifactHashRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+
 export const GetStaffOperationsResponse = zod.object({
   "area": zod.enum(['content', 'support', 'finance', 'system']),
   "notice": zod.string(),
-  "records": zod.array(zod.record(zod.string(), zod.unknown()))
+  "records": zod.array(zod.record(zod.string(), zod.unknown())),
+  "preparedCandidates": zod.array(zod.object({
+  "artifactId": zod.uuid(),
+  "artifactHash": zod.string().regex(getStaffOperationsResponsePreparedCandidatesItemArtifactHashRegExp),
+  "versionId": zod.uuid(),
+  "templateId": zod.string(),
+  "version": zod.int().min(1),
+  "preparedAt": zod.coerce.date(),
+  "reviewBy": zod.coerce.date(),
+  "state": zod.enum(['awaiting_reviews', 'saved', 'expired', 'version_taken']).describe('awaiting_reviews until its version is saved; saved once it is, with that version\'s status; expired after its review date; version_taken when another candidate was saved under its version number first.'),
+  "savedStatus": zod.union([zod.literal('candidate'),zod.literal('held'),zod.literal('published'),zod.literal('withdrawn'),zod.literal(null)]).nullable()
+})).optional().describe('Content area only. Template candidates prepared for their two reviews (decision 0014), most recent first. A candidate is a private artifact until its reviews are checked, so it is not among the content versions.')
 })
 
 

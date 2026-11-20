@@ -136,6 +136,9 @@ test(
       await scoped.query(
         `GRANT SELECT,INSERT ON "${schema}".valo_content_versions TO valo_content_drafter_dev`,
       );
+      await scoped.query(
+        `GRANT SELECT,INSERT ON "${schema}".valo_prepared_candidates TO valo_content_drafter_dev`,
+      );
       await scoped.query(`GRANT USAGE ON SCHEMA "${schema}" TO valo_content_publisher_dev`);
       await scoped.query(
         `GRANT SELECT,UPDATE ON "${schema}".valo_content_versions TO valo_content_publisher_dev`,

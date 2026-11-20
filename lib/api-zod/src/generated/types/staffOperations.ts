@@ -7,9 +7,12 @@
  */
 import type { StaffOperationsArea } from './staffOperationsArea';
 import type { StaffOperationsRecordsItem } from './staffOperationsRecordsItem';
+import type { StaffPreparedCandidate } from './staffPreparedCandidate';
 
 export interface StaffOperations {
   area: StaffOperationsArea;
   notice: string;
   records: StaffOperationsRecordsItem[];
+  /** Content area only. Template candidates prepared for their two reviews (decision 0014), most recent first. A candidate is a private artifact until its reviews are checked, so it is not among the content versions. */
+  preparedCandidates?: StaffPreparedCandidate[];
 }

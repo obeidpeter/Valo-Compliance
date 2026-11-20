@@ -2660,10 +2660,54 @@ export const StaffOperationsArea = {
 
 export type StaffOperationsRecordsItem = { [key: string]: unknown };
 
+/**
+ * awaiting_reviews until its version is saved; saved once it is, with that version's status; expired after its review date; version_taken when another candidate was saved under its version number first.
+ */
+export type StaffPreparedCandidateState = typeof StaffPreparedCandidateState[keyof typeof StaffPreparedCandidateState];
+
+
+export const StaffPreparedCandidateState = {
+  awaiting_reviews: 'awaiting_reviews',
+  saved: 'saved',
+  expired: 'expired',
+  version_taken: 'version_taken',
+} as const;
+
+/**
+ * @nullable
+ */
+export type StaffPreparedCandidateSavedStatus = typeof StaffPreparedCandidateSavedStatus[keyof typeof StaffPreparedCandidateSavedStatus] | null;
+
+
+export const StaffPreparedCandidateSavedStatus = {
+  candidate: 'candidate',
+  held: 'held',
+  published: 'published',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface StaffPreparedCandidate {
+  artifactId: string;
+  /** @pattern ^[a-f0-9]{64}$ */
+  artifactHash: string;
+  versionId: string;
+  templateId: string;
+  /** @minimum 1 */
+  version: number;
+  preparedAt: string;
+  reviewBy: string;
+  /** awaiting_reviews until its version is saved; saved once it is, with that version's status; expired after its review date; version_taken when another candidate was saved under its version number first. */
+  state: StaffPreparedCandidateState;
+  /** @nullable */
+  savedStatus: StaffPreparedCandidateSavedStatus;
+}
+
 export interface StaffOperations {
   area: StaffOperationsArea;
   notice: string;
   records: StaffOperationsRecordsItem[];
+  /** Content area only. Template candidates prepared for their two reviews (decision 0014), most recent first. A candidate is a private artifact until its reviews are checked, so it is not among the content versions. */
+  preparedCandidates?: StaffPreparedCandidate[];
 }
 
 export type AccessSupportInputTopic = typeof AccessSupportInputTopic[keyof typeof AccessSupportInputTopic];

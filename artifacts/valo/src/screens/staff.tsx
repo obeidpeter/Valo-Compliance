@@ -16,6 +16,7 @@ import { SourceSafetyControls } from "@/components/source-safety-controls";
 import { SupportRecords } from "@/components/support-records";
 import { StaffSupportCases } from "@/components/staff-support-cases";
 import { ContentEscalations } from "@/components/content-escalations";
+import { PreparedCandidates } from "@/components/prepared-candidates";
 
 const AREAS: { v: Area; l: string }[] = [
   { v: GetStaffOperationsArea.content, l: "Content" },
@@ -131,6 +132,7 @@ export default function StaffPage() {
             {area === "system" && <StaffRoleAdministration />}
             {(area === "content" || area === "system") && <SourceSafetyControls key={area} area={area} />}
             {area === "content" && <ContentEscalations onDirtyChange={setContentDirty} />}
+            {area === "content" && <PreparedCandidates candidates={q.data.preparedCandidates ?? []} />}
             {area === "support" ? (
               <>
                 <StaffSupportCases onDirtyChange={setSupportDirty} />

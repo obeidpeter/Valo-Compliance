@@ -420,6 +420,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-export-library-db
       - name: Prove the release record names the commit, migrations, content and rule versions and known issues (OPS-005)
         run: pnpm --filter @workspace/api-server test:valo-release-record-db
+      - name: Prove the staff Content area lists templates awaiting their reviews (KI-010)
+        run: pnpm --filter @workspace/api-server test:valo-staff-prepared-db
       - name: Prove controlled payment settlement and refund lifecycle
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce
