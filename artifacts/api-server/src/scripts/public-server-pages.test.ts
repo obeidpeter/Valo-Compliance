@@ -398,6 +398,32 @@ test("when the API answers the web server as its production gate does, refuses o
   assert.deepEqual(problems, []);
 });
 
+test("when the API answers the web server as its production gate does, refuses or does not answer, the home page still renders its headline and both shelves within the time limit, leaving out only the template count", async () => {
+  const shown = /\d+(?:<!-- -->)? catalogue templates/;
+  const problems: string[] = [];
+  for (const failure of [404, 429, "silent"] as const) {
+    serverFailure = failure;
+    try {
+      const started = performance.now();
+      const html = await (await fetch(web.origin + "/")).text();
+      const took = performance.now() - started;
+      if (took > 4000) problems.push(`${failure}: the page took ${took.toFixed(0)} ms`);
+      for (const part of [
+        'data-testid="text-headline"',
+        'data-testid="card-shelf-documents"',
+        'data-testid="card-shelf-compliance"',
+      ])
+        if (!html.includes(part)) problems.push(`${failure}: the page left out ${part}`);
+      if (shown.test(html)) problems.push(`${failure}: the page showed a template count it could not read`);
+    } finally {
+      serverFailure = null;
+    }
+  }
+  // With the API answering, the server shows the count it read.
+  assert.match(await (await fetch(web.origin + "/")).text(), shown);
+  assert.deepEqual(problems, []);
+});
+
 test("when a page's island cannot use what the API sent, the page says it could not be shown and keeps the site's frame", async () => {
   serverFailure = 404;
   browserGarbled = true;
