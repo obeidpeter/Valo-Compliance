@@ -11,11 +11,13 @@ import { chromium, devices, type Route } from "playwright";
 import {
   GetBuildStatusResponse,
   GetPublicCoverageResponse,
+  GetPublicDiscoveryResponse,
   GetReleasedTemplateResponse,
   ListPublicCatalogueResponse,
   ListReleasedResourcesResponse,
 } from "@workspace/api-zod";
 import { coveragePlan } from "@workspace/valo-core";
+import { startSyntheticApi } from "../test-support/synthetic-api";
 
 /**
  * NFR-002: "Mobile p75 LCP ≤2.5s, INP ≤200ms, CLS ≤0.1 on representative supported
@@ -28,8 +30,9 @@ import { coveragePlan } from "@workspace/valo-core";
  * layout shift and the slowest response to a tap on the menu button; the p75 of the five is
  * compared with the targets: INP and CLS must meet them, and LCP, which every page misses while it
  * renders in the browser after the whole app downloads, is a todo test until server-rendered public
- * pages (plan Phase 4) land. The API is answered in the page with synthetic data the contract's
- * schemas accept, after the slow connection's round trip; its own time is measured by NFR-003. The
+ * pages (plan Phase 4) land. The API is answered with synthetic data the contract's schemas accept:
+ * in the page after the slow connection's round trip, and for the web server by a synthetic API on
+ * this machine (decision 0011), at once; the API's own time is measured by NFR-003. The
  * identity provider's script cannot load in the lab, so the home page, which waits for it to know
  * the visitor is signed out, is left to a run against a deployed instance
  * (VALO_PAGE_PERFORMANCE_URL), as is every real-user measurement.
@@ -146,7 +149,41 @@ function fixtures() {
       });
     },
     resources: ListReleasedResourcesResponse.parse(resources),
+    discovery: GetPublicDiscoveryResponse.parse({
+      items: [
+        ...items.map((item) => ({
+          path: item.href,
+          title: item.title,
+          description: item.summary,
+          modifiedAt: reviewedAt,
+        })),
+        ...resources.map((resource) => ({
+          path: `/resources/${resource.slug}`,
+          title: resource.title,
+          description: resource.summary,
+          modifiedAt: reviewedAt,
+        })),
+      ],
+    }),
   };
+}
+
+/** The synthetic answer for an API address, the same for the browser and the web server. */
+function answerFor(data: ReturnType<typeof fixtures>, url: URL): unknown {
+  const path = url.pathname.replace(/^\/api/, "");
+  return path === "/public/status"
+    ? data.status
+    : path === "/public/coverage"
+      ? data.coverage
+      : path === "/public/catalogue"
+        ? data.catalogue(url)
+        : path === "/public/resources"
+          ? data.resources
+          : path === "/public/discovery"
+            ? data.discovery
+            : path.startsWith("/public/templates/")
+              ? data.template(decodeURIComponent(path.slice("/public/templates/".length)))
+              : undefined;
 }
 
 /**
@@ -196,6 +233,8 @@ function layoutShift(shifts: { value: number; time: number }[]) {
 type Row = { path: string; lcp: number; inp: number; cls: number };
 const rows: Row[] = [];
 const unknown = new Set<string>();
+/** API paths the web server asked the synthetic API for and found no answer. */
+let serverUnknown = new Set<string>();
 
 // One measurement for both tests below: five fresh loads of each page.
 before(
@@ -204,6 +243,15 @@ before(
     const front = resolve(root, "artifacts/valo");
     let origin = deployed ? new URL(deployed).origin : "";
     let server: ReturnType<typeof spawn> | undefined;
+    const data = fixtures();
+    // The web server's own reads, answered at once: it and the API sit side by side.
+    const api = deployed
+      ? undefined
+      : await startSyntheticApi((_method, url) => {
+          const body = answerFor(data, url);
+          return body === undefined ? undefined : { status: 200, body };
+        });
+    if (api) serverUnknown = api.unknown;
     if (!deployed) {
       // Pass only OS essentials; never inherit provider or database credentials.
       const env = Object.fromEntries(
@@ -217,7 +265,12 @@ before(
       const next = createRequire(resolve(front, "package.json")).resolve("next/dist/bin/next");
       server = spawn(process.execPath, [next, "start", "--hostname", "127.0.0.1", "--port", String(port)], {
         cwd: front,
-        env: { ...env, NODE_ENV: "production", NEXT_TELEMETRY_DISABLED: "1" },
+        env: {
+          ...env,
+          NODE_ENV: "production",
+          NEXT_TELEMETRY_DISABLED: "1",
+          VALO_API_INTERNAL_ORIGIN: api!.origin,
+        },
         stdio: "ignore",
       });
       let ready = false;
@@ -231,22 +284,10 @@ before(
       }
       assert.ok(ready, "the compiled web app answers");
     }
-    const data = fixtures();
     const answer = async (route: Route) => {
       const url = new URL(route.request().url());
       const path = url.pathname.replace(/^\/api/, "");
-      const body =
-        path === "/public/status"
-          ? data.status
-          : path === "/public/coverage"
-            ? data.coverage
-            : path === "/public/catalogue"
-              ? data.catalogue(url)
-              : path === "/public/resources"
-                ? data.resources
-                : path.startsWith("/public/templates/")
-                  ? data.template(decodeURIComponent(path.slice("/public/templates/".length)))
-                  : undefined;
+      const body = answerFor(data, url);
       await delay(ROUND_TRIP_MS);
       if (body === undefined) {
         unknown.add(path);
@@ -325,6 +366,7 @@ before(
     } finally {
       await browser.close();
       server?.kill("SIGTERM");
+      await api?.close();
     }
     const summary = [
       `### NFR-002 lab check: p75 of ${RUNS} fresh loads per page, emulated Moto G4, 4x slower CPU, slow 4G`,
@@ -333,7 +375,7 @@ before(
       "| --- | ---: | ---: | ---: |",
       ...rows.map((r) => `| ${r.path} | ${r.lcp.toFixed(0)} | ${r.inp.toFixed(0)} | ${r.cls.toFixed(3)} |`),
       "",
-      `Targets: LCP ${TARGETS.lcp} ms, INP ${TARGETS.inp} ms, CLS ${TARGETS.cls}. ${deployed ? "Measured against a deployed instance." : "API answered in the page with synthetic data; the identity provider's script does not load, so the home page is not measured."} No real-user measurement exists before launch.`,
+      `Targets: LCP ${TARGETS.lcp} ms, INP ${TARGETS.inp} ms, CLS ${TARGETS.cls}. ${deployed ? "Measured against a deployed instance." : "API answered with synthetic data, in the page and for the web server; the identity provider's script does not load, so the home page is not measured."} No real-user measurement exists before launch.`,
       "",
     ].join("\n");
     process.stdout.write(summary + "\n");
@@ -344,6 +386,7 @@ before(
 
 test("public pages answer a tap within NFR-002's INP target and keep CLS within 0.1 on an emulated mid-range phone", () => {
   assert.deepEqual([...unknown].sort(), [], "every API call a public page makes has a lab answer");
+  assert.deepEqual([...serverUnknown].sort(), [], "every API call the web server makes has a lab answer");
   assert.deepEqual(
     rows.map((row) => row.path),
     PAGES,

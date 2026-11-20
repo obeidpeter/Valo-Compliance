@@ -40,7 +40,7 @@ flowchart LR
 
 | Process | Entry point | Responsibility |
 | --- | --- | --- |
-| Web | `artifacts/valo/app/[[...slug]]/page.tsx` | Serves the site. Public pages and the private workspace render client-side today. |
+| Web | `artifacts/valo/app/[[...slug]]/page.tsx` | Serves the site. Public pages and the private workspace render client-side today; the public pages move to the server one at a time (decision 0011). |
 | API | `artifacts/api-server/src/index.ts` | All reads and writes, authentication, authorization, webhooks. |
 | Worker | `artifacts/api-server/src/workers/export-worker.ts` | DOCX/PDF exports, workspace data exports, retention, payments, refunds, disputes, reminders. |
 | Supervisor | `artifacts/api-server/src/workers/export-supervisor.ts` | Restarts the worker within limits and reports health. |
@@ -65,6 +65,32 @@ everything else. This is deliberate: no production launch is approved.
 Releases, rollback, environment profiles, backup retention and alerts are described in
 [docs/valo/release-and-rollback.md](../valo/release-and-rollback.md). The `Dockerfile` builds
 the API and web images; no environment runs them yet.
+
+## Public pages on the server
+
+The public pages are moving from the browser to the server, one step at a time
+([decision 0011](decisions/0011-server-rendered-public-pages.md)). A page renders in the browser,
+as before, until its own route lands.
+
+The web server reads the API only through `artifacts/valo/src/server/public-api.ts`, as an anonymous
+visitor:
+- It sends no cookie and no `Authorization` header, so a server-rendered page holds only what any
+  anonymous visitor may see, the same for every visitor.
+- It passes on the `X-Forwarded-For` header it received. The API counts each visitor separately
+  only once `VALO_TRUSTED_PROXY_CIDRS` trusts the web server, after a deployed topology has been
+  observed; until then server-rendered reads share one rate-limit budget.
+- It checks every answer with the contract's schema, refuses redirects, caps an answer at 4 MiB and
+  gives up after 1.5 seconds. A failure comes back as a reason (`not-found`, `refused`, `failed`,
+  `unconfigured`), so a page renders its unavailable or error state.
+- The API's address is `VALO_API_INTERNAL_ORIGIN`, or else the configured public origin, which
+  serves the API under `/api`. Outside development it must be https, or plain http to this
+  machine's loopback address. A set but unusable value is refused, never replaced.
+
+The metadata and the sitemap read discovery through it (`src/server/page-api.ts`). The repository
+rule `public-server` keeps the identity SDK and the browser's API client out of the code a public
+page runs on the server, and lets the islands it renders load the identity SDK only with `import()`.
+Checks that run the compiled web app point it at a synthetic API on the loopback address
+(`artifacts/api-server/src/test-support/synthetic-api.ts`).
 
 ## Invariants
 

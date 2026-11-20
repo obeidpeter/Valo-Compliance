@@ -297,6 +297,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.3.5
         version: 4.3.5
+      '@workspace/api-zod':
+        specifier: workspace:*
+        version: link:../../lib/api-zod
       '@workspace/valo-core':
         specifier: workspace:*
         version: link:../../lib/valo-core

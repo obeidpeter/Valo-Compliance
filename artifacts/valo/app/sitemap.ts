@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
-import { metadataOrigin, publicPages, fetchPublicMetadata } from "@/lib/public-metadata";
+import { metadataOrigin, publicPages } from "@/lib/public-metadata";
+import { publicDiscovery } from "@/server/page-api";
 export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = metadataOrigin();
   if (!origin) return [];
-  const entries = await fetchPublicMetadata(origin);
+  const entries = await publicDiscovery();
   return [
     ...Object.keys(publicPages).map((path) => ({ url: origin + path })),
     ...entries.map((item) => ({

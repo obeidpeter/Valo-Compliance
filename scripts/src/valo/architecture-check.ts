@@ -15,6 +15,7 @@ import ts from "typescript";
  * - workspace-actor: see workspaceActorViolations.
  * - inference-bindings: see inferenceBindingViolations.
  * - module-boundary: see moduleBoundaryViolations.
+ * - public-server: see publicServerViolations.
  */
 
 export const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -333,6 +334,128 @@ export function moduleBoundaryViolations(graph = apiImportGraph()): string[] {
   return violations.sort();
 }
 
+const WEB = "artifacts/valo/";
+const CLERK = /^@clerk\//;
+
+type WebFile = { client: boolean; imports: { specifier: string; line: number; dynamic: boolean }[] };
+
+/** Each web app product file's value imports (type-only ones carry no code) and whether it is a
+ * "use client" file, keyed by repository-relative path. */
+function webFiles(root: string): Map<string, WebFile> {
+  const files = new Map<string, WebFile>();
+  for (const dir of ["src", "app"])
+    for (const full of sourceFiles(join(root, WEB, dir), isProductSource)) {
+      const path = relative(root, full);
+      const source = ts.createSourceFile(
+        path,
+        readFileSync(full, "utf8"),
+        ts.ScriptTarget.Latest,
+        true,
+        path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+      );
+      const first = source.statements[0];
+      const client =
+        !!first &&
+        ts.isExpressionStatement(first) &&
+        ts.isStringLiteral(first.expression) &&
+        first.expression.text === "use client";
+      const imports: WebFile["imports"] = [];
+      const add = (literal: ts.Node, dynamic: boolean) => {
+        if (ts.isStringLiteral(literal))
+          imports.push({ specifier: literal.text, line: lineOf(source, literal.getStart()), dynamic });
+      };
+      const visit = (node: ts.Node) => {
+        if (ts.isImportDeclaration(node)) {
+          const clause = node.importClause;
+          const typeOnly =
+            !!clause &&
+            (clause.isTypeOnly ||
+              (!clause.name &&
+                !!clause.namedBindings &&
+                ts.isNamedImports(clause.namedBindings) &&
+                clause.namedBindings.elements.length > 0 &&
+                clause.namedBindings.elements.every((element) => element.isTypeOnly)));
+          if (!typeOnly) add(node.moduleSpecifier, false);
+        } else if (ts.isExportDeclaration(node) && node.moduleSpecifier && !node.isTypeOnly)
+          add(node.moduleSpecifier, false);
+        else if (
+          ts.isCallExpression(node) &&
+          node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+          node.arguments[0]
+        )
+          add(node.arguments[0], true);
+        ts.forEachChild(node, visit);
+      };
+      visit(source);
+      files.set(path, { client, imports });
+    }
+  return files;
+}
+
+/** Where the server code of the public pages starts: the server-only folder, the public routes, the
+ * root layout and the sitemap. */
+export function publicServerEntries(root = repositoryRoot): string[] {
+  return [...webFiles(root).keys()].filter(
+    (path) =>
+      path.startsWith(`${WEB}src/server/`) ||
+      path.startsWith(`${WEB}app/(public)/`) ||
+      path === `${WEB}app/layout.tsx` ||
+      path === `${WEB}app/sitemap.ts`,
+  );
+}
+
+/**
+ * public-server (decision 0011): a server-rendered public page holds only what any anonymous visitor
+ * may see, and the identity provider runs in the browser alone.
+ *
+ * - The server code a public page runs (its route files and what they import, up to a "use client"
+ *   file) imports neither the identity SDK (`@clerk/*`) nor the browser's API client
+ *   (`@workspace/api-client-react`), whose base address and token getter are module-level settings
+ *   that every request on a server would share. It reads the API through src/server/public-api.ts.
+ * - A "use client" island such a page renders, and every file it imports, loads the identity SDK only
+ *   with import(), after the page is interactive: an island's module code also runs in the server's
+ *   render, and the content must not wait for the SDK. Files an island loads with import() are not
+ *   part of the page's first render, so they are not checked.
+ */
+export function publicServerViolations(root = repositoryRoot): string[] {
+  const files = webFiles(root);
+  const resolveWeb = (from: string, specifier: string) => {
+    const base = specifier.startsWith("@/")
+      ? join(WEB, "src", specifier.slice(2))
+      : specifier.startsWith(".")
+        ? join(dirname(from), specifier)
+        : undefined;
+    if (!base) return undefined;
+    return [`${base}.ts`, `${base}.tsx`, join(base, "index.ts"), join(base, "index.tsx"), base].find((p) =>
+      files.has(p),
+    );
+  };
+  const violations = new Set<string>();
+  const seen = new Set<string>();
+  const visit = (path: string, mode: "server" | "island") => {
+    if (seen.has(`${mode} ${path}`)) return;
+    seen.add(`${mode} ${path}`);
+    for (const { specifier, line, dynamic } of files.get(path)?.imports ?? []) {
+      const target = resolveWeb(path, specifier);
+      if (!target) {
+        if (mode === "server" && (CLERK.test(specifier) || specifier === "@workspace/api-client-react"))
+          violations.add(
+            `${path}:${line} public-server server code of a public page imports ${specifier}; read the API through src/server/public-api.ts, as an anonymous visitor`,
+          );
+        else if (mode === "island" && CLERK.test(specifier) && !dynamic)
+          violations.add(
+            `${path}:${line} public-server an island of a public page imports ${specifier} as it loads; load it with import() once the page is interactive`,
+          );
+        continue;
+      }
+      if (mode === "island" && dynamic) continue;
+      visit(target, files.get(target)!.client ? "island" : mode);
+    }
+  };
+  for (const entry of publicServerEntries(root)) visit(entry, files.get(entry)!.client ? "island" : "server");
+  return [...violations].sort();
+}
+
 export function silentCatchReport(root = repositoryRoot): string[] {
   const roots = [
     "artifacts/api-server/src",
@@ -357,6 +480,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     ...workspaceActorReport(),
     ...inferenceBindingReport(),
     ...moduleBoundaryViolations(),
+    ...publicServerViolations(),
   ];
   for (const violation of violations) process.stdout.write(`${violation}\n`);
   process.stdout.write(`architecture check: ${violations.length} violation(s)\n`);

@@ -1,7 +1,8 @@
 import ClientApp from "@/client-app";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { metadataOrigin, publicPages, fetchPublicMetadata } from "@/lib/public-metadata";
+import { metadataOrigin, publicPages } from "@/lib/public-metadata";
+import { publicDiscovery } from "@/server/page-api";
 
 export async function generateMetadata({
   params,
@@ -13,8 +14,8 @@ export async function generateMetadata({
     origin = metadataOrigin();
   const fixed = publicPages[path];
   const detail =
-    !fixed && slug.length === 2 && ["library", "resources", "industries"].includes(slug[0]!) && origin
-      ? (await fetchPublicMetadata(origin)).find((item) => item.path === path)
+    !fixed && slug.length === 2 && ["library", "resources", "industries"].includes(slug[0]!)
+      ? (await publicDiscovery()).find((item) => item.path === path)
       : undefined;
   const item = fixed ?? detail;
   if (!item) return { title: "Page unavailable or private — Valo", robots: { index: false, follow: false } };

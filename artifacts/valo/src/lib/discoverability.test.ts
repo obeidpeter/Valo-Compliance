@@ -1,11 +1,22 @@
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { test } from "node:test";
+import { before, mock, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { generateMetadata } from "../../app/[[...slug]]/page";
-import sitemap from "../../app/sitemap";
 import { publicPages } from "./public-metadata";
+
+// The server reads the API while rendering a request, so the request's headers come from Next. Here
+// a synthetic request carries the address its proxy forwarded, which the reads must pass on.
+const forwardedFor = "203.0.113.9";
+mock.module("next/headers", {
+  namedExports: { headers: async () => new Headers({ "x-forwarded-for": forwardedFor }) },
+});
+let generateMetadata: (typeof import("../../app/[[...slug]]/page"))["generateMetadata"];
+let sitemap: (typeof import("../../app/sitemap"))["default"];
+before(async () => {
+  ({ generateMetadata } = await import("../../app/[[...slug]]/page"));
+  ({ default: sitemap } = await import("../../app/sitemap"));
+});
 
 // WEB-004: "Render public content with meaningful metadata, canonical URLs and a sitemap; exclude
 // accounts, drafts and admin pages", accepted when "no fictional testimonials, customers, ratings or
@@ -38,8 +49,13 @@ async function withDiscovery<T>(run: (requested: string[]) => Promise<T>) {
   const fetch = globalThis.fetch;
   const saved = process.env.VALO_TRUSTED_ORIGIN;
   const requested: string[] = [];
-  globalThis.fetch = (async (url: string | URL) => {
+  globalThis.fetch = (async (url: string | URL, init?: RequestInit) => {
     requested.push(String(url));
+    // As an anonymous visitor: no cookie, no Authorization, and the forwarded address passed on.
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("cookie"), null);
+    assert.equal(headers.get("authorization"), null);
+    assert.equal(headers.get("x-forwarded-for"), forwardedFor);
     const items = [...released, ...privatePaths.map((path) => ({ ...released[0]!, path }))];
     return new Response(JSON.stringify({ items }), { headers: { "content-type": "application/json" } });
   }) as typeof globalThis.fetch;

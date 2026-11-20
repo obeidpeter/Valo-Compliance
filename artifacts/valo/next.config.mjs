@@ -16,7 +16,7 @@ const nextConfig = {
     NEXT_PUBLIC_CLERK_PROXY_URL: process.env.VITE_CLERK_PROXY_URL || process.env.CLERK_PROXY_URL || "",
     NEXT_PUBLIC_BASE_PATH: (process.env.BASE_PATH || "/").replace(/\/$/, ""),
   },
-  transpilePackages: ["@workspace/api-client-react"],
+  transpilePackages: ["@workspace/api-client-react", "@workspace/api-zod"],
   async headers() {
     return [
       {
