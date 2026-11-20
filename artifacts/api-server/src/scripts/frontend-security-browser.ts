@@ -10,6 +10,7 @@ import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 import { chromium, expect } from "@playwright/test";
+import { chromiumLaunchPath } from "../platform/chromium";
 
 const root = resolve(import.meta.dirname, "../../../.."),
   front = resolve(root, "artifacts/valo");
@@ -98,11 +99,7 @@ try {
   checks.push(
     "Actual Next responses enforce unique server-generated nonces, reject supplied policy/nonce, disallow framing and prevent HTML caching, on the browser app's page and every server-rendered page",
   );
-  const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH;
-  browser = await chromium.launch({
-    headless: true,
-    ...(executablePath !== undefined ? { executablePath } : {}),
-  });
+  browser = await chromium.launch({ headless: true, ...chromiumLaunchPath() });
   const context = await browser.newContext(),
     page = await context.newPage();
   await context.route("**/*", (route) =>

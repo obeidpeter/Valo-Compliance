@@ -18,6 +18,7 @@ import { syntheticDocument } from "../lib/valo-test-fixtures";
 import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
 import { runGuidedCustomerJourneys } from "./customer-guided-journeys";
 import { deletePrivateFile } from "../platform/valo-private-storage";
+import { chromiumLaunchPath } from "../platform/chromium";
 const checks: { name: string; status: string; diagnostic?: string }[] = [];
 const run = randomUUID(),
   email = `valo-ux-${run}+clerk_test@example.com`;
@@ -132,7 +133,7 @@ try {
     throw Error("SYNTHETIC_DEVELOPMENT_INSTANCE_REQUIRED");
   await clerkSetup({ dotenv: false, debug: false });
   browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || "/repl/tools/bin/chromium",
+    ...chromiumLaunchPath(),
     headless: true,
     args: ["--no-sandbox"],
   });

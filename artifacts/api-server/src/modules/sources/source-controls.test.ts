@@ -13,6 +13,7 @@ import { checkExtractedText, extractSource } from "./source-extract";
 import { storeSourceSnapshot } from "./source-storage";
 import { randomUUID } from "node:crypto";
 import { chromium } from "playwright";
+import { chromiumLaunchPath } from "../../platform/chromium";
 test("only original and explicitly recorded coordinating references can be selected", () => {
   assert.equal(referenceFor("S04").id, "S04");
   for (const id of ["S25", "../../private", "https://example.com", "S04?admin=true"])
@@ -47,7 +48,7 @@ test("instrument identity uses body pages, not a plausible or misleading metadat
 });
 test("PDF extraction retains a blank first page so operative locators cannot shift", async () => {
   const browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? "/repl/tools/bin/chromium",
+    ...chromiumLaunchPath(),
     headless: true,
     args: ["--no-sandbox"],
   });

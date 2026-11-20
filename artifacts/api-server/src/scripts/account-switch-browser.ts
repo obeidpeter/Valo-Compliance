@@ -8,6 +8,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium, expect } from "@playwright/test";
 import { developmentPublicationOnly, publicationWorkspaceRoot } from "../modules/publication";
+import { chromiumLaunchPath } from "../platform/chromium";
 developmentPublicationOnly();
 if (process.env.VALO_RUN_ACCOUNT_SCOPE_BROWSER !== "synthetic-development-only")
   throw Error("EXPLICIT_CONTROLLED_BROWSER_FLAG_REQUIRED");
@@ -129,7 +130,7 @@ const address = server.address();
 if (!address || typeof address === "string") throw Error("NO_TEST_PORT");
 const browser = await chromium.launch({
   headless: true,
-  executablePath: process.env.CHROMIUM_EXECUTABLE_PATH || "/repl/tools/bin/chromium",
+  ...chromiumLaunchPath(),
 });
 const context = await browser.newContext({ viewport: { width: 360, height: 800 } });
 const page = await context.newPage();

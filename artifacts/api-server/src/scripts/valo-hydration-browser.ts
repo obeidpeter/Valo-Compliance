@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { chromiumLaunchPath } from "../platform/chromium";
 
 // Public, signed-out checks only: no database imports, credentials, or mutations.
 // An iframe is essential: the development proxy injects preview scripts there.
@@ -8,7 +9,7 @@ const base = new URL(
     (process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}/` : "http://127.0.0.1:80/"),
 );
 const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? "/repl/tools/bin/chromium",
+  ...chromiumLaunchPath(),
   headless: true,
   args: ["--no-sandbox"],
 });

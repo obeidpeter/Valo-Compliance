@@ -15,6 +15,7 @@ import {
   ListReleasedResourcesResponse,
 } from "@workspace/api-zod";
 import { coveragePlan } from "@workspace/valo-core";
+import { chromiumLaunchPath } from "../platform/chromium";
 
 /**
  * WEB-002: "keyboard, empty, loading, error and mobile states are covered for every primary route";
@@ -196,7 +197,7 @@ before(async () => {
   }
   assert.ok(ready, "the compiled web app answers; build it first: pnpm --filter @workspace/valo run build");
   browser = await chromium.launch({
-    ...(process.env.CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.CHROMIUM_EXECUTABLE_PATH } : {}),
+    ...chromiumLaunchPath(),
     args: ["--no-sandbox"],
   });
 });
