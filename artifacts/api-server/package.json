@@ -69,7 +69,7 @@
     "sources:retrieve-development": "NODE_ENV=development tsx src/scripts/retrieve-sources.ts",
     "sources:retrieve-instruments": "tsx src/scripts/retrieve-instruments.ts",
     "editorial:proof-development": "tsx src/scripts/editorial-proof.ts",
-    "test:valo-editorial": "tsx --test src/modules/editorial/pipeline-contract.test.ts src/modules/editorial/citation-selection.test.ts",
+    "test:valo-editorial": "tsx --test src/modules/editorial/pipeline-contract.test.ts src/modules/editorial/citation-selection.test.ts src/modules/editorial/editorial-case-candidates.test.ts",
     "test:valo-editorial-provenance": "node --experimental-test-module-mocks --import tsx --test src/modules/editorial/editorial-evaluation-evidence.test.ts src/modules/editorial/editorial-evaluation-score.test.ts src/modules/editorial/external-action-boundary.test.ts",
     "test:valo-publication": "tsx --test src/modules/publication/operational-publication.integration.test.ts",
     "test:valo-editorial-proof": "tsx --test src/modules/editorial/pipeline-proof.integration.test.ts",
