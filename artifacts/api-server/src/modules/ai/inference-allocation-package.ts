@@ -375,19 +375,23 @@ export async function registerPreparedInferenceSubmanifest(
   assertDevelopmentRuntime();
   if (!manifest.packageId || store.allocationId() !== additionalInferenceAllocation.id)
     throw Error("DELEGATED_REGISTRATION_HELD");
-  const manifestHash = requestDigest(manifest),
+  // Admitted exactly as checked: the caller cannot change the manifest while the checks wait.
+  const admitted = structuredClone(manifest),
+    packageId = manifest.packageId,
+    manifestHash = requestDigest(admitted),
     batchId = `finite-submanifest:${manifestHash}`;
+  // The binding checks read retained files, saved versions and private artifacts, and take pooled
+  // connections of their own, so they run before the ledger transaction, never while it holds the
+  // allocation lock. They confirm each candidate artifact holds a version of its template, which
+  // the membership check below relies on.
+  for (const work of admitted.works) await recheck(work);
   return store.mutate("finite-submanifest-admitted", async (s, c) => {
-    const { row, pkg } = await packageRow(c, store.schemaName(), manifest.packageId!, true);
+    const { row, pkg } = await packageRow(c, store.schemaName(), packageId, true);
     const expiry = Date.parse(expiresAt);
     if (!Number.isFinite(expiry) || expiry <= Date.now() || expiry > inferenceTimestamp(row.expires_at))
       throw Error("SUBMANIFEST_EXPIRY_INVALID");
-    for (const work of manifest.works) {
-      // The binding checks confirm the candidate artifact holds a version of this template.
-      await recheck(work);
-      assertWorkPackageMembership(work, pkg, workContentId(work));
-    }
-    const reference = `delegate:${requestDigest({ packageId: manifest.packageId, packageHash: row.manifest_hash, manifestHash })}`;
+    for (const work of admitted.works) assertWorkPackageMembership(work, pkg, workContentId(work));
+    const reference = `delegate:${requestDigest({ packageId, packageHash: row.manifest_hash, manifestHash })}`;
     await c.query(
       `INSERT INTO "${store.schemaName()}".valo_inference_batches
       (id,policy_hash,manifest_hash,manifest,enabled,approved_by,approval_reference,approved_at,expires_at)
@@ -396,7 +400,7 @@ export async function registerPreparedInferenceSubmanifest(
         batchId,
         requestDigest(inferenceProposal),
         manifestHash,
-        JSON.stringify(manifest),
+        JSON.stringify(admitted),
         reference,
         expiresAt,
       ],
@@ -414,7 +418,7 @@ export async function registerPreparedInferenceSubmanifest(
     )
       throw Error("SUBMANIFEST_REGISTRATION_CONFLICT");
     await assertDelegatedBatchAuthority(c, store.schemaName(), saved);
-    return { state: s, value: { batchId, manifestHash, packageId: manifest.packageId, providerCalls: 0 } };
+    return { state: s, value: { batchId, manifestHash, packageId, providerCalls: 0 } };
   });
 }
 

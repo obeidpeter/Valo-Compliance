@@ -14,6 +14,7 @@ import {
   budgetUsed,
   tokenCost,
   emptyBudget,
+  type BudgetState,
 } from "./inference-budget";
 import {
   prepareFiniteAllocationPackage,
@@ -685,6 +686,105 @@ test(
                   async () => {},
                 ),
               /PACKAGE_NOT_AUTHORIZED/,
+            );
+          } finally {
+            if (oldMode === undefined) delete process.env.NODE_ENV;
+            else process.env.NODE_ENV = oldMode;
+          }
+        },
+      );
+      await t.test(
+        "binding checks run before each ledger transaction, never while it holds the allocation lock",
+        async () => {
+          await reset();
+          const oldMode = process.env.NODE_ENV;
+          process.env.NODE_ENV = "development";
+          // The real checks read retained files, saved versions and private artifacts, and take
+          // pooled connections of their own. This one takes a pooled connection the same way, and
+          // notes whether a ledger transaction was open while it ran.
+          let open = 0;
+          const during: number[] = [];
+          class TrackedStore extends InferenceBudgetStore {
+            override async mutate<T>(
+              action: string,
+              fn: (
+                s: BudgetState,
+                c: import("pg").PoolClient,
+              ) => { state: BudgetState; value: T } | Promise<{ state: BudgetState; value: T }>,
+            ) {
+              return super.mutate(action, async (s, c) => {
+                open++;
+                try {
+                  return await fn(s, c);
+                } finally {
+                  open--;
+                }
+              });
+            }
+          }
+          const tracked = new TrackedStore(pool, schema, "additional-new");
+          const check = async () => {
+            during.push(open);
+            await pool.query("SELECT 1");
+          };
+          const checking = new FiniteInferenceDispatcher(tracked, async () => response(), check);
+          const options = { timeout: 100, maxRetries: 0 } as const;
+          try {
+            // One work and its explicit retry, each to settlement.
+            const single = work("unlocked-single"),
+              retry = { ...structuredClone(single), key: "unlocked-retry", retryOf: single.key },
+              singleId = await seed([single, retry]);
+            await checking.withWork(singleId, single.key, async () => {
+              await checking.withAttempt(1, () => checking.complete(single.lane, single.request, options));
+              await checking.withAttempt(2, () => checking.complete(single.lane, single.request, options));
+            });
+            // A review pair, role by role.
+            const factual = work("unlocked-factual", "editorial_evaluation", "unlocked-pair", "factual"),
+              challenge = work("unlocked-challenge", "editorial_evaluation", "unlocked-pair", "challenge"),
+              pairId = await seed([factual, challenge]);
+            await checking.withPair(pairId, "unlocked-pair", async () => {
+              await checking.withRole("factual", () =>
+                checking.complete(factual.lane, factual.request, options),
+              );
+              await checking.withRole("challenge", () =>
+                checking.complete(challenge.lane, challenge.request, options),
+              );
+            });
+            // A submanifest admitted under an approved package, and its first role dispatched.
+            const pkg = await prepareFiniteAllocationPackage(),
+              packageId = allocationPackageId(pkg),
+              expires = new Date(Date.now() + 3600000).toISOString();
+            await pool.query(
+              `INSERT INTO "${schema}".valo_inference_batches
+          (id,policy_hash,manifest_hash,manifest,enabled,approved_by,approval_reference,approved_at,expires_at)
+          VALUES($1,$2,$3,$4,true,'controlled-owner-fixture','controlled-package-approval',now(),$5)`,
+              [packageId, requestDigest(inferenceProposal), requestDigest(pkg), JSON.stringify(pkg), expires],
+            );
+            const reviews = [
+              work("unlocked-package-f", "publication", "unlocked-package-pair", "factual"),
+              work("unlocked-package-c", "publication", "unlocked-package-pair", "challenge"),
+            ];
+            const admitted = await registerPreparedInferenceSubmanifest(
+              tracked,
+              {
+                version: 2,
+                preparedAt: new Date().toISOString(),
+                policyVersion: inferenceProposal.priceVersion,
+                allocation: { ...additionalInferenceAllocation },
+                packageId,
+                works: reviews,
+              },
+              expires,
+              check,
+            );
+            await run(checking, admitted.batchId, reviews[0]!);
+            const settled = (await state()).entries.filter((e) => e.status === "settled");
+            assert.equal(settled.length, 5, "every dispatched attempt settled");
+            assert.ok(during.length >= 20, `the checks ran (${during.length})`);
+            assert.deepEqual(
+              [...new Set(during)],
+              [0],
+              "no binding check ran while a ledger transaction held the allocation lock",
             );
           } finally {
             if (oldMode === undefined) delete process.env.NODE_ENV;

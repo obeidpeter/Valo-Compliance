@@ -143,6 +143,18 @@ test("actual operational caller recovers an artifact failure from settled receip
     allocationId() {
       return additionalInferenceAllocation.id;
     }
+    // Like the real store's read: no allocation lock, and nothing it reads is kept.
+    async read<T>(
+      fn: (c: { query: (text: string, values?: unknown[]) => Promise<{ rows: unknown[] }> }) => Promise<T>,
+    ) {
+      const current = structuredClone(batch);
+      return fn({
+        query: async (text: string) => {
+          if (text.startsWith('SELECT * FROM "public".valo_inference_batches')) return { rows: [current] };
+          throw Error("UNEXPECTED_BUDGET_TEST_SQL");
+        },
+      });
+    }
     async mutate<T>(
       _action: string,
       fn: (
