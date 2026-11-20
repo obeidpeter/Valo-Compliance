@@ -1,7 +1,9 @@
 # 0011 — Server-render the public pages
 
-Date: 2026-11-18. Status: **proposed**, waiting for the product owner's review. Nothing in it
-is built.
+Date: 2026-11-18. Status: **accepted** on 2026-11-20 by the product owner's instruction "I approve
+everything that needs approval. Then implement all", given in reply to a list of the decisions
+waiting on them. The approach is taken as proposed, and the three questions at the end are answered
+in "Owner decision". It is built one step at a time, in the order of work below.
 
 ## Context
 
@@ -46,7 +48,7 @@ Server rendering must keep what the app guarantees today:
   `Forwarded` headers (`metadataOrigin`).
 - The server never knows who the visitor is. The identity provider runs in the browser.
 
-## Decision (proposed)
+## Decision
 
 **1. Scope.** Server-render the pages anyone may read without signing in:
 
@@ -199,3 +201,17 @@ commits.
 2. What signed-in visitors see on the home page (point 7).
 3. Agree that `VALO_TRUSTED_PROXY_CIDRS` gains the web server's address once a deployed topology
    has been observed (point 4). This belongs with the hosting decision in record 0005.
+
+## Owner decision
+
+On 2026-11-20 the product owner approved everything waiting on them. For this record that means:
+
+1. The approach, as proposed.
+2. The home page (point 7): it is server-rendered for everyone. A signed-in visitor sees the public
+   home for a moment, then goes to the workspace once the identity provider loads.
+3. The proxy setting (point 4): `VALO_TRUSTED_PROXY_CIDRS` gains the web server's address after a
+   deployed topology has been observed, with the hosting decision in record 0005. Until then,
+   server-rendered pages share one rate-limit budget, and the launch checklist must confirm the
+   setting.
+
+None of this approves spending, a deployment or a launch.
