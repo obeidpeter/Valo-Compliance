@@ -60,7 +60,7 @@ everything else. This is deliberate: no production launch is approved.
 | `lib/valo-records` | Requirement and evidence bookkeeping: requirement records, traceability and readiness, evidence links, acceptance work items, handover checkpoint. Depends on `valo-core`; the API reads it only to report status. |
 | `lib/integrations-openai-ai-server` | OpenAI client configured through Replit AI Integrations. |
 | `scripts` | Readiness report, register synchronisation, security scans. |
-| `scripts/ops` | Backup, restore, retention replay and planning, release manifest, host supervision, container image check. |
+| `scripts/ops` | Backup, restore, retention replay, planning and reviewed removal, release manifest, host supervision, container image check. |
 
 Releases, rollback, environment profiles, backup retention and alerts are described in
 [docs/valo/release-and-rollback.md](../valo/release-and-rollback.md). The `Dockerfile` builds

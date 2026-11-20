@@ -117,11 +117,13 @@ window and a restore point, reviewed before merge.
 During any rollback keep older backups, the restic password and the signing keys
 unchanged.
 
-## Backup retention (proposed, needs owner approval)
+## Backup retention (policy approved; removal built, not run)
 
-Backups are never pruned today. Retention decides how long erased customer data
-survives in backups, so it is an owner decision; the preflight lists it as
-`RETENTION_POLICY_AND_RELEASE_APPROVAL`. The proposal:
+No backup has been pruned. Retention decides how long erased customer data
+survives in backups, so it is an owner decision. The product owner approved the
+policy below on 2026-11-20, in the instruction "I approve everything that needs
+approval". The preflight's `RETENTION_POLICY_AND_RELEASE_APPROVAL` stays unmet:
+it also asks for a release approval, and no launch is approved. The policy:
 
 - keep every snapshot from the last 48 hours;
 - keep the newest snapshot of each UTC day for 35 days;
@@ -133,8 +135,27 @@ have stopped, and that group keeps everything until a backup succeeds again.
 
 `scripts/ops/backup_retention.py` applies this policy to the output of
 `restic snapshots --json` and prints what it would keep and remove. It needs no
-credentials and deletes nothing. After approval, removal will be a separate
-reviewed command with its own tests.
+credentials and deletes nothing.
+
+`scripts/ops/backup_removal.py` is the separate step that removes. An operator
+runs it by hand, never on a timer:
+
+1. Plan: run `restic snapshots --json` against the repository, then
+   `backup_retention.py` on that listing, and save the plan as a private file.
+2. Review the plan, and take its SHA-256.
+3. Remove: `python3 scripts/ops/backup_removal.py <plan.json> <sha256>`, with the
+   repository's environment set as for the recovery archive
+   (`VALO_RECOVERY_ARCHIVE_MODE`, `RESTIC_REPOSITORY`, `RESTIC_PASSWORD_FILE`).
+
+The command refuses a plan whose bytes do not match the hash, one made under
+another policy, and one more than a day old. It reads the snapshots again and
+plans again. It removes nothing unless each snapshot the reviewed plan removes
+still exists and is still due, and nothing from a group whose backups have
+stopped. It then runs `restic forget` on exactly those snapshots and
+`restic prune`, reads the snapshots once more, and fails unless the removed ones
+are gone and every kept one remains. Its tests run against a real restic
+repository in CI. It has not been run against a real backup repository: none is
+deployed.
 
 ## Alerts
 
