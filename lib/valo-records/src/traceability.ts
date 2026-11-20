@@ -100,12 +100,12 @@ const partialImplementations: Record<string, string[]> = {
   "WEB-001": ["artifacts/valo/src/screens/home.tsx", "artifacts/valo/src/components/site-shell.tsx"],
   "WEB-002": [
     "artifacts/valo/src/App.tsx",
-    "artifacts/valo/src/screens/library.tsx",
-    "artifacts/valo/src/screens/industries.tsx",
+    "artifacts/valo/src/public-screens/library.tsx",
+    "artifacts/valo/src/public-screens/industries.tsx",
   ],
   "DOC-001": ["lib/valo-core/src/catalogue.ts", "lib/valo-core/src/coverage.ts"],
-  "DOC-002": ["artifacts/valo/src/screens/library.tsx"],
-  "CMP-003": ["lib/valo-core/src/coverage.ts", "artifacts/valo/src/screens/industries.tsx"],
+  "DOC-002": ["artifacts/valo/src/public-screens/library.tsx"],
+  "CMP-003": ["lib/valo-core/src/coverage.ts", "artifacts/valo/src/public-screens/industries.tsx"],
   "IAM-001": ["artifacts/valo/src/App.tsx", "artifacts/api-server/src/middlewares/valo-identity.ts"],
   "IAM-002": ["artifacts/api-server/src/middlewares/valo-identity.ts"],
   "IAM-003": [
@@ -171,7 +171,7 @@ const partialImplementations: Record<string, string[]> = {
     "artifacts/api-server/src/modules/workspaces/valo-workspaces.ts",
     "lib/db/src/schema/valo-support.ts",
   ],
-  "SRV-001": ["artifacts/valo/src/screens/services.tsx"],
+  "SRV-001": ["artifacts/valo/src/public-screens/services.tsx"],
   "SRV-002": ["artifacts/valo/src/components/ticket-form.tsx", "lib/db/src/schema/valo-support.ts"],
   "EDP-002": [
     "artifacts/api-server/src/modules/sources/source-capture.ts",

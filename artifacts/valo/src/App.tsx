@@ -19,22 +19,24 @@ import NotFound from "@/screens/not-found";
 // Each screen is its own chunk, so a page downloads only the screens it shows, not the whole
 // workspace and staff app (NFR-002).
 const Home = lazy(() => import("@/screens/home"));
-const Library = lazy(() => import("@/screens/library"));
-const TemplateDetail = lazy(() => import("@/screens/template-detail"));
-const Compliance = lazy(() => import("@/screens/compliance"));
-const Industries = lazy(() => import("@/screens/industries"));
+const Library = lazy(() => import("@/public-screens/library"));
+const TemplateDetail = lazy(() => import("@/public-screens/template-detail"));
+const Compliance = lazy(() => import("@/public-screens/compliance"));
+const Industries = lazy(() => import("@/public-screens/industries"));
 const IndustryDetail = lazy(() =>
-  import("@/screens/industries").then((m) => ({ default: m.IndustryDetail })),
+  import("@/public-screens/industries").then((m) => ({ default: m.IndustryDetail })),
 );
-const Resources = lazy(() => import("@/screens/resources"));
-const ResourceDetail = lazy(() => import("@/screens/resources").then((m) => ({ default: m.ResourceDetail })));
+const Resources = lazy(() => import("@/public-screens/resources"));
+const ResourceDetail = lazy(() =>
+  import("@/public-screens/resources").then((m) => ({ default: m.ResourceDetail })),
+);
 const AccountAccess = lazy(() => import("@/screens/contact").then((m) => ({ default: m.AccountAccess })));
 const AccountPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.AccountPage })));
 const PrivacyPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.PrivacyPage })));
 const PurchasesPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.PurchasesPage })));
 const StaffPage = lazy(() => import("@/screens/staff"));
 const PrivacyOperations = lazy(() => import("@/screens/privacy-operations"));
-const Services = lazy(() => import("@/screens/services"));
+const Services = lazy(() => import("@/public-screens/services"));
 const Support = lazy(() => import("@/screens/support"));
 const Development = lazy(() => import("@/screens/development"));
 const WorkspaceHome = lazy(() => import("@/screens/workspace"));

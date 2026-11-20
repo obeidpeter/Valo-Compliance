@@ -17,7 +17,7 @@ const bundle = await build({
   stdin: {
     contents: `import React from 'react';import{createRoot}from'react-dom/client';
   import{QueryClient,QueryClientProvider}from'@tanstack/react-query';
-  import Library from ${JSON.stringify(join(root, "artifacts/valo/src/screens/library.tsx"))};
+  import Library from ${JSON.stringify(join(root, "artifacts/valo/src/public-screens/library.tsx"))};
   import{SaveTemplateButton,SavedTemplates}from ${JSON.stringify(join(root, "artifacts/valo/src/components/saved-templates.tsx"))};
   const client=new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}});
   createRoot(document.getElementById('root')).render(<QueryClientProvider client={client}>{location.pathname==='/fixture-saved'?<><SaveTemplateButton releaseId="11111111-1111-4111-8111-111111111111" templateId="TPL-01"/><SavedTemplates/></>:<Library/>}</QueryClientProvider>);`,

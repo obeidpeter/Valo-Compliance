@@ -32,7 +32,7 @@ test("a template's detail page shows its source-check and review dates, the AI-r
   );
   assert.ok(html.includes(`data-testid="text-review-by">2 February 2027</dd>`), html);
   // The detail page passes each released template's own notices to this component.
-  const page = readFileSync(join(source, "screens/template-detail.tsx"), "utf8");
+  const page = readFileSync(join(source, "public-screens/template-detail.tsx"), "utf8");
   for (const field of ["reviewedAt", "reviewBy", "disclosure", "scope", "limitations"])
     assert.match(page, new RegExp(`<ReleaseNotices[^>]*\\b${field}=\\{t\\.${field}\\}`), field);
 });
