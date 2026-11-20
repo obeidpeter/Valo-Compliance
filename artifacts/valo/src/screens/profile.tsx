@@ -409,7 +409,7 @@ export default function ProfilePage() {
           </p>
         )}
 
-        <div className="sticky bottom-24 z-10 flex justify-end lg:bottom-4">
+        <div className="held-actions sticky bottom-24 z-10 flex justify-end lg:bottom-4">
           <button
             type="submit"
             className="btn btn-primary"

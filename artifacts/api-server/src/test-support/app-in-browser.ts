@@ -265,22 +265,45 @@ export async function overflowing(page: Page): Promise<string> {
   })()`);
 }
 
-export type Stop = { name: string; visible: boolean; outlined: boolean };
-/** Each element Tab reaches, once round the page: whether it is visible and outlined. */
-export async function tabbing(page: Page) {
+export type Stop = { name: string; visible: boolean; outlined: boolean; covered: boolean };
+
+/** What the keyboard has just focused, or null once focus has left the page or come round to an
+ * element already visited. `covered` is whether a bar that stays on screen (anything fixed or sticky
+ * that the element is not part of, such as the site's header or the phone's bottom bar) lies over
+ * the element's middle, or over its top or bottom edge when the element is short enough to fit
+ * clear of the bars. */
+const FOCUSED = `(() => {
+  const e = document.activeElement;
+  if (!e || e === document.body || window.tabbed.has(e)) return null;
+  window.tabbed.add(e);
+  const s = getComputedStyle(e), box = e.getBoundingClientRect();
+  const under = (x, y) => {
+    for (let over = document.elementFromPoint(x, y); over && over !== document.body; over = over.parentElement)
+      if (["fixed", "sticky"].includes(getComputedStyle(over).position) && !over.contains(e)) return true;
+    return false;
+  };
+  const x = box.left + box.width / 2, short = box.height < innerHeight / 2;
+  return { name: e.tagName + " " + (e.getAttribute("aria-label") || e.textContent || "").trim().slice(0, 40),
+    visible: box.width > 0 && box.height > 0 && s.visibility === "visible",
+    outlined: (s.outlineStyle !== "none" && s.outlineWidth !== "0px") || s.boxShadow !== "none",
+    covered: under(x, box.top + box.height / 2) || (short && (under(x, box.top + 1) || under(x, box.bottom - 1))) };
+})()`;
+
+/**
+ * Each element the keyboard reaches, once round the page with Tab, or back round it with Shift+Tab:
+ * whether it is visible, outlined, and clear of the bars that stay on screen. Going forward an
+ * element scrolls in at the bottom, by the phone's bar; going back, at the top, by the header.
+ *
+ * The round runs with motion reduced, which turns the site's smooth scrolling off, so each element
+ * is measured where it comes to rest and not on its way there. The page stays that way afterwards.
+ */
+export async function tabbing(page: Page, key: "Tab" | "Shift+Tab" = "Tab") {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const stops: Stop[] = [];
   await page.evaluate("window.tabbed = new WeakSet()");
   for (let step = 0; step < 80; step++) {
-    await page.keyboard.press("Tab");
-    const focus = (await page.evaluate(`(() => {
-      const e = document.activeElement;
-      if (!e || e === document.body || window.tabbed.has(e)) return null;
-      window.tabbed.add(e);
-      const s = getComputedStyle(e), box = e.getBoundingClientRect();
-      return { name: e.tagName + " " + (e.getAttribute("aria-label") || e.textContent || "").trim().slice(0, 40),
-        visible: box.width > 0 && box.height > 0 && s.visibility === "visible",
-        outlined: (s.outlineStyle !== "none" && s.outlineWidth !== "0px") || s.boxShadow !== "none" };
-    })()`)) as Stop | null;
+    await page.keyboard.press(key);
+    const focus = (await page.evaluate(FOCUSED)) as Stop | null;
     if (!focus) break;
     stops.push(focus);
   }
@@ -300,7 +323,12 @@ export async function phoneProblems(page: Page, path: string, { minimumStops = 3
     if (!stop.visible) problems.push(`${path}: Tab ${i + 1} focused a hidden element (${stop.name})`);
     else if (!stop.outlined)
       problems.push(`${path}: Tab ${i + 1} focus on ${stop.name} has no visible outline`);
+    else if (stop.covered)
+      problems.push(`${path}: Tab ${i + 1} left ${stop.name} behind a bar that stays on screen`);
   }
+  for (const [i, stop] of (await tabbing(page, "Shift+Tab")).entries())
+    if (stop.visible && stop.covered)
+      problems.push(`${path}: Shift+Tab ${i + 1} left ${stop.name} behind a bar that stays on screen`);
   const { passes, failures } = await wcagFailures(page);
   if (passes <= 10) problems.push(`${path}: axe ran only ${passes} passing rules`);
   problems.push(...failures.map((failure) => `${path}: ${failure}`));

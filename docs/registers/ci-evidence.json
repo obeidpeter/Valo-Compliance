@@ -1679,7 +1679,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "on a phone, each signed-in screen names itself in the page title, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure",
-      "proves": "Signed in through a stand-in identity with synthetic data, each of the 16 signed-in workspace and staff routes, and the staff screen in each of its four areas, names itself in the page title, does not scroll sideways at 360 or 320 pixels, moves keyboard focus only to visible outlined elements and shows no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; no manual or assistive-technology review is recorded."
+      "proves": "Signed in through a stand-in identity with synthetic data, each of the 16 signed-in workspace and staff routes, and the staff screen in each of its four areas, names itself in the page title, does not scroll sideways at 360 or 320 pixels, moves keyboard focus only to visible outlined elements that come to rest clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab, and shows no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; no manual or assistive-technology review is recorded."
     },
     {
       "requirement": "NFR-006",
@@ -1700,7 +1700,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
       "test": "on a phone, each public screen the primary-page checks leave out names itself in the page title, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure",
-      "proves": "For a signed-out visitor with synthetic data, the public checker, account access help and the sign-in and sign-up frames each name themselves in the page title, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements and show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; the identity provider's own sign-in forms are not checked."
+      "proves": "For a signed-out visitor with synthetic data, the public checker, account access help and the sign-in and sign-up frames each name themselves in the page title, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements that come to rest clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab, and show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; the identity provider's own sign-in forms are not checked."
     },
     {
       "requirement": "NFR-006",
@@ -1714,7 +1714,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
       "test": "on a phone, each server-rendered page hydrates without a mismatch, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements, has no automated WCAG 2.2 AA failure, and its menu opens and closes",
-      "proves": "Rendered by the compiled web server with synthetic data, the home page, the terms, about, help, contact, privacy and pricing pages, the library, resources, industries, compliance and services pages, and a released template, guidance and industry page each hydrate without a mismatch, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements, show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule, and open and close their menu, with Escape returning focus to its button."
+      "proves": "Rendered by the compiled web server with synthetic data, the home page, the terms, about, help, contact, privacy and pricing pages, the library, resources, industries, compliance and services pages, and a released template, guidance and industry page each hydrate without a mismatch, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements that come to rest clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab,, show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule, and open and close their menu, with Escape returning focus to its button."
     },
     {
       "requirement": "NFR-007",
