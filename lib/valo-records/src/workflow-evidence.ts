@@ -436,6 +436,7 @@ const groups = [
       "artifacts/api-server/src/routes/valo-customer-access.ts",
       "artifacts/api-server/src/modules/privacy/valo-customer-access.integration.test.ts",
       "artifacts/api-server/src/scripts/customer-experience-journey.ts",
+      "artifacts/valo/app/(public)/contact/page.tsx",
       "artifacts/valo/src/screens/contact.tsx",
       "artifacts/valo/src/screens/account.tsx",
       "artifacts/valo/src/public-screens/resources.tsx",
