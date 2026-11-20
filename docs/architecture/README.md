@@ -101,6 +101,10 @@ shell, from the same parts (`site-chrome.tsx`). Islands in `src/islands` add wha
   loaded. `IdentityLoader` loads it once the page is interactive and the browser is idle, and the
   islands read what it reports (`identity-store.ts`). The content never waits for it.
 
+A page that needs data reads it while the server renders it. When that read fails, is refused or
+times out, the page still renders, and an island asks the API for the missing part from the browser:
+the pricing page's payments status is the first.
+
 Moving between a server-rendered page and the browser app loads the new page in full: each side
 links to the other with a plain link. When the browser app reaches a server-rendered address some
 other way, such as a link inside one of its screens, it reloads the address so the server renders
