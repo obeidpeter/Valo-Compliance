@@ -1,9 +1,9 @@
 import { lazy, Suspense, type ComponentProps, type ReactNode } from "react";
-import { ClerkProvider, SignIn, SignUp, Show, useAuth, useUser } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, useAuth, useUser } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { AccountStateBoundary } from "@/components/account-state-boundary";
-import { Link, Redirect, Route, Switch, useLocation, Router as WouterRouter } from "wouter";
+import { Link, Route, Switch, useLocation, Router as WouterRouter } from "wouter";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,7 +18,6 @@ import NotFound from "@/screens/not-found";
 
 // Each screen is its own chunk, so a page downloads only the screens it shows, not the whole
 // workspace and staff app (NFR-002).
-const Home = lazy(() => import("@/screens/home"));
 const AccountAccess = lazy(() => import("@/screens/contact").then((m) => ({ default: m.AccountAccess })));
 const AccountPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.AccountPage })));
 const PrivacyPage = lazy(() => import("@/screens/account").then((m) => ({ default: m.PrivacyPage })));
@@ -205,19 +204,6 @@ function ClerkAccountState({ children }: { children: ReactNode }) {
   );
 }
 
-function HomeRedirect() {
-  return (
-    <>
-      <Show when="signed-in">
-        <Redirect to="/workspace" />
-      </Show>
-      <Show when="signed-out">
-        <Home />
-      </Show>
-    </>
-  );
-}
-
 /** Holds a screen's place while its chunk loads: a full screen tall, so nothing below it moves. */
 function ScreenLoading() {
   return <div className="min-h-screen" aria-busy="true" aria-label="Loading" />;
@@ -241,7 +227,7 @@ function ShellRoutes() {
   return (
     <Shell>
       <Switch>
-        <Route path="/" component={HomeRedirect} />
+        <Route path="/" component={ServerPage} />
         <Route path="/library" component={ServerPage} />
         <Route path="/library/:slug" component={ServerPage} />
         <Route path="/compliance" component={ServerPage} />

@@ -62,6 +62,7 @@ after(() => web.close());
 /** The heading each server-rendered page's own content starts with: every fixed page the server
  * renders, and one released item's page of each kind. */
 const HEADINGS: Record<string, string> = {
+  "/": "The documents you need. The business rules you should know.",
   "/terms": "Terms of use, not yet approved",
   "/about": "Two shelves, kept apart on purpose.",
   "/help": "Straight answers",

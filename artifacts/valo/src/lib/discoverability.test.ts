@@ -11,11 +11,11 @@ const forwardedFor = "203.0.113.9";
 mock.module("next/headers", {
   namedExports: { headers: async () => new Headers({ "x-forwarded-for": forwardedFor }) },
 });
-let generateMetadata: (typeof import("../../app/[[...slug]]/page"))["generateMetadata"];
+let generateMetadata: (typeof import("../../app/[...slug]/page"))["generateMetadata"];
 let templateMetadata: (typeof import("../../app/(public)/library/[slug]/page"))["generateMetadata"];
 let sitemap: (typeof import("../../app/sitemap"))["default"];
 before(async () => {
-  ({ generateMetadata } = await import("../../app/[[...slug]]/page"));
+  ({ generateMetadata } = await import("../../app/[...slug]/page"));
   ({ generateMetadata: templateMetadata } = await import("../../app/(public)/library/[slug]/page"));
   ({ default: sitemap } = await import("../../app/sitemap"));
 });

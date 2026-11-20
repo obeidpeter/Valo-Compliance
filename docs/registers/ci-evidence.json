@@ -283,17 +283,17 @@
     },
     {
       "requirement": "WEB-001",
-      "job": "foundation",
+      "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",
       "test": "on a phone, the home page's hero links to both journeys, and one tap on either opens it",
-      "proves": "On an emulated phone, the real home screen's hero links “Start a business draft” to /sign-up and “Check what may apply” to /checker, and one tap on either opens that page; the screen is bundled with a stand-in identity library that reports a signed-out visitor."
+      "proves": "On an emulated phone, the home page the compiled web server renders links “Start a business draft” in its hero to /sign-up and “Check what may apply” to /checker, and one tap on either opens that page; the visitor is signed out, since the identity provider cannot load in the test."
     },
     {
       "requirement": "WEB-001",
-      "job": "foundation",
+      "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",
       "test": "on a phone, the opened mobile menu and the bottom dock each link to both journeys, and one tap on any of them opens it",
-      "proves": "On an emulated phone, with the header's own links hidden, one tap on Library, Checker or “Open a workspace” in the opened mobile menu opens /library, /checker or /sign-up, and the bottom dock stays on screen after scrolling, with “Start a draft” opening /sign-up and “Check rules” opening /checker."
+      "proves": "On an emulated phone, on the home page the compiled web server renders, with the header's own links hidden, one tap on Library, Checker or “Open a workspace” in the opened mobile menu opens /library, /checker or /sign-up, and the bottom dock stays on screen after scrolling, with “Start a draft” opening /sign-up and “Check rules” opening /checker."
     },
     {
       "requirement": "WEB-004",
@@ -1662,10 +1662,10 @@
     },
     {
       "requirement": "NFR-007",
-      "job": "foundation",
+      "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",
       "test": "on a phone, the home page's hero links to both journeys, and one tap on either opens it",
-      "proves": "On an emulated Moto G4 phone 360 pixels wide with touch, the home screen does not scroll sideways and a tap on either hero link opens its page; no real device or other browser is tested."
+      "proves": "On an emulated Moto G4 phone 360 pixels wide with touch, the home page the compiled web server renders does not scroll sideways and a tap on either hero link opens its page; no real device or other browser is tested."
     },
     {
       "requirement": "NFR-008",

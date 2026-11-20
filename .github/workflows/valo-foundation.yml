@@ -222,8 +222,6 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-refund-provider
       - name: Build the Next.js application
         run: pnpm --filter @workspace/valo run build
-      - name: Prove both journeys are one tap from the home page's hero, the mobile menu and the dock (WEB-001)
-        run: pnpm --filter @workspace/api-server test:valo-primary-journeys-browser
       - name: Prove compiled frontend enforces unique nonces and blocks injected scripts
         run: pnpm --filter @workspace/api-server exec tsx src/scripts/frontend-security-browser.ts
       - name: Retain compiled frontend security evidence
@@ -522,6 +520,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-public-screens-accessibility
       - name: Check the server-rendered public pages, their nonces and islands, and moving between pages (decision 0011, NFR-006)
         run: pnpm --filter @workspace/api-server test:valo-public-server-pages
+      - name: Prove both journeys are one tap from the home page's hero, the mobile menu and the dock (WEB-001)
+        run: pnpm --filter @workspace/api-server test:valo-primary-journeys-browser
       - name: Check every test the evidence register cites for this job passed
         run: pnpm --filter @workspace/scripts valo:ci-evidence --job web-performance
       - name: Retain this job's test results for the evidence job

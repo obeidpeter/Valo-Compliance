@@ -97,7 +97,7 @@ const editorial: [string, string, string][] = [
 ];
 
 const partialImplementations: Record<string, string[]> = {
-  "WEB-001": ["artifacts/valo/src/screens/home.tsx", "artifacts/valo/src/components/site-shell.tsx"],
+  "WEB-001": ["artifacts/valo/app/(public)/page.tsx", "artifacts/valo/src/components/site-shell.tsx"],
   "WEB-002": [
     "artifacts/valo/src/App.tsx",
     "artifacts/valo/src/public-screens/library.tsx",
