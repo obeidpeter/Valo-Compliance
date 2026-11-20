@@ -11,6 +11,8 @@ import { SiteShell } from "@/components/site-shell";
 import { RequireAuth } from "@/components/require-auth";
 import { Wordmark } from "@/components/brand";
 import { basePath } from "@/lib/env";
+import { useDocumentTitle } from "@/lib/document-title";
+import { publicPages } from "@/lib/public-pages";
 import NotFound from "@/screens/not-found";
 
 // Each screen is its own chunk, so a page downloads only the screens it shows, not the whole
@@ -178,6 +180,7 @@ function AuthFrame({ children, side }: { children: ReactNode; side: "in" | "up" 
 }
 
 function SignInPage() {
+  useDocumentTitle("Sign in — Valo");
   return (
     <AuthFrame side="in">
       <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
@@ -186,6 +189,7 @@ function SignInPage() {
 }
 
 function SignUpPage() {
+  useDocumentTitle("Open a workspace — Valo");
   return (
     <AuthFrame side="up">
       <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
@@ -236,6 +240,9 @@ function ScreenLoading() {
 
 function Shell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
+  // A fixed public page takes its title from the same list as its server metadata. Signed-in
+  // screens and released items' pages set their own.
+  useDocumentTitle(publicPages[location]?.title ?? null);
   return (
     <SiteShell>
       <ErrorBoundary resetKey={location}>

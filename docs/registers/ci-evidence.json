@@ -1633,6 +1633,20 @@
       "proves": "When the API fails, ten signed-in screens announce the failure in a role=\"alert\" element with a retry button that recovers once the API answers, and axe-core finds no WCAG 2.0, 2.1 or 2.2 A or AA rule failing in that state."
     },
     {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "on a phone, each public screen the primary-page checks leave out names itself in the page title, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure",
+      "proves": "For a signed-out visitor with synthetic data, the home page, the public checker, a template, guidance and industry page, About, Contact, account access help and the sign-in and sign-up frames each name themselves in the page title, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements and show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; the identity provider's own sign-in forms are not checked."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "moving between public pages in the app, from the footer and from a library card, titles each page for itself",
+      "proves": "Following each footer link and a library card with the keyboard, the page title changes to name the page opened, a released template is titled for itself, and the support page is reachable from the footer."
+    },
+    {
       "requirement": "NFR-007",
       "job": "foundation",
       "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",

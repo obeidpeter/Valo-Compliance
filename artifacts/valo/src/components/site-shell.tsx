@@ -182,6 +182,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             links={[
               ["/about", "About"],
               ["/help", "Help"],
+              ["/support", "Support"],
               ["/contact", "Contact"],
               ["/account-access", "Account access"],
               ["/privacy", "Privacy policy"],
