@@ -106,6 +106,67 @@ over a component default.
    to do next. Then five business owners try the site, with made-up details, and what trips them
    up is fixed.
 
+## What is built
+
+### Phase 1: the component styles in their layer
+
+The hand-written classes in `artifacts/valo/src/index.css` now sit in Tailwind's components layer,
+so a utility class on the same element always wins. Only the page's own rules (`html`, `body`) and
+the overrides of the identity provider's card stay outside the layers.
+
+The plan said nothing else would look different. That was wrong. The two defects in the audit were
+not alone: across the web app's 2,568 class attributes, a utility class was losing to a component
+class in 41 places. In 40 of them the class now does what it says; the other is the first
+exception below.
+
+Screenshots of 22 public pages and 19 signed-in screens, on a desktop and a phone, were compared
+pixel by pixel before and after. 51 of the 84 differ. One is a rendering flicker in the phone
+header that also shows between two captures of the same build. The other 50 differ for these
+reasons, and for no other:
+
+| What changed | Where |
+| --- | --- |
+| The phone menu button no longer shows on a desktop | The header of every page (30 screens show only this) |
+| The search text starts after the search icon, and the industry filter keeps its own width | Documents list |
+| Message boxes start three to five lines tall instead of two | Contact, account access, the privacy request and a document's notes |
+| The status list has one width, with slightly smaller text | Tasks |
+| A hint sits a little further below what it explains | Document editor, reminders |
+| The "Restore" button's text is slightly smaller | Document editor |
+| The illustration has its larger shadow | Landing page |
+
+These apply too, in states the screenshots do not show. They were found by reading the code:
+
+- An error under a field is red, not grey: the contact, account access and service enquiry forms,
+  and the privacy request.
+- An amount field leaves room for its "kobo" label.
+- A card responds to the pointer: on the landing page, the documents list, guidance, industries,
+  saved assessments and the workspace's document rows.
+- Staff and support message boxes are taller. The document preview has its larger shadow. The
+  "Remove row" button has smaller text. The heading above the business-name fields has more space
+  below it. The "New task from this item" panel has a green border.
+- On a phone the workspace's document rows leave out the "N missing" pill, as their classes say,
+  which gives the title room. The workspace phase puts the count on the row's second line.
+- Buttons that set their own focus ring show it 2 pixels from the button, not 4: the filters on
+  the documents list and the tasks screen, the staff areas and the editor's tabs.
+
+Two things were changed by hand:
+
+- The profile's save button lost its shadow class. Applied, it would have replaced the primary
+  button's edge. The button looks as it did.
+- The loading mark's animation is renamed `boot-pulse`. Tailwind's own `pulse` has the same name
+  and had been replacing it, so the mark now pulses as it was written to.
+
+Forty more classes carry `!` to force them past the component styles, such as `!px-2.5` and
+`!text-destructive`. They are no longer needed and come out as each screen is rebuilt.
+
+`artifacts/api-server/src/scripts/component-styles.test.ts` checks four things in a browser,
+against the compiled app. All four fail on the stylesheet as it was:
+
+- no class rule sits outside a layer;
+- the header shows its links and no menu button on a desktop, and the reverse on a phone;
+- the search text starts clear of its icon;
+- an error under a field is in the error colour.
+
 ## How the ten heuristics are applied
 
 1. **Visibility of system status.** Keep "Saved"; add progress in the checker and on downloads.
