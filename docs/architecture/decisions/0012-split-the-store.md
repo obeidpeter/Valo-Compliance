@@ -3,7 +3,7 @@
 Date: 2026-11-18. Status: **accepted** on 2026-11-20 by the product owner's instruction "I approve
 everything that needs approval. Then implement all", given in reply to a list of the decisions
 waiting on them. Both decisions below are taken as proposed: the split as described, and no
-`identity` module.
+`identity` module. Implemented in one pull request, a pure move per step.
 
 ## Context
 
