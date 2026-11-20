@@ -520,6 +520,8 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-public-screens-accessibility
       - name: Check the server-rendered public pages, their nonces and islands, and moving between pages (decision 0011, NFR-006)
         run: pnpm --filter @workspace/api-server test:valo-public-server-pages
+      - name: Check that a utility class wins over a component class, in the header, the library search and a form's errors
+        run: pnpm --filter @workspace/api-server test:valo-component-styles
       - name: Prove both journeys are one tap from the home page's hero, the mobile menu and the dock (WEB-001)
         run: pnpm --filter @workspace/api-server test:valo-primary-journeys-browser
       - name: Check every test the evidence register cites for this job passed
