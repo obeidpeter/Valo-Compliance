@@ -50,7 +50,9 @@ paths are relative to `artifacts/api-server`, where `pnpm --filter … exec` run
 
 1. `pnpm --filter @workspace/api-server exec tsx src/scripts/finite-allocation-approval.ts prepare <package.json>`
    writes the current package, prepared from the repository's content inventory and evaluation
-   corpora, and prints its id, cap, attempt ceilings and holds. It never overwrites a file.
+   corpora, and prints its id, cap, attempt ceilings and holds. It never overwrites a file. A
+   package admits one kind of work: the template review pairs, or, with `--editorial-cases`
+   after the file name, only the editorial case pairs (next sections).
 2. The owner reads that file and writes the approval down, naming the package id, for example in a
    dated decision record.
 3. `VALO_RECORD_OWNER_INFERENCE_APPROVAL=owner-approved-exact-finite-package pnpm --filter @workspace/api-server exec tsx src/scripts/finite-allocation-approval.ts approve <package.json> --confirm <package id> --approved-by <who approved> --reference <where it is written> [--hours 24]`
@@ -101,6 +103,29 @@ A candidate past its review date, or one whose version ID or version number is a
 refused from step 2 on; prepare it again. For content that is not general, the two reviews also
 answer EDP-005's enhanced checks. A check passes only when both reviews pass it and quote a passage
 found in the candidate or its sources. These are AI checks, not legal, tax or regulatory review.
+
+## Running the editorial case reviews (decision 0015)
+
+Each case-bound editorial case whose candidate the repository can build has a review pair in the
+editorial-evaluation lane. The pairs run under a package prepared with `--editorial-cases`, which
+admits nothing else, and no other package admits them. Steps 1 and 2 call no model. Step 3 spends
+from the approved allocation, at most two attempts per case. Run each command as in the approval
+section.
+
+1. `... finite-allocation-approval.ts prepare <package.json> --editorial-cases`, and the owner's
+   approval of that exact package, as above.
+2. `... finite-inference-run.ts --prepare-editorial-case <case id> --package=finite-package:<hash>`
+   builds the case's candidate from the pinned retained files and its two review requests, checks
+   them, and writes the private report. The case ids are the twelve in
+   `modules/editorial/editorial-case-reviews.ts`. `... finite-inference-run.ts --admit <report id> <sha256>`
+   registers the pair under the package.
+3. `... finite-inference-run.ts --execute <batch id>` rebuilds the pair at its preparation time,
+   refuses any difference, runs the two reviews one after the other and prints the run report. Each
+   review, or its failure, is kept as a private record.
+
+The reports keep `formalCaseAccepted: false`. A case counts only after an independent reviewer
+confirms its expected outcome (decision 0015, point 5), and the reviews are AI review, not legal,
+tax or regulatory review.
 
 ## Recovery/launch/handover
 
