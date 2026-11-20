@@ -11,6 +11,7 @@ import { requestDigest } from "./inference-budget";
 import { prepareCustomerFiniteManifest } from "../ai-lanes/inference-customer-manifest";
 import { prepareFiniteAllocationPackage, allocationPackageId } from "./inference-allocation-package";
 import { selectPreparedProposal, parseFinitePreparationOptions } from "../ai-lanes/inference-prepared-report";
+import { prepareEditorialCaseManifest } from "../editorial/editorial-case-reviews";
 const now = new Date("2026-11-15T05:00:00Z"),
   expiry = "2026-11-15T06:00:00Z";
 function prepared() {
@@ -260,4 +261,39 @@ test("an actual prepared roster exceeding the fixed ceiling cannot be described 
     () => buildFiniteDecisionPacket(Array(41).fill(p), Array(41).fill(artifact(p)), capacity, now),
     /EXCEEDS_ALLOCATION/,
   );
+});
+
+test("an editorial case's review pair projects as one pair naming its case, and nothing else is implied", () => {
+  const manifest = prepareEditorialCaseManifest(
+    "EVAL-EDP-C019",
+    { packageId: `finite-package:${"e".repeat(64)}` },
+    now,
+  );
+  const p = finiteManifestProposal(manifest, expiry);
+  const packet = buildFiniteDecisionPacket([p], [artifact(p)], capacity, now);
+  assert.equal(packet.attemptCount, 2);
+  assert.equal(packet.independentPairs, 1);
+  assert.equal(packet.editorialCases, 1);
+  assert.deepEqual(packet.laneAttempts, {
+    publication: 0,
+    editorial_evaluation: 2,
+    checker_challenge: 0,
+    customer: 0,
+  });
+  for (const w of packet.manifests[0]!.works) {
+    assert.deepEqual(w.evaluationCase, {
+      id: "EVAL-EDP-C019",
+      hash: manifest.works[0]!.caseHash,
+      corpus: "editorial",
+    });
+    assert.equal(w.publicationBundleHash, null);
+  }
+  assert.equal(packet.worstCaseReservationNanoUsd, (370550400n * 2n).toString());
+  assert.match(packet.excludedWork, /^Only the listed editorial case pairs are executable/);
+  assert.equal(packet.ownerApproved, false);
+  // A pair whose two works name different cases is not one review pair.
+  const split = structuredClone(manifest);
+  split.works[1]!.caseHash = "f".repeat(64);
+  const q = finiteManifestProposal(split, expiry);
+  assert.throws(() => buildFiniteDecisionPacket([q], [artifact(q)], capacity, now), /PAIR_REQUIRED/);
 });

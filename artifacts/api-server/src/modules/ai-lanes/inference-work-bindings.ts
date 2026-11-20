@@ -15,6 +15,7 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
   const b = work.bindings;
   if (!b) throw Error("FINITE_WORK_BINDINGS_MISSING");
   const actualSources: string[] = [];
+  let editorialCaseSources: string[] | null = null;
   for (const f of b.sourceFiles) {
     if (!/^docs\/[a-zA-Z0-9_./ -]+$/.test(f.path) || f.path.split("/").some((p) => p === ".." || p === "."))
       throw Error("SOURCE_BINDING_PATH_REJECTED");
@@ -37,6 +38,18 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
       const expected = await prepareCustomerFiniteManifest(b.caseId);
       if (requestDigest(work.request) !== requestDigest(expected.manifest.works[0]!.request))
         throw Error("CUSTOMER_CASE_REQUEST_CHANGED");
+    }
+    if (work.lane === "editorial_evaluation") {
+      // An editorial case pair is rebuilt from the pinned retained files at its own review clock,
+      // and the work must be exactly that rebuilt work (decision 0015, point 4).
+      if (!b.historicalCutoff || !Number.isFinite(Date.parse(b.historicalCutoff)))
+        throw Error("EDITORIAL_CASE_BINDING_REQUIRED");
+      const { prepareEditorialCaseManifest } = await import("../editorial");
+      const twin = prepareEditorialCaseManifest(b.caseId, {}, new Date(b.historicalCutoff)).works.find(
+        (w) => w.key === work.key,
+      );
+      if (!twin || requestDigest(twin) !== requestDigest(work)) throw Error("EDITORIAL_CASE_WORK_CHANGED");
+      editorialCaseSources = twin.sourceHashes.filter((h) => !b.sourceFiles.some((f) => f.sha256 === h));
     }
   } else if (work.lane !== "publication") throw Error("EVALUATION_CASE_REQUIRED");
   // Customer works prepared from a saved evaluation plan also carry that plan; validate
@@ -112,6 +125,9 @@ export async function assertFiniteWorkBindings(work: FiniteWork) {
       and request_hash=${requestDigest(work.request)} and created_at < ${new Date(b.historicalCutoff)}
       and provider_response_id is null and outcome in ('reserved','failed') limit 1`);
     if (unknown.rows.length) throw Error("HISTORICAL_EXACT_REQUEST_COMPLETION_UNKNOWN");
+  } else if (editorialCaseSources) {
+    // The case's candidate is rebuilt above, never read from a saved version.
+    actualSources.push(...editorialCaseSources);
   } else if (b.candidateVersionId) {
     // Held source candidates may be challenged in isolation; they are saved versions.
     const { db, valoContentVersions } = await import("@workspace/db");

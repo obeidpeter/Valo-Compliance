@@ -33,9 +33,21 @@ export type FiniteAllocationPackage = {
   corpora: { name: "editorial" | "checker" | "customer-ai"; cases: { id: string; hash: string }[] }[];
   laneAttemptLimits: { publication: 216; editorial_evaluation: 68; checker_challenge: 80; customer: 94 };
   allowedRoles: readonly ["factual", "challenge", "customer"];
-  supportedPreparers: readonly string[];
+  supportedPreparers: FinitePackagePreparers;
   holds: string[];
 };
+/**
+ * The request preparers a package admits work from. A package names exactly one set, so each owner
+ * approval covers one kind of work: the template review pairs (with the customer cases the
+ * original package already covered), or the case-bound editorial cases (decision 0015).
+ */
+export const finitePackagePreparers = {
+  templatePairs: ["operational-template-pair-v1"],
+  editorialCases: ["editorial-case-pair-v1"],
+} as const;
+export type FinitePackagePreparers = (typeof finitePackagePreparers)[keyof typeof finitePackagePreparers];
+const preparerSet = (value: unknown) =>
+  Object.values(finitePackagePreparers).find((set) => requestDigest(set) === requestDigest(value));
 const scopePaths = [
   "docs/registers/content-inventory.json",
   "docs/content-candidates/r1-content-intake-manifest.json",
@@ -71,7 +83,12 @@ function namedSections(path: string, body: string): NamedContentSection[] {
 }
 /** Reads the actual finite inventory/corpora. Scope is not readiness: unfinished
  * preparers remain held, and actual source/rights/currentness gates still run. */
-export async function prepareFiniteAllocationPackage(now = new Date()): Promise<FiniteAllocationPackage> {
+export async function prepareFiniteAllocationPackage(
+  now = new Date(),
+  preparers: FinitePackagePreparers = finitePackagePreparers.templatePairs,
+): Promise<FiniteAllocationPackage> {
+  if (!preparerSet(preparers)) throw Error("PACKAGE_PREPARERS_INVALID");
+  const editorialCases = preparers === finitePackagePreparers.editorialCases;
   const sources = await Promise.all(
     scopePaths.map(async (path) => {
       const bytes = await readFile(resolve(root, path));
@@ -121,12 +138,18 @@ export async function prepareFiniteAllocationPackage(now = new Date()): Promise<
     corpora,
     laneAttemptLimits: { publication: 216, editorial_evaluation: 68, checker_challenge: 80, customer: 94 },
     allowedRoles: ["factual", "challenge", "customer"],
-    supportedPreparers: ["operational-template-pair-v1"],
-    holds: [
-      `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
-      "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
-      "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
-    ],
+    supportedPreparers: [...preparers] as unknown as FinitePackagePreparers,
+    holds: editorialCases
+      ? [
+          "Supported editorial case pairs: the case-bound editorial cases whose candidates are built from retained text; each pair is rebuilt from the pinned files and rechecked before admission and dispatch.",
+          "Template review pairs, customer cases, other content and other evaluation lanes are outside this package.",
+          "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+        ]
+      : [
+          `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
+          "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
+          "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+        ],
   };
 }
 export function allocationPackageId(value: FiniteAllocationPackage) {
@@ -179,7 +202,8 @@ export function validateAllocationPackage(value: FiniteAllocationPackage) {
     requestDigest(value.allocation) !== requestDigest(additionalInferenceAllocation) ||
     requestDigest(value.laneAttemptLimits) !==
       requestDigest({ publication: 216, editorial_evaluation: 68, checker_challenge: 80, customer: 94 }) ||
-    requestDigest(value.allowedRoles) !== requestDigest(["factual", "challenge", "customer"])
+    requestDigest(value.allowedRoles) !== requestDigest(["factual", "challenge", "customer"]) ||
+    !preparerSet(value.supportedPreparers)
   )
     throw Error("ALLOCATION_PACKAGE_INVALID");
 }
@@ -195,6 +219,11 @@ export function assertWorkPackageMembership(
   validateAllocationPackage(pkg);
   if (!pkg.allowedRoles.includes(work.role) || (work.role === "customer" && work.lane !== "customer"))
     throw Error("WORK_OUTSIDE_PACKAGE");
+  // An editorial-case package admits its case pairs and nothing else; no other package admits them.
+  // The binding checks rebuild each pair from the case preparer before admission and dispatch.
+  const editorialCases =
+    requestDigest(pkg.supportedPreparers) === requestDigest(finitePackagePreparers.editorialCases);
+  if (editorialCases !== (work.lane === "editorial_evaluation")) throw Error("WORK_OUTSIDE_PACKAGE");
   if (work.bindings.corpus) {
     const corpus = pkg.corpora.find((c) => c.name === work.bindings.corpus),
       row = corpus?.cases.find((c) => c.id === work.bindings.caseId);
@@ -213,6 +242,11 @@ export function assertWorkPackageMembership(
     !contentId
   )
     return;
+  if (editorialCases) {
+    if (work.bindings.corpus !== "editorial" || !work.pair || contentId)
+      throw Error("PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE");
+    return;
+  }
   // Scope may authorize these lanes, but scope alone cannot manufacture an
   // implemented safe request preparer or weaken the actual readiness checks.
   if (
