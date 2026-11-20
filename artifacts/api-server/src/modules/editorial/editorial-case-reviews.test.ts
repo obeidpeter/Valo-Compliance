@@ -8,6 +8,7 @@ import {
   editorialCaseVersionId,
   prepareEditorialCaseManifest,
   preparableEditorialCases,
+  controlledFailureEditorialCases,
 } from "./editorial-case-reviews";
 import { reviewEvidenceGuidance, reviewResponseFormat, reviewRoleInstructions } from "./operational-review";
 
@@ -109,10 +110,15 @@ test("each work names its candidate by a stable UUID and binds its sources and t
   assert.equal(ids.size, 12);
 });
 
-test("cases that need a controlled failure, a real prior hold or unretained text cannot be prepared", () => {
+test("cases that need a real prior hold or unretained text cannot be prepared, and C041 only for a controlled failure", () => {
   const { notBuilt } = buildEditorialCaseCandidates();
-  for (const id of ["EVAL-EDP-C041", "EVAL-EDP-C060", "EVAL-EDP-C001", ...notBuilt.map((c) => c.caseId)])
+  for (const id of ["EVAL-EDP-C060", "EVAL-EDP-C001", ...notBuilt.map((c) => c.caseId)])
     assert.throws(() => prepareEditorialCaseManifest(id, {}, now), /EDITORIAL_CASE_NOT_PREPARABLE/);
+  // C041's pair is prepared like C004's, its candidate unchanged, but it is listed apart: the
+  // operator runner refuses it, and only the controlled-failure test runs it.
+  assert.deepEqual([...controlledFailureEditorialCases], ["EVAL-EDP-C041"]);
+  const c041 = prepareEditorialCaseManifest("EVAL-EDP-C041", {}, now);
+  assert.equal(c041.works[0]!.candidateHash, editorialCaseCandidate("EVAL-EDP-C004").candidate.hash);
   assert.deepEqual(
     Object.keys(buildableEditorialCases).filter(
       (id) => !(preparableEditorialCases as readonly string[]).includes(id),

@@ -1,6 +1,10 @@
 import { parseBoundedProviderJSON, type FiniteManifest, type ManagedCompletionResult } from "../ai";
 import { operationalReviewSchemaFor } from "../publication";
-import { editorialCaseCandidate, isPreparableEditorialCase } from "./editorial-case-reviews";
+import {
+  editorialCaseCandidate,
+  isControlledFailureEditorialCase,
+  isPreparableEditorialCase,
+} from "./editorial-case-reviews";
 
 /** An admitted batch as the ledger keeps it: its manifest and the provider result of each work. */
 export type EditorialCaseBatch = {
@@ -17,7 +21,7 @@ export type EditorialCaseBatch = {
  * a real unmet gate (point 5). Without both, the case is blocked.
  */
 export function editorialCaseOutcome(caseId: string, batches: EditorialCaseBatch[]) {
-  if (!isPreparableEditorialCase(caseId))
+  if (!isPreparableEditorialCase(caseId) && !isControlledFailureEditorialCase(caseId))
     return { status: "blocked" as const, reason: "case_review_pair_not_prepared" };
   const c = editorialCaseCandidate(caseId);
   const runs = batches

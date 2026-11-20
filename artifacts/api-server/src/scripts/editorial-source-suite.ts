@@ -42,6 +42,7 @@ import {
   templateEvaluationCases,
   editorialCaseOutcome,
   isPreparableEditorialCase,
+  isControlledFailureEditorialCase,
 } from "../modules/editorial";
 type Case = { id: string; scenario: string; inputMutation: string; requiresProviderRun: boolean };
 class Blocked extends Error {}
@@ -184,13 +185,28 @@ async function main() {
     }
     // The case-bound cases with a prepared review pair read that pair's reviews from the ledger
     // (decision 0015, point 4); this suite makes no provider call for them either.
-    if (isPreparableEditorialCase(c.id)) {
+    if (isPreparableEditorialCase(c.id) || isControlledFailureEditorialCase(c.id)) {
       const batches = await pool.query(
         `SELECT id, manifest, results FROM valo_inference_batches
          WHERE manifest->'works'->0->'bindings'->>'caseId' = $1`,
         [c.id],
       );
-      Object.assign(record, editorialCaseOutcome(c.id, batches.rows), { formalCaseAccepted: false });
+      const outcome = editorialCaseOutcome(c.id, batches.rows);
+      // C041's review fails at a controlled destination in CI, never at the provider, so its
+      // evidence is that run's retained result rather than this database's ledger.
+      Object.assign(
+        record,
+        isControlledFailureEditorialCase(c.id) && outcome.reason === "no_admitted_review_pair"
+          ? {
+              status: "needs_evaluator_decision",
+              reason:
+                "The controlled provider failure runs in CI; an independent reviewer decides from that run's retained result.",
+              evidence:
+                "artifacts/api-server/src/modules/editorial/editorial-case-controlled-failure.integration.test.ts",
+            }
+          : outcome,
+        { formalCaseAccepted: false },
+      );
       continue;
     }
     if (c.requiresProviderRun) {

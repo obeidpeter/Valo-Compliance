@@ -123,6 +123,10 @@ section.
    refuses any difference, runs the two reviews one after the other and prints the run report. Each
    review, or its failure, is kept as a private record.
 
+C041, "the review provider fails", never runs here. Its pair runs only in CI's database job, against
+a local destination that refuses it, so nothing reaches the provider and nothing is spent. The runner
+refuses to prepare or execute it (`EDITORIAL_CASE_CONTROLLED_FAILURE_ONLY`).
+
 The reports keep `formalCaseAccepted: false`. A case counts only after an independent reviewer
 confirms its expected outcome (decision 0015, point 5), and the reviews are AI review, not legal,
 tax or regulatory review.

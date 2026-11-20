@@ -67,5 +67,6 @@ test("only the case's own admitted pairs for its current candidate count", () =>
   for (const w of changed.manifest.works) w.candidateHash = "a".repeat(64);
   assert.equal(editorialCaseOutcome("EVAL-EDP-C019", [changed]).reason, "no_admitted_review_pair");
   assert.equal(editorialCaseOutcome("EVAL-EDP-C019", []).reason, "no_admitted_review_pair");
-  assert.equal(editorialCaseOutcome("EVAL-EDP-C041", [own]).reason, "case_review_pair_not_prepared");
+  assert.equal(editorialCaseOutcome("EVAL-EDP-C060", [own]).reason, "case_review_pair_not_prepared");
+  assert.equal(editorialCaseOutcome("EVAL-EDP-C041", [own]).reason, "no_admitted_review_pair");
 });
