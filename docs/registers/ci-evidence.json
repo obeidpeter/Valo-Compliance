@@ -198,6 +198,27 @@
       "proves": "Anyone can send a request to staff without signing in or paying; it is saved for staff and never dispatched anywhere else."
     },
     {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-lifecycle-controls.test.ts",
+      "test": "original editorial60 corpus remains exact and all ten lifecycle cases keep their original preconditions",
+      "proves": "The 60 editorial cases stay byte for byte as authored, apart from the customer AI and rule corpora, and its ten lifecycle cases keep their deterministic preconditions."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-evaluation-score.test.ts",
+      "test": "the score holds every case to EDP-010's bar and never accepts it",
+      "proves": "A run of the 60 editorial cases meets EDP-010's bar only when at least 57 pass and none is a critical false publication; blocked, unselected and unrun cases count as not passed, and the score never accepts the requirement or claims legal accuracy."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-evaluation-score.test.ts",
+      "test": "the last retained run of the 60 cases is far from EDP-010's bar",
+      "proves": "Scored against that bar, the last retained run of the 60 editorial cases passes 14 with no critical false publication, so the bar is not met."
+    },
+    {
       "requirement": "EDP-011",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",

@@ -35,6 +35,11 @@ import {
   verifyCurrentEditorialDenials,
   type EditorialDenialReceipt,
   type EditorialDenialAuditRow,
+  FalseEligibilityError,
+  scoreEditorialEvaluation,
+  isTemplateEvaluationCase,
+  templateCaseOutcome,
+  templateEvaluationCases,
 } from "../modules/editorial";
 type Case = { id: string; scenario: string; inputMutation: string; requiresProviderRun: boolean };
 class Blocked extends Error {}
@@ -130,7 +135,8 @@ async function main() {
   };
   const hold = (b: PublicationBundle, pattern: RegExp) => {
     const result = evaluatePublication(b);
-    assert.equal(result.decision, "hold");
+    // An adverse change the gate still finds eligible is a critical false publication (EDP-010).
+    if (result.decision !== "hold") throw new FalseEligibilityError();
     assert.ok(
       result.reasons.some((r) => pattern.test(r)),
       `Target boundary absent: ${pattern.source}`,
@@ -162,6 +168,16 @@ async function main() {
     if (selected && !selected.includes(c.id)) {
       record.status = "not_selected";
       record.reason = "not_executed_in_this_selection";
+      continue;
+    }
+    // C001-C003 run as their templates' own review pairs (decision 0014); the outcome is read from
+    // the template's saved versions. This suite makes no provider call for them.
+    if (isTemplateEvaluationCase(c.id)) {
+      const versions = await db
+        .select()
+        .from(valoContentVersions)
+        .where(eq(valoContentVersions.templateId, templateEvaluationCases[c.id]));
+      Object.assign(record, templateCaseOutcome(c.id, versions), { formalCaseAccepted: false });
       continue;
     }
     if (c.requiresProviderRun) {
@@ -473,8 +489,9 @@ async function main() {
         "Executed negative engineering control, not provider review or legal-accuracy acceptance";
     } catch (e) {
       record.status = e instanceof Blocked ? "blocked" : "fail";
+      if (e instanceof FalseEligibilityError) record.criticalFalsePublication = true;
       record.reason =
-        e instanceof Blocked
+        e instanceof Blocked || e instanceof FalseEligibilityError
           ? e.message
           : e instanceof assert.AssertionError
             ? e.message.split("\n")[0]
@@ -497,6 +514,11 @@ async function main() {
     blocked: results.filter((r) => r.status === "blocked").length,
     providerCalls: 0,
     publications: 0,
+    // Measured against EDP-010's bar; a blocked or unrun case has not passed.
+    score: scoreEditorialEvaluation(
+      corpus.cases.map((x) => x.id),
+      results as { caseID: string; status: string; criticalFalsePublication?: boolean }[],
+    ),
     formalAcceptance: false,
     EDP010Accepted: false,
   };

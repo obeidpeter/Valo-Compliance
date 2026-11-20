@@ -96,6 +96,13 @@ export function reviewedBaselineEvidence(
 
 /** A negative control must introduce its target failure. An already-held
  * baseline is allowed, but an already-broken target is not a new proof. */
+/** An adverse change the publication gate still found eligible. For EDP-010 this is a critical
+ * false publication, not an ordinary failed control. */
+export class FalseEligibilityError extends Error {
+  constructor() {
+    super("ADVERSE_CHANGE_FOUND_ELIGIBLE");
+  }
+}
 export function publicationHoldTransition(
   baseline: PublicationBundle,
   mutate: (bundle: PublicationBundle) => void,
@@ -106,7 +113,7 @@ export function publicationHoldTransition(
   const changed = structuredClone(baseline);
   mutate(changed);
   const result = evaluatePublication(changed);
-  assert.equal(result.decision, "hold");
+  if (result.decision !== "hold") throw new FalseEligibilityError();
   const targetReasons = result.reasons.filter((r) => target.test(r));
   assert.ok(targetReasons.length, "TARGET_FAILURE_NOT_INTRODUCED");
   assert.notEqual(digest(changed), digest(baseline), "BASELINE_NOT_MUTATED");
