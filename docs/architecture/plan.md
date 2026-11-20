@@ -123,7 +123,7 @@ day. The audit, the target and the phases are in [frontend-redesign.md](frontend
 
 | Item | Status |
 | --- | --- |
-| Foundations: component styles in their layer, one formatter for dates and money, the word list | not started |
+| Foundations: component styles in their layer, one formatter for dates and money, the word list | in progress. The component classes are in Tailwind's components layer, so a utility class on the same element wins: the phone menu button no longer shows on a desktop, the documents list's search text clears its icon, and 38 other classes that were being ignored now apply ([what changed](frontend-redesign.md#what-is-built)). The formatter and the word list are not started |
 | Menus and page structure | not started |
 | Landing page | not started |
 | Public pages: documents, guidance, checker, pricing, help | not started |

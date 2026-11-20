@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 import { createServer } from "node:net";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { chromium, devices } from "playwright";
+import { chromium, devices, type BrowserContextOptions } from "playwright";
 import { startSyntheticApi, type SyntheticAnswer } from "./synthetic-api";
 
 const front = resolve(import.meta.dirname, "../../../valo");
@@ -60,9 +60,10 @@ export async function startWebServer(answer: Answer) {
     args: ["--no-sandbox"],
   });
 
-  /** A phone-sized page; its API calls get the same answers, and any other host is unreachable. */
-  async function phone(path: string) {
-    const context = await browser.newContext({ ...devices["Moto G4"] });
+  /** A page in a browser context of its own; its API calls get the same answers, and any other host
+   * is unreachable. */
+  async function open(path: string, options: BrowserContextOptions) {
+    const context = await browser.newContext(options);
     const page = await context.newPage();
     const unknown: string[] = [],
       errors: string[] = [],
@@ -97,7 +98,10 @@ export async function startWebServer(answer: Answer) {
   return {
     origin,
     api,
-    phone,
+    /** A phone-sized page (Moto G4). */
+    phone: (path: string) => open(path, { ...devices["Moto G4"] }),
+    /** A page as wide as a desktop screen, where the site lays itself out in full. */
+    desktop: (path: string) => open(path, { viewport: { width: 1440, height: 900 } }),
     async close() {
       await browser.close();
       server.kill("SIGTERM");

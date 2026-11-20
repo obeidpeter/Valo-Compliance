@@ -412,7 +412,7 @@ export default function ProfilePage() {
         <div className="sticky bottom-24 z-10 flex justify-end lg:bottom-4">
           <button
             type="submit"
-            className="btn btn-primary shadow-[var(--shadow-lg)]"
+            className="btn btn-primary"
             disabled={save.isPending}
             data-testid="button-save-profile"
           >
