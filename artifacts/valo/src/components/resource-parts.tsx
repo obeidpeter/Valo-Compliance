@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { SiteLinkTo as Link } from "./site-link";
 import type { ReleasedResource, ReleasedResourceKind } from "@workspace/api-client-react";
 
 export const KIND_LABEL: Record<ReleasedResourceKind, string> = {
