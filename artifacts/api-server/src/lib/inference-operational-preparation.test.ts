@@ -33,11 +33,14 @@ test("actual preparation and prepared-candidate readiness bind another form with
     await rm(dir, { recursive: true, force: true });
   });
   const versions = Symbol("versions"),
-    policies = Symbol("policies");
+    policies = Symbol("policies"),
+    preparedRecords = Symbol("prepared");
   const contentTable = { table: versions, id: "id", templateId: "templateId", version: "version" },
-    policyTable = { table: policies, id: "id" };
+    policyTable = { table: policies, id: "id" },
+    preparedTable = { table: preparedRecords };
   const saved: any[] = [],
     savedPolicies: any[] = [],
+    preparedRows: any[] = [],
     artifacts = new Map<string, Buffer>();
   let reviewCalls = 0,
     authoringCalls = 0,
@@ -54,7 +57,8 @@ test("actual preparation and prepared-candidate readiness bind another form with
     }),
     insert: (table: unknown) => ({
       values: (row: any) => {
-        (table === contentTable ? saved : savedPolicies).push({ ...row, status: "draft" });
+        if (table === preparedTable) preparedRows.push(row);
+        else (table === contentTable ? saved : savedPolicies).push({ ...row, status: "draft" });
         return { onConflictDoNothing: async () => undefined };
       },
     }),
@@ -92,7 +96,12 @@ test("actual preparation and prepared-candidate readiness bind another form with
     };
   };
   t.mock.module("@workspace/db", {
-    namedExports: { db: database, valoContentVersions: contentTable, valoPublicationPolicies: policyTable },
+    namedExports: {
+      db: database,
+      valoContentVersions: contentTable,
+      valoPublicationPolicies: policyTable,
+      valoPreparedCandidates: preparedTable,
+    },
   });
   t.mock.module(new URL("../modules/publication/publication-artifacts.ts", import.meta.url).href, {
     namedExports: { putPublicationArtifact: put, getPublicationArtifact: get },
@@ -184,6 +193,27 @@ test("actual preparation and prepared-candidate readiness bind another form with
   assert.deepEqual(stored.bundle.reviews, []);
   assert.deepEqual(stored.attestations.reviews, []);
   assert.equal(prepared.candidateArtifact.templateId, "TPL-12");
+  // Staff find it by its record: the artifact, and the version it will be saved under.
+  assert.equal(preparedRows.length, 1);
+  assert.deepEqual(
+    {
+      artifactId: preparedRows[0].artifactId,
+      artifactHash: preparedRows[0].artifactHash,
+      versionId: preparedRows[0].versionId,
+      templateId: preparedRows[0].templateId,
+      version: preparedRows[0].version,
+      candidateHash: preparedRows[0].candidateHash,
+    },
+    {
+      artifactId: prepared.candidateArtifact.id,
+      artifactHash: prepared.candidateArtifact.hash,
+      versionId: prepared.id,
+      templateId: "TPL-12",
+      version: prepared.version,
+      candidateHash: prepared.candidateHash,
+    },
+  );
+  assert.equal(+preparedRows[0].reviewBy, Date.parse(stored.reviewBy));
   const ready = await readOperationalInferenceReadiness(binding);
   assert.equal(ready.candidate.id, "TPL-12");
   assert.equal(ready.candidate.hash, prepared.candidateHash);

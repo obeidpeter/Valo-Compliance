@@ -46,7 +46,8 @@ export async function prepareOperationalCandidateRelease(templateId: string, sna
   return prepareRelease(templateId, snapshotPath, false);
 }
 async function prepareRelease(templateId: string, snapshotPath: string, requestReviews: boolean) {
-  const { db, valoContentVersions, valoPublicationPolicies } = await import("@workspace/db");
+  const { db, valoContentVersions, valoPublicationPolicies, valoPreparedCandidates } =
+    await import("@workspace/db");
   developmentPublicationOnly();
   const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
   const useRecordedAuthoring = requestReviews && setting("VALO_OPERATIONAL_AUTHORING") === "recorded";
@@ -343,6 +344,20 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
       attestations,
       reviewBy: new Date(content.reviewBy).toISOString(),
       preparedAt: now.toISOString(),
+    });
+    // The artifact stays the candidate; this row only lets staff find it in the Content area.
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`SET LOCAL ROLE valo_content_drafter_dev`);
+      await tx.insert(valoPreparedCandidates).values({
+        artifactId: candidateArtifact.id,
+        artifactHash: candidateArtifact.hash,
+        versionId: id,
+        templateId,
+        version,
+        candidateHash: candidate.hash,
+        preparedAt: now,
+        reviewBy: new Date(content.reviewBy),
+      });
     });
     return {
       id,
