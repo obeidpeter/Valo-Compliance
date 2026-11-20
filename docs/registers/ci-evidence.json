@@ -240,6 +240,20 @@
       "proves": "Case C041's review pair, run through the real dispatcher, ledger, binding checks and managed SDK transport against a local destination that refuses every request, is kept as two failure records with no invented answer; running it again sends nothing, the case stays blocked, other admitted work is refused before sending, and no safety switch is engaged."
     },
     {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-case-outcomes.test.ts",
+      "test": "C060's reviews count only after C018's candidate was held by its real reviews in an earlier pair",
+      "proves": "The editorial suite counts case C060's reviews only after a pair for C018's current candidate, prepared before C060's own, has both reviews and at least one hold; otherwise C060 stays blocked, and its record names the pair that held C018."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-case-follow-up.integration.test.ts",
+      "test": "EDP-010 C060: the follow-up pair waits for C018's hold as the dispatcher records it",
+      "proves": "C060's pair is refused until C018's pair, run through the real dispatcher, ledger and managed SDK transport against a local destination that answers with synthetic holds, is recorded with both reviews holding; C060's fresh reviews of its own revised candidate then name that pair, with no provider call."
+    },
+    {
       "requirement": "EDP-011",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",

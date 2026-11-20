@@ -117,15 +117,22 @@ section.
 2. `... finite-inference-run.ts --prepare-editorial-case <case id> --package=finite-package:<hash>`
    builds the case's candidate from the pinned retained files and its two review requests, checks
    them, and writes the private report. The case ids are the twelve in
-   `modules/editorial/editorial-case-reviews.ts`. `... finite-inference-run.ts --admit <report id> <sha256>`
-   registers the pair under the package.
+   `preparableEditorialCases` (`modules/editorial/editorial-case-reviews.ts`), and C060 once C018 has
+   run (below). `... finite-inference-run.ts --admit <report id> <sha256>` registers the pair under
+   the package.
 3. `... finite-inference-run.ts --execute <batch id>` rebuilds the pair at its preparation time,
    refuses any difference, runs the two reviews one after the other and prints the run report. Each
    review, or its failure, is kept as a private record.
 
 C041, "the review provider fails", never runs here. Its pair runs only in CI's database job, against
 a local destination that refuses it, so nothing reaches the provider and nothing is spent. The runner
-refuses to prepare or execute it (`EDITORIAL_CASE_CONTROLLED_FAILURE_ONLY`).
+refuses to prepare, admit or execute it (`EDITORIAL_CASE_CONTROLLED_FAILURE_ONLY`).
+
+C060 revises C018's candidate after a real hold, so run C018 first. For C060, preparation, admission
+and execution each refuse with `EDITORIAL_CASE_PREREQUISITE_NOT_MET` until C018's latest admitted
+pair has both reviews and at least one holds. The reports name the C018 batch that keeps the failed
+evidence. If both of C018's reviews pass, C060 cannot run, and an independent reviewer decides what
+that means for both cases.
 
 The reports keep `formalCaseAccepted: false`. A case counts only after an independent reviewer
 confirms its expected outcome (decision 0015, point 5), and the reviews are AI review, not legal,
