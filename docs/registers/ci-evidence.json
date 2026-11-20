@@ -233,6 +233,13 @@
       "proves": "Each built candidate is its retained base, read against pinned hashes, with only its case's input mutation applied; building one runs, scores and publishes nothing."
     },
     {
+      "requirement": "EDP-010",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-case-controlled-failure.integration.test.ts",
+      "test": "EDP-010 C041: a review that fails at the provider is kept as a failure, never retried into a review or past the batch's limits",
+      "proves": "Case C041's review pair, run through the real dispatcher, ledger, binding checks and managed SDK transport against a local destination that refuses every request, is kept as two failure records with no invented answer; running it again sends nothing, the case stays blocked, other admitted work is refused before sending, and no safety switch is engaged."
+    },
+    {
       "requirement": "EDP-011",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
