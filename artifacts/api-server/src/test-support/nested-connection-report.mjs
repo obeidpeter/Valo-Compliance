@@ -60,15 +60,16 @@ try {
     },
   );
   const seen = recordsIn(canaryDirectory);
+  const kinds = seen.map((record) => `${record.kind} in ${record.transaction}`).sort();
   if (
     canary.status !== 0 ||
-    seen.length !== 1 ||
-    seen[0].kind !== "pool.query" ||
-    !opener(seen[0].opened).includes("nested-connection-canary.ts")
+    JSON.stringify(kinds) !== JSON.stringify(["pool.query in BEGIN", "pool.query in db.transaction"]) ||
+    !seen.every((record) => opener(record.opened).includes("nested-connection-canary.ts"))
   ) {
     console.error(canary.stderr);
     console.error(
-      "The nested-connection check did not see the canary's second connection; it cannot be trusted.",
+      "The nested-connection check did not see the canary's second connection inside a db.transaction " +
+        "and inside a transaction opened with BEGIN; it cannot be trusted.",
     );
     process.exit(1);
   }
@@ -95,7 +96,8 @@ for (const record of records) {
     allowed++;
     continue;
   }
-  const key = `${record.kind} inside the transaction opened ${at}`;
+  const how = record.transaction === "BEGIN" ? " with BEGIN" : "";
+  const key = `${record.kind} inside the transaction opened${how} ${at}`;
   unexpected.set(key, (unexpected.get(key) ?? 0) + 1);
 }
 console.log(
