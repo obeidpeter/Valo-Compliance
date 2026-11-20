@@ -1,6 +1,7 @@
-import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
-import { PageHeader } from "@/components/states";
+import { PageHeader } from "@/components/page-parts";
+import { PublicLink } from "@/components/public-link";
+import { fixedPageMetadata } from "@/server/page-metadata";
 
 const WORKS = [
   [
@@ -26,6 +27,8 @@ const NOT = [
   "Payments, subscriptions or bookings. None are enabled.",
   "Endorsement by any regulator or government body.",
 ];
+
+export const generateMetadata = () => fixedPageMetadata("/about");
 
 export default function About() {
   return (
@@ -64,12 +67,12 @@ export default function About() {
             </p>
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
-            <Link href="/sign-up" className="btn btn-primary">
+            <PublicLink href="/sign-up" className="btn btn-primary">
               Open a workspace <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/contact" className="btn btn-ghost">
+            </PublicLink>
+            <PublicLink href="/contact" className="btn btn-ghost">
               Contact us
-            </Link>
+            </PublicLink>
           </div>
         </section>
       </div>

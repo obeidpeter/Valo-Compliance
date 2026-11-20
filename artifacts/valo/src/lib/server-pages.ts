@@ -5,7 +5,14 @@
  * server-rendered page with a plain link, and the browser app hands any other way it reaches one to
  * the server with a reload (components/server-page.tsx).
  */
-export const SERVER_PAGES: readonly string[] = ["/terms"];
+export const SERVER_PAGES: readonly string[] = [
+  "/terms",
+  "/about",
+  "/help",
+  "/contact",
+  "/privacy",
+  "/pricing",
+];
 
 /** Whether the server renders the page at this address, ignoring its query and fragment. */
 export function isServerPage(href: string) {

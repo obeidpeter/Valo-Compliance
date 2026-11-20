@@ -2,6 +2,7 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 import http from "node:http";
 import fs from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -241,15 +242,14 @@ const run = async () => {
           b.onResolve({ filter: /^(wouter|lucide-react)$/ }, (a) => ({ path: a.path, namespace: "mock" }));
           b.onResolve({ filter: /^@\/lib\/utils$/ }, () => ({ path: "utils", namespace: "mock" }));
           b.onResolve({ filter: /^@\/lib\/api$/ }, () => ({ path: "api", namespace: "mock" }));
-          b.onResolve({ filter: /^@\// }, (a) => ({
-            path:
-              base +
-              "/artifacts/valo/src/" +
-              a.path.slice(2) +
-              (a.path.endsWith("support-case-api") || a.path.endsWith("use-unsaved-navigation")
-                ? ".ts"
-                : ".tsx"),
-          }));
+          // The error wording lives in its own module, imported by the shared states; it gets the
+          // same stand-in as the rest of @/lib/api.
+          b.onResolve({ filter: /^@\/lib\/describe-error$/ }, () => ({ path: "api", namespace: "mock" }));
+          // Any other @/ import is the web app's own source file, whichever extension it has.
+          b.onResolve({ filter: /^@\// }, (a) => {
+            const file = base + "/artifacts/valo/src/" + a.path.slice(2);
+            return { path: existsSync(file + ".ts") ? file + ".ts" : file + ".tsx" };
+          });
           b.onLoad({ filter: /.*/, namespace: "mock" }, (a) => ({
             loader: "tsx",
             resolveDir: base + "/artifacts/valo",
