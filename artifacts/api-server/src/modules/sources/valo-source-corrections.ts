@@ -221,6 +221,16 @@ export async function processSourceImpact() {
     return true;
   });
 }
+/** A content version is due for its substantive review once its review date passes, or 30 days
+ * after its source check (90 for general content). Reads the row's review_by and bundle columns. */
+export const contentReviewDue = (
+  now: Date,
+) => sql`(review_by<=${now} or (bundle->'candidate'->>'sourceCheckDate')::timestamptz+
+    case when bundle->'candidate'->>'risk'='general' then interval '90 days' else interval '30 days' end<=${now})`;
+/** The same for a rule release, from its rule's review date and source check and the risk its
+ * publication bundle records. Reads the row's rule and publication_bundle columns. */
+export const ruleReviewDue = (now: Date) =>
+  sql`((rule->>'reviewBy')::timestamptz<=${now} or (rule->>'sourceCheckedAt')::timestamptz+case when publication_bundle->'candidate'->>'risk'='general' then interval '90 days' else interval '30 days' end<=${now})`;
 /** Daily source availability and monthly/quarterly substantive reviews are
  * separate. Neither a successful fetch nor a staff click renews review dates. */
 export async function queueExpiredSourceReviews(now = new Date()) {
@@ -240,11 +250,10 @@ export async function queueExpiredSourceReviews(now = new Date()) {
       );
     const versions =
       await tx.execute(sql`select 'content' as kind,id from valo_content_versions c where status='published' and
-   (review_by<=${now} or (bundle->'candidate'->>'sourceCheckDate')::timestamptz+
-    case when bundle->'candidate'->>'risk'='general' then interval '90 days' else interval '30 days' end<=${now})
+   ${contentReviewDue(now)}
    and not exists(select 1 from valo_source_impacts i where i.target_kind='content' and i.target_id=c.id)
    union all select 'rule' as kind,id from valo_rule_releases r where status='published' and
-    ((rule->>'reviewBy')::timestamptz<=${now} or (rule->>'sourceCheckedAt')::timestamptz+case when publication_bundle->'candidate'->>'risk'='general' then interval '90 days' else interval '30 days' end<=${now})
+    ${ruleReviewDue(now)}
    and not exists(select 1 from valo_source_impacts i where i.target_kind='rule' and i.target_id=r.id) limit 50`);
     for (const row of versions.rows)
       await recordSourceImpact(tx, {
