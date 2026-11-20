@@ -1038,6 +1038,13 @@
       "proves": "With 45 catalogue entries and 20 to a page, page 3 reports a total of 45 and holds the last five entries in order."
     },
     {
+      "requirement": "DOC-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "the library's filters, sort and page live in its address: the server renders the results an address asks for, a reload keeps them, a new search starts again from the first page, and clearing the filters empties the address",
+      "proves": "On the compiled web server with 23 synthetic templates, the server renders the second page of a library address filtered by category, access and industry and sorted by name, and on a phone the chosen filters and sort survive a reload, Next shows the last three templates, a search with no match shows the empty state and drops the page number, and clearing the filters empties the address; paid source files are not checked here."
+    },
+    {
       "requirement": "DOC-003",
       "job": "foundation",
       "file": "artifacts/valo/src/components/release-notices.test.tsx",
