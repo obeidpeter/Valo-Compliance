@@ -135,7 +135,8 @@ Moving between a server-rendered page and the browser app loads the new page in 
 links to the other with a plain link. When the browser app reaches a server-rendered address some
 other way, such as a link inside one of its screens, it reloads the address so the server renders
 it (`src/components/server-page.tsx`); if the server sent the address back to the browser app, it
-says so instead of reloading again.
+says so instead of reloading again. The browser app keeps routes only for its own pages: every
+address in `src/lib/server-pages.ts` is handed to the server.
 
 Checks that run the compiled web app point it at a synthetic API on the loopback address
 (`artifacts/api-server/src/test-support/synthetic-api.ts`, `web-server.ts`).
