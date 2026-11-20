@@ -10,7 +10,6 @@ import { consumeQuota, quotaPolicy, quotaSubjectHash } from "./valo-quota";
 import { setting } from "../platform/settings";
 import { ValoProblem } from "../platform/valo-problem";
 import { privacyIdentityHashes } from "./valo-privacy-keys";
-export { ValoProblem } from "../platform/valo-problem";
 import { workspaceActorFromMembership, type WorkspaceActor } from "../platform/workspace-context";
 import { singleRow } from "../platform/rows";
 export type { WorkspaceActor };

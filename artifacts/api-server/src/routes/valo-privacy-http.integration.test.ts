@@ -26,7 +26,8 @@ import {
   customerAccessRouter,
 } from "./valo-customer-access";
 import { createPrivacyCase, confirmPrivacyCase } from "../modules/privacy/valo-privacy";
-import { resolveWorkspace, ValoProblem } from "../lib/valo-store";
+import { resolveWorkspace } from "../lib/valo-store";
+import { ValoProblem } from "../platform/valo-problem";
 
 test(
   "actual HTTP privacy routes apply an independent privacy role and fresh MFA",

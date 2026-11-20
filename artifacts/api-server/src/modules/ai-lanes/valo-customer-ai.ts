@@ -18,12 +18,8 @@ import {
 } from "./valo-customer-ai-domain";
 import { organizeCustomerDraft } from "./valo-customer-ai-model";
 import type { WorkspaceTx } from "../rules";
-import {
-  createDocumentInTransaction,
-  getDocument,
-  ValoProblem,
-  type WorkspaceActor,
-} from "../../lib/valo-store";
+import { createDocumentInTransaction, getDocument, type WorkspaceActor } from "../../lib/valo-store";
+import { ValoProblem } from "../../platform/valo-problem";
 import { documentInput } from "../../lib/valo-validation";
 import { hasApprovedInferenceContext } from "../ai";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";

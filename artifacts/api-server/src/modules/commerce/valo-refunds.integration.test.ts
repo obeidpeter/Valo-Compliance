@@ -19,6 +19,7 @@ import {
   valoDocuments,
 } from "@workspace/db";
 import * as store from "../../lib/valo-store";
+import { ValoProblem } from "../../platform/valo-problem";
 import { syntheticDocument } from "../../lib/valo-test-fixtures";
 import {
   requestOrderRefund,
@@ -624,7 +625,7 @@ test(
         do update set used_count=greatest(valo_rate_buckets.used_count,10)`);
           await assert.rejects(
             requestOrderRefund(a, order, payload(1)),
-            (e: unknown) => e instanceof store.ValoProblem && e.status === 429 && Boolean(e.retryAfter),
+            (e: unknown) => e instanceof ValoProblem && e.status === 429 && Boolean(e.retryAfter),
           );
           assert.equal(
             (await purchases(a)).orders.reduce((n, o) => n + o.refunds.length, 0),

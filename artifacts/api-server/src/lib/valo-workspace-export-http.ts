@@ -16,7 +16,8 @@ import {
   workspaceExportStorage,
   type WorkspaceExportStorage,
 } from "../modules/privacy";
-import { type WorkspaceActor, ValoProblem } from "./valo-store";
+import { type WorkspaceActor } from "./valo-store";
+import { ValoProblem } from "../platform/valo-problem";
 import { assertApplicationRuntime } from "../platform/valo-runtime-activation";
 const live = async (req: Request, actor: WorkspaceActor) =>
   assertWorkspaceDownloadSession(actor, getAuth(req), {

@@ -11,10 +11,10 @@ import {
 import {
   createDocumentInTransaction,
   getDocument,
-  ValoProblem,
   authorizeWorkspaceWrite,
   type WorkspaceActor,
 } from "../../lib/valo-store";
+import { ValoProblem } from "../../platform/valo-problem";
 import { documentInput } from "../../lib/valo-validation";
 import {
   paginateReleasedItems,

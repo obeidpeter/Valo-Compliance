@@ -11,7 +11,8 @@ import {
   ListRemindersResponse,
 } from "@workspace/api-zod";
 import { z } from "zod";
-import { ValoProblem, type WorkspaceActor } from "../../lib/valo-store";
+import { type WorkspaceActor } from "../../lib/valo-store";
+import { ValoProblem } from "../../platform/valo-problem";
 import {
   assessmentRow,
   serializeAssessment,
