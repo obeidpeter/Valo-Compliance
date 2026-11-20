@@ -59,6 +59,32 @@ export const valoPublicationAudit = pgTable("valo_publication_audit", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 export const insertValoContentVersionSchema = createInsertSchema(valoContentVersions);
+/**
+ * A template candidate kept as a private artifact until its two reviews are checked (decision
+ * 0014). The artifact is the candidate; this row only lets staff find it. It names the version ID
+ * and number the candidate will be saved under, and the drafter role only adds rows.
+ */
+export const valoPreparedCandidates = pgTable(
+  "valo_prepared_candidates",
+  {
+    artifactId: uuid("artifact_id").primaryKey(),
+    artifactHash: text("artifact_hash").notNull(),
+    versionId: uuid("version_id").notNull(),
+    templateId: text("template_id").notNull(),
+    version: integer("version").notNull(),
+    candidateHash: text("candidate_hash").notNull(),
+    preparedAt: timestamp("prepared_at", { withTimezone: true }).notNull(),
+    reviewBy: timestamp("review_by", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("valo_prepared_candidates_version_id_unique").on(t.versionId),
+    index("valo_prepared_candidates_template_idx").on(t.templateId, t.version),
+    check("valo_prepared_candidates_artifact_hash_check", sql`${t.artifactHash} ~ '^[a-f0-9]{64}$'`),
+    check("valo_prepared_candidates_candidate_hash_check", sql`${t.candidateHash} ~ '^[a-f0-9]{64}$'`),
+    check("valo_prepared_candidates_version_check", sql`${t.version} > 0`),
+  ],
+);
 export const valoPublicationAiAttempts = pgTable(
   "valo_publication_ai_attempts",
   {
