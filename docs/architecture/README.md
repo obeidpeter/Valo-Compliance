@@ -105,6 +105,25 @@ A page that needs data reads it while the server renders it. When that read fail
 times out, the page still renders, and an island asks the API for the missing part from the browser:
 the pricing page's payments status is the first.
 
+The catalogue pages (the library and its template pages, the resources, the industries, the
+compliance page and the services page) need more of the browser, so each renders a client screen in
+`src/public-screens` that starts from what the server read:
+- The server renders the screen with the data, so the content is in the HTML. An answer the
+  contract's schema accepts is handed over as the API sent it, the form the browser's client reads.
+- The browser shows that data at once and reads what the server could not. The lists and template
+  pages are read again every 15 seconds, so a withdrawal still reaches a page that is open.
+- The library's filters move the address in the page and read the catalogue from the browser, without
+  the server rendering the page again.
+- A template page's draft, save and download actions and the services enquiry form follow the
+  identity island. A new draft opens in the workspace with a full load.
+- `PublicProviders` gives the islands one query client, and shared components link with `PublicLink`
+  on these pages (`SiteLinkContext`).
+
+If an island fails while it renders, the page says it could not be shown and keeps the site's frame
+(`app/(public)/error.tsx`). The web server serves no API: a request for `/api` that reaches it gets a
+JSON 404 (`app/api/[...path]/route.ts`), never a page an island would try to read. Dates are shown
+in Lagos time, so the server and the browser show the same day.
+
 Moving between a server-rendered page and the browser app loads the new page in full: each side
 links to the other with a plain link. When the browser app reaches a server-rendered address some
 other way, such as a link inside one of its screens, it reloads the address so the server renders
