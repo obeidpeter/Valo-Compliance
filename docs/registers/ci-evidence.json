@@ -219,6 +219,20 @@
       "proves": "Scored against that bar, the last retained run of the 60 editorial cases passes 14 with no critical false publication, so the bar is not met."
     },
     {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-case-candidates.test.ts",
+      "test": "builds the 14 case-bound cases whose texts are retained, and names what each of the other 17 needs",
+      "proves": "Of the 31 editorial cases bound to their own candidates, the 14 whose base candidate and cited passages the repository retains are built, and each of the other 17 names the text it still needs."
+    },
+    {
+      "requirement": "EDP-010",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/editorial-case-candidates.test.ts",
+      "test": "each case changes its base exactly as the corpus's input mutation describes",
+      "proves": "Each built candidate is its retained base, read against pinned hashes, with only its case's input mutation applied; building one runs, scores and publishes nothing."
+    },
+    {
       "requirement": "EDP-011",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/sources/valo-source-controls.integration.test.ts",
