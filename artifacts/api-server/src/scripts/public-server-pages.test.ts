@@ -163,6 +163,146 @@ test("each server-rendered public page is in the server's HTML, with its heading
   }
 });
 
+/** The links inside the first element this pattern opens, read from a page's HTML: each one's words,
+ * its address, and whether it is marked as the current page. */
+const linksIn = (html: string, opens: RegExp, closes: string) => {
+  const from = opens.exec(html)?.index;
+  if (from === undefined) return [];
+  return [...html.slice(from, html.indexOf(closes, from)).matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map(
+    (link) => ({
+      label: text(link[2]!),
+      href: /href="([^"]*)"/.exec(link[1]!)?.[1] ?? "",
+      current: /aria-current="page"/.test(link[1]!),
+    }),
+  );
+};
+
+/** The header's links in their order, with the server-rendered pages that belong to each one's
+ * section. The checker is a page of the browser app, so its own mark is checked in a browser. */
+const HEADER: { label: string; href: string; pages: string[] }[] = [
+  { label: "Documents", href: "/library", pages: ["/library", items[0]!.href] },
+  { label: "Check requirements", href: "/checker", pages: [] },
+  {
+    label: "Guidance",
+    href: "/compliance",
+    pages: [
+      "/compliance",
+      "/resources",
+      "/industries",
+      `/resources/${resources[0]!.slug}`,
+      `/industries/${industry.slug}`,
+    ],
+  },
+  { label: "Pricing", href: "/pricing", pages: ["/pricing"] },
+  { label: "Help", href: "/help", pages: ["/help", "/contact"] },
+];
+/** The tabs that join the three guidance pages. */
+const GUIDANCE_TABS = [
+  ["Overview", "/compliance"],
+  ["Guides", "/resources"],
+  ["By industry", "/industries"],
+];
+/** The footer's three groups. */
+const FOOTER_GROUPS = [
+  [
+    "Product",
+    "Documents /library",
+    "Check requirements /checker",
+    "Guidance /compliance",
+    "Pricing /pricing",
+  ],
+  ["Help", "Help centre /help", "Contact us /contact", "Trouble signing in /account-access"],
+  ["Company", "About Valo /about", "Services /services", "Privacy /privacy", "Terms /terms"],
+];
+
+test("every server-rendered page has the same five header links and marks its own section, the guidance tabs join their three pages, and the footer has eleven links in three groups", async () => {
+  const reached = new Set<string>();
+  for (const path of PAGES) {
+    const html = await (await fetch(web.origin + path)).text();
+    const header = linksIn(html, /<nav[^>]*aria-label="Primary"/, "</nav>");
+    assert.deepEqual(
+      header.map((link) => [link.label, link.href]),
+      HEADER.map((link) => [link.label, link.href]),
+      `${path}: the header's links`,
+    );
+    assert.deepEqual(
+      header.filter((link) => link.current).map((link) => link.label),
+      HEADER.filter((link) => link.pages.includes(path)).map((link) => link.label),
+      `${path}: the section the header marks as current`,
+    );
+    const tabs = linksIn(html, /<nav[^>]*aria-label="Guidance"/, "</nav>");
+    assert.deepEqual(
+      tabs.map((tab) => [tab.label, tab.href, tab.current]),
+      GUIDANCE_TABS.some(([, href]) => href === path)
+        ? GUIDANCE_TABS.map(([label, href]) => [label, href, href === path])
+        : [],
+      `${path}: the guidance tabs`,
+    );
+    const footer = html.slice(html.indexOf("<footer"), html.indexOf("</footer>"));
+    assert.deepEqual(
+      [...footer.matchAll(/<p class="eyebrow[^"]*">([^<]+)<\/p><ul[^>]*>([\s\S]*?)<\/ul>/g)].map((group) => [
+        group[1],
+        ...linksIn(group[2]!, /^/, "\u0000").map((link) => `${link.label} ${link.href}`),
+      ]),
+      FOOTER_GROUPS,
+      `${path}: the footer's groups`,
+    );
+    assert.ok(!footer.includes("/development"), `${path}: the developer notes are not in the footer`);
+    for (const link of [...header, ...tabs, ...linksIn(footer, /^/, "\u0000")]) reached.add(link.href);
+    if (path === "/help") for (const link of linksIn(html, /<main/, "</main>")) reached.add(link.href);
+    reached.add(/<a[^>]*href="([^"]*)"[^>]*data-testid="link-dev-notes"/.exec(html)?.[1] ?? "");
+  }
+  // Every public page is one link from the header, the footer, the guidance tabs, the help page or
+  // the development banner (WEB-002 names the library, compliance, industries, resources, services,
+  // pricing, support and legal pages).
+  assert.deepEqual(
+    [
+      "/library",
+      "/checker",
+      "/compliance",
+      "/resources",
+      "/industries",
+      "/services",
+      "/pricing",
+      "/help",
+      "/support",
+      "/contact",
+      "/account-access",
+      "/about",
+      "/privacy",
+      "/terms",
+      "/development",
+    ].filter((page) => !reached.has(page)),
+    [],
+  );
+});
+
+test("the browser app's header has the same links and marks the checker's section, and a phone's menu marks the section too", async () => {
+  const wide = await web.desktop("/checker");
+  try {
+    await ready(wide.page);
+    const links = wide.page.getByRole("navigation", { name: "Primary" }).getByRole("link");
+    await expect(links).toHaveText(HEADER.map((link) => link.label));
+    for (const [index, link] of HEADER.entries())
+      await expect(links.nth(index)).toHaveAttribute("href", link.href);
+    await expect(wide.page.locator('nav[aria-label="Primary"] [aria-current="page"]')).toHaveText([
+      "Check requirements",
+    ]);
+  } finally {
+    await wide.close();
+  }
+  const narrow = await web.phone("/resources");
+  try {
+    await ready(narrow.page);
+    await narrow.page.getByRole("button", { name: "Open menu" }).tap();
+    const menu = narrow.page.getByRole("navigation", { name: "Mobile" });
+    await expect(menu.getByRole("link")).toHaveText(HEADER.map((link) => link.label));
+    await expect(menu.locator('[aria-current="page"]')).toHaveText(["Guidance"]);
+  } finally {
+    await narrow.close();
+  }
+});
+
 test("the web server renders a page the same for every visitor and reads the API as an anonymous one, passing on the forwarded address", async () => {
   const visitor = {
     cookie: "__session=synthetic-session-token; __client_uat=1",
@@ -237,26 +377,30 @@ test("on a phone, each server-rendered page hydrates without a mismatch, fits 36
   assert.deepEqual(problems, []);
 });
 
-/** Each page the footer links to, and the title it gives the page. */
-const FOOTER: [string, string][] = [
-  ["/library", "Document library — Valo"],
-  ["/pricing", "Pricing — Valo"],
-  ["/checker", "Business requirements checker — Valo"],
-  ["/resources", "Business resources — Valo"],
-  ["/industries", "Industry coverage — Valo"],
-  ["/compliance", "Business requirements — Valo"],
-  ["/services", "Service enquiries — Valo"],
-  ["/about", "About Valo"],
-  ["/help", "Help — Valo"],
-  ["/contact", "Contact Valo"],
-  ["/support", "Support — Valo"],
-  ["/account-access", "Account access help — Valo"],
-  ["/privacy", "Privacy — Valo"],
-  ["/terms", "Terms — Valo"],
-  ["/development", "Build status — Valo"],
+/** Each page the site's own links reach, the link that opens it, and the title it gives the page: the
+ * footer's links, then the pages a footer link's page links on to. */
+const LINKED: [string, string, string][] = [
+  ['footer a[href="/library"]', "/library", "Document library — Valo"],
+  ['footer a[href="/pricing"]', "/pricing", "Pricing — Valo"],
+  ['footer a[href="/checker"]', "/checker", "Business requirements checker — Valo"],
+  ['footer a[href="/compliance"]', "/compliance", "Business requirements — Valo"],
+  // The guidance tabs join the overview to the guides and the industries.
+  ['nav[aria-label="Guidance"] a[href="/resources"]', "/resources", "Business resources — Valo"],
+  ['nav[aria-label="Guidance"] a[href="/industries"]', "/industries", "Industry coverage — Valo"],
+  ['footer a[href="/services"]', "/services", "Service enquiries — Valo"],
+  ['footer a[href="/about"]', "/about", "About Valo"],
+  ['footer a[href="/help"]', "/help", "Help — Valo"],
+  // The help page links the page for reporting a problem.
+  ['main a[href="/support"]', "/support", "Support — Valo"],
+  ['footer a[href="/contact"]', "/contact", "Contact Valo"],
+  ['footer a[href="/account-access"]', "/account-access", "Account access help — Valo"],
+  ['footer a[href="/privacy"]', "/privacy", "Privacy — Valo"],
+  ['footer a[href="/terms"]', "/terms", "Terms — Valo"],
+  // The development banner links the developer notes.
+  ['[data-testid="link-dev-notes"]', "/development", "Build status — Valo"],
 ];
 
-test("moving between public pages in the app, from the footer and from a library card, titles each page for itself", async () => {
+test("moving between public pages in the app, from the site's own links and from a library card, titles each page for itself", async () => {
   const problems: string[] = [];
   const { page, unknown, errors, close } = await web.phone("/terms");
   /** Follows a link with the keyboard, as a visitor using Tab and Enter would, and reads the title.
@@ -283,7 +427,7 @@ test("moving between public pages in the app, from the footer and from a library
   };
   try {
     await ready(page);
-    for (const [path, title] of FOOTER) await follow(`footer a[href="${path}"]`, path, title);
+    for (const [selector, path, title] of LINKED) await follow(selector, path, title);
     // A released item's page is titled for the item, and its section again on the way back.
     await follow(`footer a[href="/library"]`, "/library", "Document library — Valo");
     await follow(`main a[href="${items[0]!.href}"]`, items[0]!.href, `${items[0]!.title} — Valo`);

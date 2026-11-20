@@ -206,6 +206,31 @@ files.
 The word list is the table under [Words](#words). Each page takes its words as the page is
 rewritten in the later phases. A check that the old words are gone comes with the last of them.
 
+### Phase 2: the header, the footer and the phone's bar
+
+| Part | Now | Before |
+| --- | --- | --- |
+| Header | Documents, Check requirements, Guidance, Pricing, Help | Checker, Library, Resources, Industries, Compliance, About, Help |
+| Account buttons | Sign in, Create account | Sign in, Open a workspace |
+| Footer | 11 links in three groups: Product, Help, Company | 17 links in three groups |
+| Phone's bar | Create a document, Check requirements | Start a draft, Check rules |
+
+- Every page marks the header section it belongs to. Guidance is marked on the overview, the
+  guides and the industries pages, and on a guide's or an industry's own page.
+- Guidance opens the overview (`/compliance`), which always has the official sources to show, even
+  before any guide is published. Tabs above its heading join it to the guides (`/resources`) and to
+  guidance by industry (`/industries`).
+- No page is removed and no address changes. A page the footer no longer lists is linked from
+  somewhere else: the guides and the industries from the guidance tabs, the support page from the
+  help page, and the developer notes from the development banner.
+- "Create account" also replaces "Open a workspace" in the sign-up page's title and on three
+  buttons.
+
+The pages' own headings and text still use the old words, such as "Compliance guidance" and
+"Resources". The public pages phase rewrites them.
+
+Not built yet: the workspace's five sections and its account menu.
+
 ## How the ten heuristics are applied
 
 1. **Visibility of system status.** Keep "Saved"; add progress in the checker and on downloads.

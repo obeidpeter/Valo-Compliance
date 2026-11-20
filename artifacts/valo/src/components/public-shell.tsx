@@ -3,9 +3,9 @@ import { AccountLinks } from "@/islands/account";
 import { MobileDock } from "@/islands/dock";
 import { IdentityLoader } from "@/islands/identity";
 import { HeaderWithMenu } from "@/islands/menu";
-import { PrimaryNav } from "@/islands/primary-nav";
+import { MobileNav, PrimaryNav } from "@/islands/primary-nav";
 import { PublicLink } from "./public-link";
-import { DevBanner, NAV, SiteFooter } from "./site-chrome";
+import { DevBanner, SiteFooter } from "./site-chrome";
 import { WORDMARK_LINK_CLASS, WordmarkMark } from "./wordmark";
 
 function HomeLink() {
@@ -38,17 +38,7 @@ export function PublicShell({ nonce, children }: { nonce?: string | undefined; c
         }
         menu={
           <>
-            <nav className="grid gap-1" aria-label="Mobile">
-              {NAV.map((n) => (
-                <PublicLink
-                  key={n.href}
-                  href={n.href}
-                  className="rounded-xl px-3 py-3 text-base hover:bg-secondary"
-                >
-                  {n.label}
-                </PublicLink>
-              ))}
-            </nav>
+            <MobileNav />
             <div className="mt-4 flex flex-wrap gap-2">
               <AccountLinks place="menu" />
             </div>

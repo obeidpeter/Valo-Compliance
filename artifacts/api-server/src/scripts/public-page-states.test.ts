@@ -16,6 +16,7 @@ import {
 } from "@workspace/api-zod";
 import { coveragePlan } from "@workspace/valo-core";
 import { chromiumLaunchPath } from "../platform/chromium";
+import { atRest } from "../test-support/app-in-browser";
 
 /**
  * WEB-002: "keyboard, empty, loading, error and mobile states are covered for every primary route";
@@ -153,8 +154,10 @@ const answer =
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
   };
 
-/** The axe-core rules that fail on the page once its entrance animations have finished. */
+/** The axe-core rules that fail on the page once its entrance animations have finished and it has
+ * stopped scrolling. */
 async function wcagFailures(page: Page) {
+  await atRest(page);
   // A heading still fading in has the contrast of its current opacity, not its own. Polled, since the
   // page's content security policy refuses the eval that waitForFunction uses for a string.
   for (let poll = 0; poll < 100; poll++) {

@@ -11,6 +11,7 @@ import {
   type PublicCoverage,
   type ReleasedResource,
 } from "@workspace/api-client-react";
+import { GuidanceTabs } from "@/components/guidance-tabs";
 import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
 import { ResourceCard, liveContent } from "@/components/resource-parts";
@@ -36,6 +37,7 @@ export function Industries({ initial }: { initial: IndustryReads }) {
   (res.data ?? []).forEach((r) => r.industrySlugs.forEach((s) => counts.set(s, (counts.get(s) ?? 0) + 1)));
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
+      <GuidanceTabs current="/industries" />
       <PageHeader eyebrow="Industries" title="Find what fits your trade.">
         Each industry page brings together released guidance and any matching document templates. Where
         nothing checked exists, it says so.

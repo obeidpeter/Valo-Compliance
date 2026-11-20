@@ -174,7 +174,7 @@ function SignInPage() {
 }
 
 function SignUpPage() {
-  useDocumentTitle("Open a workspace — Valo");
+  useDocumentTitle("Create account — Valo");
   return (
     <AuthFrame side="up">
       <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />

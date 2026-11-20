@@ -605,7 +605,7 @@ export default function Checker() {
                 <Notice className="mt-6" tone="ink" title="Want to keep this?">
                   Nothing here has been saved.{" "}
                   <Link href="/sign-up" className="font-medium underline">
-                    Open a workspace
+                    Create an account
                   </Link>{" "}
                   to save a consented copy and turn items into tasks.
                 </Notice>

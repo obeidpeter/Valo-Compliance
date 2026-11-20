@@ -36,7 +36,7 @@ const SCREENS: { path: string; title: string; ready?: string; minimumStops?: num
   },
   {
     path: "/sign-up",
-    title: "Open a workspace — Valo",
+    title: "Create account — Valo",
     ready: '[data-testid="link-auth-access-help"]',
     minimumStops: 2,
   },

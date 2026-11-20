@@ -6,6 +6,7 @@ import {
   getListPublicCatalogueQueryKey,
   type CataloguePage,
 } from "@workspace/api-client-react";
+import { GuidanceTabs } from "@/components/guidance-tabs";
 import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
 import { guidanceParams } from "@/lib/catalogue-requests";
@@ -41,6 +42,7 @@ export function Compliance({ initial }: { initial?: CataloguePage | undefined })
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
+      <GuidanceTabs current="/compliance" />
       <PageHeader eyebrow="Compliance guidance" title="No rule is shown until it can name its source.">
         Valo shows a rule only when it links to the official text it came from. Below is what is released
         today, and where to check the official position directly.

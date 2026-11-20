@@ -8,6 +8,7 @@ import {
   getGetReleasedResourceQueryKey,
   type ReleasedResource,
 } from "@workspace/api-client-react";
+import { GuidanceTabs } from "@/components/guidance-tabs";
 import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
 import { KIND_LABEL, PlainText, ResourceCard, liveContent } from "@/components/resource-parts";
@@ -24,6 +25,7 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
   const items = q.data ?? [];
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
+      <GuidanceTabs current="/resources" />
       <PageHeader eyebrow="Resources" title="Guidance that names its sources.">
         Plain-language explainers appear here only once released with their official sources, scope and
         limitations.

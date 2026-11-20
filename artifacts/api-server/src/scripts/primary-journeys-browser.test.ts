@@ -22,7 +22,7 @@ after(() => web.close());
 
 /** The title of each page a journey opens. */
 const TITLES: Record<string, string> = {
-  "/sign-up": "Open a workspace — Valo",
+  "/sign-up": "Create account — Valo",
   "/checker": "Business requirements checker — Valo",
   "/library": "Document library — Valo",
 };
@@ -76,12 +76,12 @@ test("on a phone, the opened mobile menu and the bottom dock each link to both j
       await expect(menu).toBeVisible();
     };
     await openMenu();
-    // The menu's panel: its navigation, then the sign-in and workspace buttons.
+    // The menu's panel: its navigation, then the sign-in and account buttons.
     const panel = menu.locator("..");
     const menuLinks = [
-      [panel.getByRole("link", { name: "Library", exact: true }), "/library"],
-      [panel.getByRole("link", { name: "Checker", exact: true }), "/checker"],
-      [panel.getByRole("link", { name: "Open a workspace", exact: true }), "/sign-up"],
+      [panel.getByRole("link", { name: "Documents", exact: true }), "/library"],
+      [panel.getByRole("link", { name: "Check requirements", exact: true }), "/checker"],
+      [panel.getByRole("link", { name: "Create account", exact: true }), "/sign-up"],
     ] as const;
     for (const [link, path] of menuLinks) await expect(link).toHaveAttribute("href", path);
     for (const [link, path] of menuLinks) {
@@ -96,9 +96,9 @@ test("on a phone, the opened mobile menu and the bottom dock each link to both j
     // The dock stays on screen on every page, with one button for each journey.
     const documents = page.getByTestId("link-dock-documents");
     const compliance = page.getByTestId("link-dock-compliance");
-    await expect(documents).toHaveText("Start a draft");
+    await expect(documents).toHaveText("Create a document");
     await expect(documents).toHaveAttribute("href", "/sign-up");
-    await expect(compliance).toHaveText("Check rules");
+    await expect(compliance).toHaveText("Check requirements");
     await expect(compliance).toHaveAttribute("href", "/checker");
     await page.evaluate("window.scrollTo(0, document.body.scrollHeight)");
     await expect(documents).toBeInViewport();

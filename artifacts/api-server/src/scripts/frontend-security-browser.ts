@@ -108,7 +108,7 @@ try {
   for (const path of paths) {
     const response = await page.goto(origin + path);
     assert.equal(response?.status(), 200, path);
-    await expect(page.getByRole("link", { name: "Library", exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Documents", exact: true }).first()).toBeVisible();
     await expect(page.getByText("Loading Valo", { exact: true })).toHaveCount(0);
     const liveNonce = response!.headers()["content-security-policy"]!.match(/'nonce-([^']+)'/)![1];
     // Webpack loads a lazy chunk, such as an island's, with a script element it marks data-webpack

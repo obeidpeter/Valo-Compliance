@@ -24,7 +24,7 @@ export default async function Pricing() {
             Open a development workspace to write and save business drafts. Use synthetic details only.
           </p>
           <PublicLink href="/sign-up" className="btn btn-primary mt-6">
-            Open a workspace
+            Create account
           </PublicLink>
         </div>
         <div className="surface p-7">
