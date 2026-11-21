@@ -25,7 +25,7 @@ const captureFor = async (reader: SourceReader, url: string, snapshotId: string)
   ).rows[0];
 
 /** Whether a capture is the source watch's current, successful one, checked within a day. */
-function currentCapture(snapshot: Record<string, unknown> | undefined, url: string, now: Date) {
+export function currentCapture(snapshot: Record<string, unknown> | undefined, url: string, now: Date) {
   return (
     !!snapshot &&
     allSourceLeads.some((s) => s.id === snapshot.source_id && s.url === url) &&

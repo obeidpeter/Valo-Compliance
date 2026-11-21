@@ -48,12 +48,26 @@ export const guidanceOfficialHosts = [
   "budgetoffice.gov.ng",
 ] as const;
 
+/**
+ * The most a guide's review request may measure before it is refused unsent, by the budget's
+ * cautious count: every byte counted as a token, plus an allowance. A template's limit is 32,000. A
+ * guide's request also carries its official passages and what was searched for later amendments:
+ * with the passages read from the official files as fetched on 21 November 2026, the ten mapped
+ * guides measure between 33,479 and 53,042.
+ *
+ * The policy file states this number, so the owner approves it with that file. No guide can be
+ * prepared for its reviews before then, so no request is measured against it before then.
+ */
+export const GUIDE_REVIEW_INPUT_CEILING = 64_000;
+const thousands = (n: number) => String(n).replace(/\B(?=(\d{3})+$)/g, ",");
+
 /** Sentences of the policy file the code depends on. The policy is refused if the file lacks one. */
 const boundSentences = [
   "Each sentence that says what the law requires is bound to an exact passage of an official text that Valo holds a copy of.",
   "A rate, fee, penalty, threshold or deadline appears only when the quoted passage contains that number.",
   `It does not reproduce official text beyond a short quotation: no more than ${GUIDE_SHARED_WORDS_LIMIT} words in a row from a passage it cites.`,
   "An AI review is never called a professional review.",
+  `A guide's review is refused before it is sent if it measures more than ${thousands(GUIDE_REVIEW_INPUT_CEILING)} by the budget's cautious count`,
   "This policy allows publication in the development environment.",
 ] as const;
 

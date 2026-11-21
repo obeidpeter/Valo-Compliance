@@ -16,10 +16,11 @@ import {
   getPublicationArtifact,
   operationalReviewSchemaFor,
   assertBlindReviewInputs,
+  GUIDE_REVIEW_INPUT_CEILING,
   type OperationalServerEvidence,
 } from "../publication";
 export type { OperationalServerEvidence } from "../publication";
-import { meterReviewRequest, providerUsage } from "./review-meter";
+import { meterReviewRequest, providerUsage, REVIEW_INPUT_CEILING } from "./review-meter";
 import { singleRow } from "../../platform/rows";
 /** The review prompt for content that is not general (decision 0014). Each reviewer runs EDP-005's
  * five enhanced checks and quotes the passage each relied on; a check passes only when both
@@ -75,6 +76,13 @@ export function reviewPromptVersion(
     ? `operational-${role}-${candidate.id === "TPL-07" ? "4" : "5"}`
     : `operational-${role}-enhanced-1`;
 }
+/**
+ * The most a review request may measure before it is refused unsent. A guide's request carries the
+ * official passages it rests on and what was searched for later amendments, so its limit is the one
+ * the guidance policy states (decision 0017). Every other request keeps the templates' limit.
+ */
+export const reviewInputCeiling = (candidate: Pick<PublicationBundle["candidate"], "contentClass">) =>
+  candidate.contentClass === "sourced_guidance" ? GUIDE_REVIEW_INPUT_CEILING : REVIEW_INPUT_CEILING;
 export function operationalReviewRequests(
   candidate: PublicationBundle["candidate"],
   rights: unknown,
@@ -134,7 +142,7 @@ export function operationalReviewRequests(
       reviewAsOf,
       promptVersion: reviewPromptVersion(role, candidate),
       promptHash: digest(request.messages[0]!.content),
-      meter: meterReviewRequest(request),
+      meter: meterReviewRequest(request, reviewInputCeiling(candidate)),
     };
   });
 }
@@ -203,8 +211,8 @@ export async function executeOperationalReviewPlan(
     new Set(plan.entries.map((e) => e.role)).size !== 2 ||
     plan.entries.some(
       (e) =>
-        e.meter.requestHash !== meterReviewRequest(e.request).requestHash ||
-        digest(e.meter) !== digest(meterReviewRequest(e.request)),
+        e.meter.requestHash !== meterReviewRequest(e.request, reviewInputCeiling(candidate)).requestHash ||
+        digest(e.meter) !== digest(meterReviewRequest(e.request, reviewInputCeiling(candidate))),
     )
   )
     throw Error("REVIEW_PLAN_INVALID_OR_STALE");
