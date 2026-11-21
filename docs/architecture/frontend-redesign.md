@@ -369,6 +369,75 @@ The three pages the header's Guidance link groups, and the page of a guide and o
   itself comes from the coverage plan and is not changed.
 - Counts are written by the shared formatter, as "3 guides".
 
+### Phase 4: the requirements check
+
+The page behind "Check requirements" and "Check my requirements" (`/checker`, and
+`/workspace/checker` signed in). Its heading and its browser tab read "Check your requirements".
+They read "What might apply to your business, and why." and "Business requirements checker".
+
+**Nothing is chosen for the visitor.** Every question opened with "Skip for now" showing as
+chosen, so a page nobody had touched looked answered. A question now shows no choice until the
+visitor makes one.
+
+- "I do not know", "Skip for now" and "Not applicable" are still three separate answers, and none
+  of them is a "No" or a zero (RUL-002). What is sent for them has not changed: a question nobody
+  touched and a question skipped both go as unanswered.
+- A question answered in a box shows the box at once, with those choices beside it after "or".
+  It showed a choice called "I can answer" first, and choosing that put a 0 in the number of
+  people, or last year in the turnover year, before anything was typed. An emptied box is
+  untouched again.
+- The state is chosen from a list that opens on "Choose a state or the FCT".
+- A step is ticked in the list of steps once every question it asks has been dealt with. It was
+  ticked as soon as the visitor had gone past it.
+
+**Questions that do not apply are skipped (RUL-001).** When the visitor says turnover does not
+apply, the seven questions about the figure are not asked, as the local government area already
+was not for a business with no premises. Their answers are sent as "not applicable" and no exact
+figure is sent. The rule engine already left those questions out of what is still unanswered.
+
+**Asked first.** "Start over" asks before it clears answers the visitor gave, and has nothing to
+do on a fresh page. Signed in, "Fill in from my business profile" asks before it replaces answers
+the visitor gave on the page, and says when it has filled them in.
+
+**Words.**
+
+| Now | Before |
+| --- | --- |
+| Your business, What it does, Where it is, Size and turnover, Personal data, Review your answers | Business, Activities, Location, Size and turnover, Data, Review |
+| Is it registered with the Corporate Affairs Commission (CAC)? | Is it registered with the CAC? |
+| Roughly, what is the business's turnover? | Turnover band |
+| Under ₦5 million | Under N5m |
+| The exact figure, if you have it (optional). In naira. | Exact turnover in naira (optional). Stored as whole kobo. |
+| Which year is that figure for? What period does the figure cover? | Turnover year. Period. |
+| What does the figure measure? Which currency is the figure in? | Measured as. Currency. |
+| Fill in from my business profile | Prefill from my profile (rev 3) |
+| Check my requirements | Check these answers |
+| You are not signed in. Your answers are not saved, and leaving this page clears them. | Anonymous. Answers stay in this tab only and are never saved. |
+
+- The note under a signed-out visitor's results now says that the answers on the page are not
+  carried over to a new account. That was already so, and was not said.
+- An answer of "I do not know" reads back in those words, on the review and in saved results. It
+  read "Unknown".
+- The business profile names the turnover bands the same way, from the same list.
+
+**Not changed.** The optional detail sections keep their wording, which was written with the
+rules they feed. So do the results: the four result labels (CMP-002), "Why am I seeing this?"
+(RUL-004), the coverage gaps and the official routes. The panel that saves a result to the
+workspace is rewritten with the workspace, in phase 5, where "assessment" and "revision" change
+everywhere at once.
+
+**Found on the way.**
+
+- The review's list of answers failed an accessibility rule: each "Edit" button sat directly in
+  a list of terms, which may hold only terms and their descriptions. The checks had looked at the
+  first step only. A new check runs on every step, the review, the results and the "Start over"
+  dialog.
+- The business profile's "Save before leaving?" dialog opened in the top left corner of the
+  screen, and on a phone it filled the width edge to edge. Tailwind's reset removes the margin
+  that centres a dialog. One rule now puts every dialog in the middle of the screen, clear of a
+  phone's sides. A check measures this page's dialog and the profile's, on a phone and on a
+  desktop. The app's four other dialogs get the same rule and are not measured.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the

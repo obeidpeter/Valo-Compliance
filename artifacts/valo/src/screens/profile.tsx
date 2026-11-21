@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAccountEpoch } from "@/components/account-state-boundary";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
+import { valueLabel } from "@/lib/checker";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
@@ -42,19 +43,10 @@ const EMPTY: Profile = {
   marketingConsent: false,
 };
 
+/** An answer in words. The profile has its own words for the two ways of not answering; every other
+ * answer reads as it does in the requirements check. */
 const label = (s: string) =>
-  (
-    ({
-      unknown: "Unknown",
-      unanswered: "Not answered yet",
-      not_applicable: "Not applicable",
-      NGN: "Naira (NGN)",
-      under_5m: "Under N5m",
-      "5m_to_25m": "N5m to N25m",
-      "25m_to_100m": "N25m to N100m",
-      over_100m: "Over N100m",
-    }) as Record<string, string>
-  )[s] ?? s.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+  (({ unknown: "Unknown", unanswered: "Not answered yet" }) as Record<string, string>)[s] ?? valueLabel(s);
 
 export default function ProfilePage() {
   const currentAccount = useAccountEpoch();

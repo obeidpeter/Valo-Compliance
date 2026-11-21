@@ -45,9 +45,9 @@ export const publicPages: Record<string, { title: string; description: string }>
       "Explore source-backed requirements and understand the limits of currently available guidance.",
   },
   "/checker": {
-    title: "Business requirements checker — Valo",
+    title: "Check your requirements — Valo",
     description:
-      "Explore possible business requirements using your supplied facts and currently available source evidence.",
+      "Answer a few questions about your business to see which requirements may apply, and why. Results come only from published rules checked against an official source.",
   },
   "/pricing": {
     title: "Pricing — Valo",

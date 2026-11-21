@@ -27,27 +27,30 @@ import {
   CheckerFactsTurnoverPeriod,
   type CheckerFacts,
   type AssessmentResult,
-  type Answer,
 } from "@workspace/api-client-react";
 import { AssessmentResultView } from "@/components/assessment-result";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RichCheckerFields } from "@/components/rich-checker-fields";
 import { richQuestionTarget, richStep, type RichCheckerFacts } from "@/lib/rich-checker";
 import { Notice } from "@/components/states";
 import { describeError } from "@/lib/api";
 import {
+  CHECKER_STEPS,
   EMPTY_FACTS,
   MARKER_LABEL,
   LEGAL_FORMS,
   REG_STATUSES,
   ANSWER_OPTIONS,
+  asked,
   reviewFacts,
   factsFromProfile,
   finaliseFacts,
-  needsProducts,
   nairaToKobo,
   koboToNaira,
   isMarker,
   live,
+  stepDone,
+  stepOf,
   valueLabel,
   factLabel,
   displayFact,
@@ -58,19 +61,36 @@ import { cn } from "@/lib/utils";
 import { useAccountEpoch } from "@/components/account-state-boundary";
 import { WorkspaceNav } from "@/components/workspace-nav";
 
-const STEPS = ["Business", "Activities", "Location", "Size and turnover", "Data", "Review"];
+const STEPS = CHECKER_STEPS.map((step) => step.name);
+const REVIEW = STEPS.length - 1;
+/** The step that asks about size and turnover, which holds the one box that can hold a mistake. */
+const TURNOVER = stepOf("turnoverAmountKobo");
 
 type Opt = { value: string; label: string };
-const m = (...ks: Marker[]): Opt[] => ks.map((k) => ({ value: k, label: MARKER_LABEL[k] }));
 const opts = (vals: string[]): Opt[] => vals.map((v) => ({ value: v, label: valueLabel(v) }));
+/** A question's answers without the three ways of not answering, which every question lists last. */
+const known = (vals: string[]): Opt[] => opts(vals.filter((v) => !isMarker(v)));
+
+/** What a question passes back: its answer, and whether the visitor chose it. Emptying an answer box
+ * passes "unanswered" as not chosen, so the question goes back to untouched. A question's component
+ * takes `Change<never>`: which answers are valid is fixed where the question is asked, by the answers
+ * it is given to offer. */
+type Change<V> = (value: V, chosen?: boolean) => void;
 
 export default function Checker() {
   const currentAccount = useAccountEpoch();
   const { isSignedIn } = useUser();
   const [facts, setFacts] = useState<RichCheckerFacts>(EMPTY_FACTS);
+  /** The questions the visitor chose "Skip for now" on. A question nobody has touched holds the same
+   * "unanswered", and shows nothing chosen. */
+  const [skipped, setSkipped] = useState<ReadonlySet<string>>(new Set());
+  /** Whether the visitor has answered a question themselves since the page opened, was cleared or
+   * was filled in from the profile. */
+  const [own, setOwn] = useState(false);
+  const [asking, setAsking] = useState<"start-over" | "fill-in" | null>(null);
   const [step, setStep] = useState(0);
   const [result, setResult] = useState<{ r: AssessmentResult; sig: string } | null>(null);
-  const [prefilledRev, setPrefilledRev] = useState<number | null>(null);
+  const [filledIn, setFilledIn] = useState(false);
   const [amountText, setAmountText] = useState("");
   const [amountError, setAmountError] = useState<string | null>(null);
   const publicPreview = usePreviewAssessment();
@@ -82,32 +102,57 @@ export default function Checker() {
   });
   const profile = isSignedIn ? (ws.data?.profile ?? null) : null;
 
-  const set = <K extends keyof CheckerFacts>(k: K, v: CheckerFacts[K]) => setFacts((o) => ({ ...o, [k]: v }));
+  const set = <K extends keyof CheckerFacts>(k: K, v: CheckerFacts[K], chosen = true) => {
+    setFacts((o) => ({ ...o, [k]: v }));
+    setOwn(true);
+    setSkipped((old) => {
+      const skip = chosen && v === "unanswered";
+      if (skip === old.has(k)) return old;
+      const next = new Set(old);
+      if (skip) next.add(k);
+      else next.delete(k);
+      return next;
+    });
+  };
+  /** What every question takes from the page: its name, whether the visitor chose to skip it, and
+   * where its answer goes. */
+  const at = <K extends keyof CheckerFacts>(k: K) => ({
+    name: k,
+    skipped: skipped.has(k),
+    onChange: ((v, chosen) => set(k, v, chosen)) as Change<CheckerFacts[K]>,
+  });
   const final = useMemo(() => finaliseFacts(facts), [facts]);
   const sig = JSON.stringify(final);
   const stale = result && result.sig !== sig;
+  /** Answers that only this page holds: starting over would lose them. */
+  const mine = own || !!facts.rich;
+  const untouched = !mine && !filledIn && !result && step === 0;
 
-  function prefill() {
+  function fillIn() {
     if (!ws.data?.profile) return;
     setFacts((current) => ({
       ...factsFromProfile(ws.data!.profile!),
       ...(current.rich ? { factsVersion: current.factsVersion, rich: current.rich } : {}),
     }));
+    setSkipped(new Set());
+    setOwn(false);
     setAmountText("");
     setAmountError(null);
-    setPrefilledRev(ws.data.profileRevision);
+    setFilledIn(true);
     setStep(0);
   }
 
   function reset() {
     setFacts(EMPTY_FACTS);
+    setSkipped(new Set());
+    setOwn(false);
     setAmountText("");
     setAmountError(null);
     setResult(null);
-    setPrefilledRev(null);
-    setStep(0);
+    setFilledIn(false);
     publicPreview.reset();
     workspacePreview.reset();
+    show(0);
   }
 
   function run() {
@@ -122,11 +167,10 @@ export default function Checker() {
     );
   }
 
-  function go(n: number, field?: string) {
+  /** Shows a step and moves the focus to it, or to one of its optional questions. */
+  function show(n: number, field?: string) {
     const target = field ? richQuestionTarget(field) : undefined;
-    const nextStep = target?.step ?? n;
-    if (step === 3 && nextStep > 3 && amountText && amountError) return;
-    setStep(nextStep);
+    setStep(target?.step ?? n);
     requestAnimationFrame(() => {
       if (target) {
         const details = document.querySelector<HTMLDetailsElement>(
@@ -151,90 +195,155 @@ export default function Checker() {
     });
   }
 
+  function go(n: number, field?: string) {
+    const nextStep = (field ? richQuestionTarget(field)?.step : undefined) ?? n;
+    if (step === TURNOVER && nextStep > TURNOVER && amountText && amountError) return;
+    show(n, field);
+  }
+
   const err = preview.error ? describeError(preview.error) : null;
+  const lastYear = Number(lagosToday().slice(0, 4)) - 1;
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 lg:px-8">
       {/* Inside the workspace this is a page of its Requirements section; elsewhere it shows nothing. */}
       <WorkspaceNav />
       <header className="reveal max-w-3xl">
-        <p className="eyebrow">Requirements checker</p>
-        <h1 className="font-display mt-3 text-4xl leading-[1.08] sm:text-5xl">
-          What might apply to your business, and why.
-        </h1>
+        <p className="eyebrow">Requirements</p>
+        <h1 className="font-display mt-3 text-4xl leading-[1.08] sm:text-5xl">Check your requirements</h1>
         <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-          Answer what you know. "I do not know" and "Skip for now" are recorded differently, and both are
-          fine. Results only come from released, source-checked rules.
+          Answer a few questions about your business to see which requirements may apply, and why.
+        </p>
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          If you are not sure of an answer, choose "I do not know". To leave a question for later, choose
+          "Skip for now". Neither is taken to mean "No". Results come only from published rules that have been
+          checked against an official source.
         </p>
       </header>
 
-      <div className="mt-8 flex flex-wrap items-center gap-2">
-        {isSignedIn ? (
-          ws.isLoading ? (
-            <span className="pill pill-ink">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Loading your profile
-            </span>
-          ) : profile ? (
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={prefill}
-              data-testid="button-prefill"
-            >
-              <UserRound className="h-4 w-4" />
-              {prefilledRev
-                ? "Prefilled from profile rev " + prefilledRev + " · reload"
-                : "Prefill from my profile (rev " + ws.data?.profileRevision + ")"}
-            </button>
-          ) : (
-            <Link href="/workspace/profile" className="btn btn-ghost btn-sm">
-              Set up a profile to prefill
-            </Link>
-          )
-        ) : (
-          <span className="pill pill-ink" data-testid="text-anonymous">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Anonymous. Answers stay in this tab only and are never saved.
-          </span>
-        )}
-        <button type="button" className="btn btn-ghost btn-sm" onClick={reset} data-testid="button-reset">
-          <RotateCcw className="h-4 w-4" />
-          Start over
-        </button>
-      </div>
-
-      <div className="mt-8 grid gap-8 lg:grid-cols-[13rem_1fr]">
-        <ol
-          className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible"
-          aria-label="Questionnaire steps"
-        >
-          {STEPS.map((s, i) => (
-            <li key={s}>
+      <div className="mt-8">
+        <div className="flex flex-wrap items-center gap-2">
+          {isSignedIn &&
+            (ws.isLoading ? (
+              <span className="pill pill-ink">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading your business profile
+              </span>
+            ) : profile ? (
               <button
                 type="button"
-                onClick={() => go(i)}
-                aria-current={i === step ? "step" : undefined}
-                className={cn(
-                  "flex w-full items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 text-left text-sm transition-colors",
-                  i === step
-                    ? "bg-accent font-medium text-accent-foreground"
-                    : "text-muted-foreground hover:bg-secondary",
-                )}
-                data-testid={"button-step-" + i}
+                className="btn btn-ghost btn-sm !h-auto !whitespace-normal py-2 text-left"
+                onClick={() => (own ? setAsking("fill-in") : fillIn())}
+                data-testid="button-prefill"
               >
-                <span
-                  className={cn(
-                    "grid h-6 w-6 shrink-0 place-items-center rounded-full border font-mono text-[0.7rem]",
-                    i < step ? "border-primary bg-primary text-primary-foreground" : "border-border",
-                  )}
-                >
-                  {i < step ? <Check className="h-3 w-3" /> : i + 1}
-                </span>
-                {s}
+                <UserRound className="h-4 w-4 shrink-0" />
+                {filledIn ? "Fill in again from my business profile" : "Fill in from my business profile"}
               </button>
-            </li>
-          ))}
+            ) : (
+              <Link
+                href="/workspace/profile"
+                className="btn btn-ghost btn-sm !h-auto !whitespace-normal py-2 text-left"
+              >
+                Add a business profile to fill these in for you
+              </Link>
+            ))}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => (mine ? setAsking("start-over") : reset())}
+            disabled={untouched}
+            data-testid="button-reset"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Start over
+          </button>
+        </div>
+        {!isSignedIn && (
+          <p
+            className="mt-3 flex items-start gap-2 text-sm text-muted-foreground"
+            data-testid="text-anonymous"
+          >
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+            You are not signed in. Your answers are not saved, and leaving this page clears them.
+          </p>
+        )}
+        <p
+          role="status"
+          className="text-sm text-muted-foreground [&:not(:empty)]:mt-3"
+          data-testid="status-filled-in"
+        >
+          {filledIn && !own ? "Filled in from your business profile." : ""}
+        </p>
+      </div>
+
+      <ConfirmDialog
+        open={asking === "start-over"}
+        title="Start over?"
+        keep="Keep my answers"
+        confirm="Clear my answers"
+        onKeep={() => setAsking(null)}
+        onConfirm={() => {
+          setAsking(null);
+          reset();
+        }}
+      >
+        <p>
+          This clears every answer on this page{result ? " and the results below it" : ""}. It cannot be
+          undone.
+        </p>
+        {isSignedIn && <p className="mt-2">Anything you have already saved stays in your workspace.</p>}
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={asking === "fill-in"}
+        title="Replace your answers?"
+        keep="Keep my answers"
+        confirm="Use my profile's answers"
+        onKeep={() => setAsking(null)}
+        onConfirm={() => {
+          setAsking(null);
+          fillIn();
+        }}
+      >
+        <p>
+          This replaces the answers you gave on this page with the ones in your business profile. Any optional
+          details you entered are kept.
+        </p>
+      </ConfirmDialog>
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-[14rem_1fr]">
+        <ol className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible" aria-label="Steps">
+          {STEPS.map((s, i) => {
+            const done = stepDone(facts, skipped, i);
+            return (
+              <li key={s}>
+                <button
+                  type="button"
+                  onClick={() => go(i)}
+                  aria-current={i === step ? "step" : undefined}
+                  // Positioned, so that the tick's hidden words stay inside the strip of steps, which
+                  // scrolls sideways on a phone. Otherwise they widen the page.
+                  className={cn(
+                    "relative flex w-full items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 text-left text-sm transition-colors",
+                    i === step
+                      ? "bg-accent font-medium text-accent-foreground"
+                      : "text-muted-foreground hover:bg-secondary",
+                  )}
+                  data-testid={"button-step-" + i}
+                >
+                  <span
+                    className={cn(
+                      "grid h-6 w-6 shrink-0 place-items-center rounded-full border font-mono text-[0.7rem]",
+                      done ? "border-primary bg-primary text-primary-foreground" : "border-border",
+                    )}
+                  >
+                    {done ? <Check className="h-3 w-3" /> : i + 1}
+                  </span>
+                  {s}
+                  {done && <span className="sr-only"> (answered)</span>}
+                </button>
+              </li>
+            );
+          })}
         </ol>
 
         <div className="min-w-0">
@@ -248,22 +357,22 @@ export default function Checker() {
               Step {step + 1} of {STEPS.length}
             </p>
             <h2 className="font-display mt-2 text-2xl sm:text-3xl">{STEPS[step]}</h2>
-            <div className="mt-6 grid gap-7">
+            <div className="mt-6 grid gap-8">
               {step === 0 && (
                 <>
                   <Choice
-                    name="legalForm"
+                    {...at("legalForm")}
                     label="How is the business set up?"
                     value={facts.legalForm}
-                    options={[...opts(LEGAL_FORMS), ...m("unknown", "unanswered")]}
-                    onChange={(v) => set("legalForm", v)}
+                    options={opts(LEGAL_FORMS)}
+                    markers={["unknown", "unanswered"]}
                   />
                   <Choice
-                    name="registrationStatus"
-                    label="Is it registered with the CAC?"
+                    {...at("registrationStatus")}
+                    label="Is it registered with the Corporate Affairs Commission (CAC)?"
                     value={facts.registrationStatus}
-                    options={[...opts(REG_STATUSES), ...m("unknown", "unanswered")]}
-                    onChange={(v) => set("registrationStatus", v)}
+                    options={opts(REG_STATUSES)}
+                    markers={["unknown", "unanswered"]}
                   />
                   {!isSignedIn && <p className="hint">We never ask for your business name here.</p>}
                   {isSignedIn && (
@@ -274,35 +383,33 @@ export default function Checker() {
               )}
               {step === 1 && (
                 <>
-                  <ListOrMarker
-                    name="activities"
+                  <ListOr
+                    {...at("activities")}
                     label="What does the business do?"
-                    hint="In your own words, up to 10."
+                    hint="In your own words. You can add up to 10."
                     value={facts.activities}
-                    onChange={(v) => set("activities", v)}
                     placeholder="e.g. Selling fabric wholesale"
                   />
                   <Choice
-                    name="manufacturing"
+                    {...at("manufacturing")}
                     label="Do you manufacture or process goods?"
                     value={facts.manufacturing}
-                    options={ansOpts()}
-                    onChange={(v) => set("manufacturing", v as Answer)}
+                    options={yesNo}
+                    markers={["unknown", "unanswered"]}
                   />
                   <Choice
-                    name="importing"
+                    {...at("importing")}
                     label="Do you import goods into Nigeria?"
                     value={facts.importing}
-                    options={ansOpts()}
-                    onChange={(v) => set("importing", v as Answer)}
+                    options={yesNo}
+                    markers={["unknown", "unanswered"]}
                   />
-                  {needsProducts(facts) && (
-                    <ListOrMarker
-                      name="productTypes"
-                      label="Which product types?"
-                      hint="Asked because you manufacture or import."
+                  {asked(facts, "productTypes") && (
+                    <ListOr
+                      {...at("productTypes")}
+                      label="Which kinds of product?"
+                      hint="Asked because you manufacture or import goods."
                       value={facts.productTypes ?? "unanswered"}
-                      onChange={(v) => set("productTypes", v)}
                       placeholder="e.g. Packaged snacks"
                     />
                   )}
@@ -312,208 +419,228 @@ export default function Checker() {
               {step === 2 && (
                 <>
                   <Choice
-                    name="premises"
+                    {...at("premises")}
                     label="Do you operate from physical premises?"
                     value={facts.premises}
-                    options={ansOpts()}
-                    onChange={(v) => set("premises", v as Answer)}
+                    options={yesNo}
+                    markers={["unknown", "unanswered"]}
                   />
-                  <div>
-                    <label className="label" htmlFor="state">
-                      State or FCT
-                    </label>
-                    <select
-                      id="state"
-                      className="field sm:max-w-xs"
-                      value={facts.state}
-                      onChange={(e) => set("state", e.target.value as CheckerFacts["state"])}
-                      data-testid="select-state"
-                    >
-                      <option value="unanswered">{MARKER_LABEL.unanswered}</option>
-                      <option value="unknown">{MARKER_LABEL.unknown}</option>
-                      {Object.values(CheckerFactsState)
-                        .filter((s) => !isMarker(s))
-                        .map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                  {facts.premises === "no" ? (
-                    <p className="hint">Local government area skipped because you have no premises.</p>
-                  ) : (
-                    <ValueOrMarker
-                      name="lga"
-                      label="Local government area"
+                  <AnswerOr
+                    {...at("state")}
+                    label="Which state is the business in?"
+                    value={facts.state}
+                    markers={["unknown", "unanswered"]}
+                    render={(v, change, labelledBy) => (
+                      <select
+                        id="state"
+                        aria-labelledby={labelledBy}
+                        className="field sm:max-w-xs"
+                        value={v}
+                        onChange={(e) => change(e.target.value)}
+                        data-testid="select-state"
+                      >
+                        <option value="">Choose a state or the FCT</option>
+                        {Object.values(CheckerFactsState)
+                          .filter((s) => !isMarker(s))
+                          .map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                      </select>
+                    )}
+                  />
+                  {asked(facts, "lga") ? (
+                    <AnswerOr
+                      {...at("lga")}
+                      label="Which local government area (LGA)?"
                       value={facts.lga}
                       markers={["unknown", "unanswered"]}
-                      onChange={(v) => set("lga", v)}
-                      render={(v, s) => (
+                      render={(v, change, labelledBy) => (
                         <input
                           id="lga"
+                          aria-labelledby={labelledBy}
                           className="field sm:max-w-xs"
                           maxLength={100}
                           value={v}
                           placeholder="e.g. Ikeja"
-                          onChange={(e) => s(e.target.value)}
+                          onChange={(e) => change(e.target.value)}
                           data-testid="input-lga"
                         />
                       )}
                     />
+                  ) : (
+                    <p className="hint">The local government area is skipped because you have no premises.</p>
                   )}
                 </>
               )}
               {step === 3 && (
                 <>
-                  <ValueOrMarker
-                    name="employees"
+                  <AnswerOr
+                    {...at("employees")}
                     label="How many people work in the business?"
                     value={facts.employees}
                     markers={["unknown", "unanswered", "not_applicable"]}
-                    defaultValue="0"
-                    onChange={(v) => set("employees", v)}
-                    render={(v, s) => (
+                    render={(v, change, labelledBy) => (
                       <input
                         id="employees"
+                        aria-labelledby={labelledBy}
                         inputMode="numeric"
                         className="field sm:max-w-[10rem]"
                         value={v}
-                        onChange={(e) => s(e.target.value.replace(/\D/g, "").slice(0, 7))}
+                        onChange={(e) => change(e.target.value.replace(/\D/g, "").slice(0, 7))}
                         data-testid="input-employees"
                       />
                     )}
                   />
                   <Choice
-                    name="turnoverBand"
-                    label="Turnover band"
+                    {...at("turnoverBand")}
+                    label="Roughly, what is the business's turnover?"
+                    hint="Turnover is the total of the business's sales over a period."
                     value={facts.turnoverBand}
-                    options={mixOpts(Object.values(CheckerFactsTurnoverBand))}
-                    onChange={(v) => set("turnoverBand", v as CheckerFacts["turnoverBand"])}
-                  />
-                  <ValueOrMarker
-                    name="turnoverYear"
-                    label="Turnover year"
-                    value={facts.turnoverYear}
+                    options={known(Object.values(CheckerFactsTurnoverBand))}
                     markers={["unknown", "unanswered", "not_applicable"]}
-                    defaultValue={String(new Date().getFullYear() - 1)}
-                    onChange={(v) => set("turnoverYear", v)}
-                    render={(v, s) => (
-                      <input
-                        id="turnoverYear"
-                        inputMode="numeric"
-                        className="field sm:max-w-[8rem]"
-                        value={v}
-                        onChange={(e) => s(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                        data-testid="input-turnover-year"
-                      />
-                    )}
                   />
-                  <div className="grid gap-7 sm:grid-cols-2">
-                    <Choice
-                      name="turnoverMetric"
-                      label="Measured as"
-                      value={facts.turnoverMetric}
-                      options={mixOpts(Object.values(CheckerFactsTurnoverMetric))}
-                      onChange={(v) => set("turnoverMetric", v as CheckerFacts["turnoverMetric"])}
-                    />
-                    <Choice
-                      name="turnoverCurrency"
-                      label="Currency"
-                      value={facts.turnoverCurrency}
-                      options={mixOpts(Object.values(CheckerFactsTurnoverCurrency))}
-                      onChange={(v) => set("turnoverCurrency", v as CheckerFacts["turnoverCurrency"])}
-                    />
-                  </div>
-                  <Choice
-                    name="turnoverPeriod"
-                    label="Period"
-                    value={facts.turnoverPeriod ?? "unanswered"}
-                    options={mixOpts(Object.values(CheckerFactsTurnoverPeriod))}
-                    onChange={(v) => set("turnoverPeriod", v as CheckerFacts["turnoverPeriod"])}
-                  />
-                  <div>
-                    <label className="label" htmlFor="amount">
-                      Exact turnover in naira{" "}
-                      <span className="font-normal text-muted-foreground">(optional)</span>
-                    </label>
-                    <div className="flex max-w-xs items-center gap-2">
-                      <span className="font-mono text-sm text-muted-foreground">NGN</span>
-                      <input
-                        id="amount"
-                        inputMode="decimal"
-                        className="field"
-                        value={amountText || koboToNaira(facts.turnoverAmountKobo)}
-                        aria-invalid={!!amountError}
-                        aria-describedby="amount-hint"
-                        onChange={(e) => {
-                          const t = e.target.value;
-                          setAmountText(t);
-                          const k = nairaToKobo(t);
-                          setAmountError(
-                            t.trim() && !k ? "Use digits, with up to two decimal places." : null,
-                          );
-                          set("turnoverAmountKobo", k);
-                        }}
-                        data-testid="input-amount"
+                  {asked(facts, "turnoverYear") ? (
+                    <>
+                      <div>
+                        <label className="label text-base" htmlFor="amount">
+                          The exact figure, if you have it{" "}
+                          <span className="font-normal text-muted-foreground">(optional)</span>
+                        </label>
+                        <div className="flex max-w-xs items-center gap-2">
+                          <span className="text-muted-foreground" aria-hidden="true">
+                            ₦
+                          </span>
+                          <input
+                            id="amount"
+                            inputMode="decimal"
+                            className="field"
+                            value={amountText || koboToNaira(facts.turnoverAmountKobo)}
+                            aria-invalid={!!amountError}
+                            aria-describedby="amount-hint"
+                            onChange={(e) => {
+                              const t = e.target.value;
+                              setAmountText(t);
+                              const k = nairaToKobo(t);
+                              setAmountError(
+                                t.trim() && !k ? "Use digits, with up to two decimal places." : null,
+                              );
+                              set("turnoverAmountKobo", k);
+                            }}
+                            data-testid="input-amount"
+                          />
+                        </div>
+                        <p id="amount-hint" className={cn("hint", amountError && "!text-destructive")}>
+                          {amountError ?? "In naira. Leave this blank if you would rather not say."}
+                        </p>
+                      </div>
+                      <AnswerOr
+                        {...at("turnoverYear")}
+                        label="Which year is that figure for?"
+                        value={facts.turnoverYear}
+                        markers={["unknown", "unanswered", "not_applicable"]}
+                        render={(v, change, labelledBy) => (
+                          <input
+                            id="turnoverYear"
+                            aria-labelledby={labelledBy}
+                            inputMode="numeric"
+                            className="field sm:max-w-[8rem]"
+                            value={v}
+                            placeholder={"e.g. " + lastYear}
+                            onChange={(e) => change(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                            data-testid="input-turnover-year"
+                          />
+                        )}
                       />
-                    </div>
-                    <p id="amount-hint" className={cn("hint", amountError && "!text-destructive")}>
-                      {amountError ?? "Leave blank if you prefer not to say. Stored as whole kobo."}
+                      <Choice
+                        {...at("turnoverPeriod")}
+                        label="What period does the figure cover?"
+                        value={facts.turnoverPeriod ?? "unanswered"}
+                        options={known(Object.values(CheckerFactsTurnoverPeriod))}
+                        markers={["unknown", "unanswered", "not_applicable"]}
+                      />
+                      <div className="grid gap-8 sm:grid-cols-2">
+                        <AnswerOr
+                          {...at("turnoverPeriodStart")}
+                          label="First day of that period"
+                          value={facts.turnoverPeriodStart ?? "unanswered"}
+                          markers={["unknown", "unanswered", "not_applicable"]}
+                          render={(v, change, labelledBy) => (
+                            <input
+                              id="turnoverPeriodStart"
+                              aria-labelledby={labelledBy}
+                              type="date"
+                              className="field"
+                              value={v}
+                              onChange={(e) => change(e.target.value)}
+                            />
+                          )}
+                        />
+                        <AnswerOr
+                          {...at("turnoverPeriodEnd")}
+                          label="Last day of that period"
+                          value={facts.turnoverPeriodEnd ?? "unanswered"}
+                          markers={["unknown", "unanswered", "not_applicable"]}
+                          render={(v, change, labelledBy) => (
+                            <input
+                              id="turnoverPeriodEnd"
+                              aria-labelledby={labelledBy}
+                              type="date"
+                              className="field"
+                              value={v}
+                              onChange={(e) => change(e.target.value)}
+                            />
+                          )}
+                        />
+                      </div>
+                      <div className="grid gap-8 sm:grid-cols-2">
+                        <Choice
+                          {...at("turnoverMetric")}
+                          label="What does the figure measure?"
+                          hint="Gross revenue is all sales, before any costs are taken off."
+                          value={facts.turnoverMetric}
+                          options={known(Object.values(CheckerFactsTurnoverMetric))}
+                          markers={["unknown", "unanswered", "not_applicable"]}
+                        />
+                        <Choice
+                          {...at("turnoverCurrency")}
+                          label="Which currency is the figure in?"
+                          value={facts.turnoverCurrency}
+                          options={known(Object.values(CheckerFactsTurnoverCurrency))}
+                          markers={["unknown", "unanswered", "not_applicable"]}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <p className="hint">
+                      The questions about that figure are skipped because turnover does not apply.
                     </p>
-                  </div>
-                  <div className="grid gap-7 sm:grid-cols-2">
-                    <ValueOrMarker
-                      name="turnoverPeriodStart"
-                      label="Period start"
-                      value={facts.turnoverPeriodStart ?? "unanswered"}
-                      markers={["unknown", "unanswered", "not_applicable"]}
-                      defaultValue=""
-                      onChange={(v) => set("turnoverPeriodStart", v)}
-                      render={(v, s) => (
-                        <input
-                          id="turnoverPeriodStart"
-                          type="date"
-                          className="field"
-                          value={v}
-                          onChange={(e) => s(e.target.value || "unanswered")}
-                        />
-                      )}
-                    />
-                    <ValueOrMarker
-                      name="turnoverPeriodEnd"
-                      label="Period end"
-                      value={facts.turnoverPeriodEnd ?? "unanswered"}
-                      markers={["unknown", "unanswered", "not_applicable"]}
-                      defaultValue=""
-                      onChange={(v) => set("turnoverPeriodEnd", v)}
-                      render={(v, s) => (
-                        <input
-                          id="turnoverPeriodEnd"
-                          type="date"
-                          className="field"
-                          value={v}
-                          onChange={(e) => s(e.target.value || "unanswered")}
-                        />
-                      )}
-                    />
-                  </div>
+                  )}
                 </>
               )}
               {step === 4 && (
                 <>
                   <Choice
-                    name="personalData"
+                    {...at("personalData")}
                     label="Do you collect or keep customer or staff personal data?"
                     hint="Names, phone numbers, addresses, ID numbers and similar."
                     value={facts.personalData}
-                    options={ansOpts()}
-                    onChange={(v) => set("personalData", v as Answer)}
+                    options={yesNo}
+                    markers={["unknown", "unanswered"]}
                   />
                   <RichCheckerFields section="privacy" facts={facts} onChange={setFacts} />
                 </>
               )}
-              {step === 5 && <Review facts={final} onEdit={go} />}
+              {step === REVIEW && (
+                <>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    You can change any answer, or leave it as it is. Where an answer is missing, your results
+                    say what more is needed.
+                  </p>
+                  <Review facts={final} onEdit={go} />
+                </>
+              )}
             </div>
 
             <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
@@ -527,12 +654,12 @@ export default function Checker() {
                 <ArrowLeft className="h-4 w-4" />
                 Back
               </button>
-              {step < 5 ? (
+              {step < REVIEW ? (
                 <button
                   type="button"
                   className="btn btn-primary"
                   onClick={() => go(step + 1)}
-                  disabled={step === 3 && !!amountError}
+                  disabled={step === TURNOVER && !!amountError}
                   data-testid="button-next"
                 >
                   Continue
@@ -547,7 +674,7 @@ export default function Checker() {
                   data-testid="button-run"
                 >
                   {preview.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {result ? "Check again" : "Check these answers"}
+                  {result ? "Check again" : "Check my requirements"}
                 </button>
               )}
             </div>
@@ -606,11 +733,12 @@ export default function Checker() {
                 />
               ) : (
                 <Notice className="mt-6" tone="ink" title="Want to keep this?">
-                  Nothing here has been saved.{" "}
+                  Nothing here has been saved. With an account you can save your results and turn them into
+                  tasks. The answers on this page are not carried over, so you would answer again after you{" "}
                   <Link href="/sign-up" className="font-medium underline">
-                    Create an account
-                  </Link>{" "}
-                  to save a consented copy and turn items into tasks.
+                    create an account
+                  </Link>
+                  .
                 </Notice>
               )}
             </section>
@@ -621,33 +749,80 @@ export default function Checker() {
   );
 }
 
-function ansOpts(): Opt[] {
-  return [...opts(["yes", "no"]), ...m("unknown", "unanswered")].filter((o) =>
-    (ANSWER_OPTIONS as string[]).includes(o.value),
+const yesNo: Opt[] = opts((ANSWER_OPTIONS as string[]).filter((value) => !isMarker(value)));
+
+/** The ways of not answering a question, listed after its answers. "Skip for now" shows as chosen
+ * only when the visitor chose it: an untouched question holds the same value. */
+function Markers({
+  name,
+  group,
+  value,
+  skipped,
+  markers,
+  onChange,
+}: {
+  name: string;
+  group: string;
+  value: unknown;
+  skipped: boolean;
+  markers: readonly Marker[];
+  onChange: (marker: Marker) => void;
+}) {
+  return (
+    <>
+      {markers.map((k) => {
+        const on = value === k && (k !== "unanswered" || skipped);
+        return (
+          <label
+            key={k}
+            className={cn(
+              "cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
+              on
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-dashed border-input text-muted-foreground hover:bg-secondary",
+            )}
+          >
+            <input
+              type="radio"
+              className="sr-only"
+              name={group}
+              value={k}
+              checked={on}
+              onChange={() => onChange(k)}
+              data-testid={"radio-" + name + "-" + k}
+            />
+            {MARKER_LABEL[k]}
+          </label>
+        );
+      })}
+    </>
   );
 }
-function mixOpts(vals: string[]): Opt[] {
-  return vals.map((v) => ({ value: v, label: isMarker(v) ? MARKER_LABEL[v] : valueLabel(v) }));
-}
 
+/** A question answered by choosing one of a few answers. Nothing is chosen until the visitor chooses. */
 function Choice({
   name,
   label,
   hint,
   value,
+  skipped,
   options,
+  markers,
   onChange,
 }: {
   name: string;
   label: string;
   hint?: string;
   value: string;
+  skipped: boolean;
   options: Opt[];
-  onChange: (v: string) => void;
+  markers: readonly Marker[];
+  onChange: Change<never>;
 }) {
+  const choose = onChange as Change<string>;
   return (
     <fieldset>
-      <legend className="label">{label}</legend>
+      <legend className="label text-base">{label}</legend>
       {hint && <p className="hint !mt-0 mb-2">{hint}</p>}
       <div className="flex flex-wrap gap-2">
         {options.map((o) => {
@@ -657,11 +832,7 @@ function Choice({
               key={o.value}
               className={cn(
                 "cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
-                on
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : isMarker(o.value)
-                    ? "border-dashed border-input text-muted-foreground hover:bg-secondary"
-                    : "border-input hover:bg-secondary",
+                on ? "border-primary bg-primary text-primary-foreground" : "border-input hover:bg-secondary",
               )}
             >
               <input
@@ -670,72 +841,80 @@ function Choice({
                 name={name}
                 value={o.value}
                 checked={on}
-                onChange={() => onChange(o.value)}
+                onChange={() => choose(o.value)}
                 data-testid={"radio-" + name + "-" + o.value}
               />
               {o.label}
             </label>
           );
         })}
+        <Markers
+          name={name}
+          group={name}
+          value={value}
+          skipped={skipped}
+          markers={markers}
+          onChange={choose}
+        />
       </div>
     </fieldset>
   );
 }
 
-function ValueOrMarker({
+/** A question answered in a box or a list, with the ways of not answering it beside the box. Typing
+ * an answer takes the place of a chosen "I do not know"; emptying the box leaves the question
+ * untouched. */
+function AnswerOr({
   name,
   label,
   value,
+  skipped,
   markers,
-  defaultValue = "",
   onChange,
   render,
 }: {
   name: string;
   label: string;
   value: string;
-  markers: Marker[];
-  defaultValue?: string;
-  onChange: (v: string) => void;
-  render: (v: string, set: (v: string) => void) => ReactNode;
+  skipped: boolean;
+  markers: readonly Marker[];
+  onChange: Change<never>;
+  render: (value: string, change: (value: string) => void, labelledBy: string) => ReactNode;
 }) {
-  const mode = isMarker(value) ? value : "value";
+  const choose = onChange as Change<string>;
+  const legend = name + "-question";
   return (
     <fieldset>
-      <legend className="label">{label}</legend>
-      <div className="flex flex-wrap gap-2">
-        {(["value", ...markers] as const).map((k) => (
-          <label
-            key={k}
-            className={cn(
-              "cursor-pointer rounded-full border px-3.5 py-2 text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring",
-              mode === k
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-dashed border-input text-muted-foreground hover:bg-secondary",
-            )}
-          >
-            <input
-              type="radio"
-              className="sr-only"
-              name={name + "-mode"}
-              checked={mode === k}
-              onChange={() => onChange(k === "value" ? defaultValue : k)}
-              data-testid={"radio-" + name + "-" + k}
-            />
-            {k === "value" ? "I can answer" : MARKER_LABEL[k]}
-          </label>
-        ))}
+      <legend id={legend} className="label text-base">
+        {label}
+      </legend>
+      {render(
+        isMarker(value) ? "" : value,
+        (next) => (next === "" ? choose("unanswered", false) : choose(next)),
+        legend,
+      )}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">or</span>
+        <Markers
+          name={name}
+          group={name + "-mode"}
+          value={value}
+          skipped={skipped}
+          markers={markers}
+          onChange={choose}
+        />
       </div>
-      {mode === "value" && <div className="mt-3">{render(value, onChange)}</div>}
     </fieldset>
   );
 }
 
-function ListOrMarker({
+/** A question answered with a short list in the visitor's own words. */
+function ListOr({
   name,
   label,
   hint,
   value,
+  skipped,
   onChange,
   placeholder,
 }: {
@@ -743,93 +922,61 @@ function ListOrMarker({
   label: string;
   hint: string;
   value: string[] | Marker;
-  onChange: (v: string[] | Marker) => void;
+  skipped: boolean;
+  onChange: Change<never>;
   placeholder: string;
 }) {
-  const list = Array.isArray(value) ? value : null;
+  const choose = onChange as Change<string[] | Marker>;
+  const list = Array.isArray(value) && value.length ? value : [""];
   return (
     <fieldset>
-      <legend className="label">{label}</legend>
+      <legend className="label text-base">{label}</legend>
       <p className="hint !mt-0 mb-2">{hint}</p>
-      <div className="flex flex-wrap gap-2">
-        {(["list", "unknown", "unanswered"] as const).map((k) => {
-          const on = k === "list" ? !!list : value === k;
-          return (
-            <label
-              key={k}
-              className={cn(
-                "cursor-pointer rounded-full border px-3.5 py-2 text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring",
-                on
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-dashed border-input text-muted-foreground hover:bg-secondary",
-              )}
-            >
-              <input
-                type="radio"
-                className="sr-only"
-                name={name + "-mode"}
-                checked={on}
-                onChange={() => onChange(k === "list" ? [""] : k)}
-                data-testid={"radio-" + name + "-" + k}
-              />
-              {k === "list" ? "List them" : MARKER_LABEL[k]}
-            </label>
-          );
-        })}
+      <div className="grid gap-2">
+        {list.map((a, i) => (
+          <div key={i} className="flex gap-2">
+            <input
+              aria-label={label + " " + (i + 1)}
+              className="field"
+              maxLength={120}
+              value={a}
+              placeholder={placeholder}
+              onChange={(e) => choose(list.map((x, j) => (j === i ? e.target.value : x)))}
+              data-testid={"input-" + name + "-" + i}
+            />
+            {list.length > 1 && (
+              <button
+                type="button"
+                aria-label={"Remove item " + (i + 1)}
+                className="btn btn-ghost !px-3"
+                onClick={() => choose(list.filter((_, j) => j !== i))}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        ))}
+        {list.length < 10 && (
+          <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => choose([...list, ""])}>
+            <Plus className="h-4 w-4" />
+            Add another
+          </button>
+        )}
       </div>
-      {list && (
-        <div className="mt-3 grid gap-2">
-          {list.map((a, i) => (
-            <div key={i} className="flex gap-2">
-              <input
-                aria-label={label + " " + (i + 1)}
-                className="field"
-                maxLength={120}
-                value={a}
-                placeholder={placeholder}
-                onChange={(e) => onChange(list.map((x, j) => (j === i ? e.target.value : x)))}
-                data-testid={"input-" + name + "-" + i}
-              />
-              {list.length > 1 && (
-                <button
-                  type="button"
-                  aria-label={"Remove item " + (i + 1)}
-                  className="btn btn-ghost !px-3"
-                  onClick={() => onChange(list.filter((_, j) => j !== i))}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          ))}
-          {list.length < 10 && (
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm w-fit"
-              onClick={() => onChange([...list, ""])}
-            >
-              <Plus className="h-4 w-4" />
-              Add another
-            </button>
-          )}
-        </div>
-      )}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">or</span>
+        <Markers
+          name={name}
+          group={name + "-mode"}
+          value={value}
+          skipped={skipped}
+          markers={["unknown", "unanswered"]}
+          onChange={choose}
+        />
+      </div>
     </fieldset>
   );
 }
-
-const STEP_OF: Record<string, number> = {
-  legalForm: 0,
-  registrationStatus: 0,
-  activities: 1,
-  productTypes: 1,
-  manufacturing: 1,
-  importing: 1,
-  premises: 2,
-  state: 2,
-  lga: 2,
-  personalData: 4,
-};
 
 function Review({ facts, onEdit }: { facts: RichCheckerFacts; onEdit: (n: number, field?: string) => void }) {
   return (
@@ -848,14 +995,17 @@ function Review({ facts, onEdit }: { facts: RichCheckerFacts; onEdit: (n: number
           >
             {displayFact(k, value)}
           </dd>
-          <button
-            type="button"
-            aria-label={"Edit " + factLabel(k)}
-            className="col-start-2 row-span-2 row-start-1 text-xs font-medium text-primary underline-offset-2 hover:underline sm:col-start-3 sm:row-span-1"
-            onClick={() => onEdit(k.startsWith("rich.") ? richStep(k) : (STEP_OF[k] ?? 3), k)}
-          >
-            Edit
-          </button>
+          {/* A list of terms holds only terms and their descriptions, so the button sits in one. */}
+          <dd className="col-start-2 row-span-2 row-start-1 sm:col-start-3 sm:row-span-1">
+            <button
+              type="button"
+              aria-label={"Edit " + factLabel(k)}
+              className="-my-1 px-1 py-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
+              onClick={() => onEdit(k.startsWith("rich.") ? richStep(k) : stepOf(k), k)}
+            >
+              Edit
+            </button>
+          </dd>
         </div>
       ))}
     </dl>

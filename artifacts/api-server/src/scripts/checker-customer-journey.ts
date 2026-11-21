@@ -102,7 +102,9 @@ try {
     await expect(page!.getByTestId("text-anonymous")).toBeVisible();
     await page!.getByTestId("button-step-2").click();
     const states = page!.getByTestId("select-state");
-    expect(await states.locator("option").count()).toBe(39);
+    // The prompt to choose, then the 36 states and the FCT. "I do not know" and "Skip for now" are
+    // choices beside the list.
+    expect(await states.locator("option").count()).toBe(38);
     await states.selectOption("Lagos");
     await page!.getByTestId("button-step-5").click();
     await page!.getByTestId("button-run").click();

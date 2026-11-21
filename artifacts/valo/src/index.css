@@ -308,6 +308,10 @@ html { scroll-behavior: smooth; }
   @media (min-width: 64rem) { html { scroll-padding-bottom: 1.5rem; } }
   html:has(.held-actions) { scroll-padding-bottom: 10.5rem; }
   @media (min-width: 64rem) { html:has(.held-actions) { scroll-padding-bottom: 5.5rem; } }
+  /* Tailwind's reset removes the margin that puts a dialog in the middle of the screen. Without it
+     every dialog opened in the top corner, and filled a phone's width edge to edge. The inset keeps
+     a dialog clear of a narrow screen's sides. */
+  dialog { margin: auto; inset-inline: 1rem; }
 }
 body { font-feature-settings: 'ss01', 'cv11'; }
 body::before {

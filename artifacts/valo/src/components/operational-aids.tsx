@@ -16,7 +16,7 @@ export function OperationalAids() {
         data-testid="status-operational-aids-error"
       >
         <p className="min-w-0 text-muted-foreground">
-          Optional operational aids could not be loaded. Your checker results above are unaffected.
+          Optional operational aids could not be loaded. Your results above are not affected.
         </p>
         <button
           type="button"

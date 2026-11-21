@@ -69,6 +69,84 @@ export function factsFromProfile(p: Profile): CheckerFacts {
 
 export const needsProducts = (f: CheckerFacts) => f.manufacturing === "yes" || f.importing === "yes";
 
+/**
+ * The checker's steps in order, each with the questions it asks. The last step reviews the answers.
+ * The optional detail sections (lib/rich-checker.ts) sit inside these steps and are not listed.
+ */
+export const CHECKER_STEPS = [
+  { name: "Your business", questions: ["legalForm", "registrationStatus"] },
+  { name: "What it does", questions: ["activities", "manufacturing", "importing", "productTypes"] },
+  { name: "Where it is", questions: ["premises", "state", "lga"] },
+  {
+    name: "Size and turnover",
+    questions: [
+      "employees",
+      "turnoverBand",
+      "turnoverAmountKobo",
+      "turnoverYear",
+      "turnoverPeriod",
+      "turnoverPeriodStart",
+      "turnoverPeriodEnd",
+      "turnoverMetric",
+      "turnoverCurrency",
+    ],
+  },
+  { name: "Personal data", questions: ["personalData"] },
+  { name: "Review your answers", questions: [] },
+] as const satisfies readonly { name: string; questions: readonly (keyof CheckerFacts)[] }[];
+
+/** The step that asks a question. */
+export const stepOf = (question: string) =>
+  Math.max(
+    0,
+    CHECKER_STEPS.findIndex((step) => (step.questions as readonly string[]).includes(question)),
+  );
+
+/** The questions about the turnover figure, which are skipped when turnover does not apply. */
+const TURNOVER_DETAILS: readonly string[] = [
+  "turnoverAmountKobo",
+  "turnoverYear",
+  "turnoverPeriod",
+  "turnoverPeriodStart",
+  "turnoverPeriodEnd",
+  "turnoverMetric",
+  "turnoverCurrency",
+];
+
+/**
+ * Whether the checker asks a question, given the other answers. RUL-001: "irrelevant questions are
+ * skipped". The rule engine leaves the same questions out of what is still unanswered
+ * (`missingQuestions` in lib/valo-core/src/checker.ts).
+ */
+export function asked(f: CheckerFacts, question: string): boolean {
+  if (question === "productTypes") return needsProducts(f);
+  if (question === "lga") return f.premises !== "no";
+  if (TURNOVER_DETAILS.includes(question)) return f.turnoverBand !== "not_applicable";
+  return true;
+}
+
+/**
+ * Whether the visitor has dealt with a question: given an answer, said they do not know or that it
+ * does not apply, or chosen to skip it (`skipped` holds those). A question nobody has touched holds
+ * the same "unanswered" as a skipped one, and is not dealt with.
+ */
+export function answered(f: CheckerFacts, skipped: ReadonlySet<string>, question: string): boolean {
+  const value: unknown = Reflect.get(f, question);
+  if (Array.isArray(value)) return value.some((entry) => String(entry).trim() !== "");
+  if (value === undefined || value === null || value === "" || value === "unanswered")
+    return skipped.has(question);
+  return true;
+}
+
+/** Whether every question a step asks has been dealt with. The optional exact figure never holds a
+ * step back, and the review step asks nothing. */
+export function stepDone(f: CheckerFacts, skipped: ReadonlySet<string>, step: number): boolean {
+  const questions = (CHECKER_STEPS[step]?.questions ?? []).filter(
+    (question) => question !== "turnoverAmountKobo" && asked(f, question),
+  );
+  return questions.length > 0 && questions.every((question) => answered(f, skipped, question));
+}
+
 /** Normalise before sending: dependent questions become not_applicable / omitted. */
 export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
   const out: RichCheckerFacts = { ...f };
@@ -90,6 +168,15 @@ export function finaliseFacts(f: RichCheckerFacts): RichCheckerFacts {
   if (out.premises === "no") out.lga = "not_applicable";
   else if (!out.lga.trim()) out.lga = "unanswered";
   else out.lga = out.lga.trim();
+  if (out.turnoverBand === "not_applicable") {
+    out.turnoverYear = "not_applicable";
+    out.turnoverPeriod = "not_applicable";
+    out.turnoverPeriodStart = "not_applicable";
+    out.turnoverPeriodEnd = "not_applicable";
+    out.turnoverMetric = "not_applicable";
+    out.turnoverCurrency = "not_applicable";
+    out.turnoverAmountKobo = null;
+  }
   if (!out.turnoverAmountKobo) out.turnoverAmountKobo = null;
   return out;
 }
@@ -137,15 +224,15 @@ export const FACT_LABELS: Record<string, string> = {
 export const factLabel = (k: string) => FACT_LABELS[k] ?? richFactLabel(k);
 
 const VALUE_LABELS: Record<string, string> = {
-  unknown: "Unknown",
+  unknown: "I do not know",
   unanswered: "Not answered",
   not_applicable: "Not applicable",
   yes: "Yes",
   no: "No",
-  under_5m: "Under N5m",
-  "5m_to_25m": "N5m to N25m",
-  "25m_to_100m": "N25m to N100m",
-  over_100m: "Over N100m",
+  under_5m: "Under ₦5 million",
+  "5m_to_25m": "₦5 million to ₦25 million",
+  "25m_to_100m": "₦25 million to ₦100 million",
+  over_100m: "Over ₦100 million",
   gross_revenue: "Gross revenue",
   NGN: "Naira (NGN)",
 };

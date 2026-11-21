@@ -2562,6 +2562,48 @@
       "file": "artifacts/api-server/src/lib/valo-release-record.integration.test.ts",
       "test": "the release record names the commit, the migrations shipped and applied, every content and rule version and the known issues",
       "proves": "Against PostgreSQL, the release record names the commit it is given; the latest migration the release ships and the latest the database has applied, and whether they match; every content and rule version with its status, a held synthetic content version as held; and the known issues exactly as committed. A database behind the shipped migrations is recorded as not matching, a malformed commit or a repeated known-issue ID is refused, and the command refuses a checkout that is not the named commit. It does not cover OPS-005's private repository, branch protection or human approval."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "the requirements check chooses no answer for a visitor: every question starts with nothing chosen, 'I do not know', 'Skip for now' and 'Not applicable' show only once chosen, an emptied box is untouched again, a step is ticked only when its questions are dealt with, and what is sent keeps each apart from 'No' and zero",
+      "proves": "For a signed-out visitor on an emulated phone with synthetic data, choosing “Not applicable” for turnover takes the year and exact-figure questions off the requirements check, with a note that the questions about the figure are skipped, and choosing “I do not know” brings the year question back; the first step is marked as answered only after both its questions are dealt with, and the size step when turnover does not apply but not when it is unknown; and “Edit” on the review returns to the step with the answer still there. It tests the web app's own questions; no configured questionnaire is tested."
+    },
+    {
+      "requirement": "RUL-001",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/checker.test.ts",
+      "test": "a question that depends on another answer is asked only when that answer makes it relevant",
+      "proves": "The web app's rule for which questions the requirements check asks leaves out the product question unless the business manufactures or imports, the local government area when it has no premises, and the seven questions about the turnover figure when turnover does not apply, and still asks those seven when the turnover is unknown."
+    },
+    {
+      "requirement": "RUL-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "the requirements check chooses no answer for a visitor: every question starts with nothing chosen, 'I do not know', 'Skip for now' and 'Not applicable' show only once chosen, an emptied box is untouched again, a step is ticked only when its questions are dealt with, and what is sent keeps each apart from 'No' and zero",
+      "proves": "For a signed-out visitor on an emulated phone with synthetic data, every question on the requirements check's five steps opens with nothing chosen and every answer box empty (the optional detail sections are not looked at), “I do not know”, “Skip for now” and “Not applicable” each show as chosen only once chosen, a typed 0 chooses none of them, and the answers sent carry unknown, unanswered and a typed number as given, with nothing sent as “no”, false or zero. The rule engine's use of those answers is not tested here."
+    },
+    {
+      "requirement": "RUL-002",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/checker.test.ts",
+      "test": "what is sent marks the questions the checker skipped as not applicable, and invents no other answer",
+      "proves": "Before the web app sends a visitor's answers, a question nobody touched stays unanswered, the questions skipped because another answer made them irrelevant become not applicable, and an unknown turnover leaves the answers about the figure as they were given."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "on a phone, every step of the requirements check, its review, its results and its 'Start over' dialog fit 360 and 320 pixels, move keyboard focus only to visible outlined elements and have no automated WCAG 2.2 AA failure",
+      "proves": "For a signed-out visitor with synthetic data, each of the requirements check's six steps and its results has no WCAG 2.0, 2.1 or 2.2 A or AA rule failing in axe-core and moves keyboard focus only to visible outlined elements that come to rest on screen and clear of the bars; with the “Start over” dialog open axe-core finds none either, and Tab reaches the dialog's two buttons and nothing behind it. No manual or assistive-technology review is recorded."
+    },
+    {
+      "requirement": "NFR-007",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "on a phone, every step of the requirements check, its review, its results and its 'Start over' dialog fit 360 and 320 pixels, move keyboard focus only to visible outlined elements and have no automated WCAG 2.2 AA failure",
+      "proves": "On an emulated Moto G4 phone, each of the requirements check's six steps and its results does not scroll sideways at 360 or at 320 pixels wide, with a step ticked whose place in the list of steps is past the screen's edge; no real device or other browser is tested."
     }
   ]
 }
