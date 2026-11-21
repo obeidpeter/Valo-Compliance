@@ -2669,3 +2669,59 @@ test("an empty list of tasks or reminders says what to do next in the customer's
     await close();
   }
 });
+
+// The purchases screen with nothing for sale and nothing ordered, which is how it opens while no
+// document is published with a price. The other tests give the screen an order, so its list with
+// no order had never been drawn.
+test("with nothing for sale and no order, the purchases screen says so in plain words, keeps what a saved order and a checkout here do not mean, and fits a phone", async () => {
+  const { page, errors, unknown, close } = await phone(
+    "/workspace/purchases",
+    except({
+      "GET /workspace/purchases": api.GetCustomerPurchasesResponse.parse({
+        available: true,
+        message: "Synthetic test fixture: a note in the server's own words.",
+        livePaymentsEnabled: false,
+        orders: [],
+        products: [],
+      }),
+    }),
+  );
+  try {
+    await ready(page);
+    const main = page.locator("main");
+    // PAY-003: "a browser success URL alone cannot unlock a template".
+    await expect(page.getByTestId("text-purchases-message")).toHaveText(
+      "Your orders, their receipts and the licences you accepted are listed here. A saved order is not proof of payment, and neither is coming back from the payment page.",
+    );
+    // What is switched off, and what a checkout on this screen is.
+    await expect(main).toContainText("Real payments are switched off");
+    await expect(main).toContainText(
+      "Where a checkout is offered here, it is a test, in Paystack's test mode. Do not enter a real card, or real or confidential customer details. A receipt sent by email is not shown as delivered unless its delivery is confirmed.",
+    );
+    await expect(page.getByRole("heading", { name: "Documents you can buy" })).toBeVisible();
+    await expect(page.getByTestId("text-nothing-to-buy")).toHaveText(
+      "Nothing can be bought yet. A document is listed here once it is published with a price and a licence. The documents you have made, and their files, stay in your workspace.",
+    );
+    await expect(page.getByRole("heading", { name: "Your orders" })).toBeVisible();
+    const empty = page.getByTestId("status-empty");
+    await expect(empty).toContainText("No orders yet");
+    await expect(empty).toContainText(
+      "An order appears here once you choose a document to buy and accept its licence. Saving an order does not pay for it.",
+    );
+    await expect(empty.getByRole("link", { name: "Back to Home" })).toHaveAttribute("href", "/workspace");
+    // The system's own words for these are gone, and the server's note is not printed.
+    const shown = (await main.innerText()).replace(/\s+/g, " ");
+    assert.doesNotMatch(
+      shown,
+      /released documents|approved prices|commercial licences|private exports|test-mode|delivery evidence|checkout return|server's own words/i,
+    );
+    assert.deepEqual(oldWordsIn(shown), []);
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the purchases screen with nothing on it"), []);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
