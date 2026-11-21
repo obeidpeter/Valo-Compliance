@@ -13,7 +13,7 @@ import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
 import { KIND_LABEL, PlainText, ResourceCard, liveContent } from "@/components/resource-parts";
 import { describeError } from "@/lib/describe-error";
-import { formatDay } from "@/lib/format";
+import { formatCount, formatDay } from "@/lib/format";
 import { fromServer } from "@/lib/server-data";
 
 /** The released resources, starting from what the server read; the browser reads them itself when
@@ -26,9 +26,9 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <GuidanceTabs current="/resources" />
-      <PageHeader eyebrow="Resources" title="Guidance that names its sources.">
-        Plain-language explainers appear here only once released with their official sources, scope and
-        limitations.
+      <PageHeader eyebrow="Guidance" title="Guides">
+        A guide explains one topic in plain language. It appears here once it is published with its official
+        sources, what it covers and its limits.
       </PageHeader>
       {q.isLoading ? (
         <div className="grid gap-3 md:grid-cols-2" aria-busy="true">
@@ -41,7 +41,7 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
       ) : items.length > 0 ? (
         <>
           <p className="mb-4 text-sm text-muted-foreground" data-testid="text-resource-count">
-            {items.length} released resource{items.length === 1 ? "" : "s"}
+            {formatCount(items.length)} guide{items.length === 1 ? "" : "s"}
           </p>
           <ul className="grid gap-3 md:grid-cols-2">
             {items.map((r) => (
@@ -55,11 +55,11 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
         <div className="grid gap-4">
           <EmptyState
             mark={<BookOpen className="h-5 w-5 text-muted-foreground" />}
-            title="No checked guidance is published yet"
+            title="No guides are published yet"
             action={
               <>
                 <Link href="/checker" className="btn btn-primary" data-testid="link-empty-checker">
-                  Run the requirements checker
+                  Check my requirements
                 </Link>
                 <Link href="/compliance" className="btn btn-ghost">
                   Official sources
@@ -67,15 +67,16 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
               </>
             }
           >
-            Nothing has met the bar for publication, so nothing is shown here. The checker still links each
-            result to its official source, and the compliance page lists the authorities to check directly.
+            Nothing has passed its checks yet, so nothing is shown here. The requirements check still names
+            the official source for each result, and the overview lists the authorities to check with
+            directly.
           </EmptyState>
           <Notice title="Need a document instead?">
-            Business documents live in your private workspace.{" "}
+            Documents are made in your own workspace.{" "}
             <Link href="/workspace" className="underline underline-offset-2">
-              Start a blank draft
+              Create a document
             </Link>{" "}
-            and export it when you are ready.
+            and download it when you are ready.
           </Notice>
         </div>
       )}
@@ -112,20 +113,20 @@ export function ResourceDetail({
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         data-testid="link-resources"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden /> Resources
+        <ArrowLeft className="h-4 w-4" aria-hidden /> Guides
       </Link>
       <div className="mt-6">
         {unavailable ? (
           <EmptyState
             mark={<FileX className="h-5 w-5 text-muted-foreground" />}
-            title="This resource is not available"
+            title="This guide is not available"
             action={
               <Link href="/resources" className="btn btn-primary">
-                Back to resources
+                Back to guides
               </Link>
             }
           >
-            It may have been withdrawn, or the link is wrong. Withdrawn guidance is removed from public view
+            It may have been withdrawn, or the link may be wrong. A withdrawn guide is taken off the site
             straight away.
           </EmptyState>
         ) : q.isLoading ? (
@@ -135,13 +136,13 @@ export function ResourceDetail({
             <Skel className="h-64" />
           </div>
         ) : q.isError ? (
-          <ErrorState error={q.error} title="Resource could not be loaded" onRetry={() => q.refetch()} />
+          <ErrorState error={q.error} title="This guide could not be loaded" onRetry={() => q.refetch()} />
         ) : r ? (
           <article className="grid gap-10 lg:grid-cols-[1fr_320px]">
             <div className="min-w-0">
               <div className="flex flex-wrap gap-2">
                 <span className="pill pill-forest">{KIND_LABEL[r.kind] ?? r.kind}</span>
-                <span className="pill pill-ink">Reviewed {formatDay(r.reviewedAt)}</span>
+                <span className="pill pill-ink">Sources checked {formatDay(r.reviewedAt)}</span>
               </div>
               <h1
                 className="font-display mt-4 text-4xl leading-tight sm:text-5xl"
@@ -156,11 +157,11 @@ export function ResourceDetail({
               />
               <section className="mt-10 grid gap-6 border-t border-border pt-8 text-sm leading-relaxed">
                 <div>
-                  <h2 className="eyebrow">Scope</h2>
+                  <h2 className="eyebrow">What it covers</h2>
                   <p className="mt-2 whitespace-pre-line">{r.scope}</p>
                 </div>
                 <div>
-                  <h2 className="eyebrow">Limitations</h2>
+                  <h2 className="eyebrow">Limits you should know</h2>
                   <p className="mt-2 whitespace-pre-line" data-testid="text-resource-limitations">
                     {r.limitations}
                   </p>
@@ -194,10 +195,10 @@ export function ResourceDetail({
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-sm text-muted-foreground">No sources listed.</p>
+                  <p className="mt-2 text-sm text-muted-foreground">This guide lists no sources.</p>
                 )}
               </div>
-              <Notice title="Disclosure">
+              <Notice title="How it was written and checked">
                 <p className="whitespace-pre-line">{r.disclosure}</p>
               </Notice>
             </aside>

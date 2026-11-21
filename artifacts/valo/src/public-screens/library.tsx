@@ -16,6 +16,7 @@ import { formatCount } from "@/lib/format";
 import {
   catalogueParams,
   industryLabel,
+  industryName,
   LIBRARY_TYPES as TYPES,
   libraryFilters,
   libraryHref,
@@ -122,7 +123,7 @@ export function Library({
           {unknownIndustry && <option value={industry}>Selected filter: {industry}</option>}
           {coverage.data?.industries.map((i) => (
             <option key={i.id} value={i.slug}>
-              {i.title}
+              {industryName(i.title)}
             </option>
           ))}
         </select>
@@ -277,7 +278,8 @@ export function Library({
                         <span className="pill pill-ink">{it.access === "premium" ? "Premium" : "Free"}</span>
                       )}
                     </div>
-                    <p className="font-display mt-3 text-xl">{it.title}</p>
+                    {/* An industry page is listed under the industry's name, which is in lower case. */}
+                    <p className="font-display mt-3 text-xl">{industryName(it.title)}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{it.summary}</p>
                   </Link>
                 </li>

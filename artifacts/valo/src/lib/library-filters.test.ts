@@ -1,6 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { catalogueParams, industryLabel, libraryFilters, libraryHref, typeName } from "./library-filters";
+import {
+  catalogueParams,
+  industryLabel,
+  industryName,
+  libraryFilters,
+  libraryHref,
+  typeName,
+} from "./library-filters";
 
 test("the library reads its filters from the address, with anything unknown read as its default", () => {
   assert.deepEqual(libraryFilters(new URLSearchParams("")), {
@@ -72,4 +79,17 @@ test("a result names its kind and its industries in words, never by their codes"
   assert.equal(industryLabel("retail-wholesale,unlisted-code", names), "Retail and wholesale");
   assert.equal(industryLabel("unlisted-code", names), null);
   assert.equal(industryLabel("retail-wholesale", new Map()), null);
+  // The list of industries writes its names in lower case; a page starts each with a capital.
+  assert.equal(industryName("retail/wholesale"), "Retail/wholesale");
+  assert.equal(industryName("packaged-food manufacturing"), "Packaged-food manufacturing");
+  assert.equal(
+    industryLabel(
+      "a,b",
+      new Map([
+        ["a", "retail/wholesale"],
+        ["b", "agriculture"],
+      ]),
+    ),
+    "Retail/wholesale · Agriculture",
+  );
 });

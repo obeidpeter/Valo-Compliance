@@ -16,6 +16,8 @@ import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
 import { ResourceCard, liveContent } from "@/components/resource-parts";
 import { industryTemplatesParams } from "@/lib/catalogue-requests";
+import { formatCount } from "@/lib/format";
+import { industryName } from "@/lib/library-filters";
 import { fromServer } from "@/lib/server-data";
 
 /** What an industry page starts from: the reads the server made, each missing if it failed. */
@@ -38,9 +40,9 @@ export function Industries({ initial }: { initial: IndustryReads }) {
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <GuidanceTabs current="/industries" />
-      <PageHeader eyebrow="Industries" title="Find what fits your trade.">
-        Each industry page brings together released guidance and any matching document templates. Where
-        nothing checked exists, it says so.
+      <PageHeader eyebrow="Guidance" title="Guidance by industry">
+        Each industry page brings together published guidance and any matching templates. Where nothing has
+        been checked, the page says so.
       </PageHeader>
       {coverage.isLoading ? (
         <Skel className="h-64" />
@@ -57,9 +59,9 @@ export function Industries({ initial }: { initial: IndustryReads }) {
                   className="group flex h-full items-center justify-between gap-4 bg-card p-5 transition-colors hover:bg-secondary/60 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
                 >
                   <div className="min-w-0">
-                    <p className="break-words font-medium capitalize">{ind.title}</p>
+                    <p className="break-words font-medium">{industryName(ind.title)}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {n > 0 ? `${n} released resource${n === 1 ? "" : "s"}` : "No checked guidance yet"}
+                      {n > 0 ? `${formatCount(n)} guide${n === 1 ? "" : "s"}` : "No guides yet"}
                     </p>
                   </div>
                   <ArrowRight
@@ -121,20 +123,17 @@ export function IndustryDetail({
         {coverage.isLoading ? (
           <Skel className="h-12 w-1/2" />
         ) : (
-          <PageHeader
-            eyebrow="Industry"
-            title={<span className="capitalize">{ind?.title ?? slug.replace(/-/g, " ")}</span>}
-          >
+          <PageHeader eyebrow="Industry" title={industryName(ind?.title ?? slug.replace(/-/g, " "))}>
             {coverage.data && !ind
-              ? "This industry is not in the current list. Choose another from the industries page."
-              : "Released guidance and matching document templates for this trade."}
+              ? "This industry is not on the current list. Choose another from the list of industries."
+              : "Published guidance and matching templates for this industry."}
           </PageHeader>
         )}
       </div>
 
       <section aria-labelledby="ind-guidance" className="mt-2">
         <h2 id="ind-guidance" className="flex items-center gap-2 font-display text-2xl">
-          <Scale className="h-5 w-5 text-primary" aria-hidden /> Regulatory guidance
+          <Scale className="h-5 w-5 text-primary" aria-hidden /> Guidance
         </h2>
         <div className="mt-4">
           {res.isLoading ? (
@@ -151,15 +150,16 @@ export function IndustryDetail({
             </ul>
           ) : (
             <EmptyState
-              title="No checked regulatory guidance for this industry"
+              title="No guidance is published for this industry"
               action={
                 <Link href="/checker" className="btn btn-primary">
-                  Run the requirements checker
+                  Check my requirements
                 </Link>
               }
             >
-              Valo has not published sourced guidance for this trade. The checker can still show official
-              routes based on your answers. Confirm obligations with the relevant authority.
+              Valo has not published guidance for this industry. The requirements check can still point you to
+              the official authority for your answers. Please confirm what applies with the relevant
+              authority.
             </EmptyState>
           )}
         </div>
@@ -167,10 +167,10 @@ export function IndustryDetail({
 
       <section aria-labelledby="ind-templates" className="mt-12">
         <h2 id="ind-templates" className="flex items-center gap-2 font-display text-2xl">
-          <FileText className="h-5 w-5 text-primary" aria-hidden /> Document templates
+          <FileText className="h-5 w-5 text-primary" aria-hidden /> Templates
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Templates are operational business documents. They do not tell you what the law requires.
+          Templates are everyday business documents. They do not tell you what the law requires.
         </p>
         <div className="mt-4">
           {tpl.isLoading ? (
@@ -195,20 +195,19 @@ export function IndustryDetail({
             </ul>
           ) : (
             <EmptyState
-              title="No catalogue templates for this industry"
+              title="No templates for this industry yet"
               action={
                 <>
                   <Link href="/workspace" className="btn btn-primary">
-                    Start a blank draft
+                    Create a document
                   </Link>
                   <Link href="/workspace/ai" className="btn btn-ghost">
-                    Use the draft assistant
+                    Use the drafting assistant
                   </Link>
                 </>
               }
             >
-              You can still write your own invoice, quotation or letter in your private workspace and export
-              it.
+              You can still make your own invoice, quotation or letter in your workspace and download it.
             </EmptyState>
           )}
         </div>

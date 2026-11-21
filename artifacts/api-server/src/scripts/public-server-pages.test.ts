@@ -99,13 +99,14 @@ const HEADINGS: Record<string, string> = {
   "/privacy": "How this build handles data",
   "/pricing": "Prices have not been set.",
   "/library": "Documents and guidance",
-  "/resources": "Guidance that names its sources.",
-  "/industries": "Find what fits your trade.",
-  "/compliance": "No rule is shown until it can name its source.",
+  "/resources": "Guides",
+  "/industries": "Guidance by industry",
+  "/compliance": "Guidance, and where it comes from",
   "/services": "Need a person, not a page?",
   [items[0]!.href]: items[0]!.title,
   [`/resources/${resources[0]!.slug}`]: resources[0]!.title,
-  [`/industries/${industry.slug}`]: industry.title,
+  // The list of industries writes its names in lower case; the page and its title start with a capital.
+  [`/industries/${industry.slug}`]: industry.title.charAt(0).toUpperCase() + industry.title.slice(1),
 };
 const PAGES = Object.keys(HEADINGS);
 /** The title each of those pages gives itself. */
@@ -402,13 +403,13 @@ test("a server-rendered page's opened menu fits a short screen and a phone on it
 /** Each page the site's own links reach, the link that opens it, and the title it gives the page: the
  * footer's links, then the pages a footer link's page links on to. */
 const LINKED: [string, string, string][] = [
-  ['footer a[href="/library"]', "/library", "Document library — Valo"],
+  ['footer a[href="/library"]', "/library", "Documents and guidance — Valo"],
   ['footer a[href="/pricing"]', "/pricing", "Pricing — Valo"],
   ['footer a[href="/checker"]', "/checker", "Business requirements checker — Valo"],
-  ['footer a[href="/compliance"]', "/compliance", "Business requirements — Valo"],
+  ['footer a[href="/compliance"]', "/compliance", "Guidance — Valo"],
   // The guidance tabs join the overview to the guides and the industries.
-  ['nav[aria-label="Guidance"] a[href="/resources"]', "/resources", "Business resources — Valo"],
-  ['nav[aria-label="Guidance"] a[href="/industries"]', "/industries", "Industry coverage — Valo"],
+  ['nav[aria-label="Guidance"] a[href="/resources"]', "/resources", "Guides — Valo"],
+  ['nav[aria-label="Guidance"] a[href="/industries"]', "/industries", "Guidance by industry — Valo"],
   ['footer a[href="/services"]', "/services", "Service enquiries — Valo"],
   ['footer a[href="/about"]', "/about", "About Valo"],
   ['footer a[href="/help"]', "/help", "Help — Valo"],
@@ -451,9 +452,9 @@ test("moving between public pages in the app, from the site's own links and from
     await ready(page);
     for (const [selector, path, title] of LINKED) await follow(selector, path, title);
     // A released item's page is titled for the item, and its section again on the way back.
-    await follow(`footer a[href="/library"]`, "/library", "Document library — Valo");
+    await follow(`footer a[href="/library"]`, "/library", "Documents and guidance — Valo");
     await follow(`main a[href="${items[0]!.href}"]`, items[0]!.href, `${items[0]!.title} — Valo`);
-    await follow(`main a[href="/library"]`, "/library", "Document library — Valo");
+    await follow(`main a[href="/library"]`, "/library", "Documents and guidance — Valo");
     problems.push(...unknown.map((call) => `no test answer for ${call}`));
     problems.push(...errors.map((error) => `page error ${error}`));
   } finally {
@@ -692,7 +693,7 @@ test("a template or guidance entry the API stops listing is gone from the next p
       api: `/api/public/resources/${goneGuidance.slug}`,
       shown: /data-testid="text-resource-title"/,
       title: goneGuidance.title,
-      unavailable: /This resource is not available/,
+      unavailable: /This guide is not available/,
     },
   ];
   for (const c of cases) {

@@ -7,16 +7,16 @@ export const publicPages: Record<string, { title: string; description: string }>
       "Prepare business documents and explore source-backed guidance for Nigerian SMEs. Check the stated scope and availability of every item.",
   },
   "/library": {
-    title: "Document library — Valo",
+    title: "Documents and guidance — Valo",
     description:
       "Search released business templates and guidance by keyword, category, industry and access level.",
   },
   "/resources": {
-    title: "Business resources — Valo",
+    title: "Guides — Valo",
     description: "Browse currently released business guidance, with source details and review dates.",
   },
   "/industries": {
-    title: "Industry coverage — Valo",
+    title: "Guidance by industry — Valo",
     description: "Explore available guidance by business activity. A coverage gap is not an exemption.",
   },
   "/services": {
@@ -40,7 +40,7 @@ export const publicPages: Record<string, { title: string; description: string }>
     description: "Ask for help signing in, verifying your email or using a suspended account.",
   },
   "/compliance": {
-    title: "Business requirements — Valo",
+    title: "Guidance — Valo",
     description:
       "Explore source-backed requirements and understand the limits of currently available guidance.",
   },
