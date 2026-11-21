@@ -13,15 +13,26 @@ import {
 } from "docx";
 import { chromium, type Browser, type BrowserContext } from "playwright";
 import { documentInput } from "./valo-validation";
-import { GUIDED_PREFIX, guidedRenderableBlocks } from "@workspace/valo-core/guided-runtime";
+import {
+  DOCUMENT_FIELD_LABELS,
+  GUIDED_PREFIX,
+  guidedRenderableBlocks,
+  printedCalendarDate,
+} from "@workspace/valo-core/guided-runtime";
 import { chromiumLaunchPath } from "../platform/chromium";
 
 /** Names how a document is rendered. A file is made once for a saved version, kind and render
  * version, so the name changes whenever the same saved version would print differently. Version 4:
- * a guided document prints an amount in naira under its question's name, without "kobo". */
-export const RENDER_VERSION = "manual-draft-4";
+ * a guided document prints an amount in naira under its question's name, without "kobo". Version 5:
+ * a customer's own document says "Saved version", names its fields as the editor does, prints a
+ * date with the month as a word, and carries the draft notice below. */
+export const RENDER_VERSION = "manual-draft-5";
+/** Printed at the top of a customer's own document and on every page of it. The file may be read by
+ * someone the customer sends it to, so it speaks of "the business". It still says what the notice
+ * before it said: an incomplete draft (EDT-005), details nobody verified, and not proof of payment
+ * or a government tax invoice (PAY-009), an official approval or legal advice. */
 export const DRAFT_NOTICE =
-  "INCOMPLETE BUSINESS DRAFT — user-provided information. Not verified payment proof, a government tax invoice, official approval or legal advice.";
+  "INCOMPLETE DRAFT — details as the business entered them. Not proof of payment, a government tax invoice, an official approval or legal advice.";
 export const TEMPLATE_NOTICE =
   "BLANK DEVELOPMENT TEMPLATE — complete with your own business information. Not regulatory guidance or verified business facts.";
 export const PURCHASE_NOTICE =
@@ -37,6 +48,29 @@ export function escapeHtml(text: string) {
     (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!,
   );
 }
+type Fields = Record<keyof typeof DOCUMENT_FIELD_LABELS, string>;
+/** The line under a document's title. A customer's own document says "version", as the site does. A
+ * template sample and a purchase receipt are left as they were: their words belong with the
+ * templates' own review and with the purchases screen's. */
+const savedLine = (mode: RenderMode, revision: number) =>
+  mode === "business_draft" ? `Valo · Saved version ${revision}` : `Valo · Saved revision ${revision}`;
+/**
+ * A document's own fields as its file prints them, each with its name. A document made from
+ * questions prints its note alone: its other fields are answers, printed with their questions.
+ *
+ * A customer's own document names each field as the editor does and prints a date with the month
+ * as a word. A template sample and a purchase receipt are left as they were.
+ */
+function printedFields(fields: Fields, guided: boolean, mode: RenderMode): (readonly [string, string])[] {
+  if (mode !== "business_draft") return guided ? [["Notes", fields.notes]] : Object.entries(fields);
+  const names = guided
+    ? (["notes"] as const)
+    : (["issuerName", "recipientName", "documentNumber", "issueDate", "dueDate", "notes"] as const);
+  return names.map((name) => [
+    DOCUMENT_FIELD_LABELS[name],
+    name === "issueDate" || name === "dueDate" ? printedCalendarDate(fields[name]) : fields[name],
+  ]);
+}
 export function controlledHtml(raw: unknown, revision: number, mode: RenderMode = "business_draft") {
   const notice =
     mode === "purchase_receipt"
@@ -48,9 +82,11 @@ export function controlledHtml(raw: unknown, revision: number, mode: RenderMode 
   const e = escapeHtml;
   const font = content.formatting.font === "serif" ? "Georgia, serif" : "Arial, sans-serif";
   const colour = content.formatting.accent === "forest" ? "#214d3b" : "#292724";
-  const fields = content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX))
-    ? [["Notes", content.fields.notes] as const]
-    : Object.entries(content.fields);
+  const fields = printedFields(
+    content.fields,
+    content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX)),
+    mode,
+  );
   const blocks = guidedRenderableBlocks(content)
     .map((block) =>
       block.type === "table"
@@ -65,7 +101,7 @@ export function controlledHtml(raw: unknown, revision: number, mode: RenderMode 
     .join("");
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${e(title)}</title><style>
   @page{size:A4;margin:25mm 18mm}body{font:11pt/1.25 ${font};color:#292724;overflow-wrap:anywhere}h1{color:${colour};font-size:23pt}p,li,td{white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin:14pt 0}td{border:1px solid #aaa;padding:7pt;vertical-align:top}tr{break-inside:avoid}.notice{border:1px solid #b6ac94;padding:10pt;color:#675c3b;font-size:9pt}.field{margin:5pt 0}thead{display:table-header-group}</style></head><body>
-  <div class="notice">${notice}</div><h1>${e(title)}</h1><p>Valo · Saved revision ${revision}</p>
+  <div class="notice">${notice}</div><h1>${e(title)}</h1><p>${savedLine(mode, revision)}</p>
   ${fields.map(([key, value]) => `<div class="field"><strong>${e(key)}:</strong> ${e(value || "[Not supplied]")}</div>`).join("")}
   ${blocks}</body></html>`;
 }
@@ -82,9 +118,11 @@ export async function renderDocument(
         ? TEMPLATE_NOTICE
         : DRAFT_NOTICE;
   const { title, content } = documentInput.parse(raw);
-  const fields = content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX))
-    ? [["Notes", content.fields.notes] as const]
-    : Object.entries(content.fields);
+  const fields = printedFields(
+    content.fields,
+    content.blocks.some((b) => b.id.startsWith(GUIDED_PREFIX)),
+    mode,
+  );
   if (format === "docx") {
     const children: (Paragraph | Table)[] = [
       new Paragraph({ text: notice }),
@@ -94,7 +132,7 @@ export async function renderDocument(
           new TextRun({ text: title, color: content.formatting.accent === "forest" ? "214d3b" : "292724" }),
         ],
       }),
-      new Paragraph(`Valo · Saved revision ${revision}`),
+      new Paragraph(savedLine(mode, revision)),
       ...fields.map(
         ([key, value]) =>
           new Paragraph({

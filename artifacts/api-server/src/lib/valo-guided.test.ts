@@ -12,6 +12,8 @@ import {
   guidedDataIssues,
   guidedContentConsistent,
   guidedRenderableBlocks,
+  printedCalendarDate,
+  GUIDED_DOCUMENT_NOTE,
   GUIDED_PREFIX,
 } from "@workspace/valo-core/guided-runtime";
 import { completeGuidedTestData } from "./valo-guided-test-fixtures";
@@ -67,7 +69,7 @@ test("all twelve actual DOCX/PDF renders contain supplied answers, not internal 
             : spawnSync("pdftotext", ["-layout", path, "-"], { encoding: "utf8" });
         assert.equal(extracted.status, 0, `${id} ${format} must open in the mechanical reader`);
         assert(extracted.stdout.includes("Synthetic issuerName"));
-        assert(extracted.stdout.includes("INCOMPLETE BUSINESS DRAFT"));
+        assert(extracted.stdout.includes("INCOMPLETE DRAFT"));
         assert(!extracted.stdout.includes(GUIDED_PREFIX));
         if (
           ["TPL-01", "TPL-02", "TPL-03", "TPL-04", "TPL-12", "TPL-13", "TPL-14", "TPL-16", "TPL-17"].includes(
@@ -184,6 +186,68 @@ test("recalculation preserves manually positioned sections without retaining tam
 
 // The questions' definitions name the unit an answer is stored in ("Agreed fee in whole kobo"). A
 // document names the question and prints the amount with the naira sign.
+// The site writes a day as "18 Nov 2026", so that no date can be read two ways. A document printed
+// the answer as it is stored, "2026-11-18".
+test("a document prints a date with its month as a word, leaves a date that is no real day as it was typed, and keeps what is stored unchanged", () => {
+  assert.equal(printedCalendarDate("2026-11-21"), "21 Nov 2026");
+  assert.equal(printedCalendarDate("2026-01-05"), "5 Jan 2026");
+  assert.equal(printedCalendarDate(" 2026-12-31 "), "31 Dec 2026");
+  // Not a day, and not a date at all: unchanged, so nothing is made up.
+  for (const typed of ["2026-02-30", "2026-13-01", "21/11/2026", "next week", ""])
+    assert.equal(printedCalendarDate(typed), typed);
+
+  let dates = 0;
+  for (const id of GUIDED_TEMPLATE_IDS) {
+    const spec = GUIDED_SPECS_V1[id],
+      data = completeGuidedTestData(id),
+      content = compileGuidedContent(data),
+      printed = guidedRenderableBlocks(content);
+    for (const field of spec.fields.filter((f) => f.type === "date")) {
+      const block = printed.find((b) => b.id.endsWith(":field:" + field.id));
+      if (!block) continue; // Not asked, given the fixture's other answers.
+      dates += 1;
+      const [label, value] = block.text.split("\n");
+      assert.equal(label, field.label, `${id} ${field.id}`);
+      assert.match(value!, /^\d{1,2} [A-Z][a-z]{2} \d{4}$/, `${id} ${field.id}`);
+      assert.equal(value, printedCalendarDate(data.values[field.id]!), `${id} ${field.id}`);
+    }
+    // What is saved is still the answer as it was given.
+    assert.deepEqual(guidedDataFromBlocks(content.blocks), data, id);
+  }
+  assert.ok(dates >= 12, `${dates} dates were printed`);
+
+  // A date that is no real day stays a raw answer in the document, as an invalid amount does.
+  const invalid = completeGuidedTestData("TPL-01");
+  invalid.values.issueDate = "2026-02-30";
+  const issue = guidedRenderableBlocks(compileGuidedContent(invalid)).find((b) =>
+    b.id.endsWith(":field:issueDate"),
+  )!;
+  assert.equal(issue.text.split("\n")[1], "2026-02-30");
+});
+
+// The note is saved with the document, shown under its preview and printed in its files.
+test("a document made from questions starts with a note in plain words that claims no professional review, verified payment or signature, and keeps a note it already has", () => {
+  const content = compileGuidedContent(emptyGuidedData("TPL-01"));
+  assert.equal(content.fields.notes, GUIDED_DOCUMENT_NOTE);
+  assert.equal(
+    GUIDED_DOCUMENT_NOTE,
+    "Draft made from the answers the business entered. It does not claim a professional review, a verified payment or a signature.",
+  );
+  assert.doesNotMatch(GUIDED_DOCUMENT_NOTE, /business draft|user-entered|execution/i);
+  // A document saved before keeps the note it was saved with.
+  const earlier = { ...content, fields: { ...content.fields, notes: "Synthetic earlier note." } };
+  assert.equal(
+    compileGuidedContent(completeGuidedTestData("TPL-01"), earlier).fields.notes,
+    "Synthetic earlier note.",
+  );
+  // The file prints it under the name "Notes".
+  assert.ok(
+    controlledHtml({ title: "Synthetic invoice", content }, 1).includes(
+      `<strong>Notes:</strong> ${GUIDED_DOCUMENT_NOTE}`,
+    ),
+  );
+});
+
 test("a document prints each amount in naira under its question's name, and never the unit the answer is stored in", () => {
   const named = (label: string) => label.replace(/,? in whole kobo/, "");
   const naira = /^₦\d{1,3}(,\d{3})*\.\d{2}$/;

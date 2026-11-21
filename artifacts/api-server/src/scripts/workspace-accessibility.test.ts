@@ -1347,6 +1347,22 @@ test("the document editor shows a draft status and the saved version, lists the 
     await expect(page.getByTestId("preview-doc")).toContainText(
       /Draft · version 3 · your own document, not reviewed/i,
     );
+    // The document's own details, its two dates written as the site writes a day: the files print
+    // the same names and the same dates.
+    await expect(page.getByTestId("preview-doc").locator("dl dt")).toHaveText([
+      "Issued by",
+      "Addressed to",
+      "Reference number",
+      "Issue date",
+      "Due date",
+    ]);
+    await expect(page.getByTestId("preview-doc").locator("dl dd")).toHaveText([
+      "Synthetic Trading Ltd",
+      "Synthetic Customer Enterprises",
+      "INV-0007",
+      "18 Nov 2026",
+      "2 Dec 2026",
+    ]);
     assert.doesNotMatch(await shown(), OLD_EDITOR_WORDS);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
@@ -1405,6 +1421,14 @@ test("an invoice started from its questions lists what it still needs by each qu
         shown,
         /TPL-\d+|Guided form|\brev\b|\brevisions?\b|business draft|\bexports?\b|\bkobo\b|\bNGN\b/i,
       );
+      // The preview ends with the note such a document starts with. It is printed in the files too,
+      // so it is in plain words and claims nothing.
+      await page.getByRole("tab", { name: "Preview", exact: true }).click();
+      const preview = page.getByTestId("preview-doc");
+      await expect(preview).toContainText(
+        "Draft made from the answers the business entered. It does not claim a professional review, a verified payment or a signature.",
+      );
+      assert.deepEqual(oldWordsIn(await preview.innerText()), []);
       assert.deepEqual(errors, []);
       assert.deepEqual(unknown, []);
     } finally {

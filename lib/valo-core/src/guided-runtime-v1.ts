@@ -40,6 +40,15 @@ export function guidedCalendarDate(v: string) {
   const d = new Date(`${v}T00:00:00Z`);
   return Number.isFinite(d.valueOf()) && d.toISOString().slice(0, 10) === v;
 }
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** A calendar date as a document prints it, "21 Nov 2026": the month as a word, so that no date can
+ * be read two ways, and the same as the site writes a day. Text that is no real day is unchanged. */
+export function printedCalendarDate(value: string) {
+  const text = value.trim();
+  if (!guidedCalendarDate(text)) return value;
+  const [year, month, day] = text.split("-").map(Number);
+  return `${day} ${MONTHS[month! - 1]} ${year}`;
+}
 export function guidedFieldIssue(f: GuidedField, raw: string | undefined) {
   const value = (raw ?? "").trim();
   if (!value) return f.required ? "This answer is required." : null;
@@ -274,6 +283,11 @@ export function guidedDataFromBlocks(blocks: readonly GuidedBlock[]): GuidedData
     if (!allowed.has(b.id) && !b.id.startsWith(prefix + "calc:")) throw Error("UNKNOWN_GUIDED_BLOCK");
   return data;
 }
+/** The note a document made from questions starts with. It is saved with the document, shown under
+ * its preview and printed in its files, so it speaks of "the business", whoever reads it. It claims
+ * no professional review, no verified payment and no signature, as the note before it did. */
+export const GUIDED_DOCUMENT_NOTE =
+  "Draft made from the answers the business entered. It does not claim a professional review, a verified payment or a signature.";
 export function compileGuidedContent(data: GuidedData, previous?: ContentInput): Content {
   if (!Object.hasOwn(GUIDED_SPECS_V1, data.templateId)) throw Error("UNSUPPORTED_GUIDED_VERSION");
   const spec = GUIDED_SPECS_V1[data.templateId];
@@ -323,9 +337,7 @@ export function compileGuidedContent(data: GuidedData, previous?: ContentInput):
       documentNumber: plain("documentNumber", 80),
       issueDate,
       dueDate,
-      notes:
-        previous?.fields.notes ??
-        "Private business draft from user-entered answers; no professional review, payment verification or signature execution is claimed.",
+      notes: previous?.fields.notes ?? GUIDED_DOCUMENT_NOTE,
     },
     blocks,
     selectedClauses: [],
@@ -371,6 +383,7 @@ export function guidedRenderableBlocks(content: ContentInput): GuidedBlock[] {
         label = printedMoneyLabel(label);
         if (!guidedFieldIssue(field, value)) value = formatKobo(value.trim());
       }
+      if (field.type === "date") value = printedCalendarDate(value);
       if (field.type === "select") value = field.options?.find((o) => o.value === value)?.label ?? value;
       if (field.type === "acknowledgement")
         value = value === "yes" ? "Confirmed by the user; not independently verified" : value;
@@ -398,6 +411,7 @@ export function guidedRenderableBlocks(content: ContentInput): GuidedBlock[] {
               const context = { ...data.values, ...data.tables[table.id]?.[index - 1] };
               if (!guidedVisible(c, context)) return "";
               if (c.type === "money_kobo" && !guidedFieldIssue(c, value)) return formatKobo(value.trim());
+              if (c.type === "date") return printedCalendarDate(value);
               return c.type === "select"
                 ? (c.options?.find((o) => o.value === value)?.label ?? value)
                 : value;

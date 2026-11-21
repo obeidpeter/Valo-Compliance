@@ -1497,7 +1497,7 @@
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
       "test": "all twelve actual DOCX/PDF renders contain supplied answers, not internal question IDs",
-      "proves": "Every DOCX and PDF rendered for the 12 guided templates from synthetic answers, with every question answered, carries the INCOMPLETE BUSINESS DRAFT notice in its extracted text."
+      "proves": "Every DOCX and PDF rendered for the 12 guided templates from synthetic answers, with every question answered, carries the INCOMPLETE DRAFT notice in its extracted text."
     },
     {
       "requirement": "EDT-005",
@@ -1518,7 +1518,7 @@
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/exports/valo-exports.integration.test.ts",
       "test": "real development PostgreSQL, private file storage and renderer integration",
-      "proves": "An export request for a synthetic draft without the incomplete-draft acknowledgement is refused with 422, and the acknowledged PDF export carries the INCOMPLETE BUSINESS DRAFT notice."
+      "proves": "An export request for a synthetic draft without the incomplete-draft acknowledgement is refused with 422, and the acknowledged PDF export carries the INCOMPLETE DRAFT notice."
     },
     {
       "requirement": "EDT-006",
@@ -2008,7 +2008,7 @@
       "job": "foundation",
       "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
       "test": "all twelve actual DOCX/PDF renders contain supplied answers, not internal question IDs",
-      "proves": "The DOCX and PDF of each of the twelve guided templates, the invoice among them, contain the label INCOMPLETE BUSINESS DRAFT when their text is read back from the files."
+      "proves": "The DOCX and PDF of each of the twelve guided templates, the invoice among them, contain the label INCOMPLETE DRAFT when their text is read back from the files."
     },
     {
       "requirement": "PAY-009",
@@ -2695,6 +2695,13 @@
       "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
       "test": "a document prints each amount in naira under its question's name, and never the unit the answer is stored in",
       "proves": "For each of the twelve kinds of document that start from questions, the projection the preview, the Word file and the PDF share prints every answered money question under its name without “in whole kobo” and as an amount with the naira sign, and a table of payments prints “Allocated amount” over ₦1,500.50 and ₦0.05; no printed text or cell says “kobo”."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
+      "test": "a document prints a date with its month as a word, leaves a date that is no real day as it was typed, and keeps what is stored unchanged",
+      "proves": "A document made from any of the twelve guided templates prints each date answer with its month as a word (21 Nov 2026) in the one projection its preview, Word file and PDF share, leaves a date that is no real day as it was typed, and saves the answer as it was given."
     },
     {
       "requirement": "NFR-008",
