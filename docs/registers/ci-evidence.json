@@ -328,7 +328,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/primary-journeys-browser.test.ts",
       "test": "on a phone, the home page's hero links to both journeys, and one tap on either opens it",
-      "proves": "On an emulated phone, the home page the compiled web server renders links “Start a business draft” in its hero to /sign-up and “Check what may apply” to /checker, and one tap on either opens that page; the visitor is signed out, since the identity provider cannot load in the test."
+      "proves": "On an emulated phone, the home page the compiled web server renders has “Create a document”, to /sign-up, and “Check my requirements”, to /checker, as its first two links, the same size, one under the other with documents first, and one tap on either opens that page; the visitor is signed out, since the identity provider cannot load in the test."
     },
     {
       "requirement": "WEB-001",
@@ -343,6 +343,13 @@
       "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
       "test": "every server-rendered page has the same five header links and marks its own section, the guidance tabs join their three pages, and the footer has eleven links in three groups",
       "proves": "On the compiled web server, every server-rendered public page's header lists Documents, “Check requirements”, Guidance, Pricing and Help in that order, and the footer's Product group lists Documents, “Check requirements”, Guidance and Pricing."
+    },
+    {
+      "requirement": "WEB-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "the home page offers both actions in its hero, beside its tasks and at its end, lists its eight everyday tasks, labels its examples as made up, shows the template count the server read and uses no price words",
+      "proves": "In the HTML the compiled web server sends, the home page offers “Create a document”, to /sign-up, and “Check my requirements”, to /checker, together in its hero and again at its end, lists eight document tasks that each lead to /sign-up, and offers the requirements check once more beside them."
     },
     {
       "requirement": "WEB-004",
