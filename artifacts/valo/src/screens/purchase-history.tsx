@@ -298,13 +298,14 @@ function PurchaseHistoryContent() {
         <p className="eyebrow">Your workspace</p>
         <h1 className="font-display mt-2 text-4xl">Purchases and licences</h1>
         <p className="mt-3 max-w-2xl text-muted-foreground" data-testid="text-purchases-message">
-          Keep your order, verification, receipt and licence history together. A saved order or checkout
-          return is not proof of payment.
+          Your orders, their receipts and the licences you accepted are listed here. A saved order is not
+          proof of payment, and neither is coming back from the payment page.
         </p>
       </header>
-      <Notice title="Live payments are off" className="mb-6">
-        Only explicitly enabled Paystack test-mode checkout is supported. Do not use real payment or
-        confidential customer information. Email receipts are not marked delivered without delivery evidence.
+      <Notice title="Real payments are switched off" className="mb-6">
+        Where a checkout is offered here, it is a test, in Paystack's test mode. Do not enter a real card, or
+        real or confidential customer details. A receipt sent by email is not shown as delivered unless its
+        delivery is confirmed.
       </Notice>
       {q.isLoading ? (
         <Skel className="h-48" />
@@ -314,12 +315,15 @@ function PurchaseHistoryContent() {
         <>
           <section className="mb-8" aria-labelledby="purchase-choices">
             <h2 id="purchase-choices" className="font-display mb-4 text-2xl">
-              Available documents
+              Documents you can buy
             </h2>
             {!q.data?.products.length ? (
-              <p className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-                There are no released documents with approved prices and commercial licences available to buy.
-                Your existing drafts and private exports remain available.
+              <p
+                className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground"
+                data-testid="text-nothing-to-buy"
+              >
+                Nothing can be bought yet. A document is listed here once it is published with a price and a
+                licence. The documents you have made, and their files, stay in your workspace.
               </p>
             ) : (
               <ul className="grid gap-4 sm:grid-cols-2">
@@ -378,20 +382,20 @@ function PurchaseHistoryContent() {
           </section>
           <section aria-labelledby="purchase-history">
             <h2 id="purchase-history" className="font-display mb-4 text-2xl">
-              Order history
+              Your orders
             </h2>
             {!q.data?.orders.length ? (
               <EmptyState
                 mark={<ShoppingBag className="h-5 w-5" />}
-                title="No orders saved"
+                title="No orders yet"
                 action={
                   <Link href="/workspace" className="btn btn-primary">
                     Back to Home
                   </Link>
                 }
               >
-                Orders will appear here when you choose an available document and accept its licence. No
-                payment has been assumed.
+                An order appears here once you choose a document to buy and accept its licence. Saving an
+                order does not pay for it.
               </EmptyState>
             ) : (
               <div className="space-y-4">
