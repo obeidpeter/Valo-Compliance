@@ -268,10 +268,23 @@ export async function publishOperationalVersionInTransaction(tx: PublicationTx, 
       and i.target_key=${row.templateId} and i.target_version<${row.version}`);
   return { id, decision: "published" as const, idempotent: false };
 }
-export async function publishOperationalVersion(id: string) {
-  const { db } = await import("@workspace/db");
+/**
+ * Checks that the publisher's own connection works and logged in as the publisher. Work that pays
+ * for reviews and then releases asks this first, so a login that is missing or cannot log in is
+ * found before the money is spent, not after.
+ */
+export async function assertPublisherCanLogIn() {
+  const { publisherDb, PUBLISHER_LOGIN_ROLE } = await import("@workspace/db");
   developmentPublicationOnly();
-  return db.transaction((tx) => publishOperationalVersionInTransaction(tx, id));
+  const { rows } = await publisherDb().execute(sql`select session_user as login`);
+  if (rows[0]?.login !== PUBLISHER_LOGIN_ROLE) throw Error("PUBLISHER_LOGIN_NOT_IN_USE");
+}
+export async function publishOperationalVersion(id: string) {
+  const { publisherDb } = await import("@workspace/db");
+  developmentPublicationOnly();
+  // The release runs on the publisher's own connection. The database lets a version become
+  // published only in a session that logged in as the publisher (decision 0017, point 6).
+  return publisherDb().transaction((tx) => publishOperationalVersionInTransaction(tx, id));
 }
 export async function withdrawOperationalVersion(id: string, reason: string) {
   const { db, valoContentVersions, valoPublicationAudit } = await import("@workspace/db");

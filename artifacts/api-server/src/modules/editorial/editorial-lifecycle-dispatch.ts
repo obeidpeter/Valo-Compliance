@@ -15,6 +15,21 @@ export type LifecycleResult = {
   formalCaseAccepted: false;
   actualProviderCalls: 0;
 };
+/**
+ * The publisher login's connection to a lifecycle copy: the seed server's publisher connection with
+ * the copy's database name. Undefined when none is configured or it cannot be read; a release in
+ * the copy then fails as the publisher login is unavailable, which is reported, never passed.
+ */
+export function lifecyclePublisherUrl(publisher: string | undefined, sandboxUrl: string) {
+  if (!publisher) return undefined;
+  try {
+    const url = new URL(publisher);
+    url.pathname = new URL(sandboxUrl).pathname;
+    return url.href;
+  } catch {
+    return undefined;
+  }
+}
 /** Default execution is concrete: clone a prepared genuine local seed, run the
  * actual publisher/monitor/download paths in a child, then remove only the clone.
  * Missing genuine isolated evidence remains a prerequisite hold, never a pass. */
@@ -49,7 +64,13 @@ export async function dispatchEditorialLifecycle(
         env: {
           ...environment(),
           DATABASE_URL: sandbox.url,
+          // A release in the copy runs as the publisher login on the copy's own server.
+          VALO_PUBLISHER_DATABASE_URL: lifecyclePublisherUrl(
+            setting("VALO_EDITORIAL_LIFECYCLE_PUBLISHER_DATABASE_URL"),
+            sandbox.url,
+          ),
           VALO_EDITORIAL_LIFECYCLE_DATABASE_URL: undefined,
+          VALO_EDITORIAL_LIFECYCLE_PUBLISHER_DATABASE_URL: undefined,
         },
         timeout: 120000,
         killSignal: "SIGKILL",

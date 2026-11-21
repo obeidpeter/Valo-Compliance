@@ -1,4 +1,4 @@
-import test from "node:test";
+import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
@@ -11,6 +11,12 @@ import { heldSourceBundle } from "../sources/valo-source-controls.fixtures";
  * runs them on every change. Nothing here can publish: the candidate is not eligible, and every
  * check expects a refusal.
  */
+
+// Both tests use the shared pool, so it is closed once, after the last of them.
+after(async () => {
+  if (process.env.VALO_RUN_DB_TESTS === "synthetic-development-only")
+    await (await import("@workspace/db")).pool.end();
+});
 
 /** Drizzle reports database errors as "Failed query: ..." with the database's own error as the
  * cause; match the database's message or code anywhere in that chain. */
@@ -31,12 +37,11 @@ test(
     assert.equal(process.env.NODE_ENV, "development");
     assert.ok(!process.env.REPLIT_DEPLOYMENT);
     assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
-    const { db, pool } = await import("@workspace/db");
+    const { db } = await import("@workspace/db");
     const { publishOperationalVersion, recordActualPublicationHold, withdrawOperationalVersion } =
       await import("./publication-publisher");
     const { liveOperationalVersions, readReleasedMaster } =
       await import("../catalogue/valo-released-content");
-    t.after(() => pool.end());
     const id = randomUUID(),
       prefix = `synthetic-publication-guards-${id}`,
       bundle = heldSourceBundle(new Date(), false);
@@ -155,5 +160,171 @@ test(
         databaseError(/append-only/),
       );
     });
+  },
+);
+
+/**
+ * The publisher's own login (decision 0017, point 6). The database lets a content version become
+ * published only in a session that logged in as valo_publisher_login. Every publish here is either
+ * refused or rolled back: the synthetic candidate is not eligible, and nothing stays published.
+ */
+test(
+  "a content version is published only by a session that logged in as the publisher",
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 60_000 },
+  async (t) => {
+    assert.equal(process.env.NODE_ENV, "development");
+    assert.ok(!process.env.REPLIT_DEPLOYMENT);
+    assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
+    const { db, publisherConnectionString, PUBLISHER_LOGIN_ROLE, PUBLISHER_LOGIN_UNAVAILABLE_CODE } =
+      await import("@workspace/db");
+    const { assertPublisherCanLogIn, publishOperationalVersion } = await import("./publication-publisher");
+    const { default: pg } = await import("pg");
+
+    const id = randomUUID(),
+      prefix = `synthetic-publisher-login-${id}`,
+      bundle = heldSourceBundle(new Date(), false);
+    const asRole = (role: string | null, query: ReturnType<typeof sql>) =>
+      db.transaction(async (tx) => {
+        if (role) await tx.execute(sql.raw(`set local role ${role}`));
+        return tx.execute(query);
+      });
+    const status = async () =>
+      (await db.execute(sql`select status from valo_content_versions where id=${id}::uuid`)).rows[0]?.status;
+    await db.execute(
+      sql`insert into valo_publication_policies(id,hash,policy,authority) values(${prefix},${digest(bundle.policy)},${JSON.stringify(bundle.policy)}::jsonb,'{"synthetic":true,"approved":false}')`,
+    );
+    await asRole(
+      "valo_content_drafter_dev",
+      sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+        values(${id}::uuid,${prefix},1,${prefix},${prefix},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(Date.now() + 86_400_000)})`,
+    );
+    const publish = sql`update valo_content_versions set status='published', published_at=now() where id=${id}::uuid`;
+    const needsPublisher = databaseError(
+      /published only by a session that logged in as valo_publisher_login/,
+    );
+
+    await t.test(
+      "the application's own login cannot publish a candidate, whatever role it takes",
+      async () => {
+        // The candidate-to-published transition is a valid one; only the login is wrong.
+        await assert.rejects(asRole(null, publish), needsPublisher);
+        await assert.rejects(asRole(null, publish), databaseError("42501"));
+        await assert.rejects(asRole("valo_content_publisher_dev", publish), needsPublisher);
+        assert.equal(await status(), "candidate");
+      },
+    );
+
+    // One session that logged in as the publisher, as the release does.
+    const application = process.env.DATABASE_URL!,
+      configured = publisherConnectionString(process.env.VALO_PUBLISHER_DATABASE_URL, application);
+    const publisher = new pg.Client({ connectionString: configured });
+    await publisher.connect();
+    t.after(() => publisher.end());
+    const refused = async (text: string, code = "42501") => {
+      await publisher.query("BEGIN");
+      try {
+        await assert.rejects(publisher.query(text), (error: { code?: string }) => error.code === code, text);
+      } finally {
+        await publisher.query("ROLLBACK");
+      }
+    };
+
+    await t.test("the publisher's login holds nothing itself and can become only the publisher", async () => {
+      const who = await publisher.query("select session_user as login, current_user as acting");
+      assert.deepEqual(who.rows[0], { login: PUBLISHER_LOGIN_ROLE, acting: PUBLISHER_LOGIN_ROLE });
+      const role = await publisher.query(
+        "select rolcanlogin, rolsuper, rolinherit, rolcreaterole, rolcreatedb, rolbypassrls from pg_roles where rolname=$1",
+        [PUBLISHER_LOGIN_ROLE],
+      );
+      assert.deepEqual(role.rows[0], {
+        rolcanlogin: true,
+        rolsuper: false,
+        rolinherit: false,
+        rolcreaterole: false,
+        rolcreatedb: false,
+        rolbypassrls: false,
+      });
+      const memberships = await publisher.query(
+        "select r.rolname from pg_auth_members m join pg_roles r on r.oid=m.roleid join pg_roles u on u.oid=m.member where u.rolname=$1",
+        [PUBLISHER_LOGIN_ROLE],
+      );
+      assert.deepEqual(
+        memberships.rows.map((r) => r.rolname),
+        ["valo_content_publisher_dev"],
+      );
+      // As itself it reads nothing, not even the versions it publishes.
+      await refused("select id from valo_content_versions limit 1");
+      await refused("select id from valo_documents limit 1");
+      // It cannot become the drafter, the reviewer or the customer scope.
+      for (const other of ["valo_content_drafter_dev", "valo_content_reviewer_dev", "valo_workspace_scope"])
+        await refused(`set local role ${other}`);
+    });
+
+    await t.test("as the publisher role it can release, and still reads no customer data", async () => {
+      await publisher.query("BEGIN");
+      try {
+        await publisher.query("set local role valo_content_publisher_dev");
+        const released = await publisher.query(
+          "update valo_content_versions set status='published', published_at=now() where id=$1 returning status",
+          [id],
+        );
+        assert.equal(released.rows[0]?.status, "published", "the database accepts the publisher's login");
+      } finally {
+        // Nothing stays published: the synthetic candidate passed no gate.
+        await publisher.query("ROLLBACK");
+      }
+      assert.equal(await status(), "candidate");
+      await publisher.query("BEGIN");
+      try {
+        await publisher.query("set local role valo_content_publisher_dev");
+        for (const text of [
+          "select id from valo_documents limit 1",
+          "select id from valo_orders limit 1",
+          "update valo_prices set amount_kobo=amount_kobo where false",
+          `insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by) select gen_random_uuid(),template_id,2,slug||'-2',policy_id,candidate_hash,bundle,attestations,'candidate',review_by from valo_content_versions where id='${id}'`,
+        ]) {
+          await publisher.query("SAVEPOINT attempt");
+          await assert.rejects(
+            publisher.query(text),
+            (error: { code?: string }) => error.code === "42501",
+            text,
+          );
+          await publisher.query("ROLLBACK TO SAVEPOINT attempt");
+        }
+      } finally {
+        await publisher.query("ROLLBACK");
+      }
+    });
+
+    await t.test(
+      "the release runs on the publisher's connection and still refuses a candidate that fails its gates",
+      async () => {
+        // The check that work which pays for reviews runs first finds the login in use.
+        await assertPublisherCanLogIn();
+        // The real publisher reaches its checks, which refuse the synthetic candidate's policy.
+        await assert.rejects(() => publishOperationalVersion(id), /POLICY_NOT_TRUSTED|PUBLICATION_HELD/);
+        assert.equal(await status(), "candidate");
+      },
+    );
+
+    await t.test(
+      "a publisher connection that is missing, or leads elsewhere, is refused before it is used",
+      () => {
+        const unavailable = (run: () => unknown) =>
+          assert.throws(run, (error: { code?: string }) => error.code === PUBLISHER_LOGIN_UNAVAILABLE_CODE);
+        unavailable(() => publisherConnectionString(undefined, application));
+        unavailable(() => publisherConnectionString("", application));
+        // The application's own login is not the publisher.
+        unavailable(() => publisherConnectionString(application, application));
+        // The publisher login of another database, or another server.
+        const other = new URL(configured);
+        other.pathname = "/another_database";
+        unavailable(() => publisherConnectionString(other.href, application));
+        const elsewhere = new URL(configured);
+        elsewhere.port = "6543";
+        unavailable(() => publisherConnectionString(elsewhere.href, application));
+        unavailable(() => publisherConnectionString(configured, undefined));
+      },
+    );
   },
 );

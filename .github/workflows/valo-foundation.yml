@@ -342,6 +342,13 @@ jobs:
           url=$(node lib/db/scripts/workspace-login.mjs --print-url)
           echo "VALO_CUSTOMER_DATABASE_URL=$url" >> "$GITHUB_ENV"
           node lib/db/scripts/workspace-row-security.mjs
+      - name: Let the publisher connect as the publisher login
+        env:
+          # Ephemeral synthetic CI service only; not a production secret.
+          VALO_PUBLISHER_LOGIN_PASSWORD: synthetic_ci_only_publisher_login
+        run: |
+          url=$(node lib/db/scripts/publisher-login.mjs --print-url)
+          echo "VALO_PUBLISHER_DATABASE_URL=$url" >> "$GITHUB_ENV"
       - name: Record pooled connections taken inside transactions in every later step
         run: |
           echo "VALO_NESTED_PRELOAD=file://$PWD/artifacts/api-server/src/test-support/nested-connection-preload.mjs" >> "$GITHUB_ENV"
