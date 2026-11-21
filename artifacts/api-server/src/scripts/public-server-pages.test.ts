@@ -91,7 +91,7 @@ after(() => web.close());
 /** The heading each server-rendered page's own content starts with: every fixed page the server
  * renders, and one released item's page of each kind. */
 const HEADINGS: Record<string, string> = {
-  "/": "The documents you need. The business rules you should know.",
+  "/": "Make your business documents. Know which rules apply.",
   "/terms": "Terms of use, not yet approved",
   "/about": "Two shelves, kept apart on purpose.",
   "/help": "Straight answers",
@@ -593,8 +593,59 @@ test("when the API answers the web server as its production gate does, refuses o
   assert.deepEqual(problems, []);
 });
 
-test("when the API answers the web server as its production gate does, refuses or does not answer, the home page still renders its headline and both shelves within the time limit, leaving out only the template count", async () => {
-  const shown = /\d+(?:<!-- -->)? catalogue templates/;
+/** The everyday tasks the home page offers, in its order. The web app's own unit test ties each one
+ * to documents the workspace's starter can start (landing-tasks.test.ts). */
+const HOME_TASKS = [
+  "Send an invoice",
+  "Give a quotation",
+  "Issue a receipt",
+  "Chase a late payment",
+  "Order from a supplier",
+  "Record a delivery",
+  "Hire someone",
+  "Sign an agreement",
+];
+
+test("the home page offers both actions in its hero, beside its tasks and at its end, lists its eight everyday tasks, labels its examples as made up, shows the template count the server read and uses no price words", async () => {
+  const html = await (await fetch(web.origin + "/")).text();
+  const main = html.slice(html.indexOf("<main"), html.indexOf("</main>"));
+  const link = (testId: string) => {
+    const found = new RegExp(`<a\\b[^>]*data-testid="${testId}"[^>]*>([\\s\\S]*?)</a>`).exec(main);
+    return found && { href: /href="([^"]*)"/.exec(found[0])?.[1], label: text(found[1]!) };
+  };
+  // Documents and requirements side by side, in the same words, wherever the page offers an action.
+  for (const place of ["hero", "closing"]) {
+    assert.deepEqual(link(`link-${place}-documents`), { href: "/sign-up", label: "Create a document" });
+    assert.deepEqual(link(`link-${place}-compliance`), { href: "/checker", label: "Check my requirements" });
+  }
+  assert.deepEqual(link("link-tasks-compliance"), { href: "/checker", label: "Check my requirements" });
+
+  const tasks = linksIn(main, /<ul[^>]*data-testid="list-tasks"/, "</ul>");
+  assert.deepEqual(
+    tasks.map((task) => task.href),
+    HOME_TASKS.map(() => "/sign-up"),
+  );
+  for (const [index, name] of HOME_TASKS.entries())
+    assert.ok(tasks[index]!.label.startsWith(name), `${tasks[index]!.label} is the task "${name}"`);
+
+  // The two examples are a picture with a caption that says their details are made up.
+  const figure = /<figure[^>]*data-testid="figure-examples"[\s\S]*?<\/figure>/.exec(main)?.[0] ?? "";
+  assert.match(figure, /aria-hidden="true"/);
+  assert.match(
+    text(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/.exec(figure)?.[1] ?? ""),
+    /^Examples with made-up details/,
+  );
+
+  assert.ok(
+    text(main).includes(`There are also ${items.length} ready-made templates to start from.`),
+    "the count is the one the API gave",
+  );
+  // No price is named and nothing is called free: the only amounts are on the example invoice.
+  assert.doesNotMatch(text(main.replace(figure, "")), /\bfree\b|₦|\bNGN\b|\bnaira\b|\bkobo\b/i);
+});
+
+test("when the API answers the web server as its production gate does, refuses or does not answer, the home page still renders its headline, both actions and its tasks within the time limit, leaving out only the template count", async () => {
+  const shown = /\d+ ready-made templates? to start from/;
   const problems: string[] = [];
   for (const failure of [404, 429, "silent"] as const) {
     serverFailure = failure;
@@ -605,8 +656,9 @@ test("when the API answers the web server as its production gate does, refuses o
       if (took > 4000) problems.push(`${failure}: the page took ${took.toFixed(0)} ms`);
       for (const part of [
         'data-testid="text-headline"',
-        'data-testid="card-shelf-documents"',
-        'data-testid="card-shelf-compliance"',
+        'data-testid="link-hero-documents"',
+        'data-testid="link-hero-compliance"',
+        'data-testid="list-tasks"',
       ])
         if (!html.includes(part)) problems.push(`${failure}: the page left out ${part}`);
       if (shown.test(html)) problems.push(`${failure}: the page showed a template count it could not read`);

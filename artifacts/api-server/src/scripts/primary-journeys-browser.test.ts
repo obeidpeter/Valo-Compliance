@@ -51,13 +51,24 @@ test("on a phone, the home page's hero links to both journeys, and one tap on ei
   onPhoneHome(async (page) => {
     const documents = page.getByTestId("link-hero-documents");
     const compliance = page.getByTestId("link-hero-compliance");
-    await expect(documents).toHaveText("Start a business draft");
+    await expect(documents).toHaveText("Create a document");
     await expect(documents).toHaveAttribute("href", "/sign-up");
-    await expect(compliance).toHaveText("Check what may apply");
+    await expect(compliance).toHaveText("Check my requirements");
     await expect(compliance).toHaveAttribute("href", "/checker");
-    // Both shelves, documents first, are laid out the same way.
-    await expect(page.getByTestId("card-shelf-documents")).toBeVisible();
-    await expect(page.getByTestId("card-shelf-compliance")).toBeVisible();
+    // The two buttons are the same size, one under the other with documents first, and nothing but
+    // the headline and its opening sentence comes before them.
+    const first = await documents.boundingBox(),
+      second = await compliance.boundingBox();
+    assert.ok(first && second, "both buttons are laid out");
+    assert.deepEqual([second.width, second.height, second.x], [first.width, first.height, first.x]);
+    assert.ok(first.y < second.y, "documents comes first");
+    assert.equal(
+      await page.evaluate(
+        `[...document.querySelectorAll("main a")].slice(0, 2).map((a) => a.getAttribute("data-testid")).join()`,
+      ),
+      "link-hero-documents,link-hero-compliance",
+      "the hero's two buttons are the page's first links",
+    );
     // The page fits a 360-pixel-wide screen without scrolling sideways.
     assert.equal(await page.evaluate("document.documentElement.scrollWidth"), 360);
 

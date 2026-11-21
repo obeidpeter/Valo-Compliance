@@ -147,7 +147,7 @@ try {
   await check("desktop_exact_hero_and_public_about_contact_routes", async () => {
     await page!.goto("/");
     await expect(page!.getByTestId("text-headline")).toHaveText(
-      "The documents you need. The business rules you should know.",
+      "Make your business documents. Know which rules apply.",
     );
     for (const path of [
       "/about",
