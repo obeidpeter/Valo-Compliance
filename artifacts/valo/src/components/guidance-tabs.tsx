@@ -1,6 +1,5 @@
 import { PublicLink } from "./public-link";
-import { GUIDANCE_PAGES } from "./site-chrome";
-import { cn } from "@/lib/utils";
+import { GUIDANCE_PAGES, sectionTab } from "./site-chrome";
 
 /**
  * The tabs that join the three pages the header's Guidance link opens: the overview with the
@@ -15,12 +14,7 @@ export function GuidanceTabs({ current }: { current: (typeof GUIDANCE_PAGES)[num
           key={page.href}
           href={page.href}
           current={page.href === current}
-          className={cn(
-            "rounded-full border px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-            page.href === current
-              ? "border-foreground bg-foreground text-background"
-              : "border-border hover:bg-secondary",
-          )}
+          className={sectionTab(page.href === current)}
         >
           {page.label}
         </PublicLink>

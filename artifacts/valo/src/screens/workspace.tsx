@@ -1,43 +1,21 @@
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { useUser } from "@clerk/react";
-import { useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Sparkles, FilePlus2, FileText, Loader2, UserRound } from "lucide-react";
-import {
-  useCreateDocument,
-  useGetWorkspace,
-  useListDocuments,
-  getGetWorkspaceQueryKey,
-  getListDocumentsQueryKey,
-} from "@workspace/api-client-react";
+import { ArrowRight, Sparkles, FilePlus2, Loader2, UserRound } from "lucide-react";
+import { useGetWorkspace, getGetWorkspaceQueryKey } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
-import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
-import { blankContent, describeError, missingFields } from "@/lib/api";
-import { formatDateTime } from "@/lib/format";
+import { ErrorState, Notice, Skel } from "@/components/states";
+import { describeError } from "@/lib/api";
+import { useNewDocument } from "@/lib/use-new-document";
 import { CorrectionNotices } from "@/components/correction-notices";
+import { DocumentList } from "@/components/document-list";
 import { GuidedDraftStarter } from "@/components/guided-draft-starter";
 import { SavedTemplates } from "@/components/saved-templates";
 import { LibraryExports } from "@/components/library-exports";
 
 export default function WorkspaceHome() {
   const { user } = useUser();
-  const qc = useQueryClient();
-  const [, setLocation] = useLocation();
   const ws = useGetWorkspace({ query: { enabled: true, queryKey: getGetWorkspaceQueryKey() } });
-  const docs = useListDocuments({ query: { enabled: ws.isSuccess, queryKey: getListDocumentsQueryKey() } });
-  const create = useCreateDocument();
-
-  function newDraft() {
-    create.mutate(
-      { data: { title: "Untitled business draft", content: blankContent() } },
-      {
-        onSuccess: (doc) => {
-          void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
-          void qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() });
-          setLocation("/workspace/documents/" + doc.id);
-        },
-      },
-    );
-  }
+  const create = useNewDocument();
 
   const name = user?.firstName;
   const profile = ws.data?.profile ?? null;
@@ -60,11 +38,11 @@ export default function WorkspaceHome() {
           </Link>
           <button
             className="btn btn-primary"
-            onClick={newDraft}
-            disabled={create.isPending || !ws.isSuccess}
+            onClick={create.start}
+            disabled={create.pending || !ws.isSuccess}
             data-testid="button-new-draft"
           >
-            {create.isPending ? (
+            {create.pending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <FilePlus2 className="h-4 w-4" />
@@ -134,59 +112,7 @@ export default function WorkspaceHome() {
               <p className="eyebrow">Business drafts</p>
               <span className="text-sm text-muted-foreground">{ws.data?.documentCount ?? 0} total</span>
             </div>
-            {docs.isLoading ? (
-              <div className="grid gap-3">
-                {[0, 1].map((i) => (
-                  <Skel key={i} className="h-24" />
-                ))}
-              </div>
-            ) : docs.isError ? (
-              <ErrorState error={docs.error} onRetry={() => docs.refetch()} />
-            ) : docs.data && docs.data.length > 0 ? (
-              <ul className="grid gap-3">
-                {docs.data.map((d) => {
-                  const miss = missingFields(d.content).length;
-                  return (
-                    <li key={d.id}>
-                      <Link
-                        href={"/workspace/documents/" + d.id}
-                        className="surface group flex items-center gap-5 p-5 transition-shadow hover:shadow-[var(--shadow-md)]"
-                        data-testid={"link-doc-" + d.id}
-                      >
-                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-primary">
-                          <FileText className="h-5 w-5" />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate font-medium">{d.title}</span>
-                          <span className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                            <span>Business draft</span>
-                            <span className="font-mono">rev {d.revision}</span>
-                            <span>{formatDateTime(d.updatedAt)}</span>
-                          </span>
-                        </span>
-                        {miss > 0 && (
-                          <span className="pill pill-ochre hidden sm:inline-flex">{miss} missing</span>
-                        )}
-                        <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <EmptyState
-                mark={<FilePlus2 className="h-5 w-5 text-muted-foreground" />}
-                title="No drafts yet"
-                action={
-                  <button className="btn btn-primary" onClick={newDraft} disabled={create.isPending}>
-                    Start a blank draft
-                  </button>
-                }
-              >
-                A new draft starts empty. Choose a released template from the library when one fits, or write
-                your own document.
-              </EmptyState>
-            )}
+            <DocumentList enabled={ws.isSuccess} onNew={create.start} creating={create.pending} />
             <LibraryExports />
             <Notice className="mt-4" tone="ink" title="Development workspace">
               Use synthetic test details only. Open a saved draft to request private, visibly marked DOCX or

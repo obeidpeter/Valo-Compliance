@@ -70,6 +70,12 @@ export const FOOTER_COLUMNS = [
   },
 ] as const;
 
+/** A tab that joins the pages of one section, filled on the page shown. The guidance pages and the
+ * workspace's sections use the same tabs. */
+export const sectionTab = (current: boolean) =>
+  "rounded-full border px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring " +
+  (current ? "border-foreground bg-foreground text-background" : "border-border hover:bg-secondary");
+
 /** A button of the phone's bar. Its words may wrap, so the two buttons fit side by side on the
  * narrowest phone. */
 export const DOCK_BUTTON = "btn w-full px-2 text-center text-sm leading-tight whitespace-normal";
