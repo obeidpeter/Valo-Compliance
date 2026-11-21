@@ -195,10 +195,8 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
           data-testid="text-guided-hidden"
         >
           {hiddenWithValues.length === 1
-            ? "One earlier answer is"
-            : `${hiddenWithValues.length} earlier answers are`}{" "}
-          kept but hidden because a related choice changed. Hidden answers are not checked here; whether they
-          appear in the document depends on the kind of document.
+            ? "One earlier answer is kept but hidden, because a choice it depends on was changed. A hidden answer is not checked and is not put in the document. It is shown again if you change the choice back."
+            : `${hiddenWithValues.length} earlier answers are kept but hidden, because a choice they depend on was changed. Hidden answers are not checked and are not put in the document. They are shown again if you change the choice back.`}
         </p>
       )}
     </div>
@@ -536,7 +534,7 @@ function TableEditor({
         <Plus className="h-4 w-4" aria-hidden />
         Add a row
       </button>
-      {rows.length >= t.maxRows && <p className="hint">Row limit reached.</p>}
+      {rows.length >= t.maxRows && <p className="hint">This table takes no more than {t.maxRows} rows.</p>}
     </fieldset>
   );
 }

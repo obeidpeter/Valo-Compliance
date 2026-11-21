@@ -1466,6 +1466,29 @@ reason. The other 256 are not reworded:
 - Five that are errors of a background job, and two that only someone operating the site would
   see.
 
+### Phase 6: an answer hidden by a changed choice
+
+Some of a document's questions are asked only after a choice: a tax amount once the customer says
+they have one, an end date once the agreement is for a fixed term. When the choice is changed,
+their answers are kept but hidden, and the form said so in these words: "Hidden answers are not
+checked here; whether they appear in the document depends on the kind of document."
+
+That left a customer who had typed a tax amount not knowing whether it would be printed. It also
+hedged where nothing is in doubt. The preview, the Word file and the PDF are all made by one
+projection of the saved answers, and it leaves a hidden answer out. A unit test already proved
+that of the projection.
+
+| Before | Now |
+| --- | --- |
+| "One earlier answer is kept but hidden because a related choice changed. Hidden answers are not checked here; whether they appear in the document depends on the kind of document." | "One earlier answer is kept but hidden, because a choice it depends on was changed. A hidden answer is not checked and is not put in the document. It is shown again if you change the choice back." |
+| "Row limit reached." | "This table takes no more than 20 rows.", with the table's own number |
+
+A new browser test opens an invoice saved with a tax amount, changes the choice, and reads the
+sentence. It then checks each of its three claims: the document the page saves still holds the
+answer, the preview does not print it, and changing the choice back shows it as it was.
+
+Not changed: the forms' own questions, which are frozen (decision 6).
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
@@ -1519,7 +1542,7 @@ accepted by it.
 
 | Heuristic | Built | Not done |
 | --- | --- | --- |
-| 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. The purchases screen says that real payments are switched off and that nothing can be bought yet. A downloaded document says "Saved version 3". | |
+| 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. The purchases screen says that real payments are switched off and that nothing can be bought yet. A downloaded document says "Saved version 3". A document's questions say that an answer hidden by a changed choice is kept, is not checked and is not put in the document. | |
 | 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format, and a document prints its dates the same way. A downloaded document names its fields as the editor does. A result of the check says its notice, and what it does not cover, in the site's words. So does the server when it refuses a request about a document, a file, a task, the check, the workspace, signing in, the documents list or a support request. | The twelve forms' own questions, which are frozen. The server's sentences about payments, privacy requests and the drafting assistant, 215 of them, which wait for decisions 15, 14 and 13. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
 | 3. User control and freedom | The editor has undo and keeps every version. "Start over" asks first. Five discards ask in the app's own dialog. "Save before leaving?" also catches the browser's Back and Forward buttons. | On the compiled site the Back button was checked once by hand; no CI test can sign in to it. |
 | 4. Consistency and standards | The component styles are in one layer. Dates, times, amounts and counts go through one formatter. One header, one footer and one phone bar. One page where a document starts. | |
