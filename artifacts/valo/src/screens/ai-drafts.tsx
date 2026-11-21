@@ -447,12 +447,11 @@ export function AIDraftCompose() {
                 className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 data-testid="status-ai-error"
               >
-                {aiErr.kind === "unauthenticated" ? "Please sign in again." : aiErr.message} Your entries are
-                unchanged
+                {aiErr.kind === "unauthenticated" ? "Please sign in again." : aiErr.message} What you entered
+                is still here.
                 {aiErr.kind === "offline" || aiErr.kind === "server"
-                  ? "; retrying reuses the same request key"
+                  ? " Trying again asks for the same draft, not a second one."
                   : ""}
-                .
               </p>
             )}
             <button

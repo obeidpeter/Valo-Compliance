@@ -677,6 +677,12 @@ test("a signed-in screen whose data fails to load shows an alert with a retry bu
         .catch(() => problems.push(`${path}: no error alert`));
       if ((await alert.getAttribute("role").catch(() => null)) !== "alert")
         problems.push(`${path}: the error is not announced as an alert`);
+      // A failure at Valo is said in words, with no status code, and offers the way to report it.
+      const said = await alert.innerText().catch(() => "");
+      if (/\b500\b/.test(said)) problems.push(`${path}: the alert shows a status code: ${said}`);
+      const report = alert.getByRole("link", { name: "report a problem" });
+      if ((await report.getAttribute("href").catch(() => null)) !== "/support")
+        problems.push(`${path}: the alert does not offer the way to report a failure at Valo`);
       problems.push(...(await wcagFailures(page)).failures.map((failure) => `${path} error: ${failure}`));
       failing = false;
       for (let press = 0; press < 5 && (await page.getByTestId("button-retry").count()) > 0; press++) {

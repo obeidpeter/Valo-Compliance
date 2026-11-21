@@ -10,59 +10,80 @@ export interface DescribedError {
   status?: number;
   message: string;
   currentRevision?: number | undefined;
+  /** The failed request's reference in Valo's own records, to quote when reporting the failure. */
+  reference?: string | undefined;
 }
 
+/**
+ * Says what went wrong and what to do next. The server's own sentence is used where it sent one.
+ * Nothing here promises that the customer's work is safe: this function cannot know what the page
+ * holds, so the page says that itself where it is true.
+ */
 export function describeError(err: unknown): DescribedError {
-  if (typeof navigator !== "undefined" && !navigator.onLine) {
-    return {
-      kind: "offline",
-      message: "You appear to be offline. Nothing was lost; reconnect and try again.",
-    };
+  // Only where the browser says so. Outside a browser there is a `navigator` with no such flag,
+  // and a missing flag is not a report of being offline.
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return { kind: "offline", message: "You seem to be offline. Reconnect and try again." };
   }
   const e = (err ?? {}) as MaybeApiError;
   const status = typeof e.status === "number" ? e.status : undefined;
-  const data = (e.data ?? null) as { error?: unknown; currentRevision?: unknown } | null;
+  const data = (e.data ?? null) as {
+    error?: unknown;
+    currentRevision?: unknown;
+    requestId?: unknown;
+  } | null;
   const serverText = data && typeof data.error === "string" ? data.error : undefined;
   const currentRevision = data && typeof data.currentRevision === "number" ? data.currentRevision : undefined;
+  const reference =
+    data && typeof data.requestId === "string" && /^[A-Za-z0-9-]{1,64}$/.test(data.requestId)
+      ? data.requestId
+      : undefined;
   if (status === undefined) {
     return {
       kind: "offline",
-      message: "The Valo service could not be reached. Check your connection and retry.",
+      message: "Valo could not be reached. Check your connection and try again.",
     };
   }
   if (status === 401)
-    return { kind: "unauthenticated", status, message: serverText ?? "Please sign in to continue." };
+    return {
+      kind: "unauthenticated",
+      status,
+      message: serverText ?? "You are not signed in, or your session has ended.",
+    };
   if (status === 403) {
     return {
       kind: "forbidden",
       status,
       message:
         serverText ??
-        "Your account cannot access this yet. It may need email verification, or it may be suspended.",
+        "Your account cannot open this. Your email address may still need to be verified, or the account may be suspended.",
     };
   }
   if (status === 404)
-    return {
-      kind: "notFound",
-      status,
-      message: serverText ?? "We could not find that record in your workspace.",
-    };
+    return { kind: "notFound", status, message: serverText ?? "We could not find that in your workspace." };
   if (status === 409)
     return {
       kind: "conflict",
       status,
-      message: serverText ?? "This was changed elsewhere since you opened it.",
+      message: serverText ?? "This was changed somewhere else after you opened it.",
       currentRevision,
     };
   if (status === 400 || status === 422)
     return {
       kind: "validation",
       status,
-      message: serverText ?? "Some details were not accepted. Please review and try again.",
+      message: serverText ?? "Some details were not accepted. Check them and try again.",
+    };
+  if (status === 429)
+    return {
+      kind: "server",
+      status,
+      message: serverText ?? "Too many requests in a short time. Wait a moment and try again.",
     };
   return {
     kind: "server",
     status,
-    message: serverText ?? "Something went wrong on our side. Your work in this tab is unchanged.",
+    message: serverText ?? "Something went wrong at Valo. Try again in a moment.",
+    reference,
   };
 }
