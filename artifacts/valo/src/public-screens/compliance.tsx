@@ -12,13 +12,21 @@ import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/s
 import { guidanceParams } from "@/lib/catalogue-requests";
 import { fromServer } from "@/lib/server-data";
 
-export const OFFICIAL_SOURCES = [
+export const OFFICIAL_SOURCES: { name: string; topic: string; note?: string; url: string }[] = [
   {
     name: "Corporate Affairs Commission",
     topic: "Business names, companies and annual returns",
     url: "https://www.cac.gov.ng",
   },
-  { name: "Federal Inland Revenue Service", topic: "Federal taxes and TIN", url: "https://www.firs.gov.ng" },
+  // The specification's 2026 update (docs/specification/essential-business-documents.txt): "The
+  // Nigeria Revenue Service has replaced the former FIRS framework, and the new Tax ID replaces the
+  // previous TIN identifier." The address is the host of its source S02.
+  {
+    name: "Nigeria Revenue Service",
+    topic: "Federal taxes and the Tax ID",
+    note: "It has replaced the Federal Inland Revenue Service (FIRS), and the Tax ID replaces the TIN.",
+    url: "https://www.nrs.gov.ng",
+  },
   { name: "Nigeria Data Protection Commission", topic: "Handling personal data", url: "https://ndpc.gov.ng" },
   { name: "SMEDAN", topic: "Small business support programmes", url: "https://smedan.gov.ng" },
   {
@@ -28,6 +36,10 @@ export const OFFICIAL_SOURCES = [
   },
   { name: "NAFDAC", topic: "Food, drugs and regulated products", url: "https://www.nafdac.gov.ng" },
 ];
+
+/** A source's name for a test: the first part of its address, "nrs" for www.nrs.gov.ng. Two of the
+ * sources' names begin with the same word. */
+const sourceId = (url: string) => new URL(url).hostname.replace(/^www\./, "").split(".")[0]!;
 
 /** Released guidance and the official sources, starting from what the server read; the browser
  * reads the guidance itself when the server could not (decision 0011). */
@@ -107,11 +119,12 @@ export function Compliance({ initial }: { initial?: CataloguePage | undefined })
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-start justify-between gap-4 py-3.5"
-                  data-testid={"link-source-" + s.name.split(" ")[0]!.toLowerCase()}
+                  data-testid={"link-source-" + sourceId(s.url)}
                 >
                   <span>
                     <span className="block font-medium group-hover:underline">{s.name}</span>
                     <span className="block text-sm text-muted-foreground">{s.topic}</span>
+                    {s.note && <span className="block text-sm text-muted-foreground">{s.note}</span>}
                   </span>
                   <ExternalLink className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
                 </a>
