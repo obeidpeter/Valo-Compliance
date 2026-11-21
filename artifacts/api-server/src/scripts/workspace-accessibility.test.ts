@@ -945,3 +945,36 @@ test("the phone's opened menu fits a short screen and a phone on its side: every
   }
   assert.deepEqual(problems, []);
 });
+
+test("a dialog opens in the middle of the screen and clear of its sides, on a phone and on a desktop", async () => {
+  for (const [kind, open, tasks] of [
+    ["phone", phone, '[data-testid="workspace-bar"] a[href="/workspace/tasks"]'],
+    ["desktop", desktop, 'header nav a[href="/workspace/tasks"]'],
+  ] as const) {
+    const { page, errors, close } = await open("/workspace/profile");
+    try {
+      await ready(page);
+      await page.getByTestId("input-business-name").fill("Synthetic Trading Ltd, changed");
+      await page.locator(tasks).click();
+      const dialog = page.locator("dialog[open]");
+      await expect(dialog).toContainText("Save before leaving?");
+      const box = (await dialog.boundingBox())!,
+        view = page.viewportSize()!;
+      assert.ok(
+        Math.abs(box.x + box.width / 2 - view.width / 2) <= 1 &&
+          Math.abs(box.y + box.height / 2 - view.height / 2) <= 1,
+        `${kind}: the dialog is not in the middle: ${JSON.stringify(box)} of ${JSON.stringify(view)}`,
+      );
+      assert.ok(
+        box.x >= 8 && box.y >= 8 && box.x + box.width <= view.width - 8,
+        `${kind}: the dialog touches the screen's edge: ${JSON.stringify(box)}`,
+      );
+      await dialog.getByTestId("button-stay-editor").click();
+      await expect(dialog).toHaveCount(0);
+      await expect(page.getByTestId("input-business-name")).toHaveValue("Synthetic Trading Ltd, changed");
+      assert.deepEqual(errors, [], kind);
+    } finally {
+      await close();
+    }
+  }
+});
