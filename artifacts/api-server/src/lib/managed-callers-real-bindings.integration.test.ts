@@ -15,6 +15,7 @@ import type { ArtifactRef } from "../modules/publication/publication-artifacts";
 import type { ManagedRequest, ManagedCompletionResult } from "../modules/ai/managed-inference";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
+import { digest, mandatoryEnhancedChecks } from "@workspace/valo-core";
 
 test(
   "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
@@ -199,6 +200,50 @@ test(
       });
       t.mock.module(new URL("../modules/publication/publication-artifacts.ts", import.meta.url).href, {
         namedExports: { getPublicationArtifact: get, putPublicationArtifact: put },
+      });
+      // A guide answers to the guidance policy, which the owner has not approved. The guide subtest
+      // at the end supposes that approval for its own length, under a version of its own; everywhere
+      // else the policy is as it really stands.
+      const realGuidancePolicy = await import("../modules/publication/guidance-policy");
+      const { publicationWorkspaceRoot } = await import("../modules/publication/operational-policy");
+      const guideApproval = { supposed: false };
+      const supposedGuidancePolicy = async (
+        options: Parameters<typeof realGuidancePolicy.guidancePolicy>[0] = {},
+      ) => {
+        const text = await readFile(
+          join(publicationWorkspaceRoot(), realGuidancePolicy.GUIDANCE_POLICY_PATH),
+          "utf8",
+        );
+        const base = await realGuidancePolicy.guidancePolicy({
+          ...options,
+          approvedHash: sha(Buffer.from(text)),
+        });
+        const { hash: _unapprovedVersionHash, ...body } = base.policy;
+        const supposed = { ...body, version: `${body.version}/approval-supposed-in-a-test` };
+        return { policy: { ...supposed, hash: digest(supposed) }, authority: base.authority };
+      };
+      t.mock.module(new URL("../modules/publication/guidance-policy.ts", import.meta.url).href, {
+        namedExports: {
+          ...realGuidancePolicy,
+          guidancePolicy: (options?: Parameters<typeof realGuidancePolicy.guidancePolicy>[0]) =>
+            guideApproval.supposed
+              ? supposedGuidancePolicy(options)
+              : realGuidancePolicy.guidancePolicy(options),
+        },
+      });
+      // A capture's text is read from memory, where a real capture's is read from private storage.
+      const captureTexts = new Map<string, string>();
+      const realSourceStorage = await import("../modules/sources/source-storage");
+      t.mock.module(new URL("../modules/sources/source-storage.ts", import.meta.url).href, {
+        namedExports: {
+          ...realSourceStorage,
+          readSourceText: async (snapshotId: string, checksum: string) => {
+            const text = captureTexts.get(snapshotId);
+            if (text === undefined || sha(Buffer.from(text)) !== checksum)
+              throw Error("SOURCE_STORAGE_CHECKSUM_FAILED");
+            return text;
+          },
+        },
       });
       // Everything below is the real entry, real callers, real binding checker and real SQL store.
       // Only the model SDK and private file adapter are controlled; no checker is stubbed.
@@ -485,6 +530,10 @@ test(
         ).rows[0];
       const versionOf = (fixture: Awaited<ReturnType<typeof operational>>) =>
         fixture.manifest.works[0]!.bindings.candidateVersionId!;
+      const savedSlug = async (id: string) =>
+        String(
+          (await scoped.query("SELECT slug FROM valo_content_versions WHERE id=$1", [id])).rows[0]?.slug,
+        );
       const copy = (record: object) => put(Buffer.from(JSON.stringify(record)), "json");
       await t.test(
         "the publish command accepts only the reviews its approved batch settled for the candidate",
@@ -864,6 +913,200 @@ test(
           assert.equal(held.result.status, "manual_fallback");
           assert.equal(calls, before);
           assert.equal((await state()).entries.length, 0);
+        },
+      );
+      // Decision 0017: a guide takes the same route. The owner's approval of the guidance policy is
+      // supposed for this subtest only, the captures are made from the passages kept in the
+      // repository, and the model is the stand-in above. The release happens in this disposable
+      // schema, which is dropped; no guide is published anywhere else.
+      await t.test(
+        "a prepared guide's two reviews run through the same dispatcher and the publish command releases it, in this disposable schema",
+        async () => {
+          await reset();
+          const { prepareGuideCandidateRelease } = await import("../modules/editorial/guidance-preparation");
+          const { retainedGuidePassages } = await import("../modules/publication/guidance-passages");
+          const { guideActLeads } = await import("../modules/publication/guidance-captures");
+          const { guideAmendmentRecords } = await import("../modules/publication/guidance-amendments");
+          const { guideClaimMaps } = await import("../modules/publication/guidance-bundle");
+          const { buildGuideClaims } = await import("../modules/publication/guidance-claim-map");
+          const { readGuidanceIntake } = await import("../modules/publication/operational-intake");
+          const { controlledTermsSnapshot } =
+            await import("../modules/publication/guidance-release.fixtures");
+          const { liveReleasedVersions, releasedResources } =
+            await import("../modules/catalogue/valo-released-content");
+          const { REVIEW_INPUT_CEILING } = await import("../modules/editorial/review-meter");
+          const guide = "GUD-02",
+            clockBefore = Date.now();
+          // The amendment records a guide's sources rest on were made on 21 November 2026, after
+          // this test's fixed clock, so the subtest runs just after the last of their searches. Its
+          // clock must not be ahead of the real one: the database stamps a review attempt with the
+          // real time, and the dispatcher treats an attempt stamped before its plan was made as one
+          // left unfinished by an earlier run.
+          t.mock.timers.setTime(Date.parse("2026-11-21T20:30:00Z"));
+          assert.ok(Date.now() > clockBefore, "the subtest's clock is later than the test's");
+          guideApproval.supposed = true;
+          try {
+            const now = new Date(),
+              checkedAt = new Date(+now - 3_600_000);
+            // The capture the daily check would hold of the one Act this guide quotes: the passages
+            // kept in the repository, under the checksum the Act's amendment record describes.
+            const retained = retainedGuidePassages();
+            const intake = await readGuidanceIntake(guide);
+            const needed = buildGuideClaims(
+              guideClaimMaps.find((m) => m.id === guide)!,
+              intake.section.body,
+              retained,
+            ).sources.map((source) => retained(source.id)!);
+            assert.ok(needed.length > 0 && needed.every((p) => p.instrument.id === "CAC-CAMA-2020"));
+            const leadId = guideActLeads["CAC-CAMA-2020"]!,
+              url = needed[0]!.instrument.url,
+              snapshotId = randomUUID(),
+              text = needed.map((p) => p.text).join("\n\f\n"),
+              rawChecksum = guideAmendmentRecords.find((r) => r.instrument === "CAC-CAMA-2020")!.rawSha256;
+            captureTexts.set(snapshotId, text);
+            await scoped.query(
+              `INSERT INTO valo_source_snapshots(id,source_id,url,final_url,attempted_at,fetched_at,status,http_status,mime,raw_checksum,text_checksum,raw_object_key,text_object_key,extraction_version,metadata)
+               VALUES($1,$2,$3,$3,$4,$4,'retrieved_unreviewed',200,'application/pdf',$5,$6,'synthetic-in-memory','synthetic-in-memory','synthetic','{"synthetic":true}')`,
+              [snapshotId, leadId, url, checkedAt, rawChecksum, sha(Buffer.from(text))],
+            );
+            await scoped.query(
+              `INSERT INTO valo_source_watches(source_id,url,risk,last_snapshot_id,last_raw_hash,checked_at,failure_code)
+               VALUES($1,$2,'high',$3,$4,$5,null)`,
+              [leadId, url, snapshotId, rawChecksum, checkedAt],
+            );
+            const termsPath = join(directory, "guide-terms.json");
+            // Controlled pages holding the passages the provider-permission record looks for.
+            await writeFile(termsPath, JSON.stringify(controlledTermsSnapshot(checkedAt)));
+
+            // Prepared from the stored capture, as the operator's command prepares it.
+            const prepared = await prepareGuideCandidateRelease(guide, termsPath);
+            assert.equal(prepared.state, "awaiting_reviews", prepared.reasons.join(", "));
+            assert.ok(prepared.candidateArtifact && prepared.id);
+            const current = await readOperationalInferenceReadiness({
+              candidateVersionId: prepared.id,
+              candidateArtifact: prepared.candidateArtifact,
+            });
+            const plan = await saveOperationalReviewPlan(
+              current.candidate,
+              current.rightsInput,
+              current.provenanceInput,
+              current.exportReport,
+              current.serverEvidence,
+              undefined,
+              current.bundle.sources,
+            );
+            assert.equal(plan.manifest.status, "mechanically_planned_not_reserved");
+            const manifest = prepareOperationalFiniteManifest({
+              candidateVersionId: prepared.id,
+              candidateArtifact: prepared.candidateArtifact,
+              candidateHash: current.candidate.hash,
+              bundleHash: requestDigest(current.bundle),
+              sourceHashes: current.bundle.sources.map((source) => source.hash),
+              sourceFiles: [
+                { path: current.provenanceInput.sourcePath, sha256: current.serverEvidence.sourceHash },
+              ],
+              plan,
+            });
+            const id = await seed(manifest),
+              pair = manifest.works[0]!.pair!;
+
+            // The stand-in answers each request with a pass and the five enhanced checks, each
+            // quoting the first source the request itself carries. It is not a review.
+            answer = async (request) => {
+              const sent = JSON.parse((request.messages[1] as { content: string }).content) as {
+                sources: { text: string }[];
+              };
+              return response(
+                JSON.stringify({
+                  verdict: "pass",
+                  findings: [],
+                  missingEvidence: [],
+                  observations: ["Controlled fixture; not a genuine review"],
+                  enhancedChecks: mandatoryEnhancedChecks.map((name) => ({
+                    name,
+                    result: "pass",
+                    passage: sent.sources[0]!.text.slice(0, 200),
+                    note: "Controlled fixture; not a genuine check",
+                  })),
+                }),
+              );
+            };
+            const before = calls,
+              sentBefore = captured.length;
+            const reviews = await run(() =>
+              withApprovedInferencePair(id, pair, () =>
+                executeOperationalReviewPlan(plan, current.candidate, current.serverEvidence),
+              ),
+            );
+            const attempts = await scoped.query(
+              "SELECT role,outcome,error_code FROM valo_publication_ai_attempts WHERE candidate_hash=$1 ORDER BY role",
+              [current.candidate.hash],
+            );
+            assert.equal(reviews.length, 2, JSON.stringify(attempts.rows));
+            assert.equal(calls - before, 2, "one call to the stand-in for each review");
+            // What was sent is what was planned: a guide's request, larger than a template's may be.
+            const sent = captured.slice(sentBefore);
+            assert.deepEqual(
+              sent.map((request) => requestDigest(request)).sort(),
+              plan.entries.map((entry) => entry.meter.requestHash).sort(),
+            );
+            for (const entry of plan.entries) {
+              assert.ok(entry.meter.withinInputCeiling);
+              assert.ok(entry.meter.conservativeInputTokenBound > REVIEW_INPUT_CEILING);
+            }
+            assert.equal(
+              await savedVersion(prepared.id),
+              undefined,
+              "nothing is saved before the reviews are checked",
+            );
+
+            // The publish command saves the version with its reviews, and the real publisher
+            // releases it after making every check again, the source capture among them.
+            const result = await publish(
+              id,
+              reviews.map((r) => r.artifact),
+            );
+            assert.equal(result.eligibility?.decision, "eligible", JSON.stringify(result.eligibility));
+            assert.equal(result.status, "published");
+            const row = await savedVersion(prepared.id);
+            assert.equal(row.status, "published");
+            assert.equal(row.bundle.candidate.id, guide);
+            assert.equal(row.bundle.candidate.contentClass, "sourced_guidance");
+            assert.match(row.bundle.policy.version, /approval-supposed-in-a-test$/);
+            assert.deepEqual(
+              row.bundle.enhancedChecks.map((c: { name: string; result: string }) => [c.name, c.result]),
+              mandatoryEnhancedChecks.map((name) => [name, "pass"]),
+            );
+            assert.deepEqual(
+              row.bundle.reviews.map((r: { role: string; verdict: string }) => [r.role, r.verdict]),
+              [
+                ["factual", "pass"],
+                ["challenge", "pass"],
+              ],
+            );
+            const bound = await scoped.query(
+              "SELECT bundle_source_id,snapshot_id,raw_hash FROM valo_source_release_bindings WHERE target_kind='content' AND target_id=$1",
+              [prepared.id],
+            );
+            assert.equal(bound.rows.length, current.bundle.sources.length);
+            assert.ok(bound.rows.every((b) => b.snapshot_id === snapshotId && b.raw_hash === rawChecksum));
+
+            // On the site: shown as a guide while the supposed approval stands, and not without it.
+            assert.ok((await liveReleasedVersions()).some((version) => version.id === prepared.id));
+            assert.deepEqual(
+              (await releasedResources()).filter((r) => r.id === prepared.id).map((r) => r.slug),
+              [await savedSlug(prepared.id)],
+            );
+            guideApproval.supposed = false;
+            assert.ok(!(await liveReleasedVersions()).some((version) => version.id === prepared.id));
+            assert.deepEqual(
+              (await releasedResources()).filter((r) => r.id === prepared.id),
+              [],
+            );
+          } finally {
+            guideApproval.supposed = false;
+            t.mock.timers.setTime(clockBefore);
+          }
         },
       );
       assert.equal(forbiddenNetwork, 0);

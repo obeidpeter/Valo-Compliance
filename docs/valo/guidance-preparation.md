@@ -82,8 +82,11 @@ record describes. That is deliberate: someone has to read the new file and write
   4. `tsx src/scripts/publish-reviewed-pair.ts <batch id> <result artifact id> <sha256>` saves the
      version with its reviews and hands it to the publisher, or records the hold.
 
-  Steps 1 and 2 and the checks behind step 3 are tested for a guide. Steps 3 and 4 have been run in
-  tests for templates only, never for a guide, not even with a stand-in for the model.
+  What stands behind these steps has been run for a guide in a test, in a disposable copy of the
+  database with a stand-in for the model: the guide is prepared from a stored capture, its two
+  reviews go through the real dispatcher, and the publish step releases it through the real
+  publisher. The command lines themselves, and the admission of a guide's pair under an approved
+  package, have not been run for a guide. No guide has been through any of this for real.
 - **Publication.** The publisher makes every check again at release, including that each source is
   still the capture its address serves. A test passes a prepared guide through all of those checks
   in a database transaction that is rolled back. No guide has been published.
