@@ -97,6 +97,13 @@ const contextTerms = [
     locator: "Scoped publication contexts; ChatGPT prose must not be misclassified as API-authored prose",
   },
 ];
+/** Each provider page the permission record reads, with the sentence it must hold. */
+export const providerPermissionSentences: readonly { url: string; quote: string }[] = [
+  { url: rowTerms, quote: ownershipQuote },
+  { url: euTerms, quote: ownershipQuote },
+  { url: chatGPTFAQ, quote: commercialQuote },
+  ...contextTerms.map(({ url, quote }) => ({ url, quote })),
+];
 export const chatGPTSourcePath = "docs/content-candidates/operational-template-candidates.md";
 const notePath = "docs/content-candidates/chatgpt-content-provenance-rights.md";
 const termsSnapshotSchema = z

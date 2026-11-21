@@ -26,9 +26,18 @@ owner has approved the guidance policy: it then prints what holds the guide and 
 
 3. **A capture of each address, checked within the last day.** The daily source check makes it. The
    preparer fetches nothing itself.
-4. **A copy of the AI provider's terms taken within the last day**, as a file in the form of
-   `docs/valo/evidence/chatgpt-provider-terms-snapshot.json`: the five official pages, each as its
-   full text. No command in the repository makes this file yet; it has to be supplied.
+4. **A copy of the AI provider's terms taken within the last day.** This command fetches the
+   provider's five public pages and writes the copy:
+
+   ```sh
+   NODE_ENV=development tsx src/scripts/capture-provider-terms.ts /path/to/terms.json
+   ```
+
+   It refuses to write the copy if a page no longer holds the sentence the rights record looks for.
+   That is a real stop, not a fault to work around: someone has to read what the provider's terms
+   now say before any template or guide is prepared. The command has not yet been run against the
+   provider's site from the development environment. Run from a build machine with a plain
+   request, the five pages were served on 21 November 2026 and held all five sentences.
 5. **The owner's approval of the guidance policy**, recorded as
    `docs/valo/policies/guidance-publication-policy.md` describes. Without it every guide is held.
 
