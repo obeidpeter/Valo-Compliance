@@ -842,3 +842,49 @@ test("no public page shows one of the project's own words that the word list rep
   }
   assert.deepEqual(problems, []);
 });
+
+// Help is for a visitor with a task in mind: the questions are grouped by task, each answer gives
+// the steps, and each is true of this build.
+test("the help page groups its questions by task and answers what a visitor asks first, in the server's HTML", async () => {
+  const html = await (await fetch(web.origin + "/help")).text();
+  const main = html.slice(html.search(/<main/), html.indexOf("</main>"));
+  assert.deepEqual(
+    [...main.matchAll(/<h2[^>]*>([^<]*)<\/h2>/g)].map((heading) => heading[1]),
+    [
+      "Making a document",
+      "Checking your requirements",
+      "Dates and reminders",
+      "Your account and your data",
+      "Getting help",
+    ],
+  );
+  // Fourteen questions, numbered in the order they are read.
+  assert.deepEqual(
+    [...main.matchAll(/data-testid="faq-(\d+)"/g)].map((question) => Number(question[1])),
+    Array.from({ length: 14 }, (_, number) => number),
+  );
+  const words = text(main).replace(/\s+/g, " ");
+  for (const sentence of [
+    // How to start, in steps.
+    'Sign in and choose "New document". Pick one of the twelve everyday documents',
+    // The check needs no account, and an empty result is not an exemption.
+    "You do not need an account.",
+    "Where no published rule covers your answers, the page says so. That does not mean you are exempt.",
+    "It does not provide legal, tax or accounting advice, and no regulator endorses it.",
+    // The clock every date and time is on.
+    "Lagos time, wherever you are.",
+    // What is not sent yet.
+    "Valo does not send reminder emails to customers yet.",
+    "Your requests are listed under the form, each with any reply from staff. Valo does not email replies yet.",
+  ])
+    assert.ok(words.includes(sentence), `the help page says: ${sentence}`);
+  // An answer links to the page it sends the visitor to.
+  for (const [label, href] of [
+    ["Check requirements", "/checker"],
+    ["Report a problem", "/support"],
+    ["Trouble signing in", "/account-access"],
+  ] as const)
+    assert.match(main, new RegExp(`<a[^>]*href="${href}"[^>]*>${label}</a>`), `${label} is a link`);
+  // No price is set, so the page names none.
+  assert.doesNotMatch(words, /\bfree\b|₦|\bprices?\b/i);
+});

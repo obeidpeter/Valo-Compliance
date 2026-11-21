@@ -974,6 +974,35 @@ reply, which staff screens share; and two panels left for a later, more careful 
 their words carry limits on privacy rights and on refunds: the customer's privacy requests and the
 payment concerns.
 
+### Phase 6: the help page answers the first questions
+
+The help page had eight questions in one list. None said how to make a document or how to check
+requirements, which are the two things the site is for.
+
+It now has fourteen questions in five groups, named for what the visitor is trying to do: "Making
+a document", "Checking your requirements", "Dates and reminders", "Your account and your data" and
+"Getting help".
+
+Six questions are new:
+
+| Question | What the answer says |
+| --- | --- |
+| "How do I make a document?" | Sign in, choose "New document", pick one of the twelve everyday documents or a blank one. Valo saves as you work and shows when it has. |
+| "How do I find out which requirements may apply to my business?" | Open the check, which needs no account. "I do not know" is an answer. A result with no published rule is not an exemption. |
+| "Is this legal, tax or accounting advice?" | No, in the footer's own words. |
+| "What time zone are dates and times in?" | "Lagos time, wherever you are." |
+| "Will Valo remind me about a due date?" | Only if reminders are turned on, only for a confirmed due date, and no reminder email is sent to customers yet. |
+| "Where do I read the reply to a request I sent?" | On the "Report a problem" page, under the form. Replies are not emailed yet. |
+
+Three answers link to the page they send the visitor to: the requirements check, "Report a
+problem" and "Trouble signing in".
+
+Each new answer was checked against the screen it describes: the "New document" page and its
+twelve documents, the check's own introduction, the clock in `lib/format.ts`, the reminders screen
+and the customer's requests. The eight earlier answers keep their words.
+
+The page names no price, as no price is set.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
