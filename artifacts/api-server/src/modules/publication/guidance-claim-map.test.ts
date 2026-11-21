@@ -11,7 +11,7 @@ import type { valoContentVersions } from "@workspace/db";
 import { projectReleasedResource } from "../catalogue/valo-released-content";
 import { heldSourceBundle } from "../sources/valo-source-controls.fixtures";
 import { claimLocatorMatches } from "./claim-locator";
-import { GUIDE_OPEN_EVIDENCE, buildGuideCandidate, guideClaimMaps, mappedGuideIds } from "./guidance-bundle";
+import { buildGuideCandidate, guideClaimMaps, mappedGuideIds } from "./guidance-bundle";
 import { GUIDE_LIMITATIONS, GUIDE_SCOPE } from "./guidance-candidate";
 import {
   buildGuideClaims,
@@ -21,8 +21,8 @@ import {
 } from "./guidance-claim-map";
 import { guideBodyBlocks, guideOwnBlocks, guideSourceLines } from "./guidance-document";
 import { retainedGuidePassages, type GuidePassage } from "./guidance-passages";
+import { guidanceOfficialHosts } from "./guidance-policy";
 import { readGuidanceIntake } from "./operational-intake";
-import { operationalPolicy } from "./operational-policy";
 
 const passages = retainedGuidePassages();
 const body = async (id: string) => (await readGuidanceIntake(id)).section.body;
@@ -212,9 +212,12 @@ test("a number that is Valo's own record is named with its reason, and nothing e
     recordedLocator: "Company Registration Portal home page, public notice",
     text: notice,
     hash: sha256(notice),
+    sections: [],
     instrument: {
       id: "CAC-ICRP",
+      kind: "official_page",
       url: "https://icrp.cac.gov.ng/",
+      rawSha256: null,
       title: "Corporate Affairs Commission: Company Registration Portal",
       issuingBody: "Corporate Affairs Commission",
       retrievedAt: "2026-11-21T17:55:00.000Z",
@@ -240,11 +243,12 @@ test("a number that is Valo's own record is named with its reason, and nothing e
 });
 
 test("a guide built from its map is a held candidate that says what it lacks", async () => {
-  const { policy } = await operationalPolicy();
-  // The hosts decision 0017 proposes to add; a guide's links go nowhere else.
-  const proposedHosts = ["www.cac.gov.ng", "taxid.nrs.gov.ng"];
+  // A fixed day: what a source's amendment record supports depends on how old its searches are.
+  const day = new Date("2026-11-21T20:00:00Z");
+  const unboundLine = /is not among the passages supplied/,
+    notCurrentLine = /is not marked current: /;
   for (const id of mappedGuideIds) {
-    const built = await buildGuideCandidate(id);
+    const built = await buildGuideCandidate(id, 1, passages, day);
     const c = publicationSchema.shape.candidate.parse(built.candidate);
     publicationSchema.shape.sources.parse(built.sources);
     assert.equal(c.hash, candidateDigest(c), id);
@@ -253,17 +257,23 @@ test("a guide built from its map is a held candidate that says what it lacks", a
     assert.equal(c.legalScopeStatus, "unverified", id);
     assert.equal(c.scope, GUIDE_SCOPE);
     assert.equal(c.limitations, GUIDE_LIMITATIONS);
-    for (const open of GUIDE_OPEN_EVIDENCE) assert.ok(c.missingEvidence.includes(open), id);
+    // Every line of missing evidence is a sentence left unbound or a source not marked current,
+    // and each source that is held has its line.
+    for (const line of c.missingEvidence)
+      assert.ok(unboundLine.test(line) || notCurrentLine.test(line), `${id}: ${line}`);
+    const held = built.sources.filter((s) => s.status !== "approved");
+    assert.ok(held.length > 0, `${id} has a source that is not marked current`);
+    assert.equal(c.missingEvidence.filter((line) => notCurrentLine.test(line)).length, held.length, id);
+    for (const s of built.sources)
+      assert.equal(s.status === "approved", s.operativeTextConfirmed && s.amendmentsResolved, s.id);
     assert.equal(c.assumptions.length, 1, `${id} carries its draft's own applicability note`);
     assert.match(c.assumptions[0]!, /^Applies when: /);
     // Its sources were last read on 14 November 2026, and it says so; it is due again in 30 days.
     assert.match(c.sourceCheckDate, /^2026-11-14T/);
     assert.equal(Date.parse(c.reviewBy!) - Date.parse(c.sourceCheckDate), 30 * 86_400_000);
+    // A guide's links go only to hosts the proposed guidance policy lists.
     for (const host of built.linkHosts)
-      assert.ok(
-        policy.officialHosts.includes(host) || proposedHosts.includes(host),
-        `${id} links to ${host}`,
-      );
+      assert.ok((guidanceOfficialHosts as readonly string[]).includes(host), `${id} links to ${host}`);
 
     // In a bundle it is held, for the reasons the gate gives a guide with no source decision.
     const bundle: PublicationBundle = {
@@ -284,7 +294,9 @@ test("a guide built from its map is a held candidate that says what it lacks", a
   }
   // The two guides that rest on pages not kept in the repository name the sentences left unbound.
   const unbound = async (id: string) =>
-    (await buildGuideCandidate(id)).candidate.missingEvidence.length - GUIDE_OPEN_EVIDENCE.length;
+    (await buildGuideCandidate(id, 1, passages, day)).candidate.missingEvidence.filter((line) =>
+      unboundLine.test(line),
+    ).length;
   assert.equal(await unbound("GUD-05"), 1);
   assert.equal(await unbound("GUD-08"), 3);
   assert.equal(await unbound("GUD-01"), 0);

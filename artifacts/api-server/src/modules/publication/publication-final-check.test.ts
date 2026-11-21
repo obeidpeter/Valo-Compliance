@@ -3,12 +3,14 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, copyFile, writeFile, rm } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
+import { GUIDANCE_POLICY_PATH, guidancePolicy } from "./guidance-policy";
 import { operationalPolicy, publicationWorkspaceRoot } from "./operational-policy";
 import { finalOperationalPublicationCheck } from "./publication-final-check";
 import { heldSourceBundle } from "../sources/valo-source-controls.fixtures";
 
+// The fixture is a form here: the templates' policy governs a form, and the guidance policy a guide.
 test("final check observes evidence expiry after earlier work and refuses backdating", async () => {
-  const bundle = heldSourceBundle(new Date()),
+  const bundle = heldSourceBundle(new Date(), false),
     policy = await operationalPolicy();
   // Held fixture is deliberately not a passing manifest. These assertions target
   // the time guard before the ordinary eligibility check; no release is created.
@@ -52,13 +54,89 @@ test("final check re-reads actual narrowed owner policy after initial validation
     assert.notEqual((await operationalPolicy()).policy.hash, before.policy.hash);
     await assert.rejects(
       finalOperationalPublicationCheck(
-        heldSourceBundle(new Date()),
+        heldSourceBundle(new Date(), false),
         before.policy.hash,
         new Date("2099-01-01"),
         "2099-01-01T00:00:00Z",
       ),
       /POLICY_CHANGED_DURING_VALIDATION/,
     );
+  } finally {
+    process.chdir(original);
+    await rm(folder, { recursive: true, force: true });
+  }
+});
+test("final check holds a guide to the guidance policy, which the owner's restriction file also narrows", async () => {
+  const guide = heldSourceBundle(new Date()),
+    templates = await operationalPolicy(),
+    guidance = await guidancePolicy();
+  assert.equal(guide.candidate.contentClass, "sourced_guidance");
+  // The templates' policy is not a guide's policy: its hash is refused as a changed policy.
+  await assert.rejects(
+    finalOperationalPublicationCheck(
+      guide,
+      templates.policy.hash,
+      new Date("2099-01-01"),
+      "2099-01-01T00:00:00Z",
+    ),
+    /POLICY_CHANGED_DURING_VALIDATION/,
+  );
+  // Under the guidance policy the time guard and the gate apply as they do to a form.
+  await assert.rejects(
+    finalOperationalPublicationCheck(guide, guidance.policy.hash, new Date(0), "2099-01-01T00:00:00Z"),
+    /STALE_RELEASE/,
+  );
+
+  const original = process.cwd(),
+    root = publicationWorkspaceRoot(),
+    folder = await mkdtemp(join(tmpdir(), "valo-guidance-policy-final-"));
+  try {
+    for (const path of ["docs/specification/master-execution-prompt.txt", GUIDANCE_POLICY_PATH]) {
+      await mkdir(dirname(join(folder, path)), { recursive: true });
+      await copyFile(join(root, path), join(folder, path));
+    }
+    process.chdir(folder);
+    assert.equal((await guidancePolicy()).policy.hash, guidance.policy.hash);
+    // The owner suspends publication after a guide's first checks: the guide's policy changes too.
+    await writeFile(
+      join(folder, "docs/valo/policies/operational-publication-restrictions.json"),
+      JSON.stringify({
+        version: "controlled-suspension",
+        reason: "Owner suspension during a controlled isolated validation test",
+        suspended: true,
+      }),
+    );
+    const suspended = await guidancePolicy();
+    assert.deepEqual(suspended.policy.allowedClasses, []);
+    assert.notEqual(suspended.policy.hash, guidance.policy.hash);
+    await assert.rejects(
+      finalOperationalPublicationCheck(
+        guide,
+        guidance.policy.hash,
+        new Date("2099-01-01"),
+        "2099-01-01T00:00:00Z",
+      ),
+      /POLICY_CHANGED_DURING_VALIDATION/,
+    );
+    // Excluding the guides' class does the same, and excluding a form's class leaves guides alone.
+    await writeFile(
+      join(folder, "docs/valo/policies/operational-publication-restrictions.json"),
+      JSON.stringify({
+        version: "controlled-exclusion",
+        reason: "Owner exclusion of guides during a controlled isolated validation test",
+        excludedClasses: ["sourced_guidance"],
+      }),
+    );
+    assert.deepEqual((await guidancePolicy()).policy.allowedClasses, []);
+    await writeFile(
+      join(folder, "docs/valo/policies/operational-publication-restrictions.json"),
+      JSON.stringify({
+        version: "controlled-forms-only",
+        reason: "Owner exclusion of forms during a controlled isolated validation test",
+        excludedClasses: ["general_template"],
+      }),
+    );
+    assert.deepEqual((await guidancePolicy()).policy.allowedClasses, ["sourced_guidance"]);
   } finally {
     process.chdir(original);
     await rm(folder, { recursive: true, force: true });
