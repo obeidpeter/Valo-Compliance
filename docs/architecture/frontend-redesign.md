@@ -315,6 +315,35 @@ sets a customer's own draft apart from Valo's templates and guidance, as EDP-008
 On a phone the two buttons come after the headline and its opening sentence, below the first
 screen on a short phone. The bar at the bottom of the screen offers both from the start.
 
+### Phase 4: the documents list and the document page
+
+**The list** (`/library`, which the header calls Documents):
+
+- Its heading is "Documents and guidance", and its opening sentence says what the search covers.
+- A result names its kind in words (Template, Guidance, Article, Industry page, Service enquiry)
+  and its industries by name. It showed the catalogue's short codes, such as `template` and
+  `retail-wholesale`. More than two industries are counted, and a code with no name is left out.
+- The count of results is written by the shared formatter, with the page number when there is
+  more than one page.
+- With nothing to show, the page offers "Create a document" and says in plain words what is and
+  is not searched.
+
+**The document page** (`/library/<slug>`):
+
+- What the template is for and its preview come first. The dates its sources were checked, how
+  it was written and checked, what it covers and its limits follow, under plain headings. Every
+  one of them is still on the page, and the disclosure is still the release's own text (EDP-008).
+- The button reads "Make my own copy", and the blank files are "Blank Word file" and "Blank PDF".
+- The "Not for sale" note no longer adds that use is free.
+- One sentence still says "drafts": "Drafts you already created stay in your workspace." A test
+  for EDT-010 holds that sentence, so it changes in the workspace phase, where the word is
+  replaced everywhere at once.
+
+**Kept, and why.** The list keeps its Access filter with "Free" and "Premium templates", and a
+result still shows which it is. DOC-002 requires free and premium filters, so the rule against
+price words does not reach them. The owner decides whether that changes while no price is set;
+it would be a change to the requirement, not to this page.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the

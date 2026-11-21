@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { catalogueParams, libraryFilters, libraryHref } from "./library-filters";
+import { catalogueParams, industryLabel, libraryFilters, libraryHref, typeName } from "./library-filters";
 
 test("the library reads its filters from the address, with anything unknown read as its default", () => {
   assert.deepEqual(libraryFilters(new URLSearchParams("")), {
@@ -43,4 +43,33 @@ test("the library asks the catalogue for its filters, and links to a filter chan
   );
   assert.equal(libraryHref(filters, { page: 5 }), "/library?q=invoice&type=template&access=free&page=5");
   assert.equal(libraryHref(filters, { type: "all", access: "all", q: "" }), "/library");
+});
+
+test("a result names its kind and its industries in words, never by their codes", () => {
+  assert.deepEqual(["template", "guidance", "article", "industry", "service"].map(typeName), [
+    "Template",
+    "Guidance",
+    "Article",
+    "Industry page",
+    "Service enquiry",
+  ]);
+  const names = new Map([
+    ["retail-wholesale", "Retail and wholesale"],
+    ["food-services", "Food and hospitality"],
+    ["professional-services", "Professional services"],
+  ]);
+  assert.equal(industryLabel("All industries", names), "All industries");
+  assert.equal(industryLabel("retail-wholesale", names), "Retail and wholesale");
+  assert.equal(
+    industryLabel("retail-wholesale,food-services", names),
+    "Retail and wholesale · Food and hospitality",
+  );
+  assert.equal(
+    industryLabel("retail-wholesale,food-services,professional-services", names),
+    "Retail and wholesale and 2 more",
+  );
+  // A code the list of industries does not have is never shown as it is.
+  assert.equal(industryLabel("retail-wholesale,unlisted-code", names), "Retail and wholesale");
+  assert.equal(industryLabel("unlisted-code", names), null);
+  assert.equal(industryLabel("retail-wholesale", new Map()), null);
 });

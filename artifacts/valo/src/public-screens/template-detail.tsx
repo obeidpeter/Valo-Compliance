@@ -24,12 +24,12 @@ function Unavailable() {
       title="This template is not available"
       action={
         <Link href="/library" className="btn btn-primary" data-testid="link-back-library">
-          Back to the library
+          Back to documents
         </Link>
       }
     >
-      It may have been withdrawn, its evidence may need updating, or the link may be wrong. Availability is
-      checked again before a new draft or download. Drafts you already created stay in your workspace.
+      It may have been withdrawn, its sources may need checking again, or the link may be wrong. Valo checks
+      again before a copy or a download. Drafts you already created stay in your workspace.
     </EmptyState>
   );
 }
@@ -64,7 +64,7 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
       const d = describeError(e);
       setDlError(
         d.kind === "notFound"
-          ? "This template is no longer available to download. It may have been withdrawn."
+          ? "This template can no longer be downloaded. It may have been withdrawn."
           : d.message,
       );
     } finally {
@@ -83,12 +83,12 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
         data-testid="button-create-draft"
       >
         <FilePlus2 className="h-4 w-4" aria-hidden />
-        {create.isPending ? "Creating private draft…" : "Create a private draft"}
+        {create.isPending ? "Making your copy…" : "Make my own copy"}
       </button>
       {createErr && (
         <p role="alert" className="text-sm text-red-800" data-testid="text-draft-error">
           {createErr.kind === "notFound"
-            ? "This template was withdrawn before your draft was created. Nothing was saved."
+            ? "This template was withdrawn before your copy was made. Nothing was saved."
             : createErr.message}
         </p>
       )}
@@ -103,7 +103,7 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
               data-testid={"button-download-" + f}
             >
               <Download className="h-4 w-4" aria-hidden />
-              {busy === f ? "Preparing…" : `Blank ${f.toUpperCase()}`}
+              {busy === f ? "Preparing…" : `Blank ${f === "docx" ? "Word file" : f.toUpperCase()}`}
             </button>
           ))}
         </div>
@@ -149,7 +149,7 @@ export function TemplateDetail({
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         data-testid="link-library"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden /> Library
+        <ArrowLeft className="h-4 w-4" aria-hidden /> Documents
       </Link>
       <div className="mt-6">
         {/* A template the server found missing is shown unavailable while the browser checks again,
@@ -165,10 +165,12 @@ export function TemplateDetail({
         ) : q.isError ? (
           <ErrorState error={q.error} title="Template could not be loaded" onRetry={() => q.refetch()} />
         ) : t ? (
+          // On a phone the three parts follow one another: what it is, how to use it, then its
+          // notices. On a wide screen the middle one stays beside the other two.
           <article className="grid gap-10 lg:grid-cols-[1fr_340px]">
-            <div className="min-w-0">
+            <div className="min-w-0 lg:col-start-1">
               <div className="flex flex-wrap gap-2">
-                <span className="pill pill-forest">Business document</span>
+                <span className="pill pill-forest">Template</span>
                 <span className="pill pill-ink" data-testid="text-version">
                   Version {t.version}
                 </span>
@@ -183,17 +185,9 @@ export function TemplateDetail({
               </h1>
               <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{t.summary}</p>
 
-              <ReleaseNotices
-                reviewedAt={t.reviewedAt}
-                reviewBy={t.reviewBy}
-                disclosure={t.disclosure}
-                scope={t.scope}
-                limitations={t.limitations}
-              />
-
               <section className="mt-10" aria-labelledby="preview-heading">
                 <h2 id="preview-heading" className="eyebrow">
-                  Public preview
+                  Preview
                 </h2>
                 {t.preview.length > 0 ? (
                   <div
@@ -208,18 +202,16 @@ export function TemplateDetail({
                       ))}
                     </div>
                     <p className="mt-6 border-t border-dashed border-border pt-4 text-xs text-muted-foreground">
-                      Preview excerpt only. The full text is available inside a private draft.
+                      Part of the template. All of it opens in your own copy.
                     </p>
                   </div>
                 ) : (
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    No public preview is provided for this template.
-                  </p>
+                  <p className="mt-3 text-sm text-muted-foreground">This template has no preview.</p>
                 )}
               </section>
             </div>
 
-            <aside className="lg:sticky lg:top-24 lg:self-start">
+            <aside className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
               <div className="surface grid gap-4 p-5">
                 <p className="font-display text-xl">Use this template</p>
                 {signedIn ? (
@@ -227,8 +219,8 @@ export function TemplateDetail({
                 ) : (
                   <>
                     <p className="text-sm text-muted-foreground">
-                      Sign in to create a private draft or download the blank file. Your drafts are visible
-                      only to you.
+                      Sign in to make your own copy or download the blank file. Your copy is kept in your own
+                      workspace.
                     </p>
                     <Link href="/sign-in" className="btn btn-primary w-full" data-testid="link-sign-in">
                       Sign in to continue
@@ -238,17 +230,27 @@ export function TemplateDetail({
                 {!t.commercialLicenceAccepted && (
                   <Notice title="Not for sale">
                     Commercial licence terms have not been accepted for this template, so it is not sold or
-                    offered as a paid product. Use is free in this development build.
+                    offered as a paid product.
                   </Notice>
                 )}
                 {t.developmentOnly && (
                   <p className="text-xs text-muted-foreground">
-                    Development release. This is an operational business document, not legal guidance, and it
+                    Development release. This is an everyday business document, not legal guidance, and it
                     does not tell you what the law requires of your business.
                   </p>
                 )}
               </div>
             </aside>
+
+            <div className="min-w-0 lg:col-start-1">
+              <ReleaseNotices
+                reviewedAt={t.reviewedAt}
+                reviewBy={t.reviewBy}
+                disclosure={t.disclosure}
+                scope={t.scope}
+                limitations={t.limitations}
+              />
+            </div>
           </article>
         ) : (
           <Unavailable />
