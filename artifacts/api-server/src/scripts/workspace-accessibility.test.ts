@@ -1633,6 +1633,10 @@ test("the saved results, the business profile, the tasks and the check's save pa
   await open("/workspace/profile", async (page) => {
     await expect(page.getByTestId("text-profile-revision")).toHaveText("Version 3");
     await expect(page.getByTestId("button-save-profile")).toHaveText("Save profile");
+    // An abbreviation is spelt out where it is asked for, as the check spells it.
+    await expect(page.getByTestId("select-registrationStatus")).toHaveAccessibleName(
+      "Registration with the Corporate Affairs Commission (CAC)",
+    );
     await expect(page.getByTestId("select-employees-mode").locator("option")).toHaveText([
       "I know the number",
       "I do not know",
