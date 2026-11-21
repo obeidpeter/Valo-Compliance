@@ -7,12 +7,15 @@ export function parseFinitePreparationOptions(extra: string[]) {
   if (new Set(extra).size !== extra.length || extra.length > 20)
     throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
   let retry = false,
+    guidePairs = false,
     packageId: string | undefined;
   // Prepared candidates are private artifacts until their reviews pass (decision 0014), so each
   // is named by its exact artifact: --candidate=<artifact id>:<artifact sha256>.
   const candidates: { id: string; hash: string; extension: "json" }[] = [];
   for (const option of extra) {
     if (option === "--with-schema-retry") retry = true;
+    // A new package for the review pairs of guides (decision 0017), in place of the templates' one.
+    else if (option === "--guide-pairs") guidePairs = true;
     else if (/^--package=finite-package:[a-f0-9]{64}$/.test(option)) {
       if (packageId) throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
       packageId = option.slice("--package=".length);
@@ -22,7 +25,8 @@ export function parseFinitePreparationOptions(extra: string[]) {
       candidates.push({ id, hash, extension: "json" });
     } else throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
   }
-  return { retry, packageId, candidates };
+  if (guidePairs && (retry || packageId)) throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
+  return { retry, packageId, candidates, guidePairs };
 }
 /** Select one immutable pair or customer case; never silently pick a candidate.
  * The single-proposal shape is retained for already-created private reports. */

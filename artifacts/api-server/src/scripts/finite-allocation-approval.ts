@@ -18,10 +18,11 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * `approve` authorizes spending up to the allocation's cap, so only the product owner runs it, or an
  * operator on their written instruction. Building or testing this command spends nothing.
  *
- *   tsx src/scripts/finite-allocation-approval.ts prepare <package.json> [--editorial-cases]
+ *   tsx src/scripts/finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --guide-pairs]
  *     Writes the current package to <package.json> and prints its id and limits. Writes nothing else.
  *     The package admits the template review pairs, or with --editorial-cases only the case-bound
- *     editorial cases' review pairs (decision 0015): each approval covers one kind of work.
+ *     editorial cases' review pairs (decision 0015), or with --guide-pairs only the review pairs of
+ *     guides that say what the law requires (decision 0017): each approval covers one kind of work.
  *   tsx src/scripts/finite-allocation-approval.ts status
  *     Lists every recorded package approval. Read-only.
  *   VALO_RECORD_OWNER_INFERENCE_APPROVAL=owner-approved-exact-finite-package \
@@ -34,7 +35,7 @@ import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
  * Every mode needs NODE_ENV=development and refuses a deployment.
  */
 const usage =
-  "usage: finite-allocation-approval.ts prepare <package.json> [--editorial-cases] | status | approve <package.json> --confirm <id> --approved-by <name> --reference <text> [--hours n] | revoke --confirm <id>";
+  "usage: finite-allocation-approval.ts prepare <package.json> [--editorial-cases | --guide-pairs] | status | approve <package.json> --confirm <id> --approved-by <name> --reference <text> [--hours n] | revoke --confirm <id>";
 const [mode, ...rest] = process.argv.slice(2);
 const option = (name: string) => {
   const index = rest.indexOf(name);
@@ -62,12 +63,16 @@ try {
       !out ||
       out.startsWith("--") ||
       more.length ||
-      (choice !== undefined && choice !== "--editorial-cases")
+      (choice !== undefined && choice !== "--editorial-cases" && choice !== "--guide-pairs")
     )
       throw new Error(usage);
     const pkg = await prepareFiniteAllocationPackage(
       new Date(),
-      choice ? finitePackagePreparers.editorialCases : finitePackagePreparers.templatePairs,
+      choice === "--editorial-cases"
+        ? finitePackagePreparers.editorialCases
+        : choice === "--guide-pairs"
+          ? finitePackagePreparers.guidePairs
+          : finitePackagePreparers.templatePairs,
     );
     validateAllocationPackage(pkg);
     // `wx` never overwrites: a package the owner may already have read stays as it was.

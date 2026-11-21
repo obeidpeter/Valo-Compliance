@@ -61,6 +61,18 @@ test("a publication review names the exact prepared candidate it reads", () => {
     assert.throws(() => assertFiniteWorkShape(w), /PUBLICATION_CANDIDATE_REQUIRED/);
   }
 });
+test("a publication review may read a prepared template or a prepared guide", () => {
+  for (const id of ["TPL-12", "GUD-01", "GUD-30"]) {
+    const w = work("publication");
+    w.bindings.candidateArtifact!.templateId = id;
+    assert.doesNotThrow(() => assertFiniteWorkShape(w));
+  }
+  for (const id of ["GUD-1", "GUD-001", "GUIDE-C01", "gud-01", ""]) {
+    const w = work("publication");
+    w.bindings.candidateArtifact!.templateId = id;
+    assert.throws(() => assertFiniteWorkShape(w), /PUBLICATION_CANDIDATE_REQUIRED/);
+  }
+});
 test("no other lane carries a prepared publication candidate", () => {
   for (const lane of ["editorial_evaluation", "checker_challenge", "customer"] as const) {
     const w = work(lane);

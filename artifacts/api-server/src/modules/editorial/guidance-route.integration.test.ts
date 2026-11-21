@@ -230,9 +230,53 @@ test(
       assert.deepEqual(Object.keys(facilitation.onSectionsQuoted), ["868"]);
     }
 
-    // Without the owner's approval no review can be planned. With the supposition taken away, the
-    // policy is the unapproved one it really is, and the prepared guide is refused before any
-    // request is made from it.
+    // The review route's own gates, short of spending anything. The pair is saved as a plan that is
+    // not held for its size. The manifest takes a guide. The check the dispatcher makes just before
+    // it sends anything builds both requests again from the stored candidate and finds them
+    // unchanged. And only a package for guides admits the pair.
+    const { saveOperationalReviewPlan } = await import("./operational-review");
+    const { prepareOperationalFiniteManifest } = await import("../ai/inference-manifest");
+    const { assertFiniteWorkBindings } = await import("../ai-lanes/inference-work-bindings");
+    const { assertWorkPackageMembership, finitePackagePreparers, prepareFiniteAllocationPackage } =
+      await import("../ai/inference-allocation-package");
+    const { requestDigest } = await import("../ai/inference-budget");
+    const plan = await saveOperationalReviewPlan(
+      current.candidate,
+      current.rightsInput,
+      current.provenanceInput,
+      current.exportReport,
+      current.serverEvidence,
+      undefined,
+      current.bundle.sources,
+    );
+    assert.equal(plan.manifest.status, "mechanically_planned_not_reserved");
+    const manifest = prepareOperationalFiniteManifest({
+      candidateVersionId: prepared.id,
+      candidateArtifact: prepared.candidateArtifact,
+      candidateHash: current.candidate.hash,
+      bundleHash: requestDigest(current.bundle),
+      sourceHashes: current.bundle.sources.map((source) => source.hash),
+      sourceFiles: [{ path: current.provenanceInput.sourcePath, sha256: current.serverEvidence.sourceHash }],
+      plan,
+    });
+    assert.deepEqual(
+      manifest.works.map((work) => [work.lane, work.role, work.bindings.candidateArtifact?.templateId]),
+      [
+        ["publication", "factual", guide],
+        ["publication", "challenge", guide],
+      ],
+    );
+    for (const work of manifest.works) await assertFiniteWorkBindings(work);
+    const guidePackage = await prepareFiniteAllocationPackage(new Date(), finitePackagePreparers.guidePairs),
+      templatePackage = await prepareFiniteAllocationPackage(new Date());
+    for (const work of manifest.works) {
+      assert.doesNotThrow(() => assertWorkPackageMembership(work, guidePackage, guide));
+      assert.throws(() => assertWorkPackageMembership(work, templatePackage, guide), /PREPARER_UNAVAILABLE/);
+    }
+
+    // Without the owner's approval no review can be planned or sent. With the supposition taken
+    // away, the policy is the unapproved one it really is: the prepared guide is refused before any
+    // request is made from it, and the dispatcher's check refuses the pair already planned.
     approval.supposed = false;
     await assert.rejects(
       readOperationalInferenceReadiness({
@@ -241,6 +285,8 @@ test(
       }),
       /SAVED_PLAN_INPUT_CHANGED/,
     );
+    for (const work of manifest.works)
+      await assert.rejects(assertFiniteWorkBindings(work), /SAVED_PLAN_INPUT_CHANGED/);
     const unapproved = await prepareGuideCandidateRelease(guide, termsPath, { captures, now });
     assert.equal(unapproved.state, "held");
     assert.ok(unapproved.reasons.includes("policy_not_owner_approved"));

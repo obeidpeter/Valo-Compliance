@@ -10,7 +10,11 @@ import {
 import type { FiniteManifest, FiniteWork } from "./inference-types";
 import type { InferenceBudgetStore } from "./inference-budget-store";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
-import { operationalInferenceTemplateIds, supportsOperationalInferenceTemplate } from "../publication";
+import {
+  mappedGuideIds,
+  operationalInferenceTemplateIds,
+  supportsOperationalInferenceTemplate,
+} from "../publication";
 const root = resolve(import.meta.dirname, "../../../../..");
 const sha = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 type SourceRef = { path: string; sha256: string };
@@ -39,11 +43,13 @@ export type FiniteAllocationPackage = {
 /**
  * The request preparers a package admits work from. A package names exactly one set, so each owner
  * approval covers one kind of work: the template review pairs (with the customer cases the
- * original package already covered), or the case-bound editorial cases (decision 0015).
+ * original package already covered), the case-bound editorial cases (decision 0015), or the review
+ * pairs of guides that say what the law requires (decision 0017).
  */
 export const finitePackagePreparers = {
   templatePairs: ["operational-template-pair-v1"],
   editorialCases: ["editorial-case-pair-v1"],
+  guidePairs: ["guide-review-pair-v1"],
 } as const;
 export type FinitePackagePreparers = (typeof finitePackagePreparers)[keyof typeof finitePackagePreparers];
 const preparerSet = (value: unknown) =>
@@ -89,6 +95,7 @@ export async function prepareFiniteAllocationPackage(
 ): Promise<FiniteAllocationPackage> {
   if (!preparerSet(preparers)) throw Error("PACKAGE_PREPARERS_INVALID");
   const editorialCases = preparers === finitePackagePreparers.editorialCases;
+  const guidePairs = preparers === finitePackagePreparers.guidePairs;
   const sources = await Promise.all(
     scopePaths.map(async (path) => {
       const bytes = await readFile(resolve(root, path));
@@ -145,11 +152,17 @@ export async function prepareFiniteAllocationPackage(
           "Template review pairs, customer cases, other content and other evaluation lanes are outside this package.",
           "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
         ]
-      : [
-          `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
-          "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
-          "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
-        ],
+      : guidePairs
+        ? [
+            `Supported guide review pairs: ${mappedGuideIds.join(", ")}; each requires a prepared candidate bound to current captures of its official sources, under the guidance policy as the owner approved it.`,
+            "Template review pairs, editorial cases, customer cases and other content are outside this package.",
+            "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+          ]
+        : [
+            `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
+            "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
+            "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+          ],
   };
 }
 export function allocationPackageId(value: FiniteAllocationPackage) {
@@ -224,6 +237,11 @@ export function assertWorkPackageMembership(
   const editorialCases =
     requestDigest(pkg.supportedPreparers) === requestDigest(finitePackagePreparers.editorialCases);
   if (editorialCases !== (work.lane === "editorial_evaluation")) throw Error("WORK_OUTSIDE_PACKAGE");
+  // A guide package admits the review pairs of guides and nothing else, and no other package
+  // admits a guide: the owner approves spending on guides by approving a package of this kind.
+  const guidePairs =
+    requestDigest(pkg.supportedPreparers) === requestDigest(finitePackagePreparers.guidePairs);
+  if (guidePairs && work.lane !== "publication") throw Error("WORK_OUTSIDE_PACKAGE");
   if (work.bindings.corpus) {
     const corpus = pkg.corpora.find((c) => c.name === work.bindings.corpus),
       row = corpus?.cases.find((c) => c.id === work.bindings.caseId);
@@ -252,7 +270,7 @@ export function assertWorkPackageMembership(
   if (
     work.lane !== "publication" ||
     !contentId ||
-    !supportsOperationalInferenceTemplate(contentId) ||
+    !(guidePairs ? mappedGuideIds.includes(contentId) : supportsOperationalInferenceTemplate(contentId)) ||
     !work.bindings.operationalPlan
   )
     throw Error("PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE");
