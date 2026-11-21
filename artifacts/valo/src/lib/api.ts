@@ -8,6 +8,8 @@ import {
 import type { GuidedSpec } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 
+import { askedAs, saidAs } from "./guided-money";
+
 export { describeError, type DescribedError, type ErrorKind } from "./describe-error";
 
 export function newBlockId(): string {
@@ -40,20 +42,22 @@ export const FIELD_LABELS: Record<keyof CanonicalDocument["fields"], string> = {
 const UNANSWERED = guidedFieldIssue({ id: "", label: "", type: "text", required: true }, "");
 
 /**
- * One line of the list for something a guided document still needs: the question in its own words,
- * a table's row and column by name, then what is wrong with the answer unless it was simply not
- * given.
+ * One line of the list for something a guided document still needs: the question as the editor
+ * asks it, a table's row and column by name, then what is wrong with the answer unless it was
+ * simply not given.
  */
 function neededLine(spec: GuidedSpec, key: string, message: string): string {
   const [tableId, row, columnId] = key.split(":");
+  const field = spec.fields.find((f) => f.id === key);
   const table = spec.tables.find((t) => t.id === tableId);
-  const name =
-    spec.fields.find((f) => f.id === key)?.label ??
-    (table && row !== undefined
-      ? `${table.label}, row ${Number(row) + 1}: ${table.columns.find((c) => c.id === columnId)?.label ?? columnId}`
-      : table?.label);
+  const column = table?.columns.find((c) => c.id === columnId);
+  const name = field
+    ? askedAs(field)
+    : table && row !== undefined
+      ? `${table.label}, row ${Number(row) + 1}: ${column ? askedAs(column) : columnId}`
+      : table?.label;
   if (!name) return message;
-  return message === UNANSWERED ? name : `${name}: ${message}`;
+  return message === UNANSWERED ? name : `${name}: ${saidAs(message)}`;
 }
 
 /** What a document still needs before it is complete, one line each, in the order of its questions. */

@@ -23,11 +23,17 @@ export async function runGuidedCustomerJourneys(
     dir = fileURLToPath(new URL("../../../../generated-artifacts/valo-guided-private/", import.meta.url));
   await mkdir(dir, { recursive: true });
   let lastExport = 0;
+  /** An amount of whole kobo as the naira a customer types, exactly: "150050" is "1500.50". */
+  const naira = (kobo: string) => {
+    const digits = kobo.padStart(3, "0");
+    return `${digits.slice(0, -2)}.${digits.slice(-2)}`;
+  };
   const fill = async (f: GuidedField, id: string, value: string) => {
     const input = page.locator("#" + id);
     if (f.type === "acknowledgement") await input.check();
     else if (f.type === "select") await input.selectOption(value);
-    else await input.fill(value);
+    // An amount is typed in naira; the saved answer is the same amount in whole kobo.
+    else await input.fill(f.type === "money_kobo" ? naira(value) : value);
   };
   const save = async (id: string) => {
     await page.keyboard.press("Control+s");
@@ -70,16 +76,16 @@ export async function runGuidedCustomerJourneys(
       }
       if (templateId === "TPL-01") {
         await page.locator("#g-dueDate").fill("2026-01-01");
-        await page.locator("#gt-items-0-unitPriceKobo").fill("12.50");
+        await page.locator("#gt-items-0-unitPriceKobo").fill("12.5x");
         await expect(page.getByTestId("status-guided-issues")).not.toContainText(
           "All shown answers are complete",
         );
         const invalid = await save(id),
           raw = guidedDataFromBlocks(invalid.content.blocks)!;
         expect(raw.values.dueDate).toBe("2026-01-01");
-        expect(raw.tables.items![0]!.unitPriceKobo).toBe("12.50");
+        expect(raw.tables.items![0]!.unitPriceKobo).toBe("12.5x");
         await page.locator("#g-dueDate").fill(input.values.dueDate!);
-        await page.locator("#gt-items-0-unitPriceKobo").fill(input.tables.items![0]!.unitPriceKobo!);
+        await page.locator("#gt-items-0-unitPriceKobo").fill(naira(input.tables.items![0]!.unitPriceKobo!));
       }
       const saved = await save(id),
         answers = guidedDataFromBlocks(saved.content.blocks)!;

@@ -4,7 +4,11 @@ import { setTimeout as delay } from "node:timers/promises";
 import { expect, type Page } from "@playwright/test";
 import * as api from "@workspace/api-zod";
 import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
-import { compileGuidedContent, emptyGuidedData } from "@workspace/valo-core/guided-runtime";
+import {
+  compileGuidedContent,
+  emptyGuidedData,
+  guidedDataFromBlocks,
+} from "@workspace/valo-core/guided-runtime";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import {
   menuProblems,
@@ -1375,9 +1379,10 @@ test("an invoice started from its questions lists what it still needs by each qu
         needed.map((line) => line.trim()),
         [
           ...spec.fields.filter((f) => f.required && !f.when).map((f) => f.label),
+          // An amount is asked for in naira; the questions' definitions name it in kobo.
           ...table.columns
             .filter((c) => c.required && !c.when)
-            .map((c) => `${table.label}, row 1: ${c.label}`),
+            .map((c) => `${table.label}, row 1: ${c.label.replace("whole kobo", "naira")}`),
         ],
       );
       for (const line of needed) assert.doesNotMatch(line, /:\d+:|This answer is required/);
@@ -1389,7 +1394,10 @@ test("an invoice started from its questions lists what it still needs by each qu
       await expect(page.getByTestId(`button-add-${table.id}`)).toHaveText("Add a row");
       // The project's own names for the form are not shown.
       const shown = (await page.locator("main").innerText()).replace(/\s+/g, " ");
-      assert.doesNotMatch(shown, /TPL-\d+|Guided form|\brev\b|\brevisions?\b|business draft|\bexports?\b/i);
+      assert.doesNotMatch(
+        shown,
+        /TPL-\d+|Guided form|\brev\b|\brevisions?\b|business draft|\bexports?\b|\bkobo\b|\bNGN\b/i,
+      );
       assert.deepEqual(errors, []);
       assert.deepEqual(unknown, []);
     } finally {
@@ -1472,6 +1480,90 @@ test("a new form is not marked as wrong: each unanswered question is marked as s
     // What was typed is saved as it is, and the page asked for nothing the test did not answer.
     await expect(page.getByTestId("status-save")).toContainText("Saved", { timeout: 15_000 });
     assert.ok(sent.length >= 1, "the answers were saved");
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// AI-003: "Preserve supplied names and amounts; mark missing facts explicitly. Calculate totals
+// deterministically in application code using decimal-safe arithmetic."
+test("an amount is typed in naira and saved as the same amount in whole kobo; what is not an amount stays as typed and is refused; and a saved amount is shown and printed in naira", async () => {
+  const sent: { title: string; content: { blocks: Parameters<typeof guidedDataFromBlocks>[0] } }[] = [];
+  const saving: Api = async (route, method, path, query) => {
+    if (method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+      sent.push(route.request().postDataJSON() as (typeof sent)[number]);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.SaveDocumentResponse.parse({ ...invoice(3 + sent.length), ...sent.at(-1), id: DOCUMENT }),
+        ),
+      });
+    } else await unanswered(route, method, path, query);
+  };
+  /** The unit price the page last saved, as the saved answers hold it. */
+  const savedPrice = () => guidedDataFromBlocks(sent.at(-1)!.content.blocks)!.tables.items![0]!.unitPriceKobo;
+  {
+    const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, saving);
+    try {
+      await ready(page);
+      const price = page.locator("#gt-items-0-unitPriceKobo");
+      const reading = page.getByTestId("text-gt-items-0-unitPriceKobo-ngn");
+      await expect(page.getByLabel("Unit price in naira, for the chosen quantity unit")).toHaveCount(1);
+      await expect(reading).toHaveText("");
+
+      // Naira, with or without separators and kobo: the same amount is saved in whole kobo.
+      await price.fill("1,500.50");
+      await expect(reading).toHaveText("Reads as ₦1,500.50");
+      await expect(price).toHaveAttribute("aria-invalid", "false");
+      await expect.poll(() => sent.length && savedPrice(), { timeout: 15_000 }).toBe("150050");
+      // The box keeps what the customer typed.
+      await expect(price).toHaveValue("1,500.50");
+
+      // Not an amount: it stays as typed, is refused in words about naira, and is saved as typed.
+      await price.fill("12.5x");
+      await expect(price).toHaveAttribute("aria-invalid", "true");
+      await expect(
+        page.getByTestId("guided-fields").getByText("Enter an amount in naira, such as 1500 or 1500.50."),
+      ).toHaveCount(1);
+      await expect(reading).toHaveText("");
+      await expect.poll(() => savedPrice(), { timeout: 15_000 }).toBe("12.5x");
+      await expect(page.getByTestId("card-missing")).toContainText(
+        "Goods, work and agreed charges, row 1: Unit price in naira, for the chosen quantity unit: Enter an amount in naira, such as 1500 or 1500.50.",
+      );
+      assert.doesNotMatch((await page.locator("main").innerText()).replace(/\s+/g, " "), /\bkobo\b/i);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+
+  // A document saved with an amount: the box shows it in naira, and the document prints it with
+  // the naira sign under the question's name, without the unit it is stored in.
+  const data = emptyGuidedData("TPL-01");
+  data.tables.items = [{ ...data.tables.items![0]!, unitPriceKobo: "150000" }];
+  const priced = (revision: number) => ({ ...invoice(revision), content: compileGuidedContent(data) });
+  const { page, errors, unknown, close } = await desktop(
+    `/workspace/documents/${DOCUMENT}`,
+    except({
+      [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(priced(3)),
+      [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([
+        priced(3),
+      ]),
+    }),
+  );
+  try {
+    await ready(page);
+    await expect(page.locator("#gt-items-0-unitPriceKobo")).toHaveValue("1500");
+    await expect(page.getByTestId("text-gt-items-0-unitPriceKobo-ngn")).toHaveText("Reads as ₦1,500.00");
+    await page.getByRole("tab", { name: "Preview", exact: true }).click();
+    const printed = page.getByTestId("preview-doc");
+    await expect(printed).toContainText("Unit price, for the chosen quantity unit");
+    await expect(printed).toContainText("₦1,500.00");
+    assert.doesNotMatch(await printed.innerText(), /kobo|NGN/i);
     assert.deepEqual(errors, []);
     assert.deepEqual(unknown, []);
   } finally {
