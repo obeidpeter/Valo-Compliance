@@ -405,7 +405,7 @@ test("a server-rendered page's opened menu fits a short screen and a phone on it
 const LINKED: [string, string, string][] = [
   ['footer a[href="/library"]', "/library", "Documents and guidance — Valo"],
   ['footer a[href="/pricing"]', "/pricing", "Pricing — Valo"],
-  ['footer a[href="/checker"]', "/checker", "Business requirements checker — Valo"],
+  ['footer a[href="/checker"]', "/checker", "Check your requirements — Valo"],
   ['footer a[href="/compliance"]', "/compliance", "Guidance — Valo"],
   // The guidance tabs join the overview to the guides and the industries.
   ['nav[aria-label="Guidance"] a[href="/resources"]', "/resources", "Guides — Valo"],

@@ -39,8 +39,14 @@ try {
     () => document.querySelector('[data-testid="radio-legalForm-unknown"]')?.checked,
   );
   assert.ok(await page.getByTestId("radio-legalForm-unknown").isChecked());
-  assert.ok(await page.getByTestId("radio-registrationStatus-unanswered").isChecked());
-  report.checks.push("Unknown and unanswered remain separate checked answers.");
+  // Nothing is chosen for the visitor: "Skip for now" shows as chosen only once they choose it.
+  assert.ok(!(await page.getByTestId("radio-registrationStatus-unanswered").isChecked()));
+  await page.getByTestId("radio-registrationStatus-unanswered").locator("..").click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-testid="radio-registrationStatus-unanswered"]')?.checked,
+  );
+  assert.ok(await page.getByTestId("radio-legalForm-unknown").isChecked());
+  report.checks.push("Unknown and unanswered remain separate answers, each chosen only by the visitor.");
   assert.equal(await page.locator('[data-testid="rich-section-businessName"]').count(), 0);
   report.checks.push("Private business-name questions absent from public questionnaire.");
   for (let i = 0; i < 5; i++) await page.getByTestId("button-next").click();

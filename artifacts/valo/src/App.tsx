@@ -307,7 +307,7 @@ function ShellRoutes() {
         </Route>
         <Route path="/workspace/checker">
           {() => (
-            <RequireAuth title="Business requirements checker">
+            <RequireAuth title="Check your requirements">
               <Checker />
             </RequireAuth>
           )}

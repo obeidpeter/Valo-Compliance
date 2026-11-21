@@ -515,7 +515,7 @@ const SIGNED_IN: { path: string; title: string; area?: string }[] = [
   { path: "/workspace", title: "Your workspace" },
   { path: "/workspace/documents", title: "Your documents" },
   { path: `/workspace/documents/${DOCUMENT}`, title: "Document editor" },
-  { path: "/workspace/checker", title: "Business requirements checker" },
+  { path: "/workspace/checker", title: "Check your requirements" },
   { path: "/workspace/assessments", title: "Assessment history" },
   { path: `/workspace/assessments/${ASSESSMENT}`, title: "Assessment" },
   { path: "/workspace/ai", title: "Drafting assistant" },
@@ -944,6 +944,65 @@ test("the phone's opened menu fits a short screen and a phone on its side: every
     }
   }
   assert.deepEqual(problems, []);
+});
+
+test("the requirements check fills in from the business profile at once while the customer has given no answer of their own, says that it did, keeps to the screen's width with its steps ticked, and asks before it replaces answers they gave", async () => {
+  for (const [kind, open] of [
+    ["phone", phone],
+    ["desktop", desktop],
+  ] as const) {
+    const { page, errors, close } = await open("/workspace/checker");
+    try {
+      await ready(page);
+      const fill = page.getByTestId("button-prefill");
+      const dialog = page.locator("dialog[open]");
+      const status = page.getByTestId("status-filled-in");
+      const company = page.getByTestId("radio-legalForm-limited_company");
+      const partnership = page.getByTestId("radio-legalForm-partnership");
+      await expect(fill).toHaveText("Fill in from my business profile");
+      await expect(status).toHaveText("");
+      await expect(page.locator('#checker-step input[type="radio"]:checked')).toHaveCount(0);
+
+      await fill.click();
+      await expect(dialog).toHaveCount(0);
+      await expect(company).toBeChecked();
+      await expect(page.getByTestId("radio-registrationStatus-registered")).toBeChecked();
+      await expect(status).toHaveText("Filled in from your business profile.");
+      await expect(fill).toHaveText("Fill in again from my business profile");
+      // The profile answers every question of four steps, which ticks them. On a phone most of
+      // those ticks are past the screen's edge, in the strip of steps, and must not widen the page.
+      for (const index of [0, 1, 2, 4])
+        await expect(page.getByTestId(`button-step-${index}`)).toContainText("(answered)");
+      const width = page.viewportSize()!.width;
+      assert.equal(await page.evaluate("document.documentElement.scrollWidth"), width, kind);
+      await page.getByTestId("button-step-3").click();
+      await expect(page.getByTestId("input-employees")).toHaveValue("4");
+      await expect(page.getByTestId("radio-turnoverBand-under_5m")).toBeChecked();
+      // The profile does not hold the period the figure covers: it stays untouched, not skipped.
+      await expect(page.getByTestId("radio-turnoverPeriod-unanswered")).not.toBeChecked();
+      await expect(page.getByTestId("button-step-3")).not.toContainText("(answered)");
+
+      // An answer of the customer's own is asked about before the profile's answers replace it.
+      await page.getByTestId("button-step-0").click();
+      await partnership.locator("xpath=..").click();
+      await expect(partnership).toBeChecked();
+      await expect(status).toHaveText("");
+      await fill.click();
+      await expect(dialog).toContainText("Replace your answers?");
+      await expect(dialog.getByTestId("button-keep")).toBeFocused();
+      await dialog.getByTestId("button-keep").click();
+      await expect(dialog).toHaveCount(0);
+      await expect(partnership).toBeChecked();
+      await fill.click();
+      await dialog.getByTestId("button-confirm").click();
+      await expect(dialog).toHaveCount(0);
+      await expect(company).toBeChecked();
+      await expect(status).toHaveText("Filled in from your business profile.");
+      assert.deepEqual(errors, [], kind);
+    } finally {
+      await close();
+    }
+  }
 });
 
 test("a dialog opens in the middle of the screen and clear of its sides, on a phone and on a desktop", async () => {

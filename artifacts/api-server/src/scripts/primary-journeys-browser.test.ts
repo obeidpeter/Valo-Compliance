@@ -23,7 +23,7 @@ after(() => web.close());
 /** The title of each page a journey opens. */
 const TITLES: Record<string, string> = {
   "/sign-up": "Create account — Valo",
-  "/checker": "Business requirements checker — Valo",
+  "/checker": "Check your requirements — Valo",
   "/library": "Documents and guidance — Valo",
 };
 
