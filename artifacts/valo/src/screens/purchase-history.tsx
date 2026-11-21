@@ -386,7 +386,7 @@ function PurchaseHistoryContent() {
                 title="No orders saved"
                 action={
                   <Link href="/workspace" className="btn btn-primary">
-                    Back to your drafts
+                    Back to Home
                   </Link>
                 }
               >

@@ -78,7 +78,7 @@ export function SavedTemplates() {
               )}
               <p className="mt-2 text-sm text-muted-foreground">
                 {item.available
-                  ? "Open to see the current released version. Saving does not include a purchase."
+                  ? "Open it to see its current version. Saving a template here does not buy it."
                   : "Currently unavailable. The template may have been withdrawn or removed. Your existing drafts are unchanged."}
               </p>
               <button
@@ -95,8 +95,8 @@ export function SavedTemplates() {
       ) : (
         <div className="mt-4">
           <EmptyState title="Keep useful templates here">
-            Open a released template and choose Save template. Saved items stay with your account across
-            devices.
+            Open a template under Documents and choose "Save template". Saved templates stay with your account
+            on every device.
           </EmptyState>
         </div>
       )}

@@ -193,7 +193,8 @@ export default function TasksPage() {
             }
           />
           <p className="hint mt-3">
-            To link a task to a rule, open a saved assessment and use "Add task" on a likely relevant item.
+            To link a task to a rule, open a saved result and use "Add task" on an item marked "Likely
+            relevant".
           </p>
         </div>
       )}
@@ -265,14 +266,14 @@ export default function TasksPage() {
                     Write a task
                   </button>
                   <Link href="/workspace/assessments" className="btn btn-ghost">
-                    From an assessment
+                    From a saved result
                   </Link>
                 </>
               ) : undefined
             }
           >
             {total === 0
-              ? "Add anything you need to remember. Tasks work even where Valo has no released rules for your situation."
+              ? "Add anything you need to remember. Tasks work even where no published rule covers your situation."
               : "Try another filter."}
           </EmptyState>
         ) : (
