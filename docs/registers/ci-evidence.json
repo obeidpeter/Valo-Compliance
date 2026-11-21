@@ -1248,6 +1248,20 @@
       "proves": "A passage of an Act is marked current only when its text's amendment record describes the same file, is no more than 30 days old, lists no unread instrument able to amend it, has compared the quoted part of the section where official copies differ, and records no change or open question touching the passage; with an instrument left unread or a section not compared, the passage stays held."
     },
     {
+      "requirement": "EDP-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-captures.test.ts",
+      "test": "a passage of an Act is supplied only when today's capture of the Act holds it word for word",
+      "proves": "When a guide is prepared, a passage of an Act is taken only from a capture of the Act's official address that holds it word for word, dated and checksummed from that capture; a capture that lacks it, differs by one character or is of another address supplies nothing, and the sentences resting on it stay unbound."
+    },
+    {
+      "requirement": "EDP-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-captures.test.ts",
+      "test": "a guide built from captures is bound to them, and lacks whatever they do not hold",
+      "proves": "A guide built from captures is held when a capture lacks a passage it quotes, and when the captured file is not the one the Act's amendment record describes; the captures in this test are made from the passages kept in the repository, not fetched."
+    },
+    {
       "requirement": "EDP-003",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/editorial/pipeline-contract.test.ts",
@@ -1297,6 +1311,20 @@
       "proves": "A drafted candidate that declares it was professionally reviewed, together with policy and rights approval, is refused by the candidate schema, and the review schema refuses a published verdict."
     },
     {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/editorial/guidance-review-requests.test.ts",
+      "test": "every mapped guide's two review requests are within the guides' limit",
+      "proves": "For each of the ten mapped guides the factual and the challenge request are made separately, each carries the guide's sources whole and the amendment basis of each Act it quotes, and each is within the size limit the guidance policy states for a guide's review; nothing is sent."
+    },
+    {
+      "requirement": "EDP-004",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-review-inputs.test.ts",
+      "test": "every mapped guide's review inputs can be made, and none carries a reviewer's verdict",
+      "proves": "What a guide's two reviewers are given beside the candidate and its sources holds no field for a verdict or another review."
+    },
+    {
       "requirement": "EDP-005",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -1344,6 +1372,20 @@
       "file": "artifacts/api-server/src/modules/editorial/operational-enhanced-review.test.ts",
       "test": "the publication gate holds an item when either review fails an enhanced check",
       "proves": "Contract content is eligible when both AI reviews pass all five enhanced checks, and is held, naming the failed check, when either review fails the exceptions check."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-review-inputs.test.ts",
+      "test": "the reviewers are given an Act's amendment record as it bears on the sections the guide quotes",
+      "proves": "The reviewers who run the amendments and effective-dates checks on a guide are given every place searched for later amendments and what was found, every amending instrument with the sections it changes and its words on the sections quoted, and the record's limits in full."
+    },
+    {
+      "requirement": "EDP-005",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-review-inputs.test.ts",
+      "test": "differences between official copies are given for the sections quoted, and an open question always",
+      "proves": "The reviewers are given the differences found between the official copies of an Act for the sections a guide quotes, and every open question about the text even when it names a section the guide does not quote."
     },
     {
       "requirement": "EDP-006",
@@ -1442,6 +1484,13 @@
       "file": "artifacts/api-server/src/modules/publication/guidance-release.test.ts",
       "test": "a candidate whose claims or sources were changed after it was built is found out",
       "proves": "A guide candidate whose claims, quotations, sources or source decisions were changed after it was built no longer matches what its claim map yields from its sources, and the check that builds them again reports each change."
+    },
+    {
+      "requirement": "EDP-007",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/editorial/guidance-route.integration.test.ts",
+      "test": "a prepared guide passes every publisher check on a real database, in a transaction that is rolled back",
+      "proves": "On a real database, with the owner's approval of the guidance policy supposed inside the test and with made-up captures and reviews, a prepared guide passes every check the publisher makes and is refused without its recorded claim scope, with a capture that is no longer current, and under the policy as it really stands; the transaction is rolled back and nothing is published."
     },
     {
       "requirement": "EDP-009",

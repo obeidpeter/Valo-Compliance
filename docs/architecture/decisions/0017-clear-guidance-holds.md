@@ -135,6 +135,40 @@ the repository.
 The reading of the Gazette copy and of the scanned Finance Acts was done by an AI assistant from the
 page images. It is not legal review.
 
+### Facts gathered while the preparer was built (21 November 2026)
+
+- **The official files hold every passage.** The two Acts and the three official pages were fetched
+  from their official addresses on 21 November 2026 and read with the capture pipeline's own text
+  extractor, on the build machine. Each of the ten mapped guides was then built from that text.
+  Every sentence about the law was bound, and every source was marked current. That includes the
+  sentences of GUD-05 and GUD-08 that rest on a page not kept in the repository. Supposing the
+  owner's approval, the gate then named nothing but the two reviews for each of the ten. In that
+  run the check of each guide's two files was a stand-in; the files themselves are made and
+  checked in CI. This was not a capture by the daily check in the real environment. A different
+  version of the extractor there could read a file differently, and a guide would then stay held.
+- **A guide's review is larger than a template's may be.** Before a review is sent, its size is
+  counted the cautious way: every byte as a token. A template's review is refused above 32,000. A
+  guide's review also carries the official passages and what was searched for later amendments.
+  With nothing sent twice, the ten guides' reviews measure between 33,479 and 53,042. The policy
+  file therefore states a limit of 64,000 for a guide's review, which the owner approves with the
+  file.
+- **What that limit means for money.** While a review runs, the budget holds the cost of the
+  model's whole capacity for it, about 37 US cents at the recorded prices, whatever its size. That
+  does not change. When the review finishes, the hold is replaced by what the provider counted. By
+  the cautious count, the most one guide review could cost is about 9 cents, where a template's is
+  about 7. The real cost is known only from the provider's count afterwards.
+- **Two official pages return different bytes every time.** The Commission's business-name page
+  carries an email-protection code and the revenue service's Tax ID page carries an anti-bot code;
+  both codes change with every request. Each page was fetched twice on 21 November 2026 (at 21:14
+  and 21:18 UTC, and at 18:26 and 21:18 UTC). The bytes differed and the words read from them were
+  the same (1,113 and 2,796 characters). The portal's front page returned the same bytes twice.
+- **What that means for the daily check.** The daily check calls a source changed when its bytes
+  change, and then holds whatever rests on it. It would report those two pages changed every day.
+  GUD-01 and GUD-03 rest in part on the business-name page, and GUD-08 on the Tax ID page. As the
+  check stands, those guides could be released only between two checks and would be held at the
+  next one. The guides that quote Acts alone are not affected: both Acts' files returned their
+  recorded checksums. The check needs to compare a page's words (see point 2).
+
 ## Proposal
 
 Each hold becomes a condition the guide's own route checks. A guide that fails one stays held.
@@ -230,6 +264,12 @@ This cannot prove that no later instrument exists. Only a search of every gazett
 qualified person could give an opinion on it. The guide's limits will say when and where the search
 was made.
 
+**A page is compared by its words (not yet built).** An Act's file is the same bytes every time,
+and a different file is a different text until someone has read it. An official web page is not
+like that: two of the pages the guides describe return different bytes on every request while
+saying the same words. For a page, "changed" should mean that the words read from it changed. Until
+the daily check works that way, a guide that rests on such a page is held at the next check.
+
 ### 3. The rights record
 
 Two different rights are involved.
@@ -293,8 +333,8 @@ command that publishes.
 - It publishes nothing and marks no hold as cleared.
 - It spends nothing. Each guide needs two AI reviews before it is first published and two more
   every 30 days. They run only inside an allocation the owner approves in the real environment
-  (`finite-allocation-approval.ts`). The cost is not known until the guides are prepared, because
-  an enhanced review carries the guide's sources.
+  (`finite-allocation-approval.ts`). The size of those reviews has been measured (see the facts
+  above); what they cost is known only from the provider's count after each one.
 - It does not open production. `developmentPublicationOnly` still refuses production.
 - It does not cover the twelve practical guides, the twenty industry pages or the six packs. They
   quote no law, and the gate has no route yet for a guide without sources.
@@ -307,8 +347,15 @@ command that publishes.
 4. The publisher login (hold 6).
 5. The source list, the hosts and the amendment record (hold 2), after the policy is approved.
 6. The rights record (hold 3), after the owner's answers.
-7. The guide preparer, its review requests and the publish command.
-8. Claim maps for GUD-11 to GUD-30, from the official files whose checksums match the recorded ones.
+7. The guide preparer and its review requests (built: the preparer reads the daily check's
+   captures and checks a guide again before its reviews. In a test with made-up captures and
+   reviews, and the owner's approval supposed, a guide passes every check the publisher makes and
+   nothing is published).
+8. The same review route templates use, opened to guides, and the publish command.
+9. The daily check compares a page's words, not its bytes.
+10. A released guide shown on the site as a free guide, not as a template.
+11. Claim maps for GUD-11 to GUD-30, from the official files whose checksums match the recorded
+    ones.
 
 ## Decisions for the product owner
 
@@ -326,7 +373,9 @@ the code counts the policy as approved only while the file is exactly the one ap
 5. **The real environment.** Name who runs commands there. Three steps happen only there: the
    source captures, the publisher login's password, and the AI reviews.
 6. **The monthly cost.** Accept that a published guide costs two AI reviews every 30 days, or ask
-   for the cadence to be proposed differently for some subjects.
+   for the cadence to be proposed differently for some subjects. Accept too that a guide's review
+   may measure up to 64,000 by the cautious count, where a template's limit is 32,000. The policy
+   file states this. If the limit stays at 32,000, none of the ten guides can be reviewed.
 7. **Passages for the other twenty guides.** The first ten guides' passages are kept in the
    repository, which is public. They are passages of Acts, kept on the basis recorded with them:
    section 3(b) of the Copyright Act, for official texts of a legislative nature. Say whether
