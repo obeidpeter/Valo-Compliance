@@ -6,7 +6,8 @@ import { pathToFileURL } from "node:url";
 import { expect } from "@playwright/test";
 import { paginateReleasedItems, type ReleasedLibraryItem } from "../modules/catalogue/valo-catalogue";
 import { menuProblems, phoneProblems, ready } from "../test-support/app-in-browser";
-import { industry, items, resources, serverAnswer } from "../test-support/public-answers";
+import { oldWordsIn } from "../test-support/old-words";
+import { industries, industry, items, resources, serverAnswer } from "../test-support/public-answers";
 import { HYDRATION, startWebServer } from "../test-support/web-server";
 
 /**
@@ -819,4 +820,25 @@ test("a page with nothing to list still offers 'Create a document', and its link
     catalogueItems = null;
     noGuidance = false;
   }
+});
+
+// The redesign's word list (docs/architecture/frontend-redesign.md, "Words").
+test("no public page shows one of the project's own words that the word list replaced, or an industry by its address name", async () => {
+  const problems: string[] = [];
+  for (const path of PAGES) {
+    const html = await (await fetch(web.origin + path)).text();
+    // What a visitor reads: the page's body without the data its scripts carry.
+    const shown = text(
+      html
+        .slice(html.indexOf("<body"), html.indexOf("</body>"))
+        .replace(/<(script|style|template)\b[\s\S]*?<\/\1>/g, " "),
+    );
+    assert.ok(shown.includes(HEADINGS[path]!), `${path} was read`);
+    for (const found of oldWordsIn(shown)) problems.push(`${path}: ${found}`);
+    // An industry is named as it is written ("Retail and wholesale"), never by its address name.
+    for (const each of industries)
+      if (each.slug !== each.title && new RegExp(`(^|[^/\\w-])${each.slug}([^\\w-]|$)`).test(shown))
+        problems.push(`${path}: shows the industry's address name "${each.slug}"`);
+  }
+  assert.deepEqual(problems, []);
 });

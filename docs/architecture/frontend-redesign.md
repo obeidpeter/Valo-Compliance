@@ -205,7 +205,8 @@ files.
 ### Phase 1: the word list
 
 The word list is the table under [Words](#words). Each page takes its words as the page is
-rewritten in the later phases. A check that the old words are gone comes with the last of them.
+rewritten in the later phases. The check that the old words are gone came with the last of them,
+in [phase 5](#phase-5-the-last-of-the-old-words-and-the-check-that-they-are-gone).
 
 ### Phase 2: the header, the footer and the phone's bar
 
@@ -735,6 +736,39 @@ already did.
 already signed in to where the form would have sent them: "New document" for what they chose,
 otherwise their workspace. Until now this was left to the identity provider's form, which no
 test can load. It is now the app's own code and is tested with the stand-in identity.
+
+### Phase 5: the last of the old words, and the check that they are gone
+
+**The last of them.**
+
+| Where | Now | Before |
+| --- | --- | --- |
+| Drafting assistant, saving | "Save to your documents", "Save to my documents", "It is my own document, not legal, tax or accounting advice, and not approved by anyone." | "Save to your drafts", "Save as business draft", "It is my business draft, …" |
+| Drafting assistant, once saved | "Already saved to your documents", "Open the document" | "Already saved as a business draft", "Open draft and exports" |
+| A page the site does not have | "This page does not exist." | "This page is not on either shelf." |
+| Help | 'It is marked "Draft"', "make a Word file or a PDF" | 'It is labelled "business draft"', "create a Word or PDF file" |
+| Sign-in and security | "documents, saved results, tasks or requests" | "drafts, assessments, tasks or requests" |
+| The copy of your data | "documents and their versions, saved results" | "drafts and revisions, assessments" |
+| The site's default description | "Business documents and source-backed guidance for Nigerian small businesses." | "your business drafts kept separate from source-governed compliance guidance" |
+
+In the paragraph about the copy of your data, only those names change. What the copy holds and
+what it leaves out read as before.
+
+**The check.** One list holds the old words: the "Instead of" column of the table under
+[Words](#words). Three tests read what a person sees and fail on any of them:
+
+- every signed-in customer screen;
+- every public page, where an industry must also be named as it is written and never by its
+  address name;
+- the signed-out screens, with the page the site does not have among them.
+
+A document's status is still "Draft" and a version is still a version: the check refuses only
+the old phrasings. Staff screens and the developer notes are tools, not customer screens, and
+are not checked.
+
+**What the check cannot see.** It reads each screen as it opens with the tests' synthetic data.
+Words that appear only in a state it does not open, such as an error message or a dialog, are
+not read. Phase 6 goes through those messages.
 
 ### Found on the way: keyboard focus rests clear of the bars
 

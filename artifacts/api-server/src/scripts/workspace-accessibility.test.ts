@@ -19,6 +19,7 @@ import {
   wcagFailures,
   type Api,
 } from "../test-support/app-in-browser";
+import { oldWordsIn } from "../test-support/old-words";
 
 /**
  * NFR-006: "WCAG 2.2 AA target across critical flows; keyboard, visible focus, screen-reader labels,
@@ -1872,4 +1873,20 @@ test("a visitor who is already signed in is sent on from sign-up and sign-in: to
       await close();
     }
   }
+});
+
+// The redesign's word list (docs/architecture/frontend-redesign.md, "Words").
+test("no signed-in customer screen shows one of the project's own words that the word list replaced", async () => {
+  const problems: string[] = [];
+  for (const screen of SIGNED_IN.filter((s) => !s.path.startsWith("/staff"))) {
+    const { page, close } = await desktop(screen.path);
+    try {
+      await ready(page);
+      for (const found of oldWordsIn(await page.locator("main").innerText()))
+        problems.push(`${screen.path}: ${found}`);
+    } finally {
+      await close();
+    }
+  }
+  assert.deepEqual(problems, []);
 });
