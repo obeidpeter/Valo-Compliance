@@ -202,7 +202,11 @@ export default function ProfilePage() {
           </Field>
           <div className="grid gap-5 sm:grid-cols-2">
             {sel("legalForm", ProfileLegalForm, "Legal form")}
-            {sel("registrationStatus", ProfileRegistrationStatus, "CAC registration")}
+            {sel(
+              "registrationStatus",
+              ProfileRegistrationStatus,
+              "Registration with the Corporate Affairs Commission (CAC)",
+            )}
           </div>
         </Section>
 
