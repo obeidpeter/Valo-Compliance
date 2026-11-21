@@ -1407,3 +1407,74 @@ test("an invoice started from its questions lists what it still needs by each qu
     await close();
   }
 });
+
+// EDT-005: "Highlight unresolved fields, inconsistent dates and missing party details."
+test("a new form is not marked as wrong: each unanswered question is marked as still needed, shown as a mistake only once the customer has been to it and left it empty, and a wrong answer is shown as soon as it is given", async () => {
+  const spec = GUIDED_SPECS_V1["TPL-01"];
+  const sent: { title: string; content: unknown }[] = [];
+  const saving: Api = async (route, method, path, query) => {
+    if (method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+      sent.push(route.request().postDataJSON() as { title: string; content: unknown });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.SaveDocumentResponse.parse({ ...invoice(3 + sent.length), ...sent.at(-1), id: DOCUMENT }),
+        ),
+      });
+    } else await unanswered(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, saving);
+  try {
+    await ready(page);
+    const questions = page.getByTestId("guided-fields");
+    const required = [
+      ...spec.fields.filter((f) => f.required && !f.when).map((f) => `g-${f.id}`),
+      ...spec.tables[0]!.columns.filter((c) => c.required && !c.when).map((c) => `gt-items-0-${c.id}`),
+    ];
+    // As it opens: nothing is outlined as wrong and no message is shown, and every required
+    // question is marked as still needed, in words.
+    await expect(questions.locator('[aria-invalid="true"]')).toHaveCount(0);
+    await expect(questions.getByText("This answer is required.")).toHaveCount(0);
+    await expect(questions.locator('[data-testid^="mark-needed-"]')).toHaveCount(required.length);
+    for (const id of required) await expect(page.getByTestId(`mark-needed-${id}`)).toHaveText("Still needed");
+    await expect(page.getByTestId("status-guided-issues")).toHaveText(
+      `${required.length} answers need attention`,
+    );
+
+    // Going to a question and leaving it empty marks that question, and no other.
+    const name = page.locator("#g-issuerName");
+    await name.focus();
+    await page.keyboard.press("Tab");
+    await expect(name).toHaveAttribute("aria-invalid", "true");
+    await expect(questions.locator('[aria-invalid="true"]')).toHaveCount(1);
+    await expect(questions.getByText("This answer is required.")).toHaveCount(1);
+    assert.match((await name.getAttribute("aria-describedby")) ?? "", /g-issuerName-error/);
+
+    // An answer clears its mark and its message. Tab had moved on to the next question, which the
+    // customer has now also left empty, so that one is the question marked.
+    await name.fill("Synthetic Trading Ltd");
+    await expect(name).toHaveAttribute("aria-invalid", "false");
+    await expect(page.getByTestId("mark-needed-g-issuerName")).toHaveCount(0);
+    await expect(page.locator("#g-issuerName-error")).toHaveCount(0);
+    await expect(questions.locator('[aria-invalid="true"]')).toHaveCount(1);
+    await expect(questions.locator('[aria-invalid="true"]')).toHaveAttribute("id", `g-${spec.fields[1]!.id}`);
+
+    // A wrong answer is shown at once, while the customer is still in the question.
+    const quantity = page.locator("#gt-items-0-quantity");
+    await quantity.fill("abc");
+    await expect(quantity).toBeFocused();
+    await expect(quantity).toHaveAttribute("aria-invalid", "true");
+    await expect(
+      questions.getByText("Enter a positive quantity with up to three decimal places."),
+    ).toHaveCount(1);
+
+    // What was typed is saved as it is, and the page asked for nothing the test did not answer.
+    await expect(page.getByTestId("status-save")).toContainText("Saved", { timeout: 15_000 });
+    assert.ok(sent.length >= 1, "the answers were saved");
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});

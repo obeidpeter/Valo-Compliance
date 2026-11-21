@@ -811,8 +811,11 @@ export default function DocumentEditor({ id }: { id: string }) {
             {missing.length ? (
               <ul className="mt-3 grid gap-1.5 text-sm">
                 {missing.map((m) => (
-                  <li key={m} className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--ochre))]" />
+                  <li key={m} className="flex items-start gap-2">
+                    <span
+                      className="mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--ochre))]"
+                      aria-hidden="true"
+                    />
                     {m}
                   </li>
                 ))}
