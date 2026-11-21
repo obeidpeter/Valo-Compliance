@@ -584,8 +584,7 @@ and the column's names: "Goods, work and agreed charges, row 1: Description".
 - The questions themselves ("Issuing business legal name", "Goods/work supplied and agreed
   billing basis") and the notice over each form come from the frozen question definitions.
   Rewording them changes the twelve forms, not the editor, and waits for the owner's decision.
-- Amounts in the questions are still typed in kobo, and a new form still opens with every
-  required question marked in red. Each changes in a step of its own.
+- Amounts in the questions are still typed in kobo. That changes in a step of its own.
 - A downloaded file still prints "Saved revision 3". The words inside a file are the API's.
 - The sentences a wording check pins keep the word "drafts", such as "Drafts you already created
   stay in your workspace."
@@ -593,6 +592,24 @@ and the column's names: "Goods, work and agreed charges, row 1: Description".
 
 Four scripts that need a verified test account, and so run in no CI job, name the editor's
 buttons and tabs. They were updated and not run.
+
+### Phase 5: a new form opens without red marks
+
+A document started from its questions opened with every required question outlined in red and
+"This answer is required." under each one. A new invoice showed thirteen of these messages before
+the customer had typed anything.
+
+- A required question nobody has answered is now marked "Still needed", in amber beside its
+  name. The mark goes when the question is answered.
+- The question is outlined in red, with "This answer is required.", only once the customer has
+  been to it and left it empty.
+- A wrong answer is marked at once, while the customer is still in the question, as before.
+- The list beside the form still names every unanswered question, and the count over the form is
+  unchanged.
+
+The business profile and the support forms already show no mistake until the customer has used
+the form. EDT-005 asks to "highlight unresolved fields": each one is still highlighted, in the
+form and in the list.
 
 ### Found on the way: keyboard focus rests clear of the bars
 

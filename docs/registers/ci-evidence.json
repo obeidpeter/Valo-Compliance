@@ -2681,6 +2681,13 @@
       "file": "artifacts/valo/src/lib/api.test.ts",
       "test": "what a new document still needs is listed in the questions' own words, a table's row and column by name, and never by an internal key",
       "proves": "For each of the twelve kinds of document that start from questions, with nothing answered, every line of what is still needed is a question's own label, or a table's label, row number and column label."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a new form is not marked as wrong: each unanswered question is marked as still needed, shown as a mistake only once the customer has been to it and left it empty, and a wrong answer is shown as soon as it is given",
+      "proves": "For an invoice started from its questions with nothing answered, every required question is marked “Still needed” in words and none is outlined as wrong; a question the customer goes to and leaves empty is then outlined with its message, an answer clears it, and a wrong quantity is outlined while the customer is still typing it. The API is answered in the page."
     }
   ]
 }
