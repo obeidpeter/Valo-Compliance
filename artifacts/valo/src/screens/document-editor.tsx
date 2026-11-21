@@ -41,6 +41,7 @@ import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
 import type { FinancialInput } from "@workspace/api-client-react";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { GuidedFields } from "@/components/guided-fields";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import {
@@ -52,6 +53,9 @@ import {
 
 type Snapshot = { title: string; content: CanonicalDocument };
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error" | "conflict" | "blocked";
+/** A question put to the customer before something they entered is discarded: what would be lost,
+ * the button that keeps it, the button that goes ahead, and what going ahead does. */
+type Asking = { title: string; body: string; keep: string; confirm: string; run: () => void };
 
 const AUTOSAVE_MS = 1400;
 /** What each part of a document's own text is called. */
@@ -87,6 +91,9 @@ export default function DocumentEditor({ id }: { id: string }) {
     financialValue = useRef<FinancialInput | null>(null);
   const leaveAfterSave = useRef(false);
   const [leaveError, setLeaveError] = useState("");
+  const [asking, setAsking] = useState<Asking | null>(null);
+  /** Whether a question is open. The autosave and the keyboard's save and undo wait for its answer. */
+  const questionOpen = useRef(false);
 
   const initFor = useRef<string | null>(null);
   const baseRev = useRef(0);
@@ -137,6 +144,8 @@ export default function DocumentEditor({ id }: { id: string }) {
   const doSave = useCallback(() => {
     const snap = latest.current;
     if (!snap || inFlight.current) return;
+    // Nothing is saved underneath an open question. The answer starts the autosave again.
+    if (questionOpen.current) return;
     if (ser(snap) === lastSaved.current) {
       setState("saved");
       return;
@@ -209,13 +218,42 @@ export default function DocumentEditor({ id }: { id: string }) {
     },
     [],
   );
+  /**
+   * Asks before something the customer entered is discarded. The browser's own box stopped the page
+   * while it was open. This dialog does not, so the autosave and the keyboard's save and undo wait
+   * for the answer: a save on its way when the customer chose would make the choice do nothing.
+   */
+  function ask(question: Asking) {
+    questionOpen.current = true;
+    setAsking(question);
+  }
+  /** The answer: `run` is what going ahead does, and keeping runs nothing. */
+  function answered(run?: () => void) {
+    questionOpen.current = false;
+    setAsking(null);
+    run?.();
+    // Text that was waiting to be saved is saved as it would have been.
+    if (state === "dirty" && !inFlight.current) {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => doSaveRef.current(), AUTOSAVE_MS);
+    }
+  }
+
   function undo() {
+    // With nothing to undo there is nothing to ask about.
+    if (inFlight.current || !history.length) return;
+    if (financialDirty.current)
+      ask({
+        title: "Undo, and discard the amounts you have not applied?",
+        body: "You have changed amounts that are not applied yet. Undoing your last change discards them.",
+        keep: "Keep them",
+        confirm: "Discard them and undo",
+        run: undoNow,
+      });
+    else undoNow();
+  }
+  function undoNow() {
     if (inFlight.current) return;
-    if (
-      financialDirty.current &&
-      !window.confirm("Discard the amounts you have not applied and undo your last change?")
-    )
-      return;
     setHistory((h) => {
       if (!h.length) return h;
       const prev = h[h.length - 1]!;
@@ -274,7 +312,7 @@ export default function DocumentEditor({ id }: { id: string }) {
       const target = e.target as HTMLElement | null;
       if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
-        manualSave.current();
+        if (!questionOpen.current) manualSave.current();
       }
       if (
         (e.metaKey || e.ctrlKey) &&
@@ -283,7 +321,7 @@ export default function DocumentEditor({ id }: { id: string }) {
         !(target && /INPUT|TEXTAREA/.test(target.tagName))
       ) {
         e.preventDefault();
-        undoRef.current();
+        if (!questionOpen.current) undoRef.current();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -309,13 +347,19 @@ export default function DocumentEditor({ id }: { id: string }) {
   function restore(r: BusinessDocument) {
     if (!latest.current) return;
     if (inFlight.current) return;
-    if (
-      (financialDirty.current || ser(latest.current) !== lastSaved.current) &&
-      !window.confirm(
-        "You have changes that are not saved, including any amounts you have not applied. Restoring this version replaces them. Continue?",
-      )
-    )
-      return;
+    if (financialDirty.current || ser(latest.current) !== lastSaved.current)
+      ask({
+        title: `Restore version ${r.revision}?`,
+        body: `You have changes that are not saved, including any amounts you have not applied. Restoring version ${r.revision} replaces them.`,
+        keep: "Keep my changes",
+        confirm: `Replace them with version ${r.revision}`,
+        run: () => restoreNow(r),
+      });
+    else restoreNow(r);
+  }
+  function restoreNow(r: BusinessDocument) {
+    if (!latest.current) return;
+    if (inFlight.current) return;
     if (timer.current) clearTimeout(timer.current);
     setRestoring(r.revision);
     inFlight.current = true;
@@ -414,6 +458,16 @@ export default function DocumentEditor({ id }: { id: string }) {
         }}
         error={leaveError || undefined}
       />
+      <ConfirmDialog
+        open={asking !== null}
+        title={asking?.title ?? ""}
+        keep={asking?.keep ?? ""}
+        confirm={asking?.confirm ?? ""}
+        onKeep={() => answered()}
+        onConfirm={() => answered(asking?.run)}
+      >
+        {asking?.body}
+      </ConfirmDialog>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/workspace/documents"
@@ -466,10 +520,15 @@ export default function DocumentEditor({ id }: { id: string }) {
             </button>
             <button
               className="btn btn-ghost btn-sm"
-              onClick={() => {
-                if (window.confirm("Discard what you typed here and load the newest saved version?"))
-                  void takeTheirs();
-              }}
+              onClick={() =>
+                ask({
+                  title: "Discard what you typed here?",
+                  body: "The newest saved version is loaded in its place. What you typed here is not kept.",
+                  keep: "Keep what I typed",
+                  confirm: "Discard mine and load the newest",
+                  run: () => void takeTheirs(),
+                })
+              }
               data-testid="button-load-theirs"
             >
               Discard mine and load the newest
@@ -675,11 +734,16 @@ export default function DocumentEditor({ id }: { id: string }) {
                       type="button"
                       className="btn btn-ghost btn-sm"
                       onClick={() => {
-                        if (
-                          !financialDirty.current ||
-                          window.confirm("Discard the amounts you have not applied?")
-                        )
-                          resetFinancial(content);
+                        if (financialDirty.current)
+                          ask({
+                            title: "Discard the amounts you have not applied?",
+                            body: "The amounts go back to the ones last applied to the document.",
+                            keep: "Keep them",
+                            confirm: "Discard them",
+                            // The document as it is when the answer comes, not as it was when asked.
+                            run: () => resetFinancial(latest.current?.content ?? content),
+                          });
+                        else resetFinancial(content);
                       }}
                       data-testid="button-reset-financial"
                     >

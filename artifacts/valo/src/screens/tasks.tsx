@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
 import { UnsavedNavigationDialog } from "@/components/unsaved-navigation-dialog";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 const STATE_LABEL: Record<TaskState, string> = {
   not_started: "Not started",
@@ -46,6 +47,8 @@ export default function TasksPage() {
     [editEpoch, setEditEpoch] = useState(0);
   const [pinned, setPinned] = useState<Record<string, WorkspaceTask>>({});
   const pinnedRef = useRef(pinned);
+  /** The view asked for while a task edit is unsaved: the customer is asked before it is discarded. */
+  const [leaving, setLeaving] = useState<{ filter: Filter; page: number } | null>(null);
   const pin = useCallback((editing: boolean, task: WorkspaceTask) => {
     if ((editing && pinnedRef.current[task.id]) || (!editing && !pinnedRef.current[task.id])) return;
     const next = { ...pinnedRef.current };
@@ -76,11 +79,10 @@ export default function TasksPage() {
     return all;
   }, [tasks.data, pinned]);
   function changeView(nextFilter: Filter, nextPage: number) {
-    if (
-      Object.keys(pinnedRef.current).length &&
-      !window.confirm("Discard unsaved task edits and change this view? Cancel to return and save them.")
-    )
-      return;
+    if (Object.keys(pinnedRef.current).length) setLeaving({ filter: nextFilter, page: nextPage });
+    else changeViewNow(nextFilter, nextPage);
+  }
+  function changeViewNow(nextFilter: Filter, nextPage: number) {
     pinnedRef.current = {};
     setPinned({});
     setEditEpoch((value) => value + 1);
@@ -127,6 +129,20 @@ export default function TasksPage() {
         onStay={() => navigation.stay()}
         onDiscard={() => navigation.proceed()}
       />
+      <ConfirmDialog
+        open={leaving !== null}
+        title="Leave your task edits?"
+        keep="Stay and save them"
+        confirm="Discard them and change view"
+        onKeep={() => setLeaving(null)}
+        onConfirm={() => {
+          const next = leaving;
+          setLeaving(null);
+          if (next) changeViewNow(next.filter, next.page);
+        }}
+      >
+        You have task edits that are not saved. Changing this view discards them.
+      </ConfirmDialog>
       <WorkspaceNav />
       <div className="reveal flex flex-wrap items-end justify-between gap-4">
         <div>

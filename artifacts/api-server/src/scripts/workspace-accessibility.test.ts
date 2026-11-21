@@ -1890,3 +1890,171 @@ test("no signed-in customer screen shows one of the project's own words that the
   }
   assert.deepEqual(problems, []);
 });
+
+// NFR-009: "No silent draft loss". Before anything the customer entered is discarded, the app asks,
+// in a dialog of its own whose first button keeps everything.
+test("before the editor or the tasks screen discards what the customer entered, it asks in its own dialog; keeping changes nothing, and going ahead does what its button says", async () => {
+  const sent: { expectedRevision: number; title: string }[] = [];
+  const saving: Api = async (route, method, path, query) => {
+    if (method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+      sent.push(route.request().postDataJSON() as (typeof sent)[number]);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.SaveDocumentResponse.parse(document(4))),
+      });
+    } else await answer(route, method, path, query);
+  };
+  {
+    const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, saving);
+    try {
+      await ready(page);
+      const dialog = page.getByTestId("dialog-confirm");
+      const price = page.getByTestId("input-doc-price-0");
+      await expect(price).toHaveValue("1500");
+      // An amount typed and not applied is something the editor would discard.
+      await price.fill("250");
+      await expect(page.getByTestId("status-financial-unsaved")).toBeVisible();
+      // With nothing to undo, the keyboard's undo asks nothing. Had it asked, its dialog would
+      // shut out the click that follows.
+      await price.blur();
+      await page.keyboard.press("Control+z");
+
+      // Reset: the dialog names what is lost; Escape keeps it.
+      await page.getByTestId("button-reset-financial").click();
+      await expect(dialog).toBeVisible();
+      await expect(dialog.locator("h2")).toHaveText("Discard the amounts you have not applied?");
+      await expect(dialog.getByTestId("button-keep")).toHaveText("Keep them");
+      await expect(dialog.getByTestId("button-keep")).toBeFocused();
+      await expect(dialog.getByTestId("button-confirm")).toHaveText("Discard them");
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+      await expect(price).toHaveValue("250");
+
+      // Restore: keeping leaves the typed amount and asks the API for nothing.
+      await page.getByTestId("button-restore-2").click();
+      await expect(dialog.locator("h2")).toHaveText("Restore version 2?");
+      await expect(dialog).toContainText("Restoring version 2 replaces them.");
+      await dialog.getByTestId("button-keep").click();
+      await expect(dialog).toBeHidden();
+      await expect(price).toHaveValue("250");
+      assert.equal(sent.length, 0);
+      // Going ahead restores it: version 2 is saved over the version that was open.
+      await page.getByTestId("button-restore-2").click();
+      await expect(dialog.getByTestId("button-confirm")).toHaveText("Replace them with version 2");
+      await dialog.getByTestId("button-confirm").click();
+      await expect(dialog).toBeHidden();
+      await expect(page.getByTestId("status-save")).toHaveText("Saved · version 4");
+      await expect(price).toHaveValue("1500");
+      assert.equal(sent.length, 1);
+      assert.equal(sent[0]!.expectedRevision, 3);
+      assert.equal(sent[0]!.title, document(2).title);
+
+      // Reset again, and this time go ahead: the amount goes back, with no request.
+      await price.fill("300");
+      await page.getByTestId("button-reset-financial").click();
+      await dialog.getByTestId("button-confirm").click();
+      await expect(price).toHaveValue("1500");
+      await expect(page.getByTestId("status-financial-unsaved")).toHaveCount(0);
+      assert.equal(sent.length, 1);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+
+  // The tasks screen: a task being edited is not thrown away by choosing another view.
+  const { page, errors, unknown, close } = await desktop("/workspace/tasks");
+  try {
+    await ready(page);
+    const dialog = page.getByTestId("dialog-confirm");
+    const first = tasks[0]!.id;
+    await page.getByTestId(`button-edit-${first}`).click();
+    await expect(page.getByTestId(`card-task-${first}`)).toContainText("Editing version 1");
+    await page.getByTestId("tab-all").click();
+    await expect(dialog.locator("h2")).toHaveText("Leave your task edits?");
+    await expect(dialog.getByTestId("button-keep")).toHaveText("Stay and save them");
+    await expect(dialog.getByTestId("button-keep")).toBeFocused();
+    await dialog.getByTestId("button-keep").click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByTestId(`card-task-${first}`)).toContainText("Editing version 1");
+    await expect(page.getByTestId("tab-open")).toHaveAttribute("aria-pressed", "true");
+    // Going ahead leaves the edit and shows the view asked for.
+    await page.getByTestId("tab-all").click();
+    await dialog.getByTestId("button-confirm").click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByTestId("tab-all")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId(`card-task-${first}`)).not.toContainText("Editing version 1");
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// The browser's own box stopped the page while it asked. The app's dialog does not, so the editor
+// holds its autosave and the keyboard's save and undo while a question is open: otherwise a save
+// could be on its way when the customer chose, and the choice would do nothing.
+test("while the editor asks, nothing is saved underneath the question, and the answer starts the autosave again", async () => {
+  const sent: { expectedRevision: number; title: string }[] = [];
+  let release = () => {};
+  const first = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const holding: Api = async (route, method, path, query) => {
+    if (method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+      const body = route.request().postDataJSON() as (typeof sent)[number];
+      const version = 3 + sent.push(body);
+      // The first save stays on its way until the test lets it finish.
+      if (version === 4) await first;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.SaveDocumentResponse.parse({ ...document(version), title: body.title })),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, holding);
+  try {
+    await ready(page);
+    const dialog = page.getByTestId("dialog-confirm");
+    // The newest saved version, as the download panel names it. The save indicator cannot show it
+    // here: it reads "Unsaved changes" for as long as an amount is typed and not applied.
+    const saved = page.getByTestId("private-exports");
+    const price = page.getByTestId("input-doc-price-0");
+    // A save is on its way, and more is typed before it finishes.
+    await page.getByTestId("input-title").fill("Synthetic invoice, first change");
+    await expect.poll(() => sent.length).toBe(1);
+    await page.getByTestId("input-title").fill("Synthetic invoice, second change");
+    await price.fill("250");
+    await page.getByTestId("button-reset-financial").click();
+    await expect(dialog.locator("h2")).toHaveText("Discard the amounts you have not applied?");
+    // The first save finishes underneath the question, which leaves the second change waiting.
+    release();
+    await expect(saved).toContainText("Saved version 4");
+    // While the question is open the autosave does not save it, and the keyboard neither saves nor
+    // undoes. The wait is longer than the autosave's.
+    await page.keyboard.press("Control+s");
+    await page.keyboard.press("Control+z");
+    await page.waitForTimeout(2200);
+    assert.equal(sent.length, 1);
+    await expect(saved).toContainText("Saved version 4");
+    await expect(dialog.locator("h2")).toHaveText("Discard the amounts you have not applied?");
+    await expect(page.getByTestId("input-title")).toHaveValue("Synthetic invoice, second change");
+    await expect(page.getByTestId("status-financial-unsaved")).toBeVisible();
+    // Keeping answers the question. The change that waited is then saved, and the amount that was
+    // typed is still there, not applied.
+    await dialog.getByTestId("button-keep").click();
+    await expect(saved).toContainText("Saved version 5");
+    assert.equal(sent.length, 2);
+    assert.equal(sent[1]!.title, "Synthetic invoice, second change");
+    assert.equal(sent[1]!.expectedRevision, 4);
+    await expect(price).toHaveValue("250");
+    await expect(page.getByTestId("status-financial-unsaved")).toBeVisible();
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
