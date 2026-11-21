@@ -299,6 +299,16 @@
 
 /* ---------- Valo system ---------- */
 html { scroll-behavior: smooth; }
+/* Keyboard focus and in-page jumps come to rest clear of the sticky header and, below the desktop
+   width, of the bar fixed to the bottom of the screen, so nothing focused is hidden behind either
+   (WCAG 2.2, Focus Not Obscured). A screen that holds its own actions at the bottom of the screen,
+   as the business profile holds Save, marks them `held-actions` and gets that much more room. */
+@layer base {
+  html { scroll-padding-top: 5rem; scroll-padding-bottom: 5.5rem; }
+  @media (min-width: 64rem) { html { scroll-padding-bottom: 1.5rem; } }
+  html:has(.held-actions) { scroll-padding-bottom: 10.5rem; }
+  @media (min-width: 64rem) { html:has(.held-actions) { scroll-padding-bottom: 5.5rem; } }
+}
 body { font-feature-settings: 'ss01', 'cv11'; }
 body::before {
   content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: .035;
