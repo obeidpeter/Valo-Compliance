@@ -312,6 +312,13 @@
     {
       "requirement": "EDP-008",
       "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-export.test.ts",
+      "test": "every draft guide prints as a guide in Word and PDF, and the files hold everything in it",
+      "proves": "Each of the thirty draft guides, printed as Word and PDF in a guide's own layout, holds its complete text together with the AI-review disclosure, what it covers, its limits and its source-check date, checked against the text read back from both files. The drafts are unreviewed and unpublished, and each sample says so on every page."
+    },
+    {
+      "requirement": "EDP-008",
+      "job": "foundation",
       "file": "artifacts/valo/src/components/release-notices.test.tsx",
       "test": "a template's detail page shows its source-check and review dates, the AI-review disclosure, scope and limitations",
       "proves": "The notices on a template's detail page show the exact disclosure text, the date the sources were checked, the next review date, the scope and the limitations, and the page fills them from each released template's own values."
