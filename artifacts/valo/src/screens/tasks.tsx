@@ -459,7 +459,7 @@ function TaskRow({
         <>
           <p className="eyebrow mb-4">Editing version {baseRev}</p>
           {conflict !== null && (
-            <Notice className="mb-4" title="This task changed elsewhere">
+            <Notice className="mb-4" title="This task was changed somewhere else">
               What you typed is still in the form below. The newest saved one is version {task.revision}
               {latestDiffers ? "" : " (refreshing)"}.
               <div className="mt-3 flex flex-wrap gap-2">
@@ -589,14 +589,14 @@ function TaskRow({
             {err && (
               <p role="alert" className="mt-2 text-sm text-destructive">
                 {err.kind === "conflict"
-                  ? "This task changed elsewhere; the list has been refreshed. Try again."
+                  ? "This task was changed somewhere else. The list now shows its newest version. Try again."
                   : err.message}
               </p>
             )}
             {archErr && (
               <p role="alert" className="mt-2 text-sm text-destructive">
                 {archErr.kind === "conflict"
-                  ? "This task changed elsewhere; refreshed. Archive again if you still want to."
+                  ? "This task was changed somewhere else. The list now shows its newest version. Archive it again if you still want to."
                   : archErr.message}
               </p>
             )}
