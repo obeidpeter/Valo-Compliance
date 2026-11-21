@@ -1,4 +1,5 @@
 import { GUIDED_TEMPLATE_IDS, type GuidedTemplateId } from "@workspace/valo-core/guided";
+import { ANY_DOCUMENT } from "./start";
 
 /**
  * The everyday tasks the landing page offers, in the customer's words. Each names the documents it
@@ -39,6 +40,21 @@ const TASKS: readonly LandingTask[] = [
 /** The tasks to show: those whose every document the starter offers. */
 export const landingTasks = (offered: readonly string[] = GUIDED_TEMPLATE_IDS): LandingTask[] =>
   TASKS.filter((task) => task.documents.every((id) => offered.includes(id)));
+
+/** The task a link names, when it is one the landing page offers. */
+export const landingTask = (id: string | null | undefined): LandingTask | undefined =>
+  landingTasks().find((task) => task.id === id);
+
+/**
+ * Where a visitor starts once signed in, for what they chose before: the page where a document
+ * starts, with the chosen task's documents first. Nothing for a choice the site does not offer, so
+ * an address somebody made up leads nowhere of its own.
+ */
+export function startPath(start: string | null | undefined): string | undefined {
+  if (start === ANY_DOCUMENT) return "/workspace/documents/new";
+  const task = landingTask(start);
+  return task ? "/workspace/documents/new?start=" + task.id : undefined;
+}
 
 /** The documents the landing page's opening sentence names: invoices, quotations, receipts and
  * agreements. The sentence is written only while the starter offers each kind. */

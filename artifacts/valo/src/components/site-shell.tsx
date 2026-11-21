@@ -17,6 +17,7 @@ import {
 import { basePath } from "@/lib/env";
 import { isServerPage } from "@/lib/server-pages";
 import { cn } from "@/lib/utils";
+import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 
 /** A link in the browser app's shell: within the app, its router; to a page the server renders, a
  * plain link that loads that page in full (decision 0011). */
@@ -275,7 +276,11 @@ function MobileDock() {
           </Link>
         </Show>
         <Show when="signed-out">
-          <Link href="/sign-up" className={DOCK_BUTTON + " btn-primary"} data-testid="link-dock-documents">
+          <Link
+            href={signUpFor(ANY_DOCUMENT)}
+            className={DOCK_BUTTON + " btn-primary"}
+            data-testid="link-dock-documents"
+          >
             Create a document
           </Link>
         </Show>

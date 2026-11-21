@@ -391,3 +391,41 @@ test("on a phone, every step of the requirements check, its review, its results 
   }
   assert.deepEqual(problems, []);
 });
+
+// The identity provider cannot load in a test, so its forms are stand-ins that show what the app
+// hands them. This checks the app's side: the provider's own redirect is not exercised here.
+test("what a visitor chose on the landing page is handed to sign-up and sign-in: the page to start on afterwards, and the other form's address with the choice kept; a choice the site does not offer is handed nowhere", async () => {
+  const cases: [address: string, after: string, otherForm: string][] = [
+    ["/sign-up?start=invoice", "/workspace/documents/new?start=invoice", "/sign-in?start=invoice"],
+    ["/sign-up?start=agreement", "/workspace/documents/new?start=agreement", "/sign-in?start=agreement"],
+    ["/sign-up?start=document", "/workspace/documents/new", "/sign-in?start=document"],
+    ["/sign-in?start=hire", "/workspace/documents/new?start=hire", "/sign-up?start=hire"],
+    // Nothing chosen: the provider goes where it would by itself.
+    ["/sign-up", "", "/sign-in"],
+    ["/sign-in", "", "/sign-up"],
+    // Made up: never passed on.
+    ["/sign-up?start=nothing", "", "/sign-in"],
+    ["/sign-up?start=%2Fstaff", "", "/sign-in"],
+    ["/sign-up?start=https%3A%2F%2Fexample.test%2F", "", "/sign-in"],
+    ["/sign-in?start=%2F%2Fexample.test", "", "/sign-up"],
+  ];
+  for (const [address, after, otherForm] of cases) {
+    const { page, errors, close } = await app.desktop(address, answer);
+    try {
+      const card = page.getByTestId("identity-card");
+      await card.waitFor({ state: "visible", timeout: 30_000 });
+      assert.equal(await card.getAttribute("data-after"), after, `${address}: where to go afterwards`);
+      assert.equal(await card.getAttribute("data-other-form"), otherForm, `${address}: the other form`);
+      assert.deepEqual(errors, [], address);
+    } finally {
+      await close();
+    }
+  }
+  // The sign-up card opens with the words for creating an account.
+  const { page, close } = await app.desktop("/sign-up", answer);
+  try {
+    await expect(page.getByTestId("identity-card").locator("h1")).toHaveText("Create your account");
+  } finally {
+    await close();
+  }
+});

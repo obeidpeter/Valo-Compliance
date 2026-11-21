@@ -20,6 +20,7 @@ import {
 import { PublicLink as Link } from "@/components/public-link";
 import { formatCount, formatDay, formatNaira } from "@/lib/format";
 import { landingTasks, type LandingTask } from "@/lib/landing-tasks";
+import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 
 /**
  * The landing page: what a visitor can do, an example of each, the everyday tasks, how it works, why
@@ -33,7 +34,7 @@ const WRAP = "mx-auto max-w-7xl px-5 lg:px-8";
 const H2 = "font-display text-3xl leading-tight sm:text-4xl";
 const SUB = "mt-2 text-lg text-muted-foreground";
 /** The two actions, written the same way wherever the page offers them. */
-const DOCUMENTS = { href: "/sign-up", label: "Create a document" };
+const DOCUMENTS = { href: signUpFor(ANY_DOCUMENT), label: "Create a document" };
 const REQUIREMENTS = { href: "/checker", label: "Check my requirements" };
 /** A large button whose words may wrap, so it fits the narrowest phone. */
 const BIG = "btn min-h-12 whitespace-normal px-6 py-2 text-center text-base leading-tight";
@@ -208,14 +209,14 @@ function Tasks({ tasks, templates }: { tasks: LandingTask[]; templates: number |
         <h2 id="home-tasks" className={H2}>
           What do you need to do today?
         </h2>
-        <p className={SUB}>Each of these is a document you can make once you have an account.</p>
+        <p className={SUB}>Choose one. After you create your account, you start on it.</p>
         <ul className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4" data-testid="list-tasks">
           {tasks.map((task) => {
             const TaskIcon = TASK_ICONS[task.id] ?? FileText;
             return (
               <li key={task.id}>
                 <Link
-                  href={DOCUMENTS.href}
+                  href={signUpFor(task.id)}
                   className="surface group flex h-full flex-col gap-3 p-4 transition-shadow hover:shadow-[var(--shadow-md)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-5"
                   data-testid={"link-task-" + task.id}
                 >

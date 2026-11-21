@@ -60,14 +60,24 @@ export function useAuth() { return { isLoaded: true, isSignedIn: false, userId: 
 export function useUser() { return { isLoaded: true, isSignedIn: false, user: null }; }
 export function useClerk() { return { signOut() {} }; }
 export function useReverification(action) { return action; }
-// The provider's sign-in and sign-up cards open with these headings (the app's localisation).
-const card = (heading, form) =>
-  createElement("div", null, createElement("h1", null, heading), createElement("p", null, form));
-export function SignIn() {
-  return card("Sign in to Valo", "The identity provider's sign-in form, not drawn in this test.");
+// The provider's sign-in and sign-up cards open with these headings (the app's localisation). The
+// card shows what the app hands the provider: where to go afterwards, and the other form's address.
+const card = (heading, form, props) =>
+  createElement(
+    "div",
+    {
+      "data-testid": "identity-card",
+      "data-after": props.forceRedirectUrl ?? "",
+      "data-other-form": props.signInUrl ?? props.signUpUrl ?? "",
+    },
+    createElement("h1", null, heading),
+    createElement("p", null, form),
+  );
+export function SignIn(props) {
+  return card("Sign in to Valo", "The identity provider's sign-in form, not drawn in this test.", props);
 }
-export function SignUp() {
-  return card("Open your workspace", "The identity provider's sign-up form, not drawn in this test.");
+export function SignUp(props) {
+  return card("Create your account", "The identity provider's sign-up form, not drawn in this test.", props);
 }
 export function UserProfile() { return null; }
 `,

@@ -3,6 +3,7 @@
 import { BOTTOM_BAR } from "@/components/menu-panel";
 import { DOCK_BUTTON } from "@/components/site-chrome";
 import { basePath } from "@/lib/env";
+import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 import { useIdentity } from "./identity-store";
 
 /** The phone's bar: one button for documents and one for requirements, of equal weight (WEB-001).
@@ -17,7 +18,7 @@ export function MobileDock() {
     >
       <div className="grid grid-cols-2 gap-2">
         <a
-          href={basePath + (signedIn ? "/workspace/documents" : "/sign-up")}
+          href={basePath + (signedIn ? "/workspace/documents" : signUpFor(ANY_DOCUMENT))}
           className={DOCK_BUTTON + " btn-primary"}
           data-testid="link-dock-documents"
         >
