@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { ArrowRight, Loader2 } from "lucide-react";
 import {
   useCreateDocument,
   getGetWorkspaceQueryKey,
@@ -10,13 +11,19 @@ import { GUIDED_TEMPLATE_IDS, type GuidedTemplateId } from "@workspace/valo-core
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { emptyGuidedData, compileGuidedContent } from "@workspace/valo-core/guided-runtime";
 import { describeError } from "@/lib/api";
+import { DOCUMENT_PURPOSES } from "@/lib/document-kinds";
 
+/**
+ * The documents the workspace asks questions for, each a button that starts one and opens its
+ * editor. Every kind is in view with what it is for, so nothing has to be remembered or looked up.
+ */
 export function GuidedDraftStarter() {
-  const [id, setId] = useState<GuidedTemplateId>("TPL-01");
+  const [starting, setStarting] = useState<GuidedTemplateId | null>(null);
   const create = useCreateDocument(),
     qc = useQueryClient(),
     [, navigate] = useLocation();
-  function start() {
+  function start(id: GuidedTemplateId) {
+    setStarting(id);
     create.mutate(
       {
         data: {
@@ -30,55 +37,53 @@ export function GuidedDraftStarter() {
           void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });
           navigate("/workspace/documents/" + doc.id);
         },
+        onError: () => setStarting(null),
       },
     );
   }
   return (
-    <section
-      className="surface my-7 p-5 sm:p-7"
-      aria-labelledby="guided-start-title"
-      data-testid="guided-draft-starter"
-    >
+    <section aria-labelledby="guided-start-title" data-testid="guided-draft-starter">
       <h2 id="guided-start-title" className="font-display text-2xl">
-        Prepare a structured private draft
+        Everyday documents
       </h2>
       <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
-        Answer document-specific questions using your own facts and terms. This does not include a released
-        Valo catalogue master, independent legal review, verified payment or a signature. Published-template
-        access is separate.
+        Choose one. Valo asks you its questions and sets the document out from your answers.
       </p>
-      <div className="mt-5 flex flex-wrap items-end gap-3">
-        <div className="min-w-0 flex-1">
-          <label className="label" htmlFor="guided-document-kind">
-            Document questions
-          </label>
-          <select
-            id="guided-document-kind"
-            className="field"
-            value={id}
-            onChange={(e) => setId(e.target.value as GuidedTemplateId)}
-            disabled={create.isPending}
-            data-testid="select-guided-template"
-          >
-            {GUIDED_TEMPLATE_IDS.map((id) => (
-              <option value={id} key={id}>
-                {GUIDED_SPECS_V1[id].title}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={create.isPending}
-          onClick={start}
-          data-testid="button-start-guided"
-        >
-          {create.isPending ? "Saving private draft…" : "Start with questions"}
-        </button>
-      </div>
+      <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {GUIDED_TEMPLATE_IDS.map((id) => (
+          <li key={id}>
+            <button
+              type="button"
+              className="surface group flex h-full w-full items-center gap-4 p-5 text-left transition-shadow hover:shadow-[var(--shadow-md)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={create.isPending}
+              onClick={() => start(id)}
+              data-testid={"button-start-" + id}
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">{GUIDED_SPECS_V1[id].title}</span>
+                <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
+                  {DOCUMENT_PURPOSES[id]}
+                </span>
+              </span>
+              {starting === id && create.isPending ? (
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
+              ) : (
+                <ArrowRight
+                  className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              )}
+            </button>
+          </li>
+        ))}
+      </ul>
+      <p role="status" className="sr-only">
+        {starting && create.isPending
+          ? `Starting your ${GUIDED_SPECS_V1[starting].title.toLowerCase()}…`
+          : ""}
+      </p>
       {create.isError && (
-        <p role="alert" className="mt-3 text-sm text-destructive">
+        <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {describeError(create.error).message}
         </p>
       )}

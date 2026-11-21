@@ -41,9 +41,8 @@ export async function runGuidedCustomerJourneys(
       const spec = GUIDED_SPECS_V1[templateId],
         input = completeGuidedTestData(templateId);
       await page.setViewportSize({ width: 1280, height: 900 });
-      await page.goto("/workspace");
-      await page.getByTestId("select-guided-template").selectOption(templateId);
-      await page.getByTestId("button-start-guided").click();
+      await page.goto("/workspace/documents/new");
+      await page.getByTestId(`button-start-${templateId}`).click();
       await expect(page).toHaveURL(/\/workspace\/documents\/[a-f0-9-]+/);
       const id = new URL(page.url()).pathname.split("/").at(-1)!;
       await expect(page.getByTestId("guided-fields")).toBeVisible();
