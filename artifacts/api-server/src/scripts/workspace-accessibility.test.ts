@@ -4,6 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { expect, type Page } from "@playwright/test";
 import * as api from "@workspace/api-zod";
 import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
+import { compileGuidedContent, emptyGuidedData } from "@workspace/valo-core/guided-runtime";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import {
   menuProblems,
@@ -1250,5 +1251,159 @@ test("the New document page puts first the documents of a task chosen before sig
     } finally {
       await close();
     }
+  }
+});
+
+/** The words the editor used for a document's standing, its versions and its files before they were
+ * put in the customer's words. None of them is on the screen now. */
+const OLD_EDITOR_WORDS = /\brev\b|\brevisions?\b|business draft|released template|\bexports?\b|\bkobo\b/i;
+
+// EDT-003: "Support section-level text editing, undo, preview and a clear draft status."
+// EDT-002's acceptance: "preview, DOCX and PDF use the same saved revision".
+// EDT-005's acceptance: "final export blocks mandatory omissions or requires a deliberately
+// watermarked incomplete draft".
+test("the document editor shows a draft status and the saved version, lists the versions with the current one marked, previews the saved version, and makes a file only once a marked draft is asked for", async () => {
+  const asked: unknown[] = [];
+  const job = api.ListDocumentExportsResponse.parse(answers[`GET /v1/documents/${DOCUMENT}/exports`])[0]!;
+  const making: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === `/v1/documents/${DOCUMENT}/exports`) {
+      asked.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 202,
+        contentType: "application/json",
+        body: JSON.stringify(api.CreateDocumentExportResponse.parse({ ...job, status: "queued" })),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, making);
+  try {
+    await ready(page);
+    // Where the document stands, and the way back to the list it came from.
+    await expect(page.getByTestId("status-doc")).toHaveText("Draft");
+    await expect(page.getByTestId("text-doc-standing")).toHaveText(
+      "Your own document: not a Valo template, and not reviewed.",
+    );
+    await expect(page.getByTestId("status-save")).toHaveText("Saved · version 3");
+    await expect(page.getByTestId("link-back")).toHaveText("Your documents");
+    await expect(page.getByTestId("link-back")).toHaveAttribute("href", "/workspace/documents");
+
+    // Its versions, newest first, the current one marked and the earlier one restorable.
+    const versions = page.getByTestId("card-revisions");
+    await expect(versions.locator("li")).toHaveCount(2);
+    await expect(page.getByTestId("row-revision-3")).toContainText("Version 3");
+    await expect(page.getByTestId("row-revision-3")).toContainText("Current");
+    await expect(page.getByTestId("row-revision-2")).toContainText("Version 2");
+    await expect(page.getByTestId("button-restore-2")).toBeVisible();
+
+    // Nothing is missing from this document's checked details, and the card says what that covers.
+    await expect(page.getByTestId("card-missing")).toContainText("Still needed");
+    await expect(page.getByTestId("card-missing")).toContainText(
+      "Nothing is missing from the details Valo checks. Read the whole document before you use it.",
+    );
+
+    // A file is made only after the customer asks for a draft copy, from the saved version.
+    const files = page.getByTestId("private-exports");
+    await expect(files.locator("h2")).toHaveText("Download this document");
+    await expect(files).toContainText("Saved version 3");
+    const word = files.getByRole("button", { name: "Make a Word file", exact: true });
+    const pdf = files.getByRole("button", { name: "Make a PDF file", exact: true });
+    await expect(word).toBeDisabled();
+    await expect(pdf).toBeDisabled();
+    await files
+      .getByRole("checkbox", {
+        name: "I want a draft copy: marked as a draft on every page, with any missing details left as they are.",
+      })
+      .check();
+    await expect(word).toBeEnabled();
+    await pdf.click();
+    await expect.poll(() => asked.length).toBe(1);
+    assert.deepEqual(asked, [{ revisionId: document(3).revisionId, format: "pdf", acknowledgeDraft: true }]);
+    // The file already made: its kind, version and standing, its size, and how long it can be fetched.
+    await expect(files.locator("li")).toContainText("PDF · version 3 · ready");
+    await expect(files.locator("li")).toContainText("13 KB");
+    await expect(files.locator("li")).toContainText("You can download it until 25 Nov 2026, 10:00.");
+    await expect(files.getByRole("link", { name: "Download the PDF file", exact: true })).toHaveAttribute(
+      "href",
+      job.downloadUrl!,
+    );
+
+    // The screen in the customer's words, while editing and in the preview of the saved version.
+    const shown = async () => (await page.locator("main").innerText()).replace(/\s+/g, " ");
+    assert.doesNotMatch(await shown(), OLD_EDITOR_WORDS);
+    await expect(page.getByRole("tab")).toHaveText(["Edit", "Preview"]);
+    await page.getByRole("tab", { name: "Preview", exact: true }).click();
+    await expect(page.getByTestId("preview-doc")).toContainText("Supply of synthetic goods, as agreed.");
+    await expect(page.getByTestId("preview-doc")).toContainText(
+      /Draft · version 3 · your own document, not reviewed/i,
+    );
+    assert.doesNotMatch(await shown(), OLD_EDITOR_WORDS);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+/** The same document as an invoice started from its questions, with no answer given yet. */
+const invoice = (revision: number) => ({
+  ...document(revision),
+  title: GUIDED_SPECS_V1["TPL-01"].title,
+  content: compileGuidedContent(emptyGuidedData("TPL-01")),
+});
+const unanswered = except({
+  [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(invoice(3)),
+  [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([
+    invoice(3),
+    invoice(2),
+  ]),
+});
+
+// EDT-005: "Highlight unresolved fields, inconsistent dates and missing party details."
+test("an invoice started from its questions lists what it still needs by each question's own name, a table's row and column included, never by an internal key, and on a phone fits 360 and 320 pixels with no automated WCAG 2.2 AA failure", async () => {
+  const spec = GUIDED_SPECS_V1["TPL-01"];
+  {
+    const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, unanswered);
+    try {
+      await ready(page);
+      const questions = page.getByTestId("guided-fields");
+      await expect(questions.locator("header .eyebrow")).toHaveText("Questions");
+      await expect(questions.locator("header h2")).toHaveText(spec.title);
+      // Every unanswered question is listed as it is asked; a table's cell names its row and column.
+      const needed = await page.getByTestId("card-missing").locator("li").allInnerTexts();
+      const table = spec.tables[0]!;
+      assert.deepEqual(
+        needed.map((line) => line.trim()),
+        [
+          ...spec.fields.filter((f) => f.required && !f.when).map((f) => f.label),
+          ...table.columns
+            .filter((c) => c.required && !c.when)
+            .map((c) => `${table.label}, row 1: ${c.label}`),
+        ],
+      );
+      for (const line of needed) assert.doesNotMatch(line, /:\d+:|This answer is required/);
+      // A table's row is headed by its number; each answer in it is still named with its row for a
+      // screen reader, and a row is added with a button that says so.
+      const rows = page.getByTestId(`table-${table.id}`);
+      await expect(rows.locator("legend").nth(1)).toHaveText("Row 1");
+      await expect(rows.getByLabel("Description (row 1)")).toHaveCount(1);
+      await expect(page.getByTestId(`button-add-${table.id}`)).toHaveText("Add a row");
+      // The project's own names for the form are not shown.
+      const shown = (await page.locator("main").innerText()).replace(/\s+/g, " ");
+      assert.doesNotMatch(shown, /TPL-\d+|Guided form|\brev\b|\brevisions?\b|business draft|\bexports?\b/i);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+  const { page, errors, unknown, close } = await phone(`/workspace/documents/${DOCUMENT}`, unanswered);
+  try {
+    await ready(page);
+    await expect(page.getByTestId("guided-fields")).toBeVisible();
+    assert.deepEqual(await phoneProblems(page, "a guided invoice's editor"), []);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
   }
 });

@@ -4,7 +4,7 @@ import { useGetWorkspace, getGetWorkspaceQueryKey } from "@workspace/api-client-
 import { DocumentList } from "@/components/document-list";
 import { LibraryExports } from "@/components/library-exports";
 import { SavedTemplates } from "@/components/saved-templates";
-import { ErrorState, Notice, Skel } from "@/components/states";
+import { ErrorState, Skel } from "@/components/states";
 import { WorkspaceNav } from "@/components/workspace-nav";
 
 /**
@@ -42,10 +42,6 @@ export default function DocumentsPage() {
           <section>
             <DocumentList enabled={ws.isSuccess} />
             <LibraryExports />
-            <Notice className="mt-4" tone="ink" title="Development workspace">
-              Use synthetic test details only. Open a saved draft to request private, visibly marked DOCX or
-              PDF exports. Production recovery and release approval remain unproved.
-            </Notice>
           </section>
         )}
       </div>

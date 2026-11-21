@@ -94,6 +94,13 @@ export function formatCount(count: number): string {
     : String(count);
 }
 
+/** A file's size from its bytes, as "13 KB" or "1.4 MB". A part of a kilobyte counts as a whole one. */
+export function formatFileSize(bytes: number): string {
+  return bytes < 1_000_000
+    ? `${formatCount(Math.ceil(bytes / 1000))} KB`
+    : `${(bytes / 1_000_000).toFixed(1)} MB`;
+}
+
 /**
  * An amount of whole kobo, as "₦1,500.00": the naira sign, thousands grouped, always two decimal
  * places. Exact for an amount of any size, as it never passes through a fraction. An amount that is

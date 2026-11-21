@@ -120,6 +120,11 @@ export default function Development() {
                     ok={h.data?.status === "ok"}
                   />
                 </ul>
+                <p className="text-sm text-muted-foreground" data-testid="text-download-status">
+                  Word and PDF downloads work in this development build. A failure in the queue or in file
+                  storage is never reported as a completed file. Their approval for production and their
+                  disaster recovery are still unproved.
+                </p>
               </div>
             )
           )}

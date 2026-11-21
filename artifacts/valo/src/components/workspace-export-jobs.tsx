@@ -12,7 +12,7 @@ import {
   actOnWorkspaceExport,
   type WorkspaceExportJob,
 } from "../lib/workspace-export-jobs";
-import { formatCount, formatDateTime } from "@/lib/format";
+import { formatCount, formatDateTime, formatFileSize } from "@/lib/format";
 
 const LABELS: Record<WorkspaceExportJob["status"], string> = {
   queued: "Queued",
@@ -22,8 +22,6 @@ const LABELS: Record<WorkspaceExportJob["status"], string> = {
   cancelled: "Cancelled",
   expired: "Expired",
 };
-const bytesLabel = (bytes: number) =>
-  bytes < 1_000_000 ? `${formatCount(Math.ceil(bytes / 1000))} KB` : `${(bytes / 1_000_000).toFixed(1)} MB`;
 
 export function WorkspaceExportJobs({ pollMs = 2000 }: { pollMs?: number }) {
   const [jobs, setJobs] = useState<WorkspaceExportJob[]>([]);
@@ -281,7 +279,7 @@ export function WorkspaceExportJobs({ pollMs = 2000 }: { pollMs?: number }) {
               <p className="mt-2 text-xs break-all text-muted-foreground">Reference {job.id}</p>
               {(activeWorkspaceExport(job) || job.status === "ready") && !expired && (
                 <p className="mt-2 text-sm" aria-live="polite">
-                  {formatCount(job.progress.rows)} rows read · {bytesLabel(job.progress.bytes)} prepared
+                  {formatCount(job.progress.rows)} rows read · {formatFileSize(job.progress.bytes)} prepared
                   {activeWorkspaceExport(job) ? " so far" : ""}
                 </p>
               )}

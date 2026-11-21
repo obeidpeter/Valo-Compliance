@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { formatKobo } from "@workspace/valo-core/money";
-import { formatCount, formatDateTime, formatDay, formatNaira, lagosToday } from "./format";
+import { formatCount, formatDateTime, formatDay, formatFileSize, formatNaira, lagosToday } from "./format";
 
 test("an instant is written as its day and time on a Lagos clock, the month as a word, whatever the time zone it was given in (NFR-008)", () => {
   assert.equal(formatDateTime("2026-11-18T08:00:00.000Z"), "18 Nov 2026, 09:00");
@@ -96,4 +96,13 @@ test("a count is written with its thousands grouped", () => {
   assert.equal(formatCount(12345678), "12,345,678");
   assert.equal(formatCount(-12345), "-12,345");
   assert.equal(formatCount(1.5), "1.5");
+});
+
+test("a file's size is written in kilobytes, a part of one counting as a whole, and in megabytes from a million bytes", () => {
+  assert.equal(formatFileSize(1), "1 KB");
+  assert.equal(formatFileSize(1000), "1 KB");
+  assert.equal(formatFileSize(12345), "13 KB");
+  assert.equal(formatFileSize(999_999), "1,000 KB");
+  assert.equal(formatFileSize(1_000_000), "1.0 MB");
+  assert.equal(formatFileSize(1_449_000), "1.4 MB");
 });

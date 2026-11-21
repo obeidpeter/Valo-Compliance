@@ -7,7 +7,7 @@ import { getListWorkspaceExportsQueryKey, type LibraryExport } from "@workspace/
 import { LibraryExports } from "./library-exports";
 
 // DOC-005: "successful exports appear in the business library and remain linked to the template
-// version used." The workspace home shows this list beside the business drafts.
+// version used." The documents screen shows this list under the documents.
 const fromTemplate: LibraryExport = {
   id: "00000000-0000-4000-8000-00000000e001",
   documentId: "00000000-0000-4000-8000-00000000d001",
@@ -48,11 +48,11 @@ test("the business library lists each ready export with its revision, its downlo
   const html = render([fromTemplate, blank]);
   const first = html.slice(html.indexOf("Synthetic stock register"), html.indexOf("Synthetic blank draft"));
   const second = html.slice(html.indexOf("Synthetic blank draft"));
-  assert.ok(first.includes("PDF · revision 2"), first);
+  assert.ok(first.includes("PDF · version 2"), first);
   assert.ok(first.includes("Made from template TPL-07, version 3"), first);
   assert.ok(first.includes(`href="${fromTemplate.downloadUrl}"`), first);
   assert.ok(html.includes(`href="/workspace/documents/${fromTemplate.documentId}"`), html);
-  assert.ok(second.includes("DOCX · revision 1"), second);
+  assert.ok(second.includes("Word · version 1"), second);
   assert.ok(second.includes("Not made from a template"), second);
   assert.ok(second.includes(`href="${blank.downloadUrl}"`), second);
   assert.ok(html.includes("2 ready"), html);
@@ -60,6 +60,6 @@ test("the business library lists each ready export with its revision, its downlo
 
 test("an empty business library says no export is ready yet", () => {
   const html = render([]);
-  assert.ok(html.includes("No ready exports yet."), html);
+  assert.ok(html.includes("No files yet."), html);
   assert.ok(!html.includes("Made from template"), html);
 });
