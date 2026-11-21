@@ -85,8 +85,8 @@ test("every result explains in plain words why it is shown, with its rule, versi
       ),
       text,
     );
-    assert.ok(text.includes(`${it.ruleId} v${it.ruleVersion}`), text);
-    assert.ok(text.includes("state / Lagos"), text);
+    assert.ok(text.includes(`Rule ${it.ruleId}, version ${it.ruleVersion}`), text);
+    assert.ok(text.includes("State: Lagos"), text);
     assert.ok(text.includes(`Next step: </span>${it.nextStep}`), text);
     assert.ok(text.includes("Show 1 source"), text);
     if (it.matchedFacts.length)
@@ -104,7 +104,7 @@ test("every result explains in plain words why it is shown, with its rule, versi
 });
 
 test("the result page shows every coverage gap and the excluded sectors, and no score", () => {
-  assert.ok(html.includes("Known coverage gaps"));
+  assert.ok(html.includes("What Valo does not cover yet"));
   for (const gap of result.gaps) assert.ok(html.includes(`${gap}</li>`), gap);
   assert.ok(html.includes(result.notice));
   assert.doesNotMatch(html, /score|\d\s*%|percent/i);
@@ -128,11 +128,41 @@ test("the result page shows why a held rule gives no result and links each offic
   );
   assert.ok(page.includes("SYN-HELD: Evidence is stale or not yet checked</li>"), "the held rule's reason");
   assert.ok(
-    page.includes("No released rules cover these answers yet."),
+    page.includes("No published rule covers these answers yet."),
     "no result is presented as a finding",
   );
   assert.match(
     page,
     /<a href="https:\/\/example\.test\/route" target="_blank" rel="noreferrer noopener"[^>]*>Synthetic official route/,
   );
+});
+
+// CMP-003: "Represent federal, state/FCT and LGA requirements separately", accepted when "a
+// Lagos-only entry cannot appear as a national requirement".
+test("each result says in words whether it is federal, a state's or a local government's, with its rule and version", () => {
+  const placed: AssessmentResult = {
+    ...result,
+    items: [
+      item("SYN-FEDERAL", "Likely relevant", { jurisdiction: { level: "federal" } }),
+      item("SYN-STATE", "Likely relevant", { jurisdiction: { level: "state", state: "Lagos" } }),
+      item("SYN-FCT", "Likely relevant", { jurisdiction: { level: "state", state: "FCT" } }),
+      item("SYN-LGA", "Likely relevant", { jurisdiction: { level: "lga", state: "Lagos", lga: "Ikeja" } }),
+    ],
+  };
+  const page = renderToStaticMarkup(
+    React.createElement(
+      QueryClientProvider,
+      { client: new QueryClient() },
+      React.createElement(AssessmentResultView, { result: placed }),
+    ),
+  );
+  for (const [ruleId, place] of [
+    ["SYN-FEDERAL", "Federal"],
+    ["SYN-STATE", "State: Lagos"],
+    ["SYN-FCT", "State: FCT"],
+    ["SYN-LGA", "Local government: Ikeja, Lagos"],
+  ])
+    assert.ok(page.includes(`${place} · Rule ${ruleId}, version 3</p>`), `${ruleId}: ${place}`);
+  // A state's or a local government's requirement is never marked as federal.
+  assert.equal(page.split("Federal · Rule").length - 1, 1);
 });

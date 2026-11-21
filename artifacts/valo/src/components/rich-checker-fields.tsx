@@ -465,8 +465,8 @@ export function RichCheckerFields({
       </p>
       {section === "businessName" && (
         <p className="mb-6 rounded-xl bg-secondary p-3 text-sm">
-          Name details are optional and available while signed in. They are sent for this check; a private
-          assessment is stored only when you explicitly agree to save it. Do not enter identity numbers or
+          Name details are optional and available while signed in. They are sent for this check; the result is
+          stored, privately, only when you explicitly agree to save it. Do not enter identity numbers or
           upload records here.
         </p>
       )}
