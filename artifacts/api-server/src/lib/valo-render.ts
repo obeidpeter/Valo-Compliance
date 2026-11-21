@@ -16,7 +16,10 @@ import { documentInput } from "./valo-validation";
 import { GUIDED_PREFIX, guidedRenderableBlocks } from "@workspace/valo-core/guided-runtime";
 import { chromiumLaunchPath } from "../platform/chromium";
 
-export const RENDER_VERSION = "manual-draft-3";
+/** Names how a document is rendered. A file is made once for a saved version, kind and render
+ * version, so the name changes whenever the same saved version would print differently. Version 4:
+ * a guided document prints an amount in naira under its question's name, without "kobo". */
+export const RENDER_VERSION = "manual-draft-4";
 export const DRAFT_NOTICE =
   "INCOMPLETE BUSINESS DRAFT — user-provided information. Not verified payment proof, a government tax invoice, official approval or legal advice.";
 export const TEMPLATE_NOTICE =
