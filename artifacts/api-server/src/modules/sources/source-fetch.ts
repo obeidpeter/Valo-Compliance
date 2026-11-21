@@ -133,3 +133,37 @@ export async function fetchOfficialSource(id: string) {
   }
   throw new SourceFailure("SOURCE_REDIRECT_LIMIT");
 }
+/**
+ * A public page that is not an official source, fetched with the same limits: https, a public
+ * address, the same host across redirects and the page size cap. The caller passes its own fixed
+ * list and the address must be on it. Nothing a request or a fetched page names is ever fetched.
+ */
+export async function fetchListedPage(
+  address: string,
+  listed: readonly string[],
+  /** The transport; tests replace it so that nothing is sent. */
+  send: typeof request = request,
+) {
+  if (!listed.includes(address)) throw new SourceFailure("SOURCE_NOT_ALLOWLISTED");
+  const start = new URL(address);
+  const allowed = (url: URL) =>
+    url.protocol === "https:" &&
+    !url.username &&
+    !url.password &&
+    !url.port &&
+    url.hostname === start.hostname;
+  if (!allowed(start)) throw new SourceFailure("SOURCE_NOT_ALLOWLISTED");
+  let target = start;
+  for (let redirects = 0; redirects <= 3; redirects++) {
+    const response = await send(target, MAX_SOURCE_BYTES);
+    if (response.status >= 300 && response.status < 400) {
+      if (!response.location) throw new SourceFailure("SOURCE_REDIRECT_MISSING");
+      const next = new URL(response.location, target);
+      if (!allowed(next)) throw new SourceFailure("SOURCE_REDIRECT_NOT_ALLOWLISTED");
+      target = next;
+      continue;
+    }
+    return { ...response, finalUrl: target.href, fetchedAt: new Date() };
+  }
+  throw new SourceFailure("SOURCE_REDIRECT_LIMIT");
+}
