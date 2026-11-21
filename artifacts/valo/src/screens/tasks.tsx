@@ -70,6 +70,11 @@ export default function TasksPage() {
       Object.keys(pinnedRef.current).length > 0 ||
       JSON.stringify(newDraftRef.current) !== JSON.stringify(emptyDraft()),
   );
+  // Leaving asks its own question, about every task edit that is not saved. A question about the
+  // view, still open underneath it, is answered by staying.
+  useEffect(() => {
+    if (navigation.blocked) setLeaving(null);
+  }, [navigation.blocked]);
   const create = useCreateTask();
   const { toast } = useToast();
 

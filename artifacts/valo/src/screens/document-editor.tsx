@@ -238,6 +238,14 @@ export default function DocumentEditor({ id }: { id: string }) {
       timer.current = setTimeout(() => doSaveRef.current(), AUTOSAVE_MS);
     }
   }
+  const answeredRef = useRef(answered);
+  answeredRef.current = answered;
+  // Leaving asks its own question, about everything that is not saved. A question still open
+  // underneath it is answered by keeping, the answer that discards nothing: otherwise "Save and
+  // leave" would wait on a question the customer could no longer reach.
+  useEffect(() => {
+    if (navigation.blocked && questionOpen.current) answeredRef.current();
+  }, [navigation.blocked]);
 
   function undo() {
     // With nothing to undo there is nothing to ask about.

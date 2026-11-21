@@ -2058,3 +2058,127 @@ test("while the editor asks, nothing is saved underneath the question, and the a
     await close();
   }
 });
+
+// NFR-009: "No silent draft loss". The browser's Back button leaves a screen as a link does, so a
+// screen with something unsaved on it asks first. The router hears of the move only if the screen
+// lets it go.
+test("the browser's Back button does not take unsaved work away: the screen asks first, staying keeps what was typed, and leaving goes where Back was going", async () => {
+  {
+    const sent: { content: { financialInput: { lines: { unitPriceKobo: string }[] } } }[] = [];
+    const saving: Api = async (route, method, path, query) => {
+      if (method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+        sent.push(route.request().postDataJSON() as (typeof sent)[number]);
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(api.SaveDocumentResponse.parse(document(4))),
+        });
+      } else await answer(route, method, path, query);
+    };
+    const { page, errors, unknown, close } = await desktop("/workspace/documents", saving);
+    try {
+      await ready(page);
+      const link = page.getByTestId(`link-doc-${DOCUMENT}`);
+      const editor = new RegExp(`/workspace/documents/${DOCUMENT}$`);
+      const price = page.getByTestId("input-doc-price-0");
+      const question = page.getByTestId("dialog-confirm");
+      const stay = page.getByTestId("button-stay-editor");
+      await link.click();
+      await expect(price).toHaveValue("1500");
+      // With nothing unsaved, Back goes back.
+      await page.goBack();
+      await expect(link).toBeVisible();
+      assert.equal(new URL(page.url()).pathname, "/workspace/documents");
+      await link.click();
+      // An amount typed and not applied is unsaved. Back asks, and the editor is still there.
+      await price.fill("250");
+      await page.goBack();
+      await expect(stay).toBeVisible();
+      assert.match(page.url(), editor);
+      await stay.click();
+      await expect(stay).toBeHidden();
+      await expect(price).toHaveValue("250");
+      // Leaving asks about everything unsaved, so a question of the editor's own that is still
+      // open is answered by keeping.
+      await page.getByTestId("button-reset-financial").click();
+      await expect(question).toBeVisible();
+      await page.goBack();
+      await expect(stay).toBeVisible();
+      await expect(question).toBeHidden();
+      await stay.click();
+      await expect(stay).toBeHidden();
+      await expect(price).toHaveValue("250");
+      await expect(page.getByTestId("status-financial-unsaved")).toBeVisible();
+      // Choosing to leave goes where Back was going, and nothing is sent.
+      await page.goBack();
+      await page.getByTestId("button-discard-leave").click();
+      await expect(link).toBeVisible();
+      assert.equal(new URL(page.url()).pathname, "/workspace/documents");
+      assert.equal(sent.length, 0);
+      // "Save and leave" does both, even when a question of the editor's own was open as Back was
+      // pressed: the amount is applied and saved, and then the editor is left.
+      await link.click();
+      await price.fill("250");
+      await page.getByTestId("button-reset-financial").click();
+      await expect(question).toBeVisible();
+      await page.goBack();
+      await page.getByTestId("button-save-leave").click();
+      await expect(link).toBeVisible();
+      assert.equal(new URL(page.url()).pathname, "/workspace/documents");
+      assert.equal(sent.length, 1);
+      assert.equal(sent[0]!.content.financialInput.lines[0]!.unitPriceKobo, "25000");
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+
+  // The business profile and the tasks use the same guard.
+  {
+    const { page, errors, unknown, close } = await desktop("/workspace");
+    try {
+      await ready(page);
+      await page.getByTestId("link-edit-profile").click();
+      const name = page.getByTestId("input-business-name");
+      await name.fill("Synthetic Trading Ltd, changed");
+      await page.goBack();
+      const stay = page.getByTestId("button-stay-editor");
+      await expect(stay).toBeVisible();
+      assert.equal(new URL(page.url()).pathname, "/workspace/profile");
+      await stay.click();
+      await expect(stay).toBeHidden();
+      await expect(name).toHaveValue("Synthetic Trading Ltd, changed");
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+  const { page, errors, unknown, close } = await desktop("/workspace");
+  try {
+    await ready(page);
+    await page.locator('header nav a[href="/workspace/tasks"]').click();
+    const first = tasks[0]!.id;
+    const card = page.getByTestId(`card-task-${first}`);
+    const question = page.getByTestId("dialog-confirm");
+    const stay = page.getByTestId("button-stay-editor");
+    await page.getByTestId(`button-edit-${first}`).click();
+    await expect(card).toContainText("Editing version 1");
+    // The screen's own question about the view, still open, is answered by staying.
+    await page.getByTestId("tab-all").click();
+    await expect(question.locator("h2")).toHaveText("Leave your task edits?");
+    await page.goBack();
+    await expect(stay).toBeVisible();
+    await expect(question).toBeHidden();
+    assert.equal(new URL(page.url()).pathname, "/workspace/tasks");
+    await stay.click();
+    await expect(stay).toBeHidden();
+    await expect(card).toContainText("Editing version 1");
+    await expect(page.getByTestId("tab-open")).toHaveAttribute("aria-pressed", "true");
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});

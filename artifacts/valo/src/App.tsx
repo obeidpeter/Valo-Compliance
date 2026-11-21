@@ -16,7 +16,11 @@ import { useDocumentTitle } from "@/lib/document-title";
 import { publicPages } from "@/lib/public-pages";
 import { startPath } from "@/lib/landing-tasks";
 import { isServerPage } from "@/lib/server-pages";
+import { watchBackAndForward } from "@/lib/use-unsaved-navigation";
 import NotFound from "@/screens/not-found";
+
+// Before the router renders, so that a screen with unsaved changes is asked first.
+watchBackAndForward();
 
 // Each screen is its own chunk, so a page downloads only the screens it shows, not the whole
 // workspace and staff app (NFR-002).
