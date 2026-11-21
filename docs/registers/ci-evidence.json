@@ -2800,6 +2800,13 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the browser's Back button does not take unsaved work away: the screen asks first, staying keeps what was typed, and leaving goes where Back was going",
       "proves": "Signed in through a stand-in identity with synthetic data, in the app as bundled for the test: with an amount typed and not applied, the browser's Back leaves the editor only when the customer chooses to; staying keeps the amount, “Discard and leave” sends nothing, and “Save and leave” sends one save holding the amount; the business profile and the tasks ask in the same way. The compiled site's own router is not exercised, and nor is closing the tab."
+    },
+    {
+      "requirement": "WRK-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the reminders screen says in plain words whether emails are being sent and what has happened to each reminder",
+      "proves": "Signed in through a stand-in identity with synthetic data, the reminders screen says that reminders are off unless turned on, that each is planned for 09:00 Lagos time, and whether emails are being sent; its delivery log gives each reminder's state and reason in words, and a message the email service accepted is not called sent or delivered. This shows the screen's words, not that a reminder is scheduled or an email sent."
     }
   ]
 }
