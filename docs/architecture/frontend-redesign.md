@@ -1489,6 +1489,58 @@ answer, the preview does not print it, and changing the choice back shows it as 
 
 Not changed: the forms' own questions, which are frozen (decision 6).
 
+### Phase 6: a rehearsal of the testers' tasks against the real server
+
+Before five business owners are put in front of the site, their tasks are done once by a test, in a
+browser, against the real API and a real database.
+
+Nothing in CI did that. Every browser test answered the page's requests from fixtures, and every
+API test called the API without drawing a screen. The scripts that do both sign in through the
+real identity provider, so CI runs none of them. A request the page sends that the server refuses
+would have been found by the first tester.
+
+The test (`src/scripts/tester-tasks.integration.test.ts`, in the database job) follows the task
+sheet:
+
+| Task on the sheet | What the test does |
+| --- | --- |
+| 2. Check requirements | Signed out, on a phone: answers the check for a registered sole proprietor in Ikeja, Lagos, with three staff, who keeps customers' details. With nothing published, the result says that no published rule covers the answers, that it is not a legal certificate, and to check what applies in Lagos with the authorities there |
+| 3. Make an invoice | Signed in, in an empty workspace: starts an invoice from its questions, answers them, and waits until nothing is listed as still needed and the page says it is saved |
+| 4. Get the file, then fix a mistake | Asks for a PDF, waits for it to be ready, downloads it and reads it with a PDF reader: the draft notice, the saved version, both names, and ₦7,500.00 and ₦75,000.00. Changes the price to 8000, asks again, and reads ₦8,000.00 and ₦80,000.00 in the second file and not the old price. Reloads the page and finds the answers as saved |
+| 5. Remember a due date | Saves a task due at the end of next month, and reads on the reminders screen that reminder emails are not being sent yet |
+| 6. Get help | Opens the report form, sends a report, and reads "Enquiry received" and a reference |
+
+The page makes over thirty requests on the way and the real API answers every one. The test fails
+if the server refuses or fails any request, if the page reports an error, or if the page did not
+itself send the request for each step.
+
+Two things are stood in for, and nothing else. The identity provider's script cannot load in a
+test, so the page is bundled with a signed-in or signed-out stand-in, and the server is told which
+synthetic account is asking, as the test of other workspaces' identifiers already tells it. And
+the queue's worker is not started: each file the page asks for is made by calling the function the
+worker calls. No provider is called and every record is synthetic.
+
+Not in it: the pages the server renders, which this bundle of the browser app does not hold. The
+first page a visitor reads (task 1) and the Help page are read by the tests of the server-rendered
+pages, which check the Help page's link to the report form. Nor does it open the Word file, do the
+signed-in tasks on a phone, or sign in for real.
+
+What it found: no fault. Every request the page made on its first full run was accepted. To check
+that it can fail, the server was told to trust a different site address: the page's first save was
+then refused, the test failed and said where, and the page showed the server's sentence, "This
+request was not sent the way Valo's own pages send one, so it was refused. Nothing was saved.
+Reload the page and try again."
+
+CI keeps the two invoices with each run (`tester-tasks-invoices`), so anyone can open what a
+customer would download. Reading the first one is worth doing before the sessions: the invoice
+prints the form's questions as its lines, among them "Include a user-supplied tax amount? No tax
+line supplied" and "Include an agreed discount? No discount". Those are the frozen forms' words
+(decision 6), and the task sheet's fourth closing question, whether the tester would send the
+invoice as it is, is where they will be judged.
+
+The cost: the database job now builds the web app before the rehearsal, because the page needs its
+compiled styles.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
@@ -1554,7 +1606,9 @@ accepted by it.
 | 10. Help and documentation | The help page has fourteen questions in five groups, and three of its answers link to the page they send the visitor to. The landing page has five questions. "CAC" is spelt out in the check and on the business profile. The guidance page names the "Tax ID" and says it replaces the TIN. | |
 
 Not built, and not a matter of words: testing with five business owners. The plan called for it to
-find what an audit by one reader cannot. It waits for the owner to arrange the participants.
+find what an audit by one reader cannot. It waits for the owner to arrange the participants. Their
+tasks are [rehearsed in CI](#phase-6-a-rehearsal-of-the-testers-tasks-against-the-real-server)
+against the real API and database, so that a session does not stop on a fault a test could find.
 
 ## Rules the redesign keeps
 
