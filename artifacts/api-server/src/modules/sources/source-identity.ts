@@ -1,7 +1,7 @@
 /** Content identity is not amendment, effectivity, legal interpretation or publication approval. */
 export function instrumentIdentity(id: string, text: string, metadataTitle: string | null) {
   const profile =
-    id === "S02"
+    id === "S02" || id === "NASS-NTAA-2025"
       ? {
           title: "Nigeria Tax Administration Act 2025",
           words: /nigeria\s+tax\s+administration\s+act/i,

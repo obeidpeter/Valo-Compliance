@@ -74,7 +74,12 @@ Approval is the product owner's alone, and it is of this file as a whole:
   official text, with no copyright opinion claimed;
 - that the thirty drafts, GUD-01 to GUD-30, were written in the owner's own ChatGPT account;
 - that each published guide needs two AI reviews before it is first published and two more every 30
-  days, paid for from an allocation the owner approves separately.
+  days, paid for from an allocation the owner approves separately;
+- that each of those reviews is larger than a template's, because it is sent with the official
+  passages the guide rests on. A guide's review is refused before it is sent if it measures more
+  than 64,000 by the budget's cautious count, which counts every byte as a token. A template's
+  limit is 32,000. The money held for each review while it runs is the same as for a template's.
+  What a review costs in the end depends on its size, so a guide's review costs more.
 
 Approving this file publishes nothing and spends nothing.
 

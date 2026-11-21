@@ -18,10 +18,14 @@ test("coordinating mappings and resolutions do not become implementation or cont
 });
 test("additional source leads deduplicate URLs without changing the 24 original IDs", () => {
   assert.equal(finalSourceContext.references.length, 24);
-  assert.equal(allSourceLeads.length, 31);
-  assert.equal(new Set(allSourceLeads.map((s) => s.url)).size, 31);
-  for (const id of ["CAC-BN-PROCESS", "NIPC-BFA-2022", "NCC-COPYRIGHT"])
+  // 24 original, four supplementary, three for the business-name rule and two for the tax guides.
+  assert.equal(allSourceLeads.length, 33);
+  assert.equal(new Set(allSourceLeads.map((s) => s.url)).size, 33);
+  assert.equal(new Set(allSourceLeads.map((s) => s.id)).size, 33);
+  for (const id of ["CAC-BN-PROCESS", "NIPC-BFA-2022", "NCC-COPYRIGHT", "NASS-NTAA-2025", "NRS-TAXID-HOW"])
     assert.equal(allSourceLeads.filter((s) => s.id === id).length, 1);
+  // Every lead is an https address.
+  assert.ok(allSourceLeads.every((s) => new URL(s.url).protocol === "https:"));
   assert.equal(
     allSourceLeads.find((s) => s.id === "SV-010")?.url,
     "https://icrp.cac.gov.ng/assets/docs/CAMA-NOTE%20FINAL-FULL-VERSION.pdf",

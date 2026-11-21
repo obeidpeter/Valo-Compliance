@@ -30,4 +30,27 @@ export const businessNameSourceLeads = [
     sourceLocator: "https://github.com/obeidpeter/Valo-Compliance/issues/4",
   },
 ] as const;
-export const allSourceLeads = [...baseline, ...businessNameSourceLeads];
+/**
+ * Official addresses the guidance drafts rest on that the lists above lack (decision 0017). A lead
+ * lets the address be fetched and watched; it approves nothing and says nothing is current.
+ */
+export const guidanceSourceLeads = [
+  {
+    id: "NASS-NTAA-2025",
+    title: "Nigeria Tax Administration Act 2025, National Assembly copy",
+    url: "https://nass.gov.ng/documents/download/11250",
+    category: "regulatory",
+    baselineNotes:
+      "The copy GUD-07 to GUD-10 quote. The Gazette copy (S02) differs from it in places; see the Act's amendment record.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
+  {
+    id: "NRS-TAXID-HOW",
+    title: "Nigeria Revenue Service: how Tax ID retrieval works",
+    url: "https://taxid.nrs.gov.ng/how-it-works",
+    category: "regulatory",
+    baselineNotes: "An official service page GUD-08 describes. A page says what it says when it is read.",
+    sourceLocator: "docs/architecture/decisions/0017-clear-guidance-holds.md",
+  },
+] as const;
+export const allSourceLeads = [...baseline, ...businessNameSourceLeads, ...guidanceSourceLeads];

@@ -1,6 +1,6 @@
 /**
  * The sources module's public entry: fetching, extracting and storing official source snapshots, their
- * identities and registers, the source bindings a rule release uses, the business-name source
+ * identities and registers, each address's current capture, the source bindings a rule release uses, the business-name source
  * evidence, the current-source state with its lock and the source corrections that change it, the
  * staff source controls and the daily source check. Code outside
  * artifacts/api-server/src/modules/sources imports only this file (repository rule `module-boundary`);
@@ -12,6 +12,7 @@ export * from "./business-name-candidate-binding";
 export * from "./business-name-evidence";
 export * from "./source-candidate-bindings";
 export * from "./source-capture";
+export * from "./source-current-captures";
 export * from "./source-fetch";
 export * from "./source-identity";
 export * from "./source-register";

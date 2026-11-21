@@ -1,8 +1,11 @@
 import { digest } from "@workspace/valo-core";
+/** The most a review request may measure, counted as below, unless its kind has a limit of its own. */
+export const REVIEW_INPUT_CEILING = 32000;
 /** Text-only request bound: UTF-8 bytes plus explicit protocol allowance.
  * This is conservative preflight accounting, NOT provider tokenisation,
  * a managed-gateway tariff, a credit balance or a hard monetary ceiling. */
-export function meterReviewRequest(request: unknown) {
+export function meterReviewRequest(request: unknown, inputCeiling: number = REVIEW_INPUT_CEILING) {
+  if (!Number.isSafeInteger(inputCeiling) || inputCeiling < 1) throw Error("REVIEW_INPUT_CEILING_INVALID");
   const serialized = JSON.stringify(request);
   const wireBytes = Buffer.byteLength(serialized, "utf8"),
     protocolAllowance = 1024;
@@ -12,9 +15,9 @@ export function meterReviewRequest(request: unknown) {
     wireBytes,
     protocolAllowance,
     conservativeInputTokenBound,
-    inputCeiling: 32000,
+    inputCeiling,
     maximumCompletionTokens: 8192,
-    withinInputCeiling: conservativeInputTokenBound <= 32000,
+    withinInputCeiling: conservativeInputTokenBound <= inputCeiling,
     method: "UTF8_bytes_plus_protocol_allowance_not_actual_provider_usage",
     actualInputTokens: null,
     actualOutputTokens: null,

@@ -452,6 +452,10 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-release-record-db
       - name: Prove the staff Content area lists templates awaiting their reviews (KI-010)
         run: pnpm --filter @workspace/api-server test:valo-staff-prepared-db
+      # The owner's approval of the guidance policy is supposed inside this test only. Nothing is
+      # published: the publisher's checks run in a transaction that is always rolled back.
+      - name: Prove a guide is prepared from captures, measured for its reviews and passes every publisher check, with nothing published
+        run: pnpm --filter @workspace/api-server test:valo-guide-route-db
       - name: Prove controlled payment settlement and refund lifecycle
         run: |
           pnpm --filter @workspace/api-server test:valo-commerce

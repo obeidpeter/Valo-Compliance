@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { publicationSchema } from "@workspace/valo-core";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
+  mappedGuideIds,
   operationalInferenceTemplateIds,
   readPreparedCandidate,
   supportsOperationalInferenceTemplate,
@@ -32,6 +33,7 @@ const finiteRunCommands = [
   "--prepare-customer",
   "--prepare-editorial-case",
   "--prepare-template-candidate",
+  "--prepare-guide-candidate",
   "--verify-prepared",
   "--admit",
   "--execute",
@@ -226,6 +228,24 @@ async function main() {
         JSON.stringify({
           ...prepared,
           templateId: batchId,
+          providerCalls: 0,
+          approvalRowsWritten: 0,
+          publicationAccepted: false,
+        }),
+      );
+      return;
+    }
+    if (mode === "--prepare-guide-candidate") {
+      // A guide with a claim map, and the path of a provider-terms snapshot taken within a day. The
+      // guide is bound to the captures the daily source check holds. It is kept as a candidate only
+      // when the gate names nothing but its two reviews; otherwise the reasons are printed.
+      if (!batchId || !mappedGuideIds.includes(batchId) || extra.length !== 1 || !extra[0])
+        throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const { prepareGuideCandidateRelease } = await import("../modules/editorial");
+      const prepared = await prepareGuideCandidateRelease(batchId, extra[0]);
+      console.log(
+        JSON.stringify({
+          ...prepared,
           providerCalls: 0,
           approvalRowsWritten: 0,
           publicationAccepted: false,
