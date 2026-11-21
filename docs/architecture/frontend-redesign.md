@@ -476,6 +476,41 @@ The last of the public pages. Each is headed with the name its links give it.
   advisers have not approved, and say so. Only a doubled word is corrected.
 - The forms on these pages are rewritten with the other messages, in phase 6.
 
+### Phase 5: one place to start a document, and a calmer home
+
+**One place.** A document now starts on one page, "New document" (`/workspace/documents/new`).
+It shows the twelve everyday documents, each with a line saying what it is for, and each a button
+that starts it. Below them are a blank document and the drafting assistant.
+
+The home screen had three ways to start a document and the documents screen two: a list to pick
+a document's questions from, "Prepare invoice or quotation" and "New blank draft". Each screen now
+has one button, "New document", which opens that page. With nothing saved yet, the empty list
+carries the button instead, so a screen never shows two.
+
+**The home.** The greeting and its button come first. Then anything that needs a look, the
+documents last worked on, the way into the requirements check and saved results, and the
+business profile. The home had no way into the requirements check before.
+
+| On the home | Now | Before |
+| --- | --- | --- |
+| First thing on the screen | The greeting and "New document" | A card headed "Prepare a structured private draft" |
+| Documents | "Recent documents", three of them, and "All documents" | "Business drafts" |
+| Requirements | A card with "Check requirements" and "Saved results" | Not on the home |
+| Business profile | Its name and four lines | The same, with "rev 3" in the corner |
+
+**Not changed yet.** A document's row still reads "Business draft" and "rev 3", and a new
+document is still titled "private business draft". Those words change with the rest of the
+workspace's words.
+
+**Found on the way: the phone's menu closes when focus moves on.** With the menu open, Tab went
+on from its last link to the page behind it, where the control that took the focus lay hidden
+under the menu. The new home put its first button exactly there, and a check that already ran
+reported it. The menu now closes when keyboard focus moves on from the header, on
+server-rendered pages and in the browser app.
+
+Two scripts that need a verified test account, and so run in no CI job, start their documents on
+the new page. They were updated and not run.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
