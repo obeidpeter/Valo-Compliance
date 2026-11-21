@@ -511,6 +511,33 @@ server-rendered pages and in the browser app.
 Two scripts that need a verified test account, and so run in no CI job, start their documents on
 the new page. They were updated and not run.
 
+### Phase 5: a task chosen on the landing page is carried through sign-up
+
+A visitor who picks a task on the landing page now starts on it once they have an account.
+
+- Each of the eight tasks leads to sign-up with the task on the address, as
+  `/sign-up?start=invoice`. "Create a document" does the same with `start=document`, on the
+  landing page, on the phone's bar and on an empty documents list.
+- The sign-up page hands the identity provider's form the page to go to afterwards: "New
+  document", with the task. Its link to the sign-in form keeps the choice, and the sign-in page
+  does the same the other way.
+- "New document" then shows the chosen task first, under "You chose", with its one, two or three
+  documents as buttons, and the full list below.
+- Only the site's own choices are passed on. A made-up value, such as another site's address, is
+  handed to nobody and the page opens as usual.
+- The landing page's sentence over its tasks reads "Choose one. After you create your account,
+  you start on it." It read "Each of these is a document you can make once you have an account."
+- The sign-up card is headed "Create your account". It read "Open your workspace".
+
+**What is and is not checked.** The identity provider cannot load in a test. The checks use
+stand-ins for its forms that show what the app hands them: where to go afterwards and the other
+form's address. That covers the app's side. The provider's own redirect after a real sign-up is
+documented in its library and is not exercised here.
+
+**Where the choice is lost.** It is kept while the sign-up page stays open, through the
+provider's own steps. Reloading the page part-way, or finishing sign-up in another tab, loses it,
+and the visitor then starts on the workspace's home, where "New document" is one press away.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
