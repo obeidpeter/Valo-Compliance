@@ -1,0 +1,116 @@
+{
+  "recordedAt": "2026-11-15T01:02:27.829Z",
+  "applicationCommit": "c6bca11d340ca9b34ca69a7160ba4146fd8357a2",
+  "newCode": [
+    "Shared lazy SDK transport preserves outbound observation after admission and before SDK invocation.",
+    "Role/corpus shapes enforced at both authority admission and real binding validation.",
+    "Independent reviews require the same candidate, case, sources and immutable plan; prompts must differ.",
+    "Read-only historical exposure projection retains unknown liabilities and source history.",
+    "Exact export ID oracles and page JS-heap sampling added."
+  ],
+  "tests": {
+    "managedEntryAndPreparation": {
+      "passed": 39,
+      "failed": 0
+    },
+    "isolatedPostgresDispatch": {
+      "passed": 23,
+      "failed": 0
+    },
+    "nativePrivateExport": {
+      "passed": 10,
+      "failed": 0
+    },
+    "controlledBrowser": {
+      "passed": true,
+      "checks": 9,
+      "exactExpectedIds": true,
+      "heapEvidence": {
+        "baseline": 2443452,
+        "peak": 3444440,
+        "increase": 1000988,
+        "bound": 8388608
+      },
+      "resourceScope": "Page JavaScript heap sampled every 10ms, not OS/download-manager or backend memory. Test Node process validates the saved file separately."
+    },
+    "typecheck": "passed",
+    "apiBuild": "passed"
+  },
+  "history": {
+    "potentialChargeRecords": 57,
+    "reportedUsageRecords": 37,
+    "unknownOriginalRecords": 20,
+    "verifiedRetainedArtifacts": 10,
+    "proposedReceiptResolutions": 10,
+    "projectedExposure": {
+      "potentialChargeRecords": 57,
+      "metadataReportedUsageRecords": 37,
+      "retainedReceiptRefinements": 10,
+      "unresolvedLiabilities": 10,
+      "projectedUsageEstimateNanoUsd": "232829850",
+      "inclusiveRemainingNanoUsd": null,
+      "actualBillingVerified": false,
+      "ledgerWrites": 0,
+      "sourceRowsChanged": 0,
+      "modelCapacityAssumptionsApplied": 0,
+      "note": "No unsupported model-cap assumptions were applied. Missing per-attempt request/model evidence remains held; committed code alone does not prove what was dispatched. These are potential charges and usage estimates, not verified paid calls."
+    },
+    "snapshotStillCurrent": true,
+    "historyModified": false,
+    "noRetainedRequestMetersFound": true,
+    "actualBillingVerified": false
+  },
+  "prepared": {
+    "manifestHash": "c9c648cdfe09a7a4b1db448897164ed4c6671dcab488c3761acb9c97e6aca4bb",
+    "packageId": "finite-package:c4696c9b9bddf9baa8cb30a6f7c421b25b6dfb2d1560002adcc76125a0a508ec",
+    "expiresAt": "2026-11-15T01:57:46.136Z",
+    "attemptCount": 2,
+    "worstCaseReservationNanoUsd": "741100800",
+    "ownerApproved": false,
+    "providerCalls": 0,
+    "nativeCandidateVersion": 9,
+    "publicationAccepted": false
+  },
+  "authority": {
+    "enabled": false,
+    "ownerApproved": false,
+    "newProviderCalls": 0,
+    "ordinaryQuotasChanged": false,
+    "additionalAllocationCapNanoUsd": "30000000000",
+    "historicalChargesInsideAdditionalCap": false
+  },
+  "boundaries": [
+    "The 23 PostgreSQL tests use controlled transport and a controlled binding hook; they are not provider-quality/content acceptance.",
+    "Actual default customer entry uses the real corpus/source verifier with controlled ledger/SDK.",
+    "Native prepared TPL-07 v9 passed current input/rights/mechanical/export readiness, not independent AI reviews or publication.",
+    "Historical projection refines metadata read-only: no ledger state, old usage, account billing or authorization was rewritten.",
+    "39/23/10 and browser checks are engineering evidence, not the formal 80/60/60 acceptance.",
+    "No spending, quota increase, email, merchant action, public launch, R1/R2 acceptance or production proof."
+  ],
+  "logs": {
+    "entry": {
+      "path": "docs/valo/evidence/inference-hardening/entry.txt",
+      "sha256": "67753bf2db7fff6554cbfac82ee4fa423c098aa9a5253ddd854aabfc1355a61b"
+    },
+    "postgres": {
+      "path": "docs/valo/evidence/inference-hardening/postgres.txt",
+      "sha256": "6d30e81f158b4b342547318ee6e1dae284eaf7b427312a5a2b3bbb44c668da0f"
+    },
+    "types": {
+      "path": "docs/valo/evidence/inference-hardening/types.txt",
+      "sha256": "3208b404278317f6967fa7e04cfb73d54137f714a5d7579971529776bd24f321"
+    },
+    "build": {
+      "path": "docs/valo/evidence/inference-hardening/build.txt",
+      "sha256": "5bd139dc352248ac98352366167c5dd29001b96bd7841a47cd6ee8544151e7f5"
+    },
+    "exportIds": {
+      "path": "docs/valo/evidence/inference-hardening/exportIds.txt",
+      "sha256": "39deb99de67028e8ce8ab76dcd2b69b7e6d6a4c16c75fe4844f0fb5f097c83dc"
+    },
+    "browser": {
+      "path": "docs/valo/evidence/inference-hardening/browser.txt",
+      "sha256": "ca7dd05c31ae00b949205026b099e444cad466cd7caa428291ae6684c1016b49"
+    }
+  }
+}

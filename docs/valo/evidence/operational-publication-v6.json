@@ -1,0 +1,77 @@
+{
+  "executedAt": "2026-11-14T04:43:32.977Z",
+  "id": "324c7952-cb7f-499c-983d-4e39439b4761",
+  "version": 6,
+  "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+  "policyHash": "dfa73f081effb374f07b64595e44f8557fd9c4c0ee1e173ae4b1f117f3d1fd82",
+  "eligibility": {
+    "decision": "hold",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_required:factual",
+      "review_required:challenge"
+    ]
+  },
+  "release": {
+    "id": "324c7952-cb7f-499c-983d-4e39439b4761",
+    "status": "held",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_required:factual",
+      "review_required:challenge",
+      "OPERATIONAL_REVIEW_DAILY_CAP_REACHED"
+    ],
+    "decision": "held"
+  },
+  "reviews": [],
+  "exportReport": {
+    "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+    "passed": true,
+    "hashes": {
+      "docx": "aab19702bebd1f9886f270f75138d859c5c8864507bc562385f6fadec9126998",
+      "pdf": "b0d1cf8deea46a4107a1d6c4ae4eb21759b9720294e33aac0a98dcc1725e4fe4"
+    },
+    "checks": [
+      "Actual DOCX ZIP/XML parsed; required text present",
+      "Actual Chromium A4 PDF parsed with pdftotext; required text present",
+      "Renderer network disabled"
+    ],
+    "manualWordApplicationReview": false,
+    "manualAccessibilityReview": false
+  },
+  "attestations": {
+    "provenance": {
+      "id": "65acd3e0-3602-47c0-a02b-ea19387bbf3e",
+      "hash": "4cd0449e4f217d452ace7d7b1ff006ade867cb7f9eefe73b5e67c5944a6874f4",
+      "extension": "json"
+    },
+    "rights": {
+      "id": "291691a2-9416-4f4c-905c-b110151a029b",
+      "hash": "1a6ed1d12f11827002be75fa7bc168161d8ca697f4a7641caf0453a44388d7f1",
+      "extension": "json"
+    },
+    "rightsApplicabilityHash": "da81893bcedbce31f6806d72fb1a74bc619206ee90baf4d99c8b389bb914e6b4",
+    "reviews": [],
+    "exports": {
+      "docx": {
+        "id": "b00ad6de-166f-4351-9307-de6819040d20",
+        "hash": "aab19702bebd1f9886f270f75138d859c5c8864507bc562385f6fadec9126998",
+        "extension": "docx"
+      },
+      "pdf": {
+        "id": "b42aeebc-1171-4157-a8c4-8de043aeed15",
+        "hash": "b0d1cf8deea46a4107a1d6c4ae4eb21759b9720294e33aac0a98dcc1725e4fe4",
+        "extension": "pdf"
+      }
+    },
+    "exportReport": {
+      "id": "d601ac0b-aec1-47a7-b6c4-d434d2ccaa81",
+      "hash": "04bd8842a34e4636773e9744a3684a16423d29f29d03abd402ee9effb4745886",
+      "extension": "json"
+    }
+  },
+  "rightsScope": "Provider permissions and coordinator-attributed original operational provenance checked for this free synthetic-development release only. Upstream execution IDs are unrecorded; no copyright, exclusivity or non-infringement guarantee. No sales or accepted Valo commercial licence.",
+  "commercialLicenceAccepted": false,
+  "providerFailure": "OPERATIONAL_REVIEW_DAILY_CAP_REACHED",
+  "scope": "Actual budget hold; zero new provider requests; not publication acceptance"
+}

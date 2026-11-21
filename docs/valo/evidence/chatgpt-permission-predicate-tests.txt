@@ -1,0 +1,12 @@
+✔ ChatGPT permission is scoped and hash-bound, without invented paid-plan or account-contract approval (5.520684ms)
+✔ changed original text or missing source-note binding fails before provider review (0.327884ms)
+✔ missing actual provider text, missing contextual conditions and truncated retrieval fail (1.668456ms)
+✔ future and expired rights evidence cannot pass; ChatGPT permission cannot clear Replit authoring (2.153894ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 521.506301

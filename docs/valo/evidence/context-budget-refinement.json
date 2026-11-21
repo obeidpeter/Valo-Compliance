@@ -1,0 +1,132 @@
+{
+  "recordedAt": "2026-11-14T20:52:58.210Z",
+  "sourceParent": "a1c5de53d04e7a574fa071054334d9eee8d50af8",
+  "manifest": {
+    "id": "valo-managed-inference-30-v1",
+    "model": "gpt-5.4-mini",
+    "enabled": false,
+    "ownerApproved": false,
+    "priceVersion": "public-gpt-5.4-mini-2026-11-14",
+    "capNanoUsd": "30000000000",
+    "inputNanoUsdPerToken": 750,
+    "outputNanoUsdPerToken": 4500,
+    "upliftBps": 1000,
+    "lanes": {
+      "publication": {
+        "slots": 216,
+        "input": 32000,
+        "output": 8192
+      },
+      "editorial_evaluation": {
+        "slots": 68,
+        "input": 32000,
+        "output": 8192
+      },
+      "checker_challenge": {
+        "slots": 80,
+        "input": 32000,
+        "output": 8192
+      },
+      "customer": {
+        "slots": 94,
+        "input": 4096,
+        "output": 8192
+      }
+    },
+    "tokenizationVerified": false,
+    "managedPriceUpperBoundVerified": false,
+    "fallback": {
+      "method": "model-context-capacity",
+      "inputTokens": 400000,
+      "outputTokens": 8192,
+      "capacityEvidence": "owner-transmitted-independent-budget-review",
+      "capacityVerified": true
+    },
+    "batch": {
+      "concurrency": 2,
+      "completions": 1,
+      "tools": false,
+      "automaticRetries": 0,
+      "dailySchedule": null
+    }
+  },
+  "policyHash": "9b5188fe7f5c26f218528b2cc0ed237972702f60ac256199fee7c22d94d1e431",
+  "totals": {
+    "lanes": [
+      {
+        "lane": "publication",
+        "slots": 216,
+        "baseNanoUsd": "13146624000",
+        "upliftNanoUsd": "14461286400"
+      },
+      {
+        "lane": "editorial_evaluation",
+        "slots": 68,
+        "baseNanoUsd": "4138752000",
+        "upliftNanoUsd": "4552627200"
+      },
+      {
+        "lane": "checker_challenge",
+        "slots": 80,
+        "baseNanoUsd": "4869120000",
+        "upliftNanoUsd": "5356032000"
+      },
+      {
+        "lane": "customer",
+        "slots": 94,
+        "baseNanoUsd": "3753984000",
+        "upliftNanoUsd": "4129382400"
+      }
+    ],
+    "baseNanoUsd": "25908480000",
+    "upliftNanoUsd": "28499328000",
+    "fallback": {
+      "perAttemptNanoUsd": "370550400",
+      "allSlotsNanoUsd": "169712083200",
+      "maximumAttemptsWithZeroPrior": "80",
+      "actualAvailableBalance": null
+    }
+  },
+  "executed": {
+    "unitTests": 16,
+    "unitPassed": 16,
+    "isolatedPostgresTests": 1,
+    "isolatedPostgresPassed": 1,
+    "pairRacers": 60,
+    "admittedPairs": 40,
+    "admittedAttemptReservations": 80,
+    "reservedNanoUsd": "29644032000",
+    "concurrentDispatchAttempts": 3,
+    "admittedDispatches": 2,
+    "typecheck": "pass"
+  },
+  "realProviderCalls": 0,
+  "ownerApproval": false,
+  "quotasChanged": false,
+  "actualAvailableBalance": null,
+  "pilotLedgerChanged": false,
+  "unknownChargesReconciled": false,
+  "sourceHashes": [
+    {
+      "path": "artifacts/api-server/src/lib/inference-budget.ts",
+      "sha256": "d20e9c2fa9c8137f18d9573a17155c92ceb2eae51cab0639b5a47fbe96c84d97"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/inference-budget.test.ts",
+      "sha256": "361e21ff6a266c175012ef28a623a60d6476a3e7e2ccbe846b21ea62c18ae3a7"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/inference-budget.integration.test.ts",
+      "sha256": "4a6afbd9288e47bc3b8f5868694408b08b5a74df1d932961e13d7453d3dc1121"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/managed-inference.ts",
+      "sha256": "72ed876097e556c572584b8d85f1585c7637b630b503afd828b7d407a0f1e019"
+    }
+  ],
+  "logs": [
+    "docs/valo/evidence/context-budget-unit.txt",
+    "docs/valo/evidence/context-budget-db.txt",
+    "docs/valo/evidence/context-budget-types.txt"
+  ]
+}

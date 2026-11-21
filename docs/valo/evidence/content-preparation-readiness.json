@@ -1,0 +1,2759 @@
+{
+  "version": 1,
+  "generatedAt": "2026-11-15T00:50:59.923Z",
+  "packageId": "finite-package:3f21b47b43700024af042fa1284ed45503115a1f56dba2bd591d727a68df96a8",
+  "purpose": "Engineering preparation evidence; not native readiness, content review, approval or launch acceptance",
+  "providerCalls": 0,
+  "approvalRowsWritten": 0,
+  "publicationActions": 0,
+  "corporaChanged": false,
+  "totals": {
+    "frozenUnits": 108,
+    "canonicalDrafts": 108,
+    "implementedReviewPreparers": 17,
+    "incompleteReviewPreparers": 91,
+    "intakeFailures": 0
+  },
+  "outcomes": [
+    {
+      "identity": "GUD-01",
+      "title": "Check the name you trade under",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-registration-tax.md",
+      "sourceHash": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "bodyHash": "4d0e11f185d64ae070695af3ddd54e5dfcd15642fbcb44cc7c78c15f1727d513",
+      "canonicalDocumentHash": "32eaba09a28f8520d0b50400919e17a8ede4fd27cbd17b2464bfbb7a21bfc876",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-02",
+      "title": "Identify whether you have a company or a registered business name",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-registration-tax.md",
+      "sourceHash": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "bodyHash": "7f9baa0da4ff34dc7c72ddd29158c84bbde040a5af4f5d44c1b5802254248809",
+      "canonicalDocumentHash": "625e59e9b3d2d75320bf7366d39571468518775d55f9f0d3345589b358c2e50f",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-03",
+      "title": "Keep the business-name certificate available at your premises",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-registration-tax.md",
+      "sourceHash": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "bodyHash": "7c2c4a42c9351f4a9a52f91b3887e558e6bc49d867b6a76f0211872edabeac06",
+      "canonicalDocumentHash": "ab740905a79b182f320bf8561ac51d1f20db28fdb219e7288cdb2f51cf520d72",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-04",
+      "title": "Update changed business-name particulars",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-registration-tax.md",
+      "sourceHash": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "bodyHash": "535c7ae778d84a5d08abd9fb8ef34bb48a0814e3d37bed22397a7b7b53dffd8b",
+      "canonicalDocumentHash": "5682982a771333faa886f2dd8d40fa04d8f59d4354b8e18bb98d65db6fa872cd",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-05",
+      "title": "Prepare the annual return for a registered business name",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-registration-tax.md",
+      "sourceHash": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "bodyHash": "a5d472691e378876c58be510950165f9b483940943851b180b440a49b750fa58",
+      "canonicalDocumentHash": "e1a10f55fa397b7eda61ee009e187260663b7420c1003f8f8fe6f534860a7cc7",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-06",
+      "title": "Keep company annual returns separate from tax filings",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-registration-tax.md",
+      "sourceHash": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "bodyHash": "9b0b8cf317d8e0bedac7299b6317657aaee4736306b822e40e9fc829f97ed0c0",
+      "canonicalDocumentHash": "adf5732be9baec09416977b7342efeb9250b1817be715424d86f6341bc289f77",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-07",
+      "title": "Keep company accounting records that explain the transactions",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-registration-tax.md",
+      "sourceHash": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "bodyHash": "34bae82caf09713cf0ac613686a3c38df706d6e34811e38ecf83eb5700a2c28b",
+      "canonicalDocumentHash": "6811fb8356fecd4a5a51442cbba88b3790aac402be4ef9f2450b67bd7ee9c519",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-08",
+      "title": "Retrieve the correct Tax ID before creating another record",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-registration-tax.md",
+      "sourceHash": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "bodyHash": "6781505d716c5db3316b355bdd470ca19e570c349621c603c301f4ccb24970ce",
+      "canonicalDocumentHash": "71b2ab7fdcd929e1cb7ba734cc026665eee76d916fe77e7f74f875e6abd0798c",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-09",
+      "title": "Prepare a Nigerian company's income-tax return even when no tax is payable",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-registration-tax.md",
+      "sourceHash": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "bodyHash": "fbcbbfe218ea6f5b3014e1aff00eedcd9d9e609d8a77182d1f8a1436938656ab",
+      "canonicalDocumentHash": "33c645a8bba530eae95a0a8199824e85b90c440f4dc947c67df86621f165aaf1",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-10",
+      "title": "Keep tax records with the correct retention starting point",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-registration-tax.md",
+      "sourceHash": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+      "bodyHash": "84643b2bace647ecdb0857da18b6332383822561975bf8b5df95b2b119353ac3",
+      "canonicalDocumentHash": "5897867505f6b30cf5690b4e8c2edec8119779b110ffd0ef6da4bc70e8e0a42f",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-11",
+      "title": "What should I explain before collecting customer information?",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-privacy-consumer.md",
+      "sourceHash": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+      "bodyHash": "dcf678052750324a1d545fc8dc4016a9702582f8a75bb6f92e2f04e9c8307fd3",
+      "canonicalDocumentHash": "6e4c67e45a5158a2926c6df4e4f524ebf0cbe5c5f0594afdcd974e0e893efa06",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-12",
+      "title": "Do I need consent for every use of personal information?",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-privacy-consumer.md",
+      "sourceHash": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+      "bodyHash": "f1de181c95c17311a3c14e46316905852460dda8587058e02fcbbbd28d831440",
+      "canonicalDocumentHash": "09add66010b4648c8839518aa42e1f65b11ce72878cd10f89b5b32fab6249d1b",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-13",
+      "title": "How should my business handle a request about someone's data?",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-privacy-consumer.md",
+      "sourceHash": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+      "bodyHash": "63a498141873b55006ce7d6765069486a423e3ada6c9d227fd22d4a42ae4476a",
+      "canonicalDocumentHash": "323f885803e943a49e088f44880df14420617acaa7596dc234e34f3dbd1c51b3",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-14",
+      "title": "What should I agree with a supplier handling customer data?",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-privacy-consumer.md",
+      "sourceHash": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+      "bodyHash": "8b0bd0db30325b06cbe75ed9dc76d3df3ff4724ef04f6f2c9e5963877a763c1b",
+      "canonicalDocumentHash": "2577b829425777dd8427687864740863bafe58d131f94cebda752a7cc465ac3d",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-15",
+      "title": "What should I check before customer data goes outside Nigeria?",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-privacy-consumer.md",
+      "sourceHash": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+      "bodyHash": "361a7624b1761aea1dd4c7ad35dd86cd86eeb456cfb87d86905a85681a5e4942",
+      "canonicalDocumentHash": "0b35a6dd7bdf188bc2a8e4b4164b876b816a1be796a0f92571919e92b9f740d9",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-16",
+      "title": "What price and transaction details should customers receive?",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-privacy-consumer.md",
+      "sourceHash": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+      "bodyHash": "7e5e115295330f87df70cbc263e8187f35f16adf39a71b83cf9f9ccd47c859af",
+      "canonicalDocumentHash": "9c3991a2e87579931e5bac5c5428388aaf32da4689c67b4e5917ce72239d8301",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-17",
+      "title": "Does “no refunds” settle a complaint about goods?",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-privacy-consumer.md",
+      "sourceHash": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+      "bodyHash": "928bff50a48c8289adadf30280135c9d1b98622a7a1afa60dcd6aeb47540b773",
+      "canonicalDocumentHash": "cf8c7d9ccbab9fb2073759c4ae8f6dcdcac147ffb7a9cb67cdb5f31472cd70a9",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-18",
+      "title": "How should I handle unfair terms, cancellations and poor service?",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-privacy-consumer.md",
+      "sourceHash": "59248c5cced88794dadf55901099bd6e58bbb06029942f8cb5dc77b43d083dd9",
+      "bodyHash": "6a66088dbc05c27ce366082267ce0ec5d7bb4ee3b0352786fa48d8f8dafcdb6f",
+      "canonicalDocumentHash": "93ce08b7af920468b42fca60a74317f00740ab9b0be6878db1aa7aa1d7303b35",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-19",
+      "title": "Find the food-product route that matches your activity",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-products-operations.md",
+      "sourceHash": "71378067356626c35bf1a4b3b2f85783de4e5249cac176facbdfd12ee2e23a02",
+      "bodyHash": "a7aaf1b5eea8c6378b10f50838cd50f6f0c57baf1ecf4b107744a6e562243a5b",
+      "canonicalDocumentHash": "9546f5aee70a6c34a7bd1d9fe842e5096c9759b5c50b754f60722ec8b1aaee19",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-20",
+      "title": "Prepare a food facility inspection file",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-products-operations.md",
+      "sourceHash": "71378067356626c35bf1a4b3b2f85783de4e5249cac176facbdfd12ee2e23a02",
+      "bodyHash": "e470bb063ecb6da23000ee157280507c26102b83766296420228d664657bf622",
+      "canonicalDocumentHash": "eb7b7422fb281e182a1009e27000dc277a4fac5ed29de6dd15d4f5ae81a5481b",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-21",
+      "title": "Track food registration without mistaking progress for approval",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-products-operations.md",
+      "sourceHash": "71378067356626c35bf1a4b3b2f85783de4e5249cac176facbdfd12ee2e23a02",
+      "bodyHash": "5626e2ed1b52152458b3c8e04afb6aa0eb352c7fd92717fbbaa37ae21ec8eadd",
+      "canonicalDocumentHash": "977c2f42bd14e481f9a4067658ba89268541a8f31f232322c0e4e43fbffea49d",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-22",
+      "title": "Make a food batch traceable before a problem occurs",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-products-operations.md",
+      "sourceHash": "71378067356626c35bf1a4b3b2f85783de4e5249cac176facbdfd12ee2e23a02",
+      "bodyHash": "69fba6b2bd6527fa6d1925cb7e455eb1c8266a18e5b94921e783a2bcc5e16d28",
+      "canonicalDocumentHash": "f5d97dd4daaa4f71f27f514bfb64b9c7b34fdc7a94cb78b810539fd08435133f",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-23",
+      "title": "Organise the first response to a food-product concern",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-products-operations.md",
+      "sourceHash": "71378067356626c35bf1a4b3b2f85783de4e5249cac176facbdfd12ee2e23a02",
+      "bodyHash": "716afbac316767a831abb964a42f9bdfc8b186670e20b7135f22b859d0f50261",
+      "canonicalDocumentHash": "5346364c211b64a9d8988e0c355f6fc9a5316815948ba130cdd42eb27751fdea",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-24",
+      "title": "Turn a food hygiene checklist into useful evidence",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-products-operations.md",
+      "sourceHash": "71378067356626c35bf1a4b3b2f85783de4e5249cac176facbdfd12ee2e23a02",
+      "bodyHash": "eb0fbd84285826086cc7da19c5d128588acc228d9408440ae40f4310451bdc5d",
+      "canonicalDocumentHash": "8181eae414bee70c4760160563bbeb52b93b8fceb11d3994b31c19dda43abfc7",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-25",
+      "title": "Keep suspect regulated stock controlled while arranging disposal",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-products-operations.md",
+      "sourceHash": "71378067356626c35bf1a4b3b2f85783de4e5249cac176facbdfd12ee2e23a02",
+      "bodyHash": "8e99849aaac2b9f8249610a0efef9e5f5e6e091f578e84a6ae9abff1c3886dd6",
+      "canonicalDocumentHash": "60d9610f85472887963c90103f643d8732eac09e6ad392ed482eea3cf6913291",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-26",
+      "title": "Check a food advertisement before committing to publication",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-products-operations.md",
+      "sourceHash": "71378067356626c35bf1a4b3b2f85783de4e5249cac176facbdfd12ee2e23a02",
+      "bodyHash": "05f1841ff4e4443a40f397d49ab4712669d1fbfb04d8673f3b9adb898aa1712d",
+      "canonicalDocumentHash": "70ba0ed06245cf5fc17a0bd9dded807ad5b4154a50d4dfbc103c94b72c5dd348",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-27",
+      "title": "Put agreed employment particulars in a clear record",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-employment.md",
+      "sourceHash": "25e179eebff1e760dff099c5dbdab49f4749fc9b2c5d70ddcf1754bd9ccd2334",
+      "bodyHash": "6823715250b0b952e9eeacf34d28709a7aff8743b7ed657f75a5c191c0b5eb1f",
+      "canonicalDocumentHash": "1d29dc6dc142ebff2c82f0b93bf6d8cf1ebde69a08d32f013d9bc4279e739a2d",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-28",
+      "title": "Check the basis before deducting pay",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-employment.md",
+      "sourceHash": "25e179eebff1e760dff099c5dbdab49f4749fc9b2c5d70ddcf1754bd9ccd2334",
+      "bodyHash": "d003a8f0793655c0466be587267dbe581bb06c7c396794a6a22721775b22b989",
+      "canonicalDocumentHash": "dedbc9c3babb6ab294f225425c1e46aaa0087d8f7faba30d6d3662ed244ea028",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-29",
+      "title": "Plan annual leave using the applicable terms",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-employment.md",
+      "sourceHash": "25e179eebff1e760dff099c5dbdab49f4749fc9b2c5d70ddcf1754bd9ccd2334",
+      "bodyHash": "c9df6553f2f9703e5136b3c72c3f6ea739d188498fff886a1c7ed34b56f1d328",
+      "canonicalDocumentHash": "e1a5d60a8bc8ef2f4b42f45ac1239bf68ed564c7315399b844c05f073014f198",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "GUD-30",
+      "title": "Check maternity arrangements as separate entitlements",
+      "preparationClass": "regulatory_guidance",
+      "sourcePath": "docs/content-candidates/regulatory-guidance-employment.md",
+      "sourceHash": "25e179eebff1e760dff099c5dbdab49f4749fc9b2c5d70ddcf1754bd9ccd2334",
+      "bodyHash": "1c25c1064e89ddb40ec369049fcb28815a3d18eb990648ca88bce5b65b458777",
+      "canonicalDocumentHash": "8f00b3bd912d9e118d80ff5f88825234860b357010edfc94647e7ce4d234caa4",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Canonical claim-to-retained-source publication bundle adapter",
+        "Candidate-specific rule and enhanced-risk fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-01",
+      "title": "Invoice",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "bodyHash": "3de9c28fe86bb1bf020e917c50b555bb7384d3062a809e9aa4ba1acbc9222b48",
+      "canonicalDocumentHash": "eba8fff6ce74d7954f69a56f219d60050e98e720242d1fcb9a8dbbbe8a909266",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-02",
+      "title": "Quotation",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "bodyHash": "e28246de3ecf432ab239e06b1a9ea4d54a028f959b30eda9c0727d72751536be",
+      "canonicalDocumentHash": "49a74b406145c4b46896b1718db65c2d20031a535d227a35ec7420efa1deb00a",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-03",
+      "title": "Receipt",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "bodyHash": "c99c2ad6e882952cbed39f0e159e40a6c12e5d48be2fce7b6c33564bed4b5416",
+      "canonicalDocumentHash": "059c50ed1fe6efb1dddc31667dbc5bafe56fa667957faa36fc9f21868a07d1a5",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-04",
+      "title": "Purchase order",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "bodyHash": "58ead440d6fb5e548bff74fc7db3d473b3b291cf45a8f680f7d1006c8a7b7369",
+      "canonicalDocumentHash": "68f6ade17057daa16fc1e887f39621074d4c06b9c07f26bc97e87b3fa05a63e6",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-05",
+      "title": "Delivery note",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "bodyHash": "26ee58835a0fa8c20ab45a6f72580c5e2d9c3abf89579fa10e567595579aaf1d",
+      "canonicalDocumentHash": "55fca144bb4e9c88dcd09f9a1ca0d6db608dc06e38be4314ea82253681ae775e",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-06",
+      "title": "Expense claim form",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/operational-template-revisions.md",
+      "sourceHash": "f0a427d404b8fc4d2c09b6444ca01760ac221836f52d8781dadc4248237ec664",
+      "bodyHash": "34c5e966044ba6971c46cda191227fed7a8dd4b6750795bb6cc4b963a53faddd",
+      "canonicalDocumentHash": "ca104bd6230483db24916b3b99e07bb949242a3f045e306af799c2a28865bc4f",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-07",
+      "title": "Inventory register",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/operational-template-revisions.md",
+      "sourceHash": "f0a427d404b8fc4d2c09b6444ca01760ac221836f52d8781dadc4248237ec664",
+      "bodyHash": "181224e75f377e02877a53f50da4a546ba8c1205bf8f79a1265f06f7087d923d",
+      "canonicalDocumentHash": "e082679a49c169ec91ae47cbcf13b30759f8814ec509d744ac435d213b8f28ed",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-08",
+      "title": "Meeting minutes",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-a.md",
+      "sourceHash": "0659f3e1f035277a16c37f7876042199aeaf49e836b8f0f97ae694f7db812306",
+      "bodyHash": "9071562f59f2bd3c0f667eb7b965f8eff4ecc83fbdfbc72924552dcb940bbfb6",
+      "canonicalDocumentHash": "4bd7bcbb1fe19321309c15476178defdd08bb20a4f9e32546bee9ac3059ac5ff",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-09",
+      "title": "Customer complaint form",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/operational-template-candidates.md",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "bodyHash": "27c608313cf47c7283de346efa9ea0e24be0f3cfae9049714958117c4284b018",
+      "canonicalDocumentHash": "7ca365ab63d94c5cffb7cb3f7af5939ec8cf6f3647ec08d3b8a06697b0e72713",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-10",
+      "title": "Leave request form",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "bodyHash": "bacc4948d6160d7d2e6671807ab70463bf89afa69e6d85535143dd0f3a9d38a4",
+      "canonicalDocumentHash": "e74080978ceaa17c38ab0a5b9497c42f905fbdf03be1b5453b975e742c22cc39",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-11",
+      "title": "Staff onboarding checklist",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "bodyHash": "8d7a629ce29a52a2a835f661afc5ced4002554c2878a624747fe376108a8bdd0",
+      "canonicalDocumentHash": "1e8167cde1362bd06ecdbc58c6c5b50b8fa32c70732c65929fb8057d5be34008",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-12",
+      "title": "Payment reminder letter",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "bodyHash": "0226a1fc31d68941c6fe43674db89d1ceb62fd6aafaec1ba6df099e3e99f5fe1",
+      "canonicalDocumentHash": "1eec5c9f993993d80be1134d06882c08775f29ce7ec8fdf02bce82d5ac757d90",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-13",
+      "title": "Service agreement",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "bodyHash": "e2768654c7bd044c699c661ac561f35a4e4879c27a1bafa57ccbb1527c8dcc35",
+      "canonicalDocumentHash": "08d301443e6572ecf9d91497b7ca44ac0235487ad76dd4c126b9b395fce660a6",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-14",
+      "title": "Consultancy agreement",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "bodyHash": "d1b820b9c5a53a922b2e56b3362250f1e16b67c4e9c579a21c1ee796838fbd17",
+      "canonicalDocumentHash": "98d9b1699747cdaad86e8344dfe3759f80ee116bf13b3486d945f496a22e9fd8",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-15",
+      "title": "Non-disclosure agreement",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "bodyHash": "0b40dd7b95852c6e32a17da94b41d4f57d4d763ab16cc0bcaec7e53b06c8232e",
+      "canonicalDocumentHash": "8d0c6b2d7a90684e9726c143478de3561269a3a1f8e12add5f73bba1f61f5d7e",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-16",
+      "title": "Employment contract",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/employment-template-candidates.md",
+      "sourceHash": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "bodyHash": "ee4fe2c547c7a82899236d9a6d35fb0f371f14631f3af98fedea6c35864d179d",
+      "canonicalDocumentHash": "fba23293dfafc8dfe4a7c454fea3487d139f27a7ea9300370bd4924de9cc5901",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-17",
+      "title": "Offer letter",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/employment-template-candidates.md",
+      "sourceHash": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "bodyHash": "d7072a6865240038c6eb16953ef248079ba5896e943e32bd942aa192d0e12ad6",
+      "canonicalDocumentHash": "9a3605c319c2cd01d77c210ccbcf3801e8a767ce8a24165f2da42b1bbdeadc0a",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-18",
+      "title": "Supplier agreement",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "bodyHash": "f48e4668e2071d8cbbe0d3206480d82f654276983213f42f6a301ffe99ade41c",
+      "canonicalDocumentHash": "6d7d492c8135ca3a4fcb80e2e4475dafbd996872ebdefd8d4bbfb30933beee36",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-19",
+      "title": "Sales agreement",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "bodyHash": "943b39c751c0bad329ccba2483098509d8d99adb6ffb8ce9ed424c4fbb743e12",
+      "canonicalDocumentHash": "6b2a41c913454713cbc1fa842872c5c32a3f6e494a9663c08816df76b313ccba",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-20",
+      "title": "Partnership agreement",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "bodyHash": "3c879c2cc0fd13b86048ae99a4ecb34c194b8d526aa9f59aca3bc6d2b9c8e99a",
+      "canonicalDocumentHash": "65da93a0a1e51d307552feeb2f67213b947f3fb57bffb9cd765ca9d9f93cd0ff",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-21",
+      "title": "Independent contractor agreement",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "bodyHash": "02478225e7ccaffd4d7f7bdbfc25de5536b607d268493c962e492185b57f6f74",
+      "canonicalDocumentHash": "014e77dac1139a0f8b50241e1ac9c41d06352d1a3aa4dd620e3f88917d77676b",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-22",
+      "title": "Business proposal",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "bodyHash": "b0ac84b83e111fa456b95445254b70e1b5138d9df7fc00a1d57f9c7b6948688e",
+      "canonicalDocumentHash": "1072bc619d1d4f43cef22bbb23dda9657d021d70d161c331f1c3f0d9af00686a",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-23",
+      "title": "Statement of work",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "bodyHash": "82266777abb97eab1fe797dc227dd0ee6c570e4c2d7dd4f9e4696dea6ab4b9e0",
+      "canonicalDocumentHash": "e83f2bc9dbd4a720f128ceca14fdc469a98237536af9aef80b6683714ba18aac",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-24",
+      "title": "Procurement evaluation form",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/operational-template-candidates.md",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "bodyHash": "1383efc68864bafe1acf31a1f8a2fb40f561811039a551b1ad3f0d9f9a7292a9",
+      "canonicalDocumentHash": "ec9d870fb947ca479de0b928926de293eb7d346fea8f06a204cc07e3c88e505e",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-25",
+      "title": "Board resolution",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/governance-safety-template-candidates.md",
+      "sourceHash": "5a13329b1421103e2b7ea81c2d5e2c9cd43f4f7853b2bb42b0fedc27eb354dc5",
+      "bodyHash": "0a526b1ed45e63f2494f147904310e3a37211fbc4e36e7fd4b6b4a07760fb520",
+      "canonicalDocumentHash": "dc35051a9579faf6a2886074c3a54dc628624688a5b74456e1d0cba50ab1a9a6",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-26",
+      "title": "Employee handbook",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/employment-template-candidates.md",
+      "sourceHash": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "bodyHash": "74ba5dbe1f0028b23fde5b4af460e75e6dc24a20a2935e895b647a4a76d02a0c",
+      "canonicalDocumentHash": "991e5c61a729aa79cb5092e112a06588cada804c2a158d8a19437e435498bf86",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-27",
+      "title": "Leave policy",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/employment-template-candidates.md",
+      "sourceHash": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "bodyHash": "cbf438c18f41c7c59635f2efbd3e590ad932c9e1dc3217e8f0a162ab3bb02286",
+      "canonicalDocumentHash": "37330baf4a4d972508e0facd6c3b890f1321ee12b8fd465818ba6a69f366ac18",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-28",
+      "title": "Disciplinary procedure",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/employment-template-candidates.md",
+      "sourceHash": "716037213d047dbbafd4ce4124e538c9aa4adc9a354c91eceac0e266a418e90c",
+      "bodyHash": "7dae098f5bac7e396a72ec2d8e7db26c617b9e05471dfa0256243565d6ac19a5",
+      "canonicalDocumentHash": "c7acfb7faa3ce2963430d647ec854afc169a3ef1ce58054ce0aa7fb0ef86bfdc",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-29",
+      "title": "Privacy notice",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/privacy-template-candidates.md",
+      "sourceHash": "371c85bb8942cb046204ba8e4c27c69df032225590deabea82dc9a2b574a5bf9",
+      "bodyHash": "8bc11809d02922c1adfa30288ea78d06df7d30462b28a3183e62113a4577fe81",
+      "canonicalDocumentHash": "2d456272ee7c973a6b2aea4e99e25cf570ce1bf90b2cf83bb9f262d1f6d21a66",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-30",
+      "title": "Website terms and conditions",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/privacy-template-candidates.md",
+      "sourceHash": "371c85bb8942cb046204ba8e4c27c69df032225590deabea82dc9a2b574a5bf9",
+      "bodyHash": "b627a8733ecf30ddff8524e1ceff3ab059a61832d164fe1a63f942bdddbdd325",
+      "canonicalDocumentHash": "4fc75acb9c0dc3c9134ffe2eb836c099ad5516f68dc5e3ae929dedeb6d7803cb",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-31",
+      "title": "Data processing agreement",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/privacy-template-candidates.md",
+      "sourceHash": "371c85bb8942cb046204ba8e4c27c69df032225590deabea82dc9a2b574a5bf9",
+      "bodyHash": "7bb4785ea255d2435573e4cc840ae5b2aff7d01a961c6cd9b67982d68495f521",
+      "canonicalDocumentHash": "c8072cde4383915b0bcbb7a228be8f27441e83ebb7d0a25800cf89c4a101bfc5",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-32",
+      "title": "Data retention policy",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/privacy-template-candidates.md",
+      "sourceHash": "371c85bb8942cb046204ba8e4c27c69df032225590deabea82dc9a2b574a5bf9",
+      "bodyHash": "6380cd8baf0f7c1f08e4893a6d512011fc81a1c0b46f5985d09137c84749d686",
+      "canonicalDocumentHash": "50df6f068f483618c0839a60afbc48a9f47d09b73ebf3debf13be3425959e341",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-33",
+      "title": "Health and safety checklist",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/governance-safety-template-candidates.md",
+      "sourceHash": "5a13329b1421103e2b7ea81c2d5e2c9cd43f4f7853b2bb42b0fedc27eb354dc5",
+      "bodyHash": "dc9740c019721d65980234b60088a601250f844e3fd62bf050aeb84499a1a7fa",
+      "canonicalDocumentHash": "2ab6d2b846b70722f29480db466b18711b92bad69126d0dcfc4d1b2a8e86e652",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-34",
+      "title": "Incident report",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/operational-template-candidates.md",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "bodyHash": "5af18000f5bab2ed102a304294dde6cc6f230a3477408430e38afcd577ec3072",
+      "canonicalDocumentHash": "326fcbe9a3c8891656df0bec5e4ca4e183c7dfe5d8f70adb59d52c2bfcc13c24",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-35",
+      "title": "Standard operating procedure",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/operational-template-candidates.md",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "bodyHash": "a0005aaa18cdec6368e363d64885bc2958a04acd47b1112d40e5a787561c361a",
+      "canonicalDocumentHash": "4da66346d79d7d7dd516e6e72170f9513f2815491af7fe3d10c6ec332dc5da95",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-36",
+      "title": "Product recall plan",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/governance-safety-template-candidates.md",
+      "sourceHash": "5a13329b1421103e2b7ea81c2d5e2c9cd43f4f7853b2bb42b0fedc27eb354dc5",
+      "bodyHash": "fba3beb2bf2364d197a32151729b3c404e1e89daa82087c2ee1119b7e59a65a3",
+      "canonicalDocumentHash": "28423001930620c8e18d1bf710ed900f8fe3cced0c70d7ee7df0fab6ade4f0f7",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-37",
+      "title": "Food hygiene checklist",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/governance-safety-template-candidates.md",
+      "sourceHash": "5a13329b1421103e2b7ea81c2d5e2c9cd43f4f7853b2bb42b0fedc27eb354dc5",
+      "bodyHash": "eb22499f1302d23d39ab6dee0111af38a8422ee106bafa92296a1f3050f68163",
+      "canonicalDocumentHash": "eee381f82ee7e1f5ff455f32e244341c3c389669c79fc34c03fcd2c79f8fd0c3",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-38",
+      "title": "Equipment maintenance log",
+      "preparationClass": "operational_template",
+      "sourcePath": "docs/content-candidates/operational-template-candidates.md",
+      "sourceHash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "bodyHash": "877a83b02d004371b2c51ed898bad30785607666d54ee0d7e58d5972a95bf102",
+      "canonicalDocumentHash": "57566a00c6738a400ceb4f47e318c845adf89bb29e9c76a74dcafcc6befa647c",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": "operational-template-pair-v1",
+      "preparationStatus": "runtime_preparer_implemented_evidence_required",
+      "engineeringGaps": [],
+      "evidencePrerequisites": [
+        "Fresh actual provider-permission snapshot",
+        "Saved native candidate and matching private export artifacts",
+        "Two separate measured review receipts for the exact current candidate",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-39",
+      "title": "Commercial lease checklist",
+      "preparationClass": "enhanced_template",
+      "sourcePath": "docs/content-candidates/commercial-template-candidates.md",
+      "sourceHash": "5f6ac775542a776f08f1a55505d7b5333ef9e1787fc47aad846948e730bfb963",
+      "bodyHash": "9cf2b44b2c566ccc4c12be3104c6b0dbc6e4aea2159200a89177e55d950e46a5",
+      "canonicalDocumentHash": "9d896067667facc1246f039b0a5976ccf223438e016fc2d17fec3a45b9026c69",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Exact retained source/claim and enhanced-risk request adapter",
+        "Candidate-specific enhanced and arithmetic fixtures"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "TPL-40",
+      "title": "Compliance evidence checklist",
+      "preparationClass": "unimplemented_template",
+      "sourcePath": "docs/content-candidates/additional-template-candidates-b.md",
+      "sourceHash": "6e5d39fb2f6480ef1ae198c19561b9dfc932f1dee4b7cf97494a6dac3ed21889",
+      "bodyHash": "372d06acb0de81275635f9b1137a97f944829ed6b69dcc40fb6ec6912a4ee13c",
+      "canonicalDocumentHash": "75a5569e5f7f4bcfe0c1504d8e7fb5e2a8e82076301db44952e7555b436fbcd3",
+      "provenanceHash": "a66a3656808ae380eb7104e52e291072563f45035ea47f5428ecf8f952389a1e",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Candidate-specific safe operational classification and numeric validators",
+        "Runtime preparation and retained-evidence review binding"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C01 — Prepare an invoice from facts you can check",
+      "title": "Prepare an invoice from facts you can check",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "5cf67f0a83ce4299861750c4b4d3abf7af46ea1c5f2794b12248be413efa098f",
+      "canonicalDocumentHash": "32a0a00fe1810ef7f38bb8ecd4ef49514766267adde2c53fe8a1319646453d58",
+      "provenanceHash": "6f71be868dd33665668789a5e7610af9eebb1da1a06ab5959357171f3c622758",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C02 — Write a quotation that makes the offer clear",
+      "title": "Write a quotation that makes the offer clear",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "de55a960cb91e9f633669b764425e98329f6ca97a23f3e467f97bf4ef583def4",
+      "canonicalDocumentHash": "c9131e099319728f2d5ba00e171792e156e7c9cf85005968ea906bb7315671a2",
+      "provenanceHash": "2f4f28b6b15ab1e0a3a9de502fe663f689627ec15101f07d5fdd32c87608cbdb",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C03 — Follow up an unpaid invoice with a useful reminder",
+      "title": "Follow up an unpaid invoice with a useful reminder",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "7ce7968004d4128227c465e97d19f4d4e16431c3388c67e40eabad7956ed60f9",
+      "canonicalDocumentHash": "eb8574d1efebe6f176f541064afb1b6c4e2a7a978a3d9c5fe6782e2c55d8deef",
+      "provenanceHash": "01ee9930d7851216e7228f002d31aa956caa857668b8ad1f653aaad7c3d7c1d2",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C04 — Keep an inventory register people can maintain",
+      "title": "Keep an inventory register people can maintain",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "2c1fc3dcde6aeead59b124d499fec75e14eb1d92ffaaf602aba9b586d15b31f6",
+      "canonicalDocumentHash": "6b1d0f92c8f23245e4c7a5e60176e29365e668461030e1a22e658c668b94a012",
+      "provenanceHash": "a48f3a0ddbab48c817621e7337b80f50dbcb070e1f57c66d67eb7da1b87b3582",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C05 — Prepare an expense claim with a clear record",
+      "title": "Prepare an expense claim with a clear record",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "4cf3714bcc99119931ee81b44a67abb5e4b0e7c81524cca84aa4721923aa97db",
+      "canonicalDocumentHash": "b0a2d2fe2dd003bd0127fc52c9c93d0e2f6ac08d30429aeac9678a74a7f0ce7b",
+      "provenanceHash": "db952eda3368fd25aef043296667b987de24df01d01cf2925c7b7ea90506a1a9",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C06 — Connect purchase orders, deliveries and invoices",
+      "title": "Connect purchase orders, deliveries and invoices",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "a628ed9d2049b47764645a39377b7001d8965afc6bce399ecba0f17ab0d09572",
+      "canonicalDocumentHash": "5e7931f0853b42196c28214ea2935cbb72dbd8023e780679d391a9b981f2fa84",
+      "provenanceHash": "11ec76188eb6eba3062d98fa12540dca9c69f3520c0af7c3d820bf6cf0adf1e4",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C07 — Turn meeting notes into clear actions",
+      "title": "Turn meeting notes into clear actions",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "33959b4ab9083840b9e30ad5e89c4058140f9b7f7b1bbf36f0f38076ee3ec9ae",
+      "canonicalDocumentHash": "37f830e6d87cec13f6ed564469c10addc9ff44996cb9d40a3e20b48ce4aa3fbb",
+      "provenanceHash": "04bb0e0574abdb81f1e7a5416d526e3512b1cfa021bd8017cf34a1cf3e94722c",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C08 — Record a customer complaint and its resolution",
+      "title": "Record a customer complaint and its resolution",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "5fdf0cdf065151e97b7821035888828b22c2a058149860336998805dd687f1dc",
+      "canonicalDocumentHash": "ec3a8a0d0b9830abc7e40d740b0e9b34636edb21d3563ef50fe7b3646f886126",
+      "provenanceHash": "d69fbaf207423ba22f171c45235c2480b0489ff8626498ba650aafb1a197649c",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C09 — Write a simple operating procedure people can follow",
+      "title": "Write a simple operating procedure people can follow",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "617af42d16d1948dbd1a30dd1d0b510c3ca3702342d1b2c896476f80242b190d",
+      "canonicalDocumentHash": "b520a7d40839479b5195f88628561dc6402cca8e74caf4ae7185a0c33d8d7357",
+      "provenanceHash": "fabac09824da6b0d45233db58930bdc9807246c0d572d705fe4f96cb8131b6f8",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C10 — Manage document versions without losing the history",
+      "title": "Manage document versions without losing the history",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "cdb400b121cadfcaa249d70a1a33c4663828cb5de97bcdbeb63f69564b04f3eb",
+      "canonicalDocumentHash": "6cb49a32c13b9aa70434ef2a44ad8ab653f4a289bbf1f60a845a097dc838d79b",
+      "provenanceHash": "d03774d5a8615ad2e104d44ba354c6dbd0e7c6d85785520038d390b280c667e9",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C11 — Hand over work without sharing passwords or losing context",
+      "title": "Hand over work without sharing passwords or losing context",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "47e25492c6acf97ca6846d799945eae7c68f6c0f41ffeccd691bc103b716f945",
+      "canonicalDocumentHash": "ec83589af8bc04c8e474b9bbdf5e167822ad1a9121047ae7228557295768dc46",
+      "provenanceHash": "a56cd3d133040d1695e2bab9fb8de82092eff53bfbfa6b5b379a522314c9ceff",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/practical-guide-candidates.md#GUIDE-C12 — Organise business records so you can find the answer",
+      "title": "Organise business records so you can find the answer",
+      "preparationClass": "practical_guide",
+      "sourcePath": "docs/content-candidates/practical-guide-candidates.md",
+      "sourceHash": "229728d08404c45f1bd98318fb0960396a85e78b36ffb1dc22779f1457e9ed82",
+      "bodyHash": "81091900f0ef060fe319380fd3c16dee3fb43c479c1c35aba7a11d105e4bbd25",
+      "canonicalDocumentHash": "fdc51a9bd9e35a1bac050364116c31da947e4145ec7e2bc3ca4d786270f27e65",
+      "provenanceHash": "7fd7dfc4750729a78cf1bdd30321be1127125fa8c138290a18351b5451857adf",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#retail/wholesale",
+      "title": "retail/wholesale",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "3b6d2f3c435c01403c84048c82763767a863566628c7fc8e29f36adc1126e24f",
+      "canonicalDocumentHash": "d881865721e9a76656c8883a1f7fe469912419b4ef4572548ae3e26a241572a2",
+      "provenanceHash": "56a7b4b8e3945fb848efe8b7e9e913ad6d25a4986f031dd4fa0352423f6e89fa",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#packaged-food manufacturing",
+      "title": "packaged-food manufacturing",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "bb843782df5d847237cfcb13ee1dad9e99909fae4a9bc2cee2cc89358691acd9",
+      "canonicalDocumentHash": "11da5ac2a09ecf2bf72981e7102e3d014052cfc31f7e012fc26d71bbd3439295",
+      "provenanceHash": "bd7ff680f983bd3f5299a54a58c396949e529db710308d8527539b9045b6b16b",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#restaurants/hospitality",
+      "title": "restaurants/hospitality",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "0b120d15e21856e12a30744c3a648cab26a1c5d56114df9d88ef9e1625f6a664",
+      "canonicalDocumentHash": "ffe0ba531cd24318ff1dd5054f02d375ef0c2a0fe61f398a846e6813f0fb7dc9",
+      "provenanceHash": "2db0874897defe70ba5eb653ce4be92cfdd1b16883748b9a8b3d135f0bdf153b",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#agriculture",
+      "title": "agriculture",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "f81b712a3bc1fe379e696f9bd96e84517db65dbdcd51a66a55823aa11b24d364",
+      "canonicalDocumentHash": "2e70ea7c2b68940185da6ef93ad50ec5de47ba0d2d115efbabc5882a31692e1b",
+      "provenanceHash": "a8547f543f4e2aa6cd6cd106a55e41c1bed8e694b32f6aeb33a830b689550e56",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#general manufacturing",
+      "title": "general manufacturing",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "b709606ce7459782055c76f62b3817490f34f434d3a46fec7e8943f0e0200af5",
+      "canonicalDocumentHash": "57a4ea20ffb56e6aa25c92b16fa79081d4007f4102eeed7390c9f4fb863f6d0c",
+      "provenanceHash": "bff6d0df32d5b6f5a1bf97fc7f436c286603a9607a86ce456fe6d96c135e1eca",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#logistics/transport",
+      "title": "logistics/transport",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "c72b74c8ba32e674fe2a7e6a5ae55227b8044380a25ef0bafe3c54cf7c99ae15",
+      "canonicalDocumentHash": "4fc519ed423129e14ec02509347e7a55bef7c4c25ae63b4e0b65cbca3d029ca7",
+      "provenanceHash": "2b5196f10d34ea1201658711d8ae14d745e88a1f2be3a7c2c5581235f438f1b7",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#construction",
+      "title": "construction",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "5dcde1dd5391dfa79721562ab049ad60085e53b66363c982fe8479a3930cacd1",
+      "canonicalDocumentHash": "d8333168c7a15b04031af749ec948d3e1aef679f2af5c733457473b84710dee6",
+      "provenanceHash": "1d35aa034a42bdd3dd32112dfce5547d765b44940de374a44b8c41de9daaa5d4",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#real estate",
+      "title": "real estate",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "5443a0e22f102f00b3a3f81a9fff4a5a435b95da1fb17580cf27c895ca8af95b",
+      "canonicalDocumentHash": "359946b8d52cb4ed869f8da63a933a9f9383e36488bcef58c9f7e5babf8f33dd",
+      "provenanceHash": "941b4dfe1410193533b6f5d558593d28dfd1b65eb774f83a033ffefc57e3c5f4",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#technology/software",
+      "title": "technology/software",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "9f41c1ff1ca47a842315225ff8fdd42b116c8cead2fcb735e7574762f3062d86",
+      "canonicalDocumentHash": "ca3d4eaf0838a5a4e497de06dbfcf3c38c3334cb4ffe5bedb5eb01d1ebe95d5b",
+      "provenanceHash": "45823eb40177e55dedf771bbdf9679abd5c3c3a8b782521338b1a07cd8623f98",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#e-commerce",
+      "title": "e-commerce",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "eb55b8d11019e1db63102459fffa1068d8bb1e40e9e11aa9877c84cdedecf70d",
+      "canonicalDocumentHash": "2ebeac61a822a6baa6b71fee64476e46b4bb48a3a47e8dbd3663ba037b6e9ce1",
+      "provenanceHash": "10e32d69f58b983d87be66a38bba072bfb74f4adf7716530e739c4097fe25ae7",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#beauty/personal care",
+      "title": "beauty/personal care",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "cc3ac552f8885b3f4908c27741c83e9db45c24c81830d3eefb31afabcdb7fb16",
+      "canonicalDocumentHash": "22c7d175ec4f9fe09dab730c871ecf12ed475e806210038afefc4741cfd34307",
+      "provenanceHash": "e6a22028318f8eb41689658c7641ec216df729bb648da0f23d5c0b946d1c97ec",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#fashion/textiles",
+      "title": "fashion/textiles",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "793e21ac87bc4acba8729b3098faf3f77b6dbd0c0dc1c75f5e8b229f0b1b79f2",
+      "canonicalDocumentHash": "30e1b43ce49626de3d04a526e5d523e20cbc25d2a630b9bdfe43690582f0d472",
+      "provenanceHash": "56dbe5be3c8fdd50c0d5e6d23060f30cf593344620b37688a086212b346fbcd0",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#healthcare",
+      "title": "healthcare",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "926187b595f76cf7e699511ceaec3704b1ca84308936613ce320689b2f78da2e",
+      "canonicalDocumentHash": "6ae4b9b9555bd3fc502a8f04255863417f8d3303e9c03aa7fdd56b8533f5a5f2",
+      "provenanceHash": "2618513c4940e19c16533c9c9c85dfee36ac21a30dd9e7d83987e92bc8f60dec",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#education",
+      "title": "education",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "f926d3fa762ad341d5079a8d0b8acae634073c93077432f2d097f86bfe33630d",
+      "canonicalDocumentHash": "54e48ebcb733d3c2378591d6eda7d8a09c57190a021f2095a5c1c67e183f1451",
+      "provenanceHash": "3250e8010dc35677d0d9c33c6347acdde5bd9a78696a8b8205a54cc67c01b130",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#professional services",
+      "title": "professional services",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "88bfd14725ec65cbe1d5055580f0842d6c30f3e5fbde3a2aa78583f4e1554b3d",
+      "canonicalDocumentHash": "03004c0ec52c8db7906c897b0406eeb4cebb7c4267d202d99ba2a4726d727429",
+      "provenanceHash": "36c871b16d2c691bdfff14aee24ddc23699ab1fd2bb70e7c83c41febae62fbcf",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#media/creative",
+      "title": "media/creative",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "d6ffc584886d2953095c3f6afcc8524def9f57c138705769fa1747ddc2247cd5",
+      "canonicalDocumentHash": "6f356f376938c2611c97a64f0c0fc74542f499852901de3dcc16a5a4ee6933e1",
+      "provenanceHash": "cfae0e71b4b6f52ae6a3d36be4cfba39fb653c9c7bdc2149b31336bfd2c54f2a",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#import/export",
+      "title": "import/export",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "169e80e402250c912c6442883a04e5856dfbc1ee18f388406ef993ce341ba7a9",
+      "canonicalDocumentHash": "25d22a92614987acd32d90a810f4acfa3b06df44e5af4f0096eeba175aad0e39",
+      "provenanceHash": "1b97a8ad970559584d1649c178ed5858723289cbb7db7434c76b829014552203",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#energy",
+      "title": "energy",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "632870cb8955f8ee6428a9b941745ae2901142689c8cba954bb823927ee15cd3",
+      "canonicalDocumentHash": "9c7299104d6a0daf4e910a790a3a81741865c3b2c2b9e000a23e9b4386776047",
+      "provenanceHash": "dec4a75b192af7d8815d9bcb5e1bd67bb764190d51c551e692dad482754fd8da",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#financial services",
+      "title": "financial services",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "fa5384711ee489dde5c22624c181b4b809ff0167a57f8e6346bd75a33d909f7f",
+      "canonicalDocumentHash": "934d5a87b5697ba132e852971d93a05b5c7464c87f61ad0cc9f8b68f2d045f72",
+      "provenanceHash": "de3eafc8673283053563b9d1bf0f3b0145dfac0aba75b581c93c03a30e564eda",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#other",
+      "title": "other",
+      "preparationClass": "industry_landing",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "36a59e0502aa276856874b74952782dd245410d77933b17549ad6bb3f0175387",
+      "canonicalDocumentHash": "0111105e1bb07239193879b3bc7f95134dc1e887ed2dc5fd6aa6f36ffde63966",
+      "provenanceHash": "3b6e951ee3df1d3c1840fa8eda33899657479a65263edf4defde93236e241274",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#retail/wholesale — deeper pack",
+      "title": "retail/wholesale — deeper pack",
+      "preparationClass": "industry_pack",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "8978397e1f66b322076947a7e4d21abf82ab97bf53d6c03e973e5afee78a7427",
+      "canonicalDocumentHash": "13fe0cd21bb041ff6e5fa4d3735423b7a8c0f9d40b866f5163ba178b3908739b",
+      "provenanceHash": "f26660109d93a3269694845b10d60cff2273cdb5b7b35b2ddc0eedb0c5d960e5",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#packaged-food manufacturing — deeper pack",
+      "title": "packaged-food manufacturing — deeper pack",
+      "preparationClass": "industry_pack",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "698cb0e839755763cf0850276428227b8676b56afb2a178ff456250e1261a94e",
+      "canonicalDocumentHash": "2c3f7e8d47229d2a724b3a1d0ae37aef704edb3971aef511bb1fde8f00f6540e",
+      "provenanceHash": "b0d560587962410cfad9da9f35796a6520a1d497bbe9dde713f0701d56c56acf",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#restaurants/hospitality — deeper pack",
+      "title": "restaurants/hospitality — deeper pack",
+      "preparationClass": "industry_pack",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "59ecf196b7c4892662642ed20c3e141ec509e883ec2702048f6ef68ee2f3b990",
+      "canonicalDocumentHash": "45585f8b247411d18ac45a3be461a48899f26f4b038f04fda6fde158901da4e4",
+      "provenanceHash": "e52a89ba25bc2470f49fe0508f04aff803c7affbe4df5ebf070263dfe74d0dae",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#technology/software — deeper pack",
+      "title": "technology/software — deeper pack",
+      "preparationClass": "industry_pack",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "0d4927adf1ca21dad1336e9fbdf95f96b1003368ab6e1f2a202db61388780f7a",
+      "canonicalDocumentHash": "15d53965fffc3ba48d83db47fbac94119db0e98e733fc30af02752ab1255a7ef",
+      "provenanceHash": "097b703e7cf67b2962fc39d874f6666aafb1fc1d5cfa92132985274c67f2e47d",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#professional services — deeper pack",
+      "title": "professional services — deeper pack",
+      "preparationClass": "industry_pack",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "0df42a86641fccfc5f564d4b962805d431f4490b7b69eeecf296b5876b616879",
+      "canonicalDocumentHash": "21fb7ab7f15649e2d4bdf08e7685bbf9f44cb65479b7209d2d773b601b7d0439",
+      "provenanceHash": "1e8e44c99a5204c4a69448cebf30cfd6a2979ba727aa5e696de2ee946f4a3e68",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    },
+    {
+      "identity": "docs/content-candidates/industry-content-candidates.md#beauty/personal care — deeper pack",
+      "title": "beauty/personal care — deeper pack",
+      "preparationClass": "industry_pack",
+      "sourcePath": "docs/content-candidates/industry-content-candidates.md",
+      "sourceHash": "53614ecc84b755c403017c7e2fb68d07c558a7c3783206c203b050f6fbac9897",
+      "bodyHash": "a99ab33bed88813d73080a7ab0cdc8413b82d37a1a45f72e1d03c8b1dd2d2bd3",
+      "canonicalDocumentHash": "bbc9ceec9c33fb20121b7d40390c1a18284fb2e7f337b9683ab8f238f048d011",
+      "provenanceHash": "dc83e657a63cd42bcfb16df71e1a42fae2980df68d8d2679512f23c5c8181baa",
+      "canonicalDraft": "constructed_unreviewed",
+      "runtimeReviewPreparer": null,
+      "preparationStatus": "review_preparer_engineering_incomplete",
+      "engineeringGaps": [
+        "Named identity publication/review binding adapter",
+        "Candidate-specific scope, risk and numeric validators"
+      ],
+      "evidencePrerequisites": [
+        "Exact authoritative passages for any regulatory claim; leads alone do not qualify",
+        "Applicable provenance and rights artifacts",
+        "Actual DOCX/PDF inspection of the final candidate",
+        "Separate measured factual/challenge and required enhanced evidence",
+        "Current policy and publisher gate recheck"
+      ],
+      "nativeReadiness": "not_queried",
+      "publicationEligible": false
+    }
+  ]
+}

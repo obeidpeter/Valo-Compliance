@@ -1,0 +1,108 @@
+{
+  "recordedAt": "2026-11-13T19:57:41.110Z",
+  "baselineCommit": "871899483093363ec69d765e2d16fa1d88e0836e",
+  "normalHistoryMerge": "16977a04aee6215b853685a90ebfcf14f3f9b6bb",
+  "baselineFilesMatched": 10,
+  "checks": [
+    {
+      "output": "\n> @workspace/db@0.0.0 test:schema-guard /home/runner/workspace/lib/db\n> node --test ./scripts/schema-push.test.mjs\n\n✔ zero-exit SQL failure cannot be accepted (4.042743ms)\n✔ ANSI-coloured error cannot be accepted (0.867809ms)\n✔ foreign-key failure cannot be accepted (1.741198ms)\n✔ SQLSTATE failure cannot be accepted (1.437225ms)\n✔ permission failure cannot be accepted (1.833685ms)\n✔ query failure cannot be accepted (0.724031ms)\n✔ aborted transaction cannot be accepted (2.467524ms)\n✔ production blocks before any subprocess (0.62764ms)\n✔ deployed process blocks before any subprocess (1.606872ms)\n✔ missing review blocks before any subprocess (1.366732ms)\n✔ missing test consent blocks before any subprocess (0.570961ms)\n✔ force blocks before any subprocess (0.994004ms)\n✔ injected argument blocks before any subprocess (0.663869ms)\n✔ missing completion marker, killed process and nonzero exit fail closed (2.776904ms)\n✔ a clean command still requires non-skipped, successful postcondition checks (2.191653ms)\n✔ raw credentials and query text never enter the returned evidence (1.187419ms)\n✔ the installed command really exits nonzero without explicit acknowledgements (622.898629ms)\nℹ tests 17\nℹ suites 0\nℹ pass 17\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1365.812825\n",
+      "path": "generated-artifacts/valo-checks/handover-schema-guard.log",
+      "runnerFailure": 0,
+      "runnerPass": 17,
+      "runnerSkipped": 0,
+      "runnerTests": 17,
+      "sha256": "e760e1595cbfa7f53ae8594017d1df4e0b99f8f15f36455ab6cb6f32f7d700da"
+    },
+    {
+      "output": "\n> @workspace/scripts@0.0.0 test:valo /home/runner/workspace/scripts\n> tsx --test ./src/valo/*.test.ts\n\n✔ coordinating mappings and resolutions do not become implementation or content approval (1.441194ms)\n✔ additional source leads deduplicate URLs without changing the 24 original IDs (0.230083ms)\n✔ the 27 document rows keep original numbering and exactly five direct, one composite and 21 new mappings (2.846742ms)\n✔ 79 regulatory source rows preserve category IDs and ordinal positions without universal applicability (1.230584ms)\n✔ SCUML aliases and facility/sector overlaps are traced, not counted as separate releases (1.717026ms)\n✔ 19 extra candidates have distinct purposes, existing comparison targets and no publication credit (0.696158ms)\n✔ the exact 20-industry taxonomy and six deeper-pack targets have no invented review dates (0.960269ms)\n✔ R2 metadata remains locked, R3 excluded, and management files never pad the template total (0.473172ms)\n✔ engineering context retains seven exact source blocks without inventing formal requirements or approvals (35.317221ms)\n✔ final transfer preserves exact roadmap, all 24 references and seven unapproved non-statutory retention proposals (63.330561ms)\n✔ documentation checkpoint is a real ancestor, not a copied revision label (356.649512ms)\n✔ all retained specification/register files still match their source checkpoint hashes (14.468153ms)\n✔ a documentation merge proves neither application upload nor title mutation nor gate approval (0.287397ms)\n✔ canonical hashing is property-order independent (3.006407ms)\n✔ complete synthetic attestations establish eligibility, never publication (8.243289ms)\n✔ holds changed body (4.411613ms)\n✔ holds changed applicability scope (3.54581ms)\n✔ holds changed assumptions (5.794195ms)\n✔ holds changed claim wording (8.832844ms)\n✔ holds changed content version (4.255634ms)\n✔ holds changed source-check date (1.829531ms)\n✔ holds changed source text (5.438548ms)\n✔ holds policy not approved (1.436216ms)\n✔ holds policy changed after binding (1.841156ms)\n✔ holds jurisdiction outside policy (3.260044ms)\n✔ holds risk outside policy (5.051348ms)\n✔ holds unresolved contract clause (1.586916ms)\n✔ holds missing evidence (2.102434ms)\n✔ holds future source check (0.493451ms)\n✔ holds unknown rights (6.719655ms)\n✔ holds no commercial-use rights (2.550922ms)\n✔ holds withdrawn manifest (0.388465ms)\n✔ holds source hostname suffix attack (0.536449ms)\n✔ holds source credentials attack (0.858425ms)\n✔ holds source HTTP (1.192968ms)\n✔ holds held operative text (0.838943ms)\n✔ holds unresolved amendments (0.798734ms)\n✔ holds expired evidence (1.626019ms)\n✔ holds historical concession (0.588972ms)\n✔ holds wrong source jurisdiction (0.471285ms)\n✔ holds fabricated quote (0.311661ms)\n✔ holds invented numerical claim (1.187894ms)\n✔ holds review reuses draft run (2.940501ms)\n✔ holds missing challenge review (0.442206ms)\n✔ holds review disagreement (1.715712ms)\n✔ holds review saw other verdict (0.773665ms)\n✔ holds stale review (0.705908ms)\n✔ holds failed deterministic arithmetic (0.699204ms)\n✔ holds missing deterministic check (1.440013ms)\n✔ holds missing PDF (0.341191ms)\n✔ holds PDF missing disclosure (0.441471ms)\n✔ holds PDF bound to old version (0.648044ms)\n✔ holds forged rights binding (0.526292ms)\n✔ enhanced content requires every controlling-text check (6.726198ms)\n✔ empty or untyped input holds instead of throwing (2.03328ms)\n✔ unknown schema fields cannot smuggle an override (3.661682ms)\n✔ invalid server clock holds (1.521164ms)\n✔ baseline preserves all 40 original identifiers and exact capability counts (1.466453ms)\n✔ inventory metadata never counts as published content (0.172344ms)\n✔ missing formal requirements remain explicit and uninvented (2.587906ms)\n✔ 27 mappings, 79 held source rows and the SCUML alias remain distinct from publication (0.279062ms)\n✔ implementation path alone never verifies a requirement (0.135479ms)\n✔ passing test alone never verifies a requirement (0.198368ms)\n✔ a blocked gate cannot be accepted even with passing evidence (0.208172ms)\n✔ R2, launch, live commerce and real confidential data remain disabled (0.150521ms)\n✔ all ten UAT packs and six original gate IDs remain unaccepted with exact release expectations (5.016208ms)\n✔ part three formal families preserve 51 exact criteria without expanding R3 scope (2.086057ms)\nℹ tests 67\nℹ suites 0\nℹ pass 67\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2057.527326\n",
+      "path": "generated-artifacts/valo-checks/handover-foundation.log",
+      "runnerFailure": 0,
+      "runnerPass": 67,
+      "runnerSkipped": 0,
+      "runnerTests": 67,
+      "sha256": "fb1d63d02581aa114fb612ca7c22d8148a70a351a7181e4be5c26142535aa08f"
+    },
+    {
+      "output": "\n> @workspace/api-server@0.0.0 test:valo-db /home/runner/workspace/artifacts/api-server\n> tsx --test src/lib/valo-store.integration.test.ts src/lib/valo-quota.integration.test.ts\n\n▶ synthetic PostgreSQL quotas are atomic, durable and scoped\n  ✔ concurrent callers cannot exceed one shared database cap (271.846012ms)\n  ✔ another subject and operation have independent allowances (14.877645ms)\n  ✔ durable state is visible through a separate database connection (8.519072ms)\n  ✔ expiry cleanup removes only expired windows, leaving current usage intact (15.568765ms)\n  ✔ invalid bucket, identity and ceilings never mutate storage (2.259706ms)\n✔ synthetic PostgreSQL quotas are atomic, durable and scoped (329.523516ms)\n▶ development PostgreSQL tenant, concurrency, history and durable-ticket proof\n  ✔ server membership resolution is idempotent and tenants are separate (11.491998ms)\n  ✔ profile correction appends history, preserves declined marketing and rejects stale saves (37.54032ms)\n  ✔ document and revision identifiers cannot expose a different tenant (11.135815ms)\n  ✔ two concurrent tabs produce exactly one new revision and one conflict (27.298138ms)\n  ✔ restore appends a new revision without rewriting the original (17.552209ms)\n  ✔ enquiry acknowledgement follows a durable save, not an appointment or email claim (11.02779ms)\n  ✔ suspended membership is not automatically restored (7.991585ms)\n✔ development PostgreSQL tenant, concurrency, history and durable-ticket proof (229.177926ms)\nℹ tests 14\nℹ suites 0\nℹ pass 14\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3750.853518\n",
+      "path": "generated-artifacts/valo-checks/handover-database-postconditions.log",
+      "runnerFailure": 0,
+      "runnerPass": 14,
+      "runnerSkipped": 0,
+      "runnerTests": 14,
+      "sha256": "cbed6d6346b6393d620f6e78fd09885e9db2cae2e560046a6b8114da1c69f5c3"
+    },
+    {
+      "output": "\n> @workspace/api-server@0.0.0 test:valo-http /home/runner/workspace/artifacts/api-server\n> tsx --test src/lib/valo-http.test.ts\n\n▶ running development HTTP API fails closed and reports factual release status\n  ✔ source references report actual snapshots, not baseline approval or private storage locators (239.810182ms)\n  ✔ published search excludes all held templates and private documents (34.981143ms)\n  ✔ release status does not accept P0, R2 or live payments (26.361573ms)\n  ✔ real development reads receive durable quota metadata without trusting client identity headers (17.53558ms)\n  ✔ malformed and oversized bodies fail explicitly, without reflecting submitted content (201.428082ms)\n  ✔ unauthenticated private endpoints reject reads without shared-cache retention (74.907235ms)\n  ✔ cross-origin and missing-origin mutations are rejected before any save (22.995403ms)\n  ✔ same-origin does not bypass identity verification (10.994403ms)\n  ✔ the detailed matrix retains all exact criteria without marking them accepted (29.020341ms)\n  ✔ content traceability does not promote research inventory to publications (45.42843ms)\n  ✔ the original UAT and gate register does not claim execution or sign-offs (13.857042ms)\n  ✔ public coverage serves exactly 20 held industries and six pack targets, not fictional guidance (17.484131ms)\n  ✔ every supplied inventory row has explicit evidence and coverage states; expansion stays disabled (22.607755ms)\n✔ running development HTTP API fails closed and reports factual release status (762.273149ms)\nℹ tests 14\nℹ suites 0\nℹ pass 14\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1541.444827\n",
+      "path": "generated-artifacts/valo-checks/handover-http.log",
+      "runnerFailure": 0,
+      "runnerPass": 14,
+      "runnerSkipped": 0,
+      "runnerTests": 14,
+      "sha256": "017f407710017fe71780ba86aae7990531978b773924ace04865c49d15eb5737"
+    },
+    {
+      "output": "\n> workspace@0.0.0 typecheck /home/runner/workspace\n> pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck\n\n\n> workspace@0.0.0 typecheck:libs /home/runner/workspace\n> tsc --build\n\nScope: 4 of 10 workspace projects\nartifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/valo typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck: Done\nartifacts/mockup-sandbox typecheck: Done\nartifacts/api-server typecheck: Done\nartifacts/valo typecheck: Done\n",
+      "path": "generated-artifacts/valo-checks/handover-types.log",
+      "runnerFailure": 0,
+      "runnerPass": 0,
+      "runnerSkipped": 0,
+      "runnerTests": 0,
+      "sha256": "a06491593038d555b92eb804a6c314f18619c784b322247a5c1f5b6492f2bd2e"
+    },
+    {
+      "output": "\n> @workspace/valo@0.0.0 build /home/runner/workspace/artifacts/valo\n> next build\n\n   ▲ Next.js 15.5.29\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 8.4s\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/3) ...\n ✓ Generating static pages (3/3)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /_not-found                            998 B         104 kB\n└ ƒ /[[...slug]]                         1.34 kB         104 kB\n+ First Load JS shared by all             103 kB\n  ├ chunks/786-7f3cfc83f3dc7457.js       46.3 kB\n  ├ chunks/f0943945-0282d7bc5ab078dc.js  54.2 kB\n  └ other shared chunks (total)          2.02 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n",
+      "path": "generated-artifacts/valo-checks/handover-next-build.log",
+      "runnerFailure": 0,
+      "runnerPass": 0,
+      "runnerSkipped": 0,
+      "runnerTests": 0,
+      "sha256": "3b627f083db79d9c301b547fb60bfc852cd9d20b77ad3d4c1bb01dd74a734e4a"
+    }
+  ],
+  "historicalFailureReplay": "docs/valo/evidence/handover-schema-failure-replay.json",
+  "database": {
+    "target": "development",
+    "syntheticFixtures": true,
+    "schemaDdlExecuted": false,
+    "cleanMigrationAccepted": false,
+    "productionTargeted": false
+  },
+  "preview": {
+    "route": "/development?view=sources",
+    "viewport": "390x1500",
+    "handoverSummaryVisible": true,
+    "initialCapture": "Initial capture showed loading; subsequent capture rendered the actual handover and source status.",
+    "signedInUiVerified": false,
+    "warnings": [
+      "Preview-local HMR WebSocket 502",
+      "Clerk development instance warning"
+    ]
+  },
+  "projectTitle": {
+    "changed": false,
+    "evidence": "docs/valo/evidence/project-title-attempt.json",
+    "reason": "Browser could not access Replit editor; metadata rename not verified."
+  },
+  "github": {
+    "applicationSourceUploaded": false,
+    "privateObserved": false,
+    "visibilityChanged": false,
+    "remoteApplicationCiVerified": false,
+    "protectionEnforcementVerified": false
+  },
+  "formalAcceptanceSuitesExecuted": {
+    "rules": 0,
+    "customerAi": 0,
+    "editorial": 0
+  },
+  "release": {
+    "P0Accepted": false,
+    "R1Accepted": false,
+    "R2Enabled": false,
+    "R3Included": false,
+    "publicLaunch": false,
+    "livePayments": false,
+    "confidentialCustomerData": false,
+    "paidUpgrade": false
+  }
+}

@@ -1,0 +1,355 @@
+{
+  "observedAt": "2026-11-14T09:40:47.887Z",
+  "executedAgainst": "Working tree saved with this evidence; exact source revision is recorded in the enclosing commit and generated requirements register",
+  "completeR1": false,
+  "completeR2": false,
+  "publication": {
+    "templateId": "TPL-07",
+    "candidateVersion": 8,
+    "status": "held",
+    "providerFailure": "OPERATIONAL_REVIEW_DAILY_CAP_REACHED",
+    "newIndependentReviews": 0,
+    "actualUsableFormatsPassed": true,
+    "exportChecks": [
+      {
+        "name": "docx_reader_and_active_content",
+        "passed": true
+      },
+      {
+        "name": "pdf_reader_a4_geometry",
+        "passed": true
+      },
+      {
+        "name": "pdf_text_within_pages",
+        "passed": true
+      },
+      {
+        "name": "docx_complete_content_and_disclosures",
+        "passed": true
+      },
+      {
+        "name": "pdf_complete_content_and_disclosures",
+        "passed": true
+      }
+    ],
+    "normalization": {
+      "rendererFooterLinesIgnored": 3,
+      "rendererHeaderOccurrencesIgnored": 4,
+      "rule": "Only exact renderer-owned template header text and Valo page-number footer lines excluded from content comparison"
+    },
+    "editorialDailyLimit": 6,
+    "editorialDailyReviewAttempts": 6,
+    "quotaChanged": false,
+    "commercialLicenceAccepted": false,
+    "salesEnabled": false
+  },
+  "executed": {
+    "api": {
+      "total": 101,
+      "pass": 100,
+      "fail": 0,
+      "skip": 1
+    },
+    "database": {
+      "pass": 49,
+      "fail": 0,
+      "skip": 0
+    },
+    "controlledCommerce": {
+      "pass": 14,
+      "notMerchantExecution": true
+    },
+    "controlledWebhookHTTP": {
+      "pass": 5
+    },
+    "foundation": {
+      "pass": 166,
+      "notFormalNigerianRuleAcceptance": true
+    },
+    "exactIDIntake": {
+      "pass": 3,
+      "sourceCandidates": 12,
+      "published": 0
+    },
+    "realExportInspection": {
+      "pass": 4,
+      "includesTamperAndMalformedFiles": true
+    },
+    "types": "passed",
+    "dependencyAudit": {
+      "critical": 0,
+      "high": 0,
+      "moderate": 0,
+      "low": 0,
+      "notIndependentSecurityAcceptance": true
+    }
+  },
+  "formalSuites": {
+    "rule80": "not accepted; no new formal evaluation",
+    "customerAI60": "not accepted; no new provider evaluation",
+    "editorial60": "not accepted; no new provider evaluation"
+  },
+  "publicState": {
+    "industries": [
+      {
+        "id": "IND-01",
+        "slug": "retail-wholesale",
+        "title": "retail/wholesale",
+        "deeperPackTarget": true,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-02",
+        "slug": "packaged-food-manufacturing",
+        "title": "packaged-food manufacturing",
+        "deeperPackTarget": true,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-03",
+        "slug": "restaurants-hospitality",
+        "title": "restaurants/hospitality",
+        "deeperPackTarget": true,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-04",
+        "slug": "agriculture",
+        "title": "agriculture",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-05",
+        "slug": "general-manufacturing",
+        "title": "general manufacturing",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-06",
+        "slug": "logistics-transport",
+        "title": "logistics/transport",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-07",
+        "slug": "construction",
+        "title": "construction",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-08",
+        "slug": "real-estate",
+        "title": "real estate",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-09",
+        "slug": "technology-software",
+        "title": "technology/software",
+        "deeperPackTarget": true,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-10",
+        "slug": "e-commerce",
+        "title": "e-commerce",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-11",
+        "slug": "beauty-personal-care",
+        "title": "beauty/personal care",
+        "deeperPackTarget": true,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-12",
+        "slug": "fashion-textiles",
+        "title": "fashion/textiles",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-13",
+        "slug": "healthcare",
+        "title": "healthcare",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": true,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-14",
+        "slug": "education",
+        "title": "education",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-15",
+        "slug": "professional-services",
+        "title": "professional services",
+        "deeperPackTarget": true,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-16",
+        "slug": "media-creative",
+        "title": "media/creative",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-17",
+        "slug": "import-export",
+        "title": "import/export",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-18",
+        "slug": "energy",
+        "title": "energy",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": true,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-19",
+        "slug": "financial-services",
+        "title": "financial services",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": true,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      },
+      {
+        "id": "IND-20",
+        "slug": "other",
+        "title": "other",
+        "deeperPackTarget": false,
+        "enhancedEvidenceRequired": false,
+        "coverageState": "held",
+        "evidenceState": "no_released_evidence",
+        "sourceCheckedAt": null,
+        "publishedItems": 0
+      }
+    ],
+    "guidanceTarget": 30,
+    "publishedGuidance": 0,
+    "guidesTarget": 12,
+    "publishedGuides": 0,
+    "deeperPackTarget": 6,
+    "publishedDeeperPacks": 0,
+    "selectableLocations": 37,
+    "priorityLocations": [
+      "Lagos",
+      "FCT",
+      "Bayelsa"
+    ],
+    "checkedLocationPacks": 0,
+    "notice": "Coverage targets, not completed coverage. No federal, state/FCT or LGA guidance is currently released. Priority is not evidence of a source check.",
+    "ngoNotice": "NGO applicability depends on actual legal form, activities and geography. No tax or licensing exemption is inferred. NGO onboarding expansion remains locked until R1 acceptance."
+  },
+  "boundaries": {
+    "livePayments": false,
+    "publicLaunch": false,
+    "realConfidentialCustomerData": false,
+    "R3": false
+  },
+  "remaining": [
+    "Fresh independent factual and challenge reviews blocked by existing six-attempt daily cap, not by a new factual rejection.",
+    "No eligible content or rules; drafted source candidates and the twelve intake mappings do not count as publication.",
+    "Actual merchant checkout/verification/refund and email delivery remain unproved without configured providers.",
+    "Full R1 content, privacy lifecycle, operations, performance, accessibility, independent security, beta and production recovery acceptance remain incomplete.",
+    "R2 remains gated and incomplete."
+  ],
+  "developmentObservations": [
+    "Public homepage rendered after all relevant workflows restarted; signed-in UI was not reverified in this batch.",
+    "Preview HMR websocket 502 and Clerk development/internal-CSS warnings were observed; these are not production acceptance."
+  ],
+  "ciRegression": {
+    "failedHead": "efbbd9142d86c2dae74fc0e9ea15687a67c0b759",
+    "postgresJob": "passed",
+    "rootCause": "Pure payment contract had an implicit database-import dependency",
+    "localFixedRegression": "Both actual HMAC/order-match tests passed in a child with no database/provider credentials",
+    "remoteFixedRun": "not yet executed"
+  }
+}

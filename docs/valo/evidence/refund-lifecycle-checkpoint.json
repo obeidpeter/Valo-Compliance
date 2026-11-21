@@ -1,0 +1,418 @@
+{
+  "observedAt": "2026-11-14T12:26:35.832Z",
+  "codeRevision": "cb32f1bc2eaf0a49ca6ead2ce9540a2204e7a058",
+  "status": "partial_development_evidence_not_full_acceptance",
+  "scope": "Synthetic development data, real PostgreSQL and real SIGKILL; controlled payment responses",
+  "tests": [
+    {
+      "label": "Refund PostgreSQL scenarios including one suite parent",
+      "tests": 17,
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0,
+      "rawResult": "docs/valo/evidence/refund-tests.txt",
+      "sha256": "c2f2684110c6f23b3416991d49dafcc03f1599c00d4b54ff8df080ad17860bf8"
+    },
+    {
+      "label": "Commerce PostgreSQL scenarios including one suite parent",
+      "tests": 14,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "rawResult": "docs/valo/evidence/refund-commerce-regression.txt",
+      "sha256": "0f526d65b48c64aba5d646b09f03aa6bfcd950c4bf186740555e707ab13adb6f"
+    },
+    {
+      "label": "Controlled native refund transport including one suite parent",
+      "tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "rawResult": "docs/valo/evidence/refund-provider-tests.txt",
+      "sha256": "3ec70ddc94a8cedeee8eb1d10d22991c4eeb97d80c91938130014fe3d77be0f3"
+    },
+    {
+      "label": "Signed HTTP controls including one suite parent",
+      "tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "rawResult": "docs/valo/evidence/refund-webhook-regression.txt",
+      "sha256": "54aa1d8fcd8daad0757a1c6953f7690df9efeb72f990d95a06d8a76c4c588b95"
+    },
+    {
+      "label": "API regression; one expressly skipped case",
+      "tests": 115,
+      "passed": 114,
+      "failed": 0,
+      "skipped": 1,
+      "rawResult": "docs/valo/evidence/refund-api-tests.txt",
+      "sha256": "8843a6490deba918bf9694ab6bef9f09de421d8be895dbe68243b407edadd636"
+    }
+  ],
+  "typecheck": {
+    "passed": true,
+    "sha256": "6dae4af028f38ac5d5da438946ef17f14111f39d020f1f87bb3719a1d18ac818"
+  },
+  "sourceHashes": [
+    {
+      "path": "artifacts/api-server/src/lib/valo-refunds.ts",
+      "sha256": "e989e61a6ff399f34a92e323669cea2b6920b98038c1fc35f155b4d99f276f6b"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-refund-provider.ts",
+      "sha256": "e7c5f8862d7108ddf3a96134b3984e7dd40301baa6424c88c927bf1b19d03633"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-payment-disputes.ts",
+      "sha256": "f682823f0e08c6bf1fec51a7ec57b137efbf3356552debb9b3509959b206c74b"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-commerce.ts",
+      "sha256": "8e77ef234dd74a7a22766972d262ada415d35798508717818254036c7e706eb0"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-refunds.integration.test.ts",
+      "sha256": "5210c62b25640e8d53c6a8c11d984c220a67068b21c6bcbe097b63001544d422"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-refund-provider.test.ts",
+      "sha256": "2e03931f458697cf85e6aed0b8f6451b96819bd460154ed791c7d06d8724941b"
+    },
+    {
+      "path": "artifacts/api-server/src/routes/valo-customer-access.ts",
+      "sha256": "f0695195e68a7464bbeb1b82fd7cff529f3bb09ae3e98182d2a560d9eff20ac6"
+    },
+    {
+      "path": "artifacts/api-server/src/workers/export-worker.ts",
+      "sha256": "58420697cc1a1ffc19c13b9db662a2b43b08ee6b4cc08568d47089a4ca6a4d6e"
+    }
+  ],
+  "migration": {
+    "executedAt": "2026-11-14T12:21:51.947Z",
+    "scope": "Empty local PostgreSQL only; no managed DB copy or restore",
+    "productionApplied": false,
+    "managedDevelopmentSchemaChanged": false,
+    "migrationOutput": "Reading config file '/home/runner/workspace/lib/db/drizzle.config.ts'\nUsing 'pg' driver for database querying\n[⣷] applying migrations...\u001b[2K\u001b[1G[⣯] applying migrations...\u001b[2K\u001b[1G[⣟] applying migrations...\u001b[2K\u001b[1G[⡿] applying migrations...\u001b[2K\u001b[1G[⢿] applying migrations...\u001b[2K\u001b[1G[✓] migrations applied successfully!",
+    "migrationsPassed": true,
+    "invariants": {
+      "orderTable": true,
+      "receiptOutbox": true,
+      "dailyReconciliation": true,
+      "editorialRequestMeter": true,
+      "durableReminderLease": true,
+      "firstReminderAttempt": true,
+      "refundAmount": true,
+      "refundRequestUniqueness": true,
+      "financialHistoryImmutable": true,
+      "publisherCannotRefund": true,
+      "journalledMigrations": 17,
+      "noSeedOrders": true,
+      "noSeedPrices": true,
+      "tenantForeignKeys": 4,
+      "publisherCannotReadOrders": true,
+      "publisherCannotWriteOrders": true,
+      "publisherCannotWritePrices": true
+    },
+    "disasterRecoveryProved": false,
+    "productionCompatibilityProved": false,
+    "localTemporaryClusterRemoved": true
+  },
+  "unauthenticatedFinance": {
+    "httpStatus": 401,
+    "data": {
+      "error": "Sign in to a staff account.",
+      "code": "HTTP_401",
+      "requestId": "8",
+      "message": "Sign in to a staff account."
+    }
+  },
+  "catalogue": {
+    "httpStatus": 200,
+    "data": {
+      "items": [],
+      "total": 0,
+      "page": 1,
+      "heldTemplates": 40
+    }
+  },
+  "coverage": {
+    "httpStatus": 200,
+    "data": {
+      "industries": [
+        {
+          "id": "IND-01",
+          "slug": "retail-wholesale",
+          "title": "retail/wholesale",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-02",
+          "slug": "packaged-food-manufacturing",
+          "title": "packaged-food manufacturing",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-03",
+          "slug": "restaurants-hospitality",
+          "title": "restaurants/hospitality",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-04",
+          "slug": "agriculture",
+          "title": "agriculture",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-05",
+          "slug": "general-manufacturing",
+          "title": "general manufacturing",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-06",
+          "slug": "logistics-transport",
+          "title": "logistics/transport",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-07",
+          "slug": "construction",
+          "title": "construction",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-08",
+          "slug": "real-estate",
+          "title": "real estate",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-09",
+          "slug": "technology-software",
+          "title": "technology/software",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-10",
+          "slug": "e-commerce",
+          "title": "e-commerce",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-11",
+          "slug": "beauty-personal-care",
+          "title": "beauty/personal care",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-12",
+          "slug": "fashion-textiles",
+          "title": "fashion/textiles",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-13",
+          "slug": "healthcare",
+          "title": "healthcare",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": true,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-14",
+          "slug": "education",
+          "title": "education",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-15",
+          "slug": "professional-services",
+          "title": "professional services",
+          "deeperPackTarget": true,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-16",
+          "slug": "media-creative",
+          "title": "media/creative",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-17",
+          "slug": "import-export",
+          "title": "import/export",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-18",
+          "slug": "energy",
+          "title": "energy",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": true,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-19",
+          "slug": "financial-services",
+          "title": "financial services",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": true,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        },
+        {
+          "id": "IND-20",
+          "slug": "other",
+          "title": "other",
+          "deeperPackTarget": false,
+          "enhancedEvidenceRequired": false,
+          "coverageState": "held",
+          "evidenceState": "no_released_evidence",
+          "sourceCheckedAt": null,
+          "publishedItems": 0
+        }
+      ],
+      "guidanceTarget": 30,
+      "publishedGuidance": 0,
+      "guidesTarget": 12,
+      "publishedGuides": 0,
+      "deeperPackTarget": 6,
+      "publishedDeeperPacks": 0,
+      "selectableLocations": 37,
+      "priorityLocations": [
+        "Lagos",
+        "FCT",
+        "Bayelsa"
+      ],
+      "checkedLocationPacks": 0,
+      "notice": "Coverage targets, not completed coverage. No federal, state/FCT or LGA guidance is currently released. Priority is not evidence of a source check.",
+      "ngoNotice": "NGO applicability depends on actual legal form, activities and geography. No tax or licensing exemption is inferred. NGO onboarding expansion remains locked until R1 acceptance."
+    }
+  },
+  "realPaystackTransactions": 0,
+  "realRefunds": 0,
+  "realEmailMessagesSent": 0,
+  "newAiProviderCalls": 0,
+  "sourceRule80AcceptancePassed": false,
+  "customerAi60AcceptancePassed": false,
+  "editorial60AcceptancePassed": false,
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "productionLaunchEnabled": false,
+  "livePaymentsEnabled": false,
+  "browserVerification": {
+    "publicMobileScreenshot": true,
+    "authenticatedFinanceUiVerified": false,
+    "reason": "No real fresh-MFA finance journey executed."
+  },
+  "initialFailures": [
+    {
+      "cause": "Dispute scenario reused a tenant which had already reached its ten-per-minute refund limit.",
+      "resolution": "Used a distinct fixture tenant and added an explicit durable quota rejection test; cap unchanged."
+    },
+    {
+      "cause": "Quota snapshot did not list new refund-specific ceilings.",
+      "resolution": "Added explicit 10/minute and 50/day assertions; existing ceilings unchanged."
+    },
+    {
+      "cause": "Append-only financial history prevented destructive test teardown; subsequent retained fixture IDs collided.",
+      "resolution": "Retained synthetic FK parents and audit evidence, revoked fixture roles and randomized numeric provider IDs; no trigger disabled."
+    }
+  ],
+  "remaining": [
+    "Actual sandbox merchant execution, dispute reconciliation and refund/bank outcome proof",
+    "Real fresh-MFA finance browser journey and manual accessibility",
+    "Commercial price/refund/licence acceptance separate from explicit development test policy",
+    "Provider dispute evidence submission/accept-decline workflow is not implemented",
+    "All remaining R1 customer/editor/email/privacy/content/evaluation/operational requirements; gated R2 remains incomplete"
+  ]
+}

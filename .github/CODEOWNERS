@@ -1,0 +1,8 @@
+# The product owner reviews every change. Paths below carry approval-sensitive
+# rules (see AGENTS.md) and must never merge without the owner's review.
+*                                 @obeidpeter
+/docs/specification/              @obeidpeter
+/docs/registers/                  @obeidpeter
+/lib/db/drizzle/                  @obeidpeter
+/.github/workflows/               @obeidpeter
+/scripts/ops/                     @obeidpeter

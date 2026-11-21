@@ -1,0 +1,157 @@
+{
+  "executedAt": "2026-11-14T04:43:32.979Z",
+  "sourceNoteCommit": "551e5580662cc305c05f3fd2c705a74b035c2c82",
+  "providerPermission": {
+    "verified": true,
+    "scope": "chatgpt_original_operational_provider_permission_only",
+    "hash": "da81893bcedbce31f6806d72fb1a74bc619206ee90baf4d99c8b389bb914e6b4",
+    "sourceBinding": {
+      "path": "docs/content-candidates/operational-template-candidates.md",
+      "hash": "07b23152ea8f3588644b5f996bc900a6fb5942022b61605ce8565a21c7d3494c",
+      "notePath": "docs/content-candidates/chatgpt-content-provenance-rights.md",
+      "noteHash": "57080e5d1a4105c3b3545b8e94f65662eb8e1d5ce08f2b88154fcfc345aca616"
+    },
+    "accountContractClassified": false,
+    "paidPlanRequired": false,
+    "actualRetrievedPages": [
+      {
+        "url": "https://openai.com/policies/terms-of-use/",
+        "hash": "9511877208da1e934ce4e37a2f44d25e8962e7b3e6fdb691ea9df385f1bccfd2",
+        "locator": "Content → Ownership of content"
+      },
+      {
+        "url": "https://openai.com/policies/eu-terms-of-use/",
+        "hash": "f1c390954f757dc3e09ae237a4143ec9c6f701355d8d0e2c0fad2fbdb1e06a77",
+        "locator": "Content → Ownership of content"
+      },
+      {
+        "url": "https://help.openai.com/en/articles/6783457-what-is-chatgpt",
+        "hash": "5133180236aaa723fa0dfc34c8abf26dfcc015e0a16a423f646683fdaf5e3311",
+        "locator": "Can I use output from ChatGPT for commercial uses?"
+      },
+      {
+        "url": "https://openai.com/policies/service-terms/",
+        "hash": "a3e41b2e7e6e470e2e518e2cd85f92f1cb82568d3b6233a3d58f82a6ba271c18",
+        "locator": "Service-specific terms; scope must not be inferred as an account-plan assertion"
+      },
+      {
+        "url": "https://openai.com/policies/sharing-publication-policy/",
+        "hash": "f56e82aaeb8e1f545fc055aa08413f1ad1136240d2f0fb5aa2c1d42814b80184",
+        "locator": "Scoped publication contexts; ChatGPT prose must not be misclassified as API-authored prose"
+      }
+    ]
+  },
+  "actualIndependentReviewCallsThisCheckpoint": 4,
+  "prior": [
+    {
+      "version": 4,
+      "decision": "held",
+      "candidateHash": "e1d2cf271d675b6d82b92dfc966437273c25238cf83fc73d9f63248b254b2848",
+      "reviews": [
+        {
+          "role": "factual",
+          "providerResponseId": "chatcmpl-EjzluqixbNpDtYJZHjI23ja5MICcX",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "verdict": "hold",
+          "findings": [
+            "The release disclosure says the template was 'not reviewed by a Nigerian legal, tax or sector specialist.' That is a limitation/disclaimer, not a blocker by itself, but the document also uses a jurisdiction-specific disclosure phrase ('AI drafted and reviewed') without evidence of an actual review by the named reviewer role. The review record must not imply a specialist or human review that was not established by evidence.",
+            "The source/provenance statement claims 'Source/provenance checked: 2026-11-14T04:35:09.655Z' and that 'Provider-source and authoring records are retained.' While the supplied evidence includes provider terms and an authoring note hash, the candidate still states 'original ChatGPT-authored prose supplied by coordinator; upstream model and execution ID not established.' That means narrow attribution is not independently verified from an upstream run record; the provenance is still partially unresolved for material attribution.",
+            "The rights section includes a commercial-use assertion for ChatGPT output, but the supplied evidence contains mixed provider-term surfaces (ROW/EU terms, help article, service terms) and the candidate simultaneously notes that customer licence acceptance is false and sales are disabled. The template's own rights/disclosure text should not overstate commercial-licence status beyond the verified provider permission scope.",
+            "The template uses a release/source-date assertion and 'Provider-source and authoring records are retained' language in a way that may read as an independently verified chain of custody. The supplied evidence does not establish a fully verified upstream execution record, only a coordinator-attributed route and retained hashes. That is a material provenance gap for any statement implying independent verification."
+          ],
+          "missingEvidence": [
+            "An authoritative upstream execution record or equivalent immutable provenance artifact linking the exact candidate text to the claimed ChatGPT drafting run, beyond the coordinator note and file hashes.",
+            "Evidence that the phrase 'AI drafted and reviewed' corresponds to an actual human review role and not only an automated/template-generated disclosure.",
+            "A clarified rights/provenance statement that distinguishes provider output-use permission from customer commercial licence acceptance and from independent verification of the specific drafting run.",
+            "If the release intends to rely on the supplied provider terms for commercial-use permission, a clean reconciliation of the ROW/EU terms and the help article so the template does not imply broader or exclusive rights than those sources establish."
+          ]
+        },
+        {
+          "role": "challenge",
+          "providerResponseId": "chatcmpl-EjzlufmaqdBEHAI7nPUGHrb9AOS2t",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "verdict": "hold",
+          "findings": [
+            "The template includes a source/provenance statement: “Source/provenance checked: 2026-11-14T04:35:09.655Z.” but the review package does not provide independent operative evidence that this exact source check time is authoritative for the final candidate; the timestamp is only coordinator-provided data, so the provenance claim should not be treated as independently verified.",
+            "The body says “AI drafted and reviewed; not reviewed by a Nigerian legal, tax or sector specialist.” This is acceptable as a limitation, but the package also contains broader rights and approval language that could be read as stronger verification than actually shown. The review record must avoid implying any specialist, legal, tax, or sectoral clearance for this release.",
+            "The rights section relies on provider permissions and includes a commercial-use quote from OpenAI help content. That does not establish Valo customer licence acceptance, exclusivity, non-infringement, or third-party clearance for this template, yet the surrounding package text risks overreading it as a fuller rights approval than is supported.",
+            "The candidate is presented as an “Inventory register” for NG with operational guidance, but no authoritative evidence is supplied for any material regulatory claim because the content is framed as non-regulatory. The review should keep that boundary explicit and not infer compliance, accounting, or legal adequacy from the template wording alone."
+          ],
+          "missingEvidence": [
+            "Independent operative evidence for the claimed source/provenance check time tied to the exact final candidate hash, rather than coordinator-supplied metadata alone.",
+            "Authoritative evidence showing a final rights/legal review decision by Valo for customer licence acceptance, exclusivity, or non-infringement, if any such approval is intended to be implied.",
+            "Any authoritative evidence that the template’s operational guidance has been reviewed for NG-specific legal, tax, or sector compliance, if the release package intends to suggest such clearance."
+          ]
+        }
+      ]
+    },
+    {
+      "version": 5,
+      "decision": "held",
+      "candidateHash": "467e1813e83912096930e8142352174d03732f024ecb916d3c59bec2513752f2",
+      "reviews": [
+        {
+          "role": "factual",
+          "providerResponseId": "chatcmpl-Ejzodn8Yzl2IkOAotDqLgOXdJOWwG",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "verdict": "hold",
+          "findings": [
+            "The release disclosure is internally inconsistent with the actual scope and provenance evidence: the candidate says \"AI drafted and reviewed; not reviewed by a Nigerian legal, tax or sector specialist\" and \"Authorship is attributed to the supplied ChatGPT drafts; no upstream model or execution receipt is claimed,\" while the trusted evidence says source attribution is only a provided authoring note and not independent certification of upstream authorship. If the release is relying on attribution as a factual statement, it needs to remain narrowly qualified and not imply verified upstream authorship or review beyond what was checked.",
+            "The factual scope statement \"Scope: Original stock-movement and physical-count record for user-entered business information. Optional operational practice; no legal applicability determination.\" is fine, but the later limitation \"No professional review\" conflicts with the disclosure language \"AI drafted and reviewed\" and could mislead about the nature of the review performed. The document should clearly distinguish AI factual review from professional/legal review.",
+            "The provenance statement \"Source/provenance checked (file integrity and provider-permission passages only): 2026-11-14T04:37:59.285Z\" is accurate only if read as a file-integrity/provider-permission check, not as a broader authorship or legal verification. The current wording is too easy to read as a general provenance certification, which the trusted evidence expressly does not provide."
+          ],
+          "missingEvidence": [
+            "A tighter, authoritative wording for the release disclosure that matches the evidence actually checked: file integrity, exact rendering, and provider-permission passages only, without implying independent certification of upstream authorship or professional review.",
+            "If the phrase \"AI drafted and reviewed\" is intended to mean a human or specialist review occurred, evidence of that review is missing; if it only means AI factual review, the wording should be revised to say so explicitly.",
+            "If the candidate intends to assert the authorship attribution as a verified fact beyond the supplied note, missing evidence of independent upstream authorship/execution receipt remains. The current record only supports attribution to the supplied ChatGPT drafts, not independent verification of the upstream model/run."
+          ]
+        },
+        {
+          "role": "challenge",
+          "providerResponseId": "chatcmpl-EjzodvEb0TA0fMuTtZYjChtiyHCGV",
+          "model": "gpt-5.4-mini-2026-03-17",
+          "verdict": "pass",
+          "findings": [],
+          "missingEvidence": []
+        }
+      ]
+    }
+  ],
+  "quotaHold": {
+    "version": 6,
+    "id": "324c7952-cb7f-499c-983d-4e39439b4761",
+    "reservationsBefore": 6,
+    "reservationsAfter": 6,
+    "newProviderRequests": 0,
+    "durableHeldState": true,
+    "durableAuditReason": true,
+    "heldPublisherRejected": true,
+    "actualPrivateArtifactsRead": 5,
+    "exports": {
+      "candidateHash": "8619d9332d117ff17bf659f28baba1483d7ffb4aeb0b83159da4a4c61787b00c",
+      "passed": true,
+      "hashes": {
+        "docx": "aab19702bebd1f9886f270f75138d859c5c8864507bc562385f6fadec9126998",
+        "pdf": "b0d1cf8deea46a4107a1d6c4ae4eb21759b9720294e33aac0a98dcc1725e4fe4"
+      },
+      "checks": [
+        "Actual DOCX ZIP/XML parsed; required text present",
+        "Actual Chromium A4 PDF parsed with pdftotext; required text present",
+        "Renderer network disabled"
+      ],
+      "manualWordApplicationReview": false,
+      "manualAccessibilityReview": false
+    },
+    "reason": "OPERATIONAL_REVIEW_DAILY_CAP_REACHED"
+  },
+  "copyrightCertified": false,
+  "thirdPartyRightsCertified": false,
+  "customerLicenceAccepted": false,
+  "eligibleDevelopmentReleaseProved": false,
+  "withdrawalProved": false,
+  "editorial60Accepted": false,
+  "r1Accepted": false,
+  "r2Unlocked": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false
+}

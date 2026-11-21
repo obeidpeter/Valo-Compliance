@@ -1,0 +1,16 @@
+{
+  "retrievedAt": "2026-11-14T23:53:26.464Z",
+  "sources": [
+    {
+      "url": "https://paystack.com/docs/api/dispute/",
+      "retrievedTextSha256": "258091b0b855e26b1fbe6dfc8a905a31197d25239172b20be1d856fbe6e8f997",
+      "passage": "## [resolve permalink](https://paystack.com/docs/api/dispute/\\#resolve) Resolve Dispute\n\nResolve a dispute on your integration\n\n### Headers\n\nauthorization\n\nString\n\nSet value to `Bearer SECRET_KEY`\n\ncontent-type\n\nString\n\nSet value to `application/json`\n\n### Path Parameters\n\nid\n\nString\n\nDispute ID\n\n### Body Parameters\n\nresolution\n\nString\n\nDispute resolution. Accepted values: { merchant-accepted \\| declined }.\n\nmessage\n\nString\n\nReason for resolving\n\nrefund\\_amount\n\nInteger\n\nthe amount to refund, in the subunit of the [supported currency](https://paystack.com/docs/api/#supported-currency)\n\nuploaded\\_filename\n\nString\n\nfilename of attachment returned via response from upload url(GET /dispute/:id/upload\\_url)\n\nevidence\n\nInteger\n\noptional\n\nEvidence Id for fraud claims\n\nPUT/dispute/:id/resolve\n\n"
+    },
+    {
+      "url": "https://paystack.com/docs/payments/manage-disputes/",
+      "retrievedTextSha256": "c77e529aa6fabb7b30382920b18f10c1ccceb9f2172663025c00351e35306367",
+      "passage": "##### URL Validity\n\nPlease note that the `signedUrl` is only valid for 30 minutes.\n\nOnce this URL has been obtained, you can then upload the corresponding receipt as evidence that the customer was given value for the charge for which the dispute was raised.\n\n##### Acceptable Format\n\nAcceptable document formats are `.jpg (image/jpg)`, `.jpeg (image/jpeg)` and `.pdf (application/pdf)`.\n\n"
+    }
+  ],
+  "scope": "Technical integration evidence only; no merchant action or content publication approval."
+}

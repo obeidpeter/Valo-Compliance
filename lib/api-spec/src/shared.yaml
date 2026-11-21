@@ -1,0 +1,133 @@
+# Schemas that more than one module, or a shared response, uses.
+schemas:
+  AccessSupportAck:
+    type: object
+    required: [reference, message, delivery]
+    properties:
+      reference: { type: string }
+      message: { type: string }
+      delivery: { type: string, enum: [not_dispatched] }
+  CustomerAITask:
+    type: string
+    enum: [invoice, quotation, payment_reminder, business_proposal]
+  FinancialLine:
+    type: object
+    additionalProperties: false
+    required: [description, quantity, unitPriceKobo]
+    properties:
+      description: { type: string, minLength: 1, maxLength: 200 }
+      quantity: { type: string, pattern: "^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$" }
+      unitPriceKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+      currency: { type: string, minLength: 3, maxLength: 3 }
+  FinancialInput:
+    type: object
+    additionalProperties: false
+    required: [kind, lines, taxAmountKobo, taxLabel, discountKobo, amountDueKobo]
+    properties:
+      kind: { $ref: "#/components/schemas/CustomerAITask" }
+      lines: { type: array, maxItems: 40, items: { $ref: "#/components/schemas/FinancialLine" } }
+      taxAmountKobo: { type: [string, "null"], pattern: "^[0-9]{1,24}$" }
+      taxLabel: { type: string, maxLength: 80 }
+      discountKobo: { type: [string, "null"], pattern: "^[0-9]{1,24}$" }
+      deliveryKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+      discountPercent: { type: string, pattern: "^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$" }
+      taxPercent: { type: string, pattern: "^(0|[1-9][0-9]{0,2})(\\.[0-9]{1,4})?$" }
+      taxBaseKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+      currency: { type: string, minLength: 3, maxLength: 3 }
+      requestedTotalKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+      disputedKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+      optionalLines:
+        type: array
+        maxItems: 40
+        items:
+          type: object
+          additionalProperties: false
+          required: [description, quantity, unitPriceKobo, selected]
+          properties:
+            description: { type: string, minLength: 1, maxLength: 240 }
+            quantity: { type: string, pattern: "^(0|[1-9][0-9]{0,6})(\\.[0-9]{1,3})?$" }
+            unitPriceKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+            selected: { type: boolean }
+            currency: { type: string, pattern: "^[A-Z]{3}$" }
+      amountDueKobo: { type: [string, "null"], pattern: "^[0-9]{1,24}$" }
+      paymentRecord:
+        type: object
+        additionalProperties: false
+        required: [invoiceAmountKobo, payments]
+        properties:
+          invoiceAmountKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+          duplicatesConfirmed: { type: boolean }
+          payments:
+            type: array
+            maxItems: 40
+            items:
+              type: object
+              additionalProperties: false
+              required: [reference, amountKobo]
+              properties:
+                reference: { type: string, minLength: 1, maxLength: 80 }
+                amountKobo: { type: string, pattern: "^[0-9]{1,24}$" }
+  ApiProblem:
+    type: object
+    required: [error, code, message, requestId]
+    properties:
+      error: { type: string }
+      code: { type: string }
+      message: { type: string }
+      requestId: { type: string }
+      currentRevision: { type: integer }
+  Answer:
+    type: string
+    enum: [yes, no, unknown, unanswered, not_applicable]
+  DocumentBlock:
+    type: object
+    additionalProperties: false
+    required: [id, type, text, rows]
+    properties:
+      id: { type: string, minLength: 1, maxLength: 80 }
+      type: { type: string, enum: [paragraph, list, table] }
+      text: { type: string, maxLength: 8000 }
+      rows:
+        type: array
+        maxItems: 100
+        items: { type: array, maxItems: 10, items: { type: string, maxLength: 1000 } }
+  CanonicalDocument:
+    type: object
+    additionalProperties: false
+    required: [fields, blocks, selectedClauses, formatting]
+    properties:
+      fields:
+        type: object
+        additionalProperties: false
+        required: [issuerName, recipientName, documentNumber, issueDate, dueDate, notes]
+        properties:
+          issuerName: { type: string, maxLength: 160 }
+          recipientName: { type: string, maxLength: 160 }
+          documentNumber: { type: string, maxLength: 80 }
+          issueDate: { type: string, maxLength: 10 }
+          dueDate: { type: string, maxLength: 10 }
+          notes: { type: string, maxLength: 5000 }
+      blocks: { type: array, maxItems: 100, items: { $ref: "#/components/schemas/DocumentBlock" } }
+      selectedClauses: { type: array, maxItems: 0, items: { type: string } }
+      financialInput: { $ref: "#/components/schemas/FinancialInput" }
+      formatting:
+        type: object
+        additionalProperties: false
+        required: [font, accent]
+        properties:
+          font: { type: string, enum: [sans, serif] }
+          accent: { type: string, enum: [forest, charcoal] }
+  BusinessDocument:
+    type: object
+    required: [id, revisionId, title, revision, content, contentHash, createdAt, updatedAt, status, templateVersion]
+    properties:
+      revisionId: { type: string, format: uuid }
+      id: { type: string }
+      title: { type: string }
+      revision: { type: integer }
+      content: { $ref: "#/components/schemas/CanonicalDocument" }
+      contentHash: { type: string }
+      createdAt: { type: string }
+      updatedAt: { type: string }
+      status: { type: string, enum: [business_draft] }
+      templateVersion: { type: ["string", "null"] }

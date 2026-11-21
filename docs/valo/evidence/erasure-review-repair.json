@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "status": "partial-development-engineering-proof",
+  "applicationCommit": "404b1a102e4d7fbfb26ec3888374b72357528b89",
+  "sourceBindings": {
+    "artifacts/api-server/src/lib/valo-export-recovery.ts": "38894f2cfed546df108f0f99ead1e53309c0e479079ebb69d6db11fd2849d5af",
+    "artifacts/api-server/src/lib/valo-privacy-erasure.ts": "1e9005b732cc0015cc3406cd01763d169c0de632cafddbf1a75dec71eb3bda00",
+    "artifacts/api-server/src/lib/valo-privacy-requester.ts": "e4e1562c5e26b2f72179d503cdcce9f9564e2a340677534990b3ae4ad48bd227",
+    "artifacts/api-server/src/lib/valo-privacy.ts": "af489b15c70990a9c2fcb160fa5eac2ed3500379e24faea3ba2c02666e65fab4",
+    "artifacts/api-server/src/routes/valo-customer-access.ts": "20e4f073b9ca29160ba8841f41ad39f48ed8190a113b61e9d7ac06fdd9ca45bb",
+    "artifacts/api-server/src/routes/valo.ts": "f99ad39b305e55b642c5f13b2f5ed068819f34de25f39d8ecbe938f54ecf8def"
+  },
+  "tests": {
+    "erasureKeysStorageHttp": {
+      "pass": 31,
+      "fail": 0,
+      "skip": 0,
+      "nativePrivateStorageUsed": true
+    },
+    "requesterListReplyHttpRecheck": {
+      "pass": 7,
+      "fail": 0,
+      "skip": 0,
+      "subsetOf31": true
+    },
+    "finiteBudgetControlledDispatch": {
+      "pass": 23,
+      "fail": 0,
+      "skip": 0,
+      "realProviderCalls": 0,
+      "isolatedDatabaseSchema": true
+    },
+    "rootTypecheck": "passed",
+    "apiBuild": "passed"
+  },
+  "fixes": [
+    "Authenticate complete inventory before application replay and membership fencing, not only object phase",
+    "Include empty invalid keys in full inventory validation",
+    "Live verified requester case-only read/reply after quarantine, with no restored membership",
+    "Resume remains a staff action after an information reply",
+    "Automatic worker maintenance entry tested after native late upload and killed upload completion"
+  ],
+  "verifiedExistingControls": [
+    "Privacy-only HTTP success; finance-only, stale MFA, revoked role/session and hostile origin denied",
+    "Hold/role changes between object operations stop the next dispatch; in-flight outcome retained",
+    "Pinned historical audit/identity keys, explicit missing-key holds",
+    "Late upload cleanup survives missing job/tracking rows"
+  ],
+  "schedulerScope": "Unknown upload completion is reconciled by the persisted hourly rescan; SIGKILL test advances only its fresh fixture due time and invokes the actual worker maintenance entry, not manual replay.",
+  "restore": {
+    "startedAt": "2026-11-15T03:23:59.866Z",
+    "scope": "disposable local synthetic PostgreSQL and local fixture objects",
+    "managedDatabaseRead": false,
+    "productionRestoreProved": false,
+    "appStorageRestoreProved": false,
+    "externalCredentialsInherited": false,
+    "externalMessagesSent": 0,
+    "charges": 0,
+    "refunds": 0,
+    "deletionScope": "Completed independently retained synthetic erasure receipt, physical application replay and local object cleanup; external providers excluded",
+    "retention35Days": "unresolved",
+    "checks": {
+      "exactSnapshotCutoff": true,
+      "sourceDatabaseRejectedAsReplayTarget": true,
+      "alteredJournalRejected": true,
+      "alteredJournalRejectedWithoutEffects": true,
+      "changedReceiptRejection": {
+        "code": "ERASURE_SEAL_INVALID",
+        "locations": [
+          {
+            "file": "valo-erasure-seal.ts",
+            "line": 45
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 58
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 72
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 263
+          },
+          {
+            "file": "valo-privacy-erasure.ts",
+            "line": 279
+          }
+        ]
+      },
+      "changedReceiptRejectedWithWholeImportRolledBack": true,
+      "originalPreCutoffAuditRedactedWithAuthenticWitness": true,
+      "idempotentDeletionTombstoneAndRevocationReplay": true,
+      "publisherCannotReadPrivateRevisions": true,
+      "tenantObjectChecksums": 3,
+      "tamperedObjectDetected": true,
+      "controlledObjectFailure": {
+        "batches": 1,
+        "remaining": true,
+        "failed": 1,
+        "physicalApplicationReplayComplete": false,
+        "externalSystemsFulfilled": false
+      },
+      "objectDeletionCrash": {
+        "boundaryReached": true,
+        "killReported": true
+      },
+      "physicalApplicationPurgeWithStorageFailureAndProcessRestart": true,
+      "queuePayloadPurgedBeforeTrackingRows": true,
+      "otherTenantsPreserved": true,
+      "preCutoffPrivacyCopiesNotResurrected": true,
+      "customerAccess": {
+        "authorisationChecksCreatedNoRows": true,
+        "versionedIdentityBinding": true,
+        "revokedIdentitiesDenied": 2,
+        "activeDocumentRecovered": 1,
+        "crossTenantDenied": 1
+      }
+    },
+    "phase": "completed",
+    "cutoffAt": "2026-11-15T03:24:23.406Z",
+    "localWalCutoff": "0/1F666E8",
+    "dumpElapsedMs": 552,
+    "snapshotHash": "4f77f9fcc6b7ddb8e2e35af5181e5c5122421661df28a9208bf3f12d1b96cd6b",
+    "restoreStartedAt": "2026-11-15T03:24:30.709Z",
+    "physicalApplicationReplayComplete": true,
+    "externalSystemsFulfilled": false,
+    "restoreCompletedAt": "2026-11-15T03:25:05.886Z",
+    "restoreAndValidationElapsedMs": 35177,
+    "recoveryCutoffAgeMs": 42480,
+    "passed": true,
+    "elapsedMs": 67369,
+    "completedAt": "2026-11-15T03:25:07.229Z"
+  },
+  "limitations": [
+    "Synthetic fixtures only; no owner data or genuine usage history deleted",
+    "Direct native private-object deletion tested, not App Storage backup restoration",
+    "Requester session boundary uses controlled Clerk transports on actual HTTP routes; no new live account/email actions",
+    "Signed-in UI not visually verified",
+    "Retention/holds/external identity-AI-payment deletion remain pending policy/provider outcomes",
+    "Finite inference batch remains disabled and owner approval unchanged",
+    "No complete account-erasure, production recovery, R1/R2 or formal80/60/60 acceptance"
+  ]
+}

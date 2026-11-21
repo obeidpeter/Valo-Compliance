@@ -1,0 +1,13 @@
+{
+  "migration": "0005_checker_assessments_tasks.sql",
+  "environment": "development",
+  "result": {
+    "exitCode": 0,
+    "exitReason": null,
+    "output": "BEGIN\nCREATE TABLE\nCREATE TABLE\nCREATE TABLE\nCREATE TABLE\nCREATE TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE INDEX\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nCREATE INDEX\nCREATE INDEX\nCREATE INDEX\nCREATE INDEX\nCREATE INDEX\nCREATE INDEX\nCOMMIT\n",
+    "success": true
+  },
+  "productionCompatibilityAccepted": false,
+  "schemaAcceptance": false,
+  "note": "Reviewed additive SQL only. Constraint and tenant negative tests are separate."
+}

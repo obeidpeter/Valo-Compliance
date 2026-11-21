@@ -1,0 +1,86 @@
+{
+  "startedAt": "2026-11-15T02:48:38.129Z",
+  "scope": "disposable local synthetic PostgreSQL and local fixture objects",
+  "managedDatabaseRead": false,
+  "productionRestoreProved": false,
+  "appStorageRestoreProved": false,
+  "externalCredentialsInherited": false,
+  "externalMessagesSent": 0,
+  "charges": 0,
+  "refunds": 0,
+  "deletionScope": "Completed independently retained synthetic erasure receipt, physical application replay and local object cleanup; external providers excluded",
+  "retention35Days": "unresolved",
+  "checks": {
+    "exactSnapshotCutoff": true,
+    "sourceDatabaseRejectedAsReplayTarget": true,
+    "alteredJournalRejected": true,
+    "alteredJournalRejectedWithoutEffects": true,
+    "changedReceiptRejection": {
+      "code": "ERASURE_SEAL_INVALID",
+      "locations": [
+        {
+          "file": "valo-erasure-seal.ts",
+          "line": 45
+        },
+        {
+          "file": "valo-privacy-erasure.ts",
+          "line": 58
+        },
+        {
+          "file": "valo-privacy-erasure.ts",
+          "line": 72
+        },
+        {
+          "file": "valo-privacy-erasure.ts",
+          "line": 261
+        },
+        {
+          "file": "valo-privacy-erasure.ts",
+          "line": 277
+        }
+      ]
+    },
+    "changedReceiptRejectedWithWholeImportRolledBack": true,
+    "originalPreCutoffAuditRedactedWithAuthenticWitness": true,
+    "idempotentDeletionTombstoneAndRevocationReplay": true,
+    "publisherCannotReadPrivateRevisions": true,
+    "tenantObjectChecksums": 3,
+    "tamperedObjectDetected": true,
+    "controlledObjectFailure": {
+      "batches": 1,
+      "remaining": true,
+      "failed": 1,
+      "physicalApplicationReplayComplete": false,
+      "externalSystemsFulfilled": false
+    },
+    "objectDeletionCrash": {
+      "boundaryReached": true,
+      "killReported": true
+    },
+    "physicalApplicationPurgeWithStorageFailureAndProcessRestart": true,
+    "queuePayloadPurgedBeforeTrackingRows": true,
+    "otherTenantsPreserved": true,
+    "preCutoffPrivacyCopiesNotResurrected": true,
+    "customerAccess": {
+      "authorisationChecksCreatedNoRows": true,
+      "versionedIdentityBinding": true,
+      "revokedIdentitiesDenied": 2,
+      "activeDocumentRecovered": 1,
+      "crossTenantDenied": 1
+    }
+  },
+  "phase": "completed",
+  "cutoffAt": "2026-11-15T02:48:59.987Z",
+  "localWalCutoff": "0/1F666E8",
+  "dumpElapsedMs": 512,
+  "snapshotHash": "83f92e5c07658f4ef6ff83c8e090f0296e973e194f071c516bb787fdbdf3ef66",
+  "restoreStartedAt": "2026-11-15T02:49:07.334Z",
+  "physicalApplicationReplayComplete": true,
+  "externalSystemsFulfilled": false,
+  "restoreCompletedAt": "2026-11-15T02:49:40.861Z",
+  "restoreAndValidationElapsedMs": 33528,
+  "recoveryCutoffAgeMs": 40874,
+  "passed": true,
+  "elapsedMs": 63927,
+  "completedAt": "2026-11-15T02:49:42.051Z"
+}

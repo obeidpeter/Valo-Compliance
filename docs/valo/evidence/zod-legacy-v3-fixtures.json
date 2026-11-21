@@ -1,0 +1,1165 @@
+{
+  "capturedAt": "2026-11-14T09:14:31.600Z",
+  "actualRuntime": "3.25.76",
+  "syntheticOnly": true,
+  "fixtures": [
+    {
+      "input": {
+        "title": "Synthetic manual draft",
+        "content": {
+          "fields": {
+            "issuerName": "",
+            "recipientName": "",
+            "documentNumber": "",
+            "issueDate": "",
+            "dueDate": "",
+            "notes": ""
+          },
+          "blocks": [
+            {
+              "id": "section-1",
+              "type": "paragraph",
+              "text": "User-provided synthetic test text",
+              "rows": []
+            },
+            {
+              "id": "table",
+              "type": "table",
+              "text": "Synthetic stock rows; no statutory claims",
+              "rows": [
+                [
+                  "Synthetic item 1",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 2",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 3",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 4",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 5",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 6",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 7",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 8",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 9",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 10",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 11",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 12",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 13",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 14",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 15",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 16",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 17",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 18",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 19",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 20",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 21",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 22",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 23",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 24",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 25",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 26",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 27",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 28",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 29",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 30",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 31",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 32",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 33",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 34",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 35",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 36",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 37",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 38",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 39",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 40",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ]
+              ]
+            }
+          ],
+          "selectedClauses": [],
+          "formatting": {
+            "font": "sans",
+            "accent": "forest"
+          }
+        }
+      },
+      "legacyHash": "6428731abbe1af9f27bc468576b168653165f3537bbf086974bcabfc057592e1"
+    },
+    {
+      "input": {
+        "title": "Synthetic variant 0",
+        "content": {
+          "fields": {
+            "issuerName": "",
+            "recipientName": "",
+            "documentNumber": "",
+            "issueDate": "",
+            "dueDate": "",
+            "notes": ""
+          },
+          "blocks": [
+            {
+              "id": "section-1",
+              "type": "paragraph",
+              "text": "User-provided synthetic test text",
+              "rows": []
+            },
+            {
+              "id": "table",
+              "type": "table",
+              "text": "Synthetic stock rows; no statutory claims",
+              "rows": [
+                [
+                  "Synthetic item 1",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 2",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 3",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 4",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 5",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 6",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 7",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 8",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 9",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 10",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 11",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 12",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 13",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 14",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 15",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 16",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 17",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 18",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 19",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 20",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 21",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 22",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 23",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 24",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 25",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 26",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 27",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 28",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 29",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 30",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 31",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 32",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 33",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 34",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 35",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 36",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 37",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 38",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 39",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ],
+                [
+                  "Synthetic item 40",
+                  "₦123,456.78",
+                  "User-entered test quantity"
+                ]
+              ]
+            }
+          ],
+          "selectedClauses": [],
+          "formatting": {
+            "font": "serif",
+            "accent": "charcoal"
+          }
+        }
+      },
+      "legacyHash": "629a6a433c4ebd7012fecb88d4027c54cc726e2b276bb30f42e83533e8ccf580"
+    },
+    {
+      "input": {
+        "title": "Synthetic manual draft",
+        "content": {
+          "fields": {
+            "issuerName": "",
+            "recipientName": "",
+            "documentNumber": "",
+            "issueDate": "",
+            "dueDate": "",
+            "notes": ""
+          },
+          "blocks": [
+            {
+              "id": "section-1",
+              "type": "paragraph",
+              "text": "User-provided synthetic test text",
+              "rows": []
+            },
+            {
+              "id": "financial-items-v1",
+              "type": "table",
+              "text": "Supplied line items; each line rounded half-up to one kobo",
+              "rows": [
+                [
+                  "Description",
+                  "Quantity",
+                  "Unit price",
+                  "Line total"
+                ],
+                [
+                  "Synthetic work",
+                  "1.5",
+                  "₦100.00",
+                  "₦150.00"
+                ]
+              ]
+            },
+            {
+              "id": "financial-summary-v1",
+              "type": "table",
+              "text": "No statutory tax rate or exemption has been determined",
+              "rows": [
+                [
+                  "Description",
+                  "Amount"
+                ],
+                [
+                  "Subtotal",
+                  "₦150.00"
+                ],
+                [
+                  "Draft total from supplied amounts",
+                  "₦150.00"
+                ]
+              ]
+            }
+          ],
+          "selectedClauses": [],
+          "formatting": {
+            "font": "sans",
+            "accent": "forest"
+          },
+          "financialInput": {
+            "kind": "invoice",
+            "lines": [
+              {
+                "description": "Synthetic work",
+                "quantity": "1.5",
+                "unitPriceKobo": "10000"
+              }
+            ],
+            "taxAmountKobo": null,
+            "taxLabel": "",
+            "discountKobo": null,
+            "amountDueKobo": null
+          }
+        }
+      },
+      "legacyHash": "b5b436ee50d5bfe88de5fdc682e2961d10a63c8048cbdb59ae532588980c20a6"
+    },
+    {
+      "input": {
+        "title": "Synthetic variant 1",
+        "content": {
+          "fields": {
+            "issuerName": "",
+            "recipientName": "",
+            "documentNumber": "",
+            "issueDate": "",
+            "dueDate": "",
+            "notes": ""
+          },
+          "blocks": [
+            {
+              "id": "section-1",
+              "type": "paragraph",
+              "text": "User-provided synthetic test text",
+              "rows": []
+            },
+            {
+              "id": "financial-items-v1",
+              "type": "table",
+              "text": "Supplied line items; each line rounded half-up to one kobo",
+              "rows": [
+                [
+                  "Description",
+                  "Quantity",
+                  "Unit price",
+                  "Line total"
+                ],
+                [
+                  "Synthetic work",
+                  "1.5",
+                  "₦100.00",
+                  "₦150.00"
+                ]
+              ]
+            },
+            {
+              "id": "financial-summary-v1",
+              "type": "table",
+              "text": "No statutory tax rate or exemption has been determined",
+              "rows": [
+                [
+                  "Description",
+                  "Amount"
+                ],
+                [
+                  "Subtotal",
+                  "₦150.00"
+                ],
+                [
+                  "Draft total from supplied amounts",
+                  "₦150.00"
+                ]
+              ]
+            }
+          ],
+          "selectedClauses": [],
+          "formatting": {
+            "font": "serif",
+            "accent": "charcoal"
+          },
+          "financialInput": {
+            "kind": "invoice",
+            "lines": [
+              {
+                "description": "Synthetic work",
+                "quantity": "1.5",
+                "unitPriceKobo": "10000"
+              }
+            ],
+            "taxAmountKobo": null,
+            "taxLabel": "",
+            "discountKobo": null,
+            "amountDueKobo": null
+          }
+        }
+      },
+      "legacyHash": "e3de72ddccb1210afde81b4405611c1e976d725fbe3ac434dc6ea739929429ab"
+    },
+    {
+      "input": {
+        "title": "Synthetic manual draft",
+        "content": {
+          "fields": {
+            "issuerName": "",
+            "recipientName": "",
+            "documentNumber": "",
+            "issueDate": "",
+            "dueDate": "",
+            "notes": ""
+          },
+          "blocks": [
+            {
+              "id": "section-1",
+              "type": "paragraph",
+              "text": "User-provided synthetic test text",
+              "rows": []
+            },
+            {
+              "id": "financial-items-v1",
+              "type": "table",
+              "text": "Supplied line items; each line rounded half-up to one kobo",
+              "rows": [
+                [
+                  "Description",
+                  "Quantity",
+                  "Unit price",
+                  "Line total"
+                ],
+                [
+                  "Synthetic work",
+                  "1.5",
+                  "₦100.00",
+                  "₦150.00"
+                ]
+              ]
+            },
+            {
+              "id": "financial-summary-v1",
+              "type": "table",
+              "text": "No statutory tax rate or exemption has been determined",
+              "rows": [
+                [
+                  "Description",
+                  "Amount"
+                ],
+                [
+                  "Subtotal",
+                  "₦150.00"
+                ],
+                [
+                  "Draft total from supplied amounts",
+                  "₦150.00"
+                ]
+              ]
+            }
+          ],
+          "selectedClauses": [],
+          "formatting": {
+            "font": "sans",
+            "accent": "forest"
+          },
+          "financialInput": {
+            "kind": "quotation",
+            "lines": [
+              {
+                "description": "Synthetic work",
+                "quantity": "1.5",
+                "unitPriceKobo": "10000"
+              }
+            ],
+            "taxAmountKobo": null,
+            "taxLabel": "",
+            "discountKobo": null,
+            "amountDueKobo": null
+          }
+        }
+      },
+      "legacyHash": "819a87d5d54a0eedbd90f0846cb59e8ddf15134e10612aa0e21445c9ea50f966"
+    },
+    {
+      "input": {
+        "title": "Synthetic variant 2",
+        "content": {
+          "fields": {
+            "issuerName": "",
+            "recipientName": "",
+            "documentNumber": "",
+            "issueDate": "",
+            "dueDate": "",
+            "notes": ""
+          },
+          "blocks": [
+            {
+              "id": "section-1",
+              "type": "paragraph",
+              "text": "User-provided synthetic test text",
+              "rows": []
+            },
+            {
+              "id": "financial-items-v1",
+              "type": "table",
+              "text": "Supplied line items; each line rounded half-up to one kobo",
+              "rows": [
+                [
+                  "Description",
+                  "Quantity",
+                  "Unit price",
+                  "Line total"
+                ],
+                [
+                  "Synthetic work",
+                  "1.5",
+                  "₦100.00",
+                  "₦150.00"
+                ]
+              ]
+            },
+            {
+              "id": "financial-summary-v1",
+              "type": "table",
+              "text": "No statutory tax rate or exemption has been determined",
+              "rows": [
+                [
+                  "Description",
+                  "Amount"
+                ],
+                [
+                  "Subtotal",
+                  "₦150.00"
+                ],
+                [
+                  "Draft total from supplied amounts",
+                  "₦150.00"
+                ]
+              ]
+            }
+          ],
+          "selectedClauses": [],
+          "formatting": {
+            "font": "serif",
+            "accent": "charcoal"
+          },
+          "financialInput": {
+            "kind": "quotation",
+            "lines": [
+              {
+                "description": "Synthetic work",
+                "quantity": "1.5",
+                "unitPriceKobo": "10000"
+              }
+            ],
+            "taxAmountKobo": null,
+            "taxLabel": "",
+            "discountKobo": null,
+            "amountDueKobo": null
+          }
+        }
+      },
+      "legacyHash": "b582cd3ad4b54f944c710d16ff9343073ab8a6ead4a38d02e74e118010f444d4"
+    },
+    {
+      "input": {
+        "title": "Synthetic manual draft",
+        "content": {
+          "fields": {
+            "issuerName": "",
+            "recipientName": "",
+            "documentNumber": "",
+            "issueDate": "",
+            "dueDate": "",
+            "notes": ""
+          },
+          "blocks": [
+            {
+              "id": "section-1",
+              "type": "paragraph",
+              "text": "User-provided synthetic test text",
+              "rows": []
+            },
+            {
+              "id": "financial-summary-v1",
+              "type": "table",
+              "text": "Calculated solely from your records. Confirm discrepancies with the customer; this is not verified payment evidence.",
+              "rows": [
+                [
+                  "Description",
+                  "Amount"
+                ],
+                [
+                  "Original invoice amount recorded",
+                  "₦100.00"
+                ],
+                [
+                  "Payment recorded: SYNTHETIC-PARTIAL (not verified)",
+                  "₦20.00"
+                ],
+                [
+                  "Total payments recorded (not verified)",
+                  "₦20.00"
+                ],
+                [
+                  "Amount recorded due",
+                  "₦80.00"
+                ]
+              ]
+            }
+          ],
+          "selectedClauses": [],
+          "formatting": {
+            "font": "sans",
+            "accent": "forest"
+          },
+          "financialInput": {
+            "kind": "payment_reminder",
+            "lines": [],
+            "taxAmountKobo": null,
+            "taxLabel": "",
+            "discountKobo": null,
+            "amountDueKobo": "8000",
+            "paymentRecord": {
+              "invoiceAmountKobo": "10000",
+              "payments": [
+                {
+                  "reference": "SYNTHETIC-PARTIAL",
+                  "amountKobo": "2000"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "legacyHash": "e39e0691d74d08883429e335bb875dc928ac4b706cabcad0430b7827fddf87e2"
+    },
+    {
+      "input": {
+        "title": "Synthetic variant 3",
+        "content": {
+          "fields": {
+            "issuerName": "",
+            "recipientName": "",
+            "documentNumber": "",
+            "issueDate": "",
+            "dueDate": "",
+            "notes": ""
+          },
+          "blocks": [
+            {
+              "id": "section-1",
+              "type": "paragraph",
+              "text": "User-provided synthetic test text",
+              "rows": []
+            },
+            {
+              "id": "financial-summary-v1",
+              "type": "table",
+              "text": "Calculated solely from your records. Confirm discrepancies with the customer; this is not verified payment evidence.",
+              "rows": [
+                [
+                  "Description",
+                  "Amount"
+                ],
+                [
+                  "Original invoice amount recorded",
+                  "₦100.00"
+                ],
+                [
+                  "Payment recorded: SYNTHETIC-PARTIAL (not verified)",
+                  "₦20.00"
+                ],
+                [
+                  "Total payments recorded (not verified)",
+                  "₦20.00"
+                ],
+                [
+                  "Amount recorded due",
+                  "₦80.00"
+                ]
+              ]
+            }
+          ],
+          "selectedClauses": [],
+          "formatting": {
+            "font": "serif",
+            "accent": "charcoal"
+          },
+          "financialInput": {
+            "kind": "payment_reminder",
+            "lines": [],
+            "taxAmountKobo": null,
+            "taxLabel": "",
+            "discountKobo": null,
+            "amountDueKobo": "8000",
+            "paymentRecord": {
+              "invoiceAmountKobo": "10000",
+              "payments": [
+                {
+                  "reference": "SYNTHETIC-PARTIAL",
+                  "amountKobo": "2000"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "legacyHash": "5a4ac80db794d466904e8d4c8532d9f1200efe9f3bb92ffd9f0cfdde365d12c7"
+    },
+    {
+      "input": {
+        "title": "Synthetic manual draft",
+        "content": {
+          "fields": {
+            "issuerName": "",
+            "recipientName": "",
+            "documentNumber": "",
+            "issueDate": "",
+            "dueDate": "",
+            "notes": ""
+          },
+          "blocks": [
+            {
+              "id": "section-1",
+              "type": "paragraph",
+              "text": "User-provided synthetic test text",
+              "rows": []
+            },
+            {
+              "id": "financial-items-v1",
+              "type": "table",
+              "text": "Supplied line items; each line rounded half-up to one kobo",
+              "rows": [
+                [
+                  "Description",
+                  "Quantity",
+                  "Unit price",
+                  "Line total"
+                ],
+                [
+                  "Synthetic work",
+                  "1.5",
+                  "₦100.00",
+                  "₦150.00"
+                ]
+              ]
+            },
+            {
+              "id": "financial-summary-v1",
+              "type": "table",
+              "text": "No statutory tax rate or exemption has been determined",
+              "rows": [
+                [
+                  "Description",
+                  "Amount"
+                ],
+                [
+                  "Subtotal",
+                  "₦150.00"
+                ],
+                [
+                  "Draft total from supplied amounts",
+                  "₦150.00"
+                ]
+              ]
+            }
+          ],
+          "selectedClauses": [],
+          "formatting": {
+            "font": "sans",
+            "accent": "forest"
+          },
+          "financialInput": {
+            "kind": "business_proposal",
+            "lines": [
+              {
+                "description": "Synthetic work",
+                "quantity": "1.5",
+                "unitPriceKobo": "10000"
+              }
+            ],
+            "taxAmountKobo": null,
+            "taxLabel": "",
+            "discountKobo": null,
+            "amountDueKobo": null
+          }
+        }
+      },
+      "legacyHash": "e2f8a6dc4e1f22c4aa190c3d4f0e019e86cccb157d49746e0d344dc7473fd11a"
+    },
+    {
+      "input": {
+        "title": "Synthetic variant 4",
+        "content": {
+          "fields": {
+            "issuerName": "",
+            "recipientName": "",
+            "documentNumber": "",
+            "issueDate": "",
+            "dueDate": "",
+            "notes": ""
+          },
+          "blocks": [
+            {
+              "id": "section-1",
+              "type": "paragraph",
+              "text": "User-provided synthetic test text",
+              "rows": []
+            },
+            {
+              "id": "financial-items-v1",
+              "type": "table",
+              "text": "Supplied line items; each line rounded half-up to one kobo",
+              "rows": [
+                [
+                  "Description",
+                  "Quantity",
+                  "Unit price",
+                  "Line total"
+                ],
+                [
+                  "Synthetic work",
+                  "1.5",
+                  "₦100.00",
+                  "₦150.00"
+                ]
+              ]
+            },
+            {
+              "id": "financial-summary-v1",
+              "type": "table",
+              "text": "No statutory tax rate or exemption has been determined",
+              "rows": [
+                [
+                  "Description",
+                  "Amount"
+                ],
+                [
+                  "Subtotal",
+                  "₦150.00"
+                ],
+                [
+                  "Draft total from supplied amounts",
+                  "₦150.00"
+                ]
+              ]
+            }
+          ],
+          "selectedClauses": [],
+          "formatting": {
+            "font": "serif",
+            "accent": "charcoal"
+          },
+          "financialInput": {
+            "kind": "business_proposal",
+            "lines": [
+              {
+                "description": "Synthetic work",
+                "quantity": "1.5",
+                "unitPriceKobo": "10000"
+              }
+            ],
+            "taxAmountKobo": null,
+            "taxLabel": "",
+            "discountKobo": null,
+            "amountDueKobo": null
+          }
+        }
+      },
+      "legacyHash": "fa98d950d18c7f5d13f0cbf87291eb347a8b57a0adf93af1a39e673dfb7f4138"
+    }
+  ],
+  "profiles": [
+    {
+      "input": {
+        "expectedRevision": 0,
+        "profile": {
+          "businessName": "Synthetic development business",
+          "legalForm": "unknown",
+          "registrationStatus": "unknown",
+          "activities": [
+            "unknown"
+          ],
+          "state": "unknown",
+          "lga": "",
+          "employees": "unknown",
+          "turnoverBand": "unknown",
+          "turnoverYear": "unknown",
+          "turnoverMetric": "unknown",
+          "turnoverCurrency": "unknown",
+          "premises": "unknown",
+          "manufacturing": "unknown",
+          "importing": "unknown",
+          "personalData": "unknown",
+          "marketingConsent": false
+        }
+      },
+      "legacyHash": "ce4003fe598fbee616bdc7e50dc7ecce911e7527bc8f6e47fd13be441191ef1e"
+    },
+    {
+      "input": {
+        "expectedRevision": 2,
+        "profile": {
+          "businessName": "Synthetic development business",
+          "legalForm": "unknown",
+          "registrationStatus": "unknown",
+          "activities": [
+            "unknown"
+          ],
+          "state": "Lagos",
+          "lga": "",
+          "employees": "unknown",
+          "turnoverBand": "unknown",
+          "turnoverYear": "unknown",
+          "turnoverMetric": "unknown",
+          "turnoverCurrency": "unknown",
+          "premises": "unknown",
+          "manufacturing": "unknown",
+          "importing": "unknown",
+          "personalData": "unknown",
+          "marketingConsent": true
+        }
+      },
+      "legacyHash": "0629f91ddc0f054663571e87299834dfe5c94308455116d326ce78c1f679a805"
+    }
+  ]
+}

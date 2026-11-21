@@ -1,0 +1,157 @@
+
+> @workspace/api-server@0.0.0 test:valo-paystack-http /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development tsx --test src/lib/valo-paystack-http.integration.test.ts
+
+▶ isolated real HTTP signature/durability controls — synthetic signing key, NOT Paystack delivery
+  ✔ missing, altered, replayed, malformed and legacy-only signatures fail before persistence (128.576199ms)
+[13:24:05.180] [33mWARN[39m (78554):
+    [35mreq[39m: {
+      "id": 1,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mevent[39m: "payment.signature_rejected"
+[13:24:05.183] [32mINFO[39m (78554): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 1,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mres[39m: {
+      "statusCode": 401
+    }
+    [35mresponseTime[39m: 5
+[13:24:05.212] [33mWARN[39m (78554):
+    [35mreq[39m: {
+      "id": 2,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mevent[39m: "payment.signature_rejected"
+[13:24:05.213] [32mINFO[39m (78554): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 2,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mres[39m: {
+      "statusCode": 401
+    }
+    [35mresponseTime[39m: 2
+[13:24:05.223] [33mWARN[39m (78554):
+    [35mreq[39m: {
+      "id": 3,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mevent[39m: "payment.signature_rejected"
+[13:24:05.224] [32mINFO[39m (78554): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 3,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mres[39m: {
+      "statusCode": 401
+    }
+    [35mresponseTime[39m: 1
+[13:24:05.229] [33mWARN[39m (78554):
+    [35mreq[39m: {
+      "id": 4,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mevent[39m: "payment.signature_rejected"
+[13:24:05.230] [32mINFO[39m (78554): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 4,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mres[39m: {
+      "statusCode": 401
+    }
+    [35mresponseTime[39m: 1
+[13:24:05.237] [33mWARN[39m (78554):
+    [35mreq[39m: {
+      "id": 5,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mevent[39m: "payment.signature_rejected"
+[13:24:05.238] [32mINFO[39m (78554): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 5,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mres[39m: {
+      "statusCode": 401
+    }
+    [35mresponseTime[39m: 1
+  ✔ correct raw bytes persist a minimal event before acknowledgement; delivery retry is duplicate (358.509105ms)
+Attention: Clerk collects telemetry data from its SDKs when connected to development instances.
+The data collected is used to inform Clerk's product roadmap.
+To learn more, including how to opt-out from the telemetry program, visit: https://clerk.com/docs/telemetry.
+
+  ✔ hostile compressed webhook input is rejected and the same server remains alive (23.385974ms)
+  ✔ raw webhook route does not bypass normal private authentication (26.661559ms)
+✔ isolated real HTTP signature/durability controls — synthetic signing key, NOT Paystack delivery (556.211725ms)
+[13:24:05.618] [32mINFO[39m (78554): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 6,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 339
+[13:24:05.628] [32mINFO[39m (78554): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 7,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 5
+[13:24:05.639] [32mINFO[39m (78554): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 8,
+      "method": "POST",
+      "url": "/api/webhooks/paystack"
+    }
+    [35mres[39m: {
+      "statusCode": 415
+    }
+    [35mresponseTime[39m: 1
+[13:24:05.654] [32mINFO[39m (78554): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 9,
+      "method": "GET",
+      "url": "/api/healthz"
+    }
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 12
+[13:24:05.681] [32mINFO[39m (78554): [36mrequest completed[39m
+    [35mreq[39m: {
+      "id": 10,
+      "method": "GET",
+      "url": "/api/workspace/purchases"
+    }
+    [35mres[39m: {
+      "statusCode": 401
+    }
+    [35mresponseTime[39m: 22
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5210.261001

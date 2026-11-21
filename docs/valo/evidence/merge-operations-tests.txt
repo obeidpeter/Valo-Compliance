@@ -1,0 +1,21 @@
+
+> @workspace/api-server@0.0.0 test:valo-operations /home/runner/workspace/artifacts/api-server
+> tsx --test src/lib/http-logging.test.ts src/lib/valo-operations.test.ts src/lib/valo-recovery-effects.test.ts src/lib/valo-reminder-resend.test.ts
+
+✔ real HTTP request, parser and application error logs omit private markers but retain correlation/status (106.203377ms)
+✔ operator report names reject traversal and non-integer versions (1.350367ms)
+✔ internal probes measure failures independently and persist/deduplicate/recover alerts without transports (159.438442ms)
+✔ recovery blocks actual charge/refund provider boundaries before transport or credential lookup (13.338687ms)
+✔ real sending is disabled without complete development-only settings (1.326077ms)
+✔ only the selected verified workspace owner's allowlisted email can reach transport (0.858082ms)
+✔ controlled acceptance preserves one bounded provider key and minimal stable body, not inbox delivery (6.87492ms)
+✔ controlled provider rate failure, oversized data and invalid acknowledgement never become accepted (3.566207ms)
+✔ every nonempty deployment marker and production reject before transport, including after sender construction (1.414076ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4576.264779

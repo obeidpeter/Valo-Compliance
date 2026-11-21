@@ -1,0 +1,62 @@
+{
+  "recordedAt": "2026-11-13T17:33:48.309Z",
+  "scope": "Synthetic development increment; not P0 or R1 acceptance",
+  "sourceHashes": "8d4cd94bd261058159c11db079198102e51557d66c053773dd2c916fa41106c2  artifacts/api-server/src/app.ts\n831dbb3144c9b2b4cd493c045beab90be109cd8eb1b662137969af6272b89770  artifacts/api-server/src/routes/valo.ts\n49c2eeaa8a0c77e7f9ab9c9d4d75b51f039eae272b47504a84a4b3be69aa2ca7  artifacts/api-server/src/middlewares/valo-identity.ts\n63ac54a0f327bdbefcb771e490bb115fd770f3ae9142ac6f812681610aa84d88  artifacts/api-server/src/lib/valo-store.ts\n32857110a1f280fa3c7e4f6fe53067195cfb07ae357f017537787d5aa5c12efc  artifacts/api-server/src/lib/valo-validation.test.ts\n0907ef29bff8ab106d276070e47ba2999b718da085c372b8e8ae5bade217d1fc  artifacts/api-server/src/lib/valo-store.integration.test.ts\n1c76cbb0727431a4cbecb0b34746453dad537a4d8b26e6d0fb8ac7ef30762f32  artifacts/api-server/src/lib/valo-http.test.ts\n29adb1baf737e6b9685fda3115301f0a31384f99e91ea70f169678e9e8eb4d44  artifacts/valo/next.config.mjs\n1d27bca5f74cdb703b3588c381c684c3fb30c7824ffbc5a8929843408be3bf0b  artifacts/valo/src/screens/document-editor.tsx\n42f1ea74a0e3ccfe9d2bd76f3566f0813600a4aa41868c751f89ce19dc199acd  artifacts/valo/src/screens/development.tsx\nba6955f65de5f7254941e6a24a3781d1f88874c6cb2cf76320d27921d301704b  lib/api-spec/openapi.yaml\n192746894e07acc770d04ee7c9677709d2a1bc04aaad44e025bf9cd8cb8953ef  lib/valo-core/src/traceability.ts\n355834ad76a024abef5bfd3c04c015e19b0d282b3e57f83996b31660a33cd623  lib/valo-core/src/specification.generated.ts\n4c5c644af1a315c058ae151448b5fb22e76909fc2b4f112874be8772b781e403  lib/valo-core/src/content-register.generated.ts\n8f8df7e4affea9f8889f54288d3fd79cbdcaaf912069243637ea1cfe982e4951  lib/db/drizzle/0000_valo_p0.sql\n",
+  "checks": [
+    {
+      "name": "typecheck",
+      "command": "pnpm run typecheck",
+      "observedResult": "pass",
+      "runnerReportedTests": null,
+      "rawOutput": "\n> workspace@0.0.0 typecheck /home/runner/workspace\n> pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck\n\n\n> workspace@0.0.0 typecheck:libs /home/runner/workspace\n> tsc --build\n\nScope: 4 of 10 workspace projects\nartifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/valo typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck: Done\nartifacts/api-server typecheck: Done\nartifacts/mockup-sandbox typecheck: Done\nartifacts/valo typecheck: Done\n"
+    },
+    {
+      "name": "foundation",
+      "command": "pnpm --filter @workspace/scripts test:valo",
+      "observedResult": "pass",
+      "runnerReportedTests": 52,
+      "rawOutput": "\n> @workspace/scripts@0.0.0 test:valo /home/runner/workspace/scripts\n> tsx --test ./src/valo/*.test.ts\n\n✔ canonical hashing is property-order independent (3.919742ms)\n✔ complete synthetic attestations establish eligibility, never publication (6.392184ms)\n✔ holds changed body (2.477047ms)\n✔ holds changed applicability scope (1.751987ms)\n✔ holds changed assumptions (7.804963ms)\n✔ holds changed claim wording (3.725996ms)\n✔ holds changed content version (2.152474ms)\n✔ holds changed source-check date (1.819095ms)\n✔ holds changed source text (4.135965ms)\n✔ holds policy not approved (4.351413ms)\n✔ holds policy changed after binding (1.30238ms)\n✔ holds jurisdiction outside policy (0.590875ms)\n✔ holds risk outside policy (2.827766ms)\n✔ holds unresolved contract clause (0.592107ms)\n✔ holds missing evidence (0.447073ms)\n✔ holds future source check (0.592549ms)\n✔ holds unknown rights (0.559656ms)\n✔ holds no commercial-use rights (1.16922ms)\n✔ holds withdrawn manifest (0.822076ms)\n✔ holds source hostname suffix attack (1.693916ms)\n✔ holds source credentials attack (1.552635ms)\n✔ holds source HTTP (3.227594ms)\n✔ holds held operative text (0.726963ms)\n✔ holds unresolved amendments (0.571832ms)\n✔ holds expired evidence (0.53903ms)\n✔ holds historical concession (0.471218ms)\n✔ holds wrong source jurisdiction (0.384361ms)\n✔ holds fabricated quote (0.293947ms)\n✔ holds invented numerical claim (0.837659ms)\n✔ holds review reuses draft run (0.352177ms)\n✔ holds missing challenge review (0.337226ms)\n✔ holds review disagreement (0.56201ms)\n✔ holds review saw other verdict (0.898162ms)\n✔ holds stale review (0.583165ms)\n✔ holds failed deterministic arithmetic (0.44669ms)\n✔ holds missing deterministic check (2.611708ms)\n✔ holds missing PDF (0.362741ms)\n✔ holds PDF missing disclosure (0.964789ms)\n✔ holds PDF bound to old version (0.598191ms)\n✔ holds forged rights binding (0.415001ms)\n✔ enhanced content requires every controlling-text check (1.894589ms)\n✔ empty or untyped input holds instead of throwing (1.426733ms)\n✔ unknown schema fields cannot smuggle an override (1.156105ms)\n✔ invalid server clock holds (1.155038ms)\n✔ baseline preserves all 40 original identifiers and exact capability counts (1.338328ms)\n✔ inventory metadata never counts as published content (0.170758ms)\n✔ missing formal requirements remain explicit and uninvented (0.997569ms)\n✔ 27 mappings, 79 held source rows and the SCUML alias remain distinct from publication (0.296515ms)\n✔ implementation path alone never verifies a requirement (0.205668ms)\n✔ passing test alone never verifies a requirement (0.81174ms)\n✔ a blocked gate cannot be accepted even with passing evidence (0.711558ms)\n✔ R2, launch, live commerce and real confidential data remain disabled (0.226188ms)\nℹ tests 52\nℹ suites 0\nℹ pass 52\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 776.180703\n"
+    },
+    {
+      "name": "input validation",
+      "command": "pnpm --filter @workspace/api-server test:valo",
+      "observedResult": "pass",
+      "runnerReportedTests": 8,
+      "rawOutput": "\n> @workspace/api-server@0.0.0 test:valo /home/runner/workspace/artifacts/api-server\n> tsx --test src/lib/valo-validation.test.ts\n\n✔ all 36 states and FCT are allowed without inventing nationwide rules (5.835968ms)\n✔ profile unknown, unanswered and false remain distinct; marketing is optional (0.859474ms)\n✔ profile rejects invented state, blank name and fractional revision (4.595184ms)\n✔ incomplete manual drafts persist without invented names or dates (1.419069ms)\n✔ impossible and reversed dates are rejected (3.168962ms)\n✔ arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted (1.011391ms)\n✔ updates require a positive integer expected revision (0.975463ms)\n✔ service enquiry consent cannot be assumed; support does not require sharing (0.396255ms)\nℹ tests 8\nℹ suites 0\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 650.162224\n"
+    },
+    {
+      "name": "PostgreSQL integration",
+      "command": "VALO_RUN_DB_TESTS=synthetic-development-only pnpm --filter @workspace/api-server test:valo-db",
+      "observedResult": "pass",
+      "runnerReportedTests": 8,
+      "rawOutput": "\n> @workspace/api-server@0.0.0 test:valo-db /home/runner/workspace/artifacts/api-server\n> tsx --test src/lib/valo-store.integration.test.ts\n\n▶ development PostgreSQL tenant, concurrency, history and durable-ticket proof\n  ✔ server membership resolution is idempotent and tenants are separate (12.009392ms)\n  ✔ profile correction appends history, preserves declined marketing and rejects stale saves (32.133662ms)\n  ✔ document and revision identifiers cannot expose a different tenant (9.979856ms)\n  ✔ two concurrent tabs produce exactly one new revision and one conflict (26.654663ms)\n  ✔ restore appends a new revision without rewriting the original (15.420447ms)\n  ✔ enquiry acknowledgement follows a durable save, not an appointment or email claim (13.051635ms)\n  ✔ suspended membership is not automatically restored (8.336673ms)\n✔ development PostgreSQL tenant, concurrency, history and durable-ticket proof (378.033266ms)\nℹ tests 8\nℹ suites 0\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2179.456065\n"
+    },
+    {
+      "name": "HTTP integration",
+      "command": "VALO_RUN_HTTP_TESTS=synthetic-development-only pnpm --filter @workspace/api-server test:valo-http",
+      "observedResult": "pass",
+      "runnerReportedTests": 8,
+      "rawOutput": "\n> @workspace/api-server@0.0.0 test:valo-http /home/runner/workspace/artifacts/api-server\n> tsx --test src/lib/valo-http.test.ts\n\n▶ running development HTTP API fails closed and reports factual release status\n  ✔ published search excludes all held templates and private documents (158.597604ms)\n  ✔ release status does not accept P0, R2 or live payments (26.115021ms)\n  ✔ unauthenticated private endpoints reject reads without shared-cache retention (28.746435ms)\n  ✔ cross-origin and missing-origin mutations are rejected before any save (27.323875ms)\n  ✔ same-origin does not bypass identity verification (10.593301ms)\n  ✔ the detailed matrix retains all exact criteria without marking them accepted (34.153828ms)\n  ✔ content traceability does not promote research inventory to publications (18.749277ms)\n✔ running development HTTP API fails closed and reports factual release status (309.036535ms)\nℹ tests 8\nℹ suites 0\nℹ pass 8\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 729.983706\n"
+    },
+    {
+      "name": "Next.js production build",
+      "command": "pnpm --filter @workspace/valo run build",
+      "observedResult": "pass",
+      "runnerReportedTests": null,
+      "rawOutput": "\n> @workspace/valo@0.0.0 build /home/runner/workspace/artifacts/valo\n> next build\n\n   ▲ Next.js 15.5.29\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 9.3s\n   Linting and checking validity of types ...\n   Collecting page data ...\n   Generating static pages (0/3) ...\n ✓ Generating static pages (3/3)\n   Finalizing page optimization ...\n   Collecting build traces ...\n\nRoute (app)                                 Size  First Load JS\n┌ ○ /_not-found                            998 B         104 kB\n└ ƒ /[[...slug]]                         1.34 kB         104 kB\n+ First Load JS shared by all             103 kB\n  ├ chunks/786-7f3cfc83f3dc7457.js       46.3 kB\n  ├ chunks/f0943945-0282d7bc5ab078dc.js  54.2 kB\n  └ other shared chunks (total)          2.02 kB\n\n\n○  (Static)   prerendered as static content\nƒ  (Dynamic)  server-rendered on demand\n\n"
+    }
+  ],
+  "formalEvaluations": {
+    "rule": 0,
+    "customerAi": 0,
+    "editorial": 0
+  },
+  "limitations": [
+    "Database and HTTP runner counts include a parent test: seven PostgreSQL scenarios and seven HTTP scenarios, not eight distinct cases each.",
+    "Database and validation runs preceded the specification intake; their tested service and validation code is unchanged.",
+    "No authenticated customer browser session, recovery, staff MFA, private export, disaster recovery, actual AI editorial provider run, full R1 acceptance or R2 execution proved.",
+    "Screenshot browser is signed out. Production deployment compatibility not proved.",
+    "Current source and expanded CI are not uploaded because latest repository metadata reported public visibility.",
+    "A capture-browser development hot-reload WebSocket warning was observed; rendered screens loaded and production build passed."
+  ]
+}

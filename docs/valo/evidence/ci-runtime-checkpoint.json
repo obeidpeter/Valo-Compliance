@@ -1,0 +1,127 @@
+{
+  "recordedAt": "2026-11-14T19:54:03.859Z",
+  "parentRevision": "59e362ff9eba526f0262d4029c1d3979894ef0f0",
+  "scope": "Application error-handler isolation and working fail-closed merge checks",
+  "applicationBehavior": [
+    "Production error handler is imported independently of database, identity and provider initialization; HTTP status/retry/private-log behavior preserved"
+  ],
+  "changes": [
+    "Pinned GitHub action revisions resolved from actual tags",
+    "Real static scan JSON files and sanitized fail-closed reports on startup failure",
+    "Seven-day package cooldown (npm days / pnpm minutes), no-downgrade trust and exotic-transitive restrictions"
+  ],
+  "checks": [
+    {
+      "label": "operations without DATABASE_URL",
+      "tests": 9,
+      "passed": 9,
+      "skipped": 0
+    },
+    {
+      "label": "actual isolated API parser and auth boundary",
+      "tests": 15,
+      "passed": 15,
+      "skipped": 0
+    },
+    {
+      "label": "engineering plus six scanner-driver fault injections",
+      "tests": 174,
+      "passed": 174,
+      "skipped": 0
+    },
+    {
+      "label": "API aggregate",
+      "tests": 173,
+      "passed": 172,
+      "skipped": 1
+    },
+    {
+      "label": "workspace typecheck",
+      "tests": 0,
+      "passed": 0,
+      "skipped": 0
+    },
+    {
+      "label": "frozen installation",
+      "tests": 0,
+      "passed": 0,
+      "skipped": 0
+    }
+  ],
+  "knownLimits": [
+    "Not full R1/R2 or source/editorial/customer-AI acceptance",
+    "Previous separate native static finding remains for independent assessment",
+    "94 retained synthetic receipt-outbox gaps not repaired",
+    "New GitHub CI execution pending push"
+  ],
+  "realProviderGenerationCases": 0,
+  "launchEnabled": false,
+  "livePaymentsEnabled": false,
+  "realStaticScan": {
+    "phase": "repository",
+    "canaryDetected": true,
+    "exitCode": 0,
+    "passed": true,
+    "source": "Semgrep p/ci plus committed Valo rules; raw source/matches excluded",
+    "findings": [],
+    "errors": []
+  },
+  "actionPins": [
+    {
+      "action": "actions/checkout",
+      "sha": "11d5960a326750d5838078e36cf38b85af677262",
+      "tag": "v4"
+    },
+    {
+      "action": "actions/setup-node",
+      "sha": "49933ea5288caeca8642d1e84afbd3f7d6820020",
+      "tag": "v4"
+    },
+    {
+      "action": "actions/setup-go",
+      "sha": "40f1582b2485089dde7abd97c1529aa768e1baff",
+      "tag": "v5"
+    },
+    {
+      "action": "actions/setup-python",
+      "sha": "a26af69be951a213d495a4c3e4e4022e16d87065",
+      "tag": "v5"
+    },
+    {
+      "action": "actions/upload-artifact",
+      "sha": "ea165f8d65b6e75b540449e92b4886f43607fa02",
+      "tag": "v4"
+    }
+  ],
+  "packagePolicyReference": "https://docs.npmjs.com/cli/v11/using-npm/config/#min-release-age",
+  "previousCi": [
+    {
+      "conclusion": "success",
+      "failedSteps": [],
+      "id": 132565188609,
+      "name": "Synthetic PostgreSQL isolation and concurrency"
+    },
+    {
+      "conclusion": "failure",
+      "failedSteps": [
+        "Check HTTP log privacy, internal alerts and recovery effects"
+      ],
+      "id": 132565188792,
+      "name": "Foundation typecheck and unit tests"
+    },
+    {
+      "conclusion": "failure",
+      "failedSteps": [
+        "Run canary and static security rules without cloud upload"
+      ],
+      "id": 132565188831,
+      "name": "Static security checks with detector canary"
+    },
+    {
+      "conclusion": "success",
+      "failedSteps": [],
+      "id": 132565188885,
+      "name": "Dependency and redacted secret checks on actual merges"
+    }
+  ]
+}

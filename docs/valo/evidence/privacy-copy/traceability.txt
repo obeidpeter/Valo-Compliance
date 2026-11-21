@@ -1,0 +1,19 @@
+✔ baseline preserves all 40 original identifiers and exact capability counts (1.631964ms)
+✔ inventory metadata never counts as published content (0.220904ms)
+✔ missing formal requirements remain explicit and uninvented (1.008218ms)
+✔ 27 mappings, 79 held source rows and the SCUML alias remain distinct from publication (0.4206ms)
+✔ implementation path alone never verifies a requirement (0.155941ms)
+✔ passing test alone never verifies a requirement (0.178388ms)
+✔ a blocked gate cannot be accepted even with passing evidence (0.314106ms)
+✔ R2, launch, live commerce and real confidential data remain disabled (0.263399ms)
+✔ partial execution bindings match the actual retained report bytes (167.905907ms)
+✔ all ten UAT packs and six original gate IDs remain unaccepted with exact release expectations (1.230235ms)
+✔ part three formal families preserve 51 exact criteria without expanding R3 scope (0.750609ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 515.939655

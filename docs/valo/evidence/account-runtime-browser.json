@@ -1,0 +1,54 @@
+{
+  "startedAt": "2026-11-14T18:47:55.240Z",
+  "controlledIdentity": true,
+  "controlledApi": true,
+  "realClerkSessions": 0,
+  "compiledProductCssSha256": "10dac434625f5226a90604144e05888f0aaa48d8f418486e8aaeb63bd5519e69",
+  "actualComponents": [
+    "screens/profile.tsx",
+    "screens/checker.tsx",
+    "components/account-state-boundary.tsx"
+  ],
+  "checks": [
+    "Legacy cache-only control reproduced copied A form state after identity B",
+    "Identity remount removed old profile fields before B form use",
+    "B profile submission contained no A form marker",
+    "Same-account rerender and cancelled routed navigation preserved unsaved profile",
+    "Late A save response after B switch did not update B profile or show saved toast",
+    "Mutation paused before dispatch was discarded, with zero sends, after account switch",
+    "Late old-account workspace response could not repopulate B form/cache",
+    "Public checker copied facts reset on controlled sign-out",
+    "Actual cross-tab BroadcastChannel session-end cleared an open prefilled public checker",
+    "Actual cross-tab session-end removed private profile and unsaved fields",
+    "Current API session loss scrubbed mounted private form before another workspace could use it",
+    "Controlled page lifecycle scrubbed private subtree and reloaded fresh form state",
+    "360px profile reflow and native keyboard focus advance passed"
+  ],
+  "status": "passed_controlled_component_regression_not_real_identity_acceptance",
+  "sourceHashes": [
+    {
+      "path": "artifacts/valo/src/components/account-state-boundary.tsx",
+      "sha256": "223ef52ed00158b9fcedf22f40d194b558b6c7dd745beb5ec317d6a774e74879"
+    },
+    {
+      "path": "artifacts/valo/src/components/account-epoch-context.ts",
+      "sha256": "88bb9eb2090fc8d31df572c6a248351fa204b97820145d8d89600bb4a4a597a1"
+    },
+    {
+      "path": "artifacts/valo/src/hooks/use-toast.ts",
+      "sha256": "86023ce9660cd8fd2e7d780b4eb147b0048fce4ed09f70dc1688e2aa1165ca95"
+    },
+    {
+      "path": "artifacts/valo/src/App.tsx",
+      "sha256": "d9d887c9afbdb0fae346d22998eed6a39408c1cd7985bbd8a0ddecdfecfbee6e"
+    },
+    {
+      "path": "artifacts/valo/src/screens/profile.tsx",
+      "sha256": "4eb035a203b7ebb90ed0763b4785ed3b77b16174dd6dc292855131ff6473ac6d"
+    },
+    {
+      "path": "artifacts/valo/src/screens/checker.tsx",
+      "sha256": "6e34188dfc06955c45746d7b294f3a50ee940c4e7f94a42c7742e052ab174707"
+    }
+  ]
+}

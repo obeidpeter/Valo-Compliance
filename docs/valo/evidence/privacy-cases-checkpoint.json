@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "a9eda0a1d374a286fa0532a8380da8485b016652",
+  "sourceFiles": [
+    {
+      "path": "artifacts/api-server/src/lib/valo-privacy.ts",
+      "sha256": "a406ea1a55bd45872b35ed07ac4d9e848f96d3d29308d17b3d34eccb84bb5bf3"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-privacy-state.ts",
+      "sha256": "d042131a84e66a2334bd948d15b898828ff91c778aed60cddad168a442635dd5"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-privacy-processing.ts",
+      "sha256": "43e4a30f7b3cb34b6549f903fb15f31fd70a9c003915824c1d627a7e097a6438"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-privacy-state.test.ts",
+      "sha256": "441688711baba00a60c7adf831d85e6867a99a078cfdd16ccf89a29f489cc440"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-customer-access.ts",
+      "sha256": "0b6a88e7a199f8b6b9f152cf4a47eb638e2a5f187dddb1f048835ab7a8fa4795"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/valo-store.ts",
+      "sha256": "72edd89c41eb13daaf2cb3656d193552dbd404deb5730ec70e39987537d7b9ee"
+    },
+    {
+      "path": "artifacts/api-server/src/routes/valo-customer-access.ts",
+      "sha256": "f246a159464611f2bfb58d2587ec84b7720c707f27348f773ea8b6f7ae9070b9"
+    },
+    {
+      "path": "artifacts/api-server/src/scripts/privacy-case-proof.ts",
+      "sha256": "a35097216318d7a276eb6d5a69c32eccf3fcb0eff9df0a08929863184e1ad8a0"
+    },
+    {
+      "path": "artifacts/api-server/src/scripts/customer-experience-journey.ts",
+      "sha256": "d8d7ca13bb32e234f2760ec3510340bc3f5e7907d22a9cc1c6154f1e03dcbfb8"
+    },
+    {
+      "path": "artifacts/api-server/src/scripts/apply-refund-lifecycle.ts",
+      "sha256": "5b964e432084a761ea83ae6d82cc09ccd0b215bad95bb180f52d209a47332b18"
+    },
+    {
+      "path": "artifacts/api-server/package.json",
+      "sha256": "b90745435978253ae5b8db4723cb108060fa5ca2b672f7f5520076ce5774b680"
+    },
+    {
+      "path": "artifacts/valo/src/components/privacy-cases.tsx",
+      "sha256": "937afeff3f03141770bc133eb5eab4ddc8975891d71a6a6ed6516c74a53d8a27"
+    },
+    {
+      "path": "artifacts/valo/src/screens/privacy-operations.tsx",
+      "sha256": "390829737ebf199f323c5c821475e01549ad0906c99cd6affbed1a5e92f305e9"
+    },
+    {
+      "path": "artifacts/valo/src/screens/account.tsx",
+      "sha256": "e00a8126912ee7f203b960be11dd92aa34bdc3b844f8fe56b1a8e4f5dd3be4b1"
+    },
+    {
+      "path": "artifacts/valo/src/screens/staff.tsx",
+      "sha256": "ab4a4fa309b34f0d81f7a91a580132882c002cc61d15c1cae9a8fa1334f628ff"
+    },
+    {
+      "path": "artifacts/valo/src/App.tsx",
+      "sha256": "6b59711bf0afb4548f14d8a17e675bcf6599bec4ca6ddde7966e7ccc010a1c8c"
+    },
+    {
+      "path": "lib/db/src/schema/valo-privacy.ts",
+      "sha256": "ad576637bee4188428026872a486029832e2ab7af0b9d62370f2a67c0513f4cb"
+    },
+    {
+      "path": "lib/db/src/schema/valo-support.ts",
+      "sha256": "8360004f3c447cb6fb29ba775490c04dc5d9df1211cd75a1b3a353a51e427501"
+    },
+    {
+      "path": "lib/db/src/schema/valo-customer-access.ts",
+      "sha256": "08c947c7ea51185f1bfe35a09c46d98888d443531f6f3c6a7e283b092b51fa3a"
+    },
+    {
+      "path": "lib/db/src/schema/index.ts",
+      "sha256": "14cdad7399d6ba20f7467c70c470cc66ae01c707adeb9624e65857babc063bca"
+    },
+    {
+      "path": "lib/db/drizzle/0017_privacy_cases.sql",
+      "sha256": "9b9b9133afb715f8d5457f4b8642686dd587855a292e4ba5df1126d6486993b1"
+    },
+    {
+      "path": "lib/db/drizzle/meta/_journal.json",
+      "sha256": "b878d1a160cb86dddced26f4f69d04703e3db91a57db031e8df333e4ee4a018f"
+    },
+    {
+      "path": "lib/api-spec/openapi.yaml",
+      "sha256": "0f56315128c97eed99999b0207026baef02bfe4f2df44f51b0a7d255976887bf"
+    }
+  ],
+  "checkedAt": "2026-11-14T16:09:36.969Z",
+  "environment": "synthetic-development-only",
+  "native": {
+    "checkedAt": "2026-11-14T16:05:16.885Z",
+    "checks": [
+      {
+        "name": "atomic_request_idempotency_and_payload_mismatch",
+        "status": "pass"
+      },
+      {
+        "name": "owner_verification_cancellation_history_and_stale_write",
+        "status": "pass"
+      },
+      {
+        "name": "tenant_substitution_and_revoked_membership_fail",
+        "status": "pass"
+      },
+      {
+        "name": "fresh_mfa_privacy_role_and_revocation_required",
+        "status": "pass"
+      },
+      {
+        "name": "unverified_hold_release_cannot_fake_verification_or_assignment",
+        "status": "pass"
+      },
+      {
+        "name": "scoped_export_result_is_real_private_repeatable_and_not_full_fulfilment",
+        "status": "pass"
+      },
+      {
+        "name": "actual_current_profile_correction_is_bound_and_history_preserved",
+        "status": "pass"
+      },
+      {
+        "name": "altered_state_or_audit_prevents_result_and_processing",
+        "status": "pass"
+      },
+      {
+        "name": "durable_request_limits_preserve_prior_work",
+        "status": "pass"
+      },
+      {
+        "name": "erasure_is_honestly_disabled_not_fabricated_as_complete",
+        "status": "pass"
+      }
+    ],
+    "passed": 10,
+    "failed": 0,
+    "cleanupErrors": 0,
+    "actualDevelopmentPostgres": true,
+    "staffMfaAndIdentity": "controlled domain fixtures, not real privileged Clerk sessions",
+    "realEmailSent": false,
+    "providerErasureExecuted": false,
+    "completePrivacyFulfilment": false
+  },
+  "browser": {
+    "checkedAt": "2026-11-14T16:08:41.030Z",
+    "syntheticDevelopmentOnly": true,
+    "checks": [
+      {
+        "name": "managed_verified_customer_can_open_private_routes",
+        "status": "pass"
+      },
+      {
+        "name": "controlled_support_display_preserves_mixed_full_messages_and_keyboard_mobile",
+        "status": "pass"
+      },
+      {
+        "name": "real_privacy_verification_cancellation_history_and_staff_denial",
+        "status": "pass"
+      },
+      {
+        "name": "real_private_privacy_request_reload_and_JSON_download",
+        "status": "pass"
+      }
+    ],
+    "guidedDetails": [],
+    "selection": "managed-identity-support-details-and-privacy-scope",
+    "actualManagedIdentityUsed": true,
+    "realEmailDeliveryClaimed": false,
+    "actualNewPublications": 0,
+    "fixtureDisclosure": "Actual managed synthetic customer verification, private routes, saved privacy ticket and workspace JSON download. The real staff API denied this customer. ONLY the staff display payload was intercepted with synthetic mixed request records for full-message, XSS, keyboard and mobile checks. No actual authorised staff/MFA session, privacy fulfilment, provider-wide export or erasure was proven. No messages sent.",
+    "r1Accepted": false,
+    "r2Accepted": false,
+    "cleanupErrors": 0,
+    "cleanup": "Owned synthetic identity and application rows removed; provider usage history untouched.",
+    "rawReportSha256": "07d408baf822069b626b110db18969bf8e5295063b8a08175d12986293f0e084"
+  },
+  "migration": {
+    "observedAt": "2026-11-14T15:51:18.453Z",
+    "tag": "0017_privacy_cases",
+    "sqlHash": "9b9b9133afb715f8d5457f4b8642686dd587855a292e4ba5df1126d6486993b1",
+    "applied": true,
+    "before": [
+      {
+        "refunds": 55
+      }
+    ],
+    "after": [
+      {
+        "refunds": 55
+      }
+    ],
+    "legacyAmountsInferred": false,
+    "baselineAdopted": false,
+    "productionApplied": false
+  },
+  "regression": {
+    "records": 154,
+    "passed": 153,
+    "failed": 0,
+    "skipped": 1,
+    "logPath": "docs/valo/evidence/privacy-cases-api.raw.txt",
+    "sha256": "4054d17085a21aff7cb57adee8c6e50f32dab641d9e23bee3c6bbedd91c71bcc"
+  },
+  "stateControls": {
+    "records": 4,
+    "passed": 4,
+    "failed": 0,
+    "logPath": "docs/valo/evidence/privacy-cases-state.raw.txt",
+    "sha256": "359f4045ae42b1eb2a0f43d1813abae4eef4f18640c5115223531c051578dd08",
+    "overlapsRegression": true
+  },
+  "typecheck": {
+    "result": "pass",
+    "log": "\n> workspace@0.0.0 typecheck /home/runner/workspace\n> pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck\n\n\n> workspace@0.0.0 typecheck:libs /home/runner/workspace\n> tsc --build\n\nScope: 4 of 11 workspace projects\nartifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/valo typecheck$ tsc -p tsconfig.json --noEmit\nartifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck$ tsc -p tsconfig.json --noEmit\nscripts typecheck: Done\nartifacts/mockup-sandbox typecheck: Done\nartifacts/valo typecheck: Done\nartifacts/api-server typecheck: Done\n",
+    "sha256": "3ea0d0f3c5f1f24533cf03827c5c3203fe3c21ff67a444ea0a36406b670ec2bc"
+  },
+  "working": [
+    "Atomic idempotent requests with durable support limits; explicit owner verification and cancellation.",
+    "Tenant-scoped processing history, version conflicts, keyed state/audit integrity and private prepared results.",
+    "Separate privacy-role/fresh-MFA-gated assignment and staff operations; real role/MFA authentication remains unproved.",
+    "Actual named-section JSON preparation and actual current-profile revision outcomes, both explicitly partial."
+  ],
+  "notImplemented": [
+    "Resumable erasure and application/provider deletion.",
+    "Operational deletion tombstones and restore reapplication; a table alone is not a working process.",
+    "Coordinated provider-wide export/correction and approved retention/hold handling."
+  ],
+  "boundaries": {
+    "completePrivacyFulfilment": false,
+    "realPrivilegedClerkSession": false,
+    "realProviderErasure": false,
+    "emailSent": false,
+    "paymentProviderExecuted": false,
+    "newEligiblePublications": 0,
+    "R1Accepted": false,
+    "R2Accepted": false,
+    "sourceRule80Accepted": false,
+    "customerAI60Accepted": false,
+    "editorial60Accepted": false,
+    "livePaymentsEnabled": false,
+    "publicLaunchEnabled": false
+  }
+}

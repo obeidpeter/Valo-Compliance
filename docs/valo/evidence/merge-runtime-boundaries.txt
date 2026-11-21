@@ -1,0 +1,59 @@
+
+> @workspace/api-server@0.0.0 test:valo-runtime-boundaries /home/runner/workspace/artifacts/api-server
+> tsx --test src/lib/valo-development-runtime.test.ts src/lib/valo-request-scope.test.ts
+
+✔ explicit development only; empty markers are absent, every nonempty marker rejects (1.591906ms)
+▶ actual export entries and worker startup reject before database, queue or storage effects
+  ✔ {} (312.002167ms)
+  ✔ {"NODE_ENV":""} (227.868378ms)
+  ✔ {"NODE_ENV":"production"} (388.622629ms)
+  ✔ {"NODE_ENV":"test"} (316.290671ms)
+  ✔ {"NODE_ENV":"staging"} (129.159808ms)
+  ✔ {"NODE_ENV":"preview"} (197.286539ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT":"1"} (258.113443ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT":"true"} (189.684597ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT":"arbitrary-deployment"} (150.313124ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT":"0"} (110.185851ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT":"false"} (167.38208ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT":" "} (232.996802ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_ID":"1"} (142.348246ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_ID":"true"} (111.365859ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_ID":"arbitrary-deployment"} (109.621097ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_ID":"0"} (132.364931ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_ID":"false"} (112.862558ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_ID":" "} (138.425597ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_TYPE":"1"} (129.271682ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_TYPE":"true"} (118.408121ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_TYPE":"arbitrary-deployment"} (125.291279ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_TYPE":"0"} (177.004768ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_TYPE":"false"} (119.645086ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_TYPE":" "} (121.796562ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_REGION":"1"} (125.967261ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_REGION":"true"} (136.843286ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_REGION":"arbitrary-deployment"} (108.705736ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_REGION":"0"} (111.308853ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_REGION":"false"} (124.312622ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_REGION":" "} (121.428709ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_FUTURE_MARKER":"1"} (109.407094ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_FUTURE_MARKER":"true"} (120.354035ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_FUTURE_MARKER":"arbitrary-deployment"} (118.271138ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_FUTURE_MARKER":"0"} (131.296105ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_FUTURE_MARKER":"false"} (116.493345ms)
+  ✔ {"NODE_ENV":"development","REPLIT_DEPLOYMENT_FUTURE_MARKER":" "} (113.3048ms)
+✔ actual export entries and worker startup reject before database, queue or storage effects (6084.129028ms)
+▶ account transport boundaries
+  ✔ expired scope cannot dispatch a mutation (6.046784ms)
+  ✔ late A response after B installation is discarded even when transport ignores abort (63.242206ms)
+  ✔ late body parsing cannot return previous-account data (11.901122ms)
+  ✔ current 401 invalidates current UI scope once (3.279569ms)
+  ✔ late A 401 cannot invalidate B (0.514215ms)
+  ✔ caller cancellation composes with account cancellation without adding browser bearer credentials (0.41953ms)
+✔ account transport boundaries (140.483004ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 45
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6384.033906

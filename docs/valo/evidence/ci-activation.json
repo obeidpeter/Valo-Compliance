@@ -1,0 +1,142 @@
+{
+  "observedAt": "2026-11-13T16:58:52.668Z",
+  "repository": "obeidpeter/Valo-Compliance",
+  "featureBranch": "feature/valo-p0-foundation",
+  "sourceCommit": "ae1afe1acfc529b50cf347a2b682566b845da353",
+  "workflowPath": ".github/workflows/valo-foundation.yml",
+  "retry": {
+    "status": 201,
+    "successful": true
+  },
+  "completed": true,
+  "runs": [
+    {
+      "conclusion": "success",
+      "event": "push",
+      "id": 43467960153,
+      "jobs": [
+        {
+          "conclusion": "success",
+          "id": 132032047778,
+          "name": "Foundation typecheck and unit tests",
+          "steps": [
+            {
+              "conclusion": "success",
+              "name": "Set up job"
+            },
+            {
+              "conclusion": "success",
+              "name": "Check out source"
+            },
+            {
+              "conclusion": "success",
+              "name": "Set up Node"
+            },
+            {
+              "conclusion": "success",
+              "name": "Set up pinned pnpm"
+            },
+            {
+              "conclusion": "success",
+              "name": "Install locked dependencies"
+            },
+            {
+              "conclusion": "success",
+              "name": "Typecheck all source"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run foundation unit tests"
+            },
+            {
+              "conclusion": "success",
+              "name": "Print factual readiness"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Set up Node"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Check out source"
+            },
+            {
+              "conclusion": "success",
+              "name": "Complete job"
+            }
+          ]
+        }
+      ],
+      "sha": "ae1afe1acfc529b50cf347a2b682566b845da353",
+      "status": "completed",
+      "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43467960153"
+    },
+    {
+      "conclusion": "success",
+      "event": "pull_request",
+      "id": 43467960234,
+      "jobs": [
+        {
+          "conclusion": "success",
+          "id": 132032047843,
+          "name": "Foundation typecheck and unit tests",
+          "steps": [
+            {
+              "conclusion": "success",
+              "name": "Set up job"
+            },
+            {
+              "conclusion": "success",
+              "name": "Check out source"
+            },
+            {
+              "conclusion": "success",
+              "name": "Set up Node"
+            },
+            {
+              "conclusion": "success",
+              "name": "Set up pinned pnpm"
+            },
+            {
+              "conclusion": "success",
+              "name": "Install locked dependencies"
+            },
+            {
+              "conclusion": "success",
+              "name": "Typecheck all source"
+            },
+            {
+              "conclusion": "success",
+              "name": "Run foundation unit tests"
+            },
+            {
+              "conclusion": "success",
+              "name": "Print factual readiness"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Set up Node"
+            },
+            {
+              "conclusion": "success",
+              "name": "Post Check out source"
+            },
+            {
+              "conclusion": "success",
+              "name": "Complete job"
+            }
+          ]
+        }
+      ],
+      "sha": "ae1afe1acfc529b50cf347a2b682566b845da353",
+      "status": "completed",
+      "url": "https://github.com/obeidpeter/Valo-Compliance/actions/runs/43467960234"
+    }
+  ],
+  "requiredCheckSettingsChanged": false,
+  "mainProtectionEnforced": false,
+  "mainProtectionBasis": "Owner reported account-plan enforcement limitation; no plan or protection settings changed.",
+  "p0Accepted": false,
+  "r1Accepted": false,
+  "r2Unlocked": false
+}

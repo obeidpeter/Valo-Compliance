@@ -1,0 +1,18 @@
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (41.816644ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (50.335163ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (169.528606ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (302.365999ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (67.210684ms)
+  ✔ native private storage deletion and repeated late-write replay remove actual synthetic bytes (931.184044ms)
+  ✔ a cross-workspace key in a corrupted object journal is never deleted (24.903065ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (2.714681ms)
+✔ resumable physical development erasure with retained exclusions and replay (2091.637444ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6007.771131

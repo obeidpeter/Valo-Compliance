@@ -1,0 +1,50 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": [
+    "app/**/*",
+    "middleware.ts",
+    "next-env.d.ts",
+    "src/**/*",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".next",
+    "**/*.test.ts"
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "preserve",
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable"
+    ],
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "module": "esnext",
+    "types": [
+      "node"
+    ],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "strict": true,
+  },
+  "references": [
+    {
+      "path": "../../lib/api-client-react"
+    }
+  ]
+}

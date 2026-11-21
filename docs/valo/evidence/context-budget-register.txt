@@ -1,0 +1,12 @@
+{
+  "generatedAt": "2026-11-14T20:54:11.795Z",
+  "codeRevision": "f1be761690677ad54bc3763915cfe73cc77798a9",
+  "formalRequirements": 127,
+  "sourceRegister": "docs/registers/requirements.json",
+  "rowsWithPartialExecutionEvidence": 98,
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false,
+  "note": "Exact source requirements/criteria are preserved. Partial test evidence is not full requirement, gate or operational approval."
+}

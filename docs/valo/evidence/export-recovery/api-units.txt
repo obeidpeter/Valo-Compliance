@@ -1,0 +1,56 @@
+
+> @workspace/api-server@0.0.0 test:valo /home/runner/workspace/artifacts/api-server
+> tsx --test src/lib/valo-validation.test.ts src/lib/valo-quota.test.ts src/lib/valo-render.test.ts src/lib/valo-customer-ai.test.ts src/lib/valo-site-origin.test.ts src/lib/valo-catalogue.test.ts src/lib/valo-catalogue-pages.test.ts
+
+✔ fixed20-row catalogue contract: 45 items, page1 (1.210536ms)
+✔ fixed20-row catalogue contract: 45 items, page2 (0.136501ms)
+✔ fixed20-row catalogue contract: 45 items, page3 (0.082553ms)
+✔ fixed20-row catalogue contract: 45 items, page4 (0.073956ms)
+✔ fixed20-row catalogue contract: 40 items, page2 (0.13609ms)
+✔ fixed20-row catalogue contract: 0 items, page1 (0.071457ms)
+✔ synthetic already-eligible catalogue metadata produces nonzero counts, filters and pagination (0.660574ms)
+✔ rights applicability is evidence-dependent, not an unconditional development hold (6.51898ms)
+✔ invoice manual fallback preserves supplied facts without AI consent (6.587496ms)
+✔ quotation manual fallback preserves supplied facts without AI consent (1.536154ms)
+✔ payment_reminder manual fallback preserves supplied facts without AI consent (0.37997ms)
+✔ business_proposal manual fallback preserves supplied facts without AI consent (0.795033ms)
+✔ fractional quantity rounds once, without floating point (0.149805ms)
+✔ large kobo remains exact beyond Number precision (0.681334ms)
+✔ discount cannot exceed supplied subtotal (3.20178ms)
+✔ zero quantity is rejected rather than treated as missing or positive (0.675921ms)
+✔ AI requires separate notice acceptance; manual drafting remains independent (1.022836ms)
+✔ calendar errors and mismatched task schemas are rejected (0.585537ms)
+✔ missing facts are named, never invented (1.025296ms)
+✔ scope and permission injection are blocked across all four tasks (0.515737ms)
+✔ only bounded redacted selected notes enter model context (0.920123ms)
+✔ short identifiers cannot cascade replacement or expand model notes without bound (0.298619ms)
+✔ model cannot duplicate or omit a supplied note index (0.737684ms)
+✔ JSONB key-order reconstruction preserves new financial revision hashes (1.397448ms)
+✔ invalid provider structure gets one bounded retry, never fake success (3.621882ms)
+✔ injected transport outage preserves manual fallback without logging private input (0.330428ms)
+✔ fixture source hash identifies exactly sixty separate customer cases (2.664518ms)
+✔ retained real-provider payloads remain byte-reproducible after redaction hardening (132.213514ms)
+✔ quota defaults preserve the requested initial ceilings (1.77962ms)
+✔ quota subjects are pseudonymised, domain-separated and keyed (0.534317ms)
+✔ missing quota configuration fails rather than silently using memory or an unkeyed IP hash (1.101294ms)
+✔ controlled HTML treats markup, local-file and metadata addresses as inert text (2.375207ms)
+✔ DOCX contains editable OOXML, actual table cells, bullets, draft notice and naira (49.458887ms)
+✔ renderer rejects unknown formatting, arbitrary clause inputs and invalid dates (1.734069ms)
+✔ trusted site comes only from server configuration; production never falls back to a development hostname (0.692544ms)
+✔ origin comparison includes scheme, port and exact serialized origin (1.118961ms)
+✔ all 36 states and FCT are allowed without inventing nationwide rules (4.609187ms)
+✔ profile unknown, unanswered and false remain distinct; marketing is optional (0.846939ms)
+✔ profile rejects invented state, blank name and fractional revision (1.075856ms)
+✔ incomplete manual drafts persist without invented names or dates (1.079462ms)
+✔ impossible and reversed dates are rejected (3.770456ms)
+✔ arbitrary clauses, HTML nodes, network embeds and duplicate IDs are not accepted (1.034248ms)
+✔ updates require a positive integer expected revision (2.058076ms)
+✔ service enquiry consent cannot be assumed; support does not require sharing (0.414381ms)
+ℹ tests 44
+ℹ suites 0
+ℹ pass 44
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2802.049274

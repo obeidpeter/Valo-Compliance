@@ -1,0 +1,169 @@
+{
+  "checked_on": "2026-11-13",
+  "purpose": "Foundation implementation research; not a publication manifest or completed production compatibility proof",
+  "method": "Official primary-source searches and full-page/PDF text opens. Search snippets are discovery only. Excerpts below are short locators, not complete archived source snapshots.",
+  "publication_status": "All regulatory entries remain held until complete operative evidence, amendments, applicability, rights and independent review/deterministic gates pass.",
+  "sources": [
+    {
+      "id": "SV-001",
+      "title": "Replit deployment types",
+      "url": "https://docs.replit.com/features/publishing/deployment-types",
+      "reference": "turn2view4",
+      "availability": "page_text_retrieved",
+      "locator": "lines 225-264",
+      "excerpt": "One dedicated server that never sleeps",
+      "verified_notes": "Autoscale can reach zero instances when idle. Reserved VM supports web-server or background-worker configurations; Scheduled runs a timed command then stops. These establish available deployment options, not proof that Valo's proposed queue survives restart.",
+      "implementation_constraint": "Use a real durable queue and demonstrate worker restart behavior. Do not rely on a request-local timer or memory queue. Do not purchase or deploy paid resources without authorization."
+    },
+    {
+      "id": "SV-002",
+      "title": "Replit development and production databases",
+      "url": "https://docs.replit.com/features/data-and-storage/development-and-production",
+      "reference": "turn3view2",
+      "availability": "page_text_retrieved",
+      "locator": "lines 224-241",
+      "excerpt": "Agent can read it through a read replica but can’t change it",
+      "verified_notes": "Development and production are distinct databases. Agent modifies development; publishing applies schema changes. The actual provisioned database generation must be recorded. Current Helium and legacy Neon production-creation behavior differ.",
+      "implementation_constraint": "Never assume preview data/configuration equals production. Record environment identity and prove migration/recovery behavior on the configured database."
+    },
+    {
+      "id": "SV-003",
+      "title": "Replit publish database changes",
+      "url": "https://docs.replit.com/features/data-and-storage/publish-database-changes",
+      "reference": "turn3view0",
+      "availability": "page_text_retrieved",
+      "locator": "lines 224-237; 261-310",
+      "excerpt": "Validates the SQL against a copy of your production database.",
+      "verified_notes": "For managed databases Publish compares actual development/production schemas, generates SQL, resolves ambiguous renames, validates and applies changes. External databases use their own migration workflow. Manual production changes become part of later comparisons; migrations require review.",
+      "implementation_constraint": "Choose one controlled migration owner/path; avoid conflicting schema-push and application migrations. Record reviewed SQL and rollback evidence."
+    },
+    {
+      "id": "SV-004",
+      "title": "Replit unsupported database objects and RLS limitations",
+      "url": "https://docs.replit.com/help/troubleshooting/databases",
+      "reference": "turn5view0",
+      "availability": "page_text_retrieved",
+      "locator": "lines 41-74; 107-114",
+      "excerpt": "FORCE ROW LEVEL SECURITY isn’t copied.",
+      "verified_notes": "Publish does not copy domains, functions, procedures, triggers, grants or roles. RLS policies are copied with caveats: FORCE is omitted; role/function dependencies must exist; USING/WITH CHECK conditions need review. Some missing triggers/grants allow publishing to succeed while behavior changes.",
+      "implementation_constraint": "Prove pg-boss installation/upgrade and grants explicitly. Recheck actual production roles and tenant restrictions; table-owner connections can bypass non-FORCE RLS. App authorization remains mandatory. Any manual production bootstrap needs reviewed, authorized runbook."
+    },
+    {
+      "id": "SV-005",
+      "title": "Replit App Storage",
+      "url": "https://docs.replit.com/features/data-and-storage/object-storage",
+      "reference": "turn2view6",
+      "availability": "page_text_retrieved",
+      "locator": "lines 330-350",
+      "excerpt": "Each App Storage bucket is exclusive to the project where you create it.",
+      "verified_notes": "Buckets enforce private access, but the app must authorize every served file/signed URL. A bucket cannot attach to another project, even under the same account. Apps cannot manage bucket settings. Lifecycle rules, object versioning and retention policies are unsupported.",
+      "implementation_constraint": "A separate worker project cannot assume shared bucket access. Prove supported access or propose an approved adapter. Implement cleanup, deletion, immutable object references and backup/recreation in application operations. Private bucket alone does not prove tenant isolation."
+    },
+    {
+      "id": "SV-006",
+      "title": "Replit data recovery",
+      "url": "https://docs.replit.com/features/data-and-storage/data-recovery",
+      "reference": "turn3view5",
+      "availability": "page_text_retrieved",
+      "locator": "lines 225-276",
+      "excerpt": "Checkpoint rollback never touches your production database.",
+      "verified_notes": "Documentation lists default seven-day production PITR, up to 28 days on Pro/Teams/Enterprise. Scheduled backups are optional; they retain seven days on Core or up to 28 days on eligible higher plans. Scheduled backups can skip archived inactive databases. Code rollback and production-data restore are separate actions.",
+      "implementation_constraint": "TRD's proposed 35-day backup policy exceeds the documented native maximum; retain as an unresolved architecture/policy decision. Prove RPO/RTO in an isolated restore. Do not claim production recovery from a development checkpoint. No plan upgrade authorized."
+    },
+    {
+      "id": "SV-007",
+      "title": "Paystack webhooks",
+      "url": "https://paystack.com/docs/payments/webhooks/",
+      "reference": "turn2view7",
+      "availability": "page_text_retrieved",
+      "locator": "lines 135-151; 257-270; 337-346",
+      "excerpt": "Verify it on the raw request body before you process the event.",
+      "verified_notes": "Current signing mode uses Paystack-Signature, a whsec_ secret and HMAC SHA 512 over timestamp, a period and exact raw bytes. Reject timestamp skew beyond 300 seconds; compare signatures in constant time and support rotation entries. Legacy x-paystack-signature uses the API secret and no timestamp while the new mode is inactive. Retried/resend events can duplicate delivery.",
+      "implementation_constraint": "Configure the merchant's active signing mode explicitly. Once new mode is required, do not silently downgrade to legacy on a bad/missing new signature. Preserve raw bytes, durable validated-event deduplication and transactional fulfillment. Tests must cover clock window, rotation, malformed signatures and races."
+    },
+    {
+      "id": "SV-008",
+      "title": "Paystack verify payments",
+      "url": "https://paystack.com/docs/payments/verify-payments/",
+      "reference": "turn2view8",
+      "availability": "page_text_retrieved",
+      "locator": "lines 83-106; response fields lines 127-150",
+      "excerpt": "always confirm that you haven't already delivered value for that transaction",
+      "verified_notes": "Verification is a server request using transaction reference. Provider statuses include abandoned, failed, ongoing, pending, processing, queued, reversed and success. The response supplies domain, reference, amount and currency; API request success is distinct from transaction success.",
+      "implementation_constraint": "Match verified transaction to immutable order/environment/amount/currency/reference and use one idempotent settlement service for callbacks and webhooks. Browser success must not unlock content."
+    },
+    {
+      "id": "SV-009",
+      "title": "CAC official iCRP portal",
+      "url": "https://icrp.cac.gov.ng/",
+      "reference": "turn1view5",
+      "availability": "page_text_retrieved",
+      "locator": "lines 6-25; 39-43",
+      "excerpt": "Welcome to the Official Company Registration Portal",
+      "verified_notes": "Official service-discovery route and links to CAMA 2020, Companies Regulations 2021 and account creation were retrieved. An annual-returns system notice describes a dated portal availability limitation.",
+      "implementation_constraint": "Use for official-route discovery. Portal availability notices are not proof of entity-specific filing duties or deadlines. No legal applicability rule cleared."
+    },
+    {
+      "id": "SV-010",
+      "title": "Companies and Allied Matters Act 2020, official CAC-hosted Gazette PDF",
+      "url": "https://icrp.cac.gov.ng/assets/docs/CAMA-NOTE%20FINAL-FULL-VERSION.pdf",
+      "reference": "turn3view3",
+      "availability": "pdf_text_retrieved",
+      "locator": "PDF page 0 lines 0-9;528 total pages",
+      "excerpt": "Companies and Allied Matters Act, 2020",
+      "verified_notes": "The CAC-linked PDF opens with actual CAMA 2020 Gazette text. The retrieval title misleadingly says ELECTORAL (AMENDMENT) ACT 2015; document content identifies CAMA 2020. This is an example requiring content-based authority/title validation rather than trusting metadata.",
+      "implementation_constraint": "Retain actual bytes/hash and relevant operative provisions, check amendments/currentness, then run full EDP review before any rule publication. Full text availability is not a completed claim map or legal review."
+    },
+    {
+      "id": "SV-011",
+      "title": "Nigeria Data Protection Act 2023",
+      "url": "https://ndpc.gov.ng/wp-content/uploads/2024/03/Nigeria_Data_Protection_Act_2023.pdf",
+      "reference": "turn1view7",
+      "availability": "full_fetch_failed_403",
+      "locator": null,
+      "excerpt": null,
+      "verified_notes": "Official search result exposes an introductory excerpt, but direct full-text retrieval returned 403 Forbidden. This is discovery evidence only.",
+      "implementation_constraint": "Hold statutory privacy claims until operative authoritative text and any applicable amendments are retrieved and preserved. Do not reconstruct missing sections from model memory."
+    },
+    {
+      "id": "SV-012",
+      "title": "NDP Act General Application and Implementation Directive 2025",
+      "url": "https://ndpc.gov.ng/wp-content/uploads/2025/07/NDP-ACT-GAID-2025-MARCH-20TH.pdf",
+      "reference": "turn1view8",
+      "availability": "full_fetch_failed_403",
+      "locator": null,
+      "excerpt": null,
+      "verified_notes": "Official search index exposes contents headings, but direct full-text retrieval returned 403 Forbidden. No registration/audit/transfer rule has been validated.",
+      "implementation_constraint": "Hold related guidance and numeric/filing rules pending authoritative operative evidence. An index title cannot pass EDP-002."
+    },
+    {
+      "id": "SV-013",
+      "title": "Nigeria Tax Administration Act 2025",
+      "url": "https://www.nrs.gov.ng/uploads/NIGERIA_TAX_ADMINISTRATION_ACT_2025_8c945071a7.pdf",
+      "reference": "turn1view9",
+      "availability": "full_fetch_failed_tool_size_limit",
+      "locator": null,
+      "excerpt": null,
+      "verified_notes": "Official search index exposes partial text. Full open failed because the PDF is 27,677,259 bytes and exceeds this retrieval tool's size limit. This does not prove the source itself is unavailable.",
+      "implementation_constraint": "Retrieve authoritative bytes through a supported document ingestion route; inspect operative text, amendments and current effective periods before tax rules. Do not use search snippets to publish obligations."
+    },
+    {
+      "id": "SV-014",
+      "title": "NAFDAC MSME guidance index",
+      "url": "https://nafdac.gov.ng/our-services/msme/",
+      "reference": "turn1view6",
+      "availability": "page_text_retrieved_followup_timeout",
+      "locator": "lines 28-48 and tariff section",
+      "excerpt": "Guidelines For Establishment Of Cottage And Kitchen Scale Food Industries",
+      "verified_notes": "Official page provides product/facility guideline links. The tariff section expressly concerns a reduced tariff lasting three months from 15 May 2020. Follow-up fetches timed out, although the initial page text and subsequent official search result were retrieved.",
+      "implementation_constraint": "Suitable discovery route for narrower instruments. Do not treat historical tariffs as current fees, or every SME as within NAFDAC product scope. Preserve separate guideline evidence before content/rule publication."
+    }
+  ],
+  "priority_decisions": [
+    "Confirm configured Paystack signing mode and merchant test credentials without putting secrets in prompts.",
+    "Prove worker access to the chosen private-storage and queue architecture; separate projects cannot assume shared App Storage buckets.",
+    "Prove managed Publish versus pg-boss functions/grants/roles compatibility and tenant isolation in production-shaped staging.",
+    "Resolve 35-day proposed backup policy versus documented native retention maximum without silently weakening requirements.",
+    "Acquire complete NDPC/GAID/NRS source text and exact relevant passages; until then dependent legal claims remain held."
+  ]
+}

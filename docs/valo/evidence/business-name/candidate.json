@@ -1,0 +1,116 @@
+{
+  "candidateId": "CAC-BUSINESS-NAME-814",
+  "version": 1,
+  "scope": "Business-name registration conditionality under section 814 only",
+  "excluded": [
+    "Section 815 deadlines",
+    "Company formation capacity",
+    "Tax or other SME duties",
+    "Guarantees of registration or universal exemption"
+  ],
+  "references": [
+    {
+      "snapshotId": "f3e38cb8-76aa-4c63-a922-d58b76612d1d",
+      "sourceId": "SV-010",
+      "url": "https://icrp.cac.gov.ng/assets/docs/CAMA-NOTE%20FINAL-FULL-VERSION.pdf",
+      "fetchedAt": "2026-11-14T02:32:47.189Z",
+      "textChecksum": "c72b755b97f328955c1f2e189a8cb20770ddfeeed28073e23c1322715d437ffc"
+    },
+    {
+      "snapshotId": "d6841472-ae1b-4142-b31b-ddd7cf8b826c",
+      "sourceId": "CAC-BN-PROCESS",
+      "url": "https://www.cac.gov.ng/services/business-name",
+      "fetchedAt": "2026-11-14T02:32:52.651Z",
+      "textChecksum": "450672e1d54450916364b61d568195305072641f55685cb068c72ecc20c4443a"
+    },
+    {
+      "snapshotId": "0f6e971a-5a1d-407c-803c-ed3d94cf10cb",
+      "sourceId": "NIPC-BFA-2022",
+      "url": "https://nipc.gov.ng/assets/resources/business-facilitation-miscellaneous-provisions-act-2022/business-facilitation-misc-provisions-act-2022.pdf",
+      "fetchedAt": "2026-11-14T02:32:58.312Z",
+      "textChecksum": "bb74179ef6afe11cf7674d868c1ed1a72ac6cef8a66da0713f331fa5075fbff0"
+    },
+    {
+      "snapshotId": "89725eb8-a6ba-496e-9b33-24ca7ec4bcee",
+      "sourceId": "NCC-COPYRIGHT",
+      "url": "https://copyright.gov.ng/CopyrightAct/CopyrightAct2023FinalPublication1.pdf",
+      "fetchedAt": "2026-11-14T02:33:02.180Z",
+      "textChecksum": "417ee9b90edc96eee7d355a9391b690a515458da8ef8ba0f99341bb632f660af"
+    }
+  ],
+  "passages": [
+    {
+      "id": "cama814",
+      "text": "814.—(1) Every individual, firm or Corporation having a place of business     Registration\nin Nigeria and carrying on business under a business name shall be registered       of business\nin the manner provided in this Part if—                                             names.\n\n     (a) in the case of a firm, the name does not consist of the true surname\n  of all partners without any addition other than the true forenames of the\n  individual partners or the initials of such forenames ;\n     (b) in the case of an individual, the name does not consist of his true\n  surname without any addition other than his true forenames or the initials\n  thereof ; or\n     (c) in the case of a company, whether or not registered under this Act,\n  the name does not consist of its corporate name without any addition.\n     (2) Notwithstanding subsection (1) where —\n     (a) the addition merely indicates that the business is carried on in\n  succession to a former owner of the business, that addition shall not of\n  itself render registration necessary ;\n\fA 406           2020 No. 3                Companies and Allied Matters Act, 2020\n                     (b) two or more individual partners have the same surname, the addition\n                  of an “s” at the end of that surname shall not of itself render registration\n                  necessary ; and\n                     (c) the business is carried on by a receiver or manager appointed by any\n                  court, registration shall not be necessary.",
+      "hash": "4bc357be4f635d2980b67447f8bd5e6624ddbbcf4980348ac85f0bd2f998953d"
+    },
+    {
+      "id": "cama20",
+      "text": "20.—(1) Subject to subsection (2), an individual shall not join in the\nindividual to   formation of a company under this Act if he is—\nform\ncompany.             (a) less than 18 years of age ;\n                     (b) of unsound mind and has been so found by a court in Nigeria or\n                  elsewhere ;\n                     (c) an undischarged bankrupt ; or\n                     (d) disqualified under sections 281 and 283 of this Act from being a\n                  director of a company.\n                     (2) A person shall not be disqualified under subsection (1) (a), if two\n                other persons not disqualified under that subsection have subscribed to the\n                memorandum.\n                    (3) A corporate body in liquidation shall not join in the formation of a\n                company under this Act.\n                      (4) Subject to the provisions of any enactment regulating the rights and\n                capacity of aliens to undertake or participate in trade or business, an alien or\n                a foreign company may join in forming a company.",
+      "hash": "8cbd9b004846bb0504dc366c62d9003d8ca2995b4fe514a069d24f3ddd36ddc3"
+    },
+    {
+      "id": "bfaPartI",
+      "text": "PART I — COMPANIES AND ALLIED MATTERS ACT\n          Amendment of the Companies and Allied Matters Act\n      1. The Companies and Allied Matters Act, No. 3, 2020 (in this Part\nreferred to as “the Principal Act”) is amended as set out in this Part.\n\n                          Amendment of section 78\n      2. Section 78 of the Principal Act is amended in subsection (3) by inserting\nafter paragraph (b), a new paragraph “(c)” —\n      “(c) exempted under any other Act of the National Assembly.”\n\n                          Amendment of section 127\n     3. Section 127 of the Principal Act is amended by substituting for\nsubsection (1), a new subsection “(1)” —\n    “(1) A company having a share capital may increase its issued share\n  capital by the allotment of new shares of such amount, as it considers\n  expedient —\n     (a) in a general meeting ; or\n     (b) by a resolution of the Board of Directors, subject to the condition or\n  direction that may be imposed in the Articles or by the company in general\n  meeting.”\n\n                          Amendment of section 142\n     4. Section 142 of the Principal Act is amended in —\n     (a) in subsection (1) by inserting after letter “A”, in line 1, the word\n  “private” ; and\n     (b) in subsection (2) by substituting for paragraph (c), a new paragraph\n  “(c)” —\n     “(c) that if the offer is not accepted within 21 days of the notice, the\n  offer shall be deemed declined.”\n\n                          Amendment of section 149\n     5. Section 149 of the Principal Act is amended by —\n     (a) substituting for subsection (1), a new subsection “(1)” —\n        “(1) The powers to allot the shares of a company are not exercised\n     by the directors of a company unless express authority to do so has been\n     vested in the board of directors by the —\n\fA 104   2022 No. 5         Business Facilitation (Miscellaneous Provisions)\n                                               Act, 2022\n             (a) company in a general meeting ; or\n             (b) company’s articles.” ; and\n             (b) deleting subsection (3).\n\n                                 Amendment of section 154\n             6. Section 154 of the Principal Act is amended in subsection (1) by\n        substituting for the words “one month”, the expression “15 days”.\n\n                                 Amendment of section 171\n             7. Section 171 of the Principal Act is amended by inserting after\n        subsection (6), a new subsection “(7)” —\n              “(7) For the purpose of this section, “certificate” may be in physical or\n        electronic form”.\n\n                                 Amendment of section 181\n             8. Section 181 of the Principal Act is amended by —\n             (a) substituting for the marginal note, a new “marginal note”, —\n                “Instrument of transfer” ; and\n             (b) substituting for subsection (1), a new subsection “(1)” —\n                “(1) When the holder of any share of a company wishes to transfer\n             to any person only a part of the shares represented by one or more\n             certificates, the instrument of transfer together with the relevant\n             certificates shall be delivered to the company with a request that the\n             instrument of transfer be recognised and registered and the instrument\n             of transfer shall include certificates issued in electronic form.”\n\n                                 Amendment of section 207\n             9. Section 207 of the Principal Act is amended by substituting for\n        subsection (4), a new subsection “(4)” —\n             “(4) Notwithstanding any provision in this Act or any other law to the\n          contrary and without prejudice to the provisions of section 204, the holder\n          of a fixed charge shall have priority over other debts of the company\n          including preferential debts.”\n\n                                 Amendment of section 222\n              10. Section 222 of the Principal Act is amended by inserting in subsection\n        (13), in alphabetical order, the interpretations of —\n             “cash” means money in any currency, credited to an account, or a similar\n          claim for repayment of money and includes money market deposits and\n\f      Business Facilitation (Miscellaneous Provisions)              2022 No. 5      A 105\n                          Act, 2022\n  sums due or payable to, or received between the parties in connection with\n  the operation of a financial collateral arrangement or a close-out netting\n  provision ;\n     “financial collateral” means cash or financial instruments ;\n     “financial instruments” includes —\n        (a) shares in companies and other securities equivalent to shares in\n     companies,\n        (b) bonds and other forms of instruments giving rise to or\n     acknowledging indebtedness if these are tradeable on the capital\n     market ; and\n        (c) any other securities which are normally dealt in and which give\n     the right to acquire any such shares, bonds, instruments or other securities\n     by subscription, purchase or exchange or which give rise to a cash\n     settlement (excluding instruments of payment) ; and\n     “security interest” means a —\n        (a) pledge ;\n        (b) mortgage ;\n        (c) fixed charge ; or\n        (d) charge created as a floating charge, where the financial collateral\n     charged is delivered, transferred, held, registered or otherwise designated\n     so as to be in the possession or under the control of the collateral-taker\n     or a person acting on its behalf.”\n\n                         Amendment of section 240\n     11. Section 240 (2) of the Principal Act is amended by deleting the word\n“private”.\n\n                         Amendment of section 244\n     12. Section 244 of the Principal Act is amended by —\n     (a) substituting for subsection (1), a new subsection “(1)” —\n     “(1) A notice may be given by the company to any member —\n       (a) personally ;\n       (b) electronically ;\n       (c) by sending it by post to him or to his registered address ; or\n       (d) where he has no registered address within Nigeria, to the address,\n     supplied by him to the company for the giving of notice to him.” ; and\n     (b) deleting subsection (3).\n\fA 106   2022 No. 5        Business Facilitation (Miscellaneous Provisions)\n                                              Act, 2022\n                                Amendment of section 248\n             13. Section 248 (1) of the Principal Act is amended by inserting after\n        the words, “show of hands”, the words “or electronic voting”.\n\n                                Amendment of section 275\n             14. Section 275 of the Principal Act is amended by —\n             (a) substituting for subsection (1), a new subsection “(1)” —\n                “(1) A public company shall have at least one-third of the total number\n             of its directors as independent directors.” ; and\n             (b) substituting for subsection (2), a new subsection “(2)” —\n                “(2) In a public company, any person who nominates candidates for\n             the board, who would comprise a majority of the members of the board\n             shall nominate at least one third number of persons who would be\n             independent directors.”\n\n                                Amendment of section 283\n             15. Section 283 of the Principal Act is amended by substituting for\n        paragraph (c), a new paragraph “(c)” —\n            “(c) is a person removed under section 288 of this Act, where such\n          removal was on the grounds of fraud, dishonesty or unethical conduct;”\n\n                                Amendment of section 307\n             16. Section 307 of the Principal Act is amended by substituting for\n        subsection (3), a new subsection “(3)” —\n             “(3) A person can only be a director in five public companies and where\n          the person is a director of more than five public companies before the\n          commencement of this Act, such a person shall resign as a director of all\n          but five of the companies not later than the next annual general meeting of\n          the companies after the expiration of two years from the commencement\n          of this Act.”\n\n                                Amendment of section 378\n             17. Section 378 of the Principal Act is amended by substituting for\n        subsection (1), a new subsection “(1)” —\n             “(1) Financial statements of a company prepared under section 377 of\n          this Act, shall comply with the requirements of the accounting standards\n          prescribed in the statements of accounting standards issued by the Financial\n          Reporting Council of Nigeria.”\n\f      Business Facilitation (Miscellaneous Provisions)              2022 No. 5     A 107\n                          Act, 2022\n                         Amendment of section 394\n     18. Section 394 of the Principal Act is amended by substituting for\nsubsection (2), a new subsection “(2)” —\n     “(2) A company qualifies as a small company in relation to a subsequent\n  financial year if the conditions qualifying it as a small company are met in\n  that year and the preceding financial year.”\n\n                         Amendment of section 572\n     19. Section 572 of the Principal Act is amended in paragraph (a), by\nsubstituting for the expression “a sum exceeding N200,000”, the words “a\nsum to be determined by a regulation issued by the Commission”.\n\n                         Amendment of section 658\n     20. Section 658 of the Principal Act is amended in subsection (6), by\nsubstituting for the words “period of years”, the words “period of two years”.\n\n                         Amendment of section 868\n      21. Section 868 of the Principal Act is amended by deleting the definition\nof “insolvency practitioner”.",
+      "hash": "20d2618586b4b649b34ccd7aad17d39a647624acfc392d05d47a23877f65868a"
+    },
+    {
+      "id": "copyright3b",
+      "text": "(b) official texts of a legislative or administrative nature as well as any\n                  official translations, except their compilations ; and",
+      "hash": "6cbecd5cea38b1fffc32c4f988a29f39540c5f0c981a2b8c44e15c6d544eda58"
+    },
+    {
+      "id": "process",
+      "text": "Registration steps for Business Names\n1\n\nCheck for availability of the Business Name (click here)\n\n2\n\nComplete pre-registration form - CAC-BNol and upload relevant registration documents (Online using Company Registration Portal)\n\n3\n\nPay filing fee Check the Fees for our Services here\n\nNow registration is end-to-end on the COMPANY REGISTRATION PORTAL (CRP) with electronic Certificate of Registration and Certified Extract of registration information\n\nIndividual/Proprietors can register business names without the services of the legal practitioner, chartered Accountant or Chartered Secretary.",
+      "hash": "3d3f16fac2e3110010315145c748a0345c209347f04327df28fd942a6d9d63d8"
+    }
+  ],
+  "locators": {
+    "cama814": "CAMA814(1) and814(2); printed A405–A406; PDF405–406",
+    "cama20": "CAMA20; starts PDF40; dependency context only",
+    "bfaPartI": "Schedule Part I; printed A103–A107; PDF9–13; amendment to CAMA283",
+    "copyright3b": "Copyright Act3(b); printed A184; PDF8",
+    "process": "CAC business-name service: registration steps and individual/proprietor self-registration"
+  },
+  "amendmentReview": {
+    "reviewedInstrument": "NIPC-BFA-2022",
+    "partIContains814": false,
+    "formationDependency": "CAMA20 cross-refers to283, amended in BFA Part I; formation capacity excluded from this candidate",
+    "currentness": "unverified",
+    "note": "Review of one amendment instrument is not proof no later amendment or controlling judgment exists."
+  },
+  "rightsEvidence": {
+    "source": "NCC-COPYRIGHT",
+    "section": "3(b)",
+    "scope": "Official statutory passages only",
+    "excludes": [
+      "Compilations",
+      "Website design or copy",
+      "Third-party commentary",
+      "AI provider output or account terms"
+    ],
+    "status": "scoped_passage_evidence_not_final_rights_clearance"
+  },
+  "requiredFacts": [
+    "placeOfBusinessInNigeria",
+    "carryingOnBusinessUnderName",
+    "individualFirmOrCorporation",
+    "nameComposition",
+    "successionOnlyAddition",
+    "sharedSurnamePluralOnlyAddition",
+    "courtAppointedReceiverOrManager"
+  ],
+  "missingFactBehavior": "Unknown, unanswered and not-applicable are distinct; missing facts never establish an exemption",
+  "negativeResultScope": "A negative result concerns this candidate only, never all registrations or SME obligations",
+  "checks": {
+    "passages": "pass",
+    "independentFactualReview": "not_run",
+    "independentChallenge": "not_run",
+    "amendmentCurrentness": "unverified",
+    "rightsAssessment": "unverified",
+    "releaseManifest": "absent"
+  },
+  "publication": "held",
+  "customerUseEligible": false,
+  "bundleHash": "55845bc7d77182455ca7e9b8f70c1c16f0e6a9bbd6d2ef56aada4ff5ac5890c1"
+}

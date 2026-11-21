@@ -1,0 +1,50 @@
+{
+  "description": "Known issues a release record names (OPS-005; artifacts/api-server/src/scripts/release-record.ts). The release owner keeps this list current: an entry leaves only when its issue is resolved, and a release record copies the list as committed at the release. Each entry restates what the repository already records; requirements lists the requirement IDs whose acceptance waits on it.",
+  "issues": [
+    {
+      "id": "KI-001",
+      "summary": "Production mode serves only /api/healthz until a reviewed launch change exists. Public launch, production deployment and live payments are not enabled, and each needs the owner's approval.",
+      "requirements": []
+    },
+    {
+      "id": "KI-002",
+      "summary": "The production compatibility check has not run: identity callbacks, private storage, the background queue, browser binaries, database connection limits, backup and restore, domains and outbound provider calls are unproved on production hosting, which needs the owner's hosting approval.",
+      "requirements": ["OPS-007"]
+    },
+    {
+      "id": "KI-003",
+      "summary": "No template or guidance version is published. A template publishes only with two passing AI reviews, which run only inside an owner-approved finite AI allocation, and none is approved. The publish command (decision 0014) has run only on synthetic reviews in a disposable database. Guidance is held for six standing reasons, each waiting for an owner decision or outside evidence. The reviews of content that is not general run the enhanced high-risk checks, but no preparer yet produces such content, so none has run.",
+      "requirements": ["EDP-005"]
+    },
+    {
+      "id": "KI-004",
+      "summary": "Customer AI drafting runs only inside an owner-approved finite AI allocation, and none is approved. The production preflight requires customer AI to be off.",
+      "requirements": []
+    },
+    {
+      "id": "KI-005",
+      "summary": "The 60-case editorial evaluation (EDP-010) has not run against a model. In its last retained run 14 of the 26 deterministic controls passed and 46 cases were blocked, a score of 14 of 60. The rest need real reviews under an owner-approved AI budget, a first template published with them, an independent check of the expected outcomes and, for 11 cases, official source texts not yet retained (decision 0015).",
+      "requirements": ["EDP-010"]
+    },
+    {
+      "id": "KI-006",
+      "summary": "Document exports run in development only, pending production storage, worker, recovery and privacy approval.",
+      "requirements": []
+    },
+    {
+      "id": "KI-007",
+      "summary": "Accessibility has automated checks only: axe-core, keyboard focus and phone-width layout on the public pages, the sign-in frames and the signed-in workspace and staff screens, and page titles after moving in the app, with the identity provider's own sign-in and account widgets not checked. No manual keyboard or assistive-technology review is recorded.",
+      "requirements": ["NFR-006"]
+    },
+    {
+      "id": "KI-008",
+      "summary": "The repository is public by owner decision (16 November 2026), so OPS-005's private repository does not hold, and whether main is protected is an account setting the repository cannot show.",
+      "requirements": ["OPS-005"]
+    },
+    {
+      "id": "KI-009",
+      "summary": "No requirement is accepted. Cited CI tests are partial evidence, and acceptance needs the owner's review of each requirement.",
+      "requirements": []
+    }
+  ]
+}

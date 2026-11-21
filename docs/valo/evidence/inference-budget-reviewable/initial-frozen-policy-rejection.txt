@@ -1,0 +1,82 @@
+
+> @workspace/api-server@0.0.0 test:valo-finite-entry /home/runner/workspace/artifacts/api-server
+> node --experimental-test-module-mocks --import tsx --test src/lib/inference-manifest.test.ts src/lib/inference-allocation-package.test.ts src/lib/inference-history-reconciliation.test.ts src/lib/inference-history-classification.test.ts src/lib/inference-history-exposure.test.ts src/lib/inference-price-evidence.test.ts src/lib/inference-work-shape.test.ts src/lib/managed-inference-entry.test.ts src/lib/managed-operational-recovery.test.ts src/lib/inference-operational-preparation.test.ts
+
+✔ package freezes actual inventory and the original three case rosters without approving them (248.567641ms)
+✔ delegated membership cannot broaden the content inventory or enable unsupported preparers (180.790181ms)
+✔ package allocation, lane ceilings and allowed roles are immutable policy decisions (746.045656ms)
+✖ frozen disabled owner-review artifact matches exact repository bytes, cases and named sections (206.010902ms)
+✔ matches drafting prompt separately; reconciles real receipt shape and exact held review IDs without removing old entries (37.458767ms)
+✔ future importer preserves actual model/usage and never double-subtracts excluded customer faults (3.861095ms)
+✔ missing/wrong historical drafting prompt or changed artifact bytes never discharges an unknown charge (12.939866ms)
+✔ failed draft or partial metadata is never zero cost merely because dependent reviews did not run (88.789575ms)
+✔ hash-bound editorial reports must match actual run ID, role, input and response rather than aggregate totals (1.891686ms)
+✔ changed source inventory, stale ledger, duplicate receipt and changed historical resolutions are rejected (2.406981ms)
+✔ verified retained receipts refine the projection but never mark potential charges as paid or mutate old entries (24.17787ms)
+✔ exposure projection refuses stale history and changed receipt cost evidence (53.786363ms)
+✔ missing evidence preserves every unbounded liability without a fictional maximum-model substitution (3.699049ms)
+✔ proposes one exact retained receipt with auditable old state and leaves every liability untouched (7.079046ms)
+✔ mutated actual artifact bytes are held even if summary and reference claim a receipt (0.827912ms)
+✔ exact approved returned model and actual valid usage are required (1.568917ms)
+✔ legacy missing request hash requires an unambiguous candidate and role, never row order (5.972474ms)
+✔ request hash disambiguates repeated candidate-role attempts only when it actually matches (0.605679ms)
+✔ conflicting historical usage or provider identity is never overwritten (14.909466ms)
+✔ receipt reused for another ledger row or conflicting retained artifacts remains held (1.376904ms)
+✔ duplicate reference to the same private artifact is not a second independent receipt (17.393318ms)
+✔ one source identity with conflicting metadata cannot produce a reconciliation (13.377555ms)
+✔ preparation binds distinct exact requests to one pair and fixed additional allocation (22.014776ms)
+✔ proposal discloses exact two-attempt reservation and never authorizes dispatch (4.169948ms)
+✔ stale/future/held preparation cannot produce an approvable roster (1.013603ms)
+✔ duplicate reviewer request or role cannot claim independent two-role work (0.496821ms)
+✔ changed candidate binding, path traversal and raised output budget are held (2.158045ms)
+✔ the saved manifest owns its request and source structures (0.626264ms)
+✔ changing a plan artifact creates distinct work identity without implicit retry (11.997463ms)
+(node:77160) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77160) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ actual preparation and saved-readiness callers bind another form without authoring, review, approval or publication (3091.615612ms)
+✔ multi-candidate reports require exact selection and retain old single-pair compatibility (43.801034ms)
+✔ official retained model and managed-route evidence support exact policy, not actual billing (23.437348ms)
+✔ different prices, model, context, completion ceiling or evidence version cannot claim the verified bound (0.729861ms)
+✔ publication cannot be relabeled to another corpus (1.410844ms)
+✔ editorial_evaluation cannot be relabeled to another corpus (0.388923ms)
+✔ checker_challenge cannot be relabeled to another corpus (0.145444ms)
+✔ customer cannot be relabeled to another corpus (0.143193ms)
+✔ customer context cannot carry a hidden publication plan or private candidate (0.497906ms)
+✔ checker challenge is not an independent factual review or review pair (0.169058ms)
+(node:77255) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77255) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+▶ default managed entry and customer organizer use actual finite dispatch and real corpus bindings
+  ✔ disabled default entry imports neither database configuration nor SDK (690.585232ms)
+  ✔ all nonempty deployment markers block before database or SDK initialization (1124.966552ms)
+  ✔ approved context reaches the actual default entry and settles the exact work (495.565322ms)
+  ✔ request, actual source hash and actual case binding mismatches make zero SDK calls (17.8777ms)
+  ✔ actual default customer organizer uses two separately approved attempts after invalid schema (32.353021ms)
+  ✔ actual default customer organizer stops after one invalid response without a retry grant (16.467008ms)
+✔ default managed entry and customer organizer use actual finite dispatch and real corpus bindings (3494.420933ms)
+(node:77262) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77262) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ actual operational caller recovers an artifact failure from settled receipts without new attempts or SDK calls (133.794389ms)
+ℹ tests 47
+ℹ suites 0
+ℹ pass 46
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5873.09841
+
+✖ failing tests:
+
+test at src/lib/inference-allocation-package.test.ts:1:3117
+✖ frozen disabled owner-review artifact matches exact repository bytes, cases and named sections (206.010902ms)
+  Error: ALLOCATION_PACKAGE_INVALID
+      at validateAllocationPackage (/home/runner/workspace/artifacts/api-server/src/lib/inference-allocation-package.ts:72:11)
+      at TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/lib/inference-allocation-package.test.ts:44:3)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+/home/runner/workspace/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 test:valo-finite-entry: `node --experimental-test-module-mocks --import tsx --test src/lib/inference-manifest.test.ts src/lib/inference-allocation-package.test.ts src/lib/inference-history-reconciliation.test.ts src/lib/inference-history-classification.test.ts src/lib/inference-history-exposure.test.ts src/lib/inference-price-evidence.test.ts src/lib/inference-work-shape.test.ts src/lib/managed-inference-entry.test.ts src/lib/managed-operational-recovery.test.ts src/lib/inference-operational-preparation.test.ts`
+Exit status 1

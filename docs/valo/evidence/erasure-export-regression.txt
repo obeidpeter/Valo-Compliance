@@ -1,0 +1,23 @@
+
+> @workspace/api-server@0.0.0 test:valo-exports /home/runner/workspace/artifacts/api-server
+> tsx --test src/lib/valo-exports.integration.test.ts
+
+▶ real development PostgreSQL, private App Storage and renderer integration
+  ✔ parallel natural duplicates and all request-key aliases resolve to one durable job (116.096483ms)
+  ✔ omissions require explicit watermarked-draft acknowledgement; foreign revisions are concealed (17.18968ms)
+  ✔ database composite constraints reject forged cross-workspace revisions and files (16.48857ms)
+  ✔ old immutable revision is used after the current draft changes (769.311197ms)
+  ✔ private object denies anonymous access, has a verified checksum and is never returned as a raw key (466.768085ms)
+  ✔ real Chromium PDF is A4, multipage and text-readable with the same revision and naira glyph (6545.104857ms)
+  ✔ ready delivery is idempotent and suspended memberships cannot read files (30.455926ms)
+  ✔ failed integrity checks exhaust bounded attempts, never create ready files, and support explicit retry (546.540266ms)
+  ✔ actual worker process can stop abruptly; jobs committed while it is absent survive restart (4455.729055ms)
+✔ real development PostgreSQL, private App Storage and renderer integration (14143.93816ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18207.637239

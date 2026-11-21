@@ -1,0 +1,87 @@
+{
+  "sourceRevision": "dc3216a159d49d7b072453eca9996ad9e4e6e17b",
+  "checkedAt": "2026-11-14T02:42:15.932Z",
+  "actualOfficialRetrievals": 4,
+  "privateObjectChecks": 8,
+  "anonymousDenials": 8,
+  "authorizedChecksums": 8,
+  "tests": {
+    "sourceControlAndPassageTests": {
+      "pass": 24,
+      "fail": 0,
+      "skipped": 0,
+      "newPassageTests": 14
+    },
+    "runningDevelopmentHttp": {
+      "pass": 14,
+      "fail": 0,
+      "skipped": 0
+    },
+    "foundation": {
+      "pass": 166,
+      "fail": 0,
+      "skipped": 0
+    },
+    "workspaceTypecheck": "pass"
+  },
+  "candidateId": "CAC-BUSINESS-NAME-814",
+  "candidateHash": "55845bc7d77182455ca7e9b8f70c1c16f0e6a9bbd6d2ef56aada4ff5ac5890c1",
+  "initialFindings": [
+    {
+      "code": "CAMA20_DEPENDENCY_MISSING",
+      "resolution": "Inspected actual text: sections281 and283; corrected the validator to require that actual cross-reference, not a guessed singular reference."
+    },
+    {
+      "code": "STALE_HTTP_EXECUTION_ORACLE",
+      "resolution": "The prior test assumed zero executed suite cases; it now permits factual counts but still rejects every accepted suite or gate."
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/valo/evidence/business-name/retrieval.json",
+      "sha256": "ffafe17896eee654ec36c3fefe8d1c735fb5d3894fd257300a3ffb0fa4c705b1"
+    },
+    {
+      "path": "docs/valo/evidence/business-name/candidate.json",
+      "sha256": "712e9ba35c9caa5a5546deda655aabd6fab113eefb355e796beaeba1c24c7106"
+    },
+    {
+      "path": "docs/valo/evidence/business-name/private-storage.json",
+      "sha256": "35040fca9e04fec0e82248ea4642f524cbbec02c15ebd67c405075734828edb3"
+    },
+    {
+      "path": "docs/valo/evidence/business-name/source-tests.txt",
+      "sha256": "1b1b558f0c9ba1b9cd140d8b0e12530d451176b2e30d0288015316ff95758ddc"
+    },
+    {
+      "path": "docs/valo/evidence/business-name/http-tests.txt",
+      "sha256": "c2d23965da1d6e1292292791959d51cc39852115633850e5cef7d156255bcb06"
+    },
+    {
+      "path": "docs/valo/evidence/business-name/foundation.txt",
+      "sha256": "6f3efdb8e216db6dde4c5e61b31f949e7da8fe6ad724bbdc9666e8609cc0242d"
+    },
+    {
+      "path": "docs/valo/evidence/business-name/typecheck.txt",
+      "sha256": "6dae4af028f38ac5d5da438946ef17f14111f39d020f1f87bb3719a1d18ac818"
+    }
+  ],
+  "linkedAcceptanceIssues": [
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "formalRequirements": 127,
+  "currentness": "unverified",
+  "independentReviews": "not_run",
+  "rights": "scoped_statutory_passage_evidence_only_not_final_clearance",
+  "customerRuleReleased": false,
+  "sourceBacked80RuleAcceptance": false,
+  "editorial60Acceptance": false,
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "publicLaunch": false,
+  "livePayments": false
+}

@@ -1,0 +1,34 @@
+✔ actual DOCX and Chromium PDF preserve the complete exact candidate and required notices (4960.34831ms)
+✔ both formats must be readable; a claimed pass cannot replace re-execution (1584.547785ms)
+✔ altered canonical content, date/scope and forged generic reports fail (2983.184464ms)
+✖ revised inventory paragraphs spanning pages retain all text despite renderer footer insertion (4104.14317ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15024.240537
+
+✖ failing tests:
+
+test at src/editorial/operational-export-inspection.test.ts:50:1
+✖ revised inventory paragraphs spanning pages retain all text despite renderer footer insertion (4104.14317ms)
+  AssertionError [ERR_ASSERTION]: {"version":"operational-export-inspection-3","candidateHash":"d7598ea3141107002d0292d0c4e306a465eabd0f3da4e792b93c93dcc454a16b","passed":false,"hashes":{"docx":"da62105874cde8811ff93895fe7f91822ba00eb7f5b62b0ef1d4a7eaf0ed6f92","pdf":"2739db160288f23471ac4e91dae0f5788ad7dd31434978b7ee25a21a2f873136"},"formats":{"docx":{"parsed":true,"completeContent":true,"disclosureIncluded":true,"scopeIncluded":true,"limitationsIncluded":true,"sourceDateIncluded":true,"missingTextHashes":[]},"pdf":{"parsed":true,"completeContent":false,"disclosureIncluded":true,"scopeIncluded":true,"limitationsIncluded":true,"sourceDateIncluded":true,"missingTextHashes":["07ec95e11c978d520d959896f0bdac8a063bea679800ca5a12ccfbad8b272654"]}},"checks":[{"name":"docx_reader_and_active_content","passed":true},{"name":"pdf_reader_a4_geometry","passed":true},{"name":"pdf_text_within_pages","passed":true},{"name":"docx_complete_content_and_disclosures","passed":true},{"name":"pdf_complete_content_and_disclosures","passed":false}],"geometry":{"pages":3,"width":595.91998,"height":842.88,"tolerancePoints":2},"readerNormalization":{"rendererFooterLinesIgnored":3,"rule":"Only exact Valo page-number footer lines excluded from content comparison"},"manualWordApplicationReview":false,"manualAccessibilityReview":false}
+  
+  false !== true
+  
+      at TestContext.<anonymous> (/home/runner/workspace/artifacts/api-server/src/editorial/operational-export-inspection.test.ts:59:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+undefined
+/home/runner/workspace/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx --test src/editorial/operational-export-inspection.test.ts

@@ -1,0 +1,314 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794589853460,
+      "tag": "0000_valo_p0",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794591642138,
+      "tag": "0001_valo_rate_quotas",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794593568470,
+      "tag": "0002_fresh_alice",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794596538295,
+      "tag": "0003_breezy_whiplash",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794600198354,
+      "tag": "0004_valo_editorial_runs",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794606265000,
+      "tag": "0005_checker_assessments_tasks",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794608085075,
+      "tag": "0006_customer_ai_drafting",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794615542747,
+      "tag": "0007_operational_publication",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794615542748,
+      "tag": "0008_operational_authoring_budget",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794615542749,
+      "tag": "0009_customer_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794615542750,
+      "tag": "0010_export_recovery",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794615542751,
+      "tag": "0011_commerce_ledger",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794640000000,
+      "tag": "0012_editorial_usage_meter",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794640000001,
+      "tag": "0013_reminder_delivery_retry",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794640000002,
+      "tag": "0014_reminder_replay_window",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1794640000003,
+      "tag": "0015_refund_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794640000004,
+      "tag": "0016_refund_audit_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794670552590,
+      "tag": "0017_privacy_cases",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794678000000,
+      "tag": "0018_inference_budget",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794680000000,
+      "tag": "0019_privacy_erasure_objects",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794699000000,
+      "tag": "0020_inference_batch_authorization",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794700000000,
+      "tag": "0021_privacy_key_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794700000001,
+      "tag": "0022_privacy_erasure_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794701000000,
+      "tag": "0023_privacy_information",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794702000000,
+      "tag": "0025_dispute_merchant",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794702000001,
+      "tag": "0026_dispute_category",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794702000002,
+      "tag": "0027_workspace_exports",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794702000003,
+      "tag": "0028_workspace_export_cleanup",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794705000000,
+      "tag": "0029_privacy_copy_redaction",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794705000001,
+      "tag": "0030_workspace_export_convergence",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794705000002,
+      "tag": "0031_dispute_convergence",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794705000003,
+      "tag": "0032_staff_role_governance",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794705000004,
+      "tag": "0033_workspace_cleanup_retry",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794705000005,
+      "tag": "0034_runtime_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794705000006,
+      "tag": "0035_saved_templates",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794705000007,
+      "tag": "0036_audit_append_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794705001007,
+      "tag": "0037_source_correction_controls",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794705002007,
+      "tag": "0038_editorial_lifecycle_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794705003008,
+      "tag": "0039_support_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794914417727,
+      "tag": "20261117112017_constraint_names",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794920084996,
+      "tag": "20261117125444_workspace_row_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794961335012,
+      "tag": "20261118002215_security_signals",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794965923412,
+      "tag": "20261118013843_price_change_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1795134519204,
+      "tag": "20261120002839_prepared_candidates",
+      "breakpoints": true
+    }
+  ]
+}

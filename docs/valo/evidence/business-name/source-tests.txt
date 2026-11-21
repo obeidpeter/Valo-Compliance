@@ -1,0 +1,36 @@
+
+> @workspace/api-server@0.0.0 test:valo-sources /home/runner/workspace/artifacts/api-server
+> tsx --test src/editorial/source-controls.test.ts src/editorial/business-name-evidence.test.ts
+
+✔ actual retained passage bundle includes all814 conditions/exceptions and scoped rights (2.865797ms)
+✔ omitting succession exception holds the candidate (0.452404ms)
+✔ omitting shared surname exception holds the candidate (0.126241ms)
+✔ omitting court appointment exception holds the candidate (0.103043ms)
+✔ missing individual or corporate name-composition branches cannot pass (0.24478ms)
+✔ section815 deadlines are excluded, not inferred from adjoining pages (0.214232ms)
+✔ place-of-business scope cannot be omitted (0.12763ms)
+✔ plural-surname and succession exceptions retain their limiting conditions (1.129512ms)
+✔ NCC compilation exception is mandatory and not blanket website/provider rights (0.648807ms)
+✔ actual CAMA20 references both281 and283; BFA amendment cannot be omitted (0.302912ms)
+✔ process evidence includes official availability, form and self-registration steps (0.479584ms)
+✔ retrieved original instrument does not imply currentness or release (0.158805ms)
+✔ changed checksum, missing source and expired retrieval fail before candidate construction (3.752272ms)
+✔ new official instruments are explicit allowlist entries, not arbitrary browsing (0.2766ms)
+✔ only original and explicitly recorded coordinating references can be selected (1.119423ms)
+✔ only the identified large instruments get a larger bounded ingestion profile (0.889067ms)
+✔ instrument identity uses body pages, not a plausible or misleading metadata title (1.21428ms)
+✔ PDF extraction retains a blank first page so operative locators cannot shift (4233.862111ms)
+✔ redirects cannot switch origin, downgrade TLS or include credentials (0.9606ms)
+✔ DNS pinning rejects loopback, metadata, private, reserved and non-IPv4 addresses (0.792165ms)
+✔ empty, partial and challenge text cannot count as retrieved evidence (5.5447ms)
+✔ HTML extraction preserves untrusted text but cannot execute scripts or fetch document resources (3591.373315ms)
+✔ unsupported formats and falsely labelled PDFs are rejected (0.821926ms)
+✔ source storage rejects customer keys, arbitrary object suffixes and oversized writes before SDK access (3.522793ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9489.856386

@@ -1,0 +1,64 @@
+{
+  "executedAt": "2026-11-14T22:09:07.763Z",
+  "policyAdoption": {
+    "policyHash": "9b5188fe7f5c26f218528b2cc0ed237972702f60ac256199fee7c22d94d1e431",
+    "stateHash": "05744a6a0efe67c415000ae2caa38d251cb1d6ed288ea09f3927aac0bad02eb5",
+    "ownerApproved": false,
+    "enabled": false
+  },
+  "historyHash": "05744a6a0efe67c415000ae2caa38d251cb1d6ed288ea09f3927aac0bad02eb5",
+  "potentialChargeRecords": 57,
+  "reportedUsageRecords": 37,
+  "unknownRecords": 20,
+  "unboundedLiabilities": 20,
+  "provisionalReportedCostNanoUsd": "61027725",
+  "retainedReviewReceipts": 10,
+  "unknownExactReceiptLinks": 0,
+  "sourceNotes": [
+    {
+      "version": 1,
+      "fileHash": "6423872c7ea1557ac3f4facee10a26d28036072aa80200248dad1cb94af84cb2",
+      "reviews": 2
+    },
+    {
+      "version": 2,
+      "fileHash": "7606caed3ab591ae743e19207dc8cf9b40b3a3036387bad533fdc442078b0682",
+      "reviews": 2
+    },
+    {
+      "version": 3,
+      "fileHash": "a9afbf0ed5e77d5071088f6688595b74b31cae40b3b4f88f07bbd69da0ee0b3f",
+      "reviews": 2
+    },
+    {
+      "version": 4,
+      "fileHash": "713535f54539cb32e83880a0f41f129e15053bef3aec0ac1f04e34492014483d",
+      "reviews": 2
+    },
+    {
+      "version": 5,
+      "fileHash": "6db443df8967f1f845afc0b31b0e4c0c56afe79bfe5de17b9c7054d1c741e465",
+      "reviews": 2
+    },
+    {
+      "version": 6,
+      "fileHash": "6992f6f3ee5bb64eb7caa80d6f4df645938dd0dae0439adf08fd059f5f927f82",
+      "reviews": 0
+    },
+    {
+      "version": 8,
+      "fileHash": "c6ab28e46561b55461e70ca1f1907de81bd8f31cf5495222f95a64e7454c12ce",
+      "reviews": 0
+    }
+  ],
+  "reconciliation": "Unresolved historic attempts retain a hard admission hold. No missing usage is zeroed; reported tokens are not an invoice.",
+  "availableBalance": null,
+  "approvedEnabledBatches": 0,
+  "ownerApproval": false,
+  "providerCalls": 0,
+  "quotaChanges": false,
+  "fallbackPerAttemptNanoUsd": "370550400",
+  "allProviderPathsShared": true,
+  "productionMigration": false,
+  "nativeTriggerPublishing": "Requires reviewed bootstrap; managed schema publication cannot be assumed to copy functions/triggers."
+}

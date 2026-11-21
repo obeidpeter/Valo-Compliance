@@ -1,0 +1,96 @@
+{
+  "recordedAt": "2026-11-14T17:17:35.419Z",
+  "baseSavedCommit": "76f35fd0558a3bc3019606cada9d9d1cb1c992ee",
+  "scope": "Development-only partial checkpoint; not R1/R2 acceptance",
+  "codeFileHashes": {
+    "artifacts/api-server/package.json": "5ab070fd27f626f27a913fb441cfd633dfb261792ed1093ae4791ba99dd4b0bf",
+    "artifacts/api-server/src/editorial/candidate-arithmetic.ts": "fa518599f3092400cc115679a651c5a3ade22838b696c6f12e2d445bb8ea6321",
+    "artifacts/api-server/src/editorial/claim-locator.ts": "ef97f21c745fb94eb3f0b51dbd8a0453a88bdb4da244f708c2270e1eda87b3d2",
+    "artifacts/api-server/src/editorial/operational-content.ts": "75541d999584625304998d49c9351072a2724a18ce6a8d342148a1dadf42a9f2",
+    "artifacts/api-server/src/editorial/operational-intake.ts": "fc50f4498ff3f1a48e8ea112363e7283dc9d33c8d21d38c7c08ddab7b360c2ec",
+    "artifacts/api-server/src/editorial/operational-mechanical.test.ts": "29f3cb36350e526c92dee38804f0518cbab55df78fd996ea707ae13455ea7829",
+    "artifacts/api-server/src/editorial/operational-mechanical.ts": "a136636c030291142acc81e142f3376cfa44892c5501806840fac2d58c640a6c",
+    "artifacts/api-server/src/editorial/operational-policy.ts": "73adc67276e9363fe8ef0b38c7dd867ec257c71fbd97e7f0ff0d24b6be37bdf5",
+    "artifacts/api-server/src/editorial/operational-review-contract.ts": "33b2129f111b54a72e022d11aefe76e25beb4188f8bfd8a592e94744679e5784",
+    "artifacts/api-server/src/editorial/operational-review.ts": "7c9916f01a41549cc40729774127044b5356b56077e0805a2217de3c2b634f42",
+    "artifacts/api-server/src/editorial/original-content-adapter.ts": "4130a4ab39cb449c6ef16beab7690a78b684e6e7689790ff33bbd2970d03e9d3",
+    "artifacts/api-server/src/editorial/publication-publisher.ts": "7e60b4685f73dea5749e6218e45c0ce664ea50d2d44d9f929f057f67890d28af",
+    "artifacts/api-server/src/lib/valo-customer-ai-domain.ts": "9d0a5d940d39ea1b39889319b78b2d68e593e2fe74e392426424070c0c5165ec",
+    "artifacts/api-server/src/lib/valo-customer-case-binding.ts": "010cc0654cc6e5ad2c0e9b254eb03c1db6bd28986beac88d9dd9e2609dac5f14",
+    "artifacts/api-server/src/lib/valo-exports.ts": "83faee4fc69a1a6bf57923f564100fa61c7bdbbd81ba33329e9c30adb619595c",
+    "artifacts/api-server/src/lib/valo-revision-codec.ts": "3663af12b3d93c85186470641e0ce337d6e151f9b562090d38075f35f94fff80",
+    "artifacts/api-server/src/lib/valo-source-acceptance.test.ts": "2c70410207ac368ffee9d3bf047916bf6a70631538e4f73ddb7b030ce170dba0",
+    "artifacts/api-server/src/lib/valo-store.ts": "732baa8b0e8ec0cbfab1738f37aa4c9f4c4f0d21df116d850471bf2fcdb1cfc2",
+    "artifacts/api-server/src/scripts/customer-ai-source-pilot.ts": "abfd142c2c2e10ac897a882d19482f3a861a0a07fd7b7e4cafd275ceb100760b",
+    "artifacts/api-server/src/scripts/customer-source-suite.ts": "ea4b043be06763f5b465c0cb09ebf51fcfb3af2bd73baf3de36a2f0af83cfb3c",
+    "artifacts/api-server/src/scripts/editorial-source-suite.ts": "367179593558a5616f6bde7ea1fe3be4c4638ef03fd6d1fe7ca5d6ec526cc6af",
+    "artifacts/api-server/src/scripts/source-quotation-journey.ts": "5189d7d271ee2bb4c434e3fd500f7534b5c0c74487bcf1bbf1f51492a07a7666",
+    "artifacts/valo/src/components/financial-fields.tsx": "6df8e35511d5bde42b6f4e989b9b8a8e333d86fa230d97cffaa443b3ca363400",
+    "lib/api-client-react/src/generated/api.schemas.ts": "6b2b644db97ae8a01f655f0d84f3b37d9242c18f2ce67cb89057eacf3c672c5f",
+    "lib/api-spec/openapi.yaml": "715614a38064a438168b1501dac47e3b02f4318dc905e24541908960cb15db63",
+    "lib/api-zod/src/generated/api.ts": "4620dac9c8096383380cb76c4f02f18f52abb70b6fba9459551de118e31666af",
+    "lib/api-zod/src/generated/types/financialInput.ts": "47da22916c5dcf474ebda7df3edba3aa3473822b23c948e71848f67523cec899",
+    "lib/api-zod/src/generated/types/financialInputOptionalLinesItem.ts": "f06be8ce38e1c16da988cc49890af3eedc7990d7aff8756ee0be8ccb2fdc83ee",
+    "lib/api-zod/src/generated/types/financialInputPaymentRecord.ts": "ec7082807cb4907b37cef65dc56cd1425e280d914ec6d8e7023702c134970fc9",
+    "lib/api-zod/src/generated/types/financialLine.ts": "49e0526042af4e8a882e383085c13e27fb51d666a9bfeee22fc72945bad5433f",
+    "lib/api-zod/src/generated/types/index.ts": "c328d44ceb971a70028f1e9b092e1da2d2b4ef7ead0533c1348212583ef6da8e",
+    "lib/valo-core/src/money.ts": "6a1e42fd9418e881cd56327700fca5aed75a3b76c4caae115df5666398c9f1b8",
+    "lib/valo-core/src/workflow-evidence.ts": "a7bb3f7aebf47ef1e02358eff1b5a7932c5a7e9b2a3eb0ee73ce6560be53aea5"
+  },
+  "commands": [
+    {
+      "command": "pnpm --filter @workspace/api-server run test:valo",
+      "tests": 162,
+      "passed": 161,
+      "failed": 0,
+      "skipped": 1,
+      "logHash": "513821781bfa4e170bd5f489447fd1be5522d581469f9a1acda31b1b273db430"
+    },
+    {
+      "command": "VALO_RUN_DB_TESTS=synthetic-development-only pnpm --filter @workspace/api-server run test:valo-db",
+      "tests": 61,
+      "passed": 61,
+      "failed": 0,
+      "skipped": 0,
+      "logHash": "0c95ac80b850a584e610dc17ff5caebe968c5e38146ad8cd80b1c5d0dd054249"
+    },
+    {
+      "command": "pnpm run typecheck",
+      "passed": true
+    },
+    {
+      "command": "focused source + legacy codec",
+      "tests": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "command": "source trace/catalogue validation",
+      "tests": 10,
+      "passed": 10,
+      "failed": 0
+    }
+  ],
+  "editorialAllowance": {
+    "checkedAt": "2026-11-14T16:57:19.135Z",
+    "used": 6,
+    "configuredDaily": 6,
+    "requiredForCandidate": 2,
+    "changed": false,
+    "notGlobalProviderLimit": true
+  },
+  "formal": {
+    "source80": false,
+    "customer60": false,
+    "editorial60": false,
+    "R1Accepted": false,
+    "R2Accepted": false
+  },
+  "launchEnabled": false,
+  "livePaymentsEnabled": false,
+  "recurringBillingEnabled": false,
+  "actualMerchantExecutionThisCheckpoint": false,
+  "actualEmailSendingThisCheckpoint": false,
+  "productionRecoveryProved": false,
+  "securityCertificationClaimed": false
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@workspace/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
+  "scripts": {
+    "push": "node ./scripts/schema-push.mjs",
+    "push-force": "node ./scripts/schema-push.mjs --force",
+    "test:schema-guard": "node --test ./scripts/schema-push.test.mjs",
+    "test:phase1-migrations": "node --test ./scripts/phase1-migrations.test.mjs",
+    "test:schema-drift": "node --test ./scripts/schema-drift.test.mjs"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "1.10.0",
+    "drizzle-orm": "catalog:",
+    "drizzle-zod": "^0.8.3",
+    "pg": "^8.23.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.11"
+  }
+}

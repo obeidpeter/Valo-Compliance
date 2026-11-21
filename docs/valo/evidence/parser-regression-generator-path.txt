@@ -1,0 +1,11 @@
+Legend: production dependency, optional only, dev only
+
+@workspace/api-spec@0.0.0 /home/runner/workspace/lib/api-spec (PRIVATE)
+
+devDependencies:
+orval 8.47.0
+├─┬ @scalar/json-magic 0.16.1
+│ └── undici 7.30.1
+└─┬ @scalar/openapi-parser 0.29.22
+  └─┬ @scalar/json-magic 0.19.1
+    └── undici 8.12.3

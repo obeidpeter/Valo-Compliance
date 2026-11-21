@@ -1,0 +1,90 @@
+{
+  "scope": "Synthetic development orders, real PostgreSQL/HTTP/rendering and controlled provider transports only",
+  "results": {
+    "durableDisputeChecks": {
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    "transportAndWebhookHttp": {
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    "customerPrivacyDatabaseRegression": {
+      "passed": 114,
+      "failed": 0,
+      "skipped": 0
+    },
+    "refundLifecycleRegression": {
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0
+    },
+    "foundationEngineering": {
+      "passed": 174,
+      "failed": 0,
+      "skipped": 0
+    },
+    "workspaceTypecheck": "pass"
+  },
+  "countsOverlap": true,
+  "realMerchantActions": 0,
+  "externalMessages": 0,
+  "newInferenceCalls": 0,
+  "publicationActions": 0,
+  "productionMigrations": 0,
+  "developmentMigrations": {
+    "0025_dispute_merchant": "8cc55743642c4a01ae5db8df3a7231a1e5caa7586324df511113f1c53b3894f2",
+    "0026_dispute_category": "611ad44aeb636ffc8c241a89c6d6b1c010e68d8c9471b0beff04115792e89fc8"
+  },
+  "testHistory": [
+    "An initial new-test syntax/type failure was corrected before the final native run; raw initial output retained.",
+    "A combined HTTP invocation without NODE_ENV stopped at its explicit-development assertion. The corrected invocation passed 17 checks.",
+    "Earlier 9- and 11-check dispute runs are superseded by the 12-check run, not additional acceptance cases."
+  ],
+  "limits": [
+    "Controlled staff identity resolution in native HTTP checks is not a genuine Clerk MFA-browser test.",
+    "PDF was actually generated and read using pdftotext; the signed-in customer and finance pages have not been visually verified in this checkpoint.",
+    "These are engineering checks, not the required source80/customerAI60/editorial60 acceptance suites.",
+    "Genuine merchant test-dispute availability remains unverified. No real payment, refund, evidence submission or merchant decision was executed.",
+    "No final bank-outcome mapping or mutation idempotency guarantee was inferred.",
+    "R1 and R2 remain unaccepted; no launch, spend, commercial licence or processor approval was created."
+  ],
+  "bindings": {
+    "artifacts/api-server/src/lib/valo-dispute-actions.ts": "ed51e612ee4c9824116940458e21022903d752d24958c5c796010442e07035de",
+    "artifacts/api-server/src/lib/valo-dispute-provider.ts": "ead97b08f40996a505eab903bff5815cfd3d70d1652feee5dcf6a40eee978530",
+    "artifacts/api-server/src/lib/valo-payment-disputes.ts": "03aa6c2750e278d45db2dfc57679e38270ce5fc754e3ce6463788dcea2d8d10f",
+    "artifacts/api-server/src/lib/valo-render.ts": "891d9a9a406d56af3d6d4c5db35cdfe68fb0681b1fc65c014f5e77595534363a",
+    "artifacts/api-server/src/lib/valo-privacy-erasure.ts": "f4bb68b48cd14ccac68c542c096958c8bf8ca7f4cebdfdacc558465bdaea0c42",
+    "artifacts/api-server/src/routes/valo-customer-access.ts": "0ebc96f9321f18306204a290dd83a0170af2add81507841e343478fc7040fafc",
+    "artifacts/valo/src/components/dispute-workflows.tsx": "e28e5027692065eee7f693ae77ff70946c08266596f55a8a386f70eca0adbf1c",
+    "artifacts/valo/src/screens/finance-refunds.tsx": "675d4dc983f8a0e1b5a08eb8eddfc521faf96caa1bbaaa2954c26a24ad40edc9",
+    "artifacts/valo/src/screens/purchase-history.tsx": "b40dac587e251478ee27f5db433aecf8d611a30c6b278697595aa1e28a55e774",
+    "lib/db/drizzle/0025_dispute_merchant.sql": "8cc55743642c4a01ae5db8df3a7231a1e5caa7586324df511113f1c53b3894f2",
+    "lib/db/drizzle/0026_dispute_category.sql": "611ad44aeb636ffc8c241a89c6d6b1c010e68d8c9471b0beff04115792e89fc8",
+    "artifacts/api-server/src/lib/valo-dispute-actions.integration.test.ts": "5e23f4553e20f5fa346fd41e97614c5f03da25b41772aa2f762c3e0b2e3a3b5f",
+    "docs/valo/evidence/dispute-actions-development.txt": "364c18c397149c978d372c4fc6a444ced243a41b4b2705a0e6b0b4063d09bc5a",
+    "docs/valo/evidence/dispute-http-current.txt": "67cc56b7e83159f2a89d3397034723f880958234fb8471f5c1740d75c22831ea",
+    "docs/valo/evidence/dispute-privacy-regression.txt": "b746c381c9397e6a1465c5414257064a1aa7e85b64e9b138edab135532655d79",
+    "docs/valo/evidence/dispute-refund-current.txt": "019adf1c402fe9df2edc27385b8e0d28a92ec887da65036d7005bcf7af661b6f",
+    "artifacts/api-server/src/lib/valo-dispute-schema.ts": "9d9aef8e530d30fcf7cebc5e0252343e0e8cf75598aeb2d964a30f9c80dfc8c2"
+  },
+  "recordedAt": "2026-11-15T00:13:07.413Z",
+  "mergeReconciliation": {
+    "preservedApplicationCommit": "6059bb3",
+    "sharedHead": "7b6a356",
+    "largeExportAncestor": "7c3ec83",
+    "changes": "Preserved shared DB-free schema, fraud-decline contract, editorial/preparation work and large-export ancestry; affected native and HTTP regressions rerun.",
+    "synchronizedApplicationCommit": "5c77a5ac3c7e4d78491682bf1b45b86c113c028e",
+    "additionalSharedHead": "e6b2131",
+    "rechecked": [
+      "typecheck",
+      "12 dispute tests",
+      "18 HTTP/transport tests",
+      "114 customer/privacy tests",
+      "174 engineering tests",
+      "production frontend build"
+    ]
+  }
+}

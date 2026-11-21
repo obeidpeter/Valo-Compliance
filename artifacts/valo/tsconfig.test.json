@@ -1,0 +1,7 @@
+{
+  // For the web tests only (TSX_TSCONFIG_PATH in the API's test:valo-web). tsx cannot leave JSX for
+  // Next to compile, so this compiles it as Next does, with React's automatic runtime: a component
+  // renders in a test exactly as in the app, without importing React.
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "jsx": "react-jsx" }
+}

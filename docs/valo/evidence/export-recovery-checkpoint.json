@@ -1,0 +1,131 @@
+{
+  "sourceRevision": "372a46be8142aef0557fdff1b6d6843ff98eb50d",
+  "checkedAt": "2026-11-14T02:21:15.193Z",
+  "result": "targeted_development_checks_passed_not_release_acceptance",
+  "formalRequirements": 127,
+  "checks": {
+    "typecheck": "pass",
+    "kernelKillRecovery": {
+      "runnerTests": 12,
+      "leafCases": 11,
+      "pass": 12,
+      "skipped": 0,
+      "stages": [
+        "claiming",
+        "claimed",
+        "rendering",
+        "uploading",
+        "uploaded",
+        "completing",
+        "completed"
+      ],
+      "actualPrivateStorage": true,
+      "actualPgBossDeliveryKilledUnacknowledged": true,
+      "leaseExpiry": "owned synthetic timestamps backdated after real SIGKILL",
+      "lateWriteTombstone": true
+    },
+    "realExportRegression": {
+      "runnerTests": 10,
+      "pass": 10
+    },
+    "apiUnits": {
+      "runnerTests": 44,
+      "pass": 44,
+      "newFixedPageScenarios": 6
+    },
+    "database": {
+      "runnerTests": 49,
+      "pass": 49
+    },
+    "foundation": {
+      "runnerTests": 166,
+      "pass": 166,
+      "ruleAcceptance": false
+    },
+    "browser": {
+      "groups": 11,
+      "pass": 11,
+      "liveJourneyGroups": 8,
+      "browserOnlyFixtureGroups": 3,
+      "editorWidths": [
+        320,
+        360,
+        390,
+        768
+      ],
+      "profileWidths": [
+        320,
+        390,
+        768
+      ],
+      "keyboardTableScrolling": true,
+      "activityLabels": true,
+      "titleComputedFocusOutline": true,
+      "physicalDevices": false,
+      "manualAssistiveTechnology": false
+    },
+    "migration": {
+      "reviewedSql": "lib/db/drizzle/0010_export_recovery.sql",
+      "developmentApplied": true,
+      "productionApplied": false
+    }
+  },
+  "artifacts": [
+    {
+      "path": "docs/valo/evidence/export-recovery/crash-tests.txt",
+      "sha256": "ebed7f3a6811ece97ed3d854d59a55480ec428e4dfd1d7ae58360e1cff529a08"
+    },
+    {
+      "path": "docs/valo/evidence/export-recovery/export-regression.txt",
+      "sha256": "27ac048061474ef15961be9208918ca152f8be448fbe55954e9468206ec600d3"
+    },
+    {
+      "path": "docs/valo/evidence/export-recovery/api-units.txt",
+      "sha256": "28a6319582d95d39e13c8864f9e4622268849dbe45c60333efce45f90898af4c"
+    },
+    {
+      "path": "docs/valo/evidence/export-recovery/database-regression.txt",
+      "sha256": "ebf79483a85e9a76df96e5daba6ea419d18d655240d5dbaeced1d18ac8eb4ad7"
+    },
+    {
+      "path": "docs/valo/evidence/export-recovery/foundation.txt",
+      "sha256": "b1e7293cbeffb797e922130e54ad6b1c0672931034f8add7f4f17b4a128a09f4"
+    },
+    {
+      "path": "docs/valo/evidence/export-recovery/types-final.txt",
+      "sha256": "ba0130e4c1ce10c9b900b86bd79da6c401689a632c20277ec7a959204618f331"
+    },
+    {
+      "path": "docs/valo/evidence/export-recovery/migration.txt",
+      "sha256": "345e2b60d8854baef0fd44152b6a4089095e96767a06eb60294fdf8c93d1185f"
+    },
+    {
+      "path": "docs/valo/evidence/export-recovery/browser.json",
+      "sha256": "443b42f7af14f6c3fb2b1797ac63b7d2ab83738957d73f9a4de85f1bfc0ab9de"
+    },
+    {
+      "path": "docs/valo/evidence/export-recovery/browser-initial.json",
+      "sha256": "aab7afa5a854ea8bf7b55b432572feabd6c72f5ce22e9d67a914f924b6838a8f"
+    },
+    {
+      "path": "docs/valo/evidence/export-recovery/browser-second.json",
+      "sha256": "13a5e92ee1b2b3338efffe9b911598054570e8b03e9bba8b4931d0fd0291bb72"
+    },
+    {
+      "path": "docs/valo/evidence/export-recovery/browser-third.json",
+      "sha256": "0be8bbeb744645788a28282ed41f3c5036e2221c748d2798e0b992c24042a941"
+    }
+  ],
+  "initialFailuresRetained": true,
+  "limitations": [
+    "No production worker/storage/deployment/clock/recovery approval",
+    "Cleanup tombstone retention and alert ownership still need policy approval before live data",
+    "Zero actual eligible publications; fixtures do not count",
+    "Not the complete 80 source-backed rule/60 customer-AI/60 editorial acceptance suites",
+    "No physical iOS/Android/Safari or manual screen-reader acceptance"
+  ],
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "publicLaunch": false,
+  "livePayments": false
+}

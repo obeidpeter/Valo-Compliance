@@ -1,0 +1,109 @@
+{
+  "executedAt": "2026-11-14T04:38:11.001Z",
+  "id": "edf2d117-54ca-440e-b276-3e323677266e",
+  "version": 5,
+  "candidateHash": "467e1813e83912096930e8142352174d03732f024ecb916d3c59bec2513752f2",
+  "policyHash": "dfa73f081effb374f07b64595e44f8557fd9c4c0ee1e173ae4b1f117f3d1fd82",
+  "eligibility": {
+    "decision": "hold",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_not_clear:factual"
+    ]
+  },
+  "release": {
+    "id": "edf2d117-54ca-440e-b276-3e323677266e",
+    "status": "held",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_not_clear:factual"
+    ],
+    "decision": "held"
+  },
+  "reviews": [
+    {
+      "role": "factual",
+      "providerResponseId": "chatcmpl-Ejzodn8Yzl2IkOAotDqLgOXdJOWwG",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "verdict": "hold",
+      "findings": [
+        "The release disclosure is internally inconsistent with the actual scope and provenance evidence: the candidate says \"AI drafted and reviewed; not reviewed by a Nigerian legal, tax or sector specialist\" and \"Authorship is attributed to the supplied ChatGPT drafts; no upstream model or execution receipt is claimed,\" while the trusted evidence says source attribution is only a provided authoring note and not independent certification of upstream authorship. If the release is relying on attribution as a factual statement, it needs to remain narrowly qualified and not imply verified upstream authorship or review beyond what was checked.",
+        "The factual scope statement \"Scope: Original stock-movement and physical-count record for user-entered business information. Optional operational practice; no legal applicability determination.\" is fine, but the later limitation \"No professional review\" conflicts with the disclosure language \"AI drafted and reviewed\" and could mislead about the nature of the review performed. The document should clearly distinguish AI factual review from professional/legal review.",
+        "The provenance statement \"Source/provenance checked (file integrity and provider-permission passages only): 2026-11-14T04:37:59.285Z\" is accurate only if read as a file-integrity/provider-permission check, not as a broader authorship or legal verification. The current wording is too easy to read as a general provenance certification, which the trusted evidence expressly does not provide."
+      ],
+      "missingEvidence": [
+        "A tighter, authoritative wording for the release disclosure that matches the evidence actually checked: file integrity, exact rendering, and provider-permission passages only, without implying independent certification of upstream authorship or professional review.",
+        "If the phrase \"AI drafted and reviewed\" is intended to mean a human or specialist review occurred, evidence of that review is missing; if it only means AI factual review, the wording should be revised to say so explicitly.",
+        "If the candidate intends to assert the authorship attribution as a verified fact beyond the supplied note, missing evidence of independent upstream authorship/execution receipt remains. The current record only supports attribution to the supplied ChatGPT drafts, not independent verification of the upstream model/run."
+      ]
+    },
+    {
+      "role": "challenge",
+      "providerResponseId": "chatcmpl-EjzodvEb0TA0fMuTtZYjChtiyHCGV",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "verdict": "pass",
+      "findings": [],
+      "missingEvidence": []
+    }
+  ],
+  "exportReport": {
+    "candidateHash": "467e1813e83912096930e8142352174d03732f024ecb916d3c59bec2513752f2",
+    "passed": true,
+    "hashes": {
+      "docx": "081593dc5764471677c3ee128d5d1449f65ac1020ce9a67765e3210a76ff50fb",
+      "pdf": "0d5cdab8cf14dd5ede87ee77c68761bfd8bf6f66367a326e236d0dc2a8ab08b3"
+    },
+    "checks": [
+      "Actual DOCX ZIP/XML parsed; required text present",
+      "Actual Chromium A4 PDF parsed with pdftotext; required text present",
+      "Renderer network disabled"
+    ],
+    "manualWordApplicationReview": false,
+    "manualAccessibilityReview": false
+  },
+  "attestations": {
+    "provenance": {
+      "id": "4c1f9e14-236a-4d8c-9796-b87b056a492e",
+      "hash": "94e535043b68b99bd11c4d0ee9d4cbc3f4477454e0c969405d6d4a774c0f45b3",
+      "extension": "json"
+    },
+    "rights": {
+      "id": "3f112fdb-cb56-4c27-8c7c-a8a951357f17",
+      "hash": "1b1e71c91227cd42d4b368c000ca628eaf3368d785215c4d76f5054984e67861",
+      "extension": "json"
+    },
+    "rightsApplicabilityHash": "da81893bcedbce31f6806d72fb1a74bc619206ee90baf4d99c8b389bb914e6b4",
+    "reviews": [
+      {
+        "id": "3eafe5aa-2b14-4af6-ac13-d283a0b8aaff",
+        "hash": "fd0f3742193da82ee79bbe67dd75c2c5c57249d48c311e39c378d17f25830902",
+        "extension": "json"
+      },
+      {
+        "id": "dce53fdd-da91-41c0-9fc0-9d03bed20855",
+        "hash": "7bb9b501dde7d1321934a236872f3c3f5cacfb4012b52888ef08f9a7fe2f3924",
+        "extension": "json"
+      }
+    ],
+    "exports": {
+      "docx": {
+        "id": "7555c4e3-25c7-4497-92e7-130ae9d1f187",
+        "hash": "081593dc5764471677c3ee128d5d1449f65ac1020ce9a67765e3210a76ff50fb",
+        "extension": "docx"
+      },
+      "pdf": {
+        "id": "35682bda-a3f5-48be-ba12-499407ed4e84",
+        "hash": "0d5cdab8cf14dd5ede87ee77c68761bfd8bf6f66367a326e236d0dc2a8ab08b3",
+        "extension": "pdf"
+      }
+    },
+    "exportReport": {
+      "id": "b20c0e5c-5226-43f6-9b1e-f52789567b39",
+      "hash": "87c7d2e4adc137063b8d997c9ac344fa3d2d543b873015cb6a6a34209a07d93e",
+      "extension": "json"
+    }
+  },
+  "rightsScope": "Provider permissions and coordinator-attributed original operational provenance checked for this free synthetic-development release only. Upstream execution IDs are unrecorded; no copyright, exclusivity or non-infringement guarantee. No sales or accepted Valo commercial licence.",
+  "commercialLicenceAccepted": false,
+  "scope": "Development only; no public launch, sales, R1 acceptance or professional verification"
+}

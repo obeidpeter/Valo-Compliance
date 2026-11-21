@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Off here only: src/checker-business-name.ts needs two edits for this check, and its exact
+    // bytes are the business-name candidate's version, bound to its recorded evaluation and to
+    // checker-rich.ts. Turn it on with the checker's next evaluation. Every other package has it.
+    "exactOptionalPropertyTypes": false,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

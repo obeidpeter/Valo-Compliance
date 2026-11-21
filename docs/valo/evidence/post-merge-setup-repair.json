@@ -1,0 +1,22 @@
+{
+  "scope": "Automatic merge dependency/type setup only; not schema or release acceptance",
+  "result": {
+    "durationMs": 8582,
+    "reconciliationError": "",
+    "scriptPath": "scripts/post-merge.sh",
+    "setupError": "",
+    "stderrPath": "/tmp/post-merge-setup.LzVEq0t6.stderr",
+    "stdoutPath": "/tmp/post-merge-setup.LzVEq0t6.stdout",
+    "success": true,
+    "timeoutMs": 120000
+  },
+  "regressionTests": {
+    "foundationPassed": 70,
+    "failed": 0,
+    "newSetupCases": 3
+  },
+  "automaticSchemaPush": false,
+  "schemaAcceptance": false,
+  "r1Accepted": false,
+  "r2Unlocked": false
+}

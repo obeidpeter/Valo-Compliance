@@ -1,0 +1,278 @@
+# The public catalogue, templates, resources and coverage, and saved templates.
+paths:
+  /public/discovery:
+    get:
+      operationId: getPublicDiscovery
+      responses:
+        "200":
+          description: Public metadata for current releases and existing directory pages; no source files or private records
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [path, title, description, modifiedAt]
+                      properties:
+                        path: { type: string }
+                        title: { type: string }
+                        description: { type: string }
+                        modifiedAt: { type: [string, "null"] }
+  /public/resources:
+    get:
+      operationId: listReleasedResources
+      tags: [public]
+      responses:
+        "200":
+          description: Only currently eligible released non-template content.
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ReleasedResource" } }
+  /public/resources/{slug}:
+    get:
+      operationId: getReleasedResource
+      tags: [public]
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string, maxLength: 100 } }
+      responses:
+        "200":
+          description: Released guidance with its actual sources, scope and limitations.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleasedResource" }
+        "404": { description: "Unknown, held, expired or withdrawn." }
+  /public/coverage:
+    get:
+      operationId: getPublicCoverage
+      responses:
+        "200":
+          description: Evidence-held coverage plan, not published regulatory guidance
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicCoverage" }
+        "429": { $ref: "#/components/responses/QuotaError" }
+  /public/catalogue:
+    get:
+      operationId: listPublicCatalogue
+      parameters:
+        - { in: query, name: q, schema: { type: string, maxLength: 120 } }
+        - { in: query, name: type, schema: { type: string, enum: [all, template, guidance, article, industry, service] } }
+        - { in: query, name: industry, schema: { type: string, maxLength: 80 } }
+        - { in: query, name: category, schema: { type: string, maxLength: 80 } }
+        - { in: query, name: access, schema: { type: string, enum: [all, free, premium] } }
+        - { in: query, name: sort, schema: { type: string, enum: [relevance, name, recently_checked] } }
+        - { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
+      responses:
+        "200":
+          description: Released public content only
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CataloguePage"
+        "429": { $ref: "#/components/responses/QuotaError" }
+  /public/templates/{slug}:
+    get:
+      operationId: getReleasedTemplate
+      parameters:
+        - { in: path, name: slug, required: true, schema: { type: string, maxLength: 100 } }
+      responses:
+        "200":
+          description: Live eligible development template, never an unpublished master
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleasedTemplate" }
+        "404": { $ref: "#/components/responses/AuthError" }
+  /workspace/saved-templates:
+    get:
+      operationId: listSavedTemplates
+      responses:
+        "200":
+          description: Owner-scoped saved items and currently released suggestions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SavedTemplates" }
+        "401": { description: Sign-in required }
+  /workspace/saved-templates/{id}:
+    put:
+      operationId: saveReleasedTemplate
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Saved after current release and owner checks; no entitlement is granted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SavedTemplates" }
+        "404": { description: Release unavailable }
+        "403": { description: Active owner required }
+        "409": { description: Saved-item limit reached }
+  /workspace/saved-templates/by-template/{templateId}:
+    delete:
+      operationId: unsaveTemplate
+      parameters:
+        - { in: path, name: templateId, required: true, schema: { type: string, maxLength: 80, pattern: "^[A-Za-z0-9_-]{1,80}$" } }
+      responses:
+        "200":
+          description: Idempotent removal, including unavailable templates
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SavedTemplates" }
+        "403": { description: Active owner required }
+  /public/recommendations:
+    get:
+      operationId: listOperationalRecommendations
+      responses:
+        "200":
+          description: Optional operational aids, not legal applicability recommendations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CataloguePage" }
+  /workspace/templates/{id}/draft:
+    post:
+      operationId: createTemplateDraft
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "201":
+          description: Tenant-owned immutable first revision linked to its released template version
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BusinessDocument" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+  /workspace/templates/{id}/files/{format}:
+    get:
+      operationId: downloadReleasedTemplate
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+        - { in: path, name: format, required: true, schema: { type: string, enum: [docx, pdf] } }
+      responses:
+        "200":
+          description: Private account-gated blank master; withdrawal prevents new downloads
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+schemas:
+  ReleasedResource:
+    type: object
+    required: [id, slug, title, kind, industrySlugs, summary, body, reviewedAt, disclosure, scope, limitations, sources]
+    properties:
+      id: { type: string }
+      slug: { type: string }
+      title: { type: string }
+      kind: { type: string, enum: [guidance, guide, industry_pack, location_pack] }
+      industrySlugs: { type: array, items: { type: string } }
+      summary: { type: string }
+      body: { type: string }
+      reviewedAt: { type: string }
+      disclosure: { type: string }
+      scope: { type: string }
+      limitations: { type: string }
+      sources: { type: array, items: { $ref: "#/components/schemas/PublicSourceReference" } }
+  PublicSourceReference:
+    type: object
+    required: [url, title, locator]
+    properties:
+      url: { type: string }
+      title: { type: string }
+      locator: { type: string }
+  IndustryCoverage:
+    type: object
+    required: [id, slug, title, deeperPackTarget, enhancedEvidenceRequired, coverageState, evidenceState, sourceCheckedAt, publishedItems]
+    properties:
+      id: { type: string }
+      slug: { type: string }
+      title: { type: string }
+      deeperPackTarget: { type: boolean }
+      enhancedEvidenceRequired: { type: boolean }
+      coverageState: { type: string }
+      evidenceState: { type: string }
+      sourceCheckedAt: { type: [string, "null"], format: date-time }
+      publishedItems: { type: integer }
+  PublicCoverage:
+    type: object
+    required: [industries, guidanceTarget, publishedGuidance, guidesTarget, publishedGuides, deeperPackTarget, publishedDeeperPacks, selectableLocations, priorityLocations, checkedLocationPacks, notice, ngoNotice]
+    properties:
+      industries: { type: array, items: { $ref: "#/components/schemas/IndustryCoverage" } }
+      guidanceTarget: { type: integer }
+      publishedGuidance: { type: integer }
+      guidesTarget: { type: integer }
+      publishedGuides: { type: integer }
+      deeperPackTarget: { type: integer }
+      publishedDeeperPacks: { type: integer }
+      selectableLocations: { type: integer }
+      priorityLocations: { type: array, items: { type: string } }
+      checkedLocationPacks: { type: integer }
+      notice: { type: string }
+      ngoNotice: { type: string }
+  PublicItem:
+    type: object
+    required: [id, slug, title, type, summary, industry]
+    properties:
+      id: { type: string }
+      slug: { type: string }
+      title: { type: string }
+      type: { type: string }
+      summary: { type: string }
+      industry: { type: string }
+      templateId: { type: string }
+      category: { type: string }
+      access: { type: string, enum: [free, premium] }
+      reviewedAt: { type: string }
+      href: { type: string }
+      reason: { type: string }
+  SavedTemplates:
+    type: object
+    required: [items, recommendations, notice]
+    properties:
+      notice: { type: string }
+      recommendations: { type: array, items: { $ref: "#/components/schemas/PublicItem" } }
+      items:
+        type: array
+        maxItems: 200
+        items:
+          type: object
+          required: [templateId, title, savedVersion, savedAt, available, current]
+          properties:
+            templateId: { type: string }
+            title: { type: string }
+            savedVersion: { type: integer }
+            savedAt: { type: string }
+            available: { type: boolean }
+            current:
+              anyOf:
+                - { $ref: "#/components/schemas/PublicItem" }
+                - { type: "null" }
+  ReleasedTemplate:
+    type: object
+    required: [id, templateId, slug, title, summary, version, reviewedAt, reviewBy, disclosure, scope, limitations, preview, developmentOnly, commercialLicenceAccepted, formats]
+    properties:
+      id: { type: string, format: uuid }
+      templateId: { type: string }
+      slug: { type: string }
+      title: { type: string }
+      summary: { type: string }
+      version: { type: integer }
+      reviewedAt: { type: string, format: date-time }
+      reviewBy: { type: string, format: date-time }
+      disclosure: { type: string }
+      scope: { type: string }
+      limitations: { type: string }
+      preview: { type: array, items: { type: string } }
+      developmentOnly: { type: boolean }
+      commercialLicenceAccepted: { type: boolean }
+      formats: { type: array, items: { type: string, enum: [docx, pdf] } }
+  CataloguePage:
+    type: object
+    required: [items, total, page, heldTemplates]
+    properties:
+      items: { type: array, items: { $ref: "#/components/schemas/PublicItem" } }
+      total: { type: integer }
+      page: { type: integer }
+      heldTemplates: { type: integer }

@@ -1,0 +1,495 @@
+{
+  "suite": "80-rule-engineering-evaluation",
+  "executedAt": "2026-11-13T21:56:30.903Z",
+  "fixtureProvenance": "Controlled synthetic specifications, NOT Nigerian legal evidence",
+  "fixtureSetHash": "f77acf1f5cb0ee590d8f28aed4bc1c25f2531740d2dcf78a5abfc5b8fef468a5",
+  "executed": 80,
+  "passed": 80,
+  "failed": 0,
+  "sourceBackedNigerianCases": 0,
+  "independentChallengeExecuted": false,
+  "RUL008Accepted": false,
+  "limitation": "These results validate engine semantics only. Publication/fixture-source/independent-challenge gates remain open.",
+  "results": [
+    {
+      "id": "RULE-EVAL-001",
+      "name": "Activity retail_wholesale against retail_wholesale",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-002",
+      "name": "Activity technology_software against packaged_food",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-003",
+      "name": "Activity technology_software against technology_software",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-004",
+      "name": "Activity beauty_personal_care against beauty_personal_care",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-005",
+      "name": "Activity packaged_food against restaurants_hospitality",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-006",
+      "name": "Professional services included explicitly",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-007",
+      "name": "Trustees are not a limited company",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-008",
+      "name": "Guarantee-company condition matches its own structure",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-009",
+      "name": "Unknown legal structure needs clarification",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-010",
+      "name": "Unanswered registration does not establish exemption",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-011",
+      "name": "Lagos rule stays within its own state",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-012",
+      "name": "FCT rule stays within its own state",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-013",
+      "name": "Bayelsa rule stays within its own state",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-014",
+      "name": "Lagos rule is excluded for Kaduna",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-015",
+      "name": "Unknown state is not national applicability",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-016",
+      "name": "Exact LGA match",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-017",
+      "name": "Different LGA is excluded",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-018",
+      "name": "LGA unknown does not invent a local duty",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-019",
+      "name": "LGA unanswered does not invent a local duty",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-020",
+      "name": "LGA not_applicable does not invent a local duty",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-021",
+      "name": "Strict workforce less-than below boundary",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-022",
+      "name": "Strict workforce less-than at boundary",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-023",
+      "name": "Inclusive workforce boundary",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-024",
+      "name": "Workforce above exclusive boundary",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-025",
+      "name": "Zero workforce equality",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-026",
+      "name": "unknown workforce cannot imply exemption",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-027",
+      "name": "unanswered workforce cannot imply exemption",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-028",
+      "name": "not_applicable workforce cannot imply exemption",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-029",
+      "name": "Known zero below threshold",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-030",
+      "name": "Large safe workforce count",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-031",
+      "name": "Turnover strict less-than boundary",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-032",
+      "name": "Turnover inclusive lower boundary",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-033",
+      "name": "Turnover strict greater-than boundary",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-034",
+      "name": "Turnover inclusive upper boundary",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-035",
+      "name": "Turnover exact equality",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-036",
+      "name": "Unknown metric requests the metric",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-037",
+      "name": "Unknown currency is not assumed NGN",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-038",
+      "name": "Wrong accounting year is uncertain",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-039",
+      "name": "Monthly amount cannot satisfy an annual threshold",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-040",
+      "name": "Missing exact amount and unknown band request a value",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-041",
+      "name": "Different fiscal start is uncertain",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-042",
+      "name": "Different fiscal end is uncertain",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-043",
+      "name": "An unfinished accounting period is not completed revenue",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-044",
+      "name": "Invalid calendar period is rejected",
+      "status": "pass",
+      "expected": "reject"
+    },
+    {
+      "id": "RULE-EVAL-045",
+      "name": "Amounts larger than IEEE safe integer remain exact",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-046",
+      "name": "Band wholly below a threshold",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-047",
+      "name": "Band straddles a threshold",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-048",
+      "name": "Equality inside a band is unknown",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-049",
+      "name": "Open upper band wholly above threshold",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-050",
+      "name": "Open upper band cannot prove an arbitrary high threshold",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-051",
+      "name": "All true predicates match",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-052",
+      "name": "AND false overrides true",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-053",
+      "name": "AND unknown with true remains uncertain",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-054",
+      "name": "AND false with unknown is excluded without claiming exemption",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-055",
+      "name": "Known no is not a missing answer",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-056",
+      "name": "OR true with unknown matches",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-057",
+      "name": "OR true with false matches",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-058",
+      "name": "OR false with unknown remains uncertain",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-059",
+      "name": "OR all false excluded",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-060",
+      "name": "OR cannot escape another state",
+      "status": "pass",
+      "expected": "not_indicated"
+    },
+    {
+      "id": "RULE-EVAL-061",
+      "name": "Before effective start is held",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-062",
+      "name": "At inclusive effective start",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-063",
+      "name": "At exclusive effective end is held",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-064",
+      "name": "Historical effective period remains reproducible",
+      "status": "pass",
+      "expected": "likely"
+    },
+    {
+      "id": "RULE-EVAL-065",
+      "name": "Future assessment rejected",
+      "status": "pass",
+      "expected": "reject"
+    },
+    {
+      "id": "RULE-EVAL-066",
+      "name": "Held source cannot recommend",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-067",
+      "name": "Withdrawn source cannot recommend",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-068",
+      "name": "Expired source cannot recommend",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-069",
+      "name": "Source check in the future cannot recommend",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-070",
+      "name": "Offset timestamp is compared as an instant",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-071",
+      "name": "Synthetic fixtures rejected in customer mode",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-072",
+      "name": "Forged editorial manifest is not trusted",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-073",
+      "name": "Arbitrary operator rejected",
+      "status": "pass",
+      "expected": "reject"
+    },
+    {
+      "id": "RULE-EVAL-074",
+      "name": "Numeric operator on untyped location rejected",
+      "status": "pass",
+      "expected": "reject"
+    },
+    {
+      "id": "RULE-EVAL-075",
+      "name": "Unsupported condition property rejected",
+      "status": "pass",
+      "expected": "reject"
+    },
+    {
+      "id": "RULE-EVAL-076",
+      "name": "Unknown activity remains a question",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-077",
+      "name": "Unanswered activity remains distinct",
+      "status": "pass",
+      "expected": "unknown"
+    },
+    {
+      "id": "RULE-EVAL-078",
+      "name": "No released rules is a gap, never compliance",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-079",
+      "name": "Overlapping released versions are held",
+      "status": "pass",
+      "expected": "held"
+    },
+    {
+      "id": "RULE-EVAL-080",
+      "name": "Known false data-processing answer is evaluable",
+      "status": "pass",
+      "expected": "likely"
+    }
+  ]
+}

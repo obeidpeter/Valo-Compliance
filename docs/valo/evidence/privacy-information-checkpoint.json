@@ -1,0 +1,20 @@
+{
+  "scope": "Partial development customer/staff privacy information workflow",
+  "baseRevision": "e542ff1545d15f3ff7d4305e39594cd1a1bf9154",
+  "tests": {
+    "developmentDatabase": {"passed": 103, "failed": 0, "skipped": 0},
+    "engineeringAndTraceability": {"passed": 174, "failed": 0, "skipped": 0},
+    "httpSubset": {"passed": 6, "failed": 0, "note": "Included in database total; controlled identity/session transports"},
+    "workspaceTypecheck": "passed"
+  },
+  "behavior": ["same-case information replies", "verification kept separate", "duplicate suppression", "stale-write conflicts", "cross-tenant denial", "read-only staff history", "scoped available actions", "private message erasure", "named JSON export section", "unsaved-reply navigation guard"],
+  "realManagedMfaBrowserVerified": false,
+  "signedInUiVisuallyVerified": false,
+  "newFailedRunFixturesRemoved": 2,
+  "quotasIncreased": false,
+  "newPaidInferenceCalls": 0,
+  "externalMessages": 0,
+  "livePayments": false,
+  "ownerSpendingApproval": false,
+  "formalAcceptance": false
+}

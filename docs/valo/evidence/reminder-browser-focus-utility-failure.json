@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-11-14T04:20:31.230Z",
+  "syntheticDevelopmentOnly": true,
+  "checks": [
+    {
+      "name": "managed_verified_customer_can_open_private_routes",
+      "status": "pass"
+    },
+    {
+      "name": "real_manual_reminder_records_past_due_dates_and_mobile_keyboard_flow",
+      "status": "fail",
+      "diagnostic": "{\"path\":\"/workspace/ai\",\"headings\":1,\"width\":360,\"scroll\":360,\"focus\":\"INPUT\",\"focusOutline\":\"rgb(39, 36, 33) none 3px\",\"overflow\":[{\"tag\":\"UL\",\"class\":\"flex min-w-max gap-1\"},{\"tag\":\"LI\",\"class\":\"\"},{\"tag\":\"A\",\"class\":\"relative block px-3 py-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring text-muted-foreground hover:text-foreground\"},{\"tag\":\"LI\",\"class\":\"\"},{\"tag\":\"A\",\"class\":\"relative block px-3 py-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring text-muted-foreground hover:text-foreground\"}]}"
+    }
+  ],
+  "selection": "managed-identity-reminder-only",
+  "actualManagedIdentityUsed": true,
+  "realEmailDeliveryClaimed": false,
+  "actualNewPublications": 0,
+  "fixtureDisclosure": "Resource and template fixtures were intercepted only in this browser, never inserted/published; no content eligibility or real published-master download proven.",
+  "r1Accepted": false,
+  "r2Accepted": false,
+  "cleanupErrors": 0,
+  "cleanup": "Owned synthetic identity and application rows removed; provider usage history untouched."
+}

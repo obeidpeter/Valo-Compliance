@@ -1,0 +1,103 @@
+# Business documents and their revisions.
+paths:
+  /workspace/documents:
+    get:
+      operationId: listDocuments
+      responses:
+        "200":
+          description: Private business drafts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/BusinessDocument" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
+    post:
+      operationId: createDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentInput"
+      responses:
+        "201":
+          description: Saved manual business draft, not a published template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessDocument"
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
+  /workspace/documents/{id}:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getDocument
+      responses:
+        "200":
+          description: Latest canonical saved revision
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BusinessDocument" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
+    patch:
+      operationId: saveDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentUpdate"
+      responses:
+        "200":
+          description: Newly appended immutable revision
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BusinessDocument" }
+        "400": { $ref: "#/components/responses/AuthError" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "409": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/WriteLimit" }
+  /workspace/documents/{id}/revisions:
+    get:
+      operationId: listDocumentRevisions
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Immutable historical revisions scoped to the workspace
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/BusinessDocument" }
+        "401": { $ref: "#/components/responses/AuthError" }
+        "403": { $ref: "#/components/responses/AuthError" }
+        "404": { $ref: "#/components/responses/AuthError" }
+        "429": { $ref: "#/components/responses/QuotaError" }
+schemas:
+  DocumentInput:
+    type: object
+    additionalProperties: false
+    required: [title, content]
+    properties:
+      title: { type: string, minLength: 1, maxLength: 160 }
+      content: { $ref: "#/components/schemas/CanonicalDocument" }
+  DocumentUpdate:
+    type: object
+    additionalProperties: false
+    required: [expectedRevision, title, content]
+    properties:
+      expectedRevision: { type: integer, minimum: 1 }
+      title: { type: string, minLength: 1, maxLength: 160 }
+      content: { $ref: "#/components/schemas/CanonicalDocument" }

@@ -1,0 +1,61 @@
+{
+  "checks": [
+    {
+      "sourceId": "SV-010",
+      "kind": "raw",
+      "anonymousStatus": 403,
+      "authorizedChecksumMatched": true,
+      "size": 1269127
+    },
+    {
+      "sourceId": "SV-010",
+      "kind": "text",
+      "anonymousStatus": 403,
+      "authorizedChecksumMatched": true,
+      "size": 1489356
+    },
+    {
+      "sourceId": "CAC-BN-PROCESS",
+      "kind": "raw",
+      "anonymousStatus": 403,
+      "authorizedChecksumMatched": true,
+      "size": 33421
+    },
+    {
+      "sourceId": "CAC-BN-PROCESS",
+      "kind": "text",
+      "anonymousStatus": 403,
+      "authorizedChecksumMatched": true,
+      "size": 1115
+    },
+    {
+      "sourceId": "NIPC-BFA-2022",
+      "kind": "raw",
+      "anonymousStatus": 403,
+      "authorizedChecksumMatched": true,
+      "size": 566637
+    },
+    {
+      "sourceId": "NIPC-BFA-2022",
+      "kind": "text",
+      "anonymousStatus": 403,
+      "authorizedChecksumMatched": true,
+      "size": 56140
+    },
+    {
+      "sourceId": "NCC-COPYRIGHT",
+      "kind": "raw",
+      "anonymousStatus": 403,
+      "authorizedChecksumMatched": true,
+      "size": 738936
+    },
+    {
+      "sourceId": "NCC-COPYRIGHT",
+      "kind": "text",
+      "anonymousStatus": 403,
+      "authorizedChecksumMatched": true,
+      "size": 191108
+    }
+  ],
+  "checkedAt": "2026-11-14T02:42:15.932Z"
+}

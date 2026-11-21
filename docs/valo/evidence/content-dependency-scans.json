@@ -1,0 +1,112 @@
+{
+  "executedAt": "2026-11-14T03:34:43.601Z",
+  "scope": "Automated development scans; not independent security approval",
+  "results": [
+    {
+      "scanner": "dependencies",
+      "status": "fulfilled",
+      "result": {
+        "metadata": {
+          "vulnerabilities": {
+            "critical": 0,
+            "high": 1,
+            "info": 0,
+            "low": 0,
+            "moderate": 0
+          }
+        },
+        "vulnerabilities": [
+          {
+            "affectedVersions": {
+              "ranges": [
+                {
+                  "fixed": "4.6.6",
+                  "introduced": "0"
+                }
+              ]
+            },
+            "details": {
+              "aliases": [
+                "CVE-2023-54404"
+              ],
+              "description": "Zod schema-validation library through 4.6.5 contains an uncontrolled resource consumption vulnerability that allows attackers to exhaust memory by submitting a large array to an application using an array schema without a length constraint. Attackers can exploit the handleArrayResult parse logic in $ZodArray, which accumulates every validation issue for each failing element with no cap or early termination, causing the process to allocate excessive issue objects and crash due to out-of-memory conditions.",
+              "references": [
+                {
+                  "type": "ADVISORY",
+                  "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-54404"
+                },
+                {
+                  "type": "WEB",
+                  "url": "https://github.com/colinhacks/zod/issues/1872"
+                },
+                {
+                  "type": "WEB",
+                  "url": "https://github.com/colinhacks/zod/pull/6475"
+                },
+                {
+                  "type": "WEB",
+                  "url": "https://github.com/colinhacks/zod/pull/6652"
+                },
+                {
+                  "type": "WEB",
+                  "url": "https://github.com/colinhacks/zod/commit/a0ebf970f2d752e5f58527cd2942ff48be4f46bd"
+                },
+                {
+                  "type": "PACKAGE",
+                  "url": "https://github.com/colinhacks/zod"
+                },
+                {
+                  "type": "WEB",
+                  "url": "https://www.vulncheck.com/advisories/zod-uncontrolled-resource-consumption-via-array-validation"
+                }
+              ],
+              "title": "Zod can exhaust memory while validating oversized constrained collections"
+            },
+            "filePaths": [
+              "pnpm-lock.yaml"
+            ],
+            "fix": {
+              "available": true,
+              "requiresMajorUpdate": true,
+              "version": "4.6.6"
+            },
+            "id": "GHSA-mrhx-c7xc-m3w5@zod-3.25.76",
+            "package": {
+              "ecosystem": "npm",
+              "name": "zod",
+              "purl": "pkg:npm/zod",
+              "version": "3.25.76"
+            },
+            "severity": {
+              "level": "high",
+              "type": "CVSS_V3",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+            },
+            "source": {
+              "scannedAt": "2026-11-14T03:34:44.823Z",
+              "scanner": "osv-scanner"
+            }
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "scanner": "sast",
+      "status": "fulfilled",
+      "result": {
+        "incomplete": false,
+        "results": []
+      },
+      "error": null
+    },
+    {
+      "scanner": "privacy",
+      "status": "fulfilled",
+      "result": {
+        "vulnerabilities": []
+      },
+      "error": null
+    }
+  ]
+}

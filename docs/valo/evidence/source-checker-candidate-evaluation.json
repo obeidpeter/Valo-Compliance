@@ -1,0 +1,1580 @@
+{
+  "schemaVersion": "source-checker-candidate-run-v1",
+  "generatedAt": "2026-11-14T13:59:57.109Z",
+  "baseSavedCommit": "86a56dc827b6047fb9f08180e5c7c9477ee5f6d1",
+  "codeBinding": "Exact source/algorithm/corpus file hashes below bind this working-tree run; base commit alone is not the new code revision.",
+  "mode": "isolated_candidate_validation",
+  "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+  "sourceVersionHashes": {
+    "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+    "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+    "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+  },
+  "supportedAssessmentDates": [
+    "2026-11-13",
+    "2026-11-14"
+  ],
+  "fileHashes": {
+    "docs/content-candidates/business-name-release-candidate.json": "f35564752fc7a5ce5ded80846c3e85823200ba79ecd1c98efdc42dca489197de",
+    "docs/content-candidates/business-name-source-passages.json": "18410ef30dabbdf615a551b6202decbe82f9abef3d5de2b3ee617f97e98b558e",
+    "docs/content-candidates/business-name-source-retrieval.json": "f06d18c23f17a6cf0142557c8faff75b7ca841caf0be3982976c444d7de8f3a8",
+    "lib/valo-core/src/checker-business-name.ts": "ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+    "docs/evaluation-candidates/checker.json": "5e333b3f472263e16f767b3165e29c1b1e210fdbac922873d1ffc086027ae1a0"
+  },
+  "passages": [
+    {
+      "id": "CAMA-814",
+      "sourceId": "cama_2020",
+      "locator": "section814(1)(a)-(c),814(2)(a)-(c); PDF405–406 / A405–A406",
+      "hash": "4bc357be4f635d2980b67447f8bd5e6624ddbbcf4980348ac85f0bd2f998953d"
+    },
+    {
+      "id": "CAMA-868-business",
+      "sourceId": "cama_2020",
+      "locator": "section868(1); PDF434 / A434",
+      "hash": "2d1f6640b55a0d5d85c397b8148550bbfa53723fc495e9835ad3f37163223e73"
+    },
+    {
+      "id": "CAMA-868-business-name",
+      "sourceId": "cama_2020",
+      "locator": "section868(1); PDF434 / A434",
+      "hash": "9a4eecf2738cbd2fdbedce1fa2a015968765a4f20dc83b9b3d22e64cc29b817d"
+    },
+    {
+      "id": "CAMA-868-firm",
+      "sourceId": "cama_2020",
+      "locator": "section868(1); PDF435 / A435",
+      "hash": "16dd923a01bd7222fe9d2048f3bc6dbe8d554432ac72d199f998b09616386298"
+    },
+    {
+      "id": "CAMA-868-forename",
+      "sourceId": "cama_2020",
+      "locator": "section868(1); PDF436 / A436",
+      "hash": "f93b5a5296c36b2b9499c50af891f53750bc505f0d9c94c4e4940dcbe5b49652"
+    },
+    {
+      "id": "CAMA-868-initials",
+      "sourceId": "cama_2020",
+      "locator": "section868(1); PDF436 / A436",
+      "hash": "585d122adfdcf984ec3ce8279ab31e16fd0c41c0702a669ae4fc0ad48cddd609"
+    },
+    {
+      "id": "CAMA-863",
+      "sourceId": "cama_2020",
+      "locator": "section863(1)-(2); PDF432 / A432",
+      "hash": "56d5db4d1fce754c747e68a42bd81b110ce42087ecde87ddf486db63d322d1e6"
+    },
+    {
+      "id": "CAMA-COMMENCEMENT",
+      "sourceId": "cama_2020",
+      "locator": "PDF33 / A33",
+      "hash": "5c9dbdddd56f67bcf32a1a3e1c739b5242d03220cbe29bd76a3cd2306ccaaa23"
+    },
+    {
+      "id": "BFA-PART-I",
+      "sourceId": "bfa_2022",
+      "locator": "SchedulePartI paragraphs1–21; PDF9–13 / A103–A107",
+      "hash": "20d2618586b4b649b34ccd7aad17d39a647624acfc392d05d47a23877f65868a"
+    },
+    {
+      "id": "BFA-COMMENCEMENT",
+      "sourceId": "bfa_2022",
+      "locator": "PDF5 / A99",
+      "hash": "98f879c345cab4513c7cc4bb5cc2b60fe54185b7f6d231f431696e2b2799845b"
+    },
+    {
+      "id": "COPYRIGHT-3B",
+      "sourceId": "copyright_2022",
+      "locator": "section3(b); PDF8 / A184",
+      "hash": "6cbecd5cea38b1fffc32c4f988a29f39540c5f0c981a2b8c44e15c6d544eda58"
+    },
+    {
+      "id": "COPYRIGHT-2-5",
+      "sourceId": "copyright_2022",
+      "locator": "section2(5); PDF8 / A184",
+      "hash": "4ca97a8755e31ad97c2c01805967d21e7fed3bc2c98522be55f3cc2594ec5aab"
+    }
+  ],
+  "originalPdfBytesReverifiedThisRun": false,
+  "retainedPassageBytesReverifiedThisRun": true,
+  "publicationApproval": false,
+  "independentExpectedOutcomeChallenge": "not_executed_by_this_runner",
+  "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+  "summary": {
+    "authoredCases": 80,
+    "executed": 20,
+    "passed": 20,
+    "failed": 0,
+    "unexecuted": 60,
+    "formal80CaseAcceptance": false,
+    "independentChallengeExecuted": false,
+    "customerAi60Acceptance": false,
+    "editorial60Acceptance": false,
+    "realProviderCalls": 0,
+    "publishedRules": 0
+  },
+  "limitations": [
+    "Only the CAMA naming candidate is implemented here; the remaining 60 authored cases have not executed.",
+    "Raw PDF retrieval hashes are retained prior evidence; this run verifies retained passage bytes, not freshly downloaded PDFs.",
+    "Matching authored candidate labels is not independent expected-outcome challenge or legal accuracy certification.",
+    "This isolated run never creates eligible manifests, customer assessments, tasks or reminders."
+  ],
+  "results": [
+    {
+      "caseId": "CHK-CAND-CAMA-001",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Likely relevant",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "c39de588c23bce589b563e78b2be32dc2882e9ea5d79f76de82f500083fbee6a",
+        "assessmentDate": "2026-11-13",
+        "label": "Likely relevant",
+        "reason": "The supplied name omits the confirmed surname for the individual: section 814(1)(a)/(b). This is naming relevance, not a breach or incorporation decision.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "hasPlaceOfBusinessInNigeria",
+          "carryingOnBusiness",
+          "legalForm",
+          "businessName",
+          "section814Exception",
+          "trueSurname/trueForenames"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": "Review the exact-name/operator registration position; no customer task is created.",
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "217ed4eb2c16fdbbe054790bdb3f1c6084feb26deb1164a1d3c20a33486022c7"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-002",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Not indicated by these answers",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "304f0aeb6e39c2153132252db9484dfa6a113dc9c8559d0c291166d26b421533",
+        "assessmentDate": "2026-11-13",
+        "label": "Not indicated by these answers",
+        "reason": "The supplied name contains all required true surnames and only supplied forenames/initials: section 814(1)(a)/(b), with section 868 definitions.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "businessName",
+          "trueSurname/trueForenames"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "290857d34f10b079fd9aebc95e9f87d85c59fbf3be40a944bb60cb746c0b5a3a"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-003",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Not indicated by these answers",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "2bfbfd4a4ae71e56b3c78abf4b3afefa8b8767df92f4022235faae213744c999",
+        "assessmentDate": "2026-11-13",
+        "label": "Not indicated by these answers",
+        "reason": "The supplied name contains all required true surnames and only supplied forenames/initials: section 814(1)(a)/(b), with section 868 definitions.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "businessName",
+          "trueSurname/trueForenames"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "8ae0b1dbf417a327c5636598ac2807794dfa5c41b89fda72c5096394dee79ca6"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-004",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Likely relevant",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "5130e1d0b8f5a5982e793f27e307b316b0b84e3569675ac0bd0621f2654b5bb0",
+        "assessmentDate": "2026-11-13",
+        "label": "Likely relevant",
+        "reason": "The supplied name contains an independent addition outside the recorded true names, initials or confirmed qualifying additions: section 814(1)(a)/(b). This is naming relevance, not a breach or incorporation decision.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "hasPlaceOfBusinessInNigeria",
+          "carryingOnBusiness",
+          "legalForm",
+          "businessName",
+          "section814Exception",
+          "trueSurname/trueForenames"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": "Review the exact-name/operator registration position; no customer task is created.",
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "b207610659be768125051dcbccc30ee7c645280b37f68943ba7c17227c13fe1d"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-005",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Not indicated by these answers",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "8b11ae8d13720bdebe424baa75df47fd4b323acb70e8b9daa8c3accbff0c8fe7",
+        "assessmentDate": "2026-11-13",
+        "label": "Not indicated by these answers",
+        "reason": "The supplied name contains all required true surnames and only supplied forenames/initials: section 814(1)(a)/(b), with section 868 definitions.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "businessName",
+          "partners"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "adc009ccd9c786b99e1f85bb7e4cf00bc9599f90bf579c78fb3ad6859d80a12d"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-006",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Likely relevant",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "fe5c63b411d9934c58d9d13102af470fea2f829176b275ed7e8774ac8d3c7fd6",
+        "assessmentDate": "2026-11-13",
+        "label": "Likely relevant",
+        "reason": "The supplied name omits the confirmed surname for partner positions 2: section 814(1)(a)/(b). This is naming relevance, not a breach or incorporation decision.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "hasPlaceOfBusinessInNigeria",
+          "carryingOnBusiness",
+          "legalForm",
+          "businessName",
+          "section814Exception",
+          "partners"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": "Review the exact-name/operator registration position; no customer task is created.",
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "8cc446e30aa870d39228d27707a79bbadcdee9c1cf8c4996284d1b1b17bf7058"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-007",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Not indicated by these answers",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "93297518fa0840646fb2bff1955462464377c3c4db75484c90ea53b417cdd88f",
+        "assessmentDate": "2026-11-13",
+        "label": "Not indicated by these answers",
+        "reason": "The business is carried on by the confirmed court-appointed receiver or manager: section 814(2)(c).",
+        "missingFacts": [],
+        "matchedFacts": [
+          "carryingOnBusiness",
+          "operatorRole",
+          "appointmentAuthority",
+          "appointmentConfirmed"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "7abcb6e10d6b7e0b6d7ff0986c2b798861a58117fc0efbd72ef5cf3b5fb4acca"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-008",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Not indicated by these answers",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "e76b0e9885b25846e2fac515f4e255b1be026cbe6645defbe7e5da25135229fe",
+        "assessmentDate": "2026-11-13",
+        "label": "Not indicated by these answers",
+        "reason": "The supplied business name is the exact corporate name: section 814(1)(c).",
+        "missingFacts": [],
+        "matchedFacts": [
+          "businessName",
+          "corporateName"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "490424dbbf670256770f0d86bd8aa65a1ff7c6a966b1fe070ec0b957836364cd"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-009",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Likely relevant",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "0e905a356e2886724cdc6e7642d0edaef64248f0f1c70296e98cc67d67589768",
+        "assessmentDate": "2026-11-13",
+        "label": "Likely relevant",
+        "reason": "The supplied trading name differs from the confirmed corporate name: section 814(1)(c). This is naming relevance, not a breach or incorporation decision.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "hasPlaceOfBusinessInNigeria",
+          "carryingOnBusiness",
+          "legalForm",
+          "businessName",
+          "section814Exception",
+          "corporateName"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": "Review the exact-name/operator registration position; no customer task is created.",
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "ebf66672a0e9d10820cb105fb6b359eb2b88579442d51d54063dae35f7cb06d9"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-010",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Not indicated by these answers",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "9966ace9cd38cef8cceda8b54564918e761ee74807af5742d26415e77af13b1a",
+        "assessmentDate": "2026-11-13",
+        "label": "Not indicated by these answers",
+        "reason": "After only the confirmed qualifying succession/plural addition, the applicable base-name condition is satisfied: section 814(2)(a)/(b).",
+        "missingFacts": [],
+        "matchedFacts": [
+          "businessName",
+          "namingAssessment",
+          "trueSurname/trueForenames"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "dae289c69ffe0af649db30552c5a2f3ec217137f8e726b0e1515de6589b761c5"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-011",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Likely relevant",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "676dde252dcdf7ef0a43d9f5afc44a50f75927235a9ab472bd786250712fc9a7",
+        "assessmentDate": "2026-11-13",
+        "label": "Likely relevant",
+        "reason": "The supplied name contains an independent addition outside the recorded true names, initials or confirmed qualifying additions: section 814(1)(a)/(b). This is naming relevance, not a breach or incorporation decision.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "hasPlaceOfBusinessInNigeria",
+          "carryingOnBusiness",
+          "legalForm",
+          "businessName",
+          "section814Exception",
+          "trueSurname/trueForenames"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": "Review the exact-name/operator registration position; no customer task is created.",
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "94128cbad4d70b2089376b2465e031d266d6d3443d701323fd33cef72f4723bc"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-012",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Not indicated by these answers",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "e46255cda5e93269b7acf188f8872570fcaae446c6008b2a6cfc5492733904b5",
+        "assessmentDate": "2026-11-13",
+        "label": "Not indicated by these answers",
+        "reason": "After only the confirmed qualifying succession/plural addition, the applicable base-name condition is satisfied: section 814(2)(a)/(b).",
+        "missingFacts": [],
+        "matchedFacts": [
+          "businessName",
+          "namingAssessment",
+          "partners"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "307cc808fc41f0697b37d499b4ef0ee05b9bfeb67390c39d4f89b26fe05f5476"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-013",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Not indicated by these answers",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "44c5e6cb22485234a2ca9ef5eb15dd1f0f09f2d11d56afcf5135bcce04351ce1",
+        "assessmentDate": "2026-11-13",
+        "label": "Not indicated by these answers",
+        "reason": "The business is carried on by the confirmed court-appointed receiver or manager: section 814(2)(c).",
+        "missingFacts": [],
+        "matchedFacts": [
+          "carryingOnBusiness",
+          "operatorRole",
+          "appointmentAuthority",
+          "appointmentConfirmed"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "81084c2d98421249872653cc9a482defc4b295bdc878dee6c5cf2cd7cda5fa26"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-014",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Likely relevant",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "651011dba317079d1e58ce7ca2b72955dc5dc3444c4ef08ed4f8474c6b3123ea",
+        "assessmentDate": "2026-11-13",
+        "label": "Likely relevant",
+        "reason": "The supplied trading name differs from the confirmed corporate name: section 814(1)(c). This is naming relevance, not a breach or incorporation decision.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "hasPlaceOfBusinessInNigeria",
+          "carryingOnBusiness",
+          "legalForm",
+          "businessName",
+          "section814Exception",
+          "corporateName"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": "Review the exact-name/operator registration position; no customer task is created.",
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "32d9f90bb5ae3a666dcce2d857b11d0531e7f53ceca27115146f8a6caab6a6c1"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-015",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "More information needed",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "c7770cfe450bd869019544095a8a88359bd8ab3b1530e7017cb94d859b6aa1ba",
+        "assessmentDate": "2026-11-13",
+        "label": "More information needed",
+        "reason": "The potentially material court appointment is not confirmed; a label alone cannot establish it.",
+        "missingFacts": [
+          {
+            "field": "appointmentAuthority",
+            "state": "unknown"
+          }
+        ],
+        "matchedFacts": [],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "14a7d1ec9423c26f4d16b98d18d8ec5e9925c004cc261c3623a2f0e87f6466b8"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-016",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "More information needed",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "af9753ffcad70b4c2e6d4b56f0df2fad9ca92107f282f0fd1a3b9652ffba6c9d",
+        "assessmentDate": "2026-11-13",
+        "label": "More information needed",
+        "reason": "Confirm the Nigerian place of business and that business is being carried on under the name.",
+        "missingFacts": [
+          {
+            "field": "hasPlaceOfBusinessInNigeria",
+            "state": "unknown"
+          }
+        ],
+        "matchedFacts": [],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "85f3cf72c33f533d4762ddb7e4f1f3e9f190c247ddbee738b23f3ffb8e32c5b1"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-017",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "More information needed",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "1bd95ef3e554c35a7bb2df2a13044a35411321654ee3fbb9cbad41fcf577e8e9",
+        "assessmentDate": "2026-11-13",
+        "label": "More information needed",
+        "reason": "The operator form is missing or outside this narrow supported scope.",
+        "missingFacts": [
+          {
+            "field": "legalForm",
+            "state": "unanswered"
+          }
+        ],
+        "matchedFacts": [],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "b3576211b8d064c54ded746436041f84dd2abaf46ebcfa950b973cec9a6ade9b"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-018",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Not indicated by these answers",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "030ea428f1fa13f234f28320c84eb54d5a1106996fbb82097aef2dddf999ced9",
+        "assessmentDate": "2026-11-13",
+        "label": "Not indicated by these answers",
+        "reason": "The supplied carryingOnBusiness fact is false; this section 814 naming trigger is not indicated.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "carryingOnBusiness"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "40d7f671d6ab75c52719a700aad724422627eaa1c8b8e7b6c5d852c2ce1e1ea1"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-019",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "More information needed",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "223b1f29f7876633aea40da05b8b79d4712196f08bca06568ae745627cf71513",
+        "assessmentDate": "2019-12-31",
+        "label": "More information needed",
+        "reason": "The assessment date is outside this candidate's checked research context; bind the appropriate period evidence.",
+        "missingFacts": [],
+        "matchedFacts": [],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": null,
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "cef3d497ddccb08a77a2e56d7fd08838d1178b7991c85bb995cfb724541a7f33"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-CAMA-020",
+      "executed": true,
+      "status": "passed",
+      "expectedLabel": "Likely relevant",
+      "actual": {
+        "candidateId": "CAC-BUSINESS-NAME-814",
+        "authoredSourceCandidateId": "CAND-CAMA-814-BUSINESS-NAME",
+        "candidateVersion": "business-name-v1:ae98191857ecab8a06fc12a9873612f11a7d6dbe43fc6b988c15166af4ba4d33",
+        "bindingHash": "8e3191600094ca770d7d61551cc0192e3210630132de6cec1c4bde675be5ba39",
+        "sourceVersionHashes": {
+          "cama_2020": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+          "bfa_2022": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+          "copyright_2022": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c"
+        },
+        "inputHash": "e9307893db4f4ccdc255fd0842372a76c3d9ae3853c3bd34587bbfc7c59118d4",
+        "assessmentDate": "2026-11-13",
+        "label": "Likely relevant",
+        "reason": "The supplied name contains an independent addition outside the recorded true names, initials or confirmed qualifying additions: section 814(1)(a)/(b). This is naming relevance, not a breach or incorporation decision.",
+        "missingFacts": [],
+        "matchedFacts": [
+          "hasPlaceOfBusinessInNigeria",
+          "carryingOnBusiness",
+          "legalForm",
+          "businessName",
+          "section814Exception",
+          "trueSurname/trueForenames"
+        ],
+        "availability": "offline_candidate_only",
+        "eligibleForCustomerUse": false,
+        "releasedManifestId": null,
+        "automaticStatutoryDeadline": null,
+        "automaticReminder": false,
+        "createRegistrationTask": false,
+        "candidateTaskSuggestion": "Review the exact-name/operator registration position; no customer task is created.",
+        "registrationAction": "Check the exact name and operator's registration position with CAC before choosing an action.",
+        "stateAndLocalCoverage": "not_evaluated",
+        "gaps": [
+          "This national naming check establishes no state/FCT/LGA coverage.",
+          "A negative naming result is not a general registration exemption under CAMA section 863 or other law."
+        ],
+        "resultHash": "1847ce484f5e506e0c250694fdc73210aed9b10aec754cf7e9e2b66fcd9fb407"
+      },
+      "checks": {
+        "authoredLabelMatched": true,
+        "exactInputPreserved": true,
+        "reproducibleResult": true,
+        "exactCandidateAndSourcesBound": true,
+        "noCustomerEligibility": true,
+        "noCustomerTaskOrStatutorySchedule": true,
+        "explicitLocalCoverageGap": true,
+        "unknownsNotExemptions": true
+      }
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-001",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "d7ca448ba78eb2626ee7ea60adc25be4ee44db0605276b9ddd600d5779c3da6c",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-002",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "011296ec59682845d3ca4cd413554714340f4f622e0f45ad41836ce308ea2b25",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-003",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "48fa783d0da0816d73fe4ffb2f2c7057d0fbf479d1994bbcbc152eca226bc8ab",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-004",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "452a31a9a39c3ea5e6f007e657978dc5180966fb6179161251c7d107d75c8ce1",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-005",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "56573da42f520043dd59a6895d922808145842bcb4face2a7ce93cf1f334d788",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-006",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "6419748ec37a33de99f18f76f1c700e3898b5814e99ff473b87997ed03e5a44f",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-007",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "6655161eb21dcf438813a7190559c854b36ea57f31f409235a9fc1f43f8034f2",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-008",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "648b0892e95485214e5ff537729a29b543337e3e885a8a7456e4faa7d3058627",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-009",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "1c2957ece1c0ea37c1c4d534c7c865d092b0ad30b2b266d4347a4b8d5a584f1a",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-010",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "c91a000051aedff099eeb8479c0641b280cfc92528bf209aa067e7172db53487",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-011",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "942317afc7271c38ccb9ee821cae4a4b74759e7a20c8c572fc57dc518420a139",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-012",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "d14d2340df179dd765de42848cb291bd676f209ee2b274f5d81a0f1befd8cfd5",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-013",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "31c5b1fb1de734eea3d11fb59a00611452d6b7b95b3f0b63892d9bd4fd7f6d79",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-014",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "fe3e42052487c3e4cf533df06d2ced9bd712fa0bbb5fb91dee907a4b2d22369e",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-015",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "7aa1c9fdfea1cb1220c59db96aa63f6dcdb3b86bea1788a5b4f076b861c6ab42",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-016",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "8035dab66b2151a5783386e6460c728b2cb9eb555c5db4801ddccdc49f41520a",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-017",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "92c096e4dd960418e7fd990aedee8e322b7c3b4b5cd2a8576e84180d225bdb89",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-018",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "cedb7ef740db999828679a3e14c844c44bc04ac9122ee87a39d39625060d037d",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-019",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "5731aca25da110beec3980d03116a893855e7564a48fccf31c00befc79264453",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NDPA-020",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "68a0843ef2894fbab50fc12af0de8605fb8ececbddea77f4f369f6ccf1058dab",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-001",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "fc8206d33940de226226bc690c3e3c2a481d15ab8586e4a2a68b480571285ebb",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-002",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "5cba971c654ef3a2d4a447de7d720348af75ae21639b7d000c89b670e2259d14",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-003",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "b66ab563690c162b23f06c35152eb3ef43edca0545247ce2f4d1380bdbf21228",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-004",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "af1bb93f1c72885706a07d7e454e3e21b1bbc090a19a0a38f7de0a116b51c7b7",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-005",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "845a5e032bfc4a770e05e2884a6f7de02d09e75e8a46d65262ac29e440abcfcd",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-006",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "37c9f7a32132c9c02cbdae3cb35bdf31d7c5fe5ab7b9d0ebac3e1905d16f9b30",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-007",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "0fde0a6de5540e11b57eadf48001d5a0dce4c72a5ed609cbb5835c1e919513e1",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-008",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "c18033c6b041cf9abb7cb0ec7aa25a199760322d086bab062a1d18b937702f31",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-009",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "7598e52bf62495225fc0e83dc2eb75c6e05d62d9e65c2bf78ccac2b13b3e8c81",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-010",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "650a9c7fd12628f74ee85fb7b97a7199beade19190f555ab6e93826ae1f64a33",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-011",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "64ba78e8e0908e258f86fd425911792ddc86315f933372468442cc398d372cd9",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-012",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "13f9c8af6eb32e25f65f618030155588b4c3be4a806695796b6be5f9e1adcf74",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-013",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "7c42031950dbc6ce5e6c4d7523c8f2b9bb33c185c9d9f3cfeea7063a52a1744e",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-014",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "6ecbfd8ef655c11817ad8c85aa86572f34e85ee642ed2b6e4d536fe0174d9abc",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-015",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "c5d060d05c4f8bf2f666b0e4ca9c0d5ee49d49e5d21d66f976c7ffda6870550e",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-016",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "64adb0cea064053dc75d7e92fb8141253982397afcedfe4f275b00600b5a0730",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-017",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "97a2b9726717e717f816ea753adc464f5e359303cf1ee576cd151b6fb4c4a896",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-018",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "190d52ef9f144715f4190988222d72e7de5afff89d6931f848490fc67f8e3d6e",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-019",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "0a51a9b7ddce82ff7f502003616ca3f70c96098a9e5bcf9ae193b798b9bf5247",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NTAA-020",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "f577286ea74d6f7908349295df7247b8cb9b78bb5f1eb6e16324772c302d4131",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-001",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "0c4420979ef03b5da9357371988737eaba3bcbba1348afe51974bd1479c5d2d0",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-002",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "f89c889057d93b2d8765808ef961d0c16751de5a191361a7cb679c76d2d3ef6c",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-003",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "ab77bbce21223d27a5514e5687344c611c145ac7ccc82d000b456a1d0c7c923e",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-004",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "8f51c0f5f45a787a1d47b54f8218f97ca294f5aa6953fa404363243a41f2ad0c",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-005",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "b4621f2087642bea9abfbb1319fe5c31974e988ce589ac777e6be1378c07c51f",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-006",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "41dbe77fd26b9371c01d33cc84f045b0b0738c7b33b3a56d949aa0df9398ef54",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-007",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "00fd6825c35b64ab9ab232e4bebf1f7b3f9a811389fef74ded24b8cf5051859a",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-008",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "865e861ec442635ebe5a29887334416c912530c5b944ff060409a6b1b1cdcada",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-009",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "40e2030c0d3eab2ceebbec6c4ecca6d065b1d7a6cbe4c598467da51b0b0a61c6",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-010",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "86712e5d79178d64c9102e5aae77c9011ed8bbd510dbc60149c43ca0e16e54fe",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-011",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "739f52bbde6914118dfdc1959776ba25404079a7dbb31e62f657a86909195d31",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-012",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "6985f9b69cb2d6fca46bb468f0e6d3bd8b798527e16be7160def38941d6d96c1",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-013",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "75e0f1c352bccbdb083354452633457e0fac3e97d699488abdb311544b07bb47",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-014",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "bfd6131a9307d6f7717321dc98c96bff53d65c3042b8d8c760fb7cda8314adee",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-015",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "bb6ec6ee4df43dc2ba2930455e6d13818899e3766886c358144f3e7503c30607",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-016",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "44d9e5df20bf72fb69f206efc831c9774acc8dab4454f2017ad9de13e77abe71",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-017",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "b1dd426cca03fa940f455188ab4ec4e4ef0a9876b3fa7b74b9bae7668da060cb",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-018",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "241b4380bcf47b55d9e47b823fba780b62f61b9348e9342cb4098bd7ec1b178c",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-019",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "a4225f69408f4570228e0685f2e50e57019ca5fb97ce7be74081a28db8692a5a",
+      "publicationEligibility": false
+    },
+    {
+      "caseId": "CHK-CAND-NAFDAC-020",
+      "executed": false,
+      "status": "unimplemented_source_family",
+      "inputHash": "ae2b02a367ef8fbc84447348b17a42ad0e50f1f744357739c07139fcf948c090",
+      "publicationEligibility": false
+    }
+  ]
+}

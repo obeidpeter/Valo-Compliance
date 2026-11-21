@@ -1,0 +1,62 @@
+{
+  "purpose": "Platform compatibility evidence; not an approved Nigerian legal evidence bundle",
+  "records": [
+    {
+      "id": "PLATFORM-data-recovery",
+      "path": "docs/valo/evidence/platform/data-recovery.md",
+      "url": "https://docs.replit.com/features/data-and-storage/data-recovery",
+      "retrievedAt": "2026-11-13T16:30:48.858Z",
+      "sha256": "acdd943d9844666520d6b18bcb3358cc642958dc3fa2ff91fadf2b89c4d4c7d8",
+      "bytes": 9516,
+      "representation": "Extracted markdown with retrieval header",
+      "issuingBody": "Replit",
+      "jurisdiction": "Platform documentation",
+      "legalContentEvidence": false,
+      "approvedForLegalPublication": false,
+      "limitations": "Documents platform options, not measured runtime compatibility. No Nigerian regulatory claim mapping."
+    },
+    {
+      "id": "PLATFORM-deployment-types",
+      "path": "docs/valo/evidence/platform/deployment-types.md",
+      "url": "https://docs.replit.com/features/publishing/deployment-types",
+      "retrievedAt": "2026-11-13T16:30:48.858Z",
+      "sha256": "2fb69732498722b1b0c9e15ab992bd86ab56b2f7116f5252124d797f5663eb9d",
+      "bytes": 4649,
+      "representation": "Extracted markdown with retrieval header",
+      "issuingBody": "Replit",
+      "jurisdiction": "Platform documentation",
+      "legalContentEvidence": false,
+      "approvedForLegalPublication": false,
+      "limitations": "Documents platform options, not measured runtime compatibility. No Nigerian regulatory claim mapping."
+    },
+    {
+      "id": "PLATFORM-object-storage",
+      "path": "docs/valo/evidence/platform/object-storage.md",
+      "url": "https://docs.replit.com/features/data-and-storage/object-storage",
+      "retrievedAt": "2026-11-13T16:30:48.858Z",
+      "sha256": "f58f2225fbbd7182fec2fc1c2dfc78637b640e3119ceb711d332d4d9db12c0bb",
+      "bytes": 13402,
+      "representation": "Extracted markdown with retrieval header",
+      "issuingBody": "Replit",
+      "jurisdiction": "Platform documentation",
+      "legalContentEvidence": false,
+      "approvedForLegalPublication": false,
+      "limitations": "Documents platform options, not measured runtime compatibility. No Nigerian regulatory claim mapping."
+    },
+    {
+      "id": "PLATFORM-publish-database-changes",
+      "path": "docs/valo/evidence/platform/publish-database-changes.md",
+      "url": "https://docs.replit.com/features/data-and-storage/publish-database-changes",
+      "retrievedAt": "2026-11-13T16:30:48.858Z",
+      "sha256": "048ba2986bf656d349c1f0b6b6a9d8c0502cbe40345270d8cc60f48663c0c035",
+      "bytes": 12839,
+      "representation": "Extracted markdown with retrieval header",
+      "issuingBody": "Replit",
+      "jurisdiction": "Platform documentation",
+      "legalContentEvidence": false,
+      "approvedForLegalPublication": false,
+      "limitations": "Documents platform options, not measured runtime compatibility. No Nigerian regulatory claim mapping."
+    }
+  ],
+  "nigerianRegulatorySourcesApproved": 0
+}

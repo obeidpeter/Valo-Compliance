@@ -1,0 +1,116 @@
+
+> @workspace/api-server@0.0.0 test:valo-db /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development tsx --test src/lib/inference-batch-dispatch.integration.test.ts src/lib/inference-budget.integration.test.ts src/lib/valo-store.integration.test.ts src/lib/valo-quota.integration.test.ts src/lib/valo-requirements.integration.test.ts src/lib/valo-customer-ai.integration.test.ts src/lib/valo-customer-access.integration.test.ts src/lib/valo-reminder-delivery.integration.test.ts src/lib/valo-task-pages.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts src/lib/valo-receipt-recovery.integration.test.ts src/routes/valo-privacy-http.integration.test.ts
+
+▶ durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls
+  ✔ disabled durable authority and missing allowlist cannot dispatch (64.193542ms)
+  ✔ authorized controlled work really dispatches and settles; unchanged result reuses without a call (229.281039ms)
+  ✔ review pair reserves atomically and charges its actual editorial lane (317.963079ms)
+  ✔ changed request, source bindings, expiry and forged manifest stop before transport (256.206235ms)
+  ✔ timeout keeps the whole reservation, duplicates cannot redispatch and new retry consumes another slot (287.278569ms)
+  ✔ concurrency two and duplicate runs cover every lane under one locked ledger (211.096843ms)
+  ✔ policy adoption keeps old usage and all unresolved liability instead of resetting history (42.769298ms)
+  ✔ unreconciled historic liabilities and depleted ceiling hold all further calls (84.859247ms)
+✔ durable finite batch dispatch — isolated PostgreSQL and controlled transport, zero paid calls (1970.990375ms)
+✔ isolated PostgreSQL global ledger serializes races and preserves unknown/retry liability (5690.08241ms)
+▶ real development access intake, privacy isolation and staff boundaries
+  ✔ no login or account lookup is needed; confirmation is saved, never dispatched (125.972281ms)
+  ✔ idempotent retry preserves one record; altered reuse fails (173.293172ms)
+  ✔ honeypot and invalid email fail without saving (13.688741ms)
+  ✔ concurrent verified-or-unverified contacts cannot create unlimited anonymous tickets (775.545663ms)
+  ✔ different contacts receive the same non-enumerating wording (158.58542ms)
+  ✔ privacy requests really persist and do not claim deletion (401.437847ms)
+  ✔ workspace JSON export includes saved revisions but excludes another business (602.112937ms)
+  ✔ JSON v2 includes owned file/job metadata, never private locators or queue identifiers (323.269865ms)
+  ✔ activity export is restricted to this requester and workspace (115.532869ms)
+  ✔ an over-limit metadata section fails explicitly rather than returning a truncated download (919.466145ms)
+  ✔ large scoped download spans pages without truncation, private fields or another tenant; scratch is removed (5679.918845ms)
+  ✔ download consumer failure removes private scratch instead of leaving a prepared result (59.719681ms)
+  ✔ revoked membership cannot retrieve exports or saved privacy requests (7.805922ms)
+  ✔ no staff permission, missing MFA and cross-area substitution all fail (63.194504ms)
+✔ real development access intake, privacy isolation and staff boundaries (9929.245757ms)
+▶ development AI persistence, private ownership, atomic acceptance and quotas
+  ✔ missing information persists privately without an outbound call (45.89437ms)
+  ✔ other tenant IDs and forged actor membership fail (120.333265ms)
+  ✔ consent and request shape are checked before persistence (6.005478ms)
+  ✔ same request is idempotent; changed facts cannot reuse its key (59.787399ms)
+  ✔ concurrent acceptance creates one real document and one revision (132.996649ms)
+  ✔ changed acceptance cannot silently overwrite the existing document (20.184931ms)
+  ✔ derived totals cannot be altered or their financial model stripped (88.997566ms)
+  ✔ database composite FK independently rejects a foreign accepted document (28.763673ms)
+  ✔ interrupted request becomes an honest manual fallback, not a fabricated completion (49.860445ms)
+  ✔ disabled shared spending gate rejects concurrent requests without consuming daily allowance (910.070617ms)
+✔ development AI persistence, private ownership, atomic acceptance and quotas (1858.561699ms)
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (40.300287ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (121.568236ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (228.922149ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (506.698986ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (89.310377ms)
+  ✔ native private storage deletion and repeated late-write replay remove actual synthetic bytes (1170.503217ms)
+  ✔ a cross-workspace key in a corrupted object journal is never deleted (34.577868ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (2.774539ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (17.553362ms)
+✔ resumable physical development erasure with retained exclusions and replay (2846.836301ms)
+▶ synthetic PostgreSQL quotas are atomic, durable and scoped
+  ✔ concurrent callers cannot exceed one shared database cap (281.134753ms)
+  ✔ another subject and operation have independent allowances (10.15871ms)
+  ✔ durable state is visible through a separate database connection (5.31117ms)
+  ✔ expiry cleanup removes only expired windows, leaving current usage intact (13.294344ms)
+  ✔ invalid bucket, identity and ceilings never mutate storage (2.251255ms)
+✔ synthetic PostgreSQL quotas are atomic, durable and scoped (326.299228ms)
+▶ recorded synthetic receipt recovery, no provider verification or messages
+  ✔ missing maintenance opt-in and missing recorded grant both fail closed (14.147218ms)
+  ✔ concurrent repair produces one held receipt and one audit without reactivating the grant (185.374822ms)
+  ✔ retries preserve the original receipt; other tenants cannot read it (70.160455ms)
+✔ recorded synthetic receipt recovery, no provider verification or messages (578.901146ms)
+▶ durable reminder delivery controls; controlled transport, not real email
+  ✔ turning reminders off needs no selected offset and cancels before dispatch (59.644952ms)
+  ✔ twenty-five held source reminders cannot starve an eligible later reminder (1188.347707ms)
+  ✔ no configured provider holds the reminder and consumes no attempt (84.255478ms)
+  ✔ parallel scheduler invocations send once; acceptance is not inbox delivery (110.005754ms)
+  ✔ failed acceptance persists its attempt and waits; retry keeps the same message reference (172.475381ms)
+  ✔ five failed attempts remain bounded even with repeated scheduler runs (643.327387ms)
+  ✔ SIGKILL during dispatch preserves the claim; expiry recovers without losing the attempt (3403.910448ms)
+  ✔ abandoned final attempt becomes visibly failed instead of permanently running (41.490613ms)
+  ✔ expired or unknown first acceptance time holds before any new provider invocation (130.936316ms)
+  ✔ opt-out before dispatch cancels failed work without sending (91.918814ms)
+✔ durable reminder delivery controls; controlled transport, not real email (6139.577731ms)
+▶ development saved assessments, task isolation, concurrency and reminder outbox
+  ✔ explicit consent required; anonymous bodies cannot supply rules (9.436ms)
+  ✔ saved profile assessment preserves unknowns and real coverage gaps (101.161895ms)
+  ✔ other tenants cannot read or compare assessment identifiers (116.039057ms)
+  ✔ profile changes create dated comparisons without rewriting old assessments (160.699543ms)
+  ✔ manual task creation works without falsely published requirements (70.573777ms)
+  ✔ all cross-tenant task writes and origin substitutions are denied (60.016589ms)
+  ✔ two concurrent task edits cannot silently overwrite notes (158.696024ms)
+  ✔ unconfirmed and invalid calendar dates are rejected (2.654365ms)
+  ✔ reminders default off and opt-in schedules are durable, held not sent (102.816038ms)
+  ✔ scheduler retries and preference updates preserve idempotent reminder identities (78.399728ms)
+  ✔ dispatch checks opt-out before any adapter invocation (72.907556ms)
+  ✔ source withdrawal flags a historical task without changing user completion (29.467395ms)
+  ✔ archiving a task preserves assessments and cancels reminders (212.494717ms)
+✔ development saved assessments, task isolation, concurrency and reminder outbox (1727.76481ms)
+▶ development PostgreSQL tenant, concurrency, history and durable-ticket proof
+  ✔ server membership resolution is idempotent and tenants are separate (28.038641ms)
+  ✔ profile correction appends history, preserves declined marketing and rejects stale saves (91.736839ms)
+  ✔ document and revision identifiers cannot expose a different tenant (23.181561ms)
+  ✔ two concurrent tabs produce exactly one new revision and one conflict (63.491924ms)
+  ✔ restore appends a new revision without rewriting the original (37.465888ms)
+  ✔ enquiry acknowledgement follows a durable save, not an appointment or email claim (26.672387ms)
+  ✔ suspended membership is not automatically restored (16.757008ms)
+✔ development PostgreSQL tenant, concurrency, history and durable-ticket proof (533.403873ms)
+✔ actual task pages exceed 200 without losing totals, filters or tenant scope (443.435695ms)
+▶ actual HTTP privacy routes apply an independent privacy role and fresh MFA
+  ✔ privacy-only identity can read and claim; finance-only cannot (178.385401ms)
+  ✔ revoked and stale-MFA privacy identities fail on the HTTP route (34.727688ms)
+  ✔ hostile origin never reaches the privacy mutation (4.14805ms)
+✔ actual HTTP privacy routes apply an independent privacy role and fresh MFA (481.5164ms)
+ℹ tests 94
+ℹ suites 0
+ℹ pass 94
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19041.542702

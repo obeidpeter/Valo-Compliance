@@ -1,0 +1,13 @@
+✔ bounded JSON preserves unknown values and saved content without mutation (3.531022ms)
+✔ oversized collections fail before validating their elements (0.583438ms)
+✔ deep, broad and high-node-count JSON fails within fixed budgets (0.862025ms)
+✔ validation responses cap error count, path and message lengths (6.655392ms)
+✔ isolated real API rejects compressed/oversized JSON and remains alive (3475.883827ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3790.411176

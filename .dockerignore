@@ -1,0 +1,11 @@
+# Keep images small and free of local state, credentials and run artefacts.
+.git
+**/node_modules
+**/dist
+**/.next
+**/generated-artifacts
+**/*.tsbuildinfo
+.env
+.env.*
+!.env.example
+attached_assets

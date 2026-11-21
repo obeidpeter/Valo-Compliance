@@ -1,0 +1,76 @@
+
+> @workspace/api-server@0.0.0 test:valo-db /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development tsx --test src/lib/valo-store.integration.test.ts src/lib/valo-quota.integration.test.ts src/lib/valo-requirements.integration.test.ts src/lib/valo-customer-ai.integration.test.ts src/lib/valo-customer-access.integration.test.ts src/lib/valo-reminder-delivery.integration.test.ts
+
+▶ real development access intake, privacy isolation and staff boundaries
+  ✔ no login or account lookup is needed; confirmation is saved, never dispatched (33.318029ms)
+  ✔ idempotent retry preserves one record; altered reuse fails (40.419697ms)
+  ✔ honeypot and invalid email fail without saving (2.786019ms)
+  ✔ concurrent verified-or-unverified contacts cannot create unlimited anonymous tickets (187.706336ms)
+  ✔ different contacts receive the same non-enumerating wording (26.740103ms)
+  ✔ privacy requests really persist and do not claim deletion (51.368667ms)
+  ✔ workspace JSON export includes saved revisions but excludes another business (112.825455ms)
+  ✔ revoked membership cannot retrieve exports or saved privacy requests (18.807168ms)
+  ✔ no staff permission, missing MFA and cross-area substitution all fail (43.263986ms)
+✔ real development access intake, privacy isolation and staff boundaries (696.151983ms)
+▶ development AI persistence, private ownership, atomic acceptance and quotas
+  ✔ missing information persists privately without an outbound call (13.257215ms)
+  ✔ other tenant IDs and forged actor membership fail (32.298154ms)
+  ✔ consent and request shape are checked before persistence (4.926242ms)
+  ✔ same request is idempotent; changed facts cannot reuse its key (23.804987ms)
+  ✔ concurrent acceptance creates one real document and one revision (69.568555ms)
+  ✔ changed acceptance cannot silently overwrite the existing document (9.35577ms)
+  ✔ derived totals cannot be altered or their financial model stripped (10.897507ms)
+  ✔ database composite FK independently rejects a foreign accepted document (24.112361ms)
+  ✔ interrupted request becomes an honest manual fallback, not a fabricated completion (41.790184ms)
+  ✔ concurrent requests respect the development workspace ceiling without model success (1123.512957ms)
+✔ development AI persistence, private ownership, atomic acceptance and quotas (1528.733872ms)
+▶ synthetic PostgreSQL quotas are atomic, durable and scoped
+  ✔ concurrent callers cannot exceed one shared database cap (213.28228ms)
+  ✔ another subject and operation have independent allowances (13.475887ms)
+  ✔ durable state is visible through a separate database connection (13.640898ms)
+  ✔ expiry cleanup removes only expired windows, leaving current usage intact (14.985162ms)
+  ✔ invalid bucket, identity and ceilings never mutate storage (4.832348ms)
+✔ synthetic PostgreSQL quotas are atomic, durable and scoped (274.688999ms)
+▶ durable reminder delivery controls; controlled transport, not real email
+  ✔ no configured provider holds the reminder and consumes no attempt (51.557279ms)
+  ✔ parallel scheduler invocations send once; acceptance is not inbox delivery (172.614976ms)
+  ✔ failed acceptance persists its attempt and waits; retry keeps the same message reference (117.272288ms)
+  ✔ five failed attempts remain bounded even with repeated scheduler runs (181.577151ms)
+  ✔ SIGKILL during dispatch preserves the claim; expiry recovers without losing the attempt (2486.3334ms)
+  ✔ abandoned final attempt becomes visibly failed instead of permanently running (29.271116ms)
+  ✔ expired or unknown first acceptance time holds before any new provider invocation (82.377492ms)
+  ✔ opt-out before dispatch cancels failed work without sending (62.046226ms)
+✔ durable reminder delivery controls; controlled transport, not real email (3367.883103ms)
+▶ development saved assessments, task isolation, concurrency and reminder outbox
+  ✔ explicit consent required; anonymous bodies cannot supply rules (7.448039ms)
+  ✔ saved profile assessment preserves unknowns and real coverage gaps (47.435303ms)
+  ✔ other tenants cannot read or compare assessment identifiers (33.033042ms)
+  ✔ profile changes create dated comparisons without rewriting old assessments (67.671157ms)
+  ✔ manual task creation works without falsely published requirements (42.082747ms)
+  ✔ all cross-tenant task writes and origin substitutions are denied (22.079454ms)
+  ✔ two concurrent task edits cannot silently overwrite notes (57.723953ms)
+  ✔ unconfirmed and invalid calendar dates are rejected (1.019828ms)
+  ✔ reminders default off and opt-in schedules are durable, held not sent (71.945969ms)
+  ✔ scheduler retries and preference updates preserve idempotent reminder identities (66.729456ms)
+  ✔ dispatch checks opt-out before any adapter invocation (50.764667ms)
+  ✔ source withdrawal flags a historical task without changing user completion (16.558268ms)
+  ✔ archiving a task preserves assessments and cancels reminders (151.75433ms)
+✔ development saved assessments, task isolation, concurrency and reminder outbox (892.371365ms)
+▶ development PostgreSQL tenant, concurrency, history and durable-ticket proof
+  ✔ server membership resolution is idempotent and tenants are separate (15.396003ms)
+  ✔ profile correction appends history, preserves declined marketing and rejects stale saves (67.272336ms)
+  ✔ document and revision identifiers cannot expose a different tenant (15.294073ms)
+  ✔ two concurrent tabs produce exactly one new revision and one conflict (45.520411ms)
+  ✔ restore appends a new revision without rewriting the original (43.502417ms)
+  ✔ enquiry acknowledgement follows a durable save, not an appointment or email claim (32.696894ms)
+  ✔ suspended membership is not automatically restored (11.021706ms)
+✔ development PostgreSQL tenant, concurrency, history and durable-ticket proof (391.294048ms)
+ℹ tests 58
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7648.382437

@@ -1,0 +1,47 @@
+▶ all twelve bound question models survive parser and frozen-codec JSONB reconstruction
+  ✔ TPL-01 (23.159555ms)
+  ✔ TPL-02 (4.234431ms)
+  ✔ TPL-03 (2.893845ms)
+  ✔ TPL-04 (3.95539ms)
+  ✔ TPL-05 (2.077376ms)
+  ✔ TPL-08 (3.70276ms)
+  ✔ TPL-12 (2.167893ms)
+  ✔ TPL-13 (4.13248ms)
+  ✔ TPL-14 (2.523273ms)
+  ✔ TPL-15 (1.455523ms)
+  ✔ TPL-16 (1.769741ms)
+  ✔ TPL-17 (2.609751ms)
+✔ all twelve bound question models survive parser and frozen-codec JSONB reconstruction (59.033949ms)
+▶ all twelve actual DOCX/PDF renders contain supplied answers, not internal question IDs
+  ✔ TPL-01 (4718.29543ms)
+  ✔ TPL-02 (4394.071571ms)
+  ✔ TPL-03 (3958.253062ms)
+  ✔ TPL-04 (3975.872963ms)
+  ✔ TPL-05 (3950.056467ms)
+  ✔ TPL-08 (3941.309275ms)
+  ✔ TPL-12 (3898.763486ms)
+  ✔ TPL-13 (3891.607121ms)
+  ✔ TPL-14 (3897.140318ms)
+  ✔ TPL-15 (3910.098117ms)
+  ✔ TPL-16 (3886.846358ms)
+  ✔ TPL-17 (3879.292905ms)
+✔ all twelve actual DOCX/PDF renders contain supplied answers, not internal question IDs (48331.405137ms)
+✔ invalid dates, units and money remain raw draft answers and never become complete (1.403808ms)
+✔ agreement parties and negotiated terms cannot be omitted from completion (0.481186ms)
+✔ hidden probation/end answers are retained but never rendered as selected terms (0.442452ms)
+✔ unknown allocation is not zero and duplicate payment references prevent completion (0.285658ms)
+✔ arithmetic, required-question deletion and unknown layouts fail server validation (2.166294ms)
+✔ forty rows, long names and decimal-safe half-up arithmetic use actual supplied quantities (1.988289ms)
+✔ recalculation preserves manually positioned sections without retaining tampered totals (0.433678ms)
+✔ native patched schemas and frozen codec preserve all ten actual v3 document hashes (24.930621ms)
+✔ unknown profile facts and optional marketing retain their original v3 hashes (2.151101ms)
+✔ native patched constrained arrays reject before invoking any item validator (0.836482ms)
+✔ provider outputs are byte/structure bounded BEFORE schema validation (1.96952ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 50431.905945

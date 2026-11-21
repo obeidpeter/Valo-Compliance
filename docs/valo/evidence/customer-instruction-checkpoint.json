@@ -1,0 +1,43 @@
+{
+  "sourceCommit": "d51a1c3407dcd8c6e6b52b5cb8203400c65d79e0",
+  "recordedAt": "2026-11-14T11:46:53.129Z",
+  "scope": "Partial development customer workflow; not full R1/R2 or the required sixty-case acceptance",
+  "api": {
+    "total": 115,
+    "passed": 114,
+    "failed": 0,
+    "skipped": 1
+  },
+  "database": {
+    "sourceCommit": "9a5dcc9dea19febbc99a44366d82e87684b313d3",
+    "total": 58,
+    "passed": 58,
+    "failed": 0,
+    "note": "Persistence/service methods unchanged by subsequent manual-client selection and reader-only changes"
+  },
+  "sourceCases": {
+    "executed": 2,
+    "passed": 2,
+    "failed": 0,
+    "retainedActualProviderAttempts": 1,
+    "newCallsOnSuccessfulRerun": 0,
+    "privateFilesVerified": 4,
+    "exactPreviewsReused": true,
+    "report": "docs/valo/evidence/customer-ai-source-pilot.json",
+    "initialFailure": "docs/valo/evidence/customer-ai-source-pilot-initial-failure.json"
+  },
+  "readerCorrection": "Observed Poppler omission of visual spacing; whitespace-only comparison retains every letter, amount and currency character, with changed-party/amount/currency rejection tests. No renderer or publication gate changed. Agent visually inspected one rasterized invoice PDF.",
+  "manualNotes": "Withheld notes remain outside the AI preview and now correctly survive the separate manual draft",
+  "formatChecks": "DOCX archive text and actual PDF reader; Microsoft Word UI and newly changed signed-in compose UI not browser-verified",
+  "actualBilling": null,
+  "full80RuleAcceptance": false,
+  "full60CustomerAIAcceptance": false,
+  "full60EditorialAcceptance": false,
+  "publishedEligibleTemplates": 0,
+  "publishedEligibleGuidance": 0,
+  "publishedEligibleRules": 0,
+  "R1Accepted": false,
+  "R2Accepted": false,
+  "publicLaunchEnabled": false,
+  "livePaymentsEnabled": false
+}

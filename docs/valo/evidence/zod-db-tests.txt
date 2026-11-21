@@ -1,0 +1,66 @@
+
+> @workspace/api-server@0.0.0 test:valo-db /home/runner/workspace/artifacts/api-server
+> NODE_ENV=development tsx --test src/lib/valo-store.integration.test.ts src/lib/valo-quota.integration.test.ts src/lib/valo-requirements.integration.test.ts src/lib/valo-customer-ai.integration.test.ts src/lib/valo-customer-access.integration.test.ts
+
+▶ real development access intake, privacy isolation and staff boundaries
+  ✔ no login or account lookup is needed; confirmation is saved, never dispatched (24.811644ms)
+  ✔ idempotent retry preserves one record; altered reuse fails (23.460872ms)
+  ✔ honeypot and invalid email fail without saving (2.708508ms)
+  ✔ concurrent verified-or-unverified contacts cannot create unlimited anonymous tickets (133.681913ms)
+  ✔ different contacts receive the same non-enumerating wording (21.859044ms)
+  ✔ privacy requests really persist and do not claim deletion (28.776759ms)
+  ✔ workspace JSON export includes saved revisions but excludes another business (65.870844ms)
+  ✔ revoked membership cannot retrieve exports or saved privacy requests (8.974234ms)
+  ✔ no staff permission, missing MFA and cross-area substitution all fail (32.579597ms)
+✔ real development access intake, privacy isolation and staff boundaries (479.198401ms)
+▶ development AI persistence, private ownership, atomic acceptance and quotas
+  ✔ missing information persists privately without an outbound call (13.748701ms)
+  ✔ other tenant IDs and forged actor membership fail (20.251768ms)
+  ✔ consent and request shape are checked before persistence (3.534849ms)
+  ✔ same request is idempotent; changed facts cannot reuse its key (15.59676ms)
+  ✔ concurrent acceptance creates one real document and one revision (49.056551ms)
+  ✔ changed acceptance cannot silently overwrite the existing document (8.053802ms)
+  ✔ derived totals cannot be altered or their financial model stripped (8.28012ms)
+  ✔ database composite FK independently rejects a foreign accepted document (19.761142ms)
+  ✔ interrupted request becomes an honest manual fallback, not a fabricated completion (34.77065ms)
+  ✔ concurrent requests respect the development workspace ceiling without model success (823.465525ms)
+✔ development AI persistence, private ownership, atomic acceptance and quotas (1117.346933ms)
+▶ synthetic PostgreSQL quotas are atomic, durable and scoped
+  ✔ concurrent callers cannot exceed one shared database cap (167.187725ms)
+  ✔ another subject and operation have independent allowances (12.99168ms)
+  ✔ durable state is visible through a separate database connection (4.348811ms)
+  ✔ expiry cleanup removes only expired windows, leaving current usage intact (9.561193ms)
+  ✔ invalid bucket, identity and ceilings never mutate storage (3.403846ms)
+✔ synthetic PostgreSQL quotas are atomic, durable and scoped (207.351226ms)
+▶ development saved assessments, task isolation, concurrency and reminder outbox
+  ✔ explicit consent required; anonymous bodies cannot supply rules (6.511513ms)
+  ✔ saved profile assessment preserves unknowns and real coverage gaps (41.628887ms)
+  ✔ other tenants cannot read or compare assessment identifiers (24.537109ms)
+  ✔ profile changes create dated comparisons without rewriting old assessments (56.683363ms)
+  ✔ manual task creation works without falsely published requirements (30.861199ms)
+  ✔ all cross-tenant task writes and origin substitutions are denied (17.878022ms)
+  ✔ two concurrent task edits cannot silently overwrite notes (47.094683ms)
+  ✔ unconfirmed and invalid calendar dates are rejected (1.153168ms)
+  ✔ reminders default off and opt-in schedules are durable, held not sent (118.627991ms)
+  ✔ scheduler retries and preference updates preserve idempotent reminder identities (52.104855ms)
+  ✔ dispatch checks opt-out before any adapter invocation (77.719532ms)
+  ✔ source withdrawal flags a historical task without changing user completion (16.344412ms)
+  ✔ archiving a task preserves assessments and cancels reminders (34.573592ms)
+✔ development saved assessments, task isolation, concurrency and reminder outbox (685.994458ms)
+▶ development PostgreSQL tenant, concurrency, history and durable-ticket proof
+  ✔ server membership resolution is idempotent and tenants are separate (12.012993ms)
+  ✔ profile correction appends history, preserves declined marketing and rejects stale saves (60.671558ms)
+  ✔ document and revision identifiers cannot expose a different tenant (15.621292ms)
+  ✔ two concurrent tabs produce exactly one new revision and one conflict (31.820829ms)
+  ✔ restore appends a new revision without rewriting the original (26.073859ms)
+  ✔ enquiry acknowledgement follows a durable save, not an appointment or email claim (15.767006ms)
+  ✔ suspended membership is not automatically restored (7.650097ms)
+✔ development PostgreSQL tenant, concurrency, history and durable-ticket proof (314.87892ms)
+ℹ tests 49
+ℹ suites 0
+ℹ pass 49
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5170.770726

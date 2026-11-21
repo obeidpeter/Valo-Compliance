@@ -1,0 +1,14 @@
+{
+  "historicalLog": "generated-artifacts/valo-checks/part6-schema.log",
+  "sha256": "28f4849053a8529d4dd311b80a617c1859a4dee6851ccecfc004b05606db1315",
+  "reportedUnderlyingExitCode": 0,
+  "guardDecision": {
+    "passed": false,
+    "categories": [
+      "SQL_ERROR_REPORTED",
+      "COMPLETION_NOT_CONFIRMED"
+    ]
+  },
+  "expectedGuardExitCode": 1,
+  "newSchemaMutationExecuted": false
+}

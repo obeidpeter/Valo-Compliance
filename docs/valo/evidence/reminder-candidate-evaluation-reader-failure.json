@@ -1,0 +1,97 @@
+{
+  "suite": "supplied-reminder-candidate-vertical-slice",
+  "startedAt": "2026-11-14T04:14:06.714Z",
+  "finishedAt": "2026-11-14T04:14:31.989Z",
+  "sourceCorpusHash": "8c828ad115a855da9d725aaa8ecb76d91e36daa4a9142571c0a45d306ec995e2",
+  "resumedExactPriorProviderInputs": true,
+  "suppliedCasesExecuted": 4,
+  "passed": 0,
+  "failed": 4,
+  "blocked": 0,
+  "actualProviderAttempts": 2,
+  "newProviderAttemptsThisExecution": 0,
+  "faultInjectionCases": 0,
+  "managedIdentityEvaluated": false,
+  "serviceLayerOnly": true,
+  "scope": "Four original reminder cases; two request the real configured provider and two intentionally stop at missing-information/zero-balance preflight. Real saved revisions, queue worker, private DOCX/PDF and foreign-tenant rejection. Not the full 60-case evaluation.",
+  "syntheticRecordsAndProviderQuotaRetained": true,
+  "AI008Accepted": false,
+  "R1Accepted": false,
+  "R2Accepted": false,
+  "results": [
+    {
+      "caseID": "CAI-CAND-REM-01",
+      "status": "fail",
+      "expectsProvider": true,
+      "previewId": "7f545968-ae44-4a8a-9c12-0d9501c9f3cb",
+      "actualProviderAttempts": 1,
+      "providerRuns": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 241,
+            "totalTokens": 269,
+            "outputTokens": 28
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 1234,
+          "responseId": "chatcmpl-EjzMJGBM6ZWZbGjNkmOFWa6I1mJX8",
+          "outboundAttempted": true
+        }
+      ],
+      "failureCode": "RETAINED_SCENARIO_OR_EXPORT_ASSERTION_FAILED",
+      "stage": "pdf_standard_reader",
+      "errorName": "Error"
+    },
+    {
+      "caseID": "CAI-CAND-REM-02",
+      "status": "fail",
+      "expectsProvider": false,
+      "previewId": "01682c34-7f49-4a8e-b851-8c3cc600cb62",
+      "actualProviderAttempts": 0,
+      "providerRuns": [],
+      "failureCode": "RETAINED_SCENARIO_OR_EXPORT_ASSERTION_FAILED",
+      "stage": "pdf_standard_reader",
+      "errorName": "Error"
+    },
+    {
+      "caseID": "CAI-CAND-REM-03",
+      "status": "fail",
+      "expectsProvider": true,
+      "previewId": "420c17e5-d7af-47f3-86bf-bb85a24bf569",
+      "actualProviderAttempts": 1,
+      "providerRuns": [
+        {
+          "cost": null,
+          "model": "gpt-5.4-mini-2026-03-17",
+          "usage": {
+            "inputTokens": 239,
+            "totalTokens": 267,
+            "outputTokens": 28
+          },
+          "attempt": 1,
+          "outcome": "validated",
+          "latencyMs": 731,
+          "responseId": "chatcmpl-EjzMaj11boGlEqf0trQojrWXI8KCX",
+          "outboundAttempted": true
+        }
+      ],
+      "failureCode": "RETAINED_SCENARIO_OR_EXPORT_ASSERTION_FAILED",
+      "stage": "pdf_standard_reader",
+      "errorName": "Error"
+    },
+    {
+      "caseID": "CAI-CAND-REM-04",
+      "status": "fail",
+      "expectsProvider": false,
+      "previewId": "ae05c803-d83a-4e13-82c5-7e8347f599f2",
+      "actualProviderAttempts": 0,
+      "providerRuns": [],
+      "failureCode": "RETAINED_SCENARIO_OR_EXPORT_ASSERTION_FAILED",
+      "stage": "pdf_standard_reader",
+      "errorName": "Error"
+    }
+  ]
+}

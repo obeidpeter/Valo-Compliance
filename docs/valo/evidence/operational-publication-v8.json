@@ -1,0 +1,124 @@
+{
+  "id": "fbc4ef74-33db-4a6c-9387-f23ba0e65190",
+  "version": 8,
+  "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+  "policyHash": "dfa73f081effb374f07b64595e44f8557fd9c4c0ee1e173ae4b1f117f3d1fd82",
+  "eligibility": {
+    "decision": "hold",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_required:factual",
+      "review_required:challenge"
+    ]
+  },
+  "release": {
+    "id": "fbc4ef74-33db-4a6c-9387-f23ba0e65190",
+    "status": "held",
+    "reasons": [
+      "manifest_not_eligible",
+      "review_required:factual",
+      "review_required:challenge",
+      "OPERATIONAL_REVIEW_DAILY_CAP_REACHED"
+    ],
+    "decision": "held"
+  },
+  "reviews": [],
+  "exportReport": {
+    "version": "operational-export-inspection-4",
+    "candidateHash": "6dc435e5e2b989a4d122f4cc45350772556c96e44b11f8357ca9b7b85ea93796",
+    "passed": true,
+    "hashes": {
+      "docx": "2ef5f2c0fe12417d20e6e97ef742a32bb9970016597591003f5727ccf61b81a3",
+      "pdf": "848027e7c4d8662ab20376493a9fa6a3141a9f2b7e9fab10a213e6f345d7ddf9"
+    },
+    "formats": {
+      "docx": {
+        "parsed": true,
+        "completeContent": true,
+        "disclosureIncluded": true,
+        "scopeIncluded": true,
+        "limitationsIncluded": true,
+        "sourceDateIncluded": true,
+        "missingTextHashes": []
+      },
+      "pdf": {
+        "parsed": true,
+        "completeContent": true,
+        "disclosureIncluded": true,
+        "scopeIncluded": true,
+        "limitationsIncluded": true,
+        "sourceDateIncluded": true,
+        "missingTextHashes": []
+      }
+    },
+    "checks": [
+      {
+        "name": "docx_reader_and_active_content",
+        "passed": true
+      },
+      {
+        "name": "pdf_reader_a4_geometry",
+        "passed": true
+      },
+      {
+        "name": "pdf_text_within_pages",
+        "passed": true
+      },
+      {
+        "name": "docx_complete_content_and_disclosures",
+        "passed": true
+      },
+      {
+        "name": "pdf_complete_content_and_disclosures",
+        "passed": true
+      }
+    ],
+    "geometry": {
+      "pages": 3,
+      "width": 595.91998,
+      "height": 842.88,
+      "tolerancePoints": 2
+    },
+    "readerNormalization": {
+      "rendererFooterLinesIgnored": 3,
+      "rendererHeaderOccurrencesIgnored": 4,
+      "rule": "Only exact renderer-owned template header text and Valo page-number footer lines excluded from content comparison"
+    },
+    "manualWordApplicationReview": false,
+    "manualAccessibilityReview": false
+  },
+  "attestations": {
+    "provenance": {
+      "id": "57c7b3bd-9738-425b-9732-08e9f6eff91d",
+      "hash": "1d354d26f009831ec19c42e0284d20a94fb6a4b63f803b78c3fb8cd9dee6f796",
+      "extension": "json"
+    },
+    "rights": {
+      "id": "b957f618-920c-47f4-9479-30236daf9222",
+      "hash": "33bbf6569a9bc78ccb6c8c19ed39d0b45268c166eda242ba11aacafc15f0cf18",
+      "extension": "json"
+    },
+    "rightsApplicabilityHash": "c9e085b6a2d064c6c5d4c109563eb2253c8ad7129c8d965be7ff006bc8ecdaf1",
+    "reviews": [],
+    "exports": {
+      "docx": {
+        "id": "8956ba79-1de7-46d7-a49c-0106f71d8d87",
+        "hash": "2ef5f2c0fe12417d20e6e97ef742a32bb9970016597591003f5727ccf61b81a3",
+        "extension": "docx"
+      },
+      "pdf": {
+        "id": "3d48a8c2-22d9-40d6-bc8b-51dfc6b186f1",
+        "hash": "848027e7c4d8662ab20376493a9fa6a3141a9f2b7e9fab10a213e6f345d7ddf9",
+        "extension": "pdf"
+      }
+    },
+    "exportReport": {
+      "id": "43e0ba9e-1408-40af-b299-fdcf959a9561",
+      "hash": "8792fa9f3459ddb09f198b3149e9ec50c82cc738e19ed8b4fe0810f455de2d15",
+      "extension": "json"
+    }
+  },
+  "rightsScope": "Provider permissions and coordinator-attributed original operational provenance checked for this free synthetic-development release only. Upstream execution IDs are unrecorded; no copyright, exclusivity or non-infringement guarantee. No sales or accepted Valo commercial licence.",
+  "commercialLicenceAccepted": false,
+  "providerFailure": "OPERATIONAL_REVIEW_DAILY_CAP_REACHED"
+}

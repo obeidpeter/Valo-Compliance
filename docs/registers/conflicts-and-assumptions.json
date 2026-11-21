@@ -1,0 +1,140 @@
+{
+  "status": "Development baseline; unresolved decisions remain open",
+  "items": [
+    {
+      "id": "C-01",
+      "topic": "Authority to start",
+      "source_conflict": "TRD/roadmap say document alone does not authorise development; master explicitly orders actual build.",
+      "resolution": "Master authorises new development and user-owned private repository/Replit creation. It does not authorise paid upgrades, live finance, confidential production data or public launch.",
+      "status": "resolved_by_master"
+    },
+    {
+      "id": "C-02",
+      "topic": "Earlier Valo reuse",
+      "source_conflict": "TRD permits assessed existing demo reuse; master requires entirely new application.",
+      "resolution": "Start clean; do not reuse unrelated Valo product code.",
+      "status": "resolved_by_master"
+    },
+    {
+      "id": "C-03",
+      "topic": "Staffing and timing",
+      "source_conflict": "Roadmap human FTE and 20+8-week estimates versus master primarily AI-agent team.",
+      "resolution": "AI-led implementation with separate review; retain real tests and accountable operational approvals. Dates are estimates, not elapsed-time requirements.",
+      "status": "resolved_by_master"
+    },
+    {
+      "id": "C-04",
+      "topic": "R2 scope and sequence",
+      "source_conflict": "Roadmap calls growth provisional/demand gated; master commissions both R1 and R2 but says proceed after R1 acceptance.",
+      "resolution": "R2 remains in assignment; do not call it complete or activate separately gated features before R1 acceptance and applicable gates. Cannot silently drop R2.",
+      "status": "resolved_with_gates"
+    },
+    {
+      "id": "C-05",
+      "topic": "Professional review",
+      "source_conflict": "Essential inventory asks legal review before use; master/TRD replace universal specialist sign-off with evidence-based AI editorial gates.",
+      "resolution": "No routine per-item human/specialist requirement; preserve enhanced checks, held uncertainty and actual licensed-service boundaries.",
+      "status": "resolved_by_hierarchy"
+    },
+    {
+      "id": "C-06",
+      "topic": "R1 bundles",
+      "source_conflict": "TRD commerce defaults include one-off bundles, R2 expansion also mentions bundles.",
+      "resolution": "R1 may support approved one-off bundles; R2 expands experiments. Recurring subscriptions stay off in R1.",
+      "status": "resolved_by_master_section_13"
+    },
+    {
+      "id": "C-07",
+      "topic": "NGO coverage",
+      "source_conflict": "TRD main audience is SMEs; master explicitly adds distinct NGO profile and R2 dedicated experience.",
+      "resolution": "Accommodate NGO structure in initial model; implement dedicated R2 experience with structure/activity/jurisdiction-specific guidance.",
+      "status": "resolved_by_master"
+    },
+    {
+      "id": "C-08",
+      "topic": "R2 numerical content targets",
+      "source_conflict": "Approximate 80 templates/60 entries are targets, but only R1 40-template list is exact.",
+      "resolution": "Maintain deduplicated backlog and explicit proposed additions; count only eligible usable assets. Do not invent rights/evidence to reach counts.",
+      "status": "open_content_prioritisation"
+    },
+    {
+      "id": "C-09",
+      "topic": "Pricing and billing",
+      "source_conflict": "No prices, tax treatment, refund policy or live merchant configuration supplied.",
+      "resolution": "Sandbox only with explicitly nonproduction test values; seek owner decisions on concrete proposed price book/refunds before live operations.",
+      "status": "open_owner_decision"
+    },
+    {
+      "id": "C-10",
+      "topic": "Infrastructure and identity",
+      "source_conflict": "Preferred Next.js/Clerk/pg-boss Replit stack is proposed, not proven compatible.",
+      "resolution": "Prove actual deployment, worker, private storage, migrations and restore. Material replacement requires documented architecture decision and owner approval.",
+      "status": "open_P0_proof"
+    },
+    {
+      "id": "C-11",
+      "topic": "Regulatory source evidence",
+      "source_conflict": "Documents contain discovery links and explicit retrieval gaps; Essential checklist has citation-like debris, not usable evidence.",
+      "resolution": "Retrieve authoritative operative text and store claim locators/hashes/effectivity. Treat inventory as held research leads until EDP gates pass.",
+      "status": "open_evidence"
+    },
+    {
+      "id": "C-12",
+      "topic": "R1 anonymous versus private use",
+      "source_conflict": "Checker public; saving requires verified identity.",
+      "resolution": "Anonymous minimal temporary inputs, no default retention; verified workspace required for durable private data.",
+      "status": "resolved_by_TRD"
+    },
+    {
+      "id": "C-13",
+      "topic": "External service availability",
+      "source_conflict": "No verified provider roster, sender domain or support routing supplied.",
+      "resolution": "Do not seed fictional providers or claim messages delivered; service discovery can explain categories with honest empty directory. Real support/ticket and email acceptance remain required.",
+      "status": "open_configuration"
+    }
+  ],
+  "owner_decisions": [
+    {
+      "id": "D01",
+      "owner": "Product owner",
+      "proposed_default": "Approve R1/R2/R3 boundaries, one-business workspace and the 40-template content floor.",
+      "due": "G0 / end W2"
+    },
+    {
+      "id": "D02",
+      "owner": "Technical lead + privacy owner",
+      "proposed_default": "Confirm Replit deployment, storage/database restoration, identity provider and processor geography; approve any replacement adapter.",
+      "due": "G0"
+    },
+    {
+      "id": "D03",
+      "owner": "Product + finance",
+      "proposed_default": "Set prices, AI allowances, source-checked tax treatment, licence and refunds. Owner accepts terms; no counsel signature is assumed.",
+      "due": "Before checkout testing; final before G4"
+    },
+    {
+      "id": "D04",
+      "owner": "Content lead",
+      "proposed_default": "Configure AI editorial roles, publication policy, evidence gates, six deeper sectors and Lagos/FCT/Bayelsa source priorities; no specialist hiring dependency.",
+      "due": "G0"
+    },
+    {
+      "id": "D05",
+      "owner": "Privacy owner",
+      "proposed_default": "Approve data roles, transfer arrangements, retention, notice and rights/incident procedures.",
+      "due": "Before live beta data"
+    },
+    {
+      "id": "D06",
+      "owner": "Product + delivery lead",
+      "proposed_default": "Approve staffed capacity, operating spend cap and calendar; relative weeks are planning assumptions.",
+      "due": "G0"
+    },
+    {
+      "id": "D07",
+      "owner": "Service operations",
+      "proposed_default": "Decide whether R1 lists any providers; approve enquiry handling and future booking commercial model.",
+      "due": "Before service pages go live"
+    }
+  ]
+}

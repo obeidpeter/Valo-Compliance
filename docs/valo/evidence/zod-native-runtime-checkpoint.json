@@ -1,0 +1,196 @@
+{
+  "executedAt": "2026-11-14T09:25:10.747Z",
+  "basedOnRevision": "be85f5cfaabe1daaebbe53bbc68242cd3dd9fa2e",
+  "scope": "Native patched runtime and historical private-export compatibility, not complete product/security acceptance",
+  "runtime": "4.6.7",
+  "legacyRuntimeCaptured": "3.25.76",
+  "nativeSubpathConsumersMigrated": true,
+  "generatedValidators": "Orval Zod 4",
+  "preSchemaProviderOutputBudget": {
+    "bytes": 131072,
+    "nodes": 4096,
+    "depth": 20,
+    "arrayLength": 256
+  },
+  "compatibility": {
+    "executedAt": "2026-11-14T09:18:08.588Z",
+    "runtime": "4.6.7",
+    "legacyRuntime": "3.25.76",
+    "fixtures": [
+      {
+        "index": 0,
+        "legacyHash": "6428731abbe1af9f27bc468576b168653165f3537bbf086974bcabfc057592e1",
+        "actualHash": "6428731abbe1af9f27bc468576b168653165f3537bbf086974bcabfc057592e1",
+        "frozenCodecHash": "6428731abbe1af9f27bc468576b168653165f3537bbf086974bcabfc057592e1"
+      },
+      {
+        "index": 1,
+        "legacyHash": "629a6a433c4ebd7012fecb88d4027c54cc726e2b276bb30f42e83533e8ccf580",
+        "actualHash": "629a6a433c4ebd7012fecb88d4027c54cc726e2b276bb30f42e83533e8ccf580",
+        "frozenCodecHash": "629a6a433c4ebd7012fecb88d4027c54cc726e2b276bb30f42e83533e8ccf580"
+      },
+      {
+        "index": 2,
+        "legacyHash": "b5b436ee50d5bfe88de5fdc682e2961d10a63c8048cbdb59ae532588980c20a6",
+        "actualHash": "b5b436ee50d5bfe88de5fdc682e2961d10a63c8048cbdb59ae532588980c20a6",
+        "frozenCodecHash": "b5b436ee50d5bfe88de5fdc682e2961d10a63c8048cbdb59ae532588980c20a6"
+      },
+      {
+        "index": 3,
+        "legacyHash": "e3de72ddccb1210afde81b4405611c1e976d725fbe3ac434dc6ea739929429ab",
+        "actualHash": "e3de72ddccb1210afde81b4405611c1e976d725fbe3ac434dc6ea739929429ab",
+        "frozenCodecHash": "e3de72ddccb1210afde81b4405611c1e976d725fbe3ac434dc6ea739929429ab"
+      },
+      {
+        "index": 4,
+        "legacyHash": "819a87d5d54a0eedbd90f0846cb59e8ddf15134e10612aa0e21445c9ea50f966",
+        "actualHash": "819a87d5d54a0eedbd90f0846cb59e8ddf15134e10612aa0e21445c9ea50f966",
+        "frozenCodecHash": "819a87d5d54a0eedbd90f0846cb59e8ddf15134e10612aa0e21445c9ea50f966"
+      },
+      {
+        "index": 5,
+        "legacyHash": "b582cd3ad4b54f944c710d16ff9343073ab8a6ead4a38d02e74e118010f444d4",
+        "actualHash": "b582cd3ad4b54f944c710d16ff9343073ab8a6ead4a38d02e74e118010f444d4",
+        "frozenCodecHash": "b582cd3ad4b54f944c710d16ff9343073ab8a6ead4a38d02e74e118010f444d4"
+      },
+      {
+        "index": 6,
+        "legacyHash": "e39e0691d74d08883429e335bb875dc928ac4b706cabcad0430b7827fddf87e2",
+        "actualHash": "e39e0691d74d08883429e335bb875dc928ac4b706cabcad0430b7827fddf87e2",
+        "frozenCodecHash": "e39e0691d74d08883429e335bb875dc928ac4b706cabcad0430b7827fddf87e2"
+      },
+      {
+        "index": 7,
+        "legacyHash": "5a4ac80db794d466904e8d4c8532d9f1200efe9f3bb92ffd9f0cfdde365d12c7",
+        "actualHash": "5a4ac80db794d466904e8d4c8532d9f1200efe9f3bb92ffd9f0cfdde365d12c7",
+        "frozenCodecHash": "5a4ac80db794d466904e8d4c8532d9f1200efe9f3bb92ffd9f0cfdde365d12c7"
+      },
+      {
+        "index": 8,
+        "legacyHash": "e2f8a6dc4e1f22c4aa190c3d4f0e019e86cccb157d49746e0d344dc7473fd11a",
+        "actualHash": "e2f8a6dc4e1f22c4aa190c3d4f0e019e86cccb157d49746e0d344dc7473fd11a",
+        "frozenCodecHash": "e2f8a6dc4e1f22c4aa190c3d4f0e019e86cccb157d49746e0d344dc7473fd11a"
+      },
+      {
+        "index": 9,
+        "legacyHash": "fa98d950d18c7f5d13f0cbf87291eb347a8b57a0adf93af1a39e673dfb7f4138",
+        "actualHash": "fa98d950d18c7f5d13f0cbf87291eb347a8b57a0adf93af1a39e673dfb7f4138",
+        "frozenCodecHash": "fa98d950d18c7f5d13f0cbf87291eb347a8b57a0adf93af1a39e673dfb7f4138"
+      }
+    ],
+    "profiles": [
+      {
+        "legacyHash": "ce4003fe598fbee616bdc7e50dc7ecce911e7527bc8f6e47fd13be441191ef1e",
+        "actualHash": "ce4003fe598fbee616bdc7e50dc7ecce911e7527bc8f6e47fd13be441191ef1e"
+      },
+      {
+        "legacyHash": "0629f91ddc0f054663571e87299834dfe5c94308455116d326ce78c1f679a805",
+        "actualHash": "0629f91ddc0f054663571e87299834dfe5c94308455116d326ce78c1f679a805"
+      }
+    ],
+    "actualManagedDevelopmentDatabase": true,
+    "actualSeparateWorker": true,
+    "exports": [
+      {
+        "revisionId": "1ce0c137-24f7-4eb6-ae01-90e420a6a1e3",
+        "format": "docx",
+        "size": 12007,
+        "sha256": "03643d72e3beaaf0f72f6c244c38fb2ddb1a6ede4bbc0b203bb73300eef8361f",
+        "privateStorageRead": true,
+        "status": "ready"
+      },
+      {
+        "revisionId": "1ce0c137-24f7-4eb6-ae01-90e420a6a1e3",
+        "format": "pdf",
+        "size": 47991,
+        "sha256": "ef1b82b129e3df1e432acd3556bbddd39976e76556c56e3f5ddef3c10b5f9ffe",
+        "privateStorageRead": true,
+        "status": "ready"
+      },
+      {
+        "revisionId": "b8d440f6-3f5b-4ac8-99c0-08bdefa4b7cd",
+        "format": "docx",
+        "size": 11879,
+        "sha256": "ecd6e424654659d73eb21147e844617d8b06f2dd930f7015dcb11aabb99e7b8a",
+        "privateStorageRead": true,
+        "status": "ready"
+      },
+      {
+        "revisionId": "b8d440f6-3f5b-4ac8-99c0-08bdefa4b7cd",
+        "format": "pdf",
+        "size": 44219,
+        "sha256": "f72d384019a6f686224f4342ccbace61dd5bad10c278ffc875f276264e59f611",
+        "privateStorageRead": true,
+        "status": "ready"
+      },
+      {
+        "revisionId": "bc717666-2d29-4598-9d2b-d4b9feadf898",
+        "format": "docx",
+        "size": 12007,
+        "sha256": "60fb8cb3cdeed3df67f1dbb1c1034629b70776f616273da621d77e416613a3f9",
+        "privateStorageRead": true,
+        "status": "ready"
+      },
+      {
+        "revisionId": "bc717666-2d29-4598-9d2b-d4b9feadf898",
+        "format": "pdf",
+        "size": 47991,
+        "sha256": "d426a5a80302a5bcea600d91dd1762405fdcff9616c324a2c2113c76717b2a8a",
+        "privateStorageRead": true,
+        "status": "ready"
+      }
+    ],
+    "oldRevisions": 2,
+    "newRevisions": 1,
+    "historicalHashesRewritten": 0,
+    "providerCalls": 0,
+    "productionRecoveryClaimed": false,
+    "cleanup": {
+      "ownSyntheticWorkspaceRemoved": true,
+      "ownPrivateObjectsRemoved": 6,
+      "providerUsageHistoryUntouched": true
+    }
+  },
+  "regression": {
+    "api": {
+      "pass": 92,
+      "fail": 0,
+      "skip": 1
+    },
+    "database": {
+      "pass": 49,
+      "fail": 0,
+      "skip": 0
+    },
+    "controlledCommerce": {
+      "runnerTests": 14,
+      "pass": 14
+    },
+    "foundation": {
+      "pass": 166,
+      "notSourceBackedRuleAcceptance": true
+    },
+    "codecControls": {
+      "tests": 4,
+      "pass": 4
+    },
+    "types": "passed",
+    "codeGeneration": "passed"
+  },
+  "dependencyAudit": {
+    "vulnerabilities": {
+      "critical": 0,
+      "high": 0,
+      "info": 0,
+      "low": 0,
+      "moderate": 0
+    }
+  },
+  "knownLimits": [
+    "Zero dependency advisories does not establish exploit-free code or an independent security assessment.",
+    "No actual Word application or assistive-technology review is claimed.",
+    "No production recovery or R1/R2 acceptance is claimed.",
+    "No editorial calls or quota changes occurred in this work."
+  ],
+  "latestRegressionReport": "docs/valo/evidence/validator-publication-checkpoint.json"
+}

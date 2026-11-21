@@ -1,0 +1,584 @@
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { createHash } from "node:crypto";
+import {
+  additionalInferenceAllocation,
+  inferenceProposal,
+  inferenceTimestamp,
+  requestDigest,
+} from "./inference-budget";
+import type { FiniteManifest, FiniteWork } from "./inference-types";
+import type { InferenceBudgetStore } from "./inference-budget-store";
+import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
+import { operationalInferenceTemplateIds, supportsOperationalInferenceTemplate } from "../publication";
+const root = resolve(import.meta.dirname, "../../../../..");
+const sha = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
+type SourceRef = { path: string; sha256: string };
+type NamedContentSection = {
+  identity: string;
+  sourcePath: string;
+  heading: string;
+  baselineSectionSha256: string;
+  category: "practical-guide" | "industry-landing" | "industry-deeper-pack";
+};
+export type FiniteAllocationPackage = {
+  version: 3;
+  kind: "finite-inference-package";
+  preparedAt: string;
+  policyVersion: string;
+  allocation: typeof additionalInferenceAllocation;
+  sourceFiles: SourceRef[];
+  contentIds: string[];
+  namedContentSections: NamedContentSection[];
+  corpora: { name: "editorial" | "checker" | "customer-ai"; cases: { id: string; hash: string }[] }[];
+  laneAttemptLimits: { publication: 216; editorial_evaluation: 68; checker_challenge: 80; customer: 94 };
+  allowedRoles: readonly ["factual", "challenge", "customer"];
+  supportedPreparers: FinitePackagePreparers;
+  holds: string[];
+};
+/**
+ * The request preparers a package admits work from. A package names exactly one set, so each owner
+ * approval covers one kind of work: the template review pairs (with the customer cases the
+ * original package already covered), or the case-bound editorial cases (decision 0015).
+ */
+export const finitePackagePreparers = {
+  templatePairs: ["operational-template-pair-v1"],
+  editorialCases: ["editorial-case-pair-v1"],
+} as const;
+export type FinitePackagePreparers = (typeof finitePackagePreparers)[keyof typeof finitePackagePreparers];
+const preparerSet = (value: unknown) =>
+  Object.values(finitePackagePreparers).find((set) => requestDigest(set) === requestDigest(value));
+const scopePaths = [
+  "docs/registers/content-inventory.json",
+  "docs/content-candidates/r1-content-intake-manifest.json",
+  "docs/evaluation-candidates/editorial.json",
+  "docs/evaluation-candidates/checker.json",
+  "docs/evaluation-candidates/customer-ai.json",
+  "docs/content-candidates/practical-guide-candidates.md",
+  "docs/content-candidates/industry-content-candidates.md",
+] as const;
+function namedSections(path: string, body: string): NamedContentSection[] {
+  const headers = [...body.matchAll(/^#{1,3} .+$/gm)];
+  return headers.flatMap((match, index): NamedContentSection[] => {
+    const heading = match[0].replace(/^#+ /, ""),
+      isGuide = path === scopePaths[5] && /^## GUIDE-C\d{2} — /.test(match[0]);
+    const industry = path === scopePaths[6] && match[0].startsWith("### ");
+    if (!isGuide && !industry) return [];
+    return [
+      {
+        identity: `${path}#${heading}`,
+        sourcePath: path,
+        heading,
+        baselineSectionSha256: sha(
+          Buffer.from(body.slice(match.index, headers[index + 1]?.index ?? body.length)),
+        ),
+        category: isGuide
+          ? "practical-guide"
+          : heading.endsWith(" — deeper pack")
+            ? "industry-deeper-pack"
+            : "industry-landing",
+      },
+    ];
+  });
+}
+/** Reads the actual finite inventory/corpora. Scope is not readiness: unfinished
+ * preparers remain held, and actual source/rights/currentness gates still run. */
+export async function prepareFiniteAllocationPackage(
+  now = new Date(),
+  preparers: FinitePackagePreparers = finitePackagePreparers.templatePairs,
+): Promise<FiniteAllocationPackage> {
+  if (!preparerSet(preparers)) throw Error("PACKAGE_PREPARERS_INVALID");
+  const editorialCases = preparers === finitePackagePreparers.editorialCases;
+  const sources = await Promise.all(
+    scopePaths.map(async (path) => {
+      const bytes = await readFile(resolve(root, path));
+      return {
+        path,
+        sha256: sha(bytes),
+        body: bytes.toString(),
+        value: path.endsWith(".json") ? JSON.parse(bytes.toString()) : null,
+      };
+    }),
+  );
+  const intake = sources[1]!.value as { templates: { id: string }[]; guidance: { id: string }[] };
+  const corpora = sources.slice(2, 5).map((source) => {
+    const name = source.path
+      .split("/")
+      .at(-1)!
+      .replace(".json", "") as FiniteAllocationPackage["corpora"][number]["name"];
+    const cases = (source.value as { cases: Record<string, unknown>[] }).cases.map((row) => {
+      const id = row.id ?? row.caseID ?? row.caseId ?? row.scenarioId ?? row.scenarioID;
+      if (typeof id !== "string" || !id) throw Error("PACKAGE_CORPUS_ID_INVALID");
+      return { id, hash: requestDigest(row) };
+    });
+    if (
+      cases.length !== { editorial: 60, checker: 80, "customer-ai": 60 }[name] ||
+      new Set(cases.map((c) => c.id)).size !== cases.length
+    )
+      throw Error("PACKAGE_CORPUS_CHANGED");
+    return { name, cases };
+  });
+  const sections = sources.slice(5).flatMap((source) => namedSections(source.path, source.body));
+  for (const [category, count] of Object.entries({
+    "practical-guide": 12,
+    "industry-landing": 20,
+    "industry-deeper-pack": 6,
+  }))
+    if (sections.filter((s) => s.category === category).length !== count)
+      throw Error("PACKAGE_CONTENT_SECTIONS_CHANGED");
+  return {
+    version: 3,
+    kind: "finite-inference-package",
+    preparedAt: now.toISOString(),
+    policyVersion: inferenceProposal.priceVersion,
+    allocation: { ...additionalInferenceAllocation },
+    sourceFiles: sources.map(({ path, sha256 }) => ({ path, sha256 })),
+    contentIds: [...new Set([...intake.templates, ...intake.guidance].map((c) => c.id))].sort(),
+    namedContentSections: sections,
+    corpora,
+    laneAttemptLimits: { publication: 216, editorial_evaluation: 68, checker_challenge: 80, customer: 94 },
+    allowedRoles: ["factual", "challenge", "customer"],
+    supportedPreparers: [...preparers] as unknown as FinitePackagePreparers,
+    holds: editorialCases
+      ? [
+          "Supported editorial case pairs: the case-bound editorial cases whose candidates are built from retained text; each pair is rebuilt from the pinned files and rechecked before admission and dispatch.",
+          "Template review pairs, customer cases, other content and other evaluation lanes are outside this package.",
+          "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+        ]
+      : [
+          `Supported exact operational preparers: ${operationalInferenceTemplateIds.join(", ")}; each requires a saved candidate and verified private evidence.`,
+          "Other content and all evaluation lanes require their real request preparers and eligibility checks before delegated admission.",
+          "The allocation is a maximum additional spend, not a guarantee of completing every permitted attempt.",
+        ],
+  };
+}
+export function allocationPackageId(value: FiniteAllocationPackage) {
+  return `finite-package:${requestDigest(value)}`;
+}
+/** Validates the frozen content identities and case rosters only. This is not
+ * admission authority: it accepts historical packages whose allocation terms are
+ * superseded, so callers that admit or dispatch work must use validateAllocationPackage. */
+export function validatePackageScope(value: FiniteAllocationPackage) {
+  if (
+    value.version !== 3 ||
+    value.kind !== "finite-inference-package" ||
+    !Number.isFinite(Date.parse(value.preparedAt)) ||
+    !Array.isArray(value.contentIds) ||
+    !value.contentIds.length ||
+    new Set(value.contentIds).size !== value.contentIds.length ||
+    value.sourceFiles.length !== scopePaths.length ||
+    value.sourceFiles.some((f, i) => f.path !== scopePaths[i] || !/^[a-f0-9]{64}$/.test(f.sha256))
+  )
+    throw Error("ALLOCATION_PACKAGE_INVALID");
+  if (
+    !Array.isArray(value.namedContentSections) ||
+    value.namedContentSections.length !== 38 ||
+    new Set(value.namedContentSections.map((s) => s.identity)).size !== 38 ||
+    value.namedContentSections.some(
+      (s) =>
+        (s.sourcePath !== scopePaths[5] && s.sourcePath !== scopePaths[6]) ||
+        s.identity !== `${s.sourcePath}#${s.heading}` ||
+        !/^[a-f0-9]{64}$/.test(s.baselineSectionSha256),
+    )
+  )
+    throw Error("ALLOCATION_PACKAGE_INVALID");
+  for (const [name, count] of Object.entries({ editorial: 60, checker: 80, "customer-ai": 60 })) {
+    const corpus = value.corpora.filter((c) => c.name === name);
+    if (
+      corpus.length !== 1 ||
+      corpus[0]!.cases.length !== count ||
+      new Set(corpus[0]!.cases.map((c) => c.id)).size !== count ||
+      corpus[0]!.cases.some((c) => !c.id || !/^[a-f0-9]{64}$/.test(c.hash))
+    )
+      throw Error("ALLOCATION_PACKAGE_INVALID");
+  }
+}
+/** Full validation for admission: the frozen scope plus the current allocation,
+ * policy version, lane ceilings and allowed roles. */
+export function validateAllocationPackage(value: FiniteAllocationPackage) {
+  validatePackageScope(value);
+  if (
+    value.policyVersion !== inferenceProposal.priceVersion ||
+    requestDigest(value.allocation) !== requestDigest(additionalInferenceAllocation) ||
+    requestDigest(value.laneAttemptLimits) !==
+      requestDigest({ publication: 216, editorial_evaluation: 68, checker_challenge: 80, customer: 94 }) ||
+    requestDigest(value.allowedRoles) !== requestDigest(["factual", "challenge", "customer"]) ||
+    !preparerSet(value.supportedPreparers)
+  )
+    throw Error("ALLOCATION_PACKAGE_INVALID");
+}
+/** The template a publication work reviews, from its prepared candidate's binding (decision 0014). */
+function workContentId(work: FiniteWork) {
+  return work.lane === "publication" ? (work.bindings.candidateArtifact?.templateId ?? null) : null;
+}
+export function assertWorkPackageMembership(
+  work: FiniteWork,
+  pkg: FiniteAllocationPackage,
+  contentId: string | null,
+) {
+  validateAllocationPackage(pkg);
+  if (!pkg.allowedRoles.includes(work.role) || (work.role === "customer" && work.lane !== "customer"))
+    throw Error("WORK_OUTSIDE_PACKAGE");
+  // An editorial-case package admits its case pairs and nothing else; no other package admits them.
+  // The binding checks rebuild each pair from the case preparer before admission and dispatch.
+  const editorialCases =
+    requestDigest(pkg.supportedPreparers) === requestDigest(finitePackagePreparers.editorialCases);
+  if (editorialCases !== (work.lane === "editorial_evaluation")) throw Error("WORK_OUTSIDE_PACKAGE");
+  if (work.bindings.corpus) {
+    const corpus = pkg.corpora.find((c) => c.name === work.bindings.corpus),
+      row = corpus?.cases.find((c) => c.id === work.bindings.caseId);
+    if (!row || row.hash !== work.caseHash) throw Error("WORK_OUTSIDE_PACKAGE");
+  }
+  if (work.lane === "publication" && (!contentId || !pkg.contentIds.includes(contentId)))
+    throw Error("WORK_OUTSIDE_PACKAGE");
+  // Both customer preparation routes (case selection and saved customer plans) produce
+  // single-role works with no review pair or candidate version.
+  if (
+    work.lane === "customer" &&
+    work.role === "customer" &&
+    work.pair === null &&
+    work.bindings.corpus === "customer-ai" &&
+    work.bindings.candidateVersionId === null &&
+    !contentId
+  )
+    return;
+  if (editorialCases) {
+    if (work.bindings.corpus !== "editorial" || !work.pair || contentId)
+      throw Error("PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE");
+    return;
+  }
+  // Scope may authorize these lanes, but scope alone cannot manufacture an
+  // implemented safe request preparer or weaken the actual readiness checks.
+  if (
+    work.lane !== "publication" ||
+    !contentId ||
+    !supportsOperationalInferenceTemplate(contentId) ||
+    !work.bindings.operationalPlan
+  )
+    throw Error("PACKAGE_EXECUTABLE_PREPARER_UNAVAILABLE");
+}
+async function packageRow(c: import("pg").PoolClient, schema: string, id: string, admitting: boolean) {
+  const row = (await c.query(`SELECT * FROM "${schema}".valo_inference_batches WHERE id=$1 FOR SHARE`, [id]))
+    .rows[0];
+  if (
+    !row ||
+    !row.approved_by ||
+    row.approved_by === "finite-package-delegate" ||
+    !row.approval_reference ||
+    !row.approved_at ||
+    (admitting && !row.enabled)
+  )
+    throw Error("ALLOCATION_PACKAGE_NOT_AUTHORIZED");
+  const pkg = row.manifest as FiniteAllocationPackage;
+  validateAllocationPackage(pkg);
+  const approvedAt = inferenceTimestamp(row.approved_at),
+    expiresAt = inferenceTimestamp(row.expires_at);
+  if (
+    row.policy_hash !== requestDigest(inferenceProposal) ||
+    row.manifest_hash !== requestDigest(pkg) ||
+    id !== allocationPackageId(pkg) ||
+    !Number.isFinite(approvedAt) ||
+    !Number.isFinite(expiresAt) ||
+    approvedAt > Date.now() ||
+    Date.parse(pkg.preparedAt) > approvedAt ||
+    (admitting && expiresAt <= Date.now())
+  )
+    throw Error("ALLOCATION_PACKAGE_EXPIRED_OR_CHANGED");
+  if (admitting) {
+    const actual = await Promise.all(
+      pkg.sourceFiles.map(async (source) => ({ source, bytes: await readFile(resolve(root, source.path)) })),
+    );
+    // The original evaluation oracle remains byte-pinned. Content scope is
+    // its named identity; routine same-identity candidate revisions still need
+    // full real readiness checks but do not require another spending approval.
+    for (const { source, bytes } of actual.slice(2, 5))
+      if (sha(bytes) !== source.sha256) throw Error("ALLOCATION_PACKAGE_SOURCE_CHANGED");
+    const intake = JSON.parse(actual[1]!.bytes.toString()) as {
+      templates: { id: string }[];
+      guidance: { id: string }[];
+    };
+    const ids = new Set([...intake.templates, ...intake.guidance].map((x) => x.id));
+    if (pkg.contentIds.some((id) => !ids.has(id))) throw Error("ALLOCATION_PACKAGE_CONTENT_IDENTITY_CHANGED");
+    const sections = actual.slice(5).flatMap((x) => namedSections(x.source.path, x.bytes.toString()));
+    if (pkg.namedContentSections.some((s) => !sections.some((current) => current.identity === s.identity)))
+      throw Error("ALLOCATION_PACKAGE_CONTENT_IDENTITY_CHANGED");
+  }
+  return { row, pkg };
+}
+/** Reuse the existing immutable package for fresh exact submanifests. A new
+ * child timestamp never creates a new owner-approval requirement. */
+export async function readApprovedFiniteAllocationPackage(
+  pool: Pick<import("pg").Pool, "connect">,
+  id: string,
+  schema = "public",
+) {
+  assertDevelopmentRuntime();
+  if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw Error("INVALID_LEDGER_SCHEMA");
+  const c = await pool.connect();
+  // PostgreSQL row locks require an ordinary transaction. This path performs
+  // only reads; it neither writes approval nor modifies the package.
+  try {
+    await c.query("BEGIN");
+    const { pkg, row } = await packageRow(c, schema, id, true);
+    await c.query("COMMIT");
+    return { pkg, expiresAt: new Date(row.expires_at).toISOString() };
+  } catch (error) {
+    await c.query("ROLLBACK");
+    throw error;
+  } finally {
+    c.release();
+  }
+}
+export async function assertDelegatedBatchAuthority(
+  c: import("pg").PoolClient,
+  schema: string,
+  child: {
+    manifest: FiniteManifest;
+    manifest_hash: string;
+    approved_by: string;
+    approval_reference: string;
+    approved_at: unknown;
+    expires_at: unknown;
+  },
+  admitting = true,
+) {
+  const id = child.manifest.packageId;
+  if (!id) throw Error("ALLOCATION_PACKAGE_REQUIRED");
+  const { row, pkg } = await packageRow(c, schema, id, admitting);
+  if (
+    child.approved_by !== "finite-package-delegate" ||
+    child.approval_reference !==
+      `delegate:${requestDigest({
+        packageId: id,
+        packageHash: row.manifest_hash,
+        manifestHash: child.manifest_hash,
+      })}` ||
+    inferenceTimestamp(child.approved_at) < inferenceTimestamp(row.approved_at) ||
+    inferenceTimestamp(child.expires_at) > inferenceTimestamp(row.expires_at)
+  )
+    throw Error("DELEGATED_APPROVAL_BINDING_INVALID");
+  if (admitting) {
+    for (const work of child.manifest.works) {
+      assertWorkPackageMembership(work, pkg, workContentId(work));
+    }
+  }
+  return pkg;
+}
+/** Server-only automatic admission inside a previously owner-approved finite
+ * package. It cannot create/enable the parent approval or reset its ledger. */
+export async function registerPreparedInferenceSubmanifest(
+  store: InferenceBudgetStore,
+  manifest: FiniteManifest,
+  expiresAt: string,
+  recheck: (work: FiniteWork) => Promise<void>,
+) {
+  assertDevelopmentRuntime();
+  if (!manifest.packageId || store.allocationId() !== additionalInferenceAllocation.id)
+    throw Error("DELEGATED_REGISTRATION_HELD");
+  // Admitted exactly as checked: the caller cannot change the manifest while the checks wait.
+  const admitted = structuredClone(manifest),
+    packageId = manifest.packageId,
+    manifestHash = requestDigest(admitted),
+    batchId = `finite-submanifest:${manifestHash}`;
+  // The binding checks read retained files, saved versions and private artifacts, and take pooled
+  // connections of their own, so they run before the ledger transaction, never while it holds the
+  // allocation lock. They confirm each candidate artifact holds a version of its template, which
+  // the membership check below relies on.
+  for (const work of admitted.works) await recheck(work);
+  return store.mutate("finite-submanifest-admitted", async (s, c) => {
+    const { row, pkg } = await packageRow(c, store.schemaName(), packageId, true);
+    const expiry = Date.parse(expiresAt);
+    if (!Number.isFinite(expiry) || expiry <= Date.now() || expiry > inferenceTimestamp(row.expires_at))
+      throw Error("SUBMANIFEST_EXPIRY_INVALID");
+    for (const work of admitted.works) assertWorkPackageMembership(work, pkg, workContentId(work));
+    const reference = `delegate:${requestDigest({ packageId, packageHash: row.manifest_hash, manifestHash })}`;
+    await c.query(
+      `INSERT INTO "${store.schemaName()}".valo_inference_batches
+      (id,policy_hash,manifest_hash,manifest,enabled,approved_by,approval_reference,approved_at,expires_at)
+      VALUES($1,$2,$3,$4,true,'finite-package-delegate',$5,now(),$6) ON CONFLICT(id) DO NOTHING`,
+      [
+        batchId,
+        requestDigest(inferenceProposal),
+        manifestHash,
+        JSON.stringify(admitted),
+        reference,
+        expiresAt,
+      ],
+    );
+    const saved = (
+      await c.query(`SELECT * FROM "${store.schemaName()}".valo_inference_batches WHERE id=$1 FOR SHARE`, [
+        batchId,
+      ])
+    ).rows[0];
+    if (
+      !saved ||
+      saved.manifest_hash !== manifestHash ||
+      requestDigest(saved.manifest) !== manifestHash ||
+      !saved.enabled
+    )
+      throw Error("SUBMANIFEST_REGISTRATION_CONFLICT");
+    await assertDelegatedBatchAuthority(c, store.schemaName(), saved);
+    return { state: s, value: { batchId, manifestHash, packageId, providerCalls: 0 } };
+  });
+}
+
+/** The longest approval the owner can record: the decision packet proposes 24 hours from approval. */
+export const MAX_PACKAGE_APPROVAL_HOURS = 24;
+const delegate = "finite-package-delegate";
+// Printable text with no control characters, so a label reads the same in every log and listing.
+const plainLabel = (value: string, min: number, max: number) =>
+  value.length >= min && value.length <= max && /^[\x20-\x7e]+$/.test(value) && value.trim() === value;
+export type PackageApprovalRequest = {
+  /** The package id the owner read and confirms; it must equal the package's own id. */
+  confirmPackageId: string;
+  /** Who approved the allocation. Never the marker that delegated children carry. */
+  approvedBy: string;
+  /** Where the approval is written down, such as a dated decision record. */
+  reference: string;
+  /** How long the approval lasts, in whole hours, at most MAX_PACKAGE_APPROVAL_HOURS. */
+  hours: number;
+};
+export type RecordedPackageApproval = {
+  packageId: string;
+  enabled: boolean;
+  approvedBy: string;
+  reference: string;
+  approvedAt: string;
+  expiresAt: string;
+};
+const iso = (value: unknown) => new Date(value as string | Date).toISOString();
+const recorded = (row: Record<string, unknown>): RecordedPackageApproval => ({
+  packageId: String(row.id),
+  enabled: row.enabled === true,
+  approvedBy: String(row.approved_by),
+  reference: String(row.approval_reference),
+  approvedAt: iso(row.approved_at),
+  expiresAt: iso(row.expires_at),
+});
+async function inTransaction<T>(
+  pool: Pick<import("pg").Pool, "connect">,
+  fn: (c: import("pg").PoolClient) => Promise<T>,
+) {
+  const c = await pool.connect();
+  try {
+    await c.query("BEGIN");
+    const value = await fn(c);
+    await c.query("COMMIT");
+    return value;
+  } catch (error) {
+    await c.query("ROLLBACK");
+    throw error;
+  } finally {
+    c.release();
+  }
+}
+const ledgerSchema = (schema: string) => {
+  if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw Error("INVALID_LEDGER_SCHEMA");
+  return schema;
+};
+
+/**
+ * Records the owner's approval of one exact finite allocation package: the start boundary of the
+ * additional allocation. The package must pass full admission validation and its id must be the
+ * one the owner confirms. The approval lasts at most 24 hours, only one package approval can be
+ * current at a time, and the row is kept only if the dispatcher's own admission check accepts it
+ * in the same transaction. Approving never adds money: every package draws on the one additional
+ * allocation, whose ledger keeps each reservation and charge against its cap. Nothing here calls a
+ * model, reserves budget or admits work, and the database trigger freezes the approval once written.
+ */
+export async function approveFiniteAllocationPackage(
+  pool: Pick<import("pg").Pool, "connect">,
+  pkg: FiniteAllocationPackage,
+  request: PackageApprovalRequest,
+  schema = "public",
+): Promise<RecordedPackageApproval> {
+  assertDevelopmentRuntime();
+  ledgerSchema(schema);
+  validateAllocationPackage(pkg);
+  const id = allocationPackageId(pkg);
+  if (request.confirmPackageId !== id) throw Error("PACKAGE_APPROVAL_NOT_CONFIRMED");
+  if (
+    !plainLabel(request.approvedBy, 3, 120) ||
+    request.approvedBy === delegate ||
+    request.approvedBy.startsWith("delegate:")
+  )
+    throw Error("PACKAGE_APPROVER_INVALID");
+  if (!plainLabel(request.reference, 12, 300) || request.reference.startsWith("delegate:"))
+    throw Error("PACKAGE_APPROVAL_REFERENCE_INVALID");
+  if (!Number.isInteger(request.hours) || request.hours < 1 || request.hours > MAX_PACKAGE_APPROVAL_HOURS)
+    throw Error("PACKAGE_APPROVAL_HOURS_INVALID");
+  return inTransaction(pool, async (c) => {
+    // Serializes approvals so two can never both find no current approval and both be recorded.
+    await c.query("SELECT pg_advisory_xact_lock(747116)");
+    const current = await c.query(
+      `SELECT id FROM "${schema}".valo_inference_batches
+       WHERE id LIKE 'finite-package:%' AND enabled AND approved_at IS NOT NULL AND expires_at > now()`,
+    );
+    if (current.rows.length) throw Error("ANOTHER_PACKAGE_APPROVAL_CURRENT");
+    const inserted = await c.query(
+      `INSERT INTO "${schema}".valo_inference_batches
+       (id,policy_hash,manifest_hash,manifest,enabled,approved_by,approval_reference,approved_at,expires_at)
+       VALUES($1,$2,$3,$4,true,$5,$6,now(),now() + make_interval(hours => $7))
+       ON CONFLICT(id) DO NOTHING RETURNING id`,
+      [
+        id,
+        requestDigest(inferenceProposal),
+        requestDigest(pkg),
+        JSON.stringify(pkg),
+        request.approvedBy,
+        request.reference,
+        request.hours,
+      ],
+    );
+    // An approval is never extended, repeated or re-enabled: those need a new package.
+    if (!inserted.rows.length) throw Error("PACKAGE_ALREADY_RECORDED");
+    const { row } = await packageRow(c, schema, id, true);
+    return recorded(row);
+  });
+}
+
+/** Stops new work under an approved package at once: the dispatcher and every delegated child
+ * recheck the parent before each dispatch. The trigger lets an approval be disabled, never re-enabled. */
+export async function revokeFiniteAllocationPackage(
+  pool: Pick<import("pg").Pool, "connect">,
+  confirmPackageId: string,
+  schema = "public",
+): Promise<RecordedPackageApproval & { wasEnabled: boolean }> {
+  assertDevelopmentRuntime();
+  ledgerSchema(schema);
+  if (!/^finite-package:[a-f0-9]{64}$/.test(confirmPackageId)) throw Error("PACKAGE_ID_INVALID");
+  return inTransaction(pool, async (c) => {
+    const [before] = (
+      await c.query(
+        `SELECT * FROM "${schema}".valo_inference_batches WHERE id=$1 AND approved_at IS NOT NULL FOR UPDATE`,
+        [confirmPackageId],
+      )
+    ).rows;
+    if (!before || before.approved_by === delegate) throw Error("APPROVED_PACKAGE_NOT_FOUND");
+    const [after] = (
+      await c.query(`UPDATE "${schema}".valo_inference_batches SET enabled=false WHERE id=$1 RETURNING *`, [
+        confirmPackageId,
+      ])
+    ).rows;
+    return { ...recorded(after), wasEnabled: before.enabled === true };
+  });
+}
+
+/** Every recorded package approval, oldest first. Read-only. */
+export async function listFiniteAllocationApprovals(
+  pool: Pick<import("pg").Pool, "connect">,
+  schema = "public",
+): Promise<RecordedPackageApproval[]> {
+  assertDevelopmentRuntime();
+  ledgerSchema(schema);
+  const c = await pool.connect();
+  try {
+    const rows = await c.query(
+      `SELECT * FROM "${schema}".valo_inference_batches
+       WHERE id LIKE 'finite-package:%' AND approved_at IS NOT NULL ORDER BY approved_at, id`,
+    );
+    return rows.rows.map(recorded);
+  } finally {
+    c.release();
+  }
+}

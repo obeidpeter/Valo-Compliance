@@ -1,0 +1,30 @@
+
+> @workspace/api-server@0.0.0 test:valo-erasure-db /home/runner/workspace/artifacts/api-server
+> VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --import tsx --test src/lib/valo-erasure-hardening.integration.test.ts src/lib/valo-privacy-erasure.integration.test.ts
+
+▶ erasure holds, bounded recovery and accepted-upload process death
+  ✔ distinct advisory locks cannot exhaust a one-connection shared data pool (69.015428ms)
+  ✔ holds and revoked roles stop the next object, while an in-flight result remains recorded (6230.960138ms)
+  ✔ actual export worker cleans an upload finishing after its tracking/job rows were erased (1387.797184ms)
+  ✔ SIGKILL before upload acknowledgement leaves a durable automatic late-write cleanup path (4709.755322ms)
+✔ erasure holds, bounded recovery and accepted-upload process death (12443.348386ms)
+▶ resumable physical development erasure with retained exclusions and replay
+  ✔ unacknowledged, wrong-role and stale requests cannot delete content (42.886896ms)
+  ✔ quarantine persists before physical deletion and denies workspace resurrection (94.119594ms)
+  ✔ object failure is retained and blocks content purge; repeated deletion is retryable (777.969855ms)
+  ✔ ready, pending and cleanup objects are inventoried once before rows disappear and stale workers stay fenced (399.415602ms)
+  ✔ resume physically removes only scoped rows, keeping explicit unfulfilled records and another tenant (1107.56456ms)
+  ✔ restored membership and late-written objects are re-deleted from retained tombstones (1754.760592ms)
+  ✔ native private storage deletion and repeated late-write replay remove actual synthetic bytes (1735.500059ms)
+  ✔ sealed key tampering and corrupted completion proof stop before deletion (154.275139ms)
+  ✔ non-development and every nonempty deployment marker stop before deletion I/O (2.855663ms)
+  ✔ even a deleted membership cannot recreate an identity with a deletion tombstone (16.480115ms)
+✔ resumable physical development erasure with retained exclusions and replay (7670.552474ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17041.487698

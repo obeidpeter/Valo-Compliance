@@ -1,0 +1,79 @@
+{
+  "executedAt": "2026-11-14T10:15:24.189Z",
+  "path": "lib/db/drizzle/0012_editorial_usage_meter.sql",
+  "sqlHash": "c0cc277965875da564bd5792d4f9d137b17a61f390bc517ca0d2d1ef368c8d0f",
+  "before": {
+    "reservations": 11
+  },
+  "after": {
+    "reservations": 11,
+    "legacy": 11,
+    "measured": 0
+  },
+  "columns": [
+    {
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "candidate_hash",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "role",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "request_hash",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "request_meter",
+      "data_type": "jsonb",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "outcome",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "provider_response_id",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "input_tokens",
+      "data_type": "integer",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "output_tokens",
+      "data_type": "integer",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "error_code",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "completed_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    }
+  ],
+  "existingBaselineAdopted": false,
+  "oldMigrationHistoryInvented": false,
+  "productionApplied": false,
+  "limitation": "Existing development schema predates the Drizzle journal; full baseline adoption remains separate measured work."
+}

@@ -1,0 +1,153 @@
+{
+  "executedAt": "2026-11-14T08:59:52.295Z",
+  "scope": "Targeted development commerce, authoring-aware content reads, clean migrations and auth reflow; NOT complete PAY or release acceptance",
+  "checks": {
+    "api": {
+      "passed": 71,
+      "failed": 0,
+      "skipped": 1
+    },
+    "database": {
+      "passed": 49,
+      "failed": 0,
+      "skipped": 0
+    },
+    "controlledCommerce": {
+      "runnerTests": 14,
+      "leafCases": 13,
+      "passed": 14,
+      "realProviderCalls": 0
+    },
+    "controlledWebhookHTTP": {
+      "runnerTests": 5,
+      "leafCases": 4,
+      "passed": 5,
+      "actualPaystackDelivery": false
+    },
+    "browser": {
+      "groups": 3,
+      "passed": 3,
+      "actualManagedIdentityUsed": true,
+      "persistedUnpaidControlledOrder": true,
+      "realPayment": false,
+      "purchaseWidths": [
+        360,
+        390,
+        768,
+        1280
+      ],
+      "authWidths": [
+        320,
+        360,
+        390,
+        768,
+        1280
+      ],
+      "cleanupErrors": 0
+    },
+    "cleanLocalMigrations": {
+      "executedAt": "2026-11-14T08:54:11.588Z",
+      "scope": "Empty local PostgreSQL only; no managed DB copy or restore",
+      "productionApplied": false,
+      "managedDevelopmentSchemaChanged": false,
+      "migrationOutput": "Reading config file '/home/runner/workspace/lib/db/drizzle.config.ts'\nUsing 'pg' driver for database querying\n[⣷] applying migrations...\u001b[2K\u001b[1G[⣯] applying migrations...\u001b[2K\u001b[1G[⣟] applying migrations...\u001b[2K\u001b[1G[⡿] applying migrations...\u001b[2K\u001b[1G[✓] migrations applied successfully!",
+      "migrationsPassed": true,
+      "invariants": {
+        "orderTable": true,
+        "receiptOutbox": true,
+        "dailyReconciliation": true,
+        "noSeedOrders": true,
+        "noSeedPrices": true,
+        "tenantForeignKeys": 4,
+        "publisherCannotReadOrders": true,
+        "publisherCannotWriteOrders": true,
+        "publisherCannotWritePrices": true
+      },
+      "disasterRecoveryProved": false,
+      "productionCompatibilityProved": false,
+      "localTemporaryClusterRemoved": true
+    },
+    "typecheck": "passed",
+    "nextBuild": "passed",
+    "foundation": {
+      "passed": 166,
+      "syntheticRulesNotAcceptance": true
+    }
+  },
+  "publication": {
+    "currentScopedPermissionPassed": true,
+    "latestVersion": 6,
+    "status": "held",
+    "reviewReservationsUsedToday": 6,
+    "configuredDailyReservations": 6,
+    "newReviewCalls": 0,
+    "publishedTemplates": 0,
+    "publishedGuidance": 0,
+    "releasedRules": 0
+  },
+  "controls": {
+    "livePayments": false,
+    "publicLaunch": false,
+    "recurringBilling": false,
+    "priceSeedCount": 0,
+    "merchantConfigured": false,
+    "emailDeliveryClaimed": false,
+    "disasterRestoreClaimed": false,
+    "r1Accepted": false,
+    "r2Accepted": false
+  },
+  "limitations": [
+    "No eligible product was sold. Controlled ledger records were not publication or price approval.",
+    "No real Paystack initialization, verification, refund or daily reconciliation was executed.",
+    "Refund requests persist, but authorisation/PSP refund lifecycle remains unimplemented.",
+    "The new rights-read path does not waive held reviews or establish an eligible release.",
+    "Clean local PostgreSQL migration proof is not managed-production compatibility or disaster recovery.",
+    "Formal source-backed 80/60/60 acceptance remains incomplete."
+  ],
+  "artifacts": [
+    {
+      "path": "docs/valo/evidence/commerce-api-tests.txt",
+      "sha256": "f71a809ffa8f7dbc2258518118ef74758c055b1dd730df3a01317c591960b78a"
+    },
+    {
+      "path": "docs/valo/evidence/commerce-db-tests.txt",
+      "sha256": "071fba18928e5c1e0660810a760e34ae62537340a91de9907020af3cb3e7fa9e"
+    },
+    {
+      "path": "docs/valo/evidence/commerce-ledger-tests.txt",
+      "sha256": "6f1f28f10ad6eb977320a4ce5e9f30d678486fedd78a9aa3530a01e9ad716645"
+    },
+    {
+      "path": "docs/valo/evidence/commerce-webhook-http-tests.txt",
+      "sha256": "9c5563125343625ce6e5cab3826d7a0cb5246d86d5877cc1189d7859dc086238"
+    },
+    {
+      "path": "docs/valo/evidence/commerce-clean-migrations.json",
+      "sha256": "10fc5e685c4f73a0c0ba93fec51324e8326085cb5ed9b8c2973e5f71c8c93c87"
+    },
+    {
+      "path": "docs/valo/evidence/commerce-typecheck.txt",
+      "sha256": "ba0130e4c1ce10c9b900b86bd79da6c401689a632c20277ec7a959204618f331"
+    },
+    {
+      "path": "docs/valo/evidence/commerce-next-build.txt",
+      "sha256": "84fff6118fcbc37165bf5789fa2c224aa1531b9da8cb3b61bb44c5f4cb35b80a"
+    },
+    {
+      "path": "docs/valo/evidence/commerce-read-permission.txt",
+      "sha256": "e5b4909f7c191d0304b800aea782ac16c6edd99e0fd9abbd888c30548e83b03d"
+    },
+    {
+      "path": "docs/valo/evidence/commerce-initial-fixture-failure.txt",
+      "sha256": "76b3377a7dcb5b391a4d168904ab734e5917d500c2dc7d78a1a9e86d2861e613"
+    },
+    {
+      "path": "docs/valo/evidence/commerce-initial-fixture-cleanup.txt",
+      "sha256": "f4ba4df2b95e4a922b4603c82439264f025b92243f5ae40a7720a789e6091d9d"
+    },
+    {
+      "path": "docs/valo/evidence/commerce-browser-journey.json",
+      "sha256": "6db278d9d0dc198f2fe56450a53f47fdb45f54532e797486fa926e7ac82f0d1d"
+    }
+  ]
+}

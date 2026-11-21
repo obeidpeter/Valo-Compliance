@@ -1,0 +1,67 @@
+{
+  "status": "unpublished_candidate_index_not_review_results",
+  "sourceMarkdown": "analysis/regulatory-guidance-registration-tax.md",
+  "sourceSHA256": "e861b300dd2c23a21e46128659f4834739c27ece7a402d6a6531f7722c0322f8",
+  "entries": [
+    {
+      "id": "GUD-01",
+      "title": "Check the name you trade under",
+      "customerBodyWordCount": 260,
+      "bodySHA256": "4d0e11f185d64ae070695af3ddd54e5dfcd15642fbcb44cc7c78c15f1727d513"
+    },
+    {
+      "id": "GUD-02",
+      "title": "Identify whether you have a company or a registered business name",
+      "customerBodyWordCount": 278,
+      "bodySHA256": "7f9baa0da4ff34dc7c72ddd29158c84bbde040a5af4f5d44c1b5802254248809"
+    },
+    {
+      "id": "GUD-03",
+      "title": "Keep the business-name certificate available at your premises",
+      "customerBodyWordCount": 274,
+      "bodySHA256": "7c2c4a42c9351f4a9a52f91b3887e558e6bc49d867b6a76f0211872edabeac06"
+    },
+    {
+      "id": "GUD-04",
+      "title": "Update changed business-name particulars",
+      "customerBodyWordCount": 290,
+      "bodySHA256": "535c7ae778d84a5d08abd9fb8ef34bb48a0814e3d37bed22397a7b7b53dffd8b"
+    },
+    {
+      "id": "GUD-05",
+      "title": "Prepare the annual return for a registered business name",
+      "customerBodyWordCount": 287,
+      "bodySHA256": "a5d472691e378876c58be510950165f9b483940943851b180b440a49b750fa58"
+    },
+    {
+      "id": "GUD-06",
+      "title": "Keep company annual returns separate from tax filings",
+      "customerBodyWordCount": 274,
+      "bodySHA256": "9b0b8cf317d8e0bedac7299b6317657aaee4736306b822e40e9fc829f97ed0c0"
+    },
+    {
+      "id": "GUD-07",
+      "title": "Keep company accounting records that explain the transactions",
+      "customerBodyWordCount": 284,
+      "bodySHA256": "34bae82caf09713cf0ac613686a3c38df706d6e34811e38ecf83eb5700a2c28b"
+    },
+    {
+      "id": "GUD-08",
+      "title": "Retrieve the correct Tax ID before creating another record",
+      "customerBodyWordCount": 287,
+      "bodySHA256": "6781505d716c5db3316b355bdd470ca19e570c349621c603c301f4ccb24970ce"
+    },
+    {
+      "id": "GUD-09",
+      "title": "Prepare a Nigerian company's income-tax return even when no tax is payable",
+      "customerBodyWordCount": 282,
+      "bodySHA256": "fbcbbfe218ea6f5b3014e1aff00eedcd9d9e609d8a77182d1f8a1436938656ab"
+    },
+    {
+      "id": "GUD-10",
+      "title": "Keep tax records with the correct retention starting point",
+      "customerBodyWordCount": 296,
+      "bodySHA256": "84643b2bace647ecdb0857da18b6332383822561975bf8b5df95b2b119353ac3"
+    }
+  ]
+}

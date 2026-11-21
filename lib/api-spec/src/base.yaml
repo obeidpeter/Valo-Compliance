@@ -1,0 +1,52 @@
+# The contract's header, and the responses every module shares.
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+components:
+  responses:
+    WriteLimit:
+      description: Durable write ceiling reached; saved data is unchanged and unsaved input must be retained
+      headers:
+        Retry-After: { schema: { type: integer, minimum: 1 }, description: Seconds until the limiting database window resets }
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, error, retryAfter]
+            properties:
+              code: { type: string, enum: [WRITE_LIMIT_REACHED] }
+              error: { type: string }
+              retryAfter: { type: integer, minimum: 1 }
+    QuotaError:
+      description: Read ceiling reached; retry after the indicated seconds without changing saved work
+      headers:
+        Retry-After: { schema: { type: integer }, description: Seconds until the current database window resets }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiProblem" }
+    ConflictError:
+      description: The request version or processing state changed; reload before retrying
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error: { type: string }
+              currentRevision: { type: integer }
+              requestId: { type: string }
+    AuthError:
+      description: Validation, access or concurrency error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiProblem"

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "cama_2020",
+    "url": "https://icrp.cac.gov.ng/assets/docs/CAMA-NOTE%20FINAL-FULL-VERSION.pdf",
+    "finalURL": "https://icrp.cac.gov.ng/assets/docs/CAMA-NOTE%20FINAL-FULL-VERSION.pdf",
+    "httpStatus": 200,
+    "retrievedAt": "2026-11-14T08:33:18.113942+00:00",
+    "bytes": 1269127,
+    "rawSHA256": "d39745af4eaeceb8dbdc3678bb5d072b48ad5e022ead3b1cec7f94b88b01a2c8",
+    "textSHA256": "95b456620a207318e413af3a1bd2c09ae9690ae71eb660c1b94e6a563fa9210e",
+    "textExtraction": "pdftotext -layout",
+    "rawPath": "analysis/business_name_sources/cama_2020.pdf",
+    "textPath": "analysis/business_name_sources/cama_2020.txt"
+  },
+  {
+    "id": "bfa_2022",
+    "url": "https://nipc.gov.ng/assets/resources/business-facilitation-miscellaneous-provisions-act-2022/business-facilitation-misc-provisions-act-2022.pdf",
+    "finalURL": "https://nipc.gov.ng/assets/resources/business-facilitation-miscellaneous-provisions-act-2022/business-facilitation-misc-provisions-act-2022.pdf",
+    "httpStatus": 200,
+    "retrievedAt": "2026-11-14T08:33:25.251863+00:00",
+    "bytes": 566637,
+    "rawSHA256": "c268648489af515bad45694197fa80d6ba8f5c0485a8cc0bf56cfa08b1417b14",
+    "textSHA256": "154fb2bc6ff6b19f93378ee53bb7f21a6c19a37a87e62c7c86798c349a5a4e47",
+    "textExtraction": "pdftotext -layout",
+    "rawPath": "analysis/business_name_sources/bfa_2022.pdf",
+    "textPath": "analysis/business_name_sources/bfa_2022.txt"
+  },
+  {
+    "id": "copyright_2022",
+    "url": "https://copyright.gov.ng/CopyrightAct/CopyrightAct2023FinalPublication1.pdf",
+    "finalURL": "https://copyright.gov.ng/CopyrightAct/CopyrightAct2023FinalPublication1.pdf",
+    "httpStatus": 200,
+    "retrievedAt": "2026-11-14T08:33:33.549756+00:00",
+    "bytes": 738936,
+    "rawSHA256": "75c6154c1d4feb8581d5ef806e633d434dd9f67b7a4dcfc0dac554f4cf3aad4c",
+    "textSHA256": "03db3eaff375edb4d1e5fdeed87c75812852567e57cbb1d63cf766bfd13fa5e0",
+    "textExtraction": "pdftotext -layout",
+    "rawPath": "analysis/business_name_sources/copyright_2022.pdf",
+    "textPath": "analysis/business_name_sources/copyright_2022.txt"
+  }
+]

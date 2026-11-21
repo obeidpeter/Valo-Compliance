@@ -1,0 +1,26 @@
+✔ measured operational checks execute separately on a controlled, non-published fixture (123.864932ms)
+▶ operational checks fail closed for missing, stale, altered and out-of-scope inputs
+  ✔ altered canonical hash (12.013262ms)
+  ✔ invalid canonical schema (12.473833ms)
+  ✔ altered source bytes (11.866401ms)
+  ✔ missing provider passage (15.480778ms)
+  ✔ altered provider bytes (15.600586ms)
+  ✔ expired review (11.387307ms)
+  ✔ future source check (11.418753ms)
+  ✔ unapproved permission (12.238928ms)
+  ✔ wrong artifact (10.664617ms)
+  ✔ employment scope (8.611755ms)
+  ✔ unverified legal scope (8.755048ms)
+  ✔ unlisted template (8.849404ms)
+  ✔ new legal claim (13.910432ms)
+  ✔ missing disclosure (9.98577ms)
+  ✔ invented business fact (9.199548ms)
+✔ operational checks fail closed for missing, stale, altered and out-of-scope inputs (176.089083ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1971.314886

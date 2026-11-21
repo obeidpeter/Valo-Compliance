@@ -1,0 +1,159 @@
+# Staff roles and the operations view.
+paths:
+  /admin/staff-roles:
+    get:
+      operationId: getStaffRoleAdministration
+      parameters:
+        - name: identityId
+          in: query
+          required: false
+          schema: { type: string, pattern: '^user_[A-Za-z0-9_-]+$', maxLength: 128 }
+      responses:
+        "200":
+          description: Permanent system operators only; current assignments and immutable change alerts.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StaffRoleAdministration" }
+    post:
+      operationId: changeStaffRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StaffRoleChangeInput" }
+      responses:
+        "200":
+          description: Durable idempotent role-change receipt; no privilege is granted to automation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StaffRoleChangeReceipt" }
+  /admin/staff-role-target:
+    post:
+      operationId: verifyStaffRoleTarget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VerifyStaffRoleTargetInput" }
+      responses:
+        "200":
+          description: Provider-verified target shown for review; every grant verifies again.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [identityId, label, verifiedAt]
+                properties:
+                  identityId: { type: string }
+                  label: { type: string }
+                  verifiedAt: { type: string, format: date-time }
+  /admin/operations:
+    get:
+      operationId: getStaffOperations
+      tags: [admin]
+      parameters:
+        - { name: area, in: query, required: true, schema: { type: string, enum: [content, support, finance, system] } }
+      responses:
+        "200":
+          description: Role-separated read-only operations, active managed session and recent MFA required.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StaffOperations" }
+        "403": { description: Missing staff permission or recent MFA; no self-enrolment route. }
+schemas:
+  VerifyStaffRoleTargetInput:
+    type: object
+    additionalProperties: false
+    required: [identityId]
+    properties:
+      identityId: { type: string, pattern: '^user_[A-Za-z0-9_-]+$', maxLength: 128 }
+  StaffRoleAssignment:
+    type: object
+    required: [id, identityId, role, active, grantMode, expiresAt, version, grantedBy, grantedAt, reason]
+    properties:
+      id: { type: string, format: uuid }
+      identityId: { type: string }
+      role: { type: string, enum: [content, support, finance, system, privacy] }
+      active: { type: boolean }
+      grantMode: { type: string, enum: [permanent, break_glass] }
+      expiresAt: { type: [string, "null"], format: date-time }
+      version: { type: integer, minimum: 1 }
+      grantedBy: { type: string }
+      grantedAt: { type: string, format: date-time }
+      reason: { type: string }
+  StaffRoleChangeReceipt:
+    type: object
+    required: [id, requestKey, actorId, assignmentId, targetIdentityId, action, role, reason, incidentReference, before, after, createdAt]
+    properties:
+      id: { type: string, format: uuid }
+      requestKey: { type: string, format: uuid }
+      actorId: { type: string }
+      assignmentId: { type: string, format: uuid }
+      targetIdentityId: { type: string }
+      action: { type: string, enum: [grant, revoke] }
+      role: { type: string }
+      reason: { type: string }
+      incidentReference: { type: [string, "null"] }
+      before: { type: [object, "null"], additionalProperties: true }
+      after: { type: object, additionalProperties: true }
+      createdAt: { type: string, format: date-time }
+  StaffRoleChangeInput:
+    type: object
+    additionalProperties: false
+    required: [requestKey, identityId, role, action, expectedVersion, reason, acknowledgement]
+    properties:
+      requestKey: { type: string, format: uuid }
+      identityId: { type: string, pattern: '^user_[A-Za-z0-9_-]+$', maxLength: 128 }
+      role: { type: string, enum: [content, support, finance, system, privacy] }
+      action: { type: string, enum: [grant, revoke] }
+      expectedVersion: { type: integer, minimum: 0 }
+      reason: { type: string, minLength: 20, maxLength: 1000 }
+      acknowledgement: { type: boolean, enum: [true] }
+      grantMode: { type: string, enum: [permanent, break_glass] }
+      durationMinutes: { type: integer, minimum: 5, maximum: 60 }
+      incidentReference: { type: string, minLength: 5, maxLength: 200 }
+  StaffRoleAdministration:
+    type: object
+    required: [assignments, changes, notice]
+    properties:
+      assignments:
+        type: array
+        items: { $ref: "#/components/schemas/StaffRoleAssignment" }
+      changes:
+        type: array
+        items: { $ref: "#/components/schemas/StaffRoleChangeReceipt" }
+      notice: { type: string }
+  StaffOperations:
+    type: object
+    required: [area, notice, records]
+    properties:
+      area: { type: string, enum: [content, support, finance, system] }
+      notice: { type: string }
+      records: { type: array, items: { type: object, additionalProperties: true } }
+      preparedCandidates:
+        description: >-
+          Content area only. Template candidates prepared for their two reviews (decision 0014), most
+          recent first. A candidate is a private artifact until its reviews are checked, so it is not
+          among the content versions.
+        type: array
+        items: { $ref: "#/components/schemas/StaffPreparedCandidate" }
+  StaffPreparedCandidate:
+    type: object
+    additionalProperties: false
+    required: [artifactId, artifactHash, versionId, templateId, version, preparedAt, reviewBy, state, savedStatus]
+    properties:
+      artifactId: { type: string, format: uuid }
+      artifactHash: { type: string, pattern: '^[a-f0-9]{64}$' }
+      versionId: { type: string, format: uuid }
+      templateId: { type: string }
+      version: { type: integer, minimum: 1 }
+      preparedAt: { type: string, format: date-time }
+      reviewBy: { type: string, format: date-time }
+      state:
+        description: >-
+          awaiting_reviews until its version is saved; saved once it is, with that version's status;
+          expired after its review date; version_taken when another candidate was saved under its
+          version number first.
+        type: string
+        enum: [awaiting_reviews, saved, expired, version_taken]
+      savedStatus: { type: [string, "null"], enum: [candidate, held, published, withdrawn, null] }
