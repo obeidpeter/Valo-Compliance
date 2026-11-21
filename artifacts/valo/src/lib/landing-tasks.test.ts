@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
-import { NAMED_IN_LEAD, landingTasks } from "./landing-tasks";
+import { NAMED_IN_LEAD, landingTask, landingTasks, startPath } from "./landing-tasks";
+import { ANY_DOCUMENT, signUpFor } from "./start";
 
 /** What each task's documents are called in the workspace's starter. A task's words on the landing
  * page were written for these documents: when one is renamed, its task's words are due a look. */
@@ -63,4 +64,32 @@ test("the documents the landing page's opening sentence names are ones the start
     ["Invoice", "Quotation", "Receipt", "Service agreement"],
   );
   for (const id of NAMED_IN_LEAD) assert.ok(GUIDED_TEMPLATE_IDS.includes(id), id);
+});
+
+test("what a visitor chose before signing up leads to the page where a document starts, and a choice the site does not offer leads nowhere", () => {
+  // "Create a document" asks for no task in particular.
+  assert.equal(signUpFor(ANY_DOCUMENT), "/sign-up?start=document");
+  assert.equal(startPath(ANY_DOCUMENT), "/workspace/documents/new");
+  for (const task of landingTasks()) {
+    assert.equal(signUpFor(task.id), `/sign-up?start=${task.id}`);
+    assert.equal(startPath(task.id), `/workspace/documents/new?start=${task.id}`);
+    assert.equal(landingTask(task.id), task);
+  }
+  // Only the site's own choices are turned into an address: nothing from outside is passed on.
+  for (const made of [
+    null,
+    undefined,
+    "",
+    "nothing",
+    "/staff",
+    "//example.test",
+    "https://example.test/",
+    "invoice/../../staff",
+    "INVOICE",
+    "__proto__",
+    "constructor",
+  ]) {
+    assert.equal(startPath(made), undefined, String(made));
+    assert.equal(landingTask(made), undefined, String(made));
+  }
 });

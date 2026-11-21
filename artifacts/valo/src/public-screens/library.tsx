@@ -23,6 +23,7 @@ import {
   typeName,
 } from "@/lib/library-filters";
 import { fromServer } from "@/lib/server-data";
+import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 
 /**
  * The documents and guidance search. The server renders the results for the address it was asked
@@ -311,7 +312,7 @@ export function Library({
               title={filtered ? "Nothing matches these filters" : "Nothing is published yet"}
               action={
                 <>
-                  <Link href="/sign-up" className="btn btn-primary">
+                  <Link href={signUpFor(ANY_DOCUMENT)} className="btn btn-primary">
                     Create a document
                   </Link>
                   <Link href="/workspace" className="btn btn-ghost">

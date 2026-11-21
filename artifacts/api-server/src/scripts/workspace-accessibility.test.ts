@@ -1170,3 +1170,85 @@ test("the phone's opened menu closes when keyboard focus moves on from the heade
     await close();
   }
 });
+
+test("the New document page puts first the documents of a task chosen before signing up, starts one with a press, and shows no such section for a choice the site does not offer", async () => {
+  const chosen: [start: string, task: string, documents: string[]][] = [
+    ["invoice", "Send an invoice", ["TPL-01"]],
+    ["hire", "Hire someone", ["TPL-17", "TPL-16"]],
+    ["agreement", "Sign an agreement", ["TPL-13", "TPL-14", "TPL-15"]],
+  ];
+  for (const [start, task, documents] of chosen) {
+    for (const open of [desktop, phone]) {
+      const { page, errors, close } = await open(`/workspace/documents/new?start=${start}`);
+      try {
+        await ready(page);
+        const section = page.getByTestId("chosen-task");
+        await expect(section.locator("h2")).toHaveText(task);
+        await expect(section.locator("button")).toHaveCount(documents.length);
+        for (const id of documents)
+          await expect(section.getByTestId(`button-start-chosen-${id}`)).toContainText(
+            GUIDED_SPECS_V1[id as "TPL-01"].title,
+          );
+        // It comes before the full list, which still has all twelve. (4 is "the other node follows".)
+        assert.ok(
+          await page.evaluate(
+            `!!(document.querySelector('[data-testid="chosen-task"]').compareDocumentPosition(
+              document.querySelector('[data-testid="button-start-TPL-01"]')) & 4)`,
+          ),
+          `${start}: the chosen task comes first`,
+        );
+        await expect(page.locator('[data-testid^="button-start-TPL-"]')).toHaveCount(
+          GUIDED_TEMPLATE_IDS.length,
+        );
+        assert.equal(await page.evaluate("document.documentElement.scrollWidth"), page.viewportSize()!.width);
+        assert.deepEqual(errors, [], start);
+      } finally {
+        await close();
+      }
+    }
+  }
+
+  // A press on the chosen task's document starts it.
+  const created: { title: string }[] = [];
+  const creating: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/workspace/documents") {
+      created.push(route.request().postDataJSON() as { title: string });
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify(api.CreateDocumentResponse.parse(document(1))),
+      });
+    } else await answer(route, method, path, query);
+  };
+  {
+    const { page, errors, close } = await desktop("/workspace/documents/new?start=hire", creating);
+    try {
+      await ready(page);
+      await page.getByTestId("button-start-chosen-TPL-16").click();
+      await page.waitForURL(new RegExp(`/workspace/documents/${DOCUMENT}$`));
+      assert.equal(created.length, 1);
+      assert.ok(created[0]!.title.startsWith(GUIDED_SPECS_V1["TPL-16"].title), created[0]!.title);
+      assert.deepEqual(errors, []);
+    } finally {
+      await close();
+    }
+  }
+
+  // Nothing chosen, "any document", or a made-up choice: the page as it is from the home screen.
+  for (const address of [
+    "/workspace/documents/new",
+    "/workspace/documents/new?start=document",
+    "/workspace/documents/new?start=nothing",
+    "/workspace/documents/new?start=%2Fstaff",
+  ]) {
+    const { page, errors, close } = await desktop(address);
+    try {
+      await ready(page);
+      await expect(page.getByTestId("chosen-task")).toHaveCount(0);
+      await expect(page.locator('[data-testid^="button-start-"]')).toHaveCount(GUIDED_TEMPLATE_IDS.length);
+      assert.deepEqual(errors, [], address);
+    } finally {
+      await close();
+    }
+  }
+});

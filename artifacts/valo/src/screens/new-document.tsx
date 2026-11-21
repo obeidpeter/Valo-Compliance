@@ -1,17 +1,21 @@
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { ArrowRight, FilePlus2, Loader2, Sparkles } from "lucide-react";
 import { GuidedDraftStarter } from "@/components/guided-draft-starter";
 import { Notice } from "@/components/states";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { describeError } from "@/lib/api";
+import { landingTask } from "@/lib/landing-tasks";
 import { useNewDocument } from "@/lib/use-new-document";
 
 /**
  * The one place a document starts: the everyday documents Valo asks questions for, a blank page,
- * and the drafting assistant. The home screen and the documents screen each lead here.
+ * and the drafting assistant. The home screen and the documents screen each lead here. So does
+ * sign-up, for a visitor who chose a task on the landing page (`?start=`): that task's documents
+ * come first.
  */
 export default function NewDocumentPage() {
   const blank = useNewDocument();
+  const chosen = landingTask(new URLSearchParams(useSearch()).get("start"));
   const way =
     "surface group flex h-full w-full items-center gap-4 p-5 text-left transition-shadow hover:shadow-[var(--shadow-md)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
   return (
@@ -22,7 +26,7 @@ export default function NewDocumentPage() {
         <h1 className="font-display mt-2 text-4xl sm:text-5xl">New document</h1>
       </header>
       <div className="mt-10">
-        <GuidedDraftStarter />
+        <GuidedDraftStarter chosen={chosen} />
       </div>
       <section className="mt-12" aria-labelledby="other-ways-title">
         <h2 id="other-ways-title" className="font-display text-2xl">

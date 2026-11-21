@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ComponentProps, type ReactNode } from "react";
+import { lazy, Suspense, useState, type ComponentProps, type ReactNode } from "react";
 import { ClerkProvider, SignIn, SignUp, useAuth, useUser } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
@@ -14,6 +14,7 @@ import { Wordmark } from "@/components/brand";
 import { basePath } from "@/lib/env";
 import { useDocumentTitle } from "@/lib/document-title";
 import { publicPages } from "@/lib/public-pages";
+import { startPath } from "@/lib/landing-tasks";
 import { isServerPage } from "@/lib/server-pages";
 import NotFound from "@/screens/not-found";
 
@@ -167,20 +168,47 @@ function AuthFrame({ children, side }: { children: ReactNode; side: "in" | "up" 
   );
 }
 
+/**
+ * What the visitor chose before signing in or up (`?start=` on the address), kept for as long as
+ * the page is open: the identity provider moves through steps of its own, which drop it from the
+ * address. `after` is where the visitor then starts, handed to the provider; `carry` passes the
+ * choice between the sign-in and the sign-up page. Both are empty for a choice the site does not
+ * offer, so the provider is never handed an address that came from outside.
+ */
+function useChosenStart() {
+  const [start] = useState(() => new URLSearchParams(window.location.search).get("start"));
+  const path = startPath(start);
+  return path && start
+    ? { after: { forceRedirectUrl: basePath + path }, carry: "?start=" + encodeURIComponent(start) }
+    : { after: {}, carry: "" };
+}
+
 function SignInPage() {
   useDocumentTitle("Sign in — Valo");
+  const { after, carry } = useChosenStart();
   return (
     <AuthFrame side="in">
-      <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
+      <SignIn
+        routing="path"
+        path={`${basePath}/sign-in`}
+        signUpUrl={`${basePath}/sign-up${carry}`}
+        {...after}
+      />
     </AuthFrame>
   );
 }
 
 function SignUpPage() {
   useDocumentTitle("Create account — Valo");
+  const { after, carry } = useChosenStart();
   return (
     <AuthFrame side="up">
-      <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
+      <SignUp
+        routing="path"
+        path={`${basePath}/sign-up`}
+        signInUrl={`${basePath}/sign-in${carry}`}
+        {...after}
+      />
     </AuthFrame>
   );
 }
@@ -391,7 +419,7 @@ function ClerkProviderWithRoutes({ nonce }: { nonce?: string | undefined }) {
       localization={{
         signIn: { start: { title: "Sign in to Valo", subtitle: "Your private business workspace" } },
         signUp: {
-          start: { title: "Open your workspace", subtitle: "Verify your email to keep drafts private" },
+          start: { title: "Create your account", subtitle: "You will be asked to verify your email" },
         },
       }}
       routerPush={(to) => setLocation(stripBase(to))}

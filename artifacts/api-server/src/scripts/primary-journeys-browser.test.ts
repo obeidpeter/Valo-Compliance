@@ -40,11 +40,11 @@ async function onPhoneHome(checks: (page: Page) => Promise<void>) {
   assert.deepEqual(unknown, [], "every API call the page made has a test answer");
 }
 
-/** One tap on the link opens the page at this path. */
-async function tapOpens(page: Page, link: Locator, path: string) {
+/** One tap on the link opens the page at this address, which is titled for its path. */
+async function tapOpens(page: Page, link: Locator, address: string) {
   await link.tap();
-  await expect(page).toHaveURL(web.origin + path);
-  await expect(page).toHaveTitle(TITLES[path]!);
+  await expect(page).toHaveURL(web.origin + address);
+  await expect(page).toHaveTitle(TITLES[address.split("?")[0]!]!);
 }
 
 test("on a phone, the home page's hero links to both journeys, and one tap on either opens it", () =>
@@ -52,7 +52,7 @@ test("on a phone, the home page's hero links to both journeys, and one tap on ei
     const documents = page.getByTestId("link-hero-documents");
     const compliance = page.getByTestId("link-hero-compliance");
     await expect(documents).toHaveText("Create a document");
-    await expect(documents).toHaveAttribute("href", "/sign-up");
+    await expect(documents).toHaveAttribute("href", "/sign-up?start=document");
     await expect(compliance).toHaveText("Check my requirements");
     await expect(compliance).toHaveAttribute("href", "/checker");
     // The two buttons are the same size, one under the other with documents first, and nothing but
@@ -72,7 +72,7 @@ test("on a phone, the home page's hero links to both journeys, and one tap on ei
     // The page fits a 360-pixel-wide screen without scrolling sideways.
     assert.equal(await page.evaluate("document.documentElement.scrollWidth"), 360);
 
-    await tapOpens(page, documents, "/sign-up");
+    await tapOpens(page, documents, "/sign-up?start=document");
     await page.goBack();
     await tapOpens(page, compliance, "/checker");
   }));
@@ -108,7 +108,7 @@ test("on a phone, the opened mobile menu and the bottom dock each link to both j
     const documents = page.getByTestId("link-dock-documents");
     const compliance = page.getByTestId("link-dock-compliance");
     await expect(documents).toHaveText("Create a document");
-    await expect(documents).toHaveAttribute("href", "/sign-up");
+    await expect(documents).toHaveAttribute("href", "/sign-up?start=document");
     await expect(compliance).toHaveText("Check requirements");
     await expect(compliance).toHaveAttribute("href", "/checker");
     await page.evaluate("window.scrollTo(0, document.body.scrollHeight)");
@@ -116,5 +116,5 @@ test("on a phone, the opened mobile menu and the bottom dock each link to both j
     await expect(compliance).toBeInViewport();
     await tapOpens(page, compliance, "/checker");
     await page.goBack();
-    await tapOpens(page, documents, "/sign-up");
+    await tapOpens(page, documents, "/sign-up?start=document");
   }));

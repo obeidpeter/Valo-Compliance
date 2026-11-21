@@ -631,6 +631,17 @@ const HOME_TASKS = [
   "Hire someone",
   "Sign an agreement",
 ];
+/** What each of those tasks' links carries into sign-up, in the same order. */
+const HOME_TASK_IDS = [
+  "invoice",
+  "quotation",
+  "receipt",
+  "reminder",
+  "order",
+  "delivery",
+  "hire",
+  "agreement",
+];
 
 test("the home page offers both actions in its hero, beside its tasks and at its end, lists its eight everyday tasks, labels its examples as made up, shows the template count the server read and uses no price words", async () => {
   const html = await (await fetch(web.origin + "/")).text();
@@ -641,15 +652,19 @@ test("the home page offers both actions in its hero, beside its tasks and at its
   };
   // Documents and requirements side by side, in the same words, wherever the page offers an action.
   for (const place of ["hero", "closing"]) {
-    assert.deepEqual(link(`link-${place}-documents`), { href: "/sign-up", label: "Create a document" });
+    assert.deepEqual(link(`link-${place}-documents`), {
+      href: "/sign-up?start=document",
+      label: "Create a document",
+    });
     assert.deepEqual(link(`link-${place}-compliance`), { href: "/checker", label: "Check my requirements" });
   }
   assert.deepEqual(link("link-tasks-compliance"), { href: "/checker", label: "Check my requirements" });
 
   const tasks = linksIn(main, /<ul[^>]*data-testid="list-tasks"/, "</ul>");
+  // Each task's link carries the task into sign-up.
   assert.deepEqual(
     tasks.map((task) => task.href),
-    HOME_TASKS.map(() => "/sign-up"),
+    HOME_TASK_IDS.map((id) => `/sign-up?start=${id}`),
   );
   for (const [index, name] of HOME_TASKS.entries())
     assert.ok(tasks[index]!.label.startsWith(name), `${tasks[index]!.label} is the task "${name}"`);
