@@ -24,7 +24,7 @@ export const requestReadQuota: RequestHandler = async (req, res, next): Promise<
     req.log.warn({ event: "quota.denied", bucket });
     res.setHeader("Retry-After", String(decision.retryAfter));
     res.status(429).json({
-      error: `Request limit reached. Retry in ${decision.retryAfter} seconds. Your saved work has not changed.`,
+      error: `Too many requests in a short time. Try again in ${decision.retryAfter} seconds. Your saved work has not changed.`,
     });
     return;
   }

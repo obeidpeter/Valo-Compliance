@@ -63,7 +63,7 @@ export async function getDocument(actor: WorkspaceActor, id: string) {
       ),
     )
     .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)));
-  if (!row) throw new ValoProblem(404, "Document not found");
+  if (!row) throw new ValoProblem(404, "This document was not found in your workspace.");
   return serialize(row.document, row.revision);
 }
 export async function listRevisions(actor: WorkspaceActor, id: string) {
@@ -72,7 +72,7 @@ export async function listRevisions(actor: WorkspaceActor, id: string) {
     .select()
     .from(valoDocuments)
     .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)));
-  if (!document) throw new ValoProblem(404, "Document not found");
+  if (!document) throw new ValoProblem(404, "This document was not found in your workspace.");
   const revisions = await db
     .select()
     .from(valoDocumentRevisions)
@@ -119,7 +119,7 @@ async function getExactRevision(actor: WorkspaceActor, id: string, revisionNumbe
       ),
     )
     .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)));
-  if (!row) throw new ValoProblem(404, "Document not found");
+  if (!row) throw new ValoProblem(404, "This document was not found in your workspace.");
   return serialize(row.document, row.revision);
 }
 export async function createDocument(actor: WorkspaceActor, raw: unknown) {
@@ -152,12 +152,12 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
       .from(valoDocuments)
       .where(and(eq(valoDocuments.id, id), eq(valoDocuments.workspaceId, actor.workspaceId)))
       .for("update");
-    if (!document) throw new ValoProblem(404, "Document not found");
+    if (!document) throw new ValoProblem(404, "This document was not found in your workspace.");
     await authorizeWorkspaceWrite(tx, actor);
     if (document.currentRevision !== expectedRevision)
       throw new ValoProblem(
         409,
-        "Document changed in another tab. Your text was not overwritten; compare with the latest revision.",
+        "This document was saved somewhere else after you opened it. Your text was not overwritten. Compare it with the newest version.",
         document.currentRevision,
       );
     const [current] = await tx
@@ -173,14 +173,14 @@ export async function saveDocument(actor: WorkspaceActor, id: string, raw: unkno
     if (current?.content.financialInput && !input.content.financialInput)
       throw new ValoProblem(
         422,
-        "Keep the guided financial model. Create a separate blank draft for unrestricted free-form content.",
+        "This document's amounts are worked out by Valo and cannot be taken out of it. To write without them, start a blank document.",
       );
     const oldGuided = current ? guidedDataFromBlocks(documentInput.parse(current).content.blocks) : null;
     const nextGuided = guidedDataFromBlocks(input.content.blocks);
     if (oldGuided && oldGuided.templateId !== nextGuided?.templateId)
       throw new ValoProblem(
         422,
-        "Keep this draft's versioned guided form. Create a separate blank draft instead of removing required questions.",
+        "This document is made from a set of questions, and they cannot be taken out of it. To write without them, start a blank document.",
       );
     await limitWorkspaceWrite(tx, actor, "document");
     await appendRevision(tx, actor, id, expectedRevision + 1, input);

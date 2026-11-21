@@ -8,6 +8,7 @@ import {
   type ContractOperation,
 } from "../test-support/contract-operations";
 import { requestIdentifiers } from "../test-support/request-identifiers";
+import { saysUnexpectedFailure } from "../platform/http-errors";
 
 /**
  * SEC-001 and IAM-003: changing a workspace, draft, order or file identifier must not
@@ -1136,8 +1137,7 @@ test(
         };
         // Unexpected errors are logged and answered with this generic message; a deliberate
         // refusal names its reason.
-        const serverError = (reply: Reply) =>
-          reply.status === 500 || reply.text.includes("A required service is unavailable");
+        const serverError = (reply: Reply) => reply.status === 500 || saysUnexpectedFailure(reply.text);
         // Each request starts with the owner's rate limits unused, so it reaches its writes.
         const { quotaSubjectHash } = await import("../lib/valo-quota-policy");
         const ownerQuota = quotaSubjectHash(process.env.SESSION_SECRET, "user", owner);

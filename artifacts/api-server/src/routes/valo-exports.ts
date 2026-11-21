@@ -31,7 +31,10 @@ router.use(paths, async (req, res, next) => {
     );
     if (!quota.allowed) {
       res.setHeader("Retry-After", String(quota.retryAfter));
-      res.status(429).json({ error: "Export request limit reached. Wait and retry; your document is safe." });
+      res.status(429).json({
+        error:
+          "Too many files asked for in a short time. Wait a moment and try again. Your document is safe.",
+      });
       return;
     }
   }

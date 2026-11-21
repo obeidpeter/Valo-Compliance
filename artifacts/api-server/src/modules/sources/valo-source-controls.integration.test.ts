@@ -569,7 +569,7 @@ test(
           await blocker.query("BEGIN");
           await blocker.query("select id from valo_workspaces where id=$1 for update", [actor.workspaceId]);
           const queued = action(),
-            denied = assert.rejects(queued, /Active workspace membership/);
+            denied = assert.rejects(queued, /does not have access to this workspace/);
           await db.execute(
             sql`update valo_memberships set active='no' where workspace_id=${actor.workspaceId}::uuid`,
           );
