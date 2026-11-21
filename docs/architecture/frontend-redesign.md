@@ -877,6 +877,43 @@ yet.
 One script that needs a verified test account, and so runs in no CI job, looked for "held" in the
 log. It now looks for "on hold". It was updated and not run.
 
+### Phase 6: errors in plain words
+
+Every screen describes a failed request with the same few sentences, and most show them in the
+same alert. Both are reworded.
+
+| Before | Now |
+| --- | --- |
+| The status code after every message, in the typeface kept for codes: "(500)" | No status code. For a failure at Valo only: "If this keeps happening, report a problem and quote reference 4821." |
+| "You appear to be offline. Nothing was lost; reconnect and try again." | "You seem to be offline. Reconnect and try again." |
+| "The Valo service could not be reached. Check your connection and retry." | "Valo could not be reached. Check your connection and try again." |
+| "Sign in required", "Please sign in to continue." | "Sign in to continue", "You are not signed in, or your session has ended." |
+| "Access not available", "Your account cannot access this yet. It may need email verification, or it may be suspended." | "You cannot open this", "Your account cannot open this. Your email address may still need to be verified, or the account may be suspended." |
+| "We could not find that record in your workspace." | "We could not find that in your workspace." |
+| "This was changed elsewhere since you opened it." | "This was changed somewhere else after you opened it." |
+| "Some details were not accepted. Please review and try again." | "Some details were not accepted. Check them and try again." |
+| "Something went wrong on our side. Your work in this tab is unchanged." | "Something went wrong at Valo. Try again in a moment." |
+| Too many requests, described as a failure at Valo | "Too many requests in a short time. Wait a moment and try again." |
+| Drafting assistant: "Your entries are unchanged; retrying reuses the same request key." | "What you entered is still here. Trying again asks for the same draft, not a second one." |
+
+Two sentences promised what they could not know: "Nothing was lost" and "Your work in this tab is
+unchanged". The function that writes them does not know what the screen holds. They are gone. A
+screen says it itself where it is true, as the editor and the drafting assistant do.
+
+The reference is the failed request's own, in Valo's records. The API already sent it with every
+error and the web app did not show it. It is the only code shown, and only as something to quote.
+It counts requests since the server last started, so staff need the time of the report with it.
+
+Found on the way: "offline" was said whenever the browser's online flag was missing, not only when
+the browser reported being offline. A browser always has the flag, so customers were not shown
+this. Outside a browser, in the Node version this repository runs, there is a `navigator` with no
+such flag: a failure described there was called offline, and "not found" was never recognised.
+Now offline is said only when the browser reports it.
+
+Not changed: the server's own sentences, which are shown as sent wherever the server sends one.
+There are over three hundred in the API. Putting them in plain words is a separate pass, on the
+API's side, and is not done.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
