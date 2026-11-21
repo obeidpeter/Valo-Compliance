@@ -88,7 +88,7 @@ export function DevBanner() {
     >
       <span className="font-mono uppercase tracking-wider text-background">Development build</span>
       <span className="mx-2 opacity-40">/</span>
-      Not launched. Use synthetic test details only — no real customer or confidential data.{" "}
+      Not launched. Use made-up details only — no real customer or confidential data.{" "}
       <a
         href={`${basePath}/development`}
         className="whitespace-nowrap text-background underline underline-offset-2"

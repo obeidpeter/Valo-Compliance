@@ -137,11 +137,11 @@ function AuthFrame({ children, side }: { children: ReactNode; side: "in" | "up" 
             Your drafts stay yours. The rules stay sourced.
           </p>
           <p className="mt-5 text-primary-foreground/75 leading-relaxed">
-            Email sign-in with verification and recovery is handled by our authentication provider. Valo never
-            sees your password.
+            Signing in, confirming your email address and recovering your account are handled by our sign-in
+            provider. Valo never sees your password.
           </p>
         </div>
-        <p className="text-xs text-primary-foreground/60">Development build. Use test details only.</p>
+        <p className="text-xs text-primary-foreground/60">Development build. Use made-up details only.</p>
         <div
           aria-hidden
           className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full border border-primary-foreground/10"

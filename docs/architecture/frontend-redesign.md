@@ -1179,6 +1179,41 @@ begin with "Nigeria", so each link is named by its address instead.
 A new test reads the page in the server's HTML: the six addresses in order, the entry's three
 lines, that the earlier address is gone, and that each link has a name of its own.
 
+### Phase 6: a last survey for the system's words
+
+The word list holds the phrases the redesign replaced. It does not hold every word of the
+system's. As a last check, every piece of text a customer can be shown was read from the web app's
+source, as the source test reads it, and searched for about thirty more: "released", "provider",
+"server", "revision", "export", "schema", "synthetic", "queued", "payload" and others like them.
+Twenty of the 147 files held one.
+
+Fixed:
+
+| Where | Before | Now |
+| --- | --- | --- |
+| The banner on every page | "Use synthetic test details only" | "Use made-up details only", the words the pricing page and the plan use |
+| The sign-in and sign-up pages | "Email sign-in with verification and recovery is handled by our authentication provider.", "Use test details only." | "Signing in, confirming your email address and recovering your account are handled by our sign-in provider.", "Use made-up details only." |
+| Sign-in and security | "Email, password, connected sign-in methods and active sessions are managed by our authentication provider." | "Your email, password, other ways of signing in and the devices you are signed in on are managed by our sign-in provider." |
+| The documents and guides pages' descriptions, which a search result or a shared link shows | "Search released business templates…", "Browse currently released business guidance, with source details and review dates." | "Search the business templates and guidance Valo has published…", "Browse the business guidance Valo has published, with its sources and the dates they were checked." |
+
+"Valo never sees your password" and "no real customer or confidential data" are unchanged. The
+contact page already said "sign-in provider".
+
+Found and left, each already listed as not done: the purchases screen once there is an order, with
+its bank dispute and payment concern panels; the workspace data download; the drafting assistant;
+and the privacy page, whose words are not yet approved.
+
+Found and not a fault:
+
+- "Provider" for someone who provides a service, and "reconcile" for amounts that do not add up,
+  are the everyday words.
+- A published template's page says "Development release" and "Not for sale". Those notices were
+  kept when the page was rewritten. They change with launch and with a price.
+- An alert that names a form's "schema" cannot be shown: the editor builds the answers from the
+  form itself, so the two never differ.
+
+The survey reads the web app's source. It does not read what the server sends.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the

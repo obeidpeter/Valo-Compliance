@@ -2670,6 +2670,24 @@ test("an empty list of tasks or reminders says what to do next in the customer's
   }
 });
 
+test("the account screen names the sign-in service as the contact page does, and still says that Valo never sees the password", async () => {
+  const { page, errors, unknown, close } = await desktop("/workspace/account");
+  try {
+    await ready(page);
+    const main = page.locator("main");
+    await expect(main).toContainText(
+      "Your email, password, other ways of signing in and the devices you are signed in on are managed by our sign-in provider. Valo never sees your password.",
+    );
+    // What deleting the sign-in account does not do is still said.
+    await expect(main).toContainText("Deleting your sign-in account is not a Valo data deletion");
+    assert.doesNotMatch((await main.innerText()).replace(/\s+/g, " "), /authentication provider/i);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
 // The purchases screen with nothing for sale and nothing ordered, which is how it opens while no
 // document is published with a price. The other tests give the screen an order, so its list with
 // no order had never been drawn.

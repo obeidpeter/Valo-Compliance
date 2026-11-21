@@ -29,8 +29,8 @@ export function AccountPage() {
         <p className="eyebrow">Account</p>
         <h1 className="font-display mt-2 text-4xl">Sign-in and security</h1>
         <p className="mt-3 text-muted-foreground">
-          Email, password, connected sign-in methods and active sessions are managed by our authentication
-          provider. Valo never sees your password.
+          Your email, password, other ways of signing in and the devices you are signed in on are managed by
+          our sign-in provider. Valo never sees your password.
         </p>
       </header>
       <Notice className="mb-6" title="Deleting your sign-in account is not a Valo data deletion">

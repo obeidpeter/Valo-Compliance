@@ -541,6 +541,40 @@ test("under a result, business documents are offered as optional, in words that 
   }
 });
 
+// The banner is on every page. The sign-in pages draw no site frame and have a line of their own.
+test("a visitor is told to use made-up details, on a page's banner and on the sign-in pages, and the sign-in service is named in the words the contact page uses", async () => {
+  {
+    const { page, errors, close } = await app.desktop("/checker", answer);
+    try {
+      await ready(page);
+      const banner = page.getByTestId("text-dev-banner");
+      await expect(banner).toContainText(
+        "Not launched. Use made-up details only — no real customer or confidential data.",
+      );
+      await expect(banner.getByRole("link", { name: "Developer notes" })).toBeVisible();
+      assert.doesNotMatch(await banner.innerText(), /synthetic/i);
+      assert.deepEqual(errors, []);
+    } finally {
+      await close();
+    }
+  }
+  for (const path of ["/sign-in", "/sign-up"]) {
+    const { page, errors, close } = await app.desktop(path, answer);
+    try {
+      await page.getByTestId("link-auth-access-help").waitFor();
+      const panel = page.locator("aside");
+      await expect(panel).toContainText(
+        "Signing in, confirming your email address and recovering your account are handled by our sign-in provider. Valo never sees your password.",
+      );
+      await expect(panel).toContainText("Development build. Use made-up details only.");
+      assert.doesNotMatch(await panel.innerText(), /authentication provider|synthetic/i, path);
+      assert.deepEqual(errors, [], path);
+    } finally {
+      await close();
+    }
+  }
+});
+
 // The redesign's word list (docs/architecture/frontend-redesign.md, "Words").
 test("no signed-out screen shows one of the project's own words that the word list replaced", async () => {
   const problems: string[] = [];
