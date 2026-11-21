@@ -202,7 +202,7 @@ export function AIDraftCompose() {
         </h1>
         <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
           The assistant only sorts the notes you give it and picks short connecting phrases. Names and amounts
-          are placed exactly as you typed them, and totals are calculated in whole kobo.
+          are placed exactly as you typed them, and totals are worked out to the exact kobo.
         </p>
       </header>
 
@@ -391,7 +391,7 @@ export function AIDraftCompose() {
           <Section
             n="4"
             title="Financial details"
-            hint="Calculated by Valo in whole kobo, never by the AI provider."
+            hint="Worked out by Valo to the exact kobo, never by the AI provider."
           >
             <FinancialFields
               key={task + finKey}

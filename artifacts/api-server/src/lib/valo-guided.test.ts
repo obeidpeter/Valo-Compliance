@@ -181,3 +181,58 @@ test("recalculation preserves manually positioned sections without retaining tam
       .includes("300.00"),
   );
 });
+
+// The questions' definitions name the unit an answer is stored in ("Agreed fee in whole kobo"). A
+// document names the question and prints the amount with the naira sign.
+test("a document prints each amount in naira under its question's name, and never the unit the answer is stored in", () => {
+  const named = (label: string) => label.replace(/,? in whole kobo/, "");
+  const naira = /^₦\d{1,3}(,\d{3})*\.\d{2}$/;
+  /** What a reader sees: each paragraph's or list's text, and each table's cells. */
+  const read = (blocks: ReturnType<typeof guidedRenderableBlocks>) =>
+    JSON.stringify(blocks.map((b) => (b.type === "table" ? b.rows : b.text)));
+  let amounts = 0;
+  for (const id of GUIDED_TEMPLATE_IDS) {
+    const spec = GUIDED_SPECS_V1[id],
+      printed = guidedRenderableBlocks(compileGuidedContent(completeGuidedTestData(id)));
+    for (const field of spec.fields.filter((f) => f.type === "money_kobo")) {
+      const block = printed.find((b) => b.id.endsWith(":field:" + field.id));
+      if (!block) continue; // Not asked, given the fixture's other answers.
+      amounts += 1;
+      const [label, value] = block.text.split("\n");
+      assert.equal(label, named(field.label), `${id} ${field.id}`);
+      assert.notEqual(label, field.label, `${id} ${field.id}`);
+      assert.match(value!, naira, `${id} ${field.id}`);
+    }
+    assert.doesNotMatch(read(printed), /kobo/i, id);
+  }
+  assert.ok(amounts >= 6, `${amounts} amounts were printed`);
+
+  // A table of the questions' own: its money column is named without the unit, and each amount
+  // in it carries the naira sign.
+  const reminder = completeGuidedTestData("TPL-12");
+  reminder.values.paymentsKnown = "listed";
+  reminder.tables.payments = [
+    { reference: "SYNTHETIC-1", amountKobo: "150050" },
+    { reference: "SYNTHETIC-2", amountKobo: "5" },
+  ];
+  assert.deepEqual(guidedDataIssues(GUIDED_SPECS_V1["TPL-12"], reminder), {});
+  const payments = guidedRenderableBlocks(compileGuidedContent(reminder)).find((b) =>
+    b.id.endsWith(":table:payments"),
+  )!;
+  assert.deepEqual(payments.rows, [
+    ["Allocation reference", "Allocated amount"],
+    ["SYNTHETIC-1", "₦1,500.50"],
+    ["SYNTHETIC-2", "₦0.05"],
+  ]);
+
+  // An invoice with one price that is not an amount has no calculated table, so its questions'
+  // own table is printed: the column is still named without the unit, and what was typed is shown.
+  const data = completeGuidedTestData("TPL-01");
+  data.tables.items![0]!.unitPriceKobo = "12.5x";
+  const items = guidedRenderableBlocks(compileGuidedContent(data)).find((b) =>
+    b.id.endsWith(":table:items"),
+  )!;
+  assert.ok(items.rows[0]!.includes("Unit price, for the chosen quantity unit"), items.rows[0]!.join(" | "));
+  assert.ok(items.rows[1]!.includes("12.5x"));
+  assert.doesNotMatch(JSON.stringify(items.rows), /kobo/i);
+});

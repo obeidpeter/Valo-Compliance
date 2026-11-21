@@ -338,6 +338,9 @@ export function guidedContentConsistent(content: ContentInput) {
     )
   );
 }
+/** A money question's name as a document prints it: without the unit its answer is stored in. The
+ * amount printed with it carries the naira sign, so the document does not speak of kobo. */
+const printedMoneyLabel = (label: string) => label.replace(/,? in whole kobo\b/g, "");
 /** Shared preview/Word/PDF projection of the exact same saved answers. */
 export function guidedRenderableBlocks(content: ContentInput): GuidedBlock[] {
   const data = guidedDataFromBlocks(content.blocks);
@@ -353,13 +356,16 @@ export function guidedRenderableBlocks(content: ContentInput): GuidedBlock[] {
     if (field) {
       const answer = data.values[field.id];
       if (!guidedVisible(field, data.values) || !answer?.trim()) return [];
-      let value = answer;
-      if (field.type === "money_kobo" && !guidedFieldIssue(field, value))
-        value = `${formatKobo(value.trim())} (${value.trim()} kobo entered)`;
+      let value = answer,
+        label = field.label;
+      if (field.type === "money_kobo") {
+        label = printedMoneyLabel(label);
+        if (!guidedFieldIssue(field, value)) value = formatKobo(value.trim());
+      }
       if (field.type === "select") value = field.options?.find((o) => o.value === value)?.label ?? value;
       if (field.type === "acknowledgement")
         value = value === "yes" ? "Confirmed by the user; not independently verified" : value;
-      return [{ ...b, text: `${field.label}\n${value}` }];
+      return [{ ...b, text: `${label}\n${value}` }];
     }
     const table = s.tables.find((t) => b.id === prefix + "table:" + t.id);
     if (table) {
@@ -379,10 +385,7 @@ export function guidedRenderableBlocks(content: ContentInput): GuidedBlock[] {
             columns.map(({ c, i }) => {
               // guidedDataFromBlocks above checked that every row holds one cell per column.
               const value = row[i]!;
-              if (index === 0)
-                return c.type === "money_kobo"
-                  ? value.replace(/whole kobo/g, "NGN displayed from supplied kobo")
-                  : value;
+              if (index === 0) return c.type === "money_kobo" ? printedMoneyLabel(value) : value;
               const context = { ...data.values, ...data.tables[table.id]?.[index - 1] };
               if (!guidedVisible(c, context)) return "";
               if (c.type === "money_kobo" && !guidedFieldIssue(c, value)) return formatKobo(value.trim());

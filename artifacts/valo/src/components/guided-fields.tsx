@@ -3,13 +3,15 @@ import { Info, Plus, Trash2 } from "lucide-react";
 import type { GuidedData, GuidedField, GuidedSpec, GuidedTable } from "@workspace/valo-core/guided";
 import { guidedDataIssues, guidedFieldIssue, guidedVisible } from "@workspace/valo-core/guided-runtime";
 import { formatNaira } from "@/lib/format";
+import { MONEY_HELP, askedAs, saidAs, shownAmount, storedAmount } from "@/lib/guided-money";
 import { cn } from "@/lib/utils";
 
 /**
  * Guided form for a document template. Pure: all values live in `value`.
  * Every input stores the exact typed text, so invalid edits stay visible and are
  * reported as issues rather than silently replaced by an older valid amount.
- * Money is entered as whole kobo (integer string); naira is shown as a live, decimal-safe reading.
+ * Money is typed in naira and stored as whole kobo (integer string), worked out from the digits
+ * alone; what is not an amount is stored as typed. The amount is read back with the naira sign.
  */
 
 const KOBO = /^(0|[1-9]\d{0,23})$/;
@@ -228,13 +230,15 @@ function FieldInput({
   // as soon as it is given.
   const [visited, setVisited] = useState(false);
   const unanswered = f.required && !value.trim();
-  const shown = error && (visited || !unanswered) ? error : undefined;
+  const shown = error && (visited || !unanswered) ? saidAs(error) : undefined;
+  const money = f.type === "money_kobo";
+  // The definitions' help for a money question explains kobo, which the customer no longer types.
+  const help = money && /\bkobo\b/i.test(f.help ?? "") ? MONEY_HELP : f.help;
   const leave = (event: FocusEvent<HTMLElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget)) setVisited(true);
   };
   const described =
-    [f.help && helpId, shown && errId, f.type === "money_kobo" && id + "-ngn"].filter(Boolean).join(" ") ||
-    undefined;
+    [help && helpId, shown && errId, money && id + "-ngn"].filter(Boolean).join(" ") || undefined;
   const common = {
     id,
     disabled,
@@ -245,7 +249,7 @@ function FieldInput({
   };
   const text = (
     <>
-      {f.label}
+      {askedAs(f)}
       {spoken && <span className="sr-only"> {spoken}</span>}
     </>
   );
@@ -284,9 +288,9 @@ function FieldInput({
             {req}
           </span>
         </label>
-        {f.help && (
+        {help && (
           <p id={helpId} className="hint">
-            {f.help}
+            {help}
           </p>
         )}
         {shown && (
@@ -331,41 +335,8 @@ function FieldInput({
         onChange={(e) => onChange(e.target.value)}
       />
     );
-  else if (f.type === "money_kobo") {
-    const ngn = value.trim() ? koboToNgnDisplay(value.trim()) : null;
-    control = (
-      <>
-        <div className="relative">
-          <input
-            {...common}
-            inputMode="numeric"
-            autoComplete="off"
-            className="field pr-14 font-mono tabular-nums"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-3 grid place-items-center font-mono text-xs text-muted-foreground"
-          >
-            kobo
-          </span>
-        </div>
-        <p
-          id={id + "-ngn"}
-          className="hint font-mono tabular-nums"
-          aria-live="polite"
-          data-testid={"text-" + id + "-ngn"}
-        >
-          {!value.trim()
-            ? "Whole kobo. 100 kobo = ₦1.00"
-            : ngn
-              ? "Reads as " + ngn
-              : "Not a valid amount yet"}
-        </p>
-      </>
-    );
-  } else {
+  else if (money) control = <MoneyInput common={common} id={id} value={value} onChange={onChange} />;
+  else {
     const num = f.type === "integer" || f.type === "quantity";
     control = (
       <input
@@ -386,9 +357,9 @@ function FieldInput({
         {req}
       </label>
       {control}
-      {f.help && (
+      {help && (
         <p id={helpId} className="hint">
-          {f.help}
+          {help}
         </p>
       )}
       {shown && (
@@ -397,6 +368,62 @@ function FieldInput({
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * The box for an amount. The customer types naira; the answer handed on is the same amount in whole
+ * kobo, or what was typed when it is not an amount. The box keeps the customer's own typing, and
+ * takes the stored answer again only when that answer changes from somewhere else, as on an undo.
+ */
+function MoneyInput({
+  common,
+  id,
+  value,
+  onChange,
+}: {
+  common: Record<string, unknown>;
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [text, setText] = useState(() => shownAmount(value));
+  useEffect(() => {
+    setText((typed) => (storedAmount(typed) === value ? typed : shownAmount(value)));
+  }, [value]);
+  const stored = storedAmount(text);
+  const reading = stored && stored === value ? koboToNgnDisplay(stored) : null;
+  return (
+    <>
+      <div className="relative">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-3.5 grid place-items-center text-sm text-muted-foreground"
+        >
+          ₦
+        </span>
+        <input
+          {...common}
+          inputMode="decimal"
+          autoComplete="off"
+          maxLength={26}
+          className="field pl-8 tabular-nums"
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            onChange(storedAmount(e.target.value));
+          }}
+        />
+      </div>
+      <p
+        id={id + "-ngn"}
+        className="hint tabular-nums"
+        aria-live="polite"
+        data-testid={"text-" + id + "-ngn"}
+      >
+        {reading ? "Reads as " + reading : ""}
+      </p>
+    </>
   );
 }
 

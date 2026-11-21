@@ -75,8 +75,7 @@ const financialMessage = (code: string) =>
   (
     ({
       DISCOUNT_EXCEEDS_SUBTOTAL: "The discount is larger than the subtotal.",
-      CURRENCY_RECONCILIATION_REQUIRED:
-        "Confirm one NGN currency for all items. Valo does not invent an exchange rate.",
+      CURRENCY_RECONCILIATION_REQUIRED: "Every item must be in naira. Valo does not invent an exchange rate.",
       UNEXPLAINED_TOTAL_MISMATCH:
         "The stated total differs from the items and adjustments. Reconcile them before continuing.",
       CONFLICTING_DISCOUNT_INPUTS:
@@ -127,7 +126,7 @@ function parse(
   let paymentRecord: FinancialInput["paymentRecord"];
   if (kind === "payment_reminder" && t.recorded) {
     const invoice = chk("invoice", t.invoice);
-    if (invoice === null) errors.invoice = "Enter the original invoice amount in NGN.";
+    if (invoice === null) errors.invoice = "Enter the original invoice amount in naira.";
     const payments = t.payments.map((p, i) => {
       const amount = chk("paid" + i, p.amount);
       if (amount === null) errors["paid" + i] = "Enter the amount you recorded.";
@@ -270,12 +269,12 @@ export function FinancialFields({
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {(usesLines
             ? [
-                ["delivery", "Agreed delivery (NGN)"],
+                ["delivery", "Agreed delivery (₦)"],
                 ["discountPercent", "Agreed discount (%)"],
                 ["taxPercent", "User-specified tax (%)"],
-                ["taxBase", "User-specified taxable base (NGN)"],
+                ["taxBase", "User-specified taxable base (₦)"],
               ]
-            : [["disputed", "Disputed portion (NGN)"]]
+            : [["disputed", "Disputed portion (₦)"]]
           ).map(([key, label]) => (
             <Cell key={key} id={`${idPrefix}-${key}`} label={label!} err={e(key!)}>
               <input
@@ -353,7 +352,7 @@ export function FinancialFields({
                     data-testid={`input-${idPrefix}-qty-${i}`}
                   />
                 </Cell>
-                <Cell id={`${idPrefix}-price-${i}`} label="Unit price (NGN)" err={e("p" + i)}>
+                <Cell id={`${idPrefix}-price-${i}`} label="Unit price (₦)" err={e("p" + i)}>
                   <input
                     id={`${idPrefix}-price-${i}`}
                     inputMode="decimal"
@@ -392,7 +391,7 @@ export function FinancialFields({
       )}
       {usesLines && t.lines.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-3">
-          <Cell id={`${idPrefix}-discount`} label="Discount (NGN, optional)" err={e("discount")}>
+          <Cell id={`${idPrefix}-discount`} label="Discount (₦, optional)" err={e("discount")}>
             <input
               id={`${idPrefix}-discount`}
               inputMode="decimal"
@@ -413,7 +412,7 @@ export function FinancialFields({
               data-testid={`input-${idPrefix}-taxlabel`}
             />
           </Cell>
-          <Cell id={`${idPrefix}-tax`} label="Amount (NGN, optional)" err={e("tax")}>
+          <Cell id={`${idPrefix}-tax`} label="Amount (₦, optional)" err={e("tax")}>
             <input
               id={`${idPrefix}-tax`}
               inputMode="decimal"
@@ -453,11 +452,7 @@ export function FinancialFields({
           </p>
           {t.recorded && (
             <>
-              <Cell
-                id={`${idPrefix}-invoice-amount`}
-                label="Original invoice amount (NGN)"
-                err={e("invoice")}
-              >
+              <Cell id={`${idPrefix}-invoice-amount`} label="Original invoice amount (₦)" err={e("invoice")}>
                 <input
                   id={`${idPrefix}-invoice-amount`}
                   inputMode="decimal"
@@ -498,7 +493,7 @@ export function FinancialFields({
                   </Cell>
                   <Cell
                     id={`${idPrefix}-payment-amount-${i}`}
-                    label={`Recorded amount ${i + 1} (NGN)`}
+                    label={`Recorded amount ${i + 1} (₦)`}
                     err={e("paid" + i)}
                   >
                     <input
@@ -547,9 +542,7 @@ export function FinancialFields({
         <Cell
           id={`${idPrefix}-due`}
           label={
-            kind === "payment_reminder"
-              ? "Amount you recorded as due (NGN)"
-              : "Proposed budget (NGN, optional)"
+            kind === "payment_reminder" ? "Amount you recorded as due (₦)" : "Proposed budget (₦, optional)"
           }
           err={e("due")}
         >
