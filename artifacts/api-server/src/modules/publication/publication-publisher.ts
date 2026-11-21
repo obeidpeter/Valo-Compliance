@@ -13,6 +13,8 @@ import { getPublicationArtifact, type ArtifactRef } from "./publication-artifact
 import { developmentPublicationOnly, operationalPolicy } from "./operational-policy";
 import { enhancedChecksFromReviews, operationalReviewSchemaFor } from "./operational-review-contract";
 import { templateCandidate } from "./operational-content";
+import { guidanceCandidate } from "./guidance-candidate";
+import { guideReferences } from "./guidance-document";
 import { originalFormSchema, formMarkdown } from "./operational-authoring-contract";
 import { operationalMechanicalChecks } from "./operational-mechanical";
 import { recheckOperationalExports } from "./operational-export-inspection";
@@ -102,12 +104,22 @@ export async function validateOperationalVersionInTransaction(
       throw Error("INTAKE_AUTHORING_LINEAGE_MISMATCH");
     recorded = { original: intake.section.body, provenance };
   }
-  const original = await templateCandidate(
-    bundle.candidate.id,
-    row.version,
-    new Date(bundle.candidate.sourceCheckDate),
-    recorded,
-  );
+  // A guide lists the sources its claims point to, so it is rebuilt with them.
+  const original =
+    bundle.candidate.contentClass === "sourced_guidance"
+      ? await guidanceCandidate(
+          bundle.candidate.id,
+          row.version,
+          new Date(bundle.candidate.sourceCheckDate),
+          recorded,
+          guideReferences(bundle),
+        )
+      : await templateCandidate(
+          bundle.candidate.id,
+          row.version,
+          new Date(bundle.candidate.sourceCheckDate),
+          recorded,
+        );
   if (
     row.version !== bundle.candidate.version ||
     bundle.candidate.body !== JSON.stringify(original.document) ||

@@ -20,6 +20,7 @@ import {
   printedCalendarDate,
 } from "@workspace/valo-core/guided-runtime";
 import { chromiumLaunchPath } from "../platform/chromium";
+import { GUIDANCE_DRAFT_NOTICE, GUIDANCE_NOTICE, GUIDE_PART_PREFIX } from "./valo-guide-notices";
 
 /** Names how a document is rendered. A file is made once for a saved version, kind and render
  * version, so the name changes whenever the same saved version would print differently. Version 4:
@@ -37,7 +38,27 @@ export const TEMPLATE_NOTICE =
   "BLANK DEVELOPMENT TEMPLATE — complete with your own business information. Not regulatory guidance or verified business facts.";
 export const PURCHASE_NOTICE =
   "VALO DEVELOPMENT PURCHASE RECEIPT — server-verified test transaction record only. Not proof of delivery, bank outcome, a government tax invoice or official approval.";
-type RenderMode = "business_draft" | "template_sample" | "purchase_receipt";
+export { GUIDANCE_NOTICE, GUIDANCE_DRAFT_NOTICE, GUIDE_PART_PREFIX };
+type RenderMode = "business_draft" | "template_sample" | "purchase_receipt" | "guidance" | "guidance_draft";
+const guide = (mode: RenderMode) => mode === "guidance" || mode === "guidance_draft";
+/** A named part's name and the rest of its text, or nothing when the block is not one. */
+function guidePart(mode: RenderMode, block: { id: string; type: string; text: string }) {
+  if (!guide(mode) || block.type !== "paragraph" || !block.id.startsWith(GUIDE_PART_PREFIX)) return null;
+  const end = block.text.indexOf(":");
+  return end > 0 && end <= 40
+    ? { name: block.text.slice(0, end + 1), rest: block.text.slice(end + 1) }
+    : null;
+}
+const noticeFor = (mode: RenderMode) =>
+  mode === "purchase_receipt"
+    ? PURCHASE_NOTICE
+    : mode === "template_sample"
+      ? TEMPLATE_NOTICE
+      : mode === "guidance"
+        ? GUIDANCE_NOTICE
+        : mode === "guidance_draft"
+          ? GUIDANCE_DRAFT_NOTICE
+          : DRAFT_NOTICE;
 export const exportMime = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pdf: "application/pdf",
@@ -51,17 +72,23 @@ export function escapeHtml(text: string) {
 type Fields = Record<keyof typeof DOCUMENT_FIELD_LABELS, string>;
 /** The line under a document's title. A customer's own document says "version", as the site does. A
  * template sample and a purchase receipt are left as they were: their words belong with the
- * templates' own review and with the purchases screen's. */
+ * templates' own review and with the purchases screen's. A guide names its own version. */
 const savedLine = (mode: RenderMode, revision: number) =>
-  mode === "business_draft" ? `Valo · Saved version ${revision}` : `Valo · Saved revision ${revision}`;
+  guide(mode)
+    ? `Valo · Guide version ${revision}`
+    : mode === "business_draft"
+      ? `Valo · Saved version ${revision}`
+      : `Valo · Saved revision ${revision}`;
 /**
  * A document's own fields as its file prints them, each with its name. A document made from
  * questions prints its note alone: its other fields are answers, printed with their questions.
  *
  * A customer's own document names each field as the editor does and prints a date with the month
- * as a word. A template sample and a purchase receipt are left as they were.
+ * as a word. A template sample and a purchase receipt are left as they were. A guide is something
+ * to read, with no business details to fill in, so it prints none of them.
  */
 function printedFields(fields: Fields, guided: boolean, mode: RenderMode): (readonly [string, string])[] {
+  if (guide(mode)) return [];
   if (mode !== "business_draft") return guided ? [["Notes", fields.notes]] : Object.entries(fields);
   const names = guided
     ? (["notes"] as const)
@@ -72,12 +99,7 @@ function printedFields(fields: Fields, guided: boolean, mode: RenderMode): (read
   ]);
 }
 export function controlledHtml(raw: unknown, revision: number, mode: RenderMode = "business_draft") {
-  const notice =
-    mode === "purchase_receipt"
-      ? PURCHASE_NOTICE
-      : mode === "template_sample"
-        ? TEMPLATE_NOTICE
-        : DRAFT_NOTICE;
+  const notice = noticeFor(mode);
   const { title, content } = documentInput.parse(raw);
   const e = escapeHtml;
   const font = content.formatting.font === "serif" ? "Georgia, serif" : "Arial, sans-serif";
@@ -96,7 +118,10 @@ export function controlledHtml(raw: unknown, revision: number, mode: RenderMode 
               .split("\n")
               .map((line) => `<li>${e(line)}</li>`)
               .join("")}</ul>`
-          : `<p>${e(block.text)}</p>`,
+          : ((part) =>
+              part ? `<p><strong>${e(part.name)}</strong>${e(part.rest)}</p>` : `<p>${e(block.text)}</p>`)(
+              guidePart(mode, block),
+            ),
     )
     .join("");
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${e(title)}</title><style>
@@ -111,12 +136,7 @@ export async function renderDocument(
   revision: number,
   mode: RenderMode = "business_draft",
 ): Promise<Buffer> {
-  const notice =
-    mode === "purchase_receipt"
-      ? PURCHASE_NOTICE
-      : mode === "template_sample"
-        ? TEMPLATE_NOTICE
-        : DRAFT_NOTICE;
+  const notice = noticeFor(mode);
   const { title, content } = documentInput.parse(raw);
   const fields = printedFields(
     content.fields,
@@ -158,12 +178,16 @@ export async function renderDocument(
         );
       else if (block.type === "list")
         children.push(...block.text.split("\n").map((text) => new Paragraph({ text, bullet: { level: 0 } })));
-      else
+      else {
+        const part = guidePart(mode, block);
         children.push(
           new Paragraph({
-            children: block.text.split("\n").flatMap((text, i) => [new TextRun({ text, break: i ? 1 : 0 })]),
+            children: part
+              ? [new TextRun({ text: part.name, bold: true }), new TextRun(part.rest)]
+              : block.text.split("\n").flatMap((text, i) => [new TextRun({ text, break: i ? 1 : 0 })]),
           }),
         );
+      }
     }
     return Packer.toBuffer(
       new Document({

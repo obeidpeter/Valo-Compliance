@@ -5,6 +5,7 @@ import { documentInput } from "../../lib/valo-validation";
 import { publicationWorkspaceRoot } from "./operational-policy";
 import type { ArtifactRef } from "./publication-artifacts";
 import { originalSections, operationalDocument } from "./original-content-adapter";
+import { guidanceCandidate } from "./guidance-candidate";
 export type OperationalProvenance = {
   path: string;
   hash: string;
@@ -18,7 +19,8 @@ export type OperationalProvenance = {
   generation?: ArtifactRef;
 };
 /** Canonical reconstruction for every exact R1 template ID. Risk/claims,
- * enhanced checks and eligibility are separate; extraction is not release. */
+ * enhanced checks and eligibility are separate; extraction is not release.
+ * A guidance ID is rebuilt as a guide, with no sources listed (guidance-candidate.ts). */
 export async function templateCandidate(
   id: string,
   version: number,
@@ -26,9 +28,9 @@ export async function templateCandidate(
   recorded?: { original: string; provenance: OperationalProvenance },
 ) {
   if (id === "TPL-07") return inventoryCandidate(version, now, recorded);
-  const { readTemplateIntake, readGuidanceIntake } = await import("./operational-intake");
-  const guidance = id.startsWith("GUD-");
-  const intake = guidance ? await readGuidanceIntake(id, version) : await readTemplateIntake(id, version);
+  if (id.startsWith("GUD-")) return guidanceCandidate(id, version, now, recorded);
+  const { readTemplateIntake } = await import("./operational-intake");
+  const intake = await readTemplateIntake(id, version);
   const provenance = recorded?.provenance ?? intake.provenance,
     original = recorded?.original ?? intake.section.body;
   if (
@@ -40,12 +42,9 @@ export async function templateCandidate(
     provenance.noteHash !== intake.provenance.noteHash
   )
     throw Error("TEMPLATE_PROVENANCE_OR_BODY_MISMATCH");
-  const scope = guidance
-    ? intake.catalogue.scope
-    : `Original ${intake.catalogue.title.toLowerCase()} starting form for user-entered facts, subject to its stated use assumptions and separate evidence gates.`;
-  const limitations = guidance
-    ? "Conditional general information, not a compliance determination, comprehensive local coverage or professional review. Use the stated facts, exceptions, source period and official next steps. Development evaluation only; unresolved evidence holds publication."
-    : "A starting document, not a guarantee of legal validity, regulatory approval or professional review. Unresolved parties, terms, amounts and material clauses must be resolved before use. Development evaluation only; commercial licence acceptance and sales remain separate.";
+  const scope = `Original ${intake.catalogue.title.toLowerCase()} starting form for user-entered facts, subject to its stated use assumptions and separate evidence gates.`;
+  const limitations =
+    "A starting document, not a guarantee of legal validity, regulatory approval or professional review. Unresolved parties, terms, amounts and material clauses must be resolved before use. Development evaluation only; commercial licence acceptance and sales remain separate.";
   const reviewedAt = now.toISOString(),
     reviewBy = new Date(+now + 90 * 86400000).toISOString();
   const document = documentInput.parse({
