@@ -1,6 +1,6 @@
 import { disclosure, type PublicationBundle } from "@workspace/valo-core";
 import { printedCalendarDate } from "@workspace/valo-core/guided-runtime";
-import { GUIDE_PART_PREFIX } from "../../lib/valo-render";
+import { GUIDE_PART_PREFIX } from "../../lib/valo-guide-notices";
 import { documentInput } from "../../lib/valo-validation";
 import type { OriginalSection } from "./original-content-adapter";
 

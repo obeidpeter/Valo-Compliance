@@ -20,6 +20,7 @@ import {
   printedCalendarDate,
 } from "@workspace/valo-core/guided-runtime";
 import { chromiumLaunchPath } from "../platform/chromium";
+import { GUIDANCE_DRAFT_NOTICE, GUIDANCE_NOTICE, GUIDE_PART_PREFIX } from "./valo-guide-notices";
 
 /** Names how a document is rendered. A file is made once for a saved version, kind and render
  * version, so the name changes whenever the same saved version would print differently. Version 4:
@@ -37,19 +38,9 @@ export const TEMPLATE_NOTICE =
   "BLANK DEVELOPMENT TEMPLATE — complete with your own business information. Not regulatory guidance or verified business facts.";
 export const PURCHASE_NOTICE =
   "VALO DEVELOPMENT PURCHASE RECEIPT — server-verified test transaction record only. Not proof of delivery, bank outcome, a government tax invoice or official approval.";
-/** Printed at the top of a released guide's file and on every page of it. A guide is released in
- * development only, so the notice says so, as the template notice does. */
-export const GUIDANCE_NOTICE =
-  "GENERAL GUIDANCE — DEVELOPMENT RELEASE. General information, not legal advice and not a decision about your business. Check the official sources before you act.";
-/** Printed instead on a sample of a draft guide, which nobody has reviewed: the sample shows the
- * layout, and the notice keeps it from being read as a released guide. */
-export const GUIDANCE_DRAFT_NOTICE =
-  "UNPUBLISHED DRAFT GUIDE — LAYOUT SAMPLE. This draft has not been reviewed or released. Do not rely on it.";
+export { GUIDANCE_NOTICE, GUIDANCE_DRAFT_NOTICE, GUIDE_PART_PREFIX };
 type RenderMode = "business_draft" | "template_sample" | "purchase_receipt" | "guidance" | "guidance_draft";
 const guide = (mode: RenderMode) => mode === "guidance" || mode === "guidance_draft";
-/** A guide's document ends with named parts ("What it covers: …"). Their blocks' ids start with this,
- * and a guide's file prints each part's name in bold. */
-export const GUIDE_PART_PREFIX = "guide-";
 /** A named part's name and the rest of its text, or nothing when the block is not one. */
 function guidePart(mode: RenderMode, block: { id: string; type: string; text: string }) {
   if (!guide(mode) || block.type !== "paragraph" || !block.id.startsWith(GUIDE_PART_PREFIX)) return null;

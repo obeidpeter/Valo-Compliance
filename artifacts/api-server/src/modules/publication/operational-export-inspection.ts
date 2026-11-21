@@ -6,7 +6,8 @@ import { promisify } from "node:util";
 import { unzipSync, strFromU8 } from "fflate";
 import { candidateDigest, digest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import { documentInput } from "../../lib/valo-validation";
-import { GUIDANCE_NOTICE, TEMPLATE_NOTICE } from "../../lib/valo-render";
+import { GUIDANCE_NOTICE } from "../../lib/valo-guide-notices";
+import { TEMPLATE_NOTICE } from "../../lib/valo-render";
 const execFile = promisify(execCallback);
 const compact = (s: string) => s.normalize("NFKC").replace(/\s+/g, "");
 const decodeXML = (s: string) =>
