@@ -2458,3 +2458,148 @@ test("a saved request reads 'Enquiry received' with what has not happened, and t
     await close();
   }
 });
+
+// PRV-003: "Provide request verification, correction/export/deletion and legal-hold handling." The
+// customer reads where a request stands in words, and every limit the screen stated is still
+// stated: a request that is received or partly done is not a deletion, or a complete copy.
+test("a privacy request reads in words: its kind, its state, each step and who did what; and the screen still says what a request is not", async () => {
+  const asked = { ...privacyCase, status: "needs_information", version: 3, assigned: true };
+  const fresh = {
+    ...privacyCase,
+    id: "00000000-0000-4000-8000-00000000b002",
+    reference: "PRV-SYNTH-2",
+    kind: "correction",
+    status: "awaiting_verification",
+    version: 1,
+    verifiedAt: null,
+    createdAt: at(16),
+    updatedAt: at(16),
+  };
+  const step = (system: string, status: string) => ({ system, status, detail: "Synthetic step detail." });
+  const how = except({
+    "GET /workspace/privacy-cases": api.ListPrivacyCasesResponse.parse([asked, fresh]),
+    [`GET /workspace/privacy-cases/${asked.id}`]: api.GetPrivacyCaseResponse.parse({
+      request: asked,
+      mayRespond: true,
+      messages: [
+        {
+          id: "00000000-0000-4000-8000-00000000b0a1",
+          body: "Synthetic information from the customer.",
+          createdAt: at(16),
+        },
+      ],
+      events: [
+        {
+          sequence: 1,
+          action: "request_received",
+          actorType: "customer",
+          reason: "Synthetic reason one.",
+          createdAt: at(14),
+        },
+        {
+          sequence: 2,
+          action: "information_requested",
+          actorType: "staff",
+          reason: "Synthetic question from staff.",
+          createdAt: at(16),
+        },
+        {
+          sequence: 3,
+          action: "export_prepared",
+          actorType: "worker",
+          reason: "Synthetic reason three.",
+          createdAt: at(17),
+        },
+      ],
+      steps: [
+        step("identity_verification", "confirmed"),
+        step("application", "running"),
+        step("private_files", "pending"),
+        step("managed_identity", "not_applicable"),
+        step("external_processors", "held"),
+        step("retention_and_recovery", "failed"),
+      ],
+    }),
+    [`GET /workspace/privacy-cases/${fresh.id}`]: api.GetPrivacyCaseResponse.parse({
+      request: fresh,
+      mayRespond: false,
+      messages: [],
+      events: [
+        {
+          sequence: 1,
+          action: "request_received",
+          actorType: "customer",
+          reason: "Synthetic reason one.",
+          createdAt: at(16),
+        },
+      ],
+      steps: [step("identity_verification", "pending")],
+    }),
+  });
+  const { page, errors, unknown, close } = await desktop("/workspace/privacy", how);
+  try {
+    await ready(page);
+    const main = page.locator("main");
+    // What a request is not, said before any request is read.
+    await expect(page.locator("#privacy-cases-heading")).toHaveText("Your privacy requests");
+    await expect(main).toContainText(
+      "A request that is received, or partly done, is not a confirmed deletion, and is not a complete copy from every service Valo uses.",
+    );
+    await expect(main).toContainText(
+      "You can still read and answer your own requests after a deletion has restricted your workspace. That does not give back access to your business data.",
+    );
+    // The download's own scope keeps its words.
+    await expect(page.getByTestId("workspace-export-scope")).toContainText("export/file metadata");
+    await expect(page.getByTestId("workspace-export-scope")).toContainText("not complete privacy fulfilment");
+
+    // A request staff have a question about.
+    const first = page.getByTestId("privacy-case").filter({ hasText: asked.reference });
+    await expect(first).toContainText("Full data request · Staff need more information");
+    await expect(first).toContainText("Made 14 Nov 2026, 10:00 · With privacy staff");
+    await first.getByRole("button", { name: "View request" }).click();
+    await expect(first.getByLabel("Steps of this request").locator("strong")).toHaveText([
+      "Confirming it is you: Confirmed",
+      "Your Valo workspace: In progress",
+      "Your files: Not started",
+      "Your sign-in account: Not needed",
+      "Other services Valo uses: On hold",
+      "Records Valo must keep, and backups: Failed",
+    ]);
+    await expect(first.getByLabel("Request history").locator("li")).toContainText([
+      "Request received · You · 14 Nov 2026, 10:00",
+      "Information requested · Valo staff · 16 Nov 2026, 10:00",
+      "Export prepared · Valo's system · 17 Nov 2026, 10:00",
+    ]);
+    await expect(first.getByLabel("More information for this request")).toBeVisible();
+    await expect(first).toContainText(
+      "A reply does not confirm who you are, or that the request is done. Do not include passwords or identity documents.",
+    );
+
+    // A request the customer has still to confirm.
+    const second = page.getByTestId("privacy-case").filter({ hasText: fresh.reference });
+    await expect(second).toContainText("Correct something · Waiting for you to confirm it");
+    await expect(second).toContainText("Not yet with staff");
+    await second.getByRole("button", { name: "View request" }).click();
+    await expect(second).toContainText(
+      "I confirm that this is my business's request, and I want Valo to check that I am the signed-in owner. This does not confirm that the request is done.",
+    );
+    await expect(second.getByRole("button", { name: "Confirm my request" })).toBeDisabled();
+    await expect(second.getByRole("button", { name: "Cancel before work begins" })).toBeEnabled();
+
+    // The older support references.
+    await expect(main).toContainText(
+      "They are not the results of a privacy request. A newer request has its history and its result above. An older one listed here has still to be taken up by staff.",
+    );
+    // None of the system's own names for a state, a step, an actor or a version.
+    const shown = (await main.innerText()).replace(/\s+/g, " ");
+    assert.doesNotMatch(
+      shown,
+      /[a-z]_[a-z]|awaiting verification|needs information|not applicable|\bworker\b|\bversion \d|provider-wide|privacy-fulfilment|\bintake\b/i,
+    );
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});

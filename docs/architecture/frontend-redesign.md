@@ -1003,6 +1003,58 @@ and the customer's requests. The eight earlier answers keep their words.
 
 The page names no price, as no price is set.
 
+### Phase 6: privacy requests in words
+
+The "Privacy and data" screen showed a request in the system's own names: "export · awaiting
+verification · version 2", "external_processors: not applicable", "erasure quarantined · worker".
+They are now words.
+
+| The system's name | What the customer reads |
+| --- | --- |
+| Kinds: correction, export, deletion | "Correct something", "Full data request", "Delete my data", the words the form offers them in |
+| States: awaiting verification, verified, assigned, in progress, needs information, held, partially fulfilled, fulfilled, rejected, cancelled, failed | "Waiting for you to confirm it", "Confirmed, waiting for staff", "With privacy staff", "Being carried out", "Staff need more information", "On hold", "Partly done", "Done", "Refused", "Cancelled", "Failed" |
+| Steps: identity_verification, application, private_files, managed_identity, external_processors, retention_and_recovery | "Confirming it is you", "Your Valo workspace", "Your files", "Your sign-in account", "Other services Valo uses", "Records Valo must keep, and backups" |
+| Step states: pending, running, confirmed, held, failed, not applicable | "Not started", "In progress", "Confirmed", "On hold", "Failed", "Not needed" |
+| Who: customer, staff, worker | "You", "Valo staff", "Valo's system" |
+| "version 2" | Not shown |
+
+Only the server's "fulfilled" reads as "Done". The server gives a request that state only when
+every system it tracks has a confirmed outcome.
+
+Sentences reworded, each with its limit kept:
+
+| Before | Now |
+| --- | --- |
+| "Verification, assignment and preparation are separate steps. A received or partially fulfilled request is not a confirmed deletion or complete provider-wide export." | "Confirming a request, giving it to staff and carrying it out are separate steps. A request that is received, or partly done, is not a confirmed deletion, and is not a complete copy from every service Valo uses." |
+| "You can read and answer your own requests after workspace access is restricted for deletion; this does not restore business-data access." | "You can still read and answer your own requests after a deletion has restricted your workspace. That does not give back access to your business data." |
+| "Processing has begun and cannot be cancelled as though no data had been removed. … doing so does not restore workspace access or confirm completion." | "Work on this request has begun, so it cannot be cancelled as though no data had been removed. … Doing so does not give back workspace access, or confirm that the request is done." |
+| "A reply does not verify identity or confirm fulfilment." | "A reply does not confirm who you are, or that the request is done." |
+| "I confirm this is my business's request and want the signed-in owner identity checked. This does not confirm that processing is finished." | "I confirm that this is my business's request, and I want Valo to check that I am the signed-in owner. This does not confirm that the request is done." |
+| "These are saved support acknowledgements, not privacy-fulfilment outcomes. … older support-only requests still require intake." | "These are requests that were saved earlier as support messages. They are not the results of a privacy request. … An older one listed here has still to be taken up by staff." |
+| "Verify my request", "Cancel before processing", "Download prepared result" | "Confirm my request", "Cancel before work begins", "Download the result" |
+
+An older support reference showed the customer's own text with every word given a capital. It is
+shown as written.
+
+Left alone, on purpose:
+
+- The paragraph that lists what the workspace download holds and does not hold. It is a precise
+  list, and a test reads two of its phrases.
+- The form that makes a request, and its acknowledgement, which already say that nothing is
+  corrected, exported or deleted yet.
+- The server's own sentences: a request's scope, a step's detail and an event's reason are shown
+  as sent.
+- The privacy and terms pages, whose words are not yet approved.
+- The payment concerns panel on the purchases screen. Its words are about money and refunds, and
+  no purchase is made in this build. It is not done.
+
+These sentences describe privacy rights. No limit was changed, but a legal reader should see them
+when the privacy page's words are approved.
+
+One script that needs a verified test account, and so runs in no CI job, pressed "Verify my
+request" and "Cancel before processing" and read the states by their old names. It was updated and
+not run.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the

@@ -11,6 +11,14 @@ import {
 import { ErrorState } from "./states";
 import { formatDateTime } from "@/lib/format";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
+import {
+  privacyActionWords,
+  privacyActorWords,
+  privacyKindWords,
+  privacyStatusWords,
+  privacyStepStatusWords,
+  privacyStepWords,
+} from "@/lib/privacy-words";
 export function PrivacyCases() {
   const cases = useListPrivacyCases();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -23,15 +31,16 @@ export function PrivacyCases() {
   return (
     <section className="mt-8" aria-labelledby="privacy-cases-heading">
       <h2 id="privacy-cases-heading" className="font-display text-2xl">
-        Request processing and results
+        Your privacy requests
       </h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        Verification, assignment and preparation are separate steps. A received or partially fulfilled request
-        is not a confirmed deletion or complete provider-wide export.
+        Confirming a request, giving it to staff and carrying it out are separate steps. A request that is
+        received, or partly done, is not a confirmed deletion, and is not a complete copy from every service
+        Valo uses.
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
-        Up to 100 recent requests are shown. You can read and answer your own requests after workspace access
-        is restricted for deletion; this does not restore business-data access.
+        Up to 100 recent requests are shown. You can still read and answer your own requests after a deletion
+        has restricted your workspace. That does not give back access to your business data.
       </p>
       {cases.isLoading && (
         <p role="status" className="mt-4">
@@ -41,7 +50,7 @@ export function PrivacyCases() {
       {cases.isError && <ErrorState error={cases.error} onRetry={() => cases.refetch()} />}
       {cases.data?.length === 0 && (
         <p className="mt-4 text-sm text-muted-foreground">
-          No structured privacy requests yet. Older support-only requests remain listed separately.
+          No privacy requests yet. Older requests, saved only as support messages, are listed further down.
         </p>
       )}
       <ul className="mt-5 grid gap-4">
@@ -70,9 +79,7 @@ export function PrivacyCases() {
         <h3 id="privacy-reply-leave-heading" className="font-display text-2xl">
           Leave an unsent reply?
         </h3>
-        <p className="mt-3 text-sm">
-          Your information has not been sent. Stay to send it, or explicitly discard it.
-        </p>
+        <p className="mt-3 text-sm">Your information has not been sent. Stay to send it, or discard it.</p>
         <div className="mt-5 flex flex-wrap gap-3">
           <button className="btn btn-primary btn-sm" autoFocus onClick={nav.stay}>
             Stay
@@ -135,11 +142,11 @@ function PrivacyCaseCard({
         <div className="min-w-0">
           <h3 className="break-words font-medium">{row.reference}</h3>
           <p className="mt-1 text-sm">
-            {row.kind} · <strong>{row.status.replaceAll("_", " ")}</strong> · version {row.version}
+            {privacyKindWords(row.kind)} · <strong>{privacyStatusWords(row.status)}</strong>
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatDateTime(row.createdAt)} ·{" "}
-            {row.assigned ? "Assigned to privacy operations" : "Not assigned"}
+            Made {formatDateTime(row.createdAt)} ·{" "}
+            {row.assigned ? "With privacy staff" : "Not yet with staff"}
           </p>
         </div>
         <button
@@ -158,9 +165,9 @@ function PrivacyCaseCard({
           <p className="rounded-xl bg-accent/50 p-3 text-sm">{row.resultScope}</p>
           {begun && (
             <p className="text-sm text-muted-foreground">
-              Processing has begun and cannot be cancelled as though no data had been removed. You can still
-              read this case and answer an information request; doing so does not restore workspace access or
-              confirm completion.
+              Work on this request has begun, so it cannot be cancelled as though no data had been removed.
+              You can still read this request and answer a question from staff. Doing so does not give back
+              workspace access, or confirm that the request is done.
             </p>
           )}
           {detail.data?.mayRespond && (
@@ -176,7 +183,7 @@ function PrivacyCaseCard({
               }}
             >
               <label className="grid gap-2 text-sm" htmlFor={`privacy-reply-${row.id}`}>
-                Additional information for this request
+                More information for this request
                 <textarea
                   id={`privacy-reply-${row.id}`}
                   className="field min-h-28"
@@ -189,8 +196,8 @@ function PrivacyCaseCard({
                 />
               </label>
               <p className="text-xs text-muted-foreground">
-                Read the staff question in the history below. A reply does not verify identity or confirm
-                fulfilment. Do not include passwords or identity documents.
+                Read the question from staff in the history below. A reply does not confirm who you are, or
+                that the request is done. Do not include passwords or identity documents.
               </p>
               <div className="flex flex-wrap gap-3">
                 <button className="btn btn-primary btn-sm" disabled={busy || replyText.trim().length < 10}>
@@ -210,7 +217,7 @@ function PrivacyCaseCard({
           {respond.isError && <ErrorState error={respond.error} />}
           {respond.isSuccess && (
             <p role="status" className="text-sm">
-              Information saved to this case. Processing is not confirmed complete.
+              Your information is saved with this request. The request is not confirmed as done.
             </p>
           )}
           {!!detail.data?.messages?.length && (
@@ -224,13 +231,13 @@ function PrivacyCaseCard({
             </ul>
           )}
           {detail.isError && <ErrorState error={detail.error} onRetry={() => detail.refetch()} />}
-          {detail.isLoading && <p role="status">Loading processing history…</p>}
+          {detail.isLoading && <p role="status">Loading this request's history…</p>}
           {detail.data?.steps.length !== 0 && (
-            <ul className="grid gap-2 text-sm" aria-label="Processing steps">
+            <ul className="grid gap-2 text-sm" aria-label="Steps of this request">
               {detail.data?.steps.map((step) => (
                 <li key={step.system} className="rounded-xl border border-border p-3">
                   <strong>
-                    {step.system}: {step.status.replaceAll("_", " ")}
+                    {privacyStepWords(step.system)}: {privacyStepStatusWords(step.status)}
                   </strong>
                   <p className="mt-1 whitespace-pre-wrap break-words">{step.detail}</p>
                 </li>
@@ -246,8 +253,8 @@ function PrivacyCaseCard({
                 onChange={(e) => setAck(e.target.checked)}
               />
               <span>
-                I confirm this is my business's request and want the signed-in owner identity checked. This
-                does not confirm that processing is finished.
+                I confirm that this is my business's request, and I want Valo to check that I am the signed-in
+                owner. This does not confirm that the request is done.
               </span>
             </label>
           )}
@@ -261,7 +268,7 @@ function PrivacyCaseCard({
                   verify.mutate({ id: row.id, data: { expectedVersion: row.version, acknowledgement: true } })
                 }
               >
-                {verify.isPending ? "Verifying…" : "Verify my request"}
+                {verify.isPending ? "Confirming…" : "Confirm my request"}
               </button>
             )}
             {mayCancel && (
@@ -273,12 +280,12 @@ function PrivacyCaseCard({
                   cancel.mutate({ id: row.id, data: { expectedVersion: row.version, acknowledgement: true } })
                 }
               >
-                Cancel before processing
+                Cancel before work begins
               </button>
             )}
             {row.resultAvailable && (
               <a className="btn btn-ghost btn-sm" href={getDownloadPrivacyCaseResultUrl(row.id)} download>
-                Download prepared result
+                Download the result
               </a>
             )}
           </div>
@@ -288,7 +295,7 @@ function PrivacyCaseCard({
             <ol className="grid gap-2 border-t border-border pt-4 text-sm" aria-label="Request history">
               {detail.data.events.map((event) => (
                 <li key={event.sequence}>
-                  <strong>{event.action.replaceAll("_", " ")}</strong> · {event.actorType} ·{" "}
+                  <strong>{privacyActionWords(event.action)}</strong> · {privacyActorWords(event.actorType)} ·{" "}
                   {formatDateTime(event.createdAt)}
                   <p className="mt-1 whitespace-pre-wrap break-words text-muted-foreground">{event.reason}</p>
                 </li>

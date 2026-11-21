@@ -15,6 +15,7 @@ import { ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import { PurchaseHistoryPage } from "./purchase-history";
+import { PRIVACY_KIND_WORDS } from "@/lib/privacy-words";
 import { PrivacyCases } from "@/components/privacy-cases";
 import { getListPrivacyCasesQueryKey } from "@workspace/api-client-react";
 import { WorkspaceDataDownload } from "@/components/workspace-data-download";
@@ -61,9 +62,9 @@ export function AccountPage() {
 }
 
 const KINDS: { v: PrivacyRequestInputKind; l: string; d: string }[] = [
-  { v: "correction", l: "Correct something", d: "Tell us what is inaccurate." },
-  { v: "export", l: "Full data request", d: "Ask for data beyond the download below." },
-  { v: "deletion", l: "Delete my data", d: "Ask staff to delete your workspace." },
+  { v: "correction", l: PRIVACY_KIND_WORDS.correction, d: "Tell us what is inaccurate." },
+  { v: "export", l: PRIVACY_KIND_WORDS.export, d: "Ask for data beyond the download below." },
+  { v: "deletion", l: PRIVACY_KIND_WORDS.deletion, d: "Ask staff to delete your workspace." },
 ];
 
 export function PrivacyPage() {
@@ -245,8 +246,9 @@ export function PrivacyPage() {
       <section className="mt-10">
         <h2 className="font-display text-2xl">Support references</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          These are saved support acknowledgements, not privacy-fulfilment outcomes. New requests have
-          processing history and results above; older support-only requests still require intake.
+          These are requests that were saved earlier as support messages. They are not the results of a
+          privacy request. A newer request has its history and its result above. An older one listed here has
+          still to be taken up by staff.
         </p>
         <div className="mt-4">
           {account.isLoading ? (
@@ -262,14 +264,14 @@ export function PrivacyPage() {
                   data-testid={"row-privacy-" + p.reference}
                 >
                   <div>
-                    <p className="font-medium capitalize">{p.request.replace(/_/g, " ")}</p>
+                    <p className="break-words font-medium">{p.request}</p>
                     <p className="font-mono text-xs text-muted-foreground">
                       {p.reference} · {formatDateTime(p.createdAt)}
                     </p>
                   </div>
                   <span className="pill pill-ochre">
                     <span className="dot" />
-                    {p.status.replace(/_/g, " ")}
+                    {p.status === "awaiting_staff" ? "Waiting for staff" : p.status.replace(/_/g, " ")}
                   </span>
                 </li>
               ))}
