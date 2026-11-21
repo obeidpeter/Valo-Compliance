@@ -20,23 +20,29 @@ export const publicPages: Record<string, { title: string; description: string }>
     description: "Explore available guidance by business activity. A coverage gap is not an exemption.",
   },
   "/services": {
-    title: "Service enquiries — Valo",
+    title: "Ask about a service — Valo",
     description:
-      "Save a request for staff review. An enquiry does not confirm a professional provider, appointment or referral.",
+      "Ask Valo staff about registration, tax, accounting, employment, legal, privacy or sector approvals. An enquiry does not book an appointment or pass you to a provider.",
   },
   "/about": {
     title: "About Valo",
-    description: "Learn about Valo’s business document and guidance platform for Nigerian SMEs.",
+    description: "What Valo does for small businesses in Nigeria, and what it is not.",
   },
-  "/contact": { title: "Contact Valo", description: "Contact Valo about the platform or access support." },
-  "/help": { title: "Help — Valo", description: "Help using Valo’s workspace, documents and guidance." },
+  "/contact": {
+    title: "Contact us — Valo",
+    description: "Write to Valo without an account. Your message is saved for staff, with a reference.",
+  },
+  "/help": {
+    title: "Help — Valo",
+    description: "Questions and answers about making documents, checking requirements and your account.",
+  },
   "/support": {
-    title: "Support — Valo",
+    title: "Report a problem — Valo",
     description:
-      "Save a support request for staff review and get a reference at once. No response time is promised.",
+      "Report a problem for staff to look at and get a reference at once. No response time is promised.",
   },
   "/account-access": {
-    title: "Account access help — Valo",
+    title: "Trouble signing in — Valo",
     description: "Ask for help signing in, verifying your email or using a suspended account.",
   },
   "/compliance": {

@@ -9,7 +9,7 @@ export default function Terms() {
       <PageHeader eyebrow="Terms" title="Terms of use, not yet approved" />
       <Notice title="Development notice">
         These are working notes for a development build. They have not been approved by Valo's owners or legal
-        advisers, and they are not final terms terms.
+        advisers, and they are not final terms.
       </Notice>
       <div className="mt-10 grid gap-8">
         {[

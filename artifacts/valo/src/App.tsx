@@ -151,14 +151,15 @@ function AuthFrame({ children, side }: { children: ReactNode; side: "in" | "up" 
         </div>
         {children}
         <p className="w-full max-w-[440px] break-words text-center text-sm text-muted-foreground">
-          Cannot sign in, unverified or suspended?{" "}
+          Cannot sign in, or is your account unverified or suspended? See{" "}
           <Link
             href="/account-access"
             className="font-medium text-primary underline underline-offset-4"
             data-testid="link-auth-access-help"
           >
-            Get account access help
+            Trouble signing in
           </Link>
+          .
         </p>
       </div>
     </div>

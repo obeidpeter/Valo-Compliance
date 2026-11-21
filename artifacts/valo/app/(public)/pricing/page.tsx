@@ -12,16 +12,16 @@ export default async function Pricing() {
   const status = await readForPage<BuildStatus>("/public/status", GetBuildStatusResponse);
   return (
     <div className="mx-auto max-w-5xl px-5 py-14 lg:px-8">
-      <PageHeader eyebrow="Pricing" title="Prices have not been set.">
-        We will not show a number until it is final. There is no checkout, and no card is ever asked for in
-        this build.
+      <PageHeader eyebrow="Pricing" title="Prices have not been set">
+        No price is shown until it is final. Nothing can be bought yet, and you will not be asked for a card.
       </PageHeader>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="surface p-7">
-          <p className="eyebrow">Today</p>
-          <p className="font-display mt-3 text-3xl">Drafting workspace</p>
+          <p className="eyebrow">What you can do now</p>
+          <p className="font-display mt-3 text-3xl">Make documents and check requirements</p>
           <p className="mt-3 text-muted-foreground">
-            Open a development workspace to write and save business drafts. Use synthetic details only.
+            With an account you can make and save documents, and save the results of your requirements check.
+            Please use made-up details only for now.
           </p>
           <PublicLink href="/sign-up" className="btn btn-primary mt-6">
             Create account
@@ -31,11 +31,8 @@ export default async function Pricing() {
           <p className="eyebrow">Payments</p>
           <PaymentsStatus live={status.ok ? status.data.livePaymentsEnabled : null} />
           <p className="mt-3 text-muted-foreground">
-            Live payments are not enabled. Plans will be published here after commercial terms are approved.
+            Plans will be listed here once prices and terms are set.
           </p>
-          <button className="btn btn-ghost mt-6" disabled aria-disabled="true" data-testid="button-checkout">
-            Checkout unavailable
-          </button>
         </div>
       </div>
     </div>
