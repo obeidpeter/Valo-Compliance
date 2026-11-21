@@ -2793,6 +2793,13 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "while the editor asks, nothing is saved underneath the question, and the answer starts the autosave again",
       "proves": "Signed in through a stand-in identity with synthetic data, text typed while a save was on its way is not sent while the editor's question is open, by the autosave or by the keyboard, and is sent in one save once the customer answers by keeping; the amount typed and not applied is still there. This covers one question and the answer that keeps, not a lost connection or a second device."
+    },
+    {
+      "requirement": "NFR-009",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the browser's Back button does not take unsaved work away: the screen asks first, staying keeps what was typed, and leaving goes where Back was going",
+      "proves": "Signed in through a stand-in identity with synthetic data, in the app as bundled for the test: with an amount typed and not applied, the browser's Back leaves the editor only when the customer chooses to; staying keeps the amount, “Discard and leave” sends nothing, and “Save and leave” sends one save holding the amount; the business profile and the tasks ask in the same way. The compiled site's own router is not exercised, and nor is closing the tab."
     }
   ]
 }

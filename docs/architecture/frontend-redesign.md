@@ -799,10 +799,41 @@ again, so text that was waiting is saved as it would have been.
 Two scripts that need a verified test account, and so run in no CI job, answered the browser's
 box. They now press the dialog's buttons. They were updated and not run.
 
-Found on the way, and not fixed in this step: "Save before leaving?" does not catch the browser's
-Back button. The router hears of the move first and takes the screen away before the screen's own
-guard is asked, so what was typed and not saved is lost without a question. Links and the app's
-own buttons are caught. The fix is the next step.
+Found on the way: "Save before leaving?" did not catch the browser's Back button. That is the
+next section.
+
+### Phase 6: the browser's Back button asks too
+
+"Save before leaving?" caught a link and the app's own buttons. It never caught the browser's Back
+or Forward button. A screen with unsaved work on it was taken away without a question, and what
+was typed and not saved was lost. Every screen that uses the guard was affected: the document
+editor, the business profile, the tasks, a customer's support and privacy requests, and the staff
+screens.
+
+Why: on the window, listeners are called in the order they were added. The router's was added
+first. It re-rendered before the next listener was called, so the screen was gone, and its guard
+with it, before the guard was asked.
+
+Now one listener is added as the app starts, before the router's. It asks the open screens'
+guards. If one has unsaved work, the address is put back, the router hears nothing, and the screen
+asks "Save before leaving?". Staying keeps everything. Leaving goes where Back was going. A move
+that changes only the part of the address after `#` is not a move away, and is let through.
+
+A question of the screen's own that is still open is answered by keeping, because leaving asks
+about everything that is not saved. Without this, the editor's "Save and leave" would wait on a
+question the customer could no longer reach.
+
+What is checked, and what is not:
+
+- A test in the bundled app covers the editor, the business profile and the tasks: Back asks,
+  staying keeps what was typed, "Discard and leave" sends nothing and goes back, and "Save and
+  leave" saves the typed amount and goes back, also when a question of the editor's own was open.
+- The other screens use the same guard and are not each tested.
+- The compiled site adds Next.js's own router, which also listens for Back, and no test can sign
+  in to it. It was checked once by hand, with a temporary guard on a signed-out screen: with this
+  change Back asked and the screen stayed, and without it Back left without asking. That temporary
+  change is not in the repository.
+- Closing the tab or reloading still shows the browser's own warning, as before.
 
 ### Found on the way: keyboard focus rests clear of the bars
 
