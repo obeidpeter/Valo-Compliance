@@ -1241,6 +1241,20 @@
       "proves": "A drafted candidate that declares policy approval, rights approval and professional review together is refused by the candidate schema, and the review schema refuses a published verdict."
     },
     {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-claim-map.test.ts",
+      "test": "every quotation is word for word in its retained passage, at the place its locator gives",
+      "proves": "For each of the ten registration and tax guides, every claim's quotation is found word for word in the retained official passage it names, at the section its locator gives, and every source the build produces is held with no decision on it."
+    },
+    {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-claim-map.test.ts",
+      "test": "the build refuses a map that leaves words out, changes them, or quotes what is not there",
+      "proves": "A guide's claim map fails to build when it leaves a sentence of the guide unplaced, changes a word of one, gives a sentence about the law nothing to rest on, quotes words that are not in the passage, states a number the quoted words do not contain, or names a section or printed page the passage is not."
+    },
+    {
       "requirement": "EDP-004",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",

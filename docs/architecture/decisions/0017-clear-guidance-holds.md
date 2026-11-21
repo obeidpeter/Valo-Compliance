@@ -193,11 +193,13 @@ of:
 - a source statement, bound to an exact quotation from a retained passage;
 - an interpretation, bound to the passage it rests on;
 - optional practice, bound to the official page it points to, or recorded as Valo's own suggestion;
-- not a claim, for example a heading or a sentence that only introduces a list.
+- a limit of the guide itself, which says what the guide does not cover or decide;
+- not a claim, for example a sentence that only introduces a list.
 
-A sentence the builder cannot place fails the build. The builder sets the legal scope to verified
-only when every bound source passes point 2. The two reviews check the map; no person accepts each
-guide (EDP-007).
+A sentence the builder cannot place fails the build. A number stands only where the quoted words,
+or the place given for them, contain it; a number that is Valo's own record, such as the day a page
+was read, is named with its reason. The builder sets the legal scope to verified only when every
+bound source passes point 2. The two reviews check the map; no person accepts each guide (EDP-007).
 
 ### 5. The sample files
 
