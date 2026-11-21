@@ -19,6 +19,7 @@ import { industryTemplatesParams } from "@/lib/catalogue-requests";
 import { formatCount } from "@/lib/format";
 import { industryName } from "@/lib/library-filters";
 import { fromServer } from "@/lib/server-data";
+import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 
 /** What an industry page starts from: the reads the server made, each missing if it failed. */
 export type IndustryReads = {
@@ -198,7 +199,7 @@ export function IndustryDetail({
               title="No templates for this industry yet"
               action={
                 <>
-                  <Link href="/workspace" className="btn btn-primary">
+                  <Link href={signUpFor(ANY_DOCUMENT)} className="btn btn-primary">
                     Create a document
                   </Link>
                   <Link href="/workspace/ai" className="btn btn-ghost">

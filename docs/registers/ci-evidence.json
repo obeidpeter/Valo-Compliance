@@ -2751,6 +2751,34 @@
       "file": "artifacts/valo/src/components/assessment-result.test.tsx",
       "test": "each result says in words whether it is federal, a state's or a local government's, with its rule and version",
       "proves": "On the result page, rendered on the server from a synthetic result, a federal requirement is marked “Federal”, a state's “State: Lagos” or “State: FCT”, and a local government's “Local government: Ikeja, Lagos”, each beside its rule and version, and only the federal one is marked federal."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "'Make another like this' starts a new document with the saved one's details and its reference and dates left blank, opens it, and waits while there are unsaved changes",
+      "proves": "Signed in through a stand-in identity with synthetic data, “Make another like this” asks for a new document holding the saved one's details with its reference and its dates blank, for a document with details of its own and for an invoice made from questions; the new document opens and lists the blank reference and dates as still needed; and the button is disabled while a change is unsaved. The API is answered in the page."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/document-copy.test.ts",
+      "test": "a document made like another keeps every answer except its reference and its dates, which are left blank, and invents nothing",
+      "proves": "For each of the twelve kinds of document that start from questions, the content a copy starts with holds every answer of the original except its reference and its date answers, which are blank, keeps its tables, notes and formatting, and passes the check that a document's content was made from its own answers."
+    },
+    {
+      "requirement": "WEB-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a visitor who is already signed in is sent on from sign-up and sign-in: to the New document page for what they chose, otherwise to their workspace",
+      "proves": "With a stand-in identity that is signed in, the sign-up and sign-in pages send the visitor on to the New document page for a chosen task or for “Create a document”, and to the workspace when nothing or a made-up choice was given. This is the app's own redirect; the identity provider's is not exercised."
+    },
+    {
+      "requirement": "WEB-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "a page with nothing to list still offers 'Create a document', and its link leads through sign-up with that choice, as the landing page's does",
+      "proves": "In the HTML the compiled web server sends, an industry's page with no template, the guides page with no guide and an empty documents search each offer one “Create a document” link, to sign-up carrying that choice."
     }
   ]
 }

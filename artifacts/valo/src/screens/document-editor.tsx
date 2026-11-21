@@ -35,6 +35,7 @@ import { FIELD_LABELS, describeError, missingFields, newBlockId } from "@/lib/ap
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { DocumentExports } from "@/components/document-exports";
+import { MakeAnother } from "@/components/make-another";
 import { FinancialFields, FINANCIAL_BLOCK_IDS } from "@/components/financial-fields";
 import { synchronizeFinancialBlocks } from "@workspace/valo-core/money";
 import type { FinancialInput } from "@workspace/api-client-react";
@@ -891,6 +892,7 @@ export default function DocumentEditor({ id }: { id: string }) {
             revisionNumber={doc.data.revision}
             disabled={finDirty || !["idle", "saved"].includes(state)}
           />
+          <MakeAnother saved={doc.data} unsaved={finDirty || !["idle", "saved"].includes(state)} />
         </aside>
       </div>
     </div>

@@ -1,9 +1,9 @@
 import { lazy, Suspense, useState, type ComponentProps, type ReactNode } from "react";
-import { ClerkProvider, SignIn, SignUp, useAuth, useUser } from "@clerk/react";
+import { ClerkProvider, Show, SignIn, SignUp, useAuth, useUser } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { AccountStateBoundary } from "@/components/account-state-boundary";
-import { Link, Route, Switch, useLocation, Router as WouterRouter } from "wouter";
+import { Link, Redirect, Route, Switch, useLocation, Router as WouterRouter } from "wouter";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -179,37 +179,60 @@ function useChosenStart() {
   const [start] = useState(() => new URLSearchParams(window.location.search).get("start"));
   const path = startPath(start);
   return path && start
-    ? { after: { forceRedirectUrl: basePath + path }, carry: "?start=" + encodeURIComponent(start) }
-    : { after: {}, carry: "" };
+    ? {
+        path,
+        after: { forceRedirectUrl: basePath + path },
+        carry: "?start=" + encodeURIComponent(start),
+      }
+    : { path: "/workspace", after: {}, carry: "" };
+}
+
+/**
+ * A visitor who is already signed in has no use for a sign-in or sign-up form. They go on to where
+ * the form would have sent them: the page for what they chose, or their workspace. A link that
+ * leads through sign-up, such as "Create a document" on a public page, so works for them too.
+ */
+function PastTheForm({ to }: { to: string }) {
+  return (
+    <Show when="signed-in">
+      <Redirect to={to} />
+    </Show>
+  );
 }
 
 function SignInPage() {
   useDocumentTitle("Sign in — Valo");
-  const { after, carry } = useChosenStart();
+  const { path, after, carry } = useChosenStart();
   return (
-    <AuthFrame side="in">
-      <SignIn
-        routing="path"
-        path={`${basePath}/sign-in`}
-        signUpUrl={`${basePath}/sign-up${carry}`}
-        {...after}
-      />
-    </AuthFrame>
+    <>
+      <PastTheForm to={path} />
+      <AuthFrame side="in">
+        <SignIn
+          routing="path"
+          path={`${basePath}/sign-in`}
+          signUpUrl={`${basePath}/sign-up${carry}`}
+          {...after}
+        />
+      </AuthFrame>
+    </>
   );
 }
 
 function SignUpPage() {
   useDocumentTitle("Create account — Valo");
-  const { after, carry } = useChosenStart();
+  const { path, after, carry } = useChosenStart();
   return (
-    <AuthFrame side="up">
-      <SignUp
-        routing="path"
-        path={`${basePath}/sign-up`}
-        signInUrl={`${basePath}/sign-in${carry}`}
-        {...after}
-      />
-    </AuthFrame>
+    <>
+      <PastTheForm to={path} />
+      <AuthFrame side="up">
+        <SignUp
+          routing="path"
+          path={`${basePath}/sign-up`}
+          signInUrl={`${basePath}/sign-in${carry}`}
+          {...after}
+        />
+      </AuthFrame>
+    </>
   );
 }
 

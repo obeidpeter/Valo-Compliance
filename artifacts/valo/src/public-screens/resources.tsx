@@ -15,6 +15,7 @@ import { KIND_LABEL, PlainText, ResourceCard, liveContent } from "@/components/r
 import { describeError } from "@/lib/describe-error";
 import { formatCount, formatDay } from "@/lib/format";
 import { fromServer } from "@/lib/server-data";
+import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 
 /** The released resources, starting from what the server read; the browser reads them itself when
  * the server could not, and every 15 seconds after (decision 0011). */
@@ -73,7 +74,7 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
           </EmptyState>
           <Notice title="Need a document instead?">
             Documents are made in your own workspace.{" "}
-            <Link href="/workspace" className="underline underline-offset-2">
+            <Link href={signUpFor(ANY_DOCUMENT)} className="underline underline-offset-2">
               Create a document
             </Link>{" "}
             and download it when you are ready.
