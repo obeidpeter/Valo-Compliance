@@ -2779,6 +2779,20 @@
       "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
       "test": "a page with nothing to list still offers 'Create a document', and its link leads through sign-up with that choice, as the landing page's does",
       "proves": "In the HTML the compiled web server sends, an industry's page with no template, the guides page with no guide and an empty documents search each offer one “Create a document” link, to sign-up carrying that choice."
+    },
+    {
+      "requirement": "NFR-009",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "before the editor or the tasks screen discards what the customer entered, it asks in its own dialog; keeping changes nothing, and going ahead does what its button says",
+      "proves": "Signed in through a stand-in identity with synthetic data, the editor asks before a reset or a restore discards an amount that was typed and not applied: keeping it, by the first button or Escape, leaves the amount and sends nothing, and going ahead sends one save of the restored version; the tasks screen asks before another view discards a task being edited. This covers what is typed on the screen, not a lost connection or a second device."
+    },
+    {
+      "requirement": "NFR-009",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "while the editor asks, nothing is saved underneath the question, and the answer starts the autosave again",
+      "proves": "Signed in through a stand-in identity with synthetic data, text typed while a save was on its way is not sent while the editor's question is open, by the autosave or by the keyboard, and is sent in one save once the customer answers by keeping; the amount typed and not applied is still there. This covers one question and the answer that keeps, not a lost connection or a second device."
     }
   ]
 }
