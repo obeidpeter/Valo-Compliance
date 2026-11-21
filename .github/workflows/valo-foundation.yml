@@ -416,6 +416,22 @@ jobs:
         run: pnpm --filter @workspace/api-server test:valo-exports-portable-db
       - name: Prove ready exports appear in the business library with the template version used (DOC-005)
         run: pnpm --filter @workspace/api-server test:valo-export-library-db
+      # The rehearsal draws the real web app, which needs its compiled styles. The identity key names
+      # a reserved, unreachable host (RFC 2606), as in the phone job; the page is bundled with a
+      # stand-in for the identity library, so the provider's script is never asked for.
+      - name: Build the web app for the rehearsal of a business owner's first tasks
+        run: NODE_ENV=production CLERK_PUBLISHABLE_KEY="pk_test_$(printf 'clerk.example.invalid$' | base64 -w0)" pnpm --filter @workspace/valo run build
+      - name: Rehearse a business owner's first tasks in a browser against the real API and database
+        env:
+          VALO_TESTER_TASKS_FILES: ${{ github.workspace }}/generated-artifacts/tester-tasks
+        run: pnpm --filter @workspace/api-server test:valo-tester-tasks-db
+      - name: Retain the two invoices the rehearsal downloaded
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tester-tasks-invoices
+          path: generated-artifacts/tester-tasks
+          if-no-files-found: ignore
       - name: Prove the release record names the commit, migrations, content and rule versions and known issues (OPS-005)
         run: pnpm --filter @workspace/api-server test:valo-release-record-db
       - name: Prove the staff Content area lists templates awaiting their reviews (KI-010)
