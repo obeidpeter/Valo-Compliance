@@ -1266,7 +1266,48 @@ which are the frozen forms'.
 a customer, and the source test reads only the web app. The first of them is on the result of the
 requirements check, under "Read this first": "Conditional source-governed guidance, not legal
 certification." The browser tests answer the check with a notice of their own, so it was never
-read. It is the next step.
+read. It is the next step, [below](#phase-6-the-requirements-checks-own-sentences).
+
+### Phase 6: the requirements check's own sentences
+
+Every result of the check carries a notice and a list of what it does not cover. Both are written
+by the rules engine, in the project's words, and the screen printed them as sent. The browser tests
+answered the check with a result of their own making, so none of them had these sentences on the
+screen. A visitor who runs the check today, with no rule published, reads the first four below.
+
+| The engine's sentence | What the screen says |
+| --- | --- |
+| "Conditional source-governed guidance, not legal certification. Unknown answers never establish exemption." | "This is guidance that depends on your answers. It is not a legal certificate. A missing or unknown answer never means that you are exempt." |
+| "No eligible released rules are available for these answers. This is not a finding that no duties apply." | Left out of the list: the box above it already says "No published rule covers these answers yet. This does not mean that you are exempt from anything." |
+| "State/FCT and LGA coverage is not comprehensive. Confirm location-specific requirements for Lagos." | "Valo does not cover every state, the FCT and every local government area. Check what applies in Lagos with the authorities there." |
+| "High-impact healthcare, financial services and energy activities require activity-specific released evidence." | "Healthcare, financial services and energy are covered only where a published rule is about that activity." |
+| "RULE-1: Evidence is stale or not yet checked", and the engine's six other reasons for holding a rule back | "Rule RULE-1 is on hold and gives no result here: its review date has passed, or its sources have not been checked yet.", and each other reason in plain words |
+| "Rules version" followed by a code of 64 characters | "Rules version" and the code's first twelve characters, as a result's reference is already quoted |
+
+**The engine is not changed.** Its sentences are part of a result and of the reference a result is
+quoted by, and a saved result keeps the ones it was saved with. So the web app says each one in
+the site's words (`lib/result-words.ts`), for a new result and a saved one alike. A sentence it
+does not know is shown as it was sent, in its place, so that nothing the engine says is dropped.
+
+What the result still says: that it is not a legal certificate; that a missing answer is never an
+exemption; each thing it does not cover, with the three sectors named (RUL-006); and, for a rule on
+hold, that it gives no result and why (CMP-007).
+
+Tests:
+
+- The engine itself is run with no rule published, in a unit test and in a browser on a phone, and
+  what it says is read on the screen.
+- The engine's reasons for holding a rule back are read from where the engine writes them, so a
+  new one cannot be missed. On its first run this found a seventh reason that the list did not
+  have.
+- The result page's two component tests, which are cited for RUL-006 and CMP-007, read the new
+  sentences, and their citations say so.
+- The source test records the two engine sentences this file holds as text that is not shown as
+  written.
+
+Not changed: what a result says of each rule it lists, which comes from the published rule and
+shows only once a rule is published; and the name of the official route, "Corporate Affairs
+Commission service discovery", which is the engine's.
 
 ### Found on the way: keyboard focus rests clear of the bars
 
@@ -1322,7 +1363,7 @@ accepted by it.
 | Heuristic | Built | Not done |
 | --- | --- | --- |
 | 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. The purchases screen says that real payments are switched off and that nothing can be bought yet. A downloaded document says "Saved version 3". | |
-| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format, and a document prints its dates the same way. A downloaded document names its fields as the editor does. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
+| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format, and a document prints its dates the same way. A downloaded document names its fields as the editor does. A result of the check says its notice, and what it does not cover, in the site's words. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
 | 3. User control and freedom | The editor has undo and keeps every version. "Start over" asks first. Five discards ask in the app's own dialog. "Save before leaving?" also catches the browser's Back and Forward buttons. | On the compiled site the Back button was checked once by hand; no CI test can sign in to it. |
 | 4. Consistency and standards | The component styles are in one layer. Dates, times, amounts and counts go through one formatter. One header, one footer and one phone bar. One page where a document starts. | |
 | 5. Error prevention | A new form opens without red marks, and what a document still needs is listed before a download. The check chooses no answer for the visitor. The editor saves nothing underneath an open question. Someone who cannot sign in is told before writing that no reply is emailed. | |
