@@ -359,6 +359,18 @@ body::before {
 
   .rule-lines { background-image: repeating-linear-gradient(to bottom, transparent 0 31px, hsl(var(--border) / .7) 31px 32px); }
 
+  /* The phone's opened menu when it is longer than its room: a soft shadow along an edge says there
+     is more that way, and goes when that end is reached. The first two layers move with the menu
+     and cover the shadows at its two ends; the shadows stay with the panel. */
+  .menu-panel {
+    background:
+      linear-gradient(hsl(var(--background)) 40%, hsl(var(--background) / 0)) top / 100% 2rem no-repeat local,
+      linear-gradient(hsl(var(--background) / 0), hsl(var(--background)) 60%) bottom / 100% 2rem no-repeat local,
+      radial-gradient(farthest-side at 50% 0, hsl(var(--foreground) / .18), transparent) top / 100% .75rem no-repeat scroll,
+      radial-gradient(farthest-side at 50% 100%, hsl(var(--foreground) / .18), transparent) bottom / 100% .75rem no-repeat scroll,
+      hsl(var(--background));
+  }
+
   .reveal { animation: reveal .7s cubic-bezier(.2,.7,.2,1) both; }
   .reveal-2 { animation-delay: .08s; } .reveal-3 { animation-delay: .16s; } .reveal-4 { animation-delay: .24s; }
   @keyframes reveal { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }

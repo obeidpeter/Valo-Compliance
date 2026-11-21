@@ -1,6 +1,6 @@
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
-import { phoneProblems, ready, settled, startApp } from "../test-support/app-in-browser";
+import { menuProblems, phoneProblems, ready, settled, startApp } from "../test-support/app-in-browser";
 import { answer } from "../test-support/public-answers";
 
 /**
@@ -83,4 +83,16 @@ test("on a phone, each public screen the primary-page checks leave out names its
     }
   }
   assert.deepEqual(problems, []);
+});
+
+test("signed out, the phone's opened menu fits a short screen and a phone on its side: every control in it comes to rest on screen and clear of the bottom bar", async () => {
+  const { page, errors, close } = await app.phone("/checker", answer);
+  try {
+    await ready(page);
+    // The site's five pages, sign in and create account.
+    assert.deepEqual(await menuProblems(page, "/checker", { minimumStops: 7 }), []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
 });

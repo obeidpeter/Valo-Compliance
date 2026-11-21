@@ -243,6 +243,23 @@ own Save button, which is held at the bottom of that screen. The keyboard checks
 on every screen now also fail when a focused control comes to rest behind a bar that stays on
 screen, going forward with Tab and back with Shift+Tab.
 
+### Found on the way: the phone's opened menu fits the screen
+
+The header stays at the top of the screen while the page scrolls. With the menu open the header
+is as tall as its row and the menu together, and whatever part of the menu ran past the bottom of
+the screen could not be scrolled to. On a phone held sideways (640 by 360 pixels) that was Help,
+behind the bar at the bottom, and the account buttons below it, off the screen. An upright phone
+was spared only because the menu was short.
+
+The opened menu is now never taller than the room between the header's row and the bar at the
+bottom of the screen. A longer menu scrolls inside itself, with a soft shadow along the edge it
+continues past.
+
+A new check opens the menu at 360 by 640, 320 by 480 and 640 by 360 pixels, signed out and signed
+in, on server-rendered pages and in the browser app. It fails when a control in the menu comes to
+rest off the screen or behind a bar. The keyboard checks that run on every screen now also fail
+for a control left off the screen.
+
 ## How the ten heuristics are applied
 
 1. **Visibility of system status.** Keep "Saved"; add progress in the checker and on downloads.

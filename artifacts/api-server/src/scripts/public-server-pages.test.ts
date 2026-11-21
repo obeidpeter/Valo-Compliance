@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { expect } from "@playwright/test";
 import { paginateReleasedItems, type ReleasedLibraryItem } from "../modules/catalogue/valo-catalogue";
-import { phoneProblems, ready } from "../test-support/app-in-browser";
+import { menuProblems, phoneProblems, ready } from "../test-support/app-in-browser";
 import { industry, items, resources, serverAnswer } from "../test-support/public-answers";
 import { HYDRATION, startWebServer } from "../test-support/web-server";
 
@@ -370,6 +370,28 @@ test("on a phone, each server-rendered page hydrates without a mismatch, fits 36
       problems.push(...[...errors, ...messages].filter((m) => HYDRATION.test(m)).map((m) => `${path}: ${m}`));
       problems.push(...errors.map((error) => `${path}: page error ${error}`));
       problems.push(...unknown.map((call) => `${path}: no test answer for ${call}`));
+    } finally {
+      await close();
+    }
+  }
+  assert.deepEqual(problems, []);
+});
+
+test("a server-rendered page's opened menu fits a short screen and a phone on its side: every control in it comes to rest on screen and clear of the bottom bar", async () => {
+  const problems: string[] = [];
+  // Every server-rendered page has the same header, so two stand for them: the home page and a page
+  // long enough to scroll.
+  for (const path of ["/", "/library"]) {
+    const { page, errors, messages, close } = await web.phone(path);
+    try {
+      await ready(page);
+      // The site's five pages, sign in and create account.
+      problems.push(...(await menuProblems(page, path, { minimumStops: 7 })));
+      problems.push(...errors.map((error) => `${path}: page error ${error}`));
+      // The opened menu sets its own height in the page, which the content security policy allows.
+      problems.push(
+        ...messages.filter((m) => /content security policy/i.test(m)).map((m) => `${path}: ${m}`),
+      );
     } finally {
       await close();
     }
