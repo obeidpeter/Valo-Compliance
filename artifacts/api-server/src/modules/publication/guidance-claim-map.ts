@@ -218,6 +218,10 @@ export function buildGuideClaims(
     amendmentsResolved: false,
   }));
   for (const s of sources) if (sha256(s.text) !== s.hash) fail(`GUIDE_CLAIM_SOURCE_HASH:${guide}:${s.id}`);
+  // A bundle's schema trims its strings. Words that would change under it could not stay bound to
+  // the checksums taken of them here.
+  for (const words of [...sources.map((s) => s.text), ...claims.flatMap((c) => [c.text, c.quote, c.locator])])
+    if (words !== words.trim()) fail(`GUIDE_CLAIM_NOT_TRIMMED:${guide}:${preview(words.trim())}`);
 
   const linkHosts = [...new Set([...text.matchAll(/https:\/\/[^\s)]+/g)].map((m) => new URL(m[0]).hostname))];
   if (/http:\/\//.test(text)) fail(`GUIDE_CLAIM_MAP_LINK_NOT_HTTPS:${guide}`);

@@ -69,7 +69,9 @@ Read from the code on 21 November 2026:
    application's own login. That login can switch to any role.
 8. **Passages kept for ten guides only.** The repository holds the passage text for GUD-01 to
    GUD-10 (the Companies and Allied Matters Act 2020 and the Nigeria Tax Administration Act 2025).
-   For the other twenty it holds each official file's checksum and page locators, not the text.
+   Of what the other twenty quote, it holds two passages of the Nigeria Data Protection Act
+   (sections 2 to 3 and 27) and the text of the Food, Drugs and Related Products (Registration,
+   Etc.) Act. For the rest it holds each official file's checksum and page locators, not the text.
 
 ### One fact gathered on 21 November 2026
 
@@ -84,6 +86,41 @@ the development container.
 
 An unchanged file shows that the address still serves the same text. It does not show that no
 later instrument amends it.
+
+### More facts gathered on 21 November 2026
+
+Gathered while the amendment records of point 2 were first written (`guidance-amendments.ts`). The
+searches were made between 17:50 and 19:53 UTC; each is in a record with the checksum of what the
+address returned.
+
+- **The National Assembly's list of Acts and publications** holds 182 entries. None names the
+  Companies and Allied Matters Act. One names the Nigeria Tax Administration Act: the Act itself.
+  The list is not a full statute book: it holds neither the Business Facilitation Act nor any
+  Finance Act.
+- **The Nigeria Tax Act 2025** (National Assembly copy) does not name the Companies and Allied
+  Matters Act. Its repeals (section 195) and consequential amendments (section 196) do not name the
+  Nigeria Tax Administration Act.
+- **The Business Facilitation (Miscellaneous Provisions) Act 2022** amends twenty sections of the
+  Companies and Allied Matters Act. The ten guides quote one of them, section 868, where it deletes
+  the definition of "insolvency practitioner". No guide quotes that definition.
+- **The Finance Acts made since 2020 have not been read.** A Finance Act can amend other Acts, and
+  no copy on an official host in the proposed policy has been found. Until they are read, no passage
+  of the Companies and Allied Matters Act is marked current.
+- **The two official copies of the Nigeria Tax Administration Act print three different
+  commencements.** The National Assembly's copy prints 26 June 2025 at its head, and its section 148
+  gives the Act's name only. The Gazette copy served by the revenue service prints 1 January 2026 at
+  its head, and its section 148 says the Act comes into effect on 1 January 2025. Under every one of
+  these the Act is in force from 1 January 2026. None of the thirty guides states when a law
+  commenced.
+- **The Gazette copy is a scanned image.** Its machine-read text is too unreliable to compare with
+  the National Assembly's copy by machine. Section 31 has been compared by reading, against the
+  passage of the Gazette copy kept in the repository: the two read the same, except that subsection
+  (3) of the National Assembly's copy adds "of this section". The other sections the guides quote
+  (4, 7, 11, 33 and 147) have not been compared, so they are not confirmed as the operative text.
+- **No guide repeats more than ten words in a row** from a passage it cites.
+
+The reading of the Gazette copy was done by an AI assistant from the page images. It is not legal
+review.
 
 ## Proposal
 
@@ -124,9 +161,9 @@ source-backed policy of their own. The text proposed for the owner's approval:
 >    specialist; a filing made for a customer.
 > 7. **Official text is explained, not copied.** A guide explains in its own words, names the
 >    section and links to the official address. It does not reproduce official text beyond a short
->    quotation.
+>    quotation: no more than 20 words in a row from a passage it cites.
 > 8. **Sources.** Only texts fetched from the official hosts in the policy. A source counts as
->    current only under the rule in this decision's point 2.
+>    current only under the rule in decision 0017's point 2.
 > 9. **Checks before release.** The mechanical checks, two separate AI reviews that do not see each
 >    other's result, the enhanced checks and both file formats. No person signs each guide. An AI
 >    review is never called a professional review.
@@ -162,8 +199,19 @@ than 30 days. The record holds:
   that print different commencement dates.
 
 A source with an open conflict that touches a quoted section is not resolved, and guides that quote
-that section stay held. The two reviews then run the `amendments` and `effective_dates` checks
-against the record and the captures (decision 0014).
+that section stay held. Two more things hold a source:
+
+- an instrument that may amend the text and has not been read. While the record lists one, no
+  passage of the text is resolved;
+- official copies that are known to differ. A passage is confirmed as the operative text only for a
+  section that has been compared between the copies.
+
+Where an amending instrument changes a section, the record keeps the words of that section it
+deletes or replaces. A passage of the section is unaffected only when it holds none of those words;
+where none are recorded, every passage of the section counts as changed.
+
+The two reviews then run the `amendments` and `effective_dates` checks against the record and the
+captures (decision 0014).
 
 This cannot prove that no later instrument exists. Only a search of every gazette could, and only a
 qualified person could give an opinion on it. The guide's limits will say when and where the search
@@ -178,9 +226,12 @@ Two different rights are involved.
   that assign the output and allow commercial use (`chatGPTPermissionRecord`). It lapses after 90
   days.
 - **Official text.** The policy's point 7 becomes a check: the longest run of words a guide shares
-  with any passage it cites is measured, and a guide over the limit fails. The public page shows a
-  guide's own words, the section reference and the link, never the passage. The passages are kept
-  as private evidence for the reviews.
+  with any passage it cites is measured, and a guide that shares more than 20 words in a row fails.
+  The public page shows a guide's own words, the section reference and the link, never the passage.
+  The passages are kept as private evidence for the reviews.
+
+The record is cleared only while the owner's approval of the policy stands, because its basis is
+the policy's point 7.
 
 The record claims no copyright opinion, exclusivity or clearance of third-party rights, as the
 template record does not.
@@ -248,6 +299,10 @@ command that publishes.
 
 ## Decisions for the product owner
 
+The policy is kept as a file, `docs/valo/policies/guidance-publication-policy.md`, with the same
+thirteen points. Approving that file settles decisions 1 to 4 and 6 together: the file says so, and
+the code counts the policy as approved only while the file is exactly the one approved.
+
 1. **The policy.** Approve the thirteen points above, or change them.
 2. **"Current".** Accept the amendment record of point 2 as the standard, knowing it cannot prove
    that no later change exists.
@@ -259,3 +314,10 @@ command that publishes.
    source captures, the publisher login's password, and the AI reviews.
 6. **The monthly cost.** Accept that a published guide costs two AI reviews every 30 days, or ask
    for the cadence to be proposed differently for some subjects.
+7. **Passages for the other twenty guides.** The first ten guides' passages are kept in the
+   repository, which is public. They are passages of Acts, kept on the basis recorded with them:
+   section 3(b) of the Copyright Act, for official texts of a legislative nature. Say whether
+   passages of the other Acts the guides quote may be kept the same way. Unless told otherwise,
+   passages of texts that are not Acts (the NAFDAC guidelines, one of which says on its page 2 that
+   commercial reproduction needs permission, and the data protection directive) will not be put in
+   the repository: those guides will be bound by checksum to private captures.

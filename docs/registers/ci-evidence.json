@@ -1199,6 +1199,27 @@
       "proves": "A complete publication record that has no human reviewer, approver, sign-off or professional field is eligible."
     },
     {
+      "requirement": "EDP-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-release.test.ts",
+      "test": "the guidance policy is read from its file, and the owner has not approved it",
+      "proves": "The policy for guides that say what the law requires is read from the owner's policy file, allows only guides, Nigeria and the listed subjects, and is not approved while no approval of the file's exact text is recorded; a supposed approval counts only for the exact file approved, and an edit to the file ends it."
+    },
+    {
+      "requirement": "EDP-001",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/publication-final-check.test.ts",
+      "test": "final check holds a guide to the guidance policy, which the owner's restriction file also narrows",
+      "proves": "The last check before a release holds a guide to the guidance policy and refuses the templates' policy for it, and the owner's restriction file takes the guides' class out of the guidance policy by a suspension or an exclusion; it adds nothing to it."
+    },
+    {
+      "requirement": "EDP-001",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a guide is released only under the guidance policy, and a form only under the templates' policy",
+      "proves": "On a real database the publisher refuses a guide bound to the templates' policy and a form bound to the guidance policy, and holds a guide under the guidance policy, which the owner has not approved; none of the three synthetic candidates is published."
+    },
+    {
       "requirement": "EDP-002",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",
@@ -1218,6 +1239,13 @@
       "file": "artifacts/api-server/src/modules/sources/business-name-evidence.test.ts",
       "test": "changed checksum, missing source and expired retrieval fail before candidate construction",
       "proves": "Building the business-name evidence from synthetic source texts fails, before any candidate is made, when one of its official sources is missing, a source's text no longer matches its checksum or the retrievals are stale."
+    },
+    {
+      "requirement": "EDP-002",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-release.test.ts",
+      "test": "a source is marked current only on the strength of its text's amendment record",
+      "proves": "A passage of an Act is marked current only when its text's amendment record describes the same file, is no more than 30 days old, lists no unread instrument able to amend it, has compared the section where official copies differ, and records no change or open question touching the passage; otherwise the passage stays held, as every Companies and Allied Matters Act passage does today."
     },
     {
       "requirement": "EDP-003",
@@ -1346,6 +1374,13 @@
       "proves": "A synthetic publication bundle whose two AI reviews both pass is held when its arithmetic check is marked failed, with a reason naming the failed arithmetic check."
     },
     {
+      "requirement": "EDP-006",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-release.test.ts",
+      "test": "the gate holds each mapped guide today for the same reasons, and for nothing else",
+      "proves": "For each of the ten mapped guides the ten mechanical checks are measured from the candidate itself: eight pass, the scope and rights checks fail while the policy is unapproved and sources are not marked current, and the gate holds the guide for those reasons and no other apart from its two missing reviews."
+    },
+    {
       "requirement": "EDP-007",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
@@ -1400,6 +1435,13 @@
       "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
       "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
       "proves": "A reviewed pair reaches a saved version only when each review is the one the approved batch settled for that exact candidate, plan and server evidence: another candidate's, an unsettled or a changed review and a stale candidate are refused, and a pair that fails a gate is saved and held."
+    },
+    {
+      "requirement": "EDP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-release.test.ts",
+      "test": "a candidate whose claims or sources were changed after it was built is found out",
+      "proves": "A guide candidate whose claims, quotations, sources or source decisions were changed after it was built no longer matches what its claim map yields from its sources, and the check that builds them again reports each change."
     },
     {
       "requirement": "EDP-009",

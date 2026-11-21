@@ -3,8 +3,11 @@ import { resolve } from "node:path";
 import { z } from "zod";
 import { sha256 } from "@workspace/valo-core";
 import { publicationWorkspaceRoot } from "./operational-policy";
-import { readOperationalIntake } from "./operational-intake";
+import { readGuidanceIntake, readOperationalIntake } from "./operational-intake";
 import { supportsOperationalInferenceTemplate } from "./inference-operational-coverage";
+/** The scope a guide's own wording is recorded under; a blank form keeps the scope it always had. */
+const guidanceScope = "chatgpt_original_guidance_prose_provider_permission_only";
+const guideId = /^GUD-(0[1-9]|[12]\d|30)$/;
 const schema = z
   .object({
     version: z.string().min(1),
@@ -17,6 +20,7 @@ const schema = z
       .enum([
         "blank_operational_forms_internal_business_licence",
         "chatgpt_original_operational_provider_permission_only",
+        guidanceScope,
       ])
       .nullable(),
     authoringRoute: z.literal("coordinator_chatgpt").optional(),
@@ -57,7 +61,8 @@ export function verifiedRightsApplicability(input: unknown, now = new Date()) {
       age <= 90 * 86400_000 &&
       record.authoringRoute === "coordinator_chatgpt" &&
       Boolean(record.sourceBinding) &&
-      record.commercialUseScope === "chatgpt_original_operational_provider_permission_only" &&
+      (record.commercialUseScope === "chatgpt_original_operational_provider_permission_only" ||
+        record.commercialUseScope === guidanceScope) &&
       record.evidence.some((e) => e.url === chatGPTFAQ && e.quote === commercialQuote) &&
       [rowTerms, euTerms].every((url) =>
         record.evidence.some((e) => e.url === url && e.quote === ownershipQuote),
@@ -114,15 +119,19 @@ export function chatGPTPermissionRecord(
 ) {
   const snapshot = termsSnapshotSchema.parse(raw),
     sourceHash = sha256(source);
+  // A guide's wording is bound through the manifest's guidance rows, a form's through its templates.
+  const guide = guideId.test(binding.templateId);
   if (binding.templateId) {
     const manifest = JSON.parse(note);
+    const rows: { id: string; sourcePath: string; sourceSHA256: string }[] | undefined = guide
+      ? manifest.guidance
+      : manifest.templates;
     if (
-      !supportsOperationalInferenceTemplate(binding.templateId) ||
+      (!guide && !supportsOperationalInferenceTemplate(binding.templateId)) ||
       !manifest.authoring?.context?.includes("ChatGPT") ||
       manifest.authoring.upstreamProviderExecutionReceiptsRecorded !== false ||
-      !manifest.templates.some(
-        (r: { id: string; sourcePath: string; sourceSHA256: string }) =>
-          r.id === binding.templateId && r.sourcePath === binding.path && r.sourceSHA256 === sourceHash,
+      !rows?.some(
+        (r) => r.id === binding.templateId && r.sourcePath === binding.path && r.sourceSHA256 === sourceHash,
       )
     )
       throw Error("CHATGPT_SOURCE_HASH_NOT_BOUND");
@@ -157,14 +166,16 @@ export function chatGPTPermissionRecord(
     };
   });
   const record = schema.parse({
-    version: "chatgpt-original-operational-provider-permission-1",
+    version: guide
+      ? "chatgpt-original-guidance-provider-permission-1"
+      : "chatgpt-original-operational-provider-permission-1",
     status: "verified",
     accountPlan: "not_classified_or_required_for_documented_free_paid_output_permission",
     accountTerms: null,
     integration: "chatgpt",
     provider: "openai",
     authoringRoute: "coordinator_chatgpt",
-    commercialUseScope: "chatgpt_original_operational_provider_permission_only",
+    commercialUseScope: guide ? guidanceScope : "chatgpt_original_operational_provider_permission_only",
     checkedAt: snapshot.retrievedAt,
     sourceBinding: {
       path: binding.path,
@@ -178,6 +189,12 @@ export function chatGPTPermissionRecord(
       "Regional variants are retained without claiming residence or account-contract classification.",
       "Original ChatGPT prose only; no Replit/API authoring receipt or application-code rights are inferred.",
       "Independent final-candidate checks remain mandatory. Customer licence acceptance and sales approval remain false.",
+      // A guide cites official texts. The provider's terms say nothing about those.
+      ...(guide
+        ? [
+            "This record covers Valo's own wording only. It gives no right in any official text a guide cites.",
+          ]
+        : []),
     ],
   });
   return { record, hash: sha256(JSON.stringify(record)), verified: verifiedRightsApplicability(record, now) };
@@ -195,6 +212,23 @@ export async function loadChatGPTPermission(
   },
 ) {
   const root = publicationWorkspaceRoot();
+  // A guide's wording is bound to its own draft file through the intake manifest.
+  if (provenance && guideId.test(provenance.templateId)) {
+    const intake = await readGuidanceIntake(provenance.templateId, provenance.version);
+    if (
+      provenance.path !== intake.provenance.path ||
+      provenance.hash !== intake.sourceHash ||
+      provenance.sourceText !== intake.provenance.sourceText ||
+      provenance.note !== intake.provenance.note ||
+      provenance.noteHash !== intake.provenance.noteHash
+    )
+      throw Error("INTAKE_AUTHORING_LINEAGE_MISMATCH");
+    return chatGPTPermissionRecord(snapshot, provenance.sourceText, provenance.note, new Date(), {
+      path: provenance.path,
+      notePath: "docs/content-candidates/r1-content-intake-manifest.json",
+      templateId: provenance.templateId,
+    });
+  }
   // TPL-09 shares the legacy source file but uses the exact intake-manifest
   // lineage. Select that route by the retained note, never by source path alone.
   if (provenance && (provenance.path !== chatGPTSourcePath || provenance.note.trimStart().startsWith("{"))) {

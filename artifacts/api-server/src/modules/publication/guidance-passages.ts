@@ -13,7 +13,11 @@ import { publicationWorkspaceRoot } from "./operational-policy";
  */
 export type GuideInstrument = {
   id: string;
+  /** An Act can be amended by a later one; an official page says what it says when it is read. */
+  kind: "act" | "official_page";
   url: string;
+  /** The SHA-256 of the file the passages were extracted from; null for a page kept as text only. */
+  rawSha256: string | null;
   /** The official text's name as a guide's source list prints it. */
   title: string;
   issuingBody: string;
@@ -27,8 +31,14 @@ export type GuidePassage = {
   recordedLocator: string;
   text: string;
   hash: string;
+  /** The sections of the text the passage comes from, as its recorded locator names them. */
+  sections: string[];
   instrument: GuideInstrument;
 };
+/** The section numbers a recorded locator names ("section814(1)(a)-(c); PDF405" names 814). */
+export const locatorSections = (locator: string) => [
+  ...new Set([...locator.matchAll(/section\s*(\d+)/gi)].map((m) => m[1]!)),
+];
 export type GuidePassages = (id: string) => GuidePassage | undefined;
 
 const paths = {
@@ -77,16 +87,23 @@ export function retainedGuidePassages(
     fail("GUIDE_PASSAGES_SOURCE_IDENTITY_CHANGED");
 
   const passages = new Map<string, GuidePassage>();
+  // `hash` is the retained checksum of the exact extract. A publication bundle's schema trims a
+  // source's text, so once that checksum is confirmed the passage is held as its words without the
+  // spaces around them, under those words' own checksum; a bundle then holds exactly what it hashed.
   const add = (p: GuidePassage) => {
     if (sha256(p.text) !== p.hash) fail(`GUIDE_PASSAGE_CHANGED:${p.id}`);
+    const text = p.text.trim(),
+      kept = { ...p, text, hash: sha256(text) };
     const known = passages.get(p.id);
-    if (known && known.hash !== p.hash) fail(`GUIDE_PASSAGE_CONFLICT:${p.id}`);
-    passages.set(p.id, p);
+    if (known && known.hash !== kept.hash) fail(`GUIDE_PASSAGE_CONFLICT:${p.id}`);
+    passages.set(p.id, kept);
   };
   const instruments: Record<string, GuideInstrument> = {
     cama: {
       id: "CAC-CAMA-2020",
+      kind: "act",
       url: cama.url,
+      rawSha256: cama.rawSHA256,
       title: "Companies and Allied Matters Act 2020",
       issuingBody: "Corporate Affairs Commission (official copy)",
       retrievedAt: new Date(cama.retrievedAt).toISOString(),
@@ -94,7 +111,9 @@ export function retainedGuidePassages(
     },
     ntaa: {
       id: "NASS-NTAA-2025",
+      kind: "act",
       url: ntaa.url,
+      rawSha256: ntaa.rawSHA256,
       title: "Nigeria Tax Administration Act 2025",
       issuingBody: "National Assembly of Nigeria (official copy)",
       retrievedAt: new Date(ntaa.retrievedAt).toISOString(),
@@ -119,6 +138,7 @@ export function retainedGuidePassages(
       recordedLocator: p.locator,
       text: p.exactExtractedText,
       hash: p.textSHA256,
+      sections: locatorSections(p.locator),
       instrument,
     });
   }
@@ -142,9 +162,12 @@ export function retainedGuidePassages(
     recordedLocator: candidate.locators.process,
     text: process.text,
     hash: process.hash,
+    sections: [],
     instrument: {
       id: "CAC-BN-PROCESS",
+      kind: "official_page",
       url: reference.url,
+      rawSha256: null,
       title: "Corporate Affairs Commission: business name registration page",
       issuingBody: "Corporate Affairs Commission",
       retrievedAt: fetchedAt,

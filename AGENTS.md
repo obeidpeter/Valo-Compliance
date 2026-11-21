@@ -117,6 +117,14 @@ Rules that apply now:
   `publishOperationalVersion` uses that connection; the `publisher-connection` repository rule
   enforces this. Never give the login another privilege or membership outside a reviewed
   migration, and never give its connection string to the API or the worker.
+- A guide that says what the law requires is released only under the guidance policy
+  (`guidancePolicy`, read from `docs/valo/policies/guidance-publication-policy.md`), never under
+  the templates' policy. Only the product owner approves it: the policy counts as approved only
+  while `guidancePolicyApprovedHash` returns that file's own SHA-256. Never change that function
+  without the owner's explicit, current approval of the file's exact text. A source is marked
+  current only by `guideSourceDecision`, from its text's amendment record
+  (`guidance-amendments.ts`); record there only a search, a reading or a comparison that was
+  really made, with what it did not cover.
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.

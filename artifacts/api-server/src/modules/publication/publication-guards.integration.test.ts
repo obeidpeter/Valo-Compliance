@@ -2,7 +2,7 @@ import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
-import { digest, evaluatePublication } from "@workspace/valo-core";
+import { digest, evaluatePublication, type PublicationBundle } from "@workspace/valo-core";
 import { heldSourceBundle } from "../sources/valo-source-controls.fixtures";
 
 /**
@@ -326,5 +326,82 @@ test(
         unavailable(() => publisherConnectionString(configured, undefined));
       },
     );
+  },
+);
+
+/**
+ * A guide says what the law requires, so the publisher releases it only under the guidance policy
+ * (decision 0017, point 1). Nothing here is published: each attempt is refused at the policy or held
+ * by the gate, and the candidates are synthetic rows built from the retained drafts.
+ */
+test(
+  "a guide is released only under the guidance policy, and a form only under the templates' policy",
+  { skip: process.env.VALO_RUN_DB_TESTS !== "synthetic-development-only", timeout: 60_000 },
+  async () => {
+    assert.equal(process.env.NODE_ENV, "development");
+    assert.ok(!process.env.REPLIT_DEPLOYMENT);
+    assert.ok(["localhost", "127.0.0.1", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
+    const { db } = await import("@workspace/db");
+    const { publishOperationalVersion } = await import("./publication-publisher");
+    const { guidancePolicy } = await import("./guidance-policy");
+    const { operationalPolicy } = await import("./operational-policy");
+    const { assembledGuide, passagesReadAt } = await import("./guidance-release.fixtures");
+
+    const now = new Date();
+    const guidance = await guidancePolicy(),
+      templates = await operationalPolicy();
+    for (const { policy, authority } of [guidance, templates])
+      await db.execute(
+        sql`insert into valo_publication_policies(id,hash,policy,authority) values(${policy.version},${policy.hash},${JSON.stringify(policy)}::jsonb,${JSON.stringify(authority)}::jsonb) on conflict do nothing`,
+      );
+    const save = async (bundle: PublicationBundle) => {
+      const id = randomUUID(),
+        name = `synthetic-guide-policy-${id}`;
+      await db.transaction(async (tx) => {
+        await tx.execute(sql.raw("set local role valo_content_drafter_dev"));
+        await tx.execute(
+          sql`insert into valo_content_versions(id,template_id,version,slug,policy_id,candidate_hash,bundle,attestations,status,review_by)
+            values(${id}::uuid,${name},${bundle.candidate.version},${name},${bundle.policy.version},${bundle.candidate.hash},${JSON.stringify(bundle)}::jsonb,'{}','candidate',${new Date(bundle.candidate.reviewBy!)})`,
+        );
+      });
+      return id;
+    };
+    const status = async (id: string) =>
+      (await db.execute(sql`select status from valo_content_versions where id=${id}::uuid`)).rows[0]?.status;
+
+    // The retained drafts and passages, as if the official texts had been read an hour ago: the
+    // publisher runs on the real clock.
+    const { bundle } = await assembledGuide("GUD-01", now, {
+      passages: passagesReadAt(new Date(+now - 3_600_000)),
+    });
+    assert.equal(bundle.candidate.contentClass, "sourced_guidance");
+    assert.equal(bundle.policy.hash, guidance.policy.hash);
+
+    // Under the guidance policy the publisher reaches the gate, which holds the guide: it has no
+    // reviews, and the owner has not approved the policy.
+    const underGuidance = await save(bundle);
+    await assert.rejects(
+      () => publishOperationalVersion(underGuidance),
+      (error: Error) => {
+        assert.match(error.message, /^PUBLICATION_HELD:/);
+        assert.match(error.message, /review_required:factual/);
+        assert.equal(/policy_not_owner_approved/.test(error.message), !guidance.policy.ownerApproved);
+        return true;
+      },
+    );
+    assert.equal(guidance.policy.ownerApproved, false, "no approval of the guidance policy is recorded");
+    assert.equal(await status(underGuidance), "candidate");
+
+    // The same guide bound to the templates' policy is refused before the gate is asked.
+    const underTemplates = await save({ ...bundle, policy: templates.policy });
+    await assert.rejects(() => publishOperationalVersion(underTemplates), /POLICY_NOT_TRUSTED/);
+    assert.equal(await status(underTemplates), "candidate");
+
+    // And a form bound to the guidance policy is refused the same way.
+    const form = heldSourceBundle(now, false);
+    assert.equal(form.candidate.contentClass, "general_template");
+    const formUnderGuidance = await save({ ...form, policy: guidance.policy });
+    await assert.rejects(() => publishOperationalVersion(formUnderGuidance), /POLICY_NOT_TRUSTED/);
+    assert.equal(await status(formUnderGuidance), "candidate");
   },
 );

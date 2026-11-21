@@ -13,8 +13,11 @@ import { getPublicationArtifact, type ArtifactRef } from "./publication-artifact
 import { developmentPublicationOnly, operationalPolicy } from "./operational-policy";
 import { enhancedChecksFromReviews, operationalReviewSchemaFor } from "./operational-review-contract";
 import { templateCandidate } from "./operational-content";
+import type { GuideClaimScope } from "./guidance-bundle";
 import { guidanceCandidate } from "./guidance-candidate";
 import { guideReferences } from "./guidance-document";
+import { guideMechanicalChecks } from "./guidance-mechanical";
+import { guidancePolicy } from "./guidance-policy";
 import { originalFormSchema, formMarkdown } from "./operational-authoring-contract";
 import { operationalMechanicalChecks } from "./operational-mechanical";
 import { recheckOperationalExports } from "./operational-export-inspection";
@@ -30,6 +33,8 @@ export type ReleaseAttestations = {
   rightsApplicabilityHash?: string;
   exports: { docx: ArtifactRef; pdf: ArtifactRef };
   exportReport: ArtifactRef;
+  /** A guide's recorded claim scope: the map that classified it and where its sources were read. */
+  claimScope?: ArtifactRef;
 };
 /** Shared trusted checks for the real publisher and rollback-only validation.
  * A future evaluation time can deny stale evidence; it can never backdate it. */
@@ -59,7 +64,10 @@ export async function validateOperationalVersionInTransaction(
     .select()
     .from(valoPublicationPolicies)
     .where(eq(valoPublicationPolicies.id, row.policyId));
-  const trusted = await operationalPolicy();
+  // A guide says what the law requires, so it is released only under the guidance policy, which the
+  // owner approves on its own (decision 0017). The templates' policy never releases one.
+  const guide = bundle.candidate.contentClass === "sourced_guidance";
+  const trusted = guide ? await guidancePolicy() : await operationalPolicy();
   if (
     !policy ||
     policy.hash !== trusted.policy.hash ||
@@ -149,7 +157,10 @@ export async function validateOperationalVersionInTransaction(
   if (
     digest(rights) !== bundle.rights.evidenceHash ||
     bundle.rights.evidence !== JSON.stringify(rights) ||
-    !rights.originalOperationalOnly ||
+    // A form's record is for an original form that quotes no law; a guide's is its own kind.
+    (guide
+      ? rights.kind !== "valo-guide-rights-1" || rights.sourcedGuidance !== true
+      : !rights.originalOperationalOnly) ||
     rights.customerLicenceAccepted !== false ||
     rights.provenanceHash !== a.provenance.hash ||
     Date.parse(rights.validUntil) <= +now
@@ -162,16 +173,30 @@ export async function validateOperationalVersionInTransaction(
     if (!page || page.truncated || sha256(page.text) !== evidence.hash || !page.text.includes(evidence.quote))
       throw Error("APPLICABLE_TERMS_SNAPSHOT_MISSING");
   }
-  const measuredChecks = operationalMechanicalChecks({
-    candidate: bundle.candidate,
-    policy: bundle.policy,
-    provenance,
-    provenanceArtifactHash: a.provenance.hash,
-    rights,
-    applicability,
-    snapshot: provider,
-    sources: bundle.sources,
-  });
+  if (guide && !a.claimScope) throw Error("GUIDE_CLAIM_SCOPE_MISSING");
+  const measuredChecks = guide
+    ? await guideMechanicalChecks({
+        bundle,
+        canonicalBody: JSON.stringify(original.document),
+        claimScope: JSON.parse((await getPublicationArtifact(a.claimScope!)).toString()) as GuideClaimScope,
+        provenance,
+        provenanceArtifactHash: a.provenance.hash,
+        rights,
+        applicability,
+        snapshot: provider,
+        trustedPolicy: trusted.policy,
+        now,
+      })
+    : operationalMechanicalChecks({
+        candidate: bundle.candidate,
+        policy: bundle.policy,
+        provenance,
+        provenanceArtifactHash: a.provenance.hash,
+        rights,
+        applicability,
+        snapshot: provider,
+        sources: bundle.sources,
+      });
   if (
     measuredChecks.some((check) => check.result !== "pass") ||
     digest(measuredChecks) !== digest(bundle.mechanicalChecks)
