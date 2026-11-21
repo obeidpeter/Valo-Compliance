@@ -73,7 +73,7 @@ router.get("/public/resources", async (_req, res) => {
 router.get("/public/resources/:slug", async (req, res) => {
   const item = (await releasedResources()).find((r) => r.slug === z.string().max(100).parse(req.params.slug));
   if (!item) {
-    res.status(404).json({ error: "This resource is unavailable or no longer released." });
+    res.status(404).json({ error: "This guide is not available, or it is no longer published." });
     return;
   }
   res.set("Cache-Control", "no-store");
@@ -81,7 +81,7 @@ router.get("/public/resources/:slug", async (req, res) => {
 });
 router.get("/development/source-evidence", async (_req, res): Promise<void> => {
   if (setting("NODE_ENV") !== "development") {
-    res.status(404).json({ error: "Not found" });
+    res.status(404).json({ error: "This was not found." });
     return;
   }
   res.set("Cache-Control", "no-store");

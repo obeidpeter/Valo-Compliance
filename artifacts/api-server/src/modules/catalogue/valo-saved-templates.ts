@@ -34,7 +34,7 @@ async function owner(tx: Tx, actor: WorkspaceActor) {
       ),
     );
   if (!w || w.ownerIdentityId !== actor.identityId || m?.role !== "owner")
-    throw new ValoProblem(403, "Only the active workspace owner can manage saved templates.");
+    throw new ValoProblem(403, "Only the workspace's owner can save a template or remove a saved one.");
   return w;
 }
 export async function savedTemplateList(actor: WorkspaceActor) {
@@ -86,7 +86,7 @@ export async function saveTemplate(actor: WorkspaceActor, releaseId: string) {
   await db.transaction(async (tx) => {
     const row = await lockedLiveVersion(tx, release);
     if (publicationSchema.parse(row.bundle).candidate.contentClass !== "general_template")
-      throw new ValoProblem(422, "Only released templates can be saved here.");
+      throw new ValoProblem(422, "Only a published template can be saved.");
     await owner(tx, actor);
     const [old] = await tx
       .select()
@@ -105,7 +105,10 @@ export async function saveTemplate(actor: WorkspaceActor, releaseId: string) {
         .where(eq(valoSavedTemplates.workspaceId, actor.workspaceId)),
     );
     if (count.total >= 200)
-      throw new ValoProblem(409, "Your workspace has 200 saved templates. Remove one before saving another.");
+      throw new ValoProblem(
+        409,
+        "Your workspace has 200 saved templates, which is the most it can hold. Remove one before you save another.",
+      );
     await limitWorkspaceWrite(tx, actor, "document");
     const item = projectReleasedCatalogue([row])[0]!;
     const savedId = randomUUID();

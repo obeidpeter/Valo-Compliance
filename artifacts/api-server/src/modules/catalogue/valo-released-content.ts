@@ -238,7 +238,11 @@ export async function releasedCatalogue(query: CatalogueQuery = {}) {
 }
 export async function releasedTemplate(slug: string) {
   const row = (await liveOperationalVersions()).find((r) => r.slug === slug);
-  if (!row) throw new ValoProblem(404, "This template is unavailable, withdrawn or awaiting valid evidence.");
+  if (!row)
+    throw new ValoProblem(
+      404,
+      "This template is not available. It may have been withdrawn, or it may not be published yet.",
+    );
   const bundle = publicationSchema.parse(row.bundle),
     document = documentInput.parse(JSON.parse(bundle.candidate.body));
   return {
@@ -269,7 +273,7 @@ export type CheckedRelease = {
   readonly [releaseChecked]: true;
 };
 const evidenceUnresolved = () =>
-  new ValoProblem(404, "Template unavailable while applicable rights or policy evidence is unresolved.");
+  new ValoProblem(404, "This template is not available while Valo confirms that it may be offered.");
 /**
  * Checks the rights and policy evidence an original operational version needs. That
  * evidence lives in the policy files and publication storage, so this runs before the
@@ -313,7 +317,7 @@ export async function lockedLiveVersion(
     .from(valoContentVersions)
     .where(eq(valoContentVersions.id, release.id))
     .for("share");
-  if (!row) throw new ValoProblem(404, "Template unavailable");
+  if (!row) throw new ValoProblem(404, "This template is not available.");
   const [policy] = await tx
     .select()
     .from(valoPublicationPolicies)
@@ -323,7 +327,7 @@ export async function lockedLiveVersion(
     !releaseVisible(row, policy.hash) ||
     !(await sourceTargetAllowed(tx, "content", row.id, row.bundle))
   )
-    throw new ValoProblem(404, "Template withdrawn, expired or unavailable");
+    throw new ValoProblem(404, "This template has been withdrawn or has expired, or it is not available.");
   // If the version was published after its evidence check, the evidence was never read:
   // refuse instead of reading storage under the lock. The next request checks it.
   if (
@@ -390,7 +394,7 @@ export async function readReleasedMaster(id: string, format: "docx" | "pdf", act
   const release = await checkReleaseEvidence(id);
   const row = await db.transaction(async (tx) => {
     const row = await lockedLiveVersion(tx, release);
-    if (!actor) throw new ValoProblem(403, "Template unavailable without an authorised workspace.");
+    if (!actor) throw new ValoProblem(403, "Sign in to your workspace to get this template's file.");
     await authorizeWorkspaceWrite(tx, actor);
     await requirePurchaseForPricedMaster(tx, actor, row);
     return row;

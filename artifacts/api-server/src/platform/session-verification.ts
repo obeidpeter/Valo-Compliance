@@ -64,14 +64,15 @@ function evaluate(
   user: ProviderUser,
 ): Refusal | { ok: true; account: VerifiedAccount } {
   if (session.status !== "active" || session.userId !== identity.userId || user.id !== identity.userId)
-    return { ok: false, status: 401, error: "Session is no longer active. Sign in again." };
-  if (user.banned || user.locked) return { ok: false, status: 403, error: "Account is suspended or locked" };
+    return { ok: false, status: 401, error: "Your session has ended. Sign in again." };
+  if (user.banned || user.locked)
+    return { ok: false, status: 403, error: "Your account is suspended or locked." };
   const primary = user.emailAddresses.find((email) => email.id === user.primaryEmailAddressId);
   if (primary?.verification?.status !== "verified")
     return {
       ok: false,
       status: 403,
-      error: "Verify your primary email address before saving business data",
+      error: "Confirm your main email address first. Your workspace opens once it is confirmed.",
     };
   return { ok: true, account: { identityId: user.id, contactEmail: primary.emailAddress } };
 }
