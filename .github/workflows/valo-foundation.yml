@@ -150,7 +150,16 @@ jobs:
           pnpm --filter @workspace/api-server exec playwright install --with-deps chromium
           echo "CHROMIUM_EXECUTABLE_PATH=$(pnpm --filter @workspace/api-server exec node --input-type=module -e 'import {chromium} from "playwright"; process.stdout.write(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Run API input-safety tests
+        env:
+          # The guide export test keeps its sample Word and PDF files here; they are unreviewed drafts.
+          VALO_GUIDANCE_SAMPLES: ${{ github.workspace }}/generated-artifacts/guidance-samples
         run: pnpm --filter @workspace/api-server test:valo
+      - name: Retain the draft guides' sample Word and PDF files
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: guidance-draft-samples
+          path: generated-artifacts/guidance-samples
       - name: Prove template downloads read storage outside the source-state lock
         run: pnpm --filter @workspace/api-server test:valo-released-content
       - name: Prove saved-template journeys

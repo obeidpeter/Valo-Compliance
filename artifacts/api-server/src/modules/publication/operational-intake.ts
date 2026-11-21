@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { sha256 } from "@workspace/valo-core";
 import { publicationWorkspaceRoot } from "./operational-policy";
 import { operationalDocument, type OriginalSection } from "./original-content-adapter";
+import { guidanceDocument } from "./guidance-document";
 import { supportsOperationalInferenceTemplate } from "./inference-operational-coverage";
 /** Extract ID boundaries, not arbitrary ## headings: customer forms contain
  * legitimate ## subsections. Field specifications/examples are never masters. */
@@ -135,7 +136,7 @@ export async function readGuidanceIntake(id: string, version = 1) {
   };
   return {
     section: original,
-    document: operationalDocument(original),
+    document: guidanceDocument(original),
     catalogue: row,
     sourceHash: row.sourceSHA256,
     provenance: {
@@ -148,7 +149,7 @@ export async function readGuidanceIntake(id: string, version = 1) {
       version,
       authoringRoute: "Original supplied ChatGPT guidance; source and independent review still required",
       transformation:
-        "Exact customer-body boundary extraction; editorial claim maps and internal status excluded",
+        "Exact customer-body boundary extraction; editorial claim maps and internal status excluded; links written out as words and address",
     },
   };
 }

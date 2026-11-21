@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { unzipSync, strFromU8 } from "fflate";
 import { candidateDigest, digest, sha256, type PublicationBundle } from "@workspace/valo-core";
 import { documentInput } from "../../lib/valo-validation";
-import { TEMPLATE_NOTICE } from "../../lib/valo-render";
+import { GUIDANCE_NOTICE, TEMPLATE_NOTICE } from "../../lib/valo-render";
 const execFile = promisify(execCallback);
 const compact = (s: string) => s.normalize("NFKC").replace(/\s+/g, "");
 const decodeXML = (s: string) =>
@@ -17,17 +17,25 @@ const decodeXML = (s: string) =>
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'");
 /** Actual byte/text/geometry inspection. These are technical export checks,
- * not an assertion that somebody opened Word or certified accessibility. */
+ * not an assertion that somebody opened Word or certified accessibility.
+ *
+ * `notice` is the line the renderer prints at the top of every page of the PDF: a template's unless
+ * the candidate is a guide. A caller that rendered in another mode names that mode's notice. */
 export async function inspectOperationalExports(
   candidate: PublicationBundle["candidate"],
   files: { docx: Buffer; pdf: Buffer },
+  notice: string = candidate.contentClass === "sourced_guidance" ? GUIDANCE_NOTICE : TEMPLATE_NOTICE,
 ) {
   if (candidateDigest(candidate) !== candidate.hash || Buffer.byteLength(candidate.body) > 256 * 1024)
     throw Error("EXPORT_CANDIDATE_BINDING_INVALID");
   const document = documentInput.parse(JSON.parse(candidate.body));
+  // A list prints each line as its own item, with a bullet between two of them, so each item is
+  // looked for by itself.
   const expected = [
     document.title,
-    ...document.content.blocks.flatMap((b) => [b.text, ...b.rows.flat()]).filter((s) => s.trim().length > 0),
+    ...document.content.blocks
+      .flatMap((b) => [...(b.type === "list" ? b.text.split("\n") : [b.text]), ...b.rows.flat()])
+      .filter((s) => s.trim().length > 0),
   ];
   let docxText = "",
     docxParsed = false,
@@ -75,7 +83,7 @@ export async function inspectOperationalExports(
       const footer = /^Valo · \d+ \/ \d+(?=[\r\n\f]|$)/gm;
       rendererFooterLinesIgnored = [...pdfText.matchAll(footer)].length;
       pdfText = pdfText.replace(footer, "");
-      const withoutHeader = compact(pdfText).split(compact(TEMPLATE_NOTICE));
+      const withoutHeader = compact(pdfText).split(compact(notice));
       rendererHeaderOccurrencesIgnored = withoutHeader.length - 1;
       pdfText = withoutHeader.join("");
       const bbox = (await execFile("pdftotext", ["-bbox-layout", path, "-"], options)).stdout;
