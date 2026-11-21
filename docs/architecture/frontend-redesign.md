@@ -278,6 +278,43 @@ load in a test, so no browser sees them that way. A test draws their account lin
 synthetic signed-in visitor and checks what is drawn. How the account menu opens and closes is
 checked on the same component in the browser app.
 
+### Phase 3: the landing page
+
+The home page is rebuilt to the mock-up the owner accepted: the headline, two buttons of equal
+weight, an example of each, the everyday tasks, how it works, why it can be relied on, five
+questions and answers, and a closing pair of buttons. The server renders all of it, and it adds
+no script: the questions open and close as plain HTML.
+
+What the page reads when it is shown:
+
+- **The tasks.** Each of the eight is tied to documents the workspace's starter can start. A task
+  leaves the page when the starter stops offering one of its documents, so the page never offers
+  something Valo cannot make.
+- **The count of ready-made templates.** It is the number the API gives. When the API cannot be
+  read the line is left out, and the rest of the page still renders.
+
+Where the built page differs from the mock-up in substance, and why. Each change keeps a claim
+true of this build:
+
+| Mock-up | Built | Why |
+| --- | --- | --- |
+| The requirement example named a real registration and a real authority, with a date it was checked | The example shows what a result holds: its name, why it may apply, its source and the date checked | Guidance is published only through its own checks. An example may not stand in for one |
+| "Choose a task. We take you straight to it." | "Each of these is a document you can make once you have an account." | A task leads to sign-up, and the choice is not carried through it yet. The sign-up and workspace phase does that and restores the promise |
+| "Set a date and get a reminder." | "Add a date, and tick it off when it is done." | Reminder emails are not sent in this build |
+| "Only you can see them." | "They are kept in your own workspace", and "other customers cannot see them" | It is what the workspace's isolation is tested to do |
+| "Guidance is checked by AI against official sources, not by a lawyer." | "Templates and guidance are drafted and reviewed by AI, not by a Nigerian legal, tax or sector specialist." | The disclosure EDP-008 requires, in its own terms |
+| Amounts such as "₦15,000" | "₦15,000.00" | The example is written by the same formatter as every real document |
+
+A few other phrases were tightened the same way: a result "names" its source, and the reminder
+letter and the non-disclosure agreement go by the names the workspace gives them.
+
+The old page's "Why two shelves" and "Before you begin" blocks are gone. What they said is in
+"Why you can rely on it", its "Good to know" note and the development banner. The note still
+sets a customer's own draft apart from Valo's templates and guidance, as EDP-008 asks.
+
+On a phone the two buttons come after the headline and its opening sentence, below the first
+screen on a short phone. The bar at the bottom of the screen offers both from the start.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
