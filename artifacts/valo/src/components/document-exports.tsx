@@ -95,7 +95,7 @@ export function DocumentExports({
   return (
     <section
       id="private-exports"
-      className="card p-5 sm:p-7"
+      className="surface p-5"
       aria-labelledby="export-heading"
       data-testid="private-exports"
     >

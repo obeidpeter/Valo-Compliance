@@ -39,6 +39,8 @@ let catalogueItems: ReleasedLibraryItem[] | null = null;
 /** While a test sets it, the API no longer lists the first released template and guidance entry, as
  * after their withdrawal: the lists and discovery leave them out, and reading either is not found. */
 let withdrawn = false;
+/** While a test sets it, the API lists no released guidance at all. */
+let noGuidance = false;
 const [gone, goneGuidance] = [items[0]!, resources[0]!];
 /** The API paths of a withdrawn entry the browser has read. */
 const browserReadsOfWithdrawn: string[] = [];
@@ -60,6 +62,7 @@ function answerFor(method: string, url: URL, from: "server" | "browser") {
     if (from === "browser") browserReadsOfWithdrawn.push(url.pathname);
     return { status: 404, body: { error: "Not found" } };
   }
+  if (noGuidance && url.pathname === "/api/public/resources") return { status: 200, body: [] };
   if (withdrawn && url.pathname === "/api/public/resources")
     return { status: 200, body: resources.filter((resource) => resource.id !== goneGuidance.id) };
   const listed = catalogueItems ?? (withdrawn ? items.filter((item) => item.id !== gone.id) : null);
@@ -786,5 +789,34 @@ test("when a page's island cannot use what the API sent, the page says it could 
     serverFailure = null;
     browserGarbled = false;
     await close();
+  }
+});
+
+// WEB-001: "both journeys are reachable within one deliberate action".
+test("a page with nothing to list still offers 'Create a document', and its link leads through sign-up with that choice, as the landing page's does", async () => {
+  const page = async (path: string) => {
+    const html = await (await fetch(web.origin + path)).text();
+    return html.slice(html.indexOf("<main"), html.indexOf("</main>"));
+  };
+  const createLinks = (main: string) =>
+    [...main.matchAll(/<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g)]
+      .filter((found) => text(found[2]!) === "Create a document")
+      .map((found) => found[1]!.replace(/&amp;/g, "&"));
+  catalogueItems = [];
+  noGuidance = true;
+  try {
+    // An industry with no template yet, the guides page with no guide yet, and an empty search.
+    const industryPage = await page(`/industries/${industry.slug}`);
+    assert.match(industryPage, /No templates for this industry yet/);
+    assert.deepEqual(createLinks(industryPage), ["/sign-up?start=document"]);
+    const guides = await page("/resources");
+    assert.match(guides, /Need a document instead\?/);
+    assert.deepEqual(createLinks(guides), ["/sign-up?start=document"]);
+    const library = await page("/library");
+    assert.match(library, /Nothing is published yet/);
+    assert.deepEqual(createLinks(library), ["/sign-up?start=document"]);
+  } finally {
+    catalogueItems = null;
+    noGuidance = false;
   }
 });

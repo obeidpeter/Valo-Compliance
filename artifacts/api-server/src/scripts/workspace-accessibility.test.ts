@@ -1720,3 +1720,156 @@ test("a saved result names what it was worked out from, where each requirement a
     await close();
   }
 });
+
+// EDT-005's acceptance: "never invent legal names, addresses or signatures".
+test("'Make another like this' starts a new document with the saved one's details and its reference and dates left blank, opens it, and waits while there are unsaved changes", async () => {
+  const ANOTHER = "00000000-0000-4000-8000-00000000d002";
+  type Sent = {
+    title: string;
+    content: typeof content & { blocks: Parameters<typeof guidedDataFromBlocks>[0] };
+  };
+  const made: Sent[] = [];
+  const saved: Sent[] = [];
+  /** The document the page asked to be made, as the API would then hold it. */
+  const another = () => ({ ...document(1), id: ANOTHER, ...made.at(-1)! });
+  const making =
+    (from: Api): Api =>
+    async (route, method, path, query) => {
+      const json = (status: number, body: unknown) =>
+        route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+      if (method === "POST" && path === "/workspace/documents") {
+        made.push(route.request().postDataJSON() as Sent);
+        return json(201, api.CreateDocumentResponse.parse(another()));
+      }
+      if (method === "GET" && path === `/workspace/documents/${ANOTHER}`)
+        return json(200, api.GetDocumentResponse.parse(another()));
+      if (method === "GET" && path === `/workspace/documents/${ANOTHER}/revisions`)
+        return json(200, api.ListDocumentRevisionsResponse.parse([another()]));
+      if (method === "GET" && path === `/v1/documents/${ANOTHER}/exports`) return json(200, []);
+      if (method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+        saved.push(route.request().postDataJSON() as Sent);
+        return json(200, api.SaveDocumentResponse.parse({ ...document(4), ...saved.at(-1)!, id: DOCUMENT }));
+      }
+      return from(route, method, path, query);
+    };
+
+  // A document with details of its own: the copy keeps them all but its reference and its dates.
+  {
+    const { page, errors, unknown, close } = await desktop(
+      `/workspace/documents/${DOCUMENT}`,
+      making(answer),
+    );
+    try {
+      await ready(page);
+      const card = page.getByTestId("card-make-another");
+      const button = page.getByTestId("button-make-another");
+      await expect(card).toContainText("Its reference and its dates are left blank for you to fill in.");
+      await expect(button).toHaveText("Make another like this");
+      await expect(button).toBeEnabled();
+
+      // While a change is not saved, the copy waits, and says why.
+      await page.getByTestId("input-title").fill("Synthetic invoice, changed");
+      await expect(button).toBeDisabled();
+      await expect(card).toContainText("Save your changes first.");
+      await expect(page.getByTestId("status-save")).toContainText("Saved", { timeout: 15_000 });
+      await expect(button).toBeEnabled();
+      assert.equal(saved.length, 1);
+
+      await button.click();
+      await page.waitForURL(new RegExp(`/workspace/documents/${ANOTHER}$`));
+      assert.equal(made.length, 1);
+      const sent = made[0]!;
+      // It is made from what was last saved, title included.
+      assert.equal(sent.title, "Synthetic invoice, changed");
+      assert.deepEqual(sent.content.fields, {
+        ...content.fields,
+        documentNumber: "",
+        issueDate: "",
+        dueDate: "",
+      });
+      assert.deepEqual(sent.content.blocks, content.blocks);
+      assert.deepEqual(sent.content.financialInput, content.financialInput);
+      // The new document opens, and names what it still needs.
+      await expect(page.getByTestId("input-title")).toHaveValue("Synthetic invoice, changed");
+      await expect(page.getByTestId("status-save")).toHaveText("Saved · version 1");
+      await expect(page.getByTestId("card-missing").locator("li")).toHaveText([
+        "Reference number",
+        "Issue date",
+        "Due date",
+      ]);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+
+  // An invoice made from questions: the answers are kept, its reference and its dates are not.
+  const data = emptyGuidedData("TPL-01");
+  Object.assign(data.values, {
+    issuerName: "Synthetic Trading Ltd",
+    recipientName: "Synthetic Customer Enterprises",
+    documentNumber: "INV-0007",
+    issueDate: "2026-11-18",
+    dueDate: "2026-12-02",
+  });
+  const answeredInvoice = (revision: number) => ({
+    ...invoice(revision),
+    content: compileGuidedContent(data),
+  });
+  const { page, errors, unknown, close } = await desktop(
+    `/workspace/documents/${DOCUMENT}`,
+    making(
+      except({
+        [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(answeredInvoice(3)),
+        [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([
+          answeredInvoice(3),
+        ]),
+      }),
+    ),
+  );
+  try {
+    await ready(page);
+    await page.getByTestId("button-make-another").click();
+    await page.waitForURL(new RegExp(`/workspace/documents/${ANOTHER}$`));
+    assert.equal(made.length, 2);
+    const answers = guidedDataFromBlocks(made[1]!.content.blocks)!.values;
+    assert.equal(answers.issuerName, "Synthetic Trading Ltd");
+    assert.equal(answers.recipientName, "Synthetic Customer Enterprises");
+    assert.equal(answers.documentNumber, "");
+    assert.equal(answers.issueDate, "");
+    assert.equal(answers.dueDate, "");
+    await expect(page.locator("#g-issuerName")).toHaveValue("Synthetic Trading Ltd");
+    await expect(page.locator("#g-documentNumber")).toHaveValue("");
+    await expect(page.getByTestId("mark-needed-g-documentNumber")).toHaveText("Still needed");
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
+// WEB-001: "both journeys are reachable within one deliberate action from the hero and mobile menu."
+test("a visitor who is already signed in is sent on from sign-up and sign-in: to the New document page for what they chose, otherwise to their workspace", async () => {
+  for (const [address, lands] of [
+    ["/sign-up?start=document", "/workspace/documents/new"],
+    ["/sign-up?start=invoice", "/workspace/documents/new?start=invoice"],
+    ["/sign-in?start=hire", "/workspace/documents/new?start=hire"],
+    ["/sign-up", "/workspace"],
+    ["/sign-in", "/workspace"],
+    // A choice the site does not offer leads nowhere of its own.
+    ["/sign-up?start=%2Fstaff", "/workspace"],
+    ["/sign-in?start=https%3A%2F%2Fexample.test%2F", "/workspace"],
+  ] as const) {
+    const { page, errors, close } = await desktop(address);
+    try {
+      await page.waitForURL((url) => url.pathname + url.search === lands, { timeout: 15_000 });
+      await ready(page);
+      if (lands.includes("start=invoice"))
+        await expect(page.getByTestId("chosen-task").locator("h2")).toHaveText("Send an invoice");
+      assert.deepEqual(errors, [], address);
+    } finally {
+      await close();
+    }
+  }
+});
