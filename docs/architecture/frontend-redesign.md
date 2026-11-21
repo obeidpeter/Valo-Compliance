@@ -1,8 +1,10 @@
 # Frontend redesign
 
 Status: the plan was accepted by the product owner on 2026-11-20 ("Go with your recommendations",
-in reply to the plan and its decisions). Nothing in it is built yet. Each phase lands as its own
-pull requests, and this note records what was built as it lands.
+in reply to the plan and its decisions). Phases 1 to 5 are built, except the twelve forms' own
+questions, which are frozen. Phase 6 is built except for testing with five business owners, which
+waits for the owner. What is not done is listed under [Where it stands](#where-it-stands). Each
+phase landed as its own pull requests, and this note records what was built.
 
 ## Why
 
@@ -1003,6 +1005,9 @@ and the customer's requests. The eight earlier answers keep their words.
 
 The page names no price, as no price is set.
 
+The business profile asked for "CAC registration". It now asks for "Registration with the
+Corporate Affairs Commission (CAC)", as the requirements check already did.
+
 ### Phase 6: privacy requests in words
 
 The "Privacy and data" screen showed a request in the system's own names: "export · awaiting
@@ -1099,6 +1104,29 @@ for a control left off the screen.
 10. **Help and documentation.** Questions and answers on the landing page, and short explanations
     beside terms such as TIN and CAC.
 
+## Where it stands
+
+What is built for each heuristic, and what is not. "Built" means merged into the integration
+branch. The tests that read each change are named in its pull request and, where one is cited as
+evidence, in `docs/registers/ci-evidence.json`. Nothing here is launched, and no requirement is
+accepted by it.
+
+| Heuristic | Built | Not done |
+| --- | --- | --- |
+| 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. | The words inside a downloaded file, such as "Saved revision 3", are the server's and are unchanged. |
+| 2. Match with the real world | One word list, with three tests that fail if an old word comes back. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, "Refund amount in NGN" and the payment concerns panel. |
+| 3. User control and freedom | The editor has undo and keeps every version. "Start over" asks first. Five discards ask in the app's own dialog. "Save before leaving?" also catches the browser's Back and Forward buttons. | On the compiled site the Back button was checked once by hand; no CI test can sign in to it. |
+| 4. Consistency and standards | The component styles are in one layer. Dates, times, amounts and counts go through one formatter. One header, one footer and one phone bar. One page where a document starts. | |
+| 5. Error prevention | A new form opens without red marks, and what a document still needs is listed before a download. The check chooses no answer for the visitor. The editor saves nothing underneath an open question. Someone who cannot sign in is told before writing that no reply is emailed. | |
+| 6. Recognition rather than recall | The landing page lists eight everyday tasks. The home lists the newest documents. The check shows its steps. A request's kind is named as the form named it. | |
+| 7. Flexibility and efficiency | "Make another like this". A task chosen on the landing page is carried through sign-up. The check fills in from the business profile. | A new document is not filled in from the business profile: its questions are the frozen forms'. |
+| 8. Aesthetic and minimalist design | The landing page is rebuilt around the two things a visitor can do. A document page gives what it is for before its notices. The home opens on its greeting. | |
+| 9. Help users recognise, diagnose and recover from errors | A failed request is described in words, with no status code. A failure at Valo offers the way to report it, with a reference to quote. | The server's own sentences, which are shown as sent. |
+| 10. Help and documentation | The help page has fourteen questions in five groups, and three of its answers link to the page they send the visitor to. The landing page has five questions. "CAC" is spelt out in the check and on the business profile. | "TIN" is not explained. It appears once, in the list of official sources on the guidance page. |
+
+Not built, and not a matter of words: testing with five business owners. The plan called for it to
+find what an audit by one reader cannot. It waits for the owner to arrange the participants.
+
 ## Rules the redesign keeps
 
 - Every claim on a page is true when it is shown. Lists and counts come from live data; examples
@@ -1125,3 +1153,22 @@ Open:
 
 5. Five small-business owners for the phase 6 test, about twenty minutes each, with made-up details
    only. The owner arranges them.
+6. The twelve forms' own questions, and the notice above them, are frozen in
+   `lib/valo-core/src/guided-specs-v1.ts`. Some are in the project's words. The screen already
+   shows "naira" where a question says "in whole kobo", but the question itself is unchanged.
+   Rewording the questions needs a decision to unfreeze them.
+7. The documents list has an "Access" filter for free and paid documents, which DOC-002 requires.
+   No price is set, so the page cannot say what a paid document costs. Hide the filter until a
+   price is set, or keep it.
+8. The names of the workspace's sections ("Home", "Documents", "Requirements", "Tasks", "Business
+   profile") were chosen in the plan. They stand unless the owner prefers others.
+9. Every date and time is Lagos time, with no label beside it. The help page says so once.
+10. Words that are the server's and were left alone: inside a downloaded file ("Saved revision 3",
+    the draft notice), "Refund amount in NGN" on the purchases screen, and the server's own
+    sentences for a failed request.
+11. Legal approval of the privacy and terms pages. The privacy requests' sentences were put in
+    plainer words with no limit changed; a legal reader should see them at the same time.
+12. The list of official sources on the guidance page names the "Federal Inland Revenue Service"
+    and its address. The specification's own source list (S02) names the "Nigeria Revenue
+    Service". Which name and address a visitor should be sent to has to be checked against the
+    official sites. This environment could not reach either site, so the list is unchanged.
