@@ -233,7 +233,7 @@ try {
       )
       .toBe(true);
     phase = "reminder_held_log";
-    await expect(page!.getByTestId("list-reminders")).toContainText(/held/i);
+    await expect(page!.getByTestId("list-reminders")).toContainText(/on hold/i);
     const rows = (await api("/api/workspace/reminders")).body as {
       status: string;
       deliveredAt: string | null;

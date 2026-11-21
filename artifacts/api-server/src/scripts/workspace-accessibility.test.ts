@@ -2182,3 +2182,154 @@ test("the browser's Back button does not take unsaved work away: the screen asks
     await close();
   }
 });
+
+// WRK-003: "Offer opt-in email reminders using Africa/Lagos scheduling, configurable offsets and a
+// delivery log." The screen says these in the customer's words, and never calls a message the
+// email service accepted "sent" or "delivered".
+test("the reminders screen says in plain words whether emails are being sent and what has happened to each reminder", async () => {
+  const reminder = (n: number, fields: Record<string, unknown>) => ({
+    id: `00000000-0000-4000-8000-00000000c10${n}`,
+    taskId: tasks[0]!.id,
+    scheduledAt: at(25),
+    status: "held",
+    attempts: 0,
+    nextAttemptAt: null,
+    lastAttemptAt: null,
+    reason: null,
+    deliveredAt: null,
+    ...fields,
+  });
+  const records = api.ListRemindersResponse.parse([
+    reminder(1, { reason: "EMAIL_PROVIDER_NOT_CONFIGURED", nextAttemptAt: at(26) }),
+    reminder(2, { status: "sent", scheduledAt: at(20), attempts: 1, lastAttemptAt: at(20) }),
+    reminder(3, {
+      status: "failed",
+      reason: "EMAIL_ATTEMPT_LIMIT_REACHED",
+      scheduledAt: at(21),
+      attempts: 5,
+      lastAttemptAt: at(21),
+    }),
+    reminder(4, {
+      status: "cancelled",
+      reason: "TASK_ARCHIVED",
+      taskId: "00000000-0000-4000-8000-00000000ffff",
+      scheduledAt: at(22),
+    }),
+    reminder(5, {
+      status: "failed",
+      reason: "EMAIL_ACCEPTANCE_UNCONFIRMED",
+      scheduledAt: at(23),
+      attempts: 2,
+      lastAttemptAt: at(23),
+      nextAttemptAt: at(24),
+    }),
+  ]);
+  const preferences = (deliveryAvailable: boolean) =>
+    api.GetReminderPreferencesResponse.parse({
+      enabled: true,
+      offsets: [7, 1],
+      revision: 1,
+      timezone: "Africa/Lagos",
+      deliveryAvailable,
+      deliveryBlocker: "Synthetic test fixture: a note for operators.",
+    });
+  const row = (page: Page, n: number) => page.getByTestId(`row-reminder-${records[n - 1]!.id}`);
+  {
+    const { page, errors, unknown, close } = await desktop(
+      "/workspace/reminders",
+      except({
+        "GET /workspace/reminders": records,
+        "GET /workspace/reminder-preferences": preferences(false),
+      }),
+    );
+    try {
+      await ready(page);
+      // Off unless turned on, and only for a date the customer confirmed.
+      await expect(page.locator("main")).toContainText(
+        "Reminders are off unless you turn them on. They apply only to tasks with a due date you have confirmed.",
+      );
+      await expect(page.getByRole("switch")).toHaveAccessibleName(
+        /^Send email reminders before a task is due/,
+      );
+      await expect(page.locator("main")).toContainText("Each reminder is planned for 09:00, Lagos time.");
+      // Whether emails are being sent at all, said once and plainly.
+      await expect(page.getByTestId("status-delivery")).toHaveText(
+        "Reminder emails are not being sent yet" +
+          "You can save your choices now. Nothing is sent, and each reminder stays on hold, until sending is switched on.",
+      );
+
+      // On hold because nothing is sent yet.
+      await expect(row(page, 1)).toContainText("Synthetic task 1");
+      await expect(row(page, 1)).toContainText("Planned for 25 Nov 2026, 10:00");
+      await expect(row(page, 1)).toContainText(
+        "Reminder emails are not being sent yet. Your task and your preferences are saved.",
+      );
+      await expect(row(page, 1)).toContainText(
+        "Valo looks at this again after 26 Nov 2026, 10:00, if reminders are still on.",
+      );
+      await expect(row(page, 1).locator(".pill")).toHaveText("On hold");
+      // The email service took the message. That is not called sent, or delivered.
+      await expect(row(page, 2).locator(".pill")).toHaveText("Accepted by email service");
+      await expect(row(page, 2)).toContainText(
+        "The email service accepted this message. That does not show it reached your inbox.",
+      );
+      await expect(row(page, 2)).toContainText("Tried once. Last tried 20 Nov 2026, 10:00.");
+      assert.doesNotMatch(await row(page, 2).innerText(), /delivered|\bsent\b/i);
+      // Five tries and no more: the customer cannot clear this alone, so the way to report it is here.
+      await expect(row(page, 3).locator(".pill")).toHaveText("Not confirmed");
+      await expect(row(page, 3)).toContainText(
+        "Valo tried five times and stopped. Your task and its due date have not changed.",
+      );
+      await expect(row(page, 3)).toContainText("Tried 5 times. Last tried 21 Nov 2026, 10:00.");
+      await expect(row(page, 3).getByRole("link", { name: "Report a problem" })).toHaveAttribute(
+        "href",
+        "/support",
+      );
+      // A cancelled reminder of a task that is no longer listed.
+      await expect(row(page, 4).locator(".pill")).toHaveText("Cancelled");
+      await expect(row(page, 4)).toContainText("A task no longer in your list");
+      await expect(row(page, 4)).toContainText("The task was archived.");
+      await expect(row(page, 4).getByRole("link")).toHaveCount(0);
+      // Not confirmed, and to be tried again.
+      await expect(row(page, 5)).toContainText(
+        "The email service did not confirm that it accepted this message. If Valo tries again, it asks for this same message to be sent, not a second one.",
+      );
+      await expect(row(page, 5)).toContainText(
+        "Tried 2 times. Last tried 23 Nov 2026, 10:00.Valo tries again after 24 Nov 2026, 10:00, if reminders are still on.",
+      );
+
+      // None of the system's own words, and no note written for operators.
+      const shown = (await page.locator("main").innerText()).replace(/\s+/g, " ");
+      assert.doesNotMatch(
+        shown,
+        /provider|dispatch|\bserver\b|opt-in|Africa\/Lagos|operators|development|[A-Z]{3,}_[A-Z]/i,
+      );
+      assert.deepEqual((await wcagFailures(page)).failures, []);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+
+  // Where a test email can be sent, the screen says that it is a test, and to whom.
+  const { page, errors, unknown, close } = await phone(
+    "/workspace/reminders",
+    except({
+      "GET /workspace/reminders": records,
+      "GET /workspace/reminder-preferences": preferences(true),
+    }),
+  );
+  try {
+    await ready(page);
+    await expect(page.getByTestId("status-delivery")).toHaveText(
+      "Test emails only" +
+        "Valo is still being built. A reminder is sent only as a test, to the workspace owner's verified email address.",
+    );
+    assert.deepEqual(await phoneProblems(page, "the reminders, with five in the log"), []);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
