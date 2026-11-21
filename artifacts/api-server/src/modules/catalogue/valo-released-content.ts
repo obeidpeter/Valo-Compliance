@@ -7,6 +7,7 @@ import {
   getPublicationArtifact,
   type ArtifactRef,
   currentOperationalPermission,
+  guidancePolicy,
   guidePageText,
   guideReferences,
 } from "../publication";
@@ -38,10 +39,24 @@ export function releaseVisible(
     evaluatePublication(parsed.data, now).decision === "eligible"
   );
 }
+/**
+ * Whether a published guide's policy still stands: the policy it was released under must be the
+ * guidance policy as it is today, with the owner's approval of it. An edit to the policy file ends
+ * that approval, and a suspension in the owner's restriction file changes the policy, so either
+ * takes every guide off the site until it is released again under the policy then approved.
+ */
+export function guidePolicyStands(
+  releasedUnderHash: string,
+  current: { hash: string; ownerApproved: boolean },
+) {
+  return current.ownerApproved && releasedUnderHash === current.hash;
+}
 export async function liveReleasedVersions() {
   const { db, valoContentVersions, valoPublicationPolicies } = await import("@workspace/db");
   if (setting("NODE_ENV") !== "development" || setting("REPLIT_DEPLOYMENT")) return [];
   const currentPolicy = await operationalPolicy();
+  // The guidance policy as it stands, read when the first published guide is met.
+  let currentGuidance: Awaited<ReturnType<typeof guidancePolicy>>["policy"] | undefined;
   const rows = await db
     .select({ content: valoContentVersions, policy: valoPublicationPolicies })
     .from(valoContentVersions)
@@ -54,11 +69,22 @@ export async function liveReleasedVersions() {
       !(await sourceTargetAllowed(db, "content", r.content.id, r.content.bundle))
     )
       continue;
+    const candidate = publicationSchema.parse(r.content.bundle).candidate;
     if (
-      publicationSchema.parse(r.content.bundle).candidate.evidenceMode === "original_operational" &&
+      candidate.evidenceMode === "original_operational" &&
       (r.policy.hash !== currentPolicy.policy.hash || !(await currentOperationalPermission(r.content)))
     )
       continue;
+    // A guide answers to the guidance policy, as a template answers to the templates' one, and its
+    // wording rests on the same kind of provider permission, which must still be current.
+    if (candidate.contentClass === "sourced_guidance") {
+      currentGuidance ??= (await guidancePolicy()).policy;
+      if (
+        !guidePolicyStands(r.policy.hash, currentGuidance) ||
+        !(await currentOperationalPermission(r.content))
+      )
+        continue;
+    }
     allowed.push(r.content);
   }
   return allowed

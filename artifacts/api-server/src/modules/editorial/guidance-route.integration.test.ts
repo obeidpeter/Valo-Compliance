@@ -169,6 +169,16 @@ test(
     assert.equal(kept.bundle.candidate.sourceCheckDate, checkedAt.toISOString());
     assert.deepEqual(Object.keys(kept.attestations.sourceSnapshots).sort(), needed.map((p) => p.id).sort());
 
+    // The check the site makes before it shows a published version, that the provider's permission
+    // for its wording is still current, reads a guide's own records as it reads a template's.
+    const { currentOperationalPermission } = await import("../publication/operational-read-permission");
+    assert.equal(
+      await currentOperationalPermission({
+        attestations: kept.attestations,
+      } as Parameters<typeof currentOperationalPermission>[0]),
+      true,
+    );
+
     // 2. Rebuilt for its reviews: the stored candidate is read back, its words built again from the
     // retained draft, its checks run again, and the two review requests are made from it. Each
     // carries the guide's sources and the amendment records of the Acts it quotes.

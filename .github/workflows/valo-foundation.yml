@@ -160,7 +160,7 @@ jobs:
         with:
           name: guidance-draft-samples
           path: generated-artifacts/guidance-samples
-      - name: Prove template downloads read storage outside the source-state lock
+      - name: Prove template downloads read storage outside the source-state lock, and when a published guide is shown
         run: pnpm --filter @workspace/api-server test:valo-released-content
       - name: Prove saved-template journeys
         run: pnpm --filter @workspace/api-server test:valo-catalogue-browser
