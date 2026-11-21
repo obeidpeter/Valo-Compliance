@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import { Info, Plus, Trash2 } from "lucide-react";
 import type { GuidedData, GuidedField, GuidedSpec, GuidedTable } from "@workspace/valo-core/guided";
 import { guidedDataIssues, guidedFieldIssue, guidedVisible } from "@workspace/valo-core/guided-runtime";
@@ -223,13 +223,22 @@ function FieldInput({
 }) {
   const helpId = id + "-help",
     errId = id + "-error";
+  // A required question nobody has answered yet is marked as still needed, not as a mistake. It is
+  // shown as one only once the customer has been to it and left it empty. A wrong answer is shown
+  // as soon as it is given.
+  const [visited, setVisited] = useState(false);
+  const unanswered = f.required && !value.trim();
+  const shown = error && (visited || !unanswered) ? error : undefined;
+  const leave = (event: FocusEvent<HTMLElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setVisited(true);
+  };
   const described =
-    [f.help && helpId, error && errId, f.type === "money_kobo" && id + "-ngn"].filter(Boolean).join(" ") ||
+    [f.help && helpId, shown && errId, f.type === "money_kobo" && id + "-ngn"].filter(Boolean).join(" ") ||
     undefined;
   const common = {
     id,
     disabled,
-    "aria-invalid": !!error,
+    "aria-invalid": !!shown,
     "aria-describedby": described,
     "aria-required": f.required,
     "data-testid": "input-" + id,
@@ -240,22 +249,26 @@ function FieldInput({
       {spoken && <span className="sr-only"> {spoken}</span>}
     </>
   );
-  const req = f.required ? (
-    <span className="ml-1 text-xs font-normal text-muted-foreground">Required</span>
+  const req = unanswered ? (
+    <span className="ml-1 text-xs font-medium text-[hsl(38_60%_28%)]" data-testid={"mark-needed-" + id}>
+      Still needed
+    </span>
   ) : (
-    <span className="ml-1 text-xs font-normal text-muted-foreground">Optional</span>
+    <span className="ml-1 text-xs font-normal text-muted-foreground">
+      {f.required ? "Required" : "Optional"}
+    </span>
   );
   const wide = f.type === "long_text" || f.type === "acknowledgement";
 
   let control: ReactNode;
   if (f.type === "acknowledgement") {
     return (
-      <div className={cn("min-w-0", wide && "sm:col-span-2")}>
+      <div className={cn("min-w-0", wide && "sm:col-span-2")} onBlur={leave}>
         <label
           htmlFor={id}
           className={cn(
             "flex items-start gap-3 rounded-xl border p-4 text-sm transition-colors",
-            error ? "border-destructive/50" : "border-border",
+            shown ? "border-destructive/50" : "border-border",
             value === "yes" && "bg-accent/60",
           )}
         >
@@ -276,9 +289,9 @@ function FieldInput({
             {f.help}
           </p>
         )}
-        {error && (
+        {shown && (
           <p id={errId} className="hint !text-destructive">
-            {error}
+            {shown}
           </p>
         )}
       </div>
@@ -367,7 +380,7 @@ function FieldInput({
     );
   }
   return (
-    <div className={cn("min-w-0", wide && "sm:col-span-2")}>
+    <div className={cn("min-w-0", wide && "sm:col-span-2")} onBlur={leave}>
       <label className="label" htmlFor={id}>
         {text}
         {req}
@@ -378,9 +391,9 @@ function FieldInput({
           {f.help}
         </p>
       )}
-      {error && (
+      {shown && (
         <p id={errId} className="hint !text-destructive">
-          {error}
+          {shown}
         </p>
       )}
     </div>
