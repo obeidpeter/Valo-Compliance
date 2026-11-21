@@ -367,7 +367,10 @@ command that publishes.
    guide's two reviews through the dispatcher with a stand-in for the model, and the publish
    command run for a guide).
 9. The daily check compares a page's words, not its bytes (built).
-10. A released guide shown on the site as a free guide, not as a template.
+10. A released guide on the site (found already built: a released guide is listed as a free guide
+    with its own page, apart from the templates. Added: it is shown only while the policy it was
+    released under is still the guidance policy as approved, and the provider's permission for its
+    wording is still current, as for a template).
 11. Claim maps for GUD-11 to GUD-30, from the official files whose checksums match the recorded
     ones.
 

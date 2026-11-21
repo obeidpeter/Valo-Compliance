@@ -1500,6 +1500,13 @@
       "proves": "On a real database, with the owner's approval of the guidance policy supposed inside the test and with made-up captures and reviews, a prepared guide passes every check the publisher makes and is refused without its recorded claim scope, with a capture that is no longer current, and under the policy as it really stands; the transaction is rolled back and nothing is published."
     },
     {
+      "requirement": "EDP-007",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/catalogue/valo-released-guides.test.ts",
+      "test": "a published guide is shown only while its policy stands, its sources are current and its permission is current",
+      "proves": "A guide the gate calls eligible is listed on the site only while the policy it was released under is the guidance policy as it stands with the owner's approval; once that approval no longer stands, or the policy file is edited and approved anew, or a source or the provider permission is no longer current, or its review date passes, it is not listed. The guide is an object in memory with a supposed approval and made-up reviews; nothing is published."
+    },
+    {
       "requirement": "EDP-009",
       "job": "postgres",
       "file": "artifacts/api-server/src/modules/editorial/editorial-lifecycle.integration.test.ts",
