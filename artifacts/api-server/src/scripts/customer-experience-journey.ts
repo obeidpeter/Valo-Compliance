@@ -824,10 +824,10 @@ try {
     await page!.goto("/workspace/privacy");
     const card = page!.getByTestId("privacy-case").filter({ hasText: row.reference });
     await card.getByRole("button", { name: "View request", exact: true }).click();
-    await expect(card).toContainText("awaiting verification");
+    await expect(card).toContainText("Waiting for you to confirm it");
     await card.locator('input[type="checkbox"]').check();
-    await card.getByRole("button", { name: "Verify my request", exact: true }).click();
-    await expect(card.locator("strong").first()).toHaveText("verified");
+    await card.getByRole("button", { name: "Confirm my request", exact: true }).click();
+    await expect(card.locator("strong").first()).toHaveText("Confirmed, waiting for staff");
     const verified = await api(`/api/workspace/privacy-cases/${row.id}`);
     expect(verified.status).toBe(200);
     const verifiedValue = GetPrivacyCaseResponse.parse(verified.body);
@@ -837,18 +837,18 @@ try {
     expect((await api("/api/admin/privacy-cases?page=1")).status).toBe(403);
     await page!.setViewportSize({ width: 360, height: 900 });
     await reflow();
-    await card.getByRole("button", { name: "Cancel before processing", exact: true }).focus();
-    await expect(card.getByRole("button", { name: "Cancel before processing", exact: true })).toBeFocused();
+    await card.getByRole("button", { name: "Cancel before work begins", exact: true }).focus();
+    await expect(card.getByRole("button", { name: "Cancel before work begins", exact: true })).toBeFocused();
     await page!.screenshot({
       path: "generated-artifacts/valo-customer-ux/privacy-processing-mobile.png",
       fullPage: true,
     });
-    await card.getByRole("button", { name: "Cancel before processing", exact: true }).click();
-    await expect(card.locator("strong").first()).toHaveText("cancelled");
+    await card.getByRole("button", { name: "Cancel before work begins", exact: true }).click();
+    await expect(card.locator("strong").first()).toHaveText("Cancelled");
     await page!.reload();
     await reflow();
     await expect(page!.getByTestId("privacy-case").filter({ hasText: row.reference })).toContainText(
-      "cancelled",
+      "Cancelled",
     );
     const cancelled = await api(`/api/workspace/privacy-cases/${row.id}`);
     const cancelledValue = GetPrivacyCaseResponse.parse(cancelled.body);
