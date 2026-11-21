@@ -56,6 +56,7 @@ import {
 import { lagosToday } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useAccountEpoch } from "@/components/account-state-boundary";
+import { WorkspaceNav } from "@/components/workspace-nav";
 
 const STEPS = ["Business", "Activities", "Location", "Size and turnover", "Data", "Review"];
 
@@ -154,6 +155,8 @@ export default function Checker() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 lg:px-8">
+      {/* Inside the workspace this is a page of its Requirements section; elsewhere it shows nothing. */}
+      <WorkspaceNav />
       <header className="reveal max-w-3xl">
         <p className="eyebrow">Requirements checker</p>
         <h1 className="font-display mt-3 text-4xl leading-[1.08] sm:text-5xl">

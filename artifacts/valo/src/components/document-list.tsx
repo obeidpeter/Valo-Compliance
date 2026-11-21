@@ -5,20 +5,25 @@ import { EmptyState, ErrorState, Skel } from "@/components/states";
 import { missingFields } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 
-/** The workspace's documents, most recently saved first: each opens its editor. With none, it
- * offers to start one. */
+/**
+ * The workspace's documents, most recently saved first: each opens its editor. `limit` shows only
+ * the first few, as the home screen does; the documents screen shows them all. With none, it offers
+ * to start one.
+ */
 export function DocumentList({
   enabled,
+  limit,
   onNew,
   creating,
 }: {
   /** Whether the workspace is known, so the list may be read. */
   enabled: boolean;
+  limit?: number;
   onNew: () => void;
   creating: boolean;
 }) {
   const docs = useListDocuments({ query: { enabled, queryKey: getListDocumentsQueryKey() } });
-  const shown = docs.data ?? [];
+  const shown = (docs.data ?? []).slice(0, limit);
   return (
     <>
       {docs.isLoading ? (

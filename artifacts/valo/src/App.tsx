@@ -28,6 +28,7 @@ const PrivacyOperations = lazy(() => import("@/screens/privacy-operations"));
 const Support = lazy(() => import("@/screens/support"));
 const Development = lazy(() => import("@/screens/development"));
 const WorkspaceHome = lazy(() => import("@/screens/workspace"));
+const DocumentsPage = lazy(() => import("@/screens/documents"));
 const ProfilePage = lazy(() => import("@/screens/profile"));
 const DocumentEditor = lazy(() => import("@/screens/document-editor"));
 const Checker = lazy(() => import("@/screens/checker"));
@@ -287,6 +288,13 @@ function ShellRoutes() {
           {() => (
             <RequireAuth title="Your workspace">
               <WorkspaceHome />
+            </RequireAuth>
+          )}
+        </Route>
+        <Route path="/workspace/documents">
+          {() => (
+            <RequireAuth title="Your documents">
+              <DocumentsPage />
             </RequireAuth>
           )}
         </Route>

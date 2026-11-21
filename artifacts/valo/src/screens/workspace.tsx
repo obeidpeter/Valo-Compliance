@@ -3,14 +3,12 @@ import { useUser } from "@clerk/react";
 import { ArrowRight, Sparkles, FilePlus2, Loader2, UserRound } from "lucide-react";
 import { useGetWorkspace, getGetWorkspaceQueryKey } from "@workspace/api-client-react";
 import { WorkspaceNav } from "@/components/workspace-nav";
-import { ErrorState, Notice, Skel } from "@/components/states";
+import { ErrorState, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { useNewDocument } from "@/lib/use-new-document";
 import { CorrectionNotices } from "@/components/correction-notices";
 import { DocumentList } from "@/components/document-list";
 import { GuidedDraftStarter } from "@/components/guided-draft-starter";
-import { SavedTemplates } from "@/components/saved-templates";
-import { LibraryExports } from "@/components/library-exports";
 
 export default function WorkspaceHome() {
   const { user } = useUser();
@@ -112,16 +110,17 @@ export default function WorkspaceHome() {
               <p className="eyebrow">Business drafts</p>
               <span className="text-sm text-muted-foreground">{ws.data?.documentCount ?? 0} total</span>
             </div>
-            <DocumentList enabled={ws.isSuccess} onNew={create.start} creating={create.pending} />
-            <LibraryExports />
-            <Notice className="mt-4" tone="ink" title="Development workspace">
-              Use synthetic test details only. Open a saved draft to request private, visibly marked DOCX or
-              PDF exports. Production recovery and release approval remain unproved.
-            </Notice>
+            <DocumentList enabled={ws.isSuccess} limit={3} onNew={create.start} creating={create.pending} />
+            <Link
+              href="/workspace/documents"
+              className="btn btn-ghost btn-sm mt-4"
+              data-testid="link-all-documents"
+            >
+              All documents <ArrowRight className="h-4 w-4" />
+            </Link>
           </section>
         </div>
       )}
-      {ws.isSuccess && <SavedTemplates />}
     </div>
   );
 }
