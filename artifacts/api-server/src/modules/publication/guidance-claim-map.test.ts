@@ -242,11 +242,13 @@ test("a number that is Valo's own record is named with its reason, and nothing e
   );
 });
 
-test("a guide built from its map is a held candidate that says what it lacks", async () => {
-  // A fixed day: what a source's amendment record supports depends on how old its searches are.
-  const day = new Date("2026-11-21T20:00:00Z");
-  const unboundLine = /is not among the passages supplied/,
-    notCurrentLine = /is not marked current: /;
+test("a guide built from its map carries its sources' decisions and says what it lacks", async () => {
+  // A fixed day, the morning after the amendment records' searches: what a record supports depends
+  // on how old its searches are.
+  const day = new Date("2026-11-22T08:00:00Z");
+  const unboundLine = /is not among the passages supplied/;
+  // The two guides that rest in part on an official page that is not kept in the repository.
+  const unbound: Record<string, number> = { "GUD-05": 1, "GUD-08": 3 };
   for (const id of mappedGuideIds) {
     const built = await buildGuideCandidate(id, 1, passages, day);
     const c = publicationSchema.shape.candidate.parse(built.candidate);
@@ -254,18 +256,18 @@ test("a guide built from its map is a held candidate that says what it lacks", a
     assert.equal(c.hash, candidateDigest(c), id);
     assert.equal(c.contentClass, "sourced_guidance");
     assert.notEqual(c.risk, "general", `${id} takes the enhanced checks`);
-    assert.equal(c.legalScopeStatus, "unverified", id);
     assert.equal(c.scope, GUIDE_SCOPE);
     assert.equal(c.limitations, GUIDE_LIMITATIONS);
-    // Every line of missing evidence is a sentence left unbound or a source not marked current,
-    // and each source that is held has its line.
-    for (const line of c.missingEvidence)
-      assert.ok(unboundLine.test(line) || notCurrentLine.test(line), `${id}: ${line}`);
-    const held = built.sources.filter((s) => s.status !== "approved");
-    assert.ok(held.length > 0, `${id} has a source that is not marked current`);
-    assert.equal(c.missingEvidence.filter((line) => notCurrentLine.test(line)).length, held.length, id);
-    for (const s of built.sources)
-      assert.equal(s.status === "approved", s.operativeTextConfirmed && s.amendmentsResolved, s.id);
+    // Every source is marked current, each by the decision its text's amendment record supports.
+    for (const s of built.sources) {
+      assert.equal(s.status, "approved", `${id} ${s.id}`);
+      assert.ok(s.operativeTextConfirmed && s.amendmentsResolved, `${id} ${s.id}`);
+    }
+    // Its only missing evidence is a sentence left unbound, and its legal scope is verified exactly
+    // when it has none.
+    assert.equal(c.missingEvidence.length, unbound[id] ?? 0, id);
+    for (const line of c.missingEvidence) assert.match(line, unboundLine, id);
+    assert.equal(c.legalScopeStatus, unbound[id] ? "unverified" : "verified", id);
     assert.equal(c.assumptions.length, 1, `${id} carries its draft's own applicability note`);
     assert.match(c.assumptions[0]!, /^Applies when: /);
     // Its sources were last read on 14 November 2026, and it says so; it is due again in 30 days.
@@ -275,31 +277,32 @@ test("a guide built from its map is a held candidate that says what it lacks", a
     for (const host of built.linkHosts)
       assert.ok((guidanceOfficialHosts as readonly string[]).includes(host), `${id} links to ${host}`);
 
-    // In a bundle it is held, for the reasons the gate gives a guide with no source decision.
+    // In a fixture bundle, whose rights are not cleared and whose policy is not the guides', the
+    // gate holds it. Nothing about its own claims or sources is among the reasons.
     const bundle: PublicationBundle = {
       ...heldSourceBundle(new Date(c.sourceCheckDate)),
       candidate: c,
       sources: built.sources,
     };
-    const decision = evaluatePublication(bundle, new Date(Date.parse(c.sourceCheckDate) + 86_400_000));
+    const decision = evaluatePublication(bundle, day);
     assert.equal(decision.decision, "hold", id);
-    for (const reason of ["legal_scope_unverified", "material_uncertainty", "rights_not_cleared"])
-      assert.ok(decision.reasons.includes(reason), `${id}: ${reason}`);
+    assert.ok(decision.reasons.includes("rights_not_cleared"), id);
+    for (const reason of ["legal_scope_unverified", "material_uncertainty"])
+      assert.equal(decision.reasons.includes(reason), Boolean(unbound[id]), `${id}: ${reason}`);
     assert.ok(
-      decision.reasons.some((r) => r.startsWith("source_unresolved:")),
+      !decision.reasons.some((r) =>
+        /^(unsupported_(claim|number)|source_(unresolved|hash_mismatch|not_current|jurisdiction_mismatch))/.test(
+          r,
+        ),
+      ),
       id,
     );
-    // No claim is an unsupported one: what holds the guide is the evidence it still lacks.
-    assert.ok(!decision.reasons.some((r) => /^unsupported_(claim|number)/.test(r)), id);
   }
-  // The two guides that rest on pages not kept in the repository name the sentences left unbound.
-  const unbound = async (id: string) =>
-    (await buildGuideCandidate(id, 1, passages, day)).candidate.missingEvidence.filter((line) =>
-      unboundLine.test(line),
-    ).length;
-  assert.equal(await unbound("GUD-05"), 1);
-  assert.equal(await unbound("GUD-08"), 3);
-  assert.equal(await unbound("GUD-01"), 0);
+  // The same guide a day before the searches were made: no record supports its sources yet.
+  const before = await buildGuideCandidate("GUD-01", 1, passages, new Date("2026-11-21T12:00:00Z"));
+  assert.ok(before.sources.some((s) => s.status === "held"));
+  assert.equal(before.candidate.legalScopeStatus, "unverified");
+  assert.ok(before.candidate.missingEvidence.some((line) => /is not marked current: /.test(line)));
   await assert.rejects(() => buildGuideCandidate("GUD-11"), /GUIDE_CLAIM_MAP_MISSING:GUD-11/);
 });
 

@@ -90,7 +90,7 @@ later instrument amends it.
 ### More facts gathered on 21 November 2026
 
 Gathered while the amendment records of point 2 were first written (`guidance-amendments.ts`). The
-searches were made between 17:50 and 19:53 UTC; each is in a record with the checksum of what the
+searches were made between 17:50 and 20:22 UTC; each is in a record with the checksum of what the
 address returned.
 
 - **The National Assembly's list of Acts and publications** holds 182 entries. None names the
@@ -103,9 +103,14 @@ address returned.
 - **The Business Facilitation (Miscellaneous Provisions) Act 2022** amends twenty sections of the
   Companies and Allied Matters Act. The ten guides quote one of them, section 868, where it deletes
   the definition of "insolvency practitioner". No guide quotes that definition.
-- **The Finance Acts made since 2020 have not been read.** A Finance Act can amend other Acts, and
-  no copy on an official host in the proposed policy has been found. Until they are read, no passage
-  of the Companies and Allied Matters Act is marked current.
+- **The Finance Acts of 2020, 2021 and 2023** were read from the copies the Budget Office of the
+  Federation serves. The Finance Act 2020 changes one section of the Companies and Allied Matters
+  Act: it replaces section 432, which no guide quotes. The Finance Acts of 2021 and 2023 have no
+  part for that Act. Two of the three are scanned copies, read from their page images. Whether a
+  Finance Act later than 2023 exists was not established.
+- **The other two revenue Acts of 2025**, which set up the Nigeria Revenue Service and the Joint
+  Revenue Board, change nothing in the Companies and Allied Matters Act or the Nigeria Tax
+  Administration Act.
 - **The two official copies of the Nigeria Tax Administration Act print three different
   commencements.** The National Assembly's copy prints 26 June 2025 at its head, and its section 148
   gives the Act's name only. The Gazette copy served by the revenue service prints 1 January 2026 at
@@ -113,14 +118,22 @@ address returned.
   these the Act is in force from 1 January 2026. None of the thirty guides states when a law
   commenced.
 - **The Gazette copy is a scanned image.** Its machine-read text is too unreliable to compare with
-  the National Assembly's copy by machine. Section 31 has been compared by reading, against the
-  passage of the Gazette copy kept in the repository: the two read the same, except that subsection
-  (3) of the National Assembly's copy adds "of this section". The other sections the guides quote
-  (4, 7, 11, 33 and 147) have not been compared, so they are not confirmed as the operative text.
+  the National Assembly's copy by machine, so the sections the guides quote were compared by reading
+  its page images: sections 4, 7, 11, 31 and 33, and the three definitions of section 147 that the
+  guides quote. They read the same apart from small differences of wording. The National Assembly's
+  copy says "purposes" where the Gazette copy says "purpose" (section 4), adds "of this section" in
+  three places (sections 7 and 31), and leaves out ", 2025" after "Nigeria Tax Act" in three places
+  and words one paragraph differently (section 11). None is in a number, a time limit or who must
+  act. The rest of section 147 was not compared, and a quotation from it is not confirmed.
 - **No guide repeats more than ten words in a row** from a passage it cites.
 
-The reading of the Gazette copy was done by an AI assistant from the page images. It is not legal
-review.
+With these readings, every passage the ten mapped guides quote is marked current under the rule of
+point 2. What then holds eight of those guides, apart from their two reviews, is the owner's
+approval of the policy. GUD-05 and GUD-08 also rest in part on an official page that is not kept in
+the repository.
+
+The reading of the Gazette copy and of the scanned Finance Acts was done by an AI assistant from the
+page images. It is not legal review.
 
 ## Proposal
 
@@ -180,8 +193,8 @@ Points 9 to 12 describe what is built. Point 11's 30 days is the code's cadence 
 class except `general` (`sourceTargetAllowed`), and EDP-011 asks for a monthly review of high-impact
 content. So each published guide needs two new AI reviews every 30 days.
 
-Accepting the policy also adds the seven hosts above to the policy's host list, which changes the
-policy's hash and so its version.
+The guidance policy is a policy of its own, with its own host list: the hosts the guides and their
+amendment records need, the seven above among them, and the Budget Office's for the Finance Acts.
 
 ### 2. What "current" means
 

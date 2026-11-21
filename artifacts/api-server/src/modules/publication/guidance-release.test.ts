@@ -37,9 +37,10 @@ import { assembledGuide } from "./guidance-release.fixtures";
  * what-ifs inside the test, and they approve nothing.
  */
 
-// A fixed day. A source's decision depends on how old its amendment record's searches are, and the
-// retained copies of the official texts were fetched a week before it.
-const day = new Date("2026-11-21T20:00:00Z");
+// A fixed day, the morning after the amendment records' searches were made. A source's decision
+// depends on how old those searches are, and the retained copies of the official texts were fetched
+// eight days before it.
+const day = new Date("2026-11-22T08:00:00Z");
 const passages = retainedGuidePassages();
 const root = publicationWorkspaceRoot();
 const policyFile = readFileSync(resolve(root, GUIDANCE_POLICY_PATH), "utf8");
@@ -56,26 +57,21 @@ const failed = (bundle: PublicationBundle) =>
 const kinds = (reasons: readonly string[]) =>
   [...new Set(reasons.map((r) => r.replace(/:(?!scope|rights).*$/, "")))].sort();
 
-/** The what-ifs: the owner's approval of the policy file as it stands, and amendment records with
- * nothing left unread and every quoted section compared. Neither exists outside this file. */
+/** The what-if: the owner's approval of the policy file as it stands. It exists only in this file. */
 const approvedPolicy = async () => (await guidancePolicy({ approvedHash: sha256(policyFile) })).policy;
 /** The policy file as a test supposes it; there is no restriction file beside it. */
 const supposedFile = (text: string) => async (path: string) =>
   path === GUIDANCE_POLICY_PATH ? text : Promise.reject(Object.assign(Error("no file"), { code: "ENOENT" }));
-const completedRecords: AmendmentRecord[] = guideAmendmentRecords.map((record) => ({
-  ...record,
-  notRead: [],
-  ...(record.comparedSections
-    ? {
-        comparedSections: Object.fromEntries(
-          ["4", "7", "11", "31", "33", "147"].map((section) => [
-            section,
-            { method: "supposed for this test", on: "2026-11-21" },
-          ]),
-        ),
-      }
-    : {}),
-}));
+const record = (instrument: string) => guideAmendmentRecords.find((r) => r.instrument === instrument)!;
+/** Records as they would stand with less done: an instrument left unread, and one section compared. */
+const withUnread: AmendmentRecord[] = guideAmendmentRecords.map((r) =>
+  r.instrument === "CAC-CAMA-2020"
+    ? { ...r, notRead: [{ title: "A later amending Act", why: "supposed for this test" }] }
+    : r,
+);
+const oneSectionCompared: AmendmentRecord[] = guideAmendmentRecords.map((r) =>
+  r.comparedSections ? { ...r, comparedSections: { "31": r.comparedSections["31"]! } } : r,
+);
 
 test("the guidance policy is read from its file, and the owner has not approved it", async () => {
   assert.equal(guidancePolicyApprovedHash(), null, "no approval is recorded");
@@ -225,10 +221,11 @@ test("each amendment record matches the retained texts it describes", () => {
     assert.ok(record.limits.includes("No Gazette index was searched"), "the record says what it did not do");
   }
 
-  // The Companies Act: its commencement, and the one amending Act found, as their texts print them.
+  // The Companies Act: its commencement, and the two amending Acts found. The Business Facilitation
+  // Act is checked against its retained text.
   assert.ok(text("CAMA-COMMENCEMENT").includes(cama.commencement.printed));
-  const [bfa] = cama.amendments;
-  assert.equal(cama.amendments.length, 1);
+  const [bfa, finance] = cama.amendments;
+  assert.equal(cama.amendments.length, 2);
   assert.equal(retrieval.find((r) => r.url === bfa!.url)?.rawSHA256, bfa!.rawSha256);
   assert.ok(text("BFA-COMMENCEMENT").includes(bfa!.commencement));
   const partOne = text(bfa!.passage!);
@@ -248,8 +245,16 @@ test("each amendment record matches the retained texts it describes", () => {
     ["868"],
   );
   assert.ok(partOne.includes("deleting the definition of “insolvency practitioner”"));
-  // What is not done is on the record, and holds every source from the Act.
-  assert.equal(cama.notRead.length, 1);
+  // The Finance Act 2020 is a scanned copy, so none of its text is kept. The record gives its one
+  // change to the Act as its arrangement of sections prints it, and names nothing it removes: every
+  // passage of section 432 counts as changed.
+  assert.equal(finance!.title, "Finance Act 2020");
+  assert.equal(finance!.passage, undefined);
+  assert.deepEqual(finance!.sections, { "432": { quote: "60. Substitution for section 432.", removes: [] } });
+  assert.equal(new URL(finance!.url).hostname, "budgetoffice.gov.ng");
+  // Nothing known to be able to amend the Act is left unread, and the record says how far it went.
+  assert.equal(cama.notRead.length, 0);
+  assert.ok(cama.limits.includes("Whether a Finance Act later than 2023 exists was not established"));
 
   // The tax administration Act: the comparison of its two official copies is recorded as far as it
   // went, and the copies' disagreement about its commencement stays open.
@@ -258,8 +263,22 @@ test("each amendment record matches the retained texts it describes", () => {
   };
   const taxText = (id: string) =>
     tax.passages.find((p) => p.passageID === id)!.exactExtractedText.replace(/\s+/g, " ");
-  assert.deepEqual(Object.keys(ntaa.comparedSections!), ["31"]);
-  // The retained words of the Gazette copy's section 31 bear the comparison out.
+  assert.deepEqual(Object.keys(ntaa.comparedSections!), ["4", "7", "11", "31", "33", "147"]);
+  // Section 147 was compared for three definitions only, and each is in the retained passage.
+  assert.deepEqual(ntaa.comparedSections!["147"]!.only, [
+    '"Nigerian Company" means',
+    '"Tax Authority" means',
+    '"Taxable Person" means',
+  ]);
+  for (const opening of ntaa.comparedSections!["147"]!.only!)
+    assert.ok(taxText("NTAA-147-DEFINITIONS").includes(opening), opening);
+  // What the record says of the National Assembly's copy is what its retained passages say.
+  assert.ok(taxText("NTAA-4").includes("for the purposes of compliance"));
+  assert.ok(taxText("NTAA-7").includes("under subsection (1) of this section"));
+  assert.ok(taxText("NTAA-7").includes("under subsection (3) of this section"));
+  assert.ok(taxText("NTAA-11").includes("liable to pay tax under Nigeria Tax Act or"));
+  assert.ok(taxText("NTAA-11").includes("under paragraph (a) is a paid agent"));
+  // The retained words of the Gazette copy's section 31 bear that comparison out.
   const gazette = taxText("NTAA-NRS-31-COMPARATOR"),
     assembly = taxText("NTAA-31");
   for (const words of ["shall be kept for a period not less than six years", "be certified b"])
@@ -270,7 +289,7 @@ test("each amendment record matches the retained texts it describes", () => {
     ntaa.conflicts.map((c) => [c.sections, c.open]),
     [
       [["148"], true],
-      [["31"], false],
+      [["4", "7", "11", "31"], false],
     ],
   );
   assert.equal(ntaa.amendments.length, 0);
@@ -283,22 +302,51 @@ test("a source is marked current only on the strength of its text's amendment re
   assert.deepEqual(locatorSections("SchedulePartI paragraphs1–21; PDF9–13"), []);
   assert.deepEqual(passage("CAMA-868-forename").sections, ["868"]);
 
-  // Today: every Companies Act passage is held, because the Finance Acts have not been read.
+  // Today every passage the ten guides quote is marked current.
   const today = guideSourceDecision(passage("CAMA-814"), day);
+  assert.deepEqual(today, {
+    status: "approved",
+    operativeTextConfirmed: true,
+    amendmentsResolved: true,
+    reasons: [],
+  });
+  for (const id of ["NTAA-4", "NTAA-7", "NTAA-11", "NTAA-31", "NTAA-33"])
+    assert.equal(guideSourceDecision(passage(id), day).status, "approved", id);
+  // Section 147 was compared in part: a quotation from a compared definition is confirmed, one from
+  // another definition is not, and a passage with no quotation known is not.
+  const definitions = passage("NTAA-147-DEFINITIONS");
+  const defined = (quotes?: string[]) => guideSourceDecision(definitions, day, undefined, quotes);
+  assert.equal(
+    defined(['"Taxable Person" means person who carries out economic activity']).status,
+    "approved",
+  );
+  assert.equal(defined(['"tax  authority"\n means the Nigeria Revenue Service']).status, "approved");
+  for (const quotes of [
+    undefined,
+    [],
+    ['"Company" means a company as defined under'],
+    ['"Tax Authority" means', '"Person" includes'],
+  ]) {
+    const decision = defined(quotes);
+    assert.deepEqual([decision.status, decision.operativeTextConfirmed], ["held", false]);
+    assert.match(
+      decision.reasons.join(" "),
+      /section 147 has been compared between the official copies only in part/,
+    );
+  }
+  // With less done, a passage is held: an instrument left unread holds every passage of its text,
+  // and a section not compared between differing copies is not confirmed.
+  const unread = guideSourceDecision(passage("CAMA-814"), day, withUnread);
   assert.deepEqual(
-    [today.status, today.operativeTextConfirmed, today.amendmentsResolved],
+    [unread.status, unread.operativeTextConfirmed, unread.amendmentsResolved],
     ["held", true, false],
   );
-  assert.equal(today.reasons.length, 1);
-  assert.match(
-    today.reasons[0]!,
-    /^not yet read, and able to amend this text: The Finance Acts made since 2020/,
-  );
-  // Section 31 of the tax administration Act has been compared and is untouched: it is current.
-  assert.equal(guideSourceDecision(passage("NTAA-31"), day).status, "approved");
-  // Its other sections have not been compared with the Gazette copy, so they are not confirmed.
+  assert.deepEqual(unread.reasons, [
+    "not yet read, and able to amend this text: A later amending Act (supposed for this test)",
+  ]);
+  assert.equal(guideSourceDecision(passage("NTAA-31"), day, oneSectionCompared).status, "approved");
   for (const id of ["NTAA-4", "NTAA-7", "NTAA-11", "NTAA-33", "NTAA-147-DEFINITIONS"]) {
-    const decision = guideSourceDecision(passage(id), day);
+    const decision = guideSourceDecision(passage(id), day, oneSectionCompared);
     assert.deepEqual([decision.status, decision.operativeTextConfirmed], ["held", false], id);
     assert.match(
       decision.reasons[0]!,
@@ -313,9 +361,12 @@ test("a source is marked current only on the strength of its text's amendment re
   };
   assert.equal(guideSourceDecision(elsewhere, day).status, "held");
 
-  // Supposing the Finance Acts read: what the one amending Act found does to each passage.
-  const approvedIn = (p: GuidePassage, at = day, records = completedRecords) =>
-    guideSourceDecision(p, at, records).status === "approved";
+  // What the two amending Acts found do to each passage.
+  const approvedIn = (
+    p: GuidePassage,
+    at = day,
+    records: readonly AmendmentRecord[] = guideAmendmentRecords,
+  ) => guideSourceDecision(p, at, records).status === "approved";
   assert.ok(approvedIn(passage("CAMA-814")), "section 814 is not amended");
   // Section 868 is amended, by deleting one definition. A passage without that definition stands.
   assert.ok(approvedIn(passage("CAMA-868-forename")));
@@ -325,19 +376,24 @@ test("a source is marked current only on the strength of its text's amendment re
     text: "“insolvency  practitioner” means a legal practitioner within the meaning of the Legal Practitioners Act",
   };
   assert.match(
-    guideSourceDecision(withDeleted, day, completedRecords).reasons.join(" "),
+    guideSourceDecision(withDeleted, day).reasons.join(" "),
     /Business Facilitation \(Miscellaneous Provisions\) Act 2022 changes section 868/,
   );
   // A passage of a section the amending Act rewrites is held: nothing records what was replaced.
   const rewritten: GuidePassage = { ...passage("CAMA-814"), sections: ["127"] };
   assert.ok(!approvedIn(rewritten));
+  // So is a passage of section 432, which the Finance Act 2020 replaces whole.
+  assert.match(
+    guideSourceDecision({ ...passage("CAMA-814"), sections: ["432"] }, day).reasons.join(" "),
+    /Finance Act 2020 changes section 432/,
+  );
   // A passage that names no section of a text whose copies differ cannot be confirmed.
   assert.ok(!approvedIn({ ...passage("NTAA-31"), sections: [] }));
   // The open question about section 148 holds a passage of that section, and no other.
   const s148: GuidePassage = { ...passage("NTAA-31"), sections: ["148"] };
   assert.match(
     guideSourceDecision(s148, day, [
-      { ...completedRecords[1]!, comparedSections: { "148": { method: "supposed", on: "2026-11-21" } } },
+      { ...record("NASS-NTAA-2025"), comparedSections: { "148": { method: "supposed", on: "2026-11-21" } } },
     ]).reasons.join(" "),
     /an open question touches this passage: the day the Act commenced/,
   );
@@ -346,7 +402,7 @@ test("a source is marked current only on the strength of its text's amendment re
   const lastDay = new Date(Date.parse("2026-11-21T17:50:37Z") + AMENDMENT_RECORD_DAYS * 86_400_000 - 1000);
   assert.ok(approvedIn(passage("CAMA-814"), lastDay));
   assert.match(
-    guideSourceDecision(passage("CAMA-814"), new Date(+lastDay + 2000), completedRecords).reasons.join(" "),
+    guideSourceDecision(passage("CAMA-814"), new Date(+lastDay + 2000)).reasons.join(" "),
     /more than 30 days old/,
   );
   assert.ok(
@@ -358,39 +414,49 @@ test("a source is marked current only on the strength of its text's amendment re
     ...passage("CAMA-814"),
     instrument: { ...passage("CAMA-814").instrument, rawSha256: sha256("a changed file") },
   };
-  const changed = guideSourceDecision(otherFile, day, completedRecords);
+  const changed = guideSourceDecision(otherFile, day);
   assert.deepEqual([changed.operativeTextConfirmed, changed.amendmentsResolved], [false, false]);
   assert.deepEqual(guideSourceDecision(passage("CAMA-814"), day, []).reasons, [
     "no amendment record exists for this text",
   ]);
-  // A place searched that is not an official host, or an instrument found and left unread, holds.
-  const strayHost = completedRecords.map((r) => ({
+  // A place searched that is not an official host holds.
+  const strayHost = guideAmendmentRecords.map((r) => ({
     ...r,
     searches: [...r.searches, { ...r.searches[0]!, url: "https://example.com/acts" }],
   }));
   assert.ok(!approvedIn(passage("CAMA-814"), day, strayHost));
 });
 
-test("the gate holds each mapped guide today for the same reasons, and for nothing else", async () => {
-  const everyGuide = [
+test("today the gate holds each mapped guide for the owner's approval, and two guides for an unbound sentence too", async () => {
+  // What rests on the owner's approval of the policy: the policy itself, the rights record whose
+  // basis it is, and the two mechanical checks that read them.
+  const waitsOnApproval = [
     "check_failed_or_stale",
     "check_not_passed:rights",
     "check_not_passed:scope",
-    "legal_scope_unverified",
-    "material_uncertainty",
     "policy_not_owner_approved",
     "rights_not_cleared",
-    "source_unresolved",
   ];
+  // GUD-05 and GUD-08 each rest in part on an official page that is not kept in the repository.
+  const unboundSentence = ["legal_scope_unverified", "material_uncertainty"];
   for (const id of mappedGuideIds) {
     const { bundle, eligibility, rightsProblems } = await assembled(id);
     assert.equal(eligibility.decision, "hold", id);
     // Apart from the two reviews, these are the reasons, and there is no other.
-    assert.deepEqual(kinds(guideOpenReasons(eligibility)), everyGuide, id);
+    const expected = ["GUD-05", "GUD-08"].includes(id)
+      ? [...waitsOnApproval, ...unboundSentence]
+      : waitsOnApproval;
+    assert.deepEqual(kinds(guideOpenReasons(eligibility)), [...expected].sort(), id);
     for (const reason of reasonsOnlyReviewsClear)
       assert.ok(eligibility.reasons.includes(reason), `${id}: ${reason}`);
-    // Eight of the ten mechanical checks pass. The two that fail are the ones waiting on a decision
-    // or on evidence: the policy and source decisions (scope) and the rights basis (rights).
+    // Every source is marked current.
+    assert.ok(
+      bundle.sources.every((source) => source.status === "approved"),
+      id,
+    );
+    assert.ok(!eligibility.reasons.some((reason) => reason.startsWith("source_")), id);
+    // Eight of the ten mechanical checks pass. The two that fail read the policy and the rights
+    // record, which wait on the owner.
     assert.deepEqual(failed(bundle), ["scope", "rights"], id);
     // The rights record lacks one thing only: the owner's approval of its basis.
     assert.deepEqual(rightsProblems, ["rights_basis_not_approved_by_owner"], id);
@@ -398,14 +464,23 @@ test("the gate holds each mapped guide today for the same reasons, and for nothi
     assert.equal(bundle.reviews.length, 0);
     assert.equal(bundle.manifest.status, "review");
   }
+  // With an instrument left unread, the guides that quote its text are held on their sources too.
+  const held = await assembled("GUD-01", { records: withUnread });
+  assert.deepEqual(
+    kinds(guideOpenReasons(held.eligibility)),
+    [...waitsOnApproval, ...unboundSentence, "source_unresolved"].sort(),
+  );
+  assert.ok(
+    held.bundle.candidate.missingEvidence.every((line) => /is not marked current: not yet read/.test(line)),
+  );
 });
 
-test("supposing the owner's approval and completed records, a fully bound guide lacks only its two reviews", async () => {
+test("supposing the owner's approval, a fully bound guide lacks only its two reviews", async () => {
   const policy = await approvedPolicy();
   // Every sentence of these guides is bound to a retained passage.
   const bound = ["GUD-01", "GUD-02", "GUD-03", "GUD-04", "GUD-06", "GUD-07", "GUD-09", "GUD-10"];
   for (const id of bound) {
-    const { bundle, eligibility, built } = await assembled(id, { policy, records: completedRecords });
+    const { bundle, eligibility, built } = await assembled(id, { policy });
     assert.deepEqual(guideOpenReasons(eligibility), [], id);
     assert.deepEqual(failed(bundle), [], id);
     assert.equal(bundle.rights.status, "cleared", id);
@@ -415,14 +490,14 @@ test("supposing the owner's approval and completed records, a fully bound guide 
       bundle.sources.every((s) => s.status === "approved"),
       id,
     );
-    assert.deepEqual(await guideClaimScopeProblems(bundle, built.claimScope, day, completedRecords), [], id);
+    assert.deepEqual(await guideClaimScopeProblems(bundle, built.claimScope, day), [], id);
     // It is still held: nothing but two passing reviews makes a bundle eligible.
     assert.equal(eligibility.decision, "hold", id);
     assert.deepEqual([...eligibility.reasons].sort(), [...reasonsOnlyReviewsClear].sort(), id);
   }
   // The two guides that rest on a page not kept in the repository stay held on that sentence.
   for (const id of ["GUD-05", "GUD-08"]) {
-    const { bundle, eligibility } = await assembled(id, { policy, records: completedRecords });
+    const { bundle, eligibility } = await assembled(id, { policy });
     assert.deepEqual(
       kinds(guideOpenReasons(eligibility)),
       ["check_failed_or_stale", "check_not_passed:scope", "legal_scope_unverified", "material_uncertainty"],
@@ -434,7 +509,7 @@ test("supposing the owner's approval and completed records, a fully bound guide 
 
   // With two reviews that both pass, each answering all five enhanced checks from the guide's own
   // sources, the gate's answer is eligible. The reviews here are made up for the test.
-  const { bundle } = await assembled("GUD-01", { policy, records: completedRecords });
+  const { bundle } = await assembled("GUD-01", { policy });
   const evidenceHash = digest(bundle.sources);
   const passage = bundle.sources[0]!.text.slice(0, 200);
   const reviews = (["factual", "challenge"] as const).map((role) => ({
@@ -485,11 +560,11 @@ test("supposing the owner's approval and completed records, a fully bound guide 
 
 test("a candidate whose claims or sources were changed after it was built is found out", async () => {
   const policy = await approvedPolicy();
-  const { bundle, built } = await assembled("GUD-01", { policy, records: completedRecords });
+  const { bundle, built } = await assembled("GUD-01", { policy });
   const problems = (change: (b: PublicationBundle) => void, scope = built.claimScope) => {
     const altered = structuredClone(bundle);
     change(altered);
-    return guideClaimScopeProblems(altered, scope, day, completedRecords);
+    return guideClaimScopeProblems(altered, scope, day);
   };
   assert.deepEqual(await problems(() => undefined), []);
   // A claim dropped, a quotation shortened, or a source marked current by hand.
@@ -503,12 +578,15 @@ test("a candidate whose claims or sources were changed after it was built is fou
     ),
     /not what the claim map yields/,
   );
-  const { bundle: today, built: builtToday } = await assembled("GUD-01");
-  const marked = structuredClone(today);
+  // Built while an instrument was unread, its Companies Act sources are held. Marking them current
+  // by hand is found out, because the record does not support it.
+  const { bundle: heldBundle, built: builtHeld } = await assembled("GUD-01", { records: withUnread });
+  assert.equal(heldBundle.sources.find((source) => source.id === "CAMA-814")!.status, "held");
+  const marked = structuredClone(heldBundle);
   for (const source of marked.sources)
     Object.assign(source, { status: "approved", operativeTextConfirmed: true, amendmentsResolved: true });
   assert.match(
-    (await guideClaimScopeProblems(marked, builtToday.claimScope, day)).join(" "),
+    (await guideClaimScopeProblems(marked, builtHeld.claimScope, day, withUnread)).join(" "),
     /the decision recorded for CAMA-814 is not the one its amendment record supports/,
   );
   // A source's words changed, even with its hash made to match, no longer bear the quotation out.

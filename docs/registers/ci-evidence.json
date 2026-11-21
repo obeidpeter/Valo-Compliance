@@ -1245,7 +1245,7 @@
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/guidance-release.test.ts",
       "test": "a source is marked current only on the strength of its text's amendment record",
-      "proves": "A passage of an Act is marked current only when its text's amendment record describes the same file, is no more than 30 days old, lists no unread instrument able to amend it, has compared the section where official copies differ, and records no change or open question touching the passage; otherwise the passage stays held, as every Companies and Allied Matters Act passage does today."
+      "proves": "A passage of an Act is marked current only when its text's amendment record describes the same file, is no more than 30 days old, lists no unread instrument able to amend it, has compared the quoted part of the section where official copies differ, and records no change or open question touching the passage; with an instrument left unread or a section not compared, the passage stays held."
     },
     {
       "requirement": "EDP-003",
@@ -1377,8 +1377,8 @@
       "requirement": "EDP-006",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/guidance-release.test.ts",
-      "test": "the gate holds each mapped guide today for the same reasons, and for nothing else",
-      "proves": "For each of the ten mapped guides the ten mechanical checks are measured from the candidate itself: eight pass, the scope and rights checks fail while the policy is unapproved and sources are not marked current, and the gate holds the guide for those reasons and no other apart from its two missing reviews."
+      "test": "today the gate holds each mapped guide for the owner's approval, and two guides for an unbound sentence too",
+      "proves": "For each of the ten mapped guides the ten mechanical checks are measured from the candidate itself: eight pass, the scope and rights checks fail while the owner has not approved the policy, and the gate holds the guide for that and, for two guides, a sentence left unbound, and for no other reason apart from its two missing reviews."
     },
     {
       "requirement": "EDP-007",
