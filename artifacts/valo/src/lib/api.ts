@@ -1,5 +1,6 @@
 import type { CanonicalDocument, DocumentBlock } from "@workspace/api-client-react";
 import {
+  DOCUMENT_FIELD_LABELS,
   guidedDataFromBlocks,
   guidedDataIssues,
   guidedFieldIssue,
@@ -29,14 +30,8 @@ export function blankContent(): CanonicalDocument {
   };
 }
 
-export const FIELD_LABELS: Record<keyof CanonicalDocument["fields"], string> = {
-  issuerName: "Issued by",
-  recipientName: "Addressed to",
-  documentNumber: "Reference number",
-  issueDate: "Issue date",
-  dueDate: "Due date",
-  notes: "Notes",
-};
+/** A document's own fields by name, as the shared library gives them. */
+export const FIELD_LABELS: Record<keyof CanonicalDocument["fields"], string> = DOCUMENT_FIELD_LABELS;
 
 /** What the questions say of a required answer that was simply not given. */
 const UNANSWERED = guidedFieldIssue({ id: "", label: "", type: "text", required: true }, "");

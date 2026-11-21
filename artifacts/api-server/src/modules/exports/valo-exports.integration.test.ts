@@ -223,8 +223,8 @@ test(
           const text = await readFile(join(temp, "text.txt"), "utf8");
           assert.ok(text.includes("₦12,345.67"));
           assert.ok(text.includes("ORIGINAL REVISION"));
-          assert.ok(text.includes("Saved revision 1"));
-          assert.ok(text.includes("INCOMPLETE BUSINESS DRAFT"));
+          assert.ok(text.includes("Saved version 1"));
+          assert.ok(text.includes("INCOMPLETE DRAFT"));
         },
       );
       await t.test("ready delivery is idempotent and suspended memberships cannot read files", async () => {

@@ -32,7 +32,7 @@ import {
 } from "@workspace/api-client-react";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { FIELD_LABELS, describeError, missingFields, newBlockId } from "@/lib/api";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { DocumentExports } from "@/components/document-exports";
 import { MakeAnother } from "@/components/make-another";
@@ -1196,7 +1196,7 @@ function DocPreview({
             >
               <dt className="text-muted-foreground">{FIELD_LABELS[k]}</dt>
               <dd className={cn("min-w-0", f[k] ? "" : "italic text-[hsl(38_60%_35%)]")}>
-                {f[k] || "Missing"}
+                {(k === "issueDate" || k === "dueDate" ? formatDay(f[k]) : f[k]) || "Missing"}
               </dd>
             </div>
           ))}

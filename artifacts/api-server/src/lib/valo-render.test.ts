@@ -25,8 +25,62 @@ test("controlled HTML treats markup, local-file and metadata addresses as inert 
   assert.ok(!html.includes("<img"));
   assert.ok(html.includes("&lt;script&gt;"));
   assert.ok(html.includes("default-src 'none'"));
-  assert.ok(html.includes("Saved revision 7"));
+  assert.ok(html.includes("Saved version 7"));
   assert.ok(html.includes(DRAFT_NOTICE));
+});
+
+// The words inside a customer's own file are the site's: "version", the editor's names for the
+// document's fields, a date with its month as a word. The other two kinds of file are kept exactly
+// as they were: their words belong with the templates' own review and with the purchases screen's.
+test("a customer's own document prints 'Saved version', its fields by the editor's names and its dates in words, and a template sample and a purchase receipt print as before", async () => {
+  const input = structuredClone(syntheticDocument);
+  input.content.fields = {
+    issuerName: "Synthetic issuer",
+    recipientName: "",
+    documentNumber: "SYN-1",
+    issueDate: "2026-11-21",
+    dueDate: "2026-12-05",
+    notes: "",
+  };
+  const lines = (html: string) =>
+    [...html.matchAll(/<div class="field"><strong>([^<]*)<\/strong> ([^<]*)<\/div>/g)].map(
+      (field) => field[1]! + " " + field[2]!,
+    );
+  const own = controlledHtml(input, 7);
+  assert.deepEqual(lines(own), [
+    "Issued by: Synthetic issuer",
+    // A detail that was not given is left as a gap, never filled in.
+    "Addressed to: [Not supplied]",
+    "Reference number: SYN-1",
+    "Issue date: 21 Nov 2026",
+    "Due date: 5 Dec 2026",
+    "Notes: [Not supplied]",
+  ]);
+  assert.ok(own.includes("<p>Valo · Saved version 7</p>"));
+  assert.ok(!own.includes("revision"));
+  for (const mode of ["template_sample", "purchase_receipt"] as const) {
+    const other = controlledHtml(input, 7, mode);
+    assert.deepEqual(
+      lines(other),
+      [
+        "issuerName: Synthetic issuer",
+        "recipientName: [Not supplied]",
+        "documentNumber: SYN-1",
+        "issueDate: 2026-11-21",
+        "dueDate: 2026-12-05",
+        "notes: [Not supplied]",
+      ],
+      mode,
+    );
+    assert.ok(other.includes("<p>Valo · Saved revision 7</p>"), mode);
+    assert.ok(!other.includes(DRAFT_NOTICE), mode);
+  }
+  // The Word file says the same as the page the PDF is printed from.
+  const xml = strFromU8(unzipSync(await renderDocument(input, "docx", 7))["word/document.xml"]!);
+  const text = xml.replace(/<[^>]+>/g, "");
+  for (const part of ["Issued by: Synthetic issuer", "Issue date: 21 Nov 2026", "Valo · Saved version 7"])
+    assert.ok(text.includes(part), part);
+  assert.ok(!text.includes("issuerName"));
 });
 test("DOCX contains editable OOXML, actual table cells, bullets, draft notice and naira", async () => {
   const input = structuredClone(syntheticDocument);
@@ -50,7 +104,7 @@ test("DOCX contains editable OOXML, actual table cells, bullets, draft notice an
   assert.ok(xml.includes("₦12,345.67"));
   assert.ok(xml.includes("<w:tbl>"));
   assert.ok(xml.includes("First action"));
-  assert.ok(xml.includes("Saved revision 3"));
+  assert.ok(xml.includes("Saved version 3"));
   assert.ok(Object.keys(parts).some((name) => name.startsWith("word/header")));
 });
 test("renderer rejects unknown formatting, arbitrary clause inputs and invalid dates", async () => {
@@ -159,10 +213,7 @@ test("every page of a generated invoice and of a purchase receipt says it is not
   const { tmpdir } = await import("node:os");
   const { join } = await import("node:path");
   const { promisify } = await import("node:util");
-  assert.match(
-    DRAFT_NOTICE,
-    /^INCOMPLETE BUSINESS DRAFT .* Not verified payment proof, a government tax invoice,/,
-  );
+  assert.match(DRAFT_NOTICE, /^INCOMPLETE DRAFT .* Not proof of payment, a government tax invoice,/);
   assert.match(
     PURCHASE_NOTICE,
     /^VALO DEVELOPMENT PURCHASE RECEIPT .* Not proof of delivery, bank outcome, a government tax invoice/,
