@@ -33,7 +33,7 @@ router.post("/checker/preview", async (req, res): Promise<void> => {
     res.status(429).json({
       code: "CHECKER_RATE_LIMIT",
       error:
-        "Too many checker requests. Your unsaved answers remain in this tab; retry after the indicated delay.",
+        "Too many checks in a short time. Your answers are still on this page. Wait a moment and try again.",
     });
     return;
   }
@@ -50,7 +50,8 @@ router.post("/workspace/checker/preview", async (req, res): Promise<void> => {
     res.set("Retry-After", String(quota.retryAfter));
     res.status(429).json({
       code: "CHECKER_RATE_LIMIT",
-      error: "Too many checker requests. Your unsaved answers remain in this tab.",
+      error:
+        "Too many checks in a short time. Your answers are still on this page. Wait a moment and try again.",
     });
     return;
   }

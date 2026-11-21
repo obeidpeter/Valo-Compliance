@@ -3,6 +3,25 @@ import { ZodError } from "zod";
 import { safeValidationFields } from "./request-complexity";
 import { ValoProblem } from "./valo-problem";
 
+/** What a customer is told when the server rejects what was sent, without saying which part. */
+export const DETAILS_NOT_ACCEPTED = "Some details were not accepted. Check them and try again.";
+/**
+ * What a customer is told when a request fails in a way the server did not expect. A request that
+ * only reads is told to try again. Any other may have failed before or after something was saved,
+ * so its sentence says to check before trying again. It says "if", because a request that is not a
+ * read does not always save anything: a check run without an account does not.
+ */
+export const UNEXPECTED_FAILURE_READING = "Something went wrong at Valo. Try again in a moment.";
+export const UNEXPECTED_FAILURE_CHANGING =
+  "Something went wrong at Valo. If you were saving something, it may or may not have been saved. Check before you try again.";
+/**
+ * Whether a reply holds the server's answer to a failure it did not expect. Tests that must tell
+ * such a failure from a deliberate refusal ask this.
+ */
+export function saysUnexpectedFailure(text: string) {
+  return text.includes(UNEXPECTED_FAILURE_READING) || text.includes(UNEXPECTED_FAILURE_CHANGING);
+}
+
 /** Shared production handler. Importing it must not initialise a database or provider. */
 export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) => {
   res.setHeader("Cache-Control", "private, no-store");
@@ -12,7 +31,9 @@ export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) =>
       return;
     }
     if (error.type === "entity.too.large") {
-      res.status(413).json({ error: "Request body exceeds the 128 KiB limit." });
+      res
+        .status(413)
+        .json({ error: "That is too much to send at once (the limit is 128 KB). Shorten it and try again." });
       return;
     }
     if (error.type === "encoding.unsupported") {
@@ -27,7 +48,7 @@ export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) =>
     res.status(422).json({
       code: "VALIDATION_FAILED",
       requestId: String(req.id),
-      error: "Invalid request",
+      error: DETAILS_NOT_ACCEPTED,
       fields: safeValidationFields(error.issues),
       truncated: error.issues.length > 32,
     });
@@ -54,6 +75,8 @@ export const onError: ErrorRequestHandler = (error: unknown, req, res, _next) =>
   );
   res.status(503).json({
     error:
-      "A required service is unavailable. Check the saved status before retrying; your request may need recovery.",
+      req.method === "GET" || req.method === "HEAD"
+        ? UNEXPECTED_FAILURE_READING
+        : UNEXPECTED_FAILURE_CHANGING,
   });
 };

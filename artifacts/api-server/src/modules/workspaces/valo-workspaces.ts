@@ -25,7 +25,7 @@ export async function authorizeWorkspaceRead(tx: Tx, actor: WorkspaceActor) {
       ),
     );
   if (!member || member.active !== "yes")
-    throw new ValoProblem(403, "Active workspace membership is required.");
+    throw new ValoProblem(403, "Your account does not have access to this workspace.");
   const [deleted] = await tx
     .select({ id: valoPrivacyTombstones.id })
     .from(valoPrivacyTombstones)
@@ -49,7 +49,7 @@ export async function authorizeWorkspaceWrite(tx: Tx, actor: WorkspaceActor) {
     )
     .for("share");
   if (!member || member.active !== "yes")
-    throw new ValoProblem(403, "Active workspace membership is required. No changes were saved.");
+    throw new ValoProblem(403, "Your account does not have access to this workspace. No changes were saved.");
   const [deleted] = await tx
     .select({ id: valoPrivacyTombstones.id })
     .from(valoPrivacyTombstones)
@@ -69,7 +69,7 @@ export async function limitWorkspaceWrite(
     if (!q.allowed)
       throw new ValoProblem(
         429,
-        `Write limit reached. Retry in ${q.retryAfter} seconds. Previously saved work is unchanged; keep your unsaved input.`,
+        `Too many changes in a short time. Try again in ${q.retryAfter} seconds. Your saved work is unchanged. Keep this page open so that you do not lose what you have typed.`,
         undefined,
         q.retryAfter,
       );
@@ -118,7 +118,8 @@ export async function resolveWorkspace(identityId: string): Promise<WorkspaceAct
         .where(eq(valoPrivacyTombstones.workspaceId, existing.workspaceId))
         .limit(1);
       if (deleted) throw new ValoProblem(403, "Workspace deletion is recorded. Access cannot be recreated.");
-      if (existing.active !== "yes") throw new ValoProblem(403, "Workspace membership is suspended");
+      if (existing.active !== "yes")
+        throw new ValoProblem(403, "Your access to this workspace is suspended.");
       return workspaceActorFromMembership({ workspaceId: existing.workspaceId, identityId });
     }
     await tx
@@ -147,14 +148,15 @@ export async function resolveWorkspace(identityId: string): Promise<WorkspaceAct
     const membership = singleRow(
       await tx.select().from(valoMemberships).where(eq(valoMemberships.identityId, identityId)),
     );
-    if (membership.active !== "yes") throw new ValoProblem(403, "Workspace membership is suspended");
+    if (membership.active !== "yes")
+      throw new ValoProblem(403, "Your access to this workspace is suspended.");
     return workspaceActorFromMembership({ workspaceId: membership.workspaceId, identityId });
   });
 }
 export async function getWorkspace(actor: WorkspaceActor) {
   const { db, valoDocuments, valoProfileVersions, valoWorkspaces } = await import("@workspace/db");
   const [workspace] = await db.select().from(valoWorkspaces).where(eq(valoWorkspaces.id, actor.workspaceId));
-  if (!workspace) throw new ValoProblem(404, "Workspace not found");
+  if (!workspace) throw new ValoProblem(404, "Your workspace was not found.");
   const [version] = await db
     .select()
     .from(valoProfileVersions)
@@ -186,12 +188,12 @@ export async function saveProfile(actor: WorkspaceActor, raw: unknown) {
       .from(valoWorkspaces)
       .where(eq(valoWorkspaces.id, actor.workspaceId))
       .for("update");
-    if (!workspace) throw new ValoProblem(404, "Workspace not found");
+    if (!workspace) throw new ValoProblem(404, "Your workspace was not found.");
     await authorizeWorkspaceWrite(tx, actor);
     if (workspace.profileRevision !== input.expectedRevision)
       throw new ValoProblem(
         409,
-        "Profile changed elsewhere. Reload before saving; your unsaved input has not been applied.",
+        "Your business profile was changed somewhere else after you opened it. Reload it before you save. What you typed has not been saved.",
         workspace.profileRevision,
       );
     await limitWorkspaceWrite(tx, actor, "profile");

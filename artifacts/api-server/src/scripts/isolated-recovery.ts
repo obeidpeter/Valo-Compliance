@@ -324,13 +324,13 @@ async function verifyAccess() {
     });
     await assert.rejects(() => resolveWorkspace(fixtures[1]!.identityId), {
       status: 403,
-      message: "Workspace membership is suspended",
+      message: "Your access to this workspace is suspended.",
     });
     const c = await resolveWorkspace(fixtures[2]!.identityId);
     assert.equal((await getDocument(c, fixtures[2]!.documentId)).id, fixtures[2]!.documentId);
     await assert.rejects(() => getDocument(c, fixtures[0]!.documentId), {
       status: 404,
-      message: "Document not found",
+      message: "This document was not found in your workspace.",
     });
     const after = (
       await pool.query(

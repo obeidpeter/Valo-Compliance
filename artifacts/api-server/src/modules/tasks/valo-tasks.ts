@@ -44,7 +44,8 @@ const taskUpdate = UpdateTaskBody.strict()
   .refine((i) => i.dueDate === null || i.dateConfirmed, "Confirm the date before scheduling");
 export function reminderInstant(dueDate: string, offset: number) {
   z.string().date().parse(dueDate);
-  if (![0, 1, 3, 7, 14].includes(offset)) throw new ValoProblem(422, "Unsupported reminder offset");
+  if (![0, 1, 3, 7, 14].includes(offset))
+    throw new ValoProblem(422, "That is not one of the reminder times on offer.");
   // Africa/Lagos uses UTC+01:00. User-selected calendar date at 09:00 local, never an inferred statutory date.
   return new Date(new Date(`${dueDate}T09:00:00+01:00`).getTime() - offset * 86400000);
 }
@@ -62,7 +63,7 @@ async function findTask(tx: WorkspaceTx, actor: WorkspaceActor, id: string) {
     .where(
       and(eq(valoTasks.workspaceId, actor.workspaceId), eq(valoTasks.id, id), isNull(valoTasks.deletedAt)),
     );
-  if (!row) throw new ValoProblem(404, "Task not found");
+  if (!row) throw new ValoProblem(404, "This task was not found in your workspace.");
   return row;
 }
 async function cancelOutstanding(
@@ -156,14 +157,14 @@ export async function createTask(actor: WorkspaceActor, raw: unknown) {
         if (!item)
           throw new ValoProblem(
             422,
-            "Only an eligible recommendation in this saved assessment can create a source-linked task",
+            'This saved result does not offer a task for that item. A task can be made only from an item marked "Likely relevant".',
           );
         const now = new Date(),
           current = await releasedRegistry(tx, now);
         if (!currentSourceTaskRecommendation(saved.facts, current, item.ruleId, item.ruleVersion, now))
           throw new ValoProblem(
             409,
-            "This recommendation is no longer current. Reassess before creating its task.",
+            "This item is out of date. Run the check again before you make a task from it.",
           );
         ruleVersion = item.ruleVersion;
       }
@@ -286,7 +287,7 @@ export async function updateTask(actor: WorkspaceActor, id: string, raw: unknown
     if (old.revision !== expectedRevision)
       throw new ValoProblem(
         409,
-        "Task changed in another tab. Your unsaved notes were not overwritten.",
+        "This task was changed somewhere else after you opened it. Your unsaved notes were not overwritten.",
         old.revision,
       );
     const row = singleRow(
@@ -307,7 +308,11 @@ export async function deleteTask(actor: WorkspaceActor, id: string, raw: unknown
   return workspaceTransaction(actor, async (tx) => {
     const task = await findTask(tx, actor, id);
     if (task.revision !== input.expectedRevision)
-      throw new ValoProblem(409, "Task changed elsewhere. Review it before archiving.", task.revision);
+      throw new ValoProblem(
+        409,
+        "This task was changed somewhere else. Look at it again before you archive it.",
+        task.revision,
+      );
     await tx
       .update(valoTasks)
       .set({ deletedAt: new Date(), revision: task.revision + 1 })
@@ -347,7 +352,11 @@ export async function saveReminderPreferences(actor: WorkspaceActor, raw: unknow
       .from(valoReminderPreferences)
       .where(eq(valoReminderPreferences.workspaceId, actor.workspaceId));
     if ((old?.revision ?? 0) !== input.expectedRevision)
-      throw new ValoProblem(409, "Reminder preferences changed elsewhere.", old?.revision ?? 0);
+      throw new ValoProblem(
+        409,
+        "Your reminder settings were changed somewhere else after you opened them.",
+        old?.revision ?? 0,
+      );
     const values = {
       enabled: input.enabled,
       offsets: [...input.offsets].sort((a, b) => a - b),

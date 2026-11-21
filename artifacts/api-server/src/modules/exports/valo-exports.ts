@@ -57,13 +57,13 @@ export async function assertExportActor(actor: WorkspaceActor, connection: typeo
         eq(valoMemberships.role, "owner"),
       ),
     );
-  if (!membership) throw new ValoProblem(404, "Export not found or access revoked");
+  if (!membership) throw new ValoProblem(404, "This file was not found, or it can no longer be downloaded.");
   const [erased] = await connection
     .select({ id: valoPrivacyTombstones.id })
     .from(valoPrivacyTombstones)
     .where(eq(valoPrivacyTombstones.workspaceId, actor.workspaceId))
     .limit(1);
-  if (erased) throw new ValoProblem(404, "Export not found or access revoked");
+  if (erased) throw new ValoProblem(404, "This file was not found, or it can no longer be downloaded.");
 }
 function publicJob(
   job: typeof valoExportJobs.$inferSelect,
@@ -103,7 +103,7 @@ export async function getExport(
       and(eq(valoFileAssets.jobId, valoExportJobs.id), eq(valoFileAssets.workspaceId, actor.workspaceId)),
     )
     .where(and(eq(valoExportJobs.id, id), eq(valoExportJobs.workspaceId, actor.workspaceId)));
-  if (!row) throw new ValoProblem(404, "Export not found");
+  if (!row) throw new ValoProblem(404, "This file was not found.");
   if (
     ["queued", "running", "retrying"].includes(row.job.status) &&
     Date.now() - row.job.updatedAt.getTime() > EXPORT_LEASE_MS
@@ -122,7 +122,7 @@ export async function listExports(
     .select()
     .from(valoDocuments)
     .where(and(eq(valoDocuments.id, documentId), eq(valoDocuments.workspaceId, actor.workspaceId)));
-  if (!document) throw new ValoProblem(404, "Document not found");
+  if (!document) throw new ValoProblem(404, "This document was not found in your workspace.");
   const rows = await db
     .select({ job: valoExportJobs, asset: valoFileAssets })
     .from(valoExportJobs)
@@ -203,7 +203,7 @@ export async function requestExport(actor: WorkspaceActor, documentId: string, k
   if (!input.acknowledgeDraft)
     throw new ValoProblem(
       422,
-      "Deliberately acknowledge the visibly marked incomplete business draft before exporting.",
+      "Say that you want a draft copy before a file is made. Every file is marked as an incomplete draft on each page.",
     );
   const fingerprint = sha256(
     JSON.stringify({
@@ -225,7 +225,7 @@ export async function requestExport(actor: WorkspaceActor, documentId: string, k
           eq(valoDocumentRevisions.workspaceId, actor.workspaceId),
         ),
       );
-    if (!revision) throw new ValoProblem(404, "Saved document revision not found");
+    if (!revision) throw new ValoProblem(404, "That saved version of the document was not found.");
     const [created] = await tx
       .insert(valoExportJobs)
       .values({
@@ -266,7 +266,10 @@ export async function requestExport(actor: WorkspaceActor, documentId: string, k
       .from(valoExportRequests)
       .where(and(eq(valoExportRequests.workspaceId, actor.workspaceId), eq(valoExportRequests.key, key)));
     if (request?.fingerprint !== fingerprint)
-      throw new ValoProblem(409, "Idempotency-Key was already used for a different revision or format.");
+      throw new ValoProblem(
+        409,
+        "This request was already used for a different version or kind of file. Ask for the file again.",
+      );
     if (created)
       await tx.insert(valoEvents).values({
         id: randomUUID(),
@@ -292,16 +295,22 @@ export async function retryExport(actor: WorkspaceActor, id: string) {
       .from(valoExportJobs)
       .where(and(eq(valoExportJobs.id, id), eq(valoExportJobs.workspaceId, actor.workspaceId)))
       .for("update");
-    if (!job) throw new ValoProblem(404, "Export not found");
+    if (!job) throw new ValoProblem(404, "This file was not found.");
     await authorizeWorkspaceWrite(tx, actor);
     const [asset] = await tx.select().from(valoFileAssets).where(eq(valoFileAssets.jobId, id)).for("update");
     const regenerate = job.errorCode === EXPORT_EXPIRED || (job.status === "ready" && exportIsExpired(asset));
     if (regenerate && !cleanup.allowed)
-      throw new ValoProblem(409, "Export regeneration is held for privacy review. Your saved draft is safe.");
+      throw new ValoProblem(
+        409,
+        "This file cannot be made again while a privacy request is being reviewed. Your saved document is safe.",
+      );
     if (job.status === "ready" && asset && exportIsExpired(asset)) await retireExpiredExport(tx, job, asset);
     if (job.status !== "failed" && !regenerate) return;
     if (!regenerate && job.retryCycles >= 3)
-      throw new ValoProblem(409, "Retry limit reached. Your saved draft is safe; contact support.");
+      throw new ValoProblem(
+        409,
+        "This file has been tried again three times and still failed, so it will not be tried again. Your saved document is safe. Report a problem if you still need the file.",
+      );
     await tx
       .update(valoExportJobs)
       .set({
@@ -329,10 +338,10 @@ export async function retryExport(actor: WorkspaceActor, id: string) {
 export async function downloadExport(actor: WorkspaceActor, id: string) {
   const { job, asset } = await getExport(actor, id);
   if (job.errorCode === EXPORT_EXPIRED)
-    throw new ValoProblem(410, "Export expired. Regenerate it from your saved revision.");
-  if (job.status !== "ready" || !asset) throw new ValoProblem(404, "Export is not ready");
+    throw new ValoProblem(410, "This file has expired. Make it again from your saved version.");
+  if (job.status !== "ready" || !asset) throw new ValoProblem(404, "This file is not ready yet.");
   if (exportIsExpired(asset))
-    throw new ValoProblem(410, "Export expired. Regenerate it from your saved revision.");
+    throw new ValoProblem(410, "This file has expired. Make it again from your saved version.");
   const bytes = await readPrivateFile(asset.objectKey, asset.checksum);
   if (bytes.length !== asset.size || asset.mime !== exportMime[job.format])
     throw new Error("PRIVATE_FILE_BINDING_MISMATCH");
@@ -341,7 +350,7 @@ export async function downloadExport(actor: WorkspaceActor, id: string) {
   if (current.job.status !== "ready" || current.asset?.id !== asset.id || exportIsExpired(current.asset))
     throw new ValoProblem(
       410,
-      "Export availability changed during retrieval. Regenerate it from your saved revision.",
+      "This file stopped being available while it was being fetched. Make it again from your saved version.",
     );
   return { bytes, mime: asset.mime, filename: `valo-business-draft-r${job.revision}.${job.format}` };
 }

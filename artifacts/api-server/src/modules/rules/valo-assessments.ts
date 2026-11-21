@@ -47,7 +47,7 @@ export async function workspaceTransaction<T>(
       .from(valoWorkspaces)
       .where(eq(valoWorkspaces.id, actor.workspaceId))
       .for("update");
-    if (!workspace) throw new ValoProblem(404, "Workspace not found");
+    if (!workspace) throw new ValoProblem(404, "Your workspace was not found.");
     await authorizeWorkspaceWrite(tx, actor);
     return fn(tx);
   });
@@ -108,7 +108,11 @@ export function ruleReleaseEligible(row: StoredRuleRelease, now: Date) {
 /** No customer endpoint writes this registry or supplies a publication manifest. */
 export async function releasedRegistry(tx: WorkspaceTx | typeof db, now: Date) {
   const rows = await tx.select().from(valoRuleReleases).limit(501);
-  if (rows.length > 500) throw new ValoProblem(503, "Rule registry exceeds its reviewed operating limit");
+  if (rows.length > 500)
+    throw new ValoProblem(
+      503,
+      "The requirements check is not available at the moment. Nothing was saved or changed.",
+    );
   const rules: z.infer<typeof ruleSchema>[] = [],
     trusted = new Set<string>(),
     states: unknown[] = [];
@@ -168,13 +172,13 @@ export async function runAssessment(
   now = new Date(),
 ) {
   const todayLagos = currentAssessmentDate(now);
-  if (asOfDate > todayLagos) throw new ValoProblem(422, "Future-dated assessments are not available.");
+  if (asOfDate > todayLagos) throw new ValoProblem(422, "A check cannot be dated in the future.");
   if (
     /^\d{4}-\d{2}-\d{2}$/.test(facts.turnoverPeriodStart) &&
     /^\d{4}-\d{2}-\d{2}$/.test(facts.turnoverPeriodEnd) &&
     facts.turnoverPeriodStart > facts.turnoverPeriodEnd
   )
-    throw new ValoProblem(422, "The turnover period end must not precede its start.");
+    throw new ValoProblem(422, "The turnover period cannot end before it starts.");
   z.string().date().parse(asOfDate);
   const registry = await releasedRegistry(tx, now);
   const result = assess(facts, registry.rules, asOfDate, now, { trustedManifestHashes: registry.trusted });
@@ -191,7 +195,7 @@ export async function previewAssessment(raw: unknown) {
   if (facts.rich?.businessName !== undefined)
     throw new ValoProblem(
       401,
-      "Sign in to check optional business-name facts. Anonymous checks do not accept name details.",
+      "Sign in to add details about your business name. A check without an account does not take them.",
     );
   const input = PreviewAssessmentBody.strict().parse(raw);
   return runAssessment(facts, input.asOfDate);
@@ -211,7 +215,10 @@ export function serializeAssessment(row: typeof valoAssessments.$inferSelect) {
   });
   const { resultHash, ...body } = result.result;
   if (resultHash !== row.resultHash || digest(body) !== resultHash || digest(result.facts) !== row.factsHash)
-    throw new ValoProblem(503, "Assessment integrity check failed. The saved record was not changed.");
+    throw new ValoProblem(
+      503,
+      "This saved result did not pass Valo's own check of it, so it is not shown. The saved record was not changed.",
+    );
   return result;
 }
 export async function createAssessment(actor: WorkspaceActor, raw: unknown) {
@@ -230,7 +237,7 @@ export async function createAssessment(actor: WorkspaceActor, raw: unknown) {
     )
       throw new ValoProblem(
         409,
-        "The business profile changed. Review the current answers before saving.",
+        "Your business profile has changed. Look over the current answers before you save.",
         workspace.profileRevision,
       );
     const [profile] = await tx
@@ -243,7 +250,7 @@ export async function createAssessment(actor: WorkspaceActor, raw: unknown) {
         ),
       );
     if (!input.facts && !profile)
-      throw new ValoProblem(422, "Complete a business profile or provide questionnaire answers first");
+      throw new ValoProblem(422, "Fill in your business profile, or answer the check's questions, first.");
     // Without supplied facts, the check above found the profile: each `profile!` below relies on it.
     const facts = suppliedFacts ?? factsFromProfile(profile!.profile);
     const result = await runAssessment(facts, input.asOfDate, tx);
@@ -288,7 +295,7 @@ export async function assessmentRow(tx: WorkspaceTx, actor: WorkspaceActor, id: 
     .select()
     .from(valoAssessments)
     .where(and(eq(valoAssessments.workspaceId, actor.workspaceId), eq(valoAssessments.id, id)));
-  if (!row) throw new ValoProblem(404, "Assessment not found");
+  if (!row) throw new ValoProblem(404, "This saved result was not found in your workspace.");
   return row;
 }
 export async function getAssessment(actor: WorkspaceActor, id: string) {
