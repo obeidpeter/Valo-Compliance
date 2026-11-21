@@ -1395,6 +1395,13 @@
       "proves": "The reviewers are given the differences found between the official copies of an Act for the sections a guide quotes, and every open question about the text even when it names a section the guide does not quote."
     },
     {
+      "requirement": "EDP-005",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/lib/managed-callers-real-bindings.integration.test.ts",
+      "test": "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
+      "proves": "In a disposable copy of the database, a guide prepared from a stored capture has its two reviews run through the real dispatcher with a stand-in for the model; each answer carries the five enhanced checks with a passage of the guide's own sources, and the real publisher releases the version with all five recorded as passed by both. The owner's approval of the guidance policy is supposed inside the test and the answers are controlled fixtures, not reviews."
+    },
+    {
       "requirement": "EDP-006",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-mechanical.test.ts",
