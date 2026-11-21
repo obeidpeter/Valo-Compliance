@@ -1108,6 +1108,44 @@ answered its list with nothing:
 "Operational aids" joins the word list. A new browser test draws the panel with a document in it,
 and with its list failing, on a phone.
 
+### Phase 6: what the purchases screen opens on
+
+The development database has no published content, so nothing is for sale. A customer who opens
+"Purchases" finds a notice, a list with nothing to buy and a list with no order. All of it was in
+the system's words.
+
+| Before | Now |
+| --- | --- |
+| "Keep your order, verification, receipt and licence history together. A saved order or checkout return is not proof of payment." | "Your orders, their receipts and the licences you accepted are listed here. A saved order is not proof of payment, and neither is coming back from the payment page." |
+| "Live payments are off", "Only explicitly enabled Paystack test-mode checkout is supported. Do not use real payment or confidential customer information. Email receipts are not marked delivered without delivery evidence." | "Real payments are switched off", "Where a checkout is offered here, it is a test, in Paystack's test mode. Do not enter a real card, or real or confidential customer details. A receipt sent by email is not shown as delivered unless its delivery is confirmed." |
+| "Available documents", "There are no released documents with approved prices and commercial licences available to buy. Your existing drafts and private exports remain available." | "Documents you can buy", "Nothing can be bought yet. A document is listed here once it is published with a price and a licence. The documents you have made, and their files, stay in your workspace." |
+| "Order history", "No orders saved", "Orders will appear here when you choose an available document and accept its licence. No payment has been assumed." | "Your orders", "No orders yet", "An order appears here once you choose a document to buy and accept its licence. Saving an order does not pay for it." |
+
+Each limit is kept:
+
+- A saved order is not proof of payment, and neither is coming back from the payment page
+  (PAY-003).
+- A checkout on this screen is only ever a test. The server starts one only in a development
+  build, with test checkout switched on and a Paystack test key.
+- No real card, and no real or confidential customer details.
+- An emailed receipt is not called delivered without confirmation.
+
+"Switched off" and "Nothing can be bought yet" are the pricing page's own words. The screen names
+no price.
+
+A new browser test opens the screen with nothing for sale and no order, on a phone, and reads
+these sentences. The other tests give the screen an order, so its list with no order had never
+been drawn.
+
+Not changed: everything the screen shows once there is something to buy or an order. That is the
+button that saves a test order, an order's states, the test checkout, the receipt, the refund form,
+the information for a bank dispute and the payment concerns panel. These say "test order" and
+"test-only refund policy" because only a test checkout exists, and they state what a refund and a
+dispute do and do not do. They are left for when a price and a refund policy are set.
+
+One script that needs a verified test account, and so runs in no CI job, read the two empty
+states by their old words. It was updated and not run.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
@@ -1162,7 +1200,7 @@ accepted by it.
 | Heuristic | Built | Not done |
 | --- | --- | --- |
 | 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. | The words inside a downloaded file, such as "Saved revision 3", are the server's and are unchanged. |
-| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. The purchases screen, throughout: what it opens on, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
+| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
 | 3. User control and freedom | The editor has undo and keeps every version. "Start over" asks first. Five discards ask in the app's own dialog. "Save before leaving?" also catches the browser's Back and Forward buttons. | On the compiled site the Back button was checked once by hand; no CI test can sign in to it. |
 | 4. Consistency and standards | The component styles are in one layer. Dates, times, amounts and counts go through one formatter. One header, one footer and one phone bar. One page where a document starts. | |
 | 5. Error prevention | A new form opens without red marks, and what a document still needs is listed before a download. The check chooses no answer for the visitor. The editor saves nothing underneath an open question. Someone who cannot sign in is told before writing that no reply is emailed. | |
@@ -1228,3 +1266,9 @@ Open:
 14. The workspace data download says "Queued", "Prepare a private JSON snapshot" and "Prepared
     export availability withdrawn". Its sentences state limits on a privacy right, and a test in
     CI reads most of them word for word. They are unchanged; reword them with the privacy page.
+15. The purchases screen's words about buying and about an order: "Save test order", "Continue
+    hosted test checkout", "Staff reconciliation required", "Refund amount in NGN", "Provider
+    dispute observation", and the panels for a bank dispute and a payment concern. They say
+    "test" because only a test checkout exists, and they state what a refund and a dispute do and
+    do not do. They are unchanged. Reword them when a price and a refund policy are set, with a
+    legal reader.

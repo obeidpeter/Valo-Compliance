@@ -731,8 +731,8 @@ try {
     expect(workspaceId).toBeTruthy();
     await page!.goto("/workspace/purchases");
     await expect(page!.getByRole("heading", { name: "Purchases and licences" })).toBeVisible();
-    await expect(page!.getByText("No orders saved", { exact: true })).toBeVisible();
-    await expect(page!.getByText(/no released documents with approved prices/i)).toBeVisible();
+    await expect(page!.getByText("No orders yet", { exact: true })).toBeVisible();
+    await expect(page!.getByTestId("text-nothing-to-buy")).toBeVisible();
     const held = await pool.query("select id from valo_content_versions where status='held' limit 1");
     expect(held.rowCount).toBe(1);
     const price = randomUUID(),
