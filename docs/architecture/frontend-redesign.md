@@ -438,6 +438,45 @@ everywhere at once.
   phone's sides. A check measures this page's dialog and the profile's, on a phone and on a
   desktop. The app's four other dialogs get the same rule and are not measured.
 
+### Phase 4: pricing, help and the pages about Valo
+
+The last of the public pages. Each is headed with the name its links give it.
+
+| Page | Heading now | Heading before |
+| --- | --- | --- |
+| Help (`/help`) | Questions and answers | Straight answers |
+| Contact (`/contact`) | Contact us | Write to the people building Valo. |
+| Report a problem (`/support`) | Report a problem | Tell us what went wrong. |
+| Trouble signing in (`/account-access`) | Trouble signing in | Cannot get in? Start here. |
+| About (`/about`) | Documents and guidance for Nigerian small businesses | Two shelves, kept apart on purpose. |
+| Services (`/services`) | Ask about a service | Need a person, not a page? |
+
+- The browser tabs follow: "Contact us", "Report a problem", "Trouble signing in" and "Ask about a
+  service". They read "Contact Valo", "Support", "Account access help" and "Service enquiries".
+- These pages' links to each other use those names, and so do the sign-in page and the error
+  screens, which said "Get account access help" and "Account access help". The reminders screen
+  still says "Contact support"; it changes with the workspace.
+- **Help.** The eight answers use the site's words. Two were out of date:
+  - Where to get a copy of your data. The answer said "Workspace, then Privacy", which the
+    workspace's sections replaced. It now says "Privacy and data", in the account menu.
+  - How to download a document. The answer named an "Export" control the editor does not have. It
+    now says where the Word and PDF files are made.
+- **About.** "What works today" is in plain words, and says that the drafting assistant is AI
+  and runs only when asked for and agreed to. It no longer lists proposals, which no document here
+  is for.
+- **Pricing.** The page still opens on "Prices have not been set". The disabled "Checkout
+  unavailable" button is gone; the page says that payments are switched off.
+
+**Kept, and why.**
+
+- Services keeps the sentence "No professional providers are listed yet, so nothing is booked or
+  forwarded." A test for SRV-001 holds it.
+- About keeps its list headed "What Valo is not". The check that the site shows no endorsement
+  (WEB-004) reads that list by its heading.
+- The privacy and terms pages keep their words. They are working notes that the owner and legal
+  advisers have not approved, and say so. Only a doubled word is corrected.
+- The forms on these pages are rewritten with the other messages, in phase 6.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
