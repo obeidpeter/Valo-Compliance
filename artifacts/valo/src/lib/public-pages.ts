@@ -9,11 +9,12 @@ export const publicPages: Record<string, { title: string; description: string }>
   "/library": {
     title: "Documents and guidance — Valo",
     description:
-      "Search released business templates and guidance by keyword, category, industry and access level.",
+      "Search the business templates and guidance Valo has published, by keyword, category, industry and access level.",
   },
   "/resources": {
     title: "Guides — Valo",
-    description: "Browse currently released business guidance, with source details and review dates.",
+    description:
+      "Browse the business guidance Valo has published, with its sources and the dates they were checked.",
   },
   "/industries": {
     title: "Guidance by industry — Valo",

@@ -943,3 +943,33 @@ test("the guidance page names the tax authority and its number as the specificat
     "link-source-nafdac",
   ]);
 });
+
+// The banner is the first thing on every page. It said "synthetic test details", the project's own
+// word; the rest of the site says "made-up details".
+test("a server-rendered page's banner tells a visitor to use made-up details, and the documents and guides pages describe themselves in the site's words", async () => {
+  const home = await (await fetch(web.origin + "/")).text();
+  const banner = text(/data-testid="text-dev-banner"[^>]*>([\s\S]*?)<\/div>/.exec(home)?.[1] ?? "").replace(
+    /\s+/g,
+    " ",
+  );
+  assert.ok(
+    banner.includes("Not launched. Use made-up details only — no real customer or confidential data."),
+    banner,
+  );
+  assert.ok(banner.includes("Developer notes"), banner);
+  assert.doesNotMatch(banner, /synthetic/i);
+  // A page's description is what a search result or a shared link shows of it.
+  for (const [path, description] of [
+    [
+      "/library",
+      "Search the business templates and guidance Valo has published, by keyword, category, industry and access level.",
+    ],
+    [
+      "/resources",
+      "Browse the business guidance Valo has published, with its sources and the dates they were checked.",
+    ],
+  ] as const) {
+    const html = await (await fetch(web.origin + path)).text();
+    assert.equal(/<meta name="description" content="([^"]*)"\/>/.exec(html)?.[1], description, path);
+  }
+});
