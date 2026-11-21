@@ -10,6 +10,7 @@ import {
 } from "./source-fetch";
 import { instrumentIdentity } from "./source-identity";
 import { checkExtractedText, extractSource } from "./source-extract";
+import { captureOutcome } from "./valo-source-monitor";
 import { storeSourceSnapshot } from "./source-storage";
 import { randomUUID } from "node:crypto";
 import { chromium } from "playwright";
@@ -141,5 +142,50 @@ test("source storage rejects customer keys, arbitrary object suffixes and oversi
   await assert.rejects(
     () => storeSourceSnapshot(randomUUID(), "raw", Buffer.alloc(8 * 1024 * 1024 + 1)),
     /TOO_LARGE/,
+  );
+});
+test("a file is compared by its bytes, and a web page by the words read from it", () => {
+  const page = (raw: string, text: string, version = "source-text-3") => ({
+    raw_checksum: raw,
+    text_checksum: text,
+    mime: "text/html",
+    extraction_version: version,
+  });
+  const file = (raw: string, text: string) => ({ ...page(raw, text), mime: "application/pdf" });
+  // The first capture of a source, and the same file served again.
+  assert.equal(captureOutcome(null, undefined, page("r1", "t1")), "first");
+  assert.equal(captureOutcome("r1", page("r1", "t1"), page("r1", "t1")), "same_file");
+  assert.equal(captureOutcome("r1", file("r1", "t1"), file("r1", "t1")), "same_file");
+  // A page that returns different bytes and says the same words has not changed.
+  assert.equal(captureOutcome("r1", page("r1", "t1"), page("r2", "t1")), "same_words");
+  assert.equal(
+    captureOutcome("r1", { ...page("r1", "t1"), mime: "application/xhtml+xml" }, page("r2", "t1")),
+    "same_words",
+  );
+  // Different words are a change.
+  assert.equal(captureOutcome("r1", page("r1", "t1"), page("r2", "t2")), "changed");
+  // A file with different bytes is a change even when the words read from it are the same.
+  assert.equal(captureOutcome("r1", file("r1", "t1"), file("r2", "t1")), "changed");
+  // So is a file where a page was, or a page where a file was.
+  assert.equal(captureOutcome("r1", page("r1", "t1"), file("r2", "t1")), "changed");
+  assert.equal(captureOutcome("r1", file("r1", "t1"), page("r2", "t1")), "changed");
+  assert.equal(
+    captureOutcome("r1", { ...page("r1", "t1"), mime: "text/plain" }, page("r2", "t1")),
+    "changed",
+  );
+  // Words read by another version of the extractor are not comparable.
+  assert.equal(captureOutcome("r1", page("r1", "t1", "source-text-2"), page("r2", "t1")), "changed");
+  assert.equal(captureOutcome("r1", page("r1", "t1", ""), page("r2", "t1", "")), "changed");
+  // The watch's current capture must be the one its recorded checksum names, and must be known.
+  assert.equal(captureOutcome("r1", page("r0", "t1"), page("r2", "t1")), "changed");
+  assert.equal(captureOutcome("r1", undefined, page("r2", "t1")), "changed");
+  // A capture without both checksums never counts as the same.
+  assert.equal(
+    captureOutcome("r1", page("r1", "t1"), { ...page("r2", "t1"), text_checksum: null }),
+    "changed",
+  );
+  assert.equal(
+    captureOutcome("r1", page("r1", "t1"), { ...page("r1", "t1"), raw_checksum: null }),
+    "changed",
   );
 });

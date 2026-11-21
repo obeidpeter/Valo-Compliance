@@ -33,6 +33,40 @@ export async function scheduleSourceChecks(now = new Date()) {
   });
 }
 type Claim = { id: string; source_id: string; token: string };
+type Capture = {
+  raw_checksum?: unknown;
+  text_checksum?: unknown;
+  mime?: unknown;
+  extraction_version?: unknown;
+};
+const isPage = (capture: Capture) => capture.mime === "text/html" || capture.mime === "application/xhtml+xml";
+/**
+ * What a successful new capture means for a watched source.
+ *
+ * A file is compared by its bytes: a different file is a different text until someone has read it.
+ * A web page is compared by the words read from it, because a page can return different bytes on
+ * every request (an email-protection or anti-bot code) while saying the same words. A page counts
+ * as saying the same words only when the watch's current capture and the new one are both pages,
+ * were read by the same version of the extractor, and the words read are identical.
+ */
+export function captureOutcome(
+  lastRawHash: unknown,
+  current: Capture | undefined,
+  next: Capture,
+): "first" | "same_file" | "same_words" | "changed" {
+  if (!lastRawHash) return "first";
+  if (!next.raw_checksum || !next.text_checksum) return "changed";
+  if (lastRawHash === next.raw_checksum) return "same_file";
+  return current &&
+    current.raw_checksum === lastRawHash &&
+    isPage(current) &&
+    isPage(next) &&
+    current.text_checksum === next.text_checksum &&
+    !!next.extraction_version &&
+    current.extraction_version === next.extraction_version
+    ? "same_words"
+    : "changed";
+}
 export async function claimSourceCheck(now = new Date()): Promise<Claim | null> {
   const { db } = await import("@workspace/db");
   return db.transaction(async (tx) => {
@@ -70,54 +104,76 @@ export async function claimSourceCheck(now = new Date()): Promise<Claim | null> 
 }
 export async function completeSourceCheck(claim: Claim, snapshotId: string | null, now = new Date()) {
   const { db } = await import("@workspace/db");
-  return db.transaction(async (tx) => {
-    await lockSourceState(tx, true);
-    const job = (
-      await tx.execute(sql`select * from valo_source_check_jobs where id=${claim.id}::uuid for update`)
-    ).rows[0];
-    if (
-      !job ||
-      job.status !== "running" ||
-      job.lease_token !== claim.token ||
-      !job.lease_until ||
-      sourceTime(job.lease_until) <= +now
-    )
-      return false;
-    const prior = (
-      await tx.execute(sql`select * from valo_source_watches where source_id=${claim.source_id} for update`)
-    ).rows[0]!;
-    const snapshot = snapshotId
+  return db.transaction((tx) => completeSourceCheckIn(tx, claim, snapshotId, now));
+}
+/** The completion itself, on the caller's transaction. Only `completeSourceCheck` and tests call it. */
+export async function completeSourceCheckIn(
+  tx: SourceTx,
+  claim: Claim,
+  snapshotId: string | null,
+  now = new Date(),
+) {
+  await lockSourceState(tx, true);
+  const job = (
+    await tx.execute(sql`select * from valo_source_check_jobs where id=${claim.id}::uuid for update`)
+  ).rows[0];
+  if (
+    !job ||
+    job.status !== "running" ||
+    job.lease_token !== claim.token ||
+    !job.lease_until ||
+    sourceTime(job.lease_until) <= +now
+  )
+    return false;
+  const prior = (
+    await tx.execute(sql`select * from valo_source_watches where source_id=${claim.source_id} for update`)
+  ).rows[0]!;
+  const snapshot = snapshotId
+    ? (
+        await tx.execute(
+          sql`select * from valo_source_snapshots where id=${snapshotId}::uuid and source_id=${claim.source_id}`,
+        )
+      ).rows[0]
+    : null;
+  const okay =
+    !!snapshot &&
+    snapshot.status === "retrieved_unreviewed" &&
+    snapshot.raw_checksum &&
+    snapshot.text_checksum &&
+    snapshot.raw_object_key &&
+    snapshot.text_object_key;
+  const failure = okay ? null : String(snapshot?.failure_code ?? "SOURCE_CAPTURE_UNCONFIRMED");
+  const current =
+    okay && prior.last_snapshot_id
       ? (
           await tx.execute(
-            sql`select * from valo_source_snapshots where id=${snapshotId}::uuid and source_id=${claim.source_id}`,
+            sql`select raw_checksum,text_checksum,mime,extraction_version from valo_source_snapshots
+   where id=${String(prior.last_snapshot_id)}::uuid and source_id=${claim.source_id}`,
           )
         ).rows[0]
-      : null;
-    const okay =
-      !!snapshot &&
-      snapshot.status === "retrieved_unreviewed" &&
-      snapshot.raw_checksum &&
-      snapshot.text_checksum &&
-      snapshot.raw_object_key &&
-      snapshot.text_object_key;
-    const failure = okay ? null : String(snapshot?.failure_code ?? "SOURCE_CAPTURE_UNCONFIRMED");
-    await tx.execute(sql`update valo_source_check_jobs set status='complete',snapshot_id=${snapshot ? String(snapshot.id) : null}::uuid,
-   result=${failure ?? (prior.last_raw_hash && prior.last_raw_hash !== snapshot!.raw_checksum ? "SOURCE_CHANGED" : "SOURCE_CAPTURED")},lease_token=null,lease_until=null where id=${claim.id}::uuid`);
-    await tx.execute(sql`update valo_source_watches set checked_at=${now},failure_code=${failure},
-   last_snapshot_id=case when ${Boolean(okay)} then ${snapshot ? String(snapshot.id) : null}::uuid else last_snapshot_id end,
-   last_raw_hash=case when ${Boolean(okay)} then ${snapshot ? String(snapshot.raw_checksum) : null} else last_raw_hash end where source_id=${claim.source_id}`);
-    if (!okay || (prior.last_raw_hash && prior.last_raw_hash !== snapshot!.raw_checksum))
-      await impactSourceDependants(
-        tx,
-        claim.source_id,
-        okay
-          ? "The official source bytes changed; claims require fresh review."
-          : "The official source could not be verified by the daily check.",
-        `check:${claim.id}`,
-        snapshot ? String(snapshot.id) : null,
-      );
-    return true;
-  });
+      : undefined;
+  const outcome = okay ? captureOutcome(prior.last_raw_hash, current, snapshot!) : null;
+  const changed = outcome === "changed";
+  // A page that says the same words under different bytes: the watch goes on naming the capture
+  // it already holds, so whatever is bound to that capture stays bound. Only the time of the
+  // check moves. The new capture is kept, and this job's record names it.
+  const moveToNew = Boolean(okay) && outcome !== "same_words";
+  await tx.execute(sql`update valo_source_check_jobs set status='complete',snapshot_id=${snapshot ? String(snapshot.id) : null}::uuid,
+   result=${failure ?? (changed ? "SOURCE_CHANGED" : outcome === "same_words" ? "SOURCE_SAME_WORDS" : "SOURCE_CAPTURED")},lease_token=null,lease_until=null where id=${claim.id}::uuid`);
+  await tx.execute(sql`update valo_source_watches set checked_at=${now},failure_code=${failure},
+   last_snapshot_id=case when ${moveToNew} then ${snapshot ? String(snapshot.id) : null}::uuid else last_snapshot_id end,
+   last_raw_hash=case when ${moveToNew} then ${snapshot ? String(snapshot.raw_checksum) : null} else last_raw_hash end where source_id=${claim.source_id}`);
+  if (!okay || changed)
+    await impactSourceDependants(
+      tx,
+      claim.source_id,
+      okay
+        ? "The official source bytes changed; claims require fresh review."
+        : "The official source could not be verified by the daily check.",
+      `check:${claim.id}`,
+      snapshot ? String(snapshot.id) : null,
+    );
+  return true;
 }
 let captureInFlight: Promise<string> | null = null;
 export async function reconcileSourceMonitoring() {

@@ -162,12 +162,13 @@ page images. It is not legal review.
   both codes change with every request. Each page was fetched twice on 21 November 2026 (at 21:14
   and 21:18 UTC, and at 18:26 and 21:18 UTC). The bytes differed and the words read from them were
   the same (1,113 and 2,796 characters). The portal's front page returned the same bytes twice.
-- **What that means for the daily check.** The daily check calls a source changed when its bytes
-  change, and then holds whatever rests on it. It would report those two pages changed every day.
+- **What that meant for the daily check.** The daily check called a source changed when its bytes
+  changed, and then held whatever rested on it. It would have reported those two pages changed
+  every day.
   GUD-01 and GUD-03 rest in part on the business-name page, and GUD-08 on the Tax ID page. As the
-  check stands, those guides could be released only between two checks and would be held at the
-  next one. The guides that quote Acts alone are not affected: both Acts' files returned their
-  recorded checksums. The check needs to compare a page's words (see point 2).
+  check stood then, those guides could be released only between two checks and would be held at
+  the next one. The guides that quote Acts alone are not affected: both Acts' files returned their
+  recorded checksums. The check now compares a page's words (see point 2).
 
 ## Proposal
 
@@ -264,11 +265,20 @@ This cannot prove that no later instrument exists. Only a search of every gazett
 qualified person could give an opinion on it. The guide's limits will say when and where the search
 was made.
 
-**A page is compared by its words (not yet built).** An Act's file is the same bytes every time,
-and a different file is a different text until someone has read it. An official web page is not
-like that: two of the pages the guides describe return different bytes on every request while
-saying the same words. For a page, "changed" should mean that the words read from it changed. Until
-the daily check works that way, a guide that rests on such a page is held at the next check.
+**A page is compared by its words (built).** An Act's file is the same bytes every time, and a
+different file is a different text until someone has read it. An official web page is not like
+that: two of the pages the guides describe return different bytes on every request while saying the
+same words. So the daily check now compares a web page by the words read from it:
+
+- When a page returns different bytes and the words read from it are identical, nothing is held.
+  The check records that it found the same words, and keeps the new capture.
+- When the words differ, the page has changed, and what rests on it is held as before.
+- A file, such as an Act's PDF, is still compared by its bytes.
+- Words read by a different version of the text extractor are not compared; that counts as a change.
+
+This rule is about every watched source, not only the guides': a rule that rests on a web page is
+treated the same way. It takes away false alarms. It cannot notice a change that leaves a page's
+words as they were, such as a different picture or a link that now leads somewhere else.
 
 ### 3. The rights record
 
@@ -352,7 +362,7 @@ command that publishes.
    reviews, and the owner's approval supposed, a guide passes every check the publisher makes and
    nothing is published).
 8. The same review route templates use, opened to guides, and the publish command.
-9. The daily check compares a page's words, not its bytes.
+9. The daily check compares a page's words, not its bytes (built).
 10. A released guide shown on the site as a free guide, not as a template.
 11. Claim maps for GUD-11 to GUD-30, from the official files whose checksums match the recorded
     ones.

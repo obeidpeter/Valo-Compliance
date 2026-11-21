@@ -75,6 +75,6 @@ record describes. That is deliberate: someone has to read the new file and write
   in a database transaction that is rolled back. No guide has been published.
 - **Pages that change with every request.** The business-name page and the Tax ID page return
   different bytes each time they are fetched while saying the same words. The daily check compares
-  bytes, so it will report them changed at every check and hold what rests on them. GUD-01, GUD-03
-  and GUD-08 are affected until the check compares a page's words.
+  a web page by its words, so that alone holds nothing. If a page's words change, what rests on it
+  is held until it is prepared and reviewed again.
 - **The other twenty guides** have no claim map yet.
