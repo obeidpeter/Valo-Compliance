@@ -1,5 +1,6 @@
 "use client";
 
+import { BOTTOM_BAR } from "@/components/menu-panel";
 import { DOCK_BUTTON } from "@/components/site-chrome";
 import { basePath } from "@/lib/env";
 import { useIdentity } from "./identity-store";
@@ -12,6 +13,7 @@ export function MobileDock() {
     <div
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.6rem)] pt-2.5 backdrop-blur lg:hidden"
       data-testid="mobile-dock"
+      {...BOTTOM_BAR}
     >
       <div className="grid grid-cols-2 gap-2">
         <a

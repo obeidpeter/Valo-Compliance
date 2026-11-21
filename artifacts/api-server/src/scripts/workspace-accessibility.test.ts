@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import * as api from "@workspace/api-zod";
 import {
+  menuProblems,
   phoneProblems,
   ready,
   settled,
@@ -675,6 +676,22 @@ test("a signed-in screen whose data fails to load shows an alert with a retry bu
         .waitFor({ state: "detached", timeout: 30_000 })
         .catch(() => problems.push(`${path}: retrying did not clear the error`));
       problems.push(...unknown.map((call) => `${path}: no test answer for ${call}`));
+      problems.push(...errors.map((error) => `${path}: page error ${error}`));
+    } finally {
+      await close();
+    }
+  }
+  assert.deepEqual(problems, []);
+});
+
+test("the phone's opened menu fits a short screen and a phone on its side: every control in it comes to rest on screen and clear of the bottom bar", async () => {
+  const problems: string[] = [];
+  // Signed in, on a public screen and on two of the workspace's.
+  for (const path of ["/checker", "/workspace/account", "/workspace"]) {
+    const { page, errors, close } = await phone(path);
+    try {
+      await ready(page);
+      problems.push(...(await menuProblems(page, path)));
       problems.push(...errors.map((error) => `${path}: page error ${error}`));
     } finally {
       await close();

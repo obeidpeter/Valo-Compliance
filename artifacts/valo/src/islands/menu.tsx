@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { MenuPanel } from "@/components/menu-panel";
 
 /**
  * The header of a server-rendered public page, with its menu button. The server renders the header's
@@ -39,9 +40,7 @@ export function HeaderWithMenu({ row, menu }: { row: ReactNode; menu: ReactNode 
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
-      {open && (
-        <div className="reveal border-t border-border bg-background px-5 pb-6 pt-3 lg:hidden">{menu}</div>
-      )}
+      {open && <MenuPanel>{menu}</MenuPanel>}
     </header>
   );
 }

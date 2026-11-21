@@ -265,13 +265,21 @@ export async function overflowing(page: Page): Promise<string> {
   })()`);
 }
 
-export type Stop = { name: string; visible: boolean; outlined: boolean; covered: boolean };
+export type Stop = {
+  name: string;
+  visible: boolean;
+  outlined: boolean;
+  covered: boolean;
+  offScreen: boolean;
+};
 
 /** What the keyboard has just focused, or null once focus has left the page or come round to an
  * element already visited. `covered` is whether a bar that stays on screen (anything fixed or sticky
  * that the element is not part of, such as the site's header or the phone's bottom bar) lies over
  * the element's middle, or over its top or bottom edge when the element is short enough to fit
- * clear of the bars. */
+ * clear of the bars. `offScreen` is whether the element is outside the screen, which no bar need
+ * cover: a menu longer than the screen, inside a header that stays put, leaves its last links there.
+ * A short element is outside when its middle is; one too tall to fit, when no part of it shows. */
 const FOCUSED = `(() => {
   const e = document.activeElement;
   if (!e || e === document.body || window.tabbed.has(e)) return null;
@@ -282,11 +290,13 @@ const FOCUSED = `(() => {
       if (["fixed", "sticky"].includes(getComputedStyle(over).position) && !over.contains(e)) return true;
     return false;
   };
-  const x = box.left + box.width / 2, short = box.height < innerHeight / 2;
+  const x = box.left + box.width / 2, y = box.top + box.height / 2, short = box.height < innerHeight / 2;
   return { name: e.tagName + " " + (e.getAttribute("aria-label") || e.textContent || "").trim().slice(0, 40),
     visible: box.width > 0 && box.height > 0 && s.visibility === "visible",
     outlined: (s.outlineStyle !== "none" && s.outlineWidth !== "0px") || s.boxShadow !== "none",
-    covered: under(x, box.top + box.height / 2) || (short && (under(x, box.top + 1) || under(x, box.bottom - 1))) };
+    covered: under(x, y) || (short && (under(x, box.top + 1) || under(x, box.bottom - 1))),
+    offScreen: box.right <= 0 || box.left >= innerWidth ||
+      (short ? y < 0 || y > innerHeight : box.bottom <= 0 || box.top >= innerHeight) };
 })()`;
 
 /**
@@ -323,11 +333,14 @@ export async function phoneProblems(page: Page, path: string, { minimumStops = 3
     if (!stop.visible) problems.push(`${path}: Tab ${i + 1} focused a hidden element (${stop.name})`);
     else if (!stop.outlined)
       problems.push(`${path}: Tab ${i + 1} focus on ${stop.name} has no visible outline`);
+    else if (stop.offScreen) problems.push(`${path}: Tab ${i + 1} left ${stop.name} off the screen`);
     else if (stop.covered)
       problems.push(`${path}: Tab ${i + 1} left ${stop.name} behind a bar that stays on screen`);
   }
   for (const [i, stop] of (await tabbing(page, "Shift+Tab")).entries())
-    if (stop.visible && stop.covered)
+    if (stop.visible && stop.offScreen)
+      problems.push(`${path}: Shift+Tab ${i + 1} left ${stop.name} off the screen`);
+    else if (stop.visible && stop.covered)
       problems.push(`${path}: Shift+Tab ${i + 1} left ${stop.name} behind a bar that stays on screen`);
   const { passes, failures } = await wcagFailures(page);
   if (passes <= 10) problems.push(`${path}: axe ran only ${passes} passing rules`);
@@ -337,5 +350,61 @@ export async function phoneProblems(page: Page, path: string, { minimumStops = 3
   const narrow = await page.evaluate<number>("document.documentElement.scrollWidth");
   if (narrow > 320)
     problems.push(`${path}: ${narrow} pixels wide on a 320-pixel screen (${await overflowing(page)})`);
+  return problems;
+}
+
+/** The screens the phone's opened menu must fit: the test phone upright, a shorter and narrower
+ * phone, and a phone on its side, where the header and the bottom bar leave the menu little room. */
+const MENU_SCREENS = [
+  { width: 360, height: 640 },
+  { width: 320, height: 480 },
+  { width: 640, height: 360 },
+];
+
+/**
+ * The problems with the phone's opened menu on each of those screens: a control in it that keyboard
+ * focus leaves off the screen or behind a bar that stays on screen. The header stays put, so a
+ * finger cannot scroll to such a control either. On each screen it opens the menu from the keyboard,
+ * goes through the header with Tab, and closes the menu again with Escape, which must return focus
+ * to its button. The page is left at the last of the sizes.
+ */
+export async function menuProblems(page: Page, path: string, { minimumStops = 3 } = {}) {
+  const problems: string[] = [];
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const size of MENU_SCREENS) {
+    await page.setViewportSize(size);
+    await delay(300);
+    problems.push(
+      ...(await openMenuProblems(page, `${path} at ${size.width} by ${size.height}`, minimumStops)),
+    );
+  }
+  return problems;
+}
+
+async function openMenuProblems(page: Page, where: string, minimumStops: number) {
+  const problems: string[] = [];
+  const button = page.getByTestId("button-menu");
+  await button.focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("navigation", { name: "Mobile" }).waitFor({ state: "visible" });
+  await page.evaluate("window.tabbed = new WeakSet()");
+  let stops = 0;
+  for (let step = 0; step < 40; step++) {
+    await page.keyboard.press("Tab");
+    if (!(await page.evaluate("!!document.activeElement?.closest('header')"))) break;
+    const stop = (await page.evaluate(FOCUSED)) as Stop | null;
+    if (!stop) break;
+    stops++;
+    if (!stop.visible) problems.push(`${where}: the open menu's ${stop.name} is hidden`);
+    else if (stop.offScreen) problems.push(`${where}: the open menu leaves ${stop.name} off the screen`);
+    else if (stop.covered)
+      problems.push(`${where}: the open menu leaves ${stop.name} behind a bar that stays on screen`);
+  }
+  if (stops < minimumStops) problems.push(`${where}: Tab reached only ${stops} controls in the open menu`);
+  await button.focus();
+  await page.keyboard.press("Escape");
+  await page.getByRole("navigation", { name: "Mobile" }).waitFor({ state: "hidden" });
+  if ((await page.evaluate("document.activeElement?.getAttribute('data-testid')")) !== "button-menu")
+    problems.push(`${where}: Escape did not return focus to the menu button`);
   return problems;
 }

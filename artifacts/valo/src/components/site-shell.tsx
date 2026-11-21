@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Show, useClerk, useUser } from "@clerk/react";
 import { LogOut, Menu, X } from "lucide-react";
 import { Wordmark } from "@/components/brand";
+import { BOTTOM_BAR, MenuPanel } from "@/components/menu-panel";
 import { DevBanner, DOCK_BUTTON, NAV, SiteFooter, inSection } from "@/components/site-chrome";
 import { basePath } from "@/lib/env";
 import { isServerPage } from "@/lib/server-pages";
@@ -134,7 +135,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           </button>
         </div>
         {open && (
-          <div className="reveal border-t border-border bg-background px-5 pb-6 pt-3 lg:hidden">
+          <MenuPanel>
             <nav className="grid gap-1" aria-label="Mobile">
               {NAV.map((n) => (
                 <ShellLink
@@ -160,7 +161,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 </Link>
               </Show>
             </div>
-          </div>
+          </MenuPanel>
         )}
       </header>
       <main className="flex-1 pb-24 lg:pb-0">{children}</main>
@@ -176,6 +177,7 @@ function MobileDock() {
     <div
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.6rem)] pt-2.5 backdrop-blur lg:hidden"
       data-testid="mobile-dock"
+      {...BOTTOM_BAR}
     >
       <div className="grid grid-cols-2 gap-2">
         <Show when="signed-in">
