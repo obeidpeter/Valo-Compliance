@@ -435,11 +435,10 @@ function TaskRow({
     >
       {editing && draft ? (
         <>
-          <p className="eyebrow mb-4">Editing · based on rev {baseRev}</p>
+          <p className="eyebrow mb-4">Editing version {baseRev}</p>
           {conflict !== null && (
             <Notice className="mb-4" title="This task changed elsewhere">
-              Your unsaved text is still in the form below. The latest saved version is revision{" "}
-              {task.revision}
+              What you typed is still in the form below. The newest saved one is version {task.revision}
               {latestDiffers ? "" : " (refreshing)"}.
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
@@ -452,7 +451,7 @@ function TaskRow({
                   }}
                   data-testid={"button-overwrite-" + task.id}
                 >
-                  Save my version over rev {task.revision}
+                  Save mine over version {task.revision}
                 </button>
                 <button
                   type="button"
@@ -465,7 +464,7 @@ function TaskRow({
                   }}
                   data-testid={"button-load-latest-" + task.id}
                 >
-                  Discard mine, load latest
+                  Discard mine and load the newest
                 </button>
               </div>
             </Notice>
@@ -550,13 +549,14 @@ function TaskRow({
               {task.ruleId && task.assessmentId && (
                 <Link
                   href={"/workspace/assessments/" + task.assessmentId}
-                  className="font-mono text-muted-foreground underline underline-offset-2"
+                  className="text-muted-foreground underline underline-offset-2"
+                  title={"Rule " + task.ruleId}
                 >
-                  rule {task.ruleId}
+                  From a saved result
                 </Link>
               )}
-              <span className="font-mono text-muted-foreground">
-                rev {task.revision} · {formatDateTime(task.updatedAt)}
+              <span className="text-muted-foreground">
+                Version {task.revision} · saved {formatDateTime(task.updatedAt)}
               </span>
             </div>
             {done && (

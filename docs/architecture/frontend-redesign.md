@@ -647,6 +647,48 @@ their labels until their own step.
 One script that needs a verified test account, and so runs in no CI job, types amounts into the
 questions. It now types naira. It was updated and not run.
 
+### Phase 5: saved results, the profile and tasks in the customer's words
+
+The workspace called a saved result an "assessment", a version a "revision" or "rev", and the
+check "the checker". The word list's words replace them. No address changes: saved results are
+still at `/workspace/assessments`.
+
+| Where | Now | Before |
+| --- | --- | --- |
+| Saved results list | "Saved results", under "Requirements" | "History", under "Saved assessments" |
+| A result's row | "Rules as at 18 Nov 2026", "Rules version …", "From your profile, version 3" or "From the answers you gave" | "as of 18 Nov 2026", "ruleset …", "profile rev 3" or "questionnaire snapshot" |
+| An empty list | "No saved results yet", with "Check my requirements" | "No saved checks yet", with "Run the checker" |
+| One saved result | "Result saved 18 Nov 2026, 10:00" and "Worked out from your business profile, version 3." | "Assessment of 18 Nov 2026, 10:00" and "From saved profile revision 3" |
+| Its comparison | "Earlier result", "No other saved results" | "Earlier assessment", "No other assessments" |
+| Page titles | "Saved results", "Saved result" | "Assessment history", "Assessment" |
+| The check's save panel | "Save this result", "With the answers I gave here", "With my business profile, version 3" | "Save to your workspace", "These questionnaire answers", "My saved profile, revision 3", "Save assessment" |
+| Business profile | "Version 3", "Save profile", and "I do not know" and "Not answered" as the check says them | "revision 3", "Save new revision", "Unknown" and "Not answered yet" |
+| Tasks | "Version 1 · saved 12 Nov 2026, 10:00", "From a saved result" | "rev 1 · 12 Nov 2026, 10:00", "rule SYNTHETIC-RULE-1" |
+| Reminders | No version beside "Preferences" | "rev 3" |
+
+**Kept on purpose.**
+
+- A result is still saved only after the customer ticks a box. It now reads "I agree to Valo
+  storing this result privately in my workspace."
+- Each saved result still names the version of the rules it used, so two results can be told
+  apart (CMP-005).
+- What the save panel says happens is what happened before: the profile is not changed, the
+  extra details are left out when the profile is used, and nothing is saved if the profile has
+  changed.
+
+**Not changed, and why.**
+
+- The result itself, as it reads after a check and in a saved result, still says "As of",
+  "Ruleset", "hash" and "Coverage unavailable". The public check shows the same result, so it
+  changes in a step of its own.
+- The account screen's paragraph about the copy of your data, and the reminders' words about
+  what an email provider accepted, are exact statements that checks pin. They wait for the
+  review of the privacy pages and for phase 6.
+- The drafting assistant's screens, and the API's own messages, keep their words.
+
+One script that needs a verified test account, and so runs in no CI job, reads the profile's
+version. It was updated and not run.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the

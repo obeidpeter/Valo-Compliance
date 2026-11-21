@@ -2716,6 +2716,13 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "an amount is typed in naira and saved as the same amount in whole kobo; what is not an amount stays as typed and is refused; and a saved amount is shown and printed in naira",
       "proves": "Signed in through a stand-in identity, typing “1,500.50” into an invoice's unit price reads back as ₦1,500.50 and the page saves 150050 kobo; “12.5x” stays in the box, is refused in words about naira and is saved as typed; and a document saved with 150000 kobo shows 1500 in the box and prints ₦1,500.00 under “Unit price, for the chosen quantity unit” in its preview. The API is answered in the page."
+    },
+    {
+      "requirement": "WRK-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the saved results, the business profile, the tasks and the check's save panel say 'result' and 'version' in the customer's words",
+      "proves": "Signed in through a stand-in identity with synthetic data: the list of saved results shows the rules and the profile version each used; one saved result is headed “Result saved” with its date and where it was worked out from; the business profile shows its version and the check's own words for not knowing; a task shows its version; and the check's save panel lets a result be saved only once its box is ticked. The list, the profile, the tasks and the save panel say none of “assessment”, “revision”, “rev”, “ruleset”, “questionnaire”, “snapshot” or “checker”. The result shown inside a saved result is not part of this check. The API is answered in the page, so nothing is saved for real."
     }
   ]
 }

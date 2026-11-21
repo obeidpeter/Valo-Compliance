@@ -1056,7 +1056,7 @@ function SavePanel({
 
   return (
     <div className="surface mt-8 p-5 sm:p-7" data-testid="panel-save">
-      <p className="eyebrow">Save to your workspace</p>
+      <p className="eyebrow">Save this result</p>
       <fieldset className="mt-4 grid gap-2">
         <legend className="sr-only">What to save</legend>
         <label
@@ -1074,9 +1074,9 @@ function SavePanel({
             data-testid="radio-save-answers"
           />
           <span>
-            <span className="font-medium">These questionnaire answers</span>
+            <span className="font-medium">With the answers I gave here</span>
             <span className="block text-muted-foreground">
-              Saved as a snapshot. Your business profile is not changed.
+              The answers are kept with the result. Your business profile is not changed.
             </span>
           </span>
         </label>
@@ -1097,11 +1097,15 @@ function SavePanel({
             data-testid="radio-save-profile"
           />
           <span>
-            <span className="font-medium">My saved profile, revision {profileRevision}</span>
+            <span className="font-medium">
+              {hasProfile
+                ? `With my business profile, version ${profileRevision}`
+                : "With my business profile"}
+            </span>
             <span className="block text-muted-foreground">
               {hasProfile
-                ? "The server re-checks using that exact revision. This choice excludes the optional details entered above. If the profile has changed since, saving stops."
-                : "No saved profile yet."}
+                ? "The result is worked out again from that version of your profile. The extra details you gave above are left out. If your profile has changed since this page opened, nothing is saved and you are told."
+                : "You have not saved a business profile yet."}
             </span>
           </span>
         </label>
@@ -1114,17 +1118,18 @@ function SavePanel({
           onChange={(ev) => setConsent(ev.target.checked)}
           data-testid="checkbox-save-consent"
         />
-        <span>I agree to Valo storing this assessment privately in my workspace.</span>
+        <span>I agree to Valo storing this result privately in my workspace.</span>
       </label>
       {stale && mode === "answers" && (
         <p className="hint">
-          You edited answers after this result. The saved copy is re-checked against your current answers.
+          You changed answers after this result was worked out. What is saved is worked out again from your
+          answers as they are now.
         </p>
       )}
       {e && (
         <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {e.kind === "conflict"
-            ? "Your profile changed since this page loaded. The revision shown above has been refreshed; review it and save again."
+            ? "Your profile changed after this page opened. The version above is now the newest. Look at it, then save again."
             : e.message}
         </p>
       )}
@@ -1135,7 +1140,7 @@ function SavePanel({
         onClick={save}
         data-testid="button-save-assessment"
       >
-        {create.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Save assessment
+        {create.isPending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}Save this result
       </button>
     </div>
   );

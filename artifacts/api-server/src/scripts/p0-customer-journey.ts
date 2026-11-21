@@ -149,7 +149,7 @@ try {
     await states.selectOption("unknown");
     await expect(page.getByTestId("checkbox-marketing")).not.toBeChecked();
     await page.getByTestId("button-save-profile").click();
-    await expect(page.getByTestId("text-profile-revision")).toContainText("revision 1");
+    await expect(page.getByTestId("text-profile-revision")).toContainText("Version 1");
     await page.reload();
     await expect(page.getByTestId("input-business-name")).toHaveValue("Synthetic P0 business");
     await expect(states).toHaveValue("unknown");
