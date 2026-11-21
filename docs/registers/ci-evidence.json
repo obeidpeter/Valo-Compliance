@@ -2828,6 +2828,27 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "a privacy request reads in words: its kind, its state, each step and who did what; and the screen still says what a request is not",
       "proves": "Signed in through a stand-in identity with synthetic data, the privacy screen gives a request's kind, state, steps and history in words, still says that a request received or partly done is not a confirmed deletion or a complete copy, and keeps the download's scope statement. This shows the screen's words, not that a request is verified or carried out in any system."
+    },
+    {
+      "requirement": "EDT-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/scripts/tester-tasks.integration.test.ts",
+      "test": "a business owner's first tasks work in a browser against the real API and database",
+      "proves": "In a browser against the real API and a real database, the PDF a customer downloads holds the answers typed on the page and names the saved version the page shows; after the price is corrected, the next file holds the corrected amounts and the newer version. The identity provider and the queue's worker are stood in for, and the Word file is not opened."
+    },
+    {
+      "requirement": "EDT-003",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/scripts/tester-tasks.integration.test.ts",
+      "test": "a business owner's first tasks work in a browser against the real API and database",
+      "proves": "After a full reload of the editor against the real API and a real database, the answers and the corrected price are shown as saved. This shows a reload in one browser, not a sign-in on another device."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/scripts/tester-tasks.integration.test.ts",
+      "test": "a business owner's first tasks work in a browser against the real API and database",
+      "proves": "A report sent from the page to the real API and a real database is answered on the page with \"Enquiry received\" and a reference. This shows the receipt, not what staff then see or do."
     }
   ]
 }
