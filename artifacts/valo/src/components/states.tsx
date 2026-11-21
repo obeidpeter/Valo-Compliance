@@ -34,15 +34,29 @@ export function ErrorState({
         <p className="font-medium">
           {title ??
             (d.kind === "forbidden"
-              ? "Access not available"
+              ? "You cannot open this"
               : d.kind === "unauthenticated"
-                ? "Sign in required"
+                ? "Sign in to continue"
                 : "We could not load this")}
         </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {d.message}
-          {d.status ? <span className="font-mono"> ({d.status})</span> : null}
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{d.message}</p>
+        {/* A failure at Valo is worth reporting if it lasts. The reference is the failed request's
+            own, in Valo's records: the only code shown, and only as something to quote. */}
+        {d.kind === "server" && (d.status ?? 0) >= 500 && (
+          <p className="mt-1 text-sm text-muted-foreground" data-testid="text-error-report">
+            If this keeps happening,{" "}
+            <Link href="/support" className="underline underline-offset-4">
+              report a problem
+            </Link>
+            {d.reference ? (
+              <>
+                {" "}
+                and quote reference <span className="font-mono">{d.reference}</span>
+              </>
+            ) : null}
+            .
+          </p>
+        )}
         <div className="mt-4 flex flex-wrap gap-2">
           {onRetry && (
             <button className="btn btn-ghost btn-sm" onClick={onRetry} data-testid="button-retry">
