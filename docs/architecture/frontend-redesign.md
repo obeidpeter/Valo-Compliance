@@ -1170,9 +1170,9 @@ The added line is for someone who knows the earlier names. It says what the spec
 no more. The sentence above the list is unchanged: "These are links, not endorsements, and none of
 these bodies has reviewed Valo."
 
-The address was not opened. This environment's network settings do not allow that host, or the
-earlier one. It is the host of the specification's own source, and it is listed as open decision 12
-for the owner to open once.
+The address could not be opened from the environment this was built in: its network settings do
+not allow that host, or the earlier one. It is the host of the specification's own source. The
+owner opened it on 2026-11-21 and confirmed that it works (decision 12).
 
 Each link in the list was named for a test by the first word of the source's name. Two names now
 begin with "Nigeria", so each link is named by its address instead.
@@ -1611,6 +1611,13 @@ Accepted by the owner on 2026-11-21:
     "test" because only a test checkout exists, and they state what a refund and a dispute do and
     do not do. They are reworded when a price and a refund policy are set, with a legal reader.
 
+Confirmed by the owner on 2026-11-21:
+
+12. The guidance page names the "Nigeria Revenue Service" and the "Tax ID", in the specification's
+    words, and links to https://www.nrs.gov.ng, the host of the specification's source S02. That
+    address could not be opened from the environment the page was built in. The owner opened it
+    and confirmed that it works.
+
 Waiting on the owner:
 
 5. Five small-business owners for the phase 6 test, about twenty minutes each, with made-up details
@@ -1618,7 +1625,3 @@ Waiting on the owner:
    are kept outside this repository, because the filled-in notes will be about real people.
 11. Legal approval of the privacy and terms pages. The privacy requests' sentences were put in
     plainer words with no limit changed; a legal reader should see them at the same time.
-12. The guidance page now names the "Nigeria Revenue Service" and the "Tax ID", in the
-    specification's words, and links to https://www.nrs.gov.ng, the host of the specification's
-    source S02. This environment's network settings do not allow that host, so the address was
-    not opened. Open it once to confirm that it is the authority's site.
