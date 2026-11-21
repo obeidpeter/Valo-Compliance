@@ -1060,6 +1060,31 @@ One script that needs a verified test account, and so runs in no CI job, pressed
 request" and "Cancel before processing" and read the states by their old names. It was updated and
 not run.
 
+### Phase 6: words in the states a screen does not open in
+
+The three browser tests of the word list read each screen as it opens. A sentence that shows only
+in another state was never read: an empty list, a form that has to be opened, a failure. Reading
+the source found six such sentences.
+
+| Where | Before | Now |
+| --- | --- | --- |
+| Tasks, the form for a new task | "open a saved assessment and use "Add task" on a likely relevant item" | "open a saved result and use "Add task" on an item marked "Likely relevant"" |
+| Tasks, with no task yet | "From an assessment", "no released rules for your situation" | "From a saved result", "no published rule covers your situation" |
+| Saved templates | "Open a released template and choose Save template.", "the current released version" | "Open a template under Documents and choose "Save template".", "its current version" |
+| Purchases, with no order | "Back to your drafts" | "Back to Home", which is where the button leads |
+
+The empty list of reminders said what would fill it and offered nothing to do. It now offers "Go
+to your tasks".
+
+A new test reads the words where they are written. It parses every source file of the web app that
+a customer's screen is built from, takes each piece of text a person could be shown, and checks it
+against the same word list. The screens that only staff or developers open are named in the test
+and left out. The test was tried by putting an old word back in three kinds of place: in a
+screen's text, in a sentence chosen by a condition, and in a title. It failed each time.
+
+What the test does not do: it reads the web app's source, not what the server sends, and it knows
+only the word list. It would not notice "provider" or "dispatch".
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
@@ -1114,7 +1139,7 @@ accepted by it.
 | Heuristic | Built | Not done |
 | --- | --- | --- |
 | 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. | The words inside a downloaded file, such as "Saved revision 3", are the server's and are unchanged. |
-| 2. Match with the real world | One word list, with three tests that fail if an old word comes back. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, "Refund amount in NGN" and the payment concerns panel. |
+| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, "Refund amount in NGN", "Provider dispute observation" and the payment concerns panel. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
 | 3. User control and freedom | The editor has undo and keeps every version. "Start over" asks first. Five discards ask in the app's own dialog. "Save before leaving?" also catches the browser's Back and Forward buttons. | On the compiled site the Back button was checked once by hand; no CI test can sign in to it. |
 | 4. Consistency and standards | The component styles are in one layer. Dates, times, amounts and counts go through one formatter. One header, one footer and one phone bar. One page where a document starts. | |
 | 5. Error prevention | A new form opens without red marks, and what a document still needs is listed before a download. The check chooses no answer for the visitor. The editor saves nothing underneath an open question. Someone who cannot sign in is told before writing that no reply is emailed. | |
@@ -1172,3 +1197,12 @@ Open:
     and its address. The specification's own source list (S02) names the "Nigeria Revenue
     Service". Which name and address a visitor should be sent to has to be checked against the
     official sites. This environment could not reach either site, so the list is unchanged.
+13. The drafting assistant says "AI provider", "Inserted verbatim by the server" and "Input hash".
+    Its sentences are the notice a customer agrees to before anything is sent to the AI, and the
+    server records that notice's version with every request (`customer-ai-development-notice-v2`).
+    Putting the notice in plainer words means a new version of it, which touches the records and
+    the prepared evaluation packages. It belongs with the decision on the AI budget, so it is
+    unchanged.
+14. The workspace data download says "Queued", "Prepare a private JSON snapshot" and "Prepared
+    export availability withdrawn". Its sentences state limits on a privacy right, and a test in
+    CI reads most of them word for word. They are unchanged; reword them with the privacy page.
