@@ -400,6 +400,31 @@ test("a server-rendered page's opened menu fits a short screen and a phone on it
   assert.deepEqual(problems, []);
 });
 
+test("a server-rendered page's opened menu closes when keyboard focus moves on from the header, so no control on the page is focused under it", async () => {
+  const { page, errors, close } = await web.phone("/");
+  try {
+    await ready(page);
+    const button = page.getByTestId("button-menu");
+    const menu = page.getByRole("navigation", { name: "Mobile" });
+    await button.focus();
+    await page.keyboard.press("Enter");
+    await expect(menu).toBeVisible();
+    // Tab goes through the menu's links and then on to the page, which closes the menu.
+    let presses = 0;
+    while (presses < 40 && (await menu.isVisible())) {
+      await page.keyboard.press("Tab");
+      presses++;
+    }
+    await expect(menu).toBeHidden();
+    assert.ok(presses > 7, `Tab left the menu after ${presses} presses, before reaching its seven links`);
+    await expect(button).toHaveAttribute("aria-expanded", "false");
+    await expect(page.locator("main :focus")).toHaveCount(1);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
 /** Each page the site's own links reach, the link that opens it, and the title it gives the page: the
  * footer's links, then the pages a footer link's page links on to. */
 const LINKED: [string, string, string][] = [

@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 import { expect, type Page } from "@playwright/test";
 import * as api from "@workspace/api-zod";
+import { GUIDED_TEMPLATE_IDS } from "@workspace/valo-core/guided";
+import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import {
   menuProblems,
   phoneProblems,
@@ -514,6 +516,7 @@ const desktop = (path: string, api: Api = answer) => app.desktop(path, api);
 const SIGNED_IN: { path: string; title: string; area?: string }[] = [
   { path: "/workspace", title: "Your workspace" },
   { path: "/workspace/documents", title: "Your documents" },
+  { path: "/workspace/documents/new", title: "New document" },
   { path: `/workspace/documents/${DOCUMENT}`, title: "Document editor" },
   { path: "/workspace/checker", title: "Check your requirements" },
   { path: "/workspace/assessments", title: "Assessment history" },
@@ -706,6 +709,8 @@ const SECTIONS: {
     tabs: ["Your documents", "Drafting assistant"],
     screens: [
       ["/workspace/documents", "Your documents"],
+      // The page where a document starts is a page of the documents.
+      ["/workspace/documents/new", "Your documents"],
       ["/workspace/ai", "Drafting assistant"],
       [`/workspace/ai/${DRAFT}`, "Drafting assistant"],
       // The editor is one document's own screen and shows no tabs.
@@ -1035,5 +1040,133 @@ test("a dialog opens in the middle of the screen and clear of its sides, on a ph
     } finally {
       await close();
     }
+  }
+});
+
+test("a document starts in one place: the home and the documents screen each have one button to the New document page, which starts each of the twelve everyday documents with one press, a blank one, and leads to the drafting assistant", async () => {
+  // The buttons that used to start a document from these two screens are gone.
+  const former = [
+    "button-new-draft",
+    "button-new-document",
+    "select-guided-template",
+    "button-start-guided",
+    "link-ai-drafting",
+    "link-documents-assistant",
+  ];
+  for (const path of ["/workspace", "/workspace/documents"]) {
+    const { page, errors, close } = await desktop(path);
+    try {
+      await ready(page);
+      const start = page.locator('main a[href="/workspace/documents/new"]');
+      await expect(start).toHaveCount(1);
+      await expect(start).toHaveText("New document");
+      for (const id of former) await expect(page.getByTestId(id)).toHaveCount(0);
+      await start.click();
+      await expect(page.locator("main h1")).toHaveText("New document");
+      await expect(page.locator('[data-testid^="button-start-"]')).toHaveCount(GUIDED_TEMPLATE_IDS.length);
+      assert.deepEqual(errors, [], path);
+    } finally {
+      await close();
+    }
+  }
+
+  // With nothing saved yet, the empty list leads to the same page.
+  const nothingSaved = {
+    "GET /workspace": api.GetWorkspaceResponse.parse({
+      id: WORKSPACE,
+      profileRevision: 0,
+      profile: null,
+      documentCount: 0,
+    }),
+    "GET /workspace/documents": [],
+    "GET /v1/exports": [],
+    "GET /workspace/correction-notices": { page: 1, hasMore: false, notices: [] },
+  };
+  for (const path of ["/workspace", "/workspace/documents"]) {
+    const { page, errors, close } = await desktop(path, except(nothingSaved));
+    try {
+      await ready(page);
+      // The documents screen has other lists with nothing in them; this is the documents' own.
+      await expect(page.getByTestId("status-empty").filter({ hasText: "No documents yet" })).toHaveCount(1);
+      // Still one button: the empty list's own.
+      const start = page.locator('main a[href="/workspace/documents/new"]');
+      await expect(start).toHaveCount(1);
+      await expect(start).toHaveAttribute("data-testid", "link-first-document");
+      await expect(page.getByTestId("link-all-documents")).toHaveCount(0);
+      assert.deepEqual(errors, [], path);
+    } finally {
+      await close();
+    }
+  }
+
+  // Each way to start saves a new document, named for what was chosen, and opens its editor.
+  const created: { title: string }[] = [];
+  const creating: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/workspace/documents") {
+      created.push(route.request().postDataJSON() as { title: string });
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify(api.CreateDocumentResponse.parse(document(1))),
+      });
+    } else await answer(route, method, path, query);
+  };
+  const { page, errors, close } = await desktop("/workspace/documents/new", creating);
+  try {
+    await ready(page);
+    const editor = new RegExp(`/workspace/documents/${DOCUMENT}$`);
+    for (const id of GUIDED_TEMPLATE_IDS) {
+      const button = page.getByTestId(`button-start-${id}`);
+      await expect(button).toContainText(GUIDED_SPECS_V1[id].title);
+      await button.click();
+      await page.waitForURL(editor);
+      assert.ok(
+        created.at(-1)!.title.startsWith(GUIDED_SPECS_V1[id].title),
+        `${id}: ${created.at(-1)!.title}`,
+      );
+      await page.goBack();
+      await expect(page.locator("main h1")).toHaveText("New document");
+    }
+    assert.equal(created.length, GUIDED_TEMPLATE_IDS.length);
+    await page.getByTestId("button-new-draft").click();
+    await page.waitForURL(editor);
+    assert.equal(created.length, GUIDED_TEMPLATE_IDS.length + 1);
+    await page.goBack();
+    await expect(page.getByTestId("link-ai-drafting")).toHaveAttribute("href", "/workspace/ai");
+    await page.getByTestId("link-ai-drafting").click();
+    await expect(page.locator("main h1")).toBeVisible();
+    assert.equal(new URL(page.url()).pathname, "/workspace/ai");
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
+test("the phone's opened menu closes when keyboard focus moves on from the header, so no control on the screen is focused under it", async () => {
+  // On the home screen the first control after the header is at the top of the screen, where the
+  // opened menu lies over it.
+  const { page, errors, close } = await phone("/workspace");
+  try {
+    await ready(page);
+    const button = page.getByTestId("button-menu");
+    const menu = page.getByRole("navigation", { name: "Mobile" });
+    await button.focus();
+    await page.keyboard.press("Enter");
+    await expect(menu).toBeVisible();
+    let presses = 0;
+    while (presses < 40 && (await menu.isVisible())) {
+      await page.keyboard.press("Tab");
+      presses++;
+    }
+    await expect(menu).toBeHidden();
+    assert.ok(presses > 3, `Tab left the menu after ${presses} presses, before going through it`);
+    await expect(button).toHaveAttribute("aria-expanded", "false");
+    await expect(page.getByTestId("link-new-document")).toBeFocused();
+    // Shift+Tab goes back to the header without opening the menu again.
+    await page.keyboard.press("Shift+Tab");
+    await expect(menu).toBeHidden();
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
   }
 });

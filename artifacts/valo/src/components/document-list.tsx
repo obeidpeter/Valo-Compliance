@@ -7,20 +7,16 @@ import { formatDateTime } from "@/lib/format";
 
 /**
  * The workspace's documents, most recently saved first: each opens its editor. `limit` shows only
- * the first few, as the home screen does; the documents screen shows them all. With none, it offers
- * to start one.
+ * the first few, as the home screen does; the documents screen shows them all. With none, it leads
+ * to the page where a document starts.
  */
 export function DocumentList({
   enabled,
   limit,
-  onNew,
-  creating,
 }: {
   /** Whether the workspace is known, so the list may be read. */
   enabled: boolean;
   limit?: number;
-  onNew: () => void;
-  creating: boolean;
 }) {
   const docs = useListDocuments({ query: { enabled, queryKey: getListDocumentsQueryKey() } });
   const shown = (docs.data ?? []).slice(0, limit);
@@ -66,15 +62,18 @@ export function DocumentList({
       ) : (
         <EmptyState
           mark={<FilePlus2 className="h-5 w-5 text-muted-foreground" />}
-          title="No drafts yet"
+          title="No documents yet"
           action={
-            <button className="btn btn-primary" onClick={onNew} disabled={creating}>
-              Start a blank draft
-            </button>
+            <Link
+              href="/workspace/documents/new"
+              className="btn btn-primary"
+              data-testid="link-first-document"
+            >
+              New document
+            </Link>
           }
         >
-          A new draft starts empty. Choose a released template from the library when one fits, or write your
-          own document.
+          Start with an invoice, a quotation or another everyday document, or with a blank page.
         </EmptyState>
       )}
     </>

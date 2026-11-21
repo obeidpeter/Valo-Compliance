@@ -1,22 +1,19 @@
 import { Link } from "wouter";
-import { FilePlus2, Loader2, Sparkles } from "lucide-react";
+import { FilePlus2 } from "lucide-react";
 import { useGetWorkspace, getGetWorkspaceQueryKey } from "@workspace/api-client-react";
 import { DocumentList } from "@/components/document-list";
 import { LibraryExports } from "@/components/library-exports";
 import { SavedTemplates } from "@/components/saved-templates";
 import { ErrorState, Notice, Skel } from "@/components/states";
 import { WorkspaceNav } from "@/components/workspace-nav";
-import { describeError } from "@/lib/api";
-import { useNewDocument } from "@/lib/use-new-document";
 
 /**
  * The workspace's documents section: every document the business has saved, the files ready to
- * download from them, and the templates it has saved from the library. A new document starts here
- * or on the home screen.
+ * download from them, and the templates it has saved from the library. "New document" leads to the
+ * one page where a document starts.
  */
 export default function DocumentsPage() {
   const ws = useGetWorkspace({ query: { enabled: true, queryKey: getGetWorkspaceQueryKey() } });
-  const create = useNewDocument();
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
@@ -29,30 +26,13 @@ export default function DocumentsPage() {
             {ws.data?.documentCount ?? 0} saved
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/workspace/ai" className="btn btn-ink" data-testid="link-documents-assistant">
-            <Sparkles className="h-4 w-4" /> Prepare invoice or quotation
+        {/* With nothing saved yet, the empty list below offers this instead: one button, not two. */}
+        {(ws.data?.documentCount ?? 0) > 0 && (
+          <Link href="/workspace/documents/new" className="btn btn-primary" data-testid="link-new-document">
+            <FilePlus2 className="h-4 w-4" /> New document
           </Link>
-          <button
-            className="btn btn-primary"
-            onClick={create.start}
-            disabled={create.pending || !ws.isSuccess}
-            data-testid="button-new-document"
-          >
-            {create.pending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <FilePlus2 className="h-4 w-4" />
-            )}{" "}
-            New blank draft
-          </button>
-        </div>
+        )}
       </header>
-      {create.error && (
-        <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {describeError(create.error).message}
-        </p>
-      )}
       <div className="mt-10">
         {ws.isLoading ? (
           <Skel className="h-60" />
@@ -60,7 +40,7 @@ export default function DocumentsPage() {
           <ErrorState error={ws.error} onRetry={() => ws.refetch()} />
         ) : (
           <section>
-            <DocumentList enabled={ws.isSuccess} onNew={create.start} creating={create.pending} />
+            <DocumentList enabled={ws.isSuccess} />
             <LibraryExports />
             <Notice className="mt-4" tone="ink" title="Development workspace">
               Use synthetic test details only. Open a saved draft to request private, visibly marked DOCX or

@@ -125,7 +125,7 @@ try {
     testIdentityId = await page.evaluate(() => (globalThis as unknown as BrowserProbe).Clerk.user!.id);
     createdIdentities.push({ id: testIdentityId, email });
     await page.goto("/workspace");
-    await expect(page.getByTestId("button-new-draft")).toBeEnabled({ timeout: 30000 });
+    await expect(page.getByTestId("link-new-document")).toBeVisible({ timeout: 30000 });
     const workspace = await page.evaluate(async () => {
       const r = await fetch("/api/workspace");
       return { status: r.status, body: await r.json() };
@@ -156,7 +156,7 @@ try {
     await expect(page.getByTestId("checkbox-marketing")).not.toBeChecked();
   });
   await check("saved_document_autosave_reload_and_preview", async () => {
-    await page.goto("/workspace");
+    await page.goto("/workspace/documents/new");
     await page.getByTestId("button-new-draft").click();
     await expect(page.getByTestId("input-title")).toBeVisible();
     report.documentId = new URL(page.url()).pathname.split("/").at(-1);
@@ -366,7 +366,7 @@ try {
     const otherId = await otherPage.evaluate(() => (globalThis as unknown as BrowserProbe).Clerk.user!.id);
     createdIdentities.push({ id: otherId, email: otherEmail });
     await otherPage.goto("/workspace");
-    await expect(otherPage.getByTestId("button-new-draft")).toBeEnabled();
+    await expect(otherPage.getByTestId("link-new-document")).toBeVisible();
     const own = GetWorkspaceResponse.parse(await (await other.request.get("/api/workspace")).json());
     expect(own.id).not.toBe(report.workspaceId);
     expect(own.profileRevision).toBe(0);
@@ -399,6 +399,7 @@ try {
       );
       expect(status).toBe(404);
     }
+    await otherPage.goto("/workspace/documents/new");
     await otherPage.getByTestId("button-new-draft").click();
     await expect(otherPage.getByTestId("input-title")).toBeVisible();
     const otherDocumentId = new URL(otherPage.url()).pathname.split("/").at(-1);

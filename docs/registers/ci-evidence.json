@@ -1686,7 +1686,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "on a phone, each signed-in screen names itself in the page title, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure",
-      "proves": "Signed in through a stand-in identity with synthetic data, each of the 17 signed-in workspace and staff routes, and the staff screen in each of its four areas, names itself in the page title, does not scroll sideways at 360 or 320 pixels, moves keyboard focus only to visible outlined elements that come to rest on screen and clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab, and shows no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; no manual or assistive-technology review is recorded."
+      "proves": "Signed in through a stand-in identity with synthetic data, each of the 18 signed-in workspace and staff routes, and the staff screen in each of its four areas, names itself in the page title, does not scroll sideways at 360 or 320 pixels, moves keyboard focus only to visible outlined elements that come to rest on screen and clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab, and shows no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; no manual or assistive-technology review is recorded."
     },
     {
       "requirement": "NFR-006",
@@ -2470,7 +2470,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "on a desktop, every workspace screen's header lists the five sections and marks its own, and the screen shows its section's pages as tabs with its own page marked",
-      "proves": "Signed in through a stand-in identity with synthetic data, on a desktop-sized page each of the 15 workspace screens opens with a header that links to Home, Documents, Requirements, Tasks and “Business profile” and marks the screen's own section, and with tabs that join the documents to the drafting assistant, the checker to the saved results and the tasks to the reminders; sign-in and security, privacy and purchases mark no section and are joined by tabs of their own, and the header's links stay on one line at 1024 pixels. It does not open the support page, where a customer's enquiries are listed."
+      "proves": "Signed in through a stand-in identity with synthetic data, on a desktop-sized page each of the 16 workspace screens opens with a header that links to Home, Documents, Requirements, Tasks and “Business profile” and marks the screen's own section, and with tabs that join the documents to the drafting assistant, the checker to the saved results and the tasks to the reminders; sign-in and security, privacy and purchases mark no section and are joined by tabs of their own, and the header's links stay on one line at 1024 pixels. It does not open the support page, where a customer's enquiries are listed."
     },
     {
       "requirement": "WRK-002",
@@ -2604,6 +2604,34 @@
       "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
       "test": "on a phone, every step of the requirements check, its review, its results and its 'Start over' dialog fit 360 and 320 pixels, move keyboard focus only to visible outlined elements and have no automated WCAG 2.2 AA failure",
       "proves": "On an emulated Moto G4 phone, each of the requirements check's six steps and its results does not scroll sideways at 360 or at 320 pixels wide, with a step ticked whose place in the list of steps is past the screen's edge; no real device or other browser is tested."
+    },
+    {
+      "requirement": "EDT-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a document starts in one place: the home and the documents screen each have one button to the New document page, which starts each of the twelve everyday documents with one press, a blank one, and leads to the drafting assistant",
+      "proves": "Signed in through a stand-in identity with synthetic data, the New document page shows a button for each of the twelve guided documents, and one press on each sends a new document named for it and opens the editor of the document the test's API answers with. The questions, the server's validation and the files are not tested here."
+    },
+    {
+      "requirement": "WRK-001",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a document starts in one place: the home and the documents screen each have one button to the New document page, which starts each of the twelve everyday documents with one press, a blank one, and leads to the drafting assistant",
+      "proves": "Signed in through a stand-in identity with synthetic data, the workspace's home and its documents screen each have exactly one link to the New document page, also when nothing is saved yet, and that page starts a blank document and links to the drafting assistant."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the phone's opened menu closes when keyboard focus moves on from the header, so no control on the screen is focused under it",
+      "proves": "Signed in through a stand-in identity on an emulated phone, with the menu opened on the workspace's home, Tab goes through the menu and on to the screen's first control, at which the menu closes and its button reports it closed; Shift+Tab back does not reopen it. No assistive technology is used."
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-server-pages.test.ts",
+      "test": "a server-rendered page's opened menu closes when keyboard focus moves on from the header, so no control on the page is focused under it",
+      "proves": "On the compiled web server's home page on an emulated phone, with the menu opened, Tab goes through the menu's links and on to a control in the page's own content, at which the menu closes and its button reports it closed."
     }
   ]
 }
