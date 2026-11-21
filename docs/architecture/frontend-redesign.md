@@ -1388,11 +1388,83 @@ Tests:
 - The test that tries every private operation with another workspace's identifiers tells an
   unexpected failure from a refusal by these sentences, and asks the handler's own code for them.
 
-Not done: the other 299 sentences. Next are those a customer can be told without buying anything
-or asking for their data: support requests, the documents list, and signing in. Then, each with its
-decision: payments and orders (126 sentences, decision 15), privacy requests and the workspace's
-data download (decisions 14 and 11), and the drafting assistant (decision 13). Sentences that only
-staff are told keep the project's words.
+Not done in this batch: the other 299 sentences. The
+[second batch](#phase-6-the-servers-own-sentences-second-batch) takes those a customer can be told
+without buying anything, asking for their data or using the drafting assistant.
+
+### Phase 6: the server's own sentences, second batch
+
+The second batch is the rest of what a customer can be told without buying anything, asking for
+their data or using the drafting assistant: signing in and sessions, the documents list, and their
+own support requests. Six files hold 43 of the 359 sentences: 21 different ones are reworded, 20
+are left as they were, and two are repeats.
+
+| Before | Now |
+| --- | --- |
+| "Sign in with a verified email to access your workspace" | "You are not signed in, or your session has ended.", the web app's own words for it |
+| "Session is no longer active. Sign in again." | "Your session has ended. Sign in again." |
+| "Account is suspended or locked" | "Your account is suspended or locked." |
+| "Verify your primary email address before saving business data" | "Confirm your main email address first. Your workspace opens once it is confirmed." |
+| "Trusted site configuration is unavailable. No changes were saved." | "Valo is not set up to accept changes at the moment. Nothing was saved. Try again later." |
+| "A same-origin JSON request is required" | "This request was not sent the way Valo's own pages send one, so it was refused. Nothing was saved. Reload the page and try again." |
+| "This resource is unavailable or no longer released." | "This guide is not available, or it is no longer published." |
+| "This template is unavailable, withdrawn or awaiting valid evidence." | "This template is not available. It may have been withdrawn, or it may not be published yet." |
+| "Template unavailable while applicable rights or policy evidence is unresolved." | "This template is not available while Valo confirms that it may be offered." |
+| "Template withdrawn, expired or unavailable" | "This template has been withdrawn or has expired, or it is not available." |
+| "Only the active workspace owner can manage saved templates." | "Only the workspace's owner can save a template or remove a saved one." |
+| "Only released templates can be saved here." | "Only a published template can be saved." |
+| "Support case not found." | "This support request was not found." |
+| "This case changed elsewhere. Reload the latest case; your draft has not been applied." | "This request was changed somewhere else after you opened it. Reload it to see what changed. What you sent has not been saved." |
+| "This request key already belongs to a different action." | "This was already sent once in a different form. Reload the page and try again." |
+
+As in the first batch, only the sentence changes: no refusal, status or code.
+
+The verified-email sentence said "before saving business data". The check it belongs to stands
+before every request to a workspace, reading included, so the new sentence says that the workspace
+opens once the address is confirmed.
+
+Left as they were, 20 sentences:
+
+- Eighteen that only staff are told, in the file that also answers a customer's support requests:
+  assigning a request, triage, and referring content. Staff screens keep the project's words.
+- Two about buying a document ("An approved licence and server-verified purchase are required for
+  this premium document."). They are reworded with the purchases' words when a price is set
+  (decision 15). Nothing is for sale, so no customer is told them today.
+
+**Found on the way: the tasks screen's own words for the same refusal.** When the server refuses a
+change to a task that was changed somewhere else, the tasks screen says so itself. Two of its three
+sentences were shorthand: "This task changed elsewhere; refreshed. Archive again if you still want
+to." They now read as the server's sentence and the other screens' do: "This task was changed
+somewhere else. The list now shows its newest version. Archive it again if you still want to." No
+browser test had this state on the screen. One now does, for a change of status, an archive and a
+save, and reads that what was typed is still in the form.
+
+Tests:
+
+- `platform/customer-sentences.test.ts` now reads the six files too. In the support file it reads
+  only the sentences of the four functions a customer's own request passes through, and fails if
+  one of those functions no longer holds a sentence, so that a renamed function cannot drop out
+  unnoticed. A test of its own checks that a staff sentence in that file is not read.
+- Its list of the project's own words gains this batch's ("released", "evidence", "intake",
+  "case", "request key", "same-origin", "primary email", "JSON" and others). Every sentence that
+  holds such a word and is left on purpose is now named there with its reason: four entries, for
+  the production build's sentence, the recorded deletions, the two answers about JSON and the two
+  sentences about buying.
+- The two unit tests that read a reworded sentence read the new words: the session check's, and the
+  one that tells a template awaiting confirmation from a withdrawn one.
+
+**Where the sentences stand.** Every sentence a customer can be told about documents, files, tasks,
+the check, the workspace, signing in, the documents list and their own support requests is now in
+the site's words: 103 of the 359 were read, 63 different ones reworded and 27 left with a recorded
+reason. The other 256 are not reworded:
+
+- 129 about payments and orders, which wait for a price and a refund policy (decision 15).
+- 76 about privacy requests and the workspace's data download, which wait for the privacy page's
+  legal read (decisions 14 and 11).
+- 10 of the drafting assistant, which wait for the AI budget decision (decision 13).
+- 34 that only staff are told, which keep the project's words.
+- Five that are errors of a background job, and two that only someone operating the site would
+  see.
 
 ### Found on the way: keyboard focus rests clear of the bars
 
@@ -1448,14 +1520,14 @@ accepted by it.
 | Heuristic | Built | Not done |
 | --- | --- | --- |
 | 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. The purchases screen says that real payments are switched off and that nothing can be bought yet. A downloaded document says "Saved version 3". | |
-| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format, and a document prints its dates the same way. A downloaded document names its fields as the editor does. A result of the check says its notice, and what it does not cover, in the site's words. So does the server when it refuses a request about a document, a file, a task, the check or the workspace. | The twelve forms' own questions, which are frozen. The server's other sentences, about three hundred: those for support requests, the documents list and signing in come next, and those for payments, privacy requests and the drafting assistant wait for their decisions. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
+| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format, and a document prints its dates the same way. A downloaded document names its fields as the editor does. A result of the check says its notice, and what it does not cover, in the site's words. So does the server when it refuses a request about a document, a file, a task, the check, the workspace, signing in, the documents list or a support request. | The twelve forms' own questions, which are frozen. The server's sentences about payments, privacy requests and the drafting assistant, 215 of them, which wait for decisions 15, 14 and 13. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
 | 3. User control and freedom | The editor has undo and keeps every version. "Start over" asks first. Five discards ask in the app's own dialog. "Save before leaving?" also catches the browser's Back and Forward buttons. | On the compiled site the Back button was checked once by hand; no CI test can sign in to it. |
 | 4. Consistency and standards | The component styles are in one layer. Dates, times, amounts and counts go through one formatter. One header, one footer and one phone bar. One page where a document starts. | |
 | 5. Error prevention | A new form opens without red marks, and what a document still needs is listed before a download. The check chooses no answer for the visitor. The editor saves nothing underneath an open question. Someone who cannot sign in is told before writing that no reply is emailed. | |
 | 6. Recognition rather than recall | The landing page lists eight everyday tasks. The home lists the newest documents. The check shows its steps. A request's kind is named as the form named it. | |
 | 7. Flexibility and efficiency | "Make another like this". A task chosen on the landing page is carried through sign-up. The check fills in from the business profile. | A new document is not filled in from the business profile: its questions are the frozen forms'. |
 | 8. Aesthetic and minimalist design | The landing page is rebuilt around the two things a visitor can do. A document page gives what it is for before its notices. The home opens on its greeting. | |
-| 9. Help users recognise, diagnose and recover from errors | A failed request is described in words, with no status code. A failure at Valo offers the way to report it, with a reference to quote. The server's sentence for a failure it did not expect tells a page that only loads to try again, and tells anything else to check what was saved first. | The server's sentences that are not yet reworded, which are shown as sent. |
+| 9. Help users recognise, diagnose and recover from errors | A failed request is described in words, with no status code. A failure at Valo offers the way to report it, with a reference to quote. The server's sentence for a failure it did not expect tells a page that only loads to try again, and tells anything else to check what was saved first. | The server's sentences about payments, privacy requests and the drafting assistant, which are shown as sent until their decisions. |
 | 10. Help and documentation | The help page has fourteen questions in five groups, and three of its answers link to the page they send the visitor to. The landing page has five questions. "CAC" is spelt out in the check and on the business profile. The guidance page names the "Tax ID" and says it replaces the TIN. | |
 
 Not built, and not a matter of words: testing with five business owners. The plan called for it to
@@ -1498,7 +1570,9 @@ Accepted by the owner on 2026-11-21:
 10. Words that are the server's. The words inside a downloaded document are reworded before the
     test, which is [done](#phase-6-the-words-inside-a-downloaded-document). The server's own
     sentences for a failed request are reworded in batches. The
-    [first batch](#phase-6-the-servers-own-sentences-first-batch) is done.
+    [first](#phase-6-the-servers-own-sentences-first-batch) and
+    [second](#phase-6-the-servers-own-sentences-second-batch) batches are done. What is left waits
+    for decisions 13, 14 and 15 or is said only to staff.
 13. The drafting assistant says "AI provider", "Inserted verbatim by the server" and "Input hash".
     Its sentences are the notice a customer agrees to before anything is sent to the AI, and the
     server records that notice's version with every request (`customer-ai-development-notice-v2`).
