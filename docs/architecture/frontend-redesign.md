@@ -914,9 +914,9 @@ this. Outside a browser, in the Node version this repository runs, there is a `n
 such flag: a failure described there was called offline, and "not found" was never recognised.
 Now offline is said only when the browser reports it.
 
-Not changed: the server's own sentences, which are shown as sent wherever the server sends one.
-There are over three hundred in the API. Putting them in plain words is a separate pass, on the
-API's side, and is not done.
+Not changed here: the server's own sentences, which are shown as sent wherever the server sends
+one. There are over three hundred in the API. They are put in plain words on the API's side, in
+batches, [starting with these](#phase-6-the-servers-own-sentences-first-batch).
 
 ### Phase 6: the support forms in plain words
 
@@ -1309,6 +1309,91 @@ Not changed: what a result says of each rule it lists, which comes from the publ
 shows only once a rule is published; and the name of the official route, "Corporate Affairs
 Commission service discovery", which is the engine's.
 
+### Phase 6: the server's own sentences, first batch
+
+When the server refuses a request it says why, and the web app shows that sentence as sent. A
+survey found 334 such sentences raised in the API's code, and 25 more that a route, a check before
+a route or the shared handler sends itself. They were written for whoever builds the site, in the
+project's words. The owner accepted that they are reworded in batches (decision 10).
+
+This batch is what someone making a document, running the check or keeping tasks can be told: the
+sentences of documents, files, tasks, the check and the workspace, and of the shared handler. Nine
+files hold 60 of the 359: 42 different sentences that are reworded, seven that are left as they
+were, and repeats of both.
+
+| Before | Now |
+| --- | --- |
+| "Document not found", "Task not found", "Assessment not found" | "This document was not found in your workspace.", and the same for a task and for a saved result |
+| "Invalid request" | "Some details were not accepted. Check them and try again.", the web app's own words for it |
+| "Document changed in another tab. Your text was not overwritten; compare with the latest revision." | "This document was saved somewhere else after you opened it. Your text was not overwritten. Compare it with the newest version." |
+| "Keep this draft's versioned guided form. Create a separate blank draft instead of removing required questions." | "This document is made from a set of questions, and they cannot be taken out of it. To write without them, start a blank document." |
+| "Deliberately acknowledge the visibly marked incomplete business draft before exporting." | "Say that you want a draft copy before a file is made. Every file is marked as an incomplete draft on each page." |
+| "Export expired. Regenerate it from your saved revision." | "This file has expired. Make it again from your saved version." |
+| "Export regeneration is held for privacy review. Your saved draft is safe." | "This file cannot be made again while a privacy request is being reviewed. Your saved document is safe." |
+| "Retry limit reached. Your saved draft is safe; contact support." | "This file has been tried again three times and still failed, so it will not be tried again. Your saved document is safe. Report a problem if you still need the file." |
+| "Only an eligible recommendation in this saved assessment can create a source-linked task" | "This saved result does not offer a task for that item. A task can be made only from an item marked "Likely relevant"." |
+| "This recommendation is no longer current. Reassess before creating its task." | "This item is out of date. Run the check again before you make a task from it." |
+| "Sign in to check optional business-name facts. Anonymous checks do not accept name details." | "Sign in to add details about your business name. A check without an account does not take them." |
+| "Rule registry exceeds its reviewed operating limit" | "The requirements check is not available at the moment. Nothing was saved or changed." |
+| "Active workspace membership is required.", "Workspace membership is suspended" | "Your account does not have access to this workspace.", "Your access to this workspace is suspended." |
+| "Write limit reached. Retry in 30 seconds. Previously saved work is unchanged; keep your unsaved input." | "Too many changes in a short time. Try again in 30 seconds. Your saved work is unchanged. Keep this page open so that you do not lose what you have typed." |
+| "Too many checker requests. Your unsaved answers remain in this tab; retry after the indicated delay." | "Too many checks in a short time. Your answers are still on this page. Wait a moment and try again." |
+| "Request body exceeds the 128 KiB limit." | "That is too much to send at once (the limit is 128 KB). Shorten it and try again." |
+
+Each sentence says what happened, what is safe where the server knows it, and what to do next. A
+sentence says the same thing as before in other words: no limit, refusal or status is changed, and
+neither is what the server sends beside the sentence.
+
+**A failure the server did not expect.** Every request was answered "A required service is
+unavailable. Check the saved status before retrying; your request may need recovery.", a page that
+only loads included. Now a request that only reads is told "Something went wrong at Valo. Try again
+in a moment.", which is also what the web app says when the server sends nothing. Any other is told
+"Something went wrong at Valo. If you were saving something, it may or may not have been saved.
+Check before you try again." That one says "if" because a request that is not a read does not
+always save: a check run without an account does not. Neither promises that work is safe, since
+such a failure can come before a save or after it.
+
+Left as they were, seven sentences:
+
+- Four that say a workspace's or an account's deletion is recorded. They are about a privacy
+  deletion and are reworded with the privacy sentences (decision 14). Two tests in CI read them.
+- "Exports remain disabled pending production storage, worker, recovery and privacy approval.",
+  which only a production build says. No customer is served by one yet.
+- Two answers to a request that no page of the site sends: a body that is not JSON, and a
+  compressed one.
+
+The reminder worker's five sentences are in the tasks module and are not in this batch: they are
+errors of a background job, and no request is answered with them.
+
+Found on the way:
+
+- "Retry limit reached" is said when a file that failed has already been tried again three times.
+  The new sentence says that. A first wording said "failed three times", which the code does not
+  bear out, and was corrected before it was committed.
+- The database job was run on this machine before anything was pushed. It found a test that
+  recognised the refusal of a workspace without access by its old words. The test now reads the new
+  ones. A second test reads "saved work is unchanged" in the sentence for too many changes, and the
+  new sentence keeps those words.
+
+Tests:
+
+- `platform/customer-sentences.test.ts` reads every sentence in the reworded files where it is
+  written: the text of each refusal, each `error` a reply sends and each named sentence. It fails on
+  a word from the screens' word list, on a further list of the project's own words ("revision",
+  "export", "membership", "questionnaire" and others), on a sentence that does not end as one, and
+  on a code in place of a sentence. The one sentence left with such a word is recorded there with
+  its reason, and an entry that excuses nothing fails. A file joins the list with its batch.
+- The same file sends real requests to the shared handler and reads what a read and a change are
+  each told. It fails if the two are no longer told apart.
+- The test that tries every private operation with another workspace's identifiers tells an
+  unexpected failure from a refusal by these sentences, and asks the handler's own code for them.
+
+Not done: the other 299 sentences. Next are those a customer can be told without buying anything
+or asking for their data: support requests, the documents list, and signing in. Then, each with its
+decision: payments and orders (126 sentences, decision 15), privacy requests and the workspace's
+data download (decisions 14 and 11), and the drafting assistant (decision 13). Sentences that only
+staff are told keep the project's words.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
@@ -1363,14 +1448,14 @@ accepted by it.
 | Heuristic | Built | Not done |
 | --- | --- | --- |
 | 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. The purchases screen says that real payments are switched off and that nothing can be bought yet. A downloaded document says "Saved version 3". | |
-| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format, and a document prints its dates the same way. A downloaded document names its fields as the editor does. A result of the check says its notice, and what it does not cover, in the site's words. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
+| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format, and a document prints its dates the same way. A downloaded document names its fields as the editor does. A result of the check says its notice, and what it does not cover, in the site's words. So does the server when it refuses a request about a document, a file, a task, the check or the workspace. | The twelve forms' own questions, which are frozen. The server's other sentences, about three hundred: those for support requests, the documents list and signing in come next, and those for payments, privacy requests and the drafting assistant wait for their decisions. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
 | 3. User control and freedom | The editor has undo and keeps every version. "Start over" asks first. Five discards ask in the app's own dialog. "Save before leaving?" also catches the browser's Back and Forward buttons. | On the compiled site the Back button was checked once by hand; no CI test can sign in to it. |
 | 4. Consistency and standards | The component styles are in one layer. Dates, times, amounts and counts go through one formatter. One header, one footer and one phone bar. One page where a document starts. | |
 | 5. Error prevention | A new form opens without red marks, and what a document still needs is listed before a download. The check chooses no answer for the visitor. The editor saves nothing underneath an open question. Someone who cannot sign in is told before writing that no reply is emailed. | |
 | 6. Recognition rather than recall | The landing page lists eight everyday tasks. The home lists the newest documents. The check shows its steps. A request's kind is named as the form named it. | |
 | 7. Flexibility and efficiency | "Make another like this". A task chosen on the landing page is carried through sign-up. The check fills in from the business profile. | A new document is not filled in from the business profile: its questions are the frozen forms'. |
 | 8. Aesthetic and minimalist design | The landing page is rebuilt around the two things a visitor can do. A document page gives what it is for before its notices. The home opens on its greeting. | |
-| 9. Help users recognise, diagnose and recover from errors | A failed request is described in words, with no status code. A failure at Valo offers the way to report it, with a reference to quote. | The server's own sentences, which are shown as sent. |
+| 9. Help users recognise, diagnose and recover from errors | A failed request is described in words, with no status code. A failure at Valo offers the way to report it, with a reference to quote. The server's sentence for a failure it did not expect tells a page that only loads to try again, and tells anything else to check what was saved first. | The server's sentences that are not yet reworded, which are shown as sent. |
 | 10. Help and documentation | The help page has fourteen questions in five groups, and three of its answers link to the page they send the visitor to. The landing page has five questions. "CAC" is spelt out in the check and on the business profile. The guidance page names the "Tax ID" and says it replaces the TIN. | |
 
 Not built, and not a matter of words: testing with five business owners. The plan called for it to
@@ -1412,7 +1497,8 @@ Accepted by the owner on 2026-11-21:
    page says so once.
 10. Words that are the server's. The words inside a downloaded document are reworded before the
     test, which is [done](#phase-6-the-words-inside-a-downloaded-document). The server's own
-    sentences for a failed request are reworded in batches.
+    sentences for a failed request are reworded in batches. The
+    [first batch](#phase-6-the-servers-own-sentences-first-batch) is done.
 13. The drafting assistant says "AI provider", "Inserted verbatim by the server" and "Input hash".
     Its sentences are the notice a customer agrees to before anything is sent to the AI, and the
     server records that notice's version with every request (`customer-ai-development-notice-v2`).
