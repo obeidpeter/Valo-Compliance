@@ -20,7 +20,7 @@ export function ReleaseNotices({
 }) {
   return (
     <>
-      <dl className="mt-8 grid gap-4 border-y border-border py-5 text-sm sm:grid-cols-2">
+      <dl className="grid gap-4 border-y border-border py-5 text-sm sm:grid-cols-2">
         <div>
           <dt className="eyebrow">Sources checked</dt>
           <dd className="mt-1" data-testid="text-reviewed">
@@ -37,19 +37,19 @@ export function ReleaseNotices({
 
       <section className="mt-8 grid gap-6 text-sm leading-relaxed">
         <div>
-          <h2 className="eyebrow">Disclosure</h2>
+          <h2 className="eyebrow">How it was written and checked</h2>
           <p className="mt-2 whitespace-pre-line" data-testid="text-disclosure">
             {disclosure}
           </p>
         </div>
         <div>
-          <h2 className="eyebrow">Scope</h2>
+          <h2 className="eyebrow">What it covers</h2>
           <p className="mt-2 whitespace-pre-line" data-testid="text-scope">
             {scope}
           </p>
         </div>
         <div>
-          <h2 className="eyebrow">Limitations</h2>
+          <h2 className="eyebrow">Limits you should know</h2>
           <p className="mt-2 whitespace-pre-line" data-testid="text-limitations">
             {limitations}
           </p>

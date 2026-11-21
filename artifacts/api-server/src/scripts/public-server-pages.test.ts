@@ -98,7 +98,7 @@ const HEADINGS: Record<string, string> = {
   "/contact": "Write to the people building Valo.",
   "/privacy": "How this build handles data",
   "/pricing": "Prices have not been set.",
-  "/library": "Find the right starting point",
+  "/library": "Documents and guidance",
   "/resources": "Guidance that names its sources.",
   "/industries": "Find what fits your trade.",
   "/compliance": "No rule is shown until it can name its source.",

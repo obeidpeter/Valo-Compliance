@@ -78,3 +78,29 @@ export function libraryHref(f: LibraryFilters, next: Record<string, string | num
   const s = merged.toString();
   return "/library" + (s ? "?" + s : "");
 }
+
+/** What each kind of item is called on a result. */
+const TYPE_NAMES: Record<string, string> = {
+  template: "Template",
+  guidance: "Guidance",
+  article: "Article",
+  industry: "Industry page",
+  service: "Service enquiry",
+};
+export const typeName = (type: string) => TYPE_NAMES[type] ?? type;
+
+/**
+ * A catalogue item's industries in words. The catalogue gives them as short codes joined by commas,
+ * or as "All industries"; a result shows the names as written, never the codes. One or two are
+ * named, more are counted, and a code the list of industries does not have is left out. Null when
+ * there is no name to show.
+ */
+export function industryLabel(industry: string, names: ReadonlyMap<string, string>): string | null {
+  if (industry === "All industries") return industry;
+  const found = industry
+    .split(",")
+    .map((code) => names.get(code.trim()))
+    .filter((name): name is string => !!name);
+  if (found.length === 0) return null;
+  return found.length <= 2 ? found.join(" · ") : `${found[0]} and ${found.length - 1} more`;
+}

@@ -12,14 +12,23 @@ import {
 } from "@workspace/api-client-react";
 import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
-import { catalogueParams, LIBRARY_TYPES as TYPES, libraryFilters, libraryHref } from "@/lib/library-filters";
+import { formatCount } from "@/lib/format";
+import {
+  catalogueParams,
+  industryLabel,
+  LIBRARY_TYPES as TYPES,
+  libraryFilters,
+  libraryHref,
+  typeName,
+} from "@/lib/library-filters";
 import { fromServer } from "@/lib/server-data";
 
 /**
- * The library. The server renders the results for the address it was asked for; the browser takes
- * over from there (decision 0011). A filter change moves the address in the page and reads the
- * catalogue from the browser, without asking the server to render the page again, and the results
- * are read again every 15 seconds.
+ * The documents and guidance search. The server renders the results for the address it was asked
+ * for; the browser takes over from there (decision 0011). A filter change moves the address in the
+ * page and reads the catalogue from the browser, without asking the server to render the page
+ * again, and the results are read again every 15 seconds. DOC-002 asks for the search, the category,
+ * industry and free or premium filters, the three sort orders, and all of them kept in the address.
  */
 export function Library({
   initialSearch,
@@ -53,6 +62,7 @@ export function Library({
     query: { retry: false, staleTime: 60000, ...(initialCoverage ? { initialData: initialCoverage } : {}) },
   });
   const unknownIndustry = !!industry && !coverage.data?.industries.some((i) => i.slug === industry);
+  const industryNames = new Map((coverage.data?.industries ?? []).map((i) => [i.slug, i.title] as const));
 
   function go(next: Record<string, string | number | undefined>) {
     setLocation(libraryHref(filters, next));
@@ -76,9 +86,10 @@ export function Library({
 
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
-      <PageHeader eyebrow="Library" title="Find the right starting point">
-        Search released templates and guidance, industry coverage pages, and service enquiry categories.
-        Directory pages do not mean guidance or providers are available.
+      <PageHeader eyebrow="Documents" title="Documents and guidance">
+        Search everything Valo has published: ready-made templates, guidance, industry pages and service
+        enquiries. An industry or service page being listed does not mean guidance or a provider is available
+        for it.
       </PageHeader>
 
       <form
@@ -87,7 +98,7 @@ export function Library({
         role="search"
       >
         <label className="relative">
-          <span className="sr-only">Search the library</span>
+          <span className="sr-only">Search documents and guidance</span>
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="search"
@@ -196,8 +207,8 @@ export function Library({
       )}
       {unknownIndustry && coverage.data && (
         <p className="mt-3 text-sm text-muted-foreground">
-          This saved industry filter is not in the current taxonomy. It is preserved in the URL; choose a
-          listed category or clear filters. No different activity is inferred.
+          This address asks for an industry that is no longer on the list. Choose a listed industry or clear
+          the filters. No other industry is assumed.
         </p>
       )}
 
@@ -242,7 +253,8 @@ export function Library({
         ) : d && d.items.length > 0 ? (
           <>
             <p className="mb-4 text-sm text-muted-foreground" data-testid="text-result-count">
-              {d.total} result{d.total === 1 ? "" : "s"}
+              {formatCount(d.total)} result{d.total === 1 ? "" : "s"}
+              {d.total > pageSize && `, page ${formatCount(d.page)}`}
             </p>
             <ul className="grid gap-3">
               {d.items.map((it) => (
@@ -257,9 +269,13 @@ export function Library({
                     data-testid={"link-item-" + it.slug}
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="pill pill-forest">{it.type}</span>
-                      <span className="pill pill-ink">{it.industry}</span>
-                      {it.access && <span className="pill pill-ink">{it.access}</span>}
+                      <span className="pill pill-forest">{typeName(it.type)}</span>
+                      {industryLabel(it.industry, industryNames) && (
+                        <span className="pill pill-ink">{industryLabel(it.industry, industryNames)}</span>
+                      )}
+                      {it.access && (
+                        <span className="pill pill-ink">{it.access === "premium" ? "Premium" : "Free"}</span>
+                      )}
                     </div>
                     <p className="font-display mt-3 text-xl">{it.title}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{it.summary}</p>
@@ -290,11 +306,11 @@ export function Library({
           <div className="grid gap-4">
             <EmptyState
               mark={<BookOpen className="h-5 w-5 text-muted-foreground" />}
-              title={filtered ? "Nothing matches these filters" : "No public items are available"}
+              title={filtered ? "Nothing matches these filters" : "Nothing is published yet"}
               action={
                 <>
                   <Link href="/sign-up" className="btn btn-primary">
-                    Write your own draft
+                    Create a document
                   </Link>
                   <Link href="/workspace" className="btn btn-ghost">
                     Open your workspace
@@ -303,12 +319,12 @@ export function Library({
               }
             >
               {filtered
-                ? "Try a shorter keyword, remove an industry or category filter, or choose all access levels. Unreleased documents and private drafts never appear in search."
-                : "Nothing is in the public catalogue right now. You can still write a private business draft from scratch and export it from your workspace."}
+                ? "Try a shorter word, remove a filter, or choose all access levels. Documents that are not published, and your own private documents, never appear in this search."
+                : "Nothing is published right now. You can still make your own document and download it from your workspace."}
             </EmptyState>
             <Notice title="Two kinds of download">
-              Private drafts you write in your workspace can be exported now. Blank catalogue files are
-              offered only for items actually listed here.
+              A document you make in your workspace can be downloaded now. A ready-made template's blank file
+              is offered only when the template is listed here.
             </Notice>
           </div>
         )}
