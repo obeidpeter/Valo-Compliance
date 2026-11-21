@@ -678,9 +678,9 @@ still at `/workspace/assessments`.
 
 **Not changed, and why.**
 
-- The result itself, as it reads after a check and in a saved result, still says "As of",
+- The result itself, as it reads after a check and in a saved result, still said "As of",
   "Ruleset", "hash" and "Coverage unavailable". The public check shows the same result, so it
-  changes in a step of its own.
+  changed in a step of its own, [below](#phase-5-a-result-in-the-customers-words).
 - The account screen's paragraph about the copy of your data, and the reminders' words about
   what an email provider accepted, are exact statements that checks pin. They wait for the
   review of the privacy pages and for phase 6.
@@ -688,6 +688,30 @@ still at `/workspace/assessments`.
 
 One script that needs a verified test account, and so runs in no CI job, reads the profile's
 version. It was updated and not run.
+
+### Phase 5: a result in the customer's words
+
+A result is shown after a check, to a visitor and to a signed-in customer, and again inside a
+saved result. It is one component, so these words change in all three places.
+
+| Where | Now | Before |
+| --- | --- | --- |
+| What a result was worked out from | "Rules as at 18 Nov 2026", "Rules version …", "1 result with a source", "Reference cccccccccccc" | "As of 18 Nov 2026", "Ruleset …", "1 source-backed", "hash cccccccccccc" |
+| No rule matched | "Nothing to show yet", "No published rule covers these answers yet." | "Coverage unavailable", "No released rules cover these answers yet." |
+| What that means | "This does not mean that you are exempt from anything." | "This is not a finding that you are exempt from anything." |
+| Where a requirement applies, and its rule | "Federal · Rule SYNTHETIC-RULE-1, version 1"; "State: Lagos"; "Local government: Ikeja, Lagos" | "FEDERAL · SYNTHETIC-RULE-1 V1", in capitals; "state / Lagos" |
+| The question a rule checked | "The question checked:" | "Question assessed:" |
+| What is not covered | "What Valo does not cover yet" | "Known coverage gaps" |
+| Official links | "Official sources" | "Official routes" |
+
+**Kept on purpose.** The four labels a result can carry ("Likely relevant", "May apply", "More
+information needed", "Not indicated by these answers") are CMP-002's own words. "Why am I seeing
+this?" is RUL-004's. Each requirement still shows its rule and version, where it applies, its
+sources and its next step, and a result still shows no score.
+
+The check's optional name details said "a private assessment is stored only when you explicitly
+agree to save it". It now says "the result is stored, privately, only when you explicitly agree
+to save it".
 
 ### Found on the way: keyboard focus rests clear of the bars
 

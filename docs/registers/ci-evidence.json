@@ -1063,7 +1063,7 @@
       "job": "foundation",
       "file": "artifacts/valo/src/components/assessment-result.test.tsx",
       "test": "the result page shows why a held rule gives no result and links each official route",
-      "proves": "The checker's result page, rendered on the server from a synthetic result with no items, lists a held rule's stale-evidence reason among the coverage gaps, says no released rules cover these answers yet and links the official route to open in a new tab."
+      "proves": "The checker's result page, rendered on the server from a synthetic result with no items, lists a held rule's stale-evidence reason among the coverage gaps, says no published rule covers these answers yet and links the official route to open in a new tab."
     },
     {
       "requirement": "DOC-001",
@@ -2723,6 +2723,34 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the saved results, the business profile, the tasks and the check's save panel say 'result' and 'version' in the customer's words",
       "proves": "Signed in through a stand-in identity with synthetic data: the list of saved results shows the rules and the profile version each used; one saved result is headed “Result saved” with its date and where it was worked out from; the business profile shows its version and the check's own words for not knowing; a task shows its version; and the check's save panel lets a result be saved only once its box is ticked. The list, the profile, the tasks and the save panel say none of “assessment”, “revision”, “rev”, “ruleset”, “questionnaire”, “snapshot” or “checker”. The result shown inside a saved result is not part of this check. The API is answered in the page, so nothing is saved for real."
+    },
+    {
+      "requirement": "CMP-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "a check that no published rule covers says so in plain words, says it is not an exemption, and shows what Valo does not cover",
+      "proves": "For a signed-out visitor whose check matches no rule, the result says “No published rule covers these answers yet.” and “This does not mean that you are exempt from anything.”, and names the rules' date and version it was worked out from. The result is a synthetic one answered in the page."
+    },
+    {
+      "requirement": "RUL-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
+      "test": "a check that no published rule covers says so in plain words, says it is not an exemption, and shows what Valo does not cover",
+      "proves": "For a signed-out visitor whose check matches no rule, the result still lists what Valo does not cover, under that heading. The result is a synthetic one answered in the page."
+    },
+    {
+      "requirement": "RUL-004",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a saved result names what it was worked out from, where each requirement applies and which rule and version it is, and links the official sources",
+      "proves": "Signed in through a stand-in identity with synthetic data, a saved result shows each requirement under its label with “Why am I seeing this?”, its reason, its next step, and its rule and version in words, and names the rules' date and version and the result's reference."
+    },
+    {
+      "requirement": "CMP-003",
+      "job": "foundation",
+      "file": "artifacts/valo/src/components/assessment-result.test.tsx",
+      "test": "each result says in words whether it is federal, a state's or a local government's, with its rule and version",
+      "proves": "On the result page, rendered on the server from a synthetic result, a federal requirement is marked “Federal”, a state's “State: Lagos” or “State: FCT”, and a local government's “Local government: Ikeja, Lagos”, each beside its rule and version, and only the federal one is marked federal."
     }
   ]
 }
