@@ -42,7 +42,8 @@ export function prepareOperationalFiniteManifest(
     !input.candidateArtifact ||
     !/^[a-f0-9-]{36}$/.test(input.candidateArtifact.id) ||
     input.candidateArtifact.extension !== "json" ||
-    !/^TPL-\d{2,3}$/.test(input.candidateArtifact.templateId) ||
+    // A template's ID or a guide's.
+    !/^(?:TPL-\d{2,3}|GUD-\d{2})$/.test(input.candidateArtifact.templateId) ||
     ![
       input.candidateHash,
       input.bundleHash,

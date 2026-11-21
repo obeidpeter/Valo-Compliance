@@ -187,3 +187,22 @@ test("the prepared candidate's artifact is required, exact and part of work iden
   value.candidateArtifact.templateId = "TPL-13";
   assert.equal(changed.works[0]!.bindings.candidateArtifact!.templateId, "TPL-12");
 });
+test("a prepared candidate may be a template or a guide, named by its exact ID", () => {
+  for (const id of ["TPL-07", "TPL-12", "GUD-01", "GUD-30"]) {
+    const value = input();
+    value.candidateArtifact.templateId = id;
+    const manifest = prepareOperationalFiniteManifest(value, now);
+    assert.deepEqual(
+      manifest.works.map((w) => [w.lane, w.bindings.candidateArtifact!.templateId]),
+      [
+        ["publication", id],
+        ["publication", id],
+      ],
+    );
+  }
+  for (const id of ["GUD-1", "GUD-001", "GUIDE-C01", "gud-01", "GUD-01 ", "RULE-01", ""]) {
+    const value = input();
+    value.candidateArtifact.templateId = id;
+    assert.throws(() => prepareOperationalFiniteManifest(value, now), /FINITE_PREPARATION_BINDING_INVALID/);
+  }
+});

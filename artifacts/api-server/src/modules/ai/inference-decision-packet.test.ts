@@ -72,16 +72,23 @@ async function mixed(retry = true) {
 }
 test("preparation options preserve explicit retries and never accept approval or quota assertions", () => {
   const packageId = `finite-package:${"e".repeat(64)}`;
-  assert.deepEqual(parseFinitePreparationOptions([]), { retry: false, packageId: undefined, candidates: [] });
+  assert.deepEqual(parseFinitePreparationOptions([]), {
+    retry: false,
+    packageId: undefined,
+    candidates: [],
+    guidePairs: false,
+  });
   assert.deepEqual(parseFinitePreparationOptions([`--package=${packageId}`]), {
     retry: false,
     packageId,
     candidates: [],
+    guidePairs: false,
   });
   assert.deepEqual(parseFinitePreparationOptions(["--with-schema-retry", `--package=${packageId}`]), {
     retry: true,
     packageId,
     candidates: [],
+    guidePairs: false,
   });
   // Prepared candidates are named by their exact private artifact (decision 0014).
   const one = `55555555-5555-4555-8555-555555555555:${"1".repeat(64)}`,
@@ -93,7 +100,23 @@ test("preparation options preserve explicit retries and never accept approval or
       { id: "55555555-5555-4555-8555-555555555555", hash: "1".repeat(64), extension: "json" },
       { id: "66666666-6666-4666-8666-666666666666", hash: "2".repeat(64), extension: "json" },
     ],
+    guidePairs: false,
   });
+  // A new package for the guides' review pairs is asked for by name. An approved package has its
+  // kind already, and a retry is never part of asking for one.
+  assert.deepEqual(parseFinitePreparationOptions(["--guide-pairs", `--candidate=${one}`]), {
+    retry: false,
+    packageId: undefined,
+    candidates: [{ id: "55555555-5555-4555-8555-555555555555", hash: "1".repeat(64), extension: "json" }],
+    guidePairs: true,
+  });
+  for (const args of [
+    ["--guide-pairs", `--package=${packageId}`],
+    ["--guide-pairs", "--with-schema-retry"],
+    ["--guide-pairs", "--guide-pairs"],
+    ["--guide-pairs=yes"],
+  ])
+    assert.throws(() => parseFinitePreparationOptions(args), /FINITE_PREPARATION_OPTIONS_INVALID/);
   for (const args of [
     ["--approved=true"],
     ["--quota=100"],

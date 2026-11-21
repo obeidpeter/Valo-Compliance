@@ -113,7 +113,7 @@ async function main() {
     if (mode === "--prepare-customer") {
       if (!batchId) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
-      if (options.candidates.length) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      if (options.candidates.length || options.guidePairs) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareCustomerFiniteManifest } = await import("../modules/ai-lanes");
       const existing = options.packageId
         ? await readApprovedFiniteAllocationPackage(pool, options.packageId)
@@ -164,7 +164,8 @@ async function main() {
       // package: the case is named by its corpus id, as in --prepare-editorial-case EVAL-EDP-C019.
       if (!batchId || !/^EVAL-EDP-C\d{3}$/.test(batchId)) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
-      if (options.candidates.length || options.retry) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      if (options.candidates.length || options.retry || options.guidePairs)
+        throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareEditorialCaseManifest, isControlledFailureEditorialCase } =
         await import("../modules/editorial");
       // C041's review must fail under control; it never goes to the provider.
@@ -409,15 +410,30 @@ async function main() {
           !/^(?:new|finite-package:[a-f0-9]{64})$/.test(batchId) ||
           preparationOptions!.retry ||
           preparationOptions!.packageId ||
+          // --guide-pairs chooses the kind of a new package; an approved package has its kind already.
+          (preparationOptions!.guidePairs && batchId !== "new") ||
           !preparationOptions!.candidates.length)) ||
+      (selection && preparationOptions!.guidePairs) ||
       (mode === "--execute" && (!batchId || !/^[-a-zA-Z0-9_:]{1,160}$/.test(batchId)))
     )
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");
     if (mode === "--prepare" || selection) {
       const parentId = selection ? selectionOptions?.packageId : batchId === "new" ? undefined : batchId;
       const existingPackage = parentId ? await readApprovedFiniteAllocationPackage(pool, parentId) : null;
-      const allocationPackage = existingPackage?.pkg ?? (await prepareFiniteAllocationPackage()),
+      const allocationPackage =
+          existingPackage?.pkg ??
+          (await prepareFiniteAllocationPackage(
+            new Date(),
+            preparationOptions!.guidePairs
+              ? finitePackagePreparers.guidePairs
+              : finitePackagePreparers.templatePairs,
+          )),
         packageId = allocationPackageId(allocationPackage);
+      // A package admits one kind of work: the templates' review pairs, or the guides'.
+      const guidePackage =
+        requestDigest(allocationPackage.supportedPreparers) ===
+        requestDigest(finitePackagePreparers.guidePairs);
+      if (selection && guidePackage) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const holds: { candidateVersionId: string | null; templateId: string | null; reason: string }[] = [];
       const prepared: ReturnType<typeof finiteManifestProposal>[] = [];
       const customerHolds: { caseId: string; reason: string }[] = [];
@@ -428,8 +444,10 @@ async function main() {
           const saved = await readPreparedCandidate(ref);
           candidateVersionId = saved.versionId;
           templateId = saved.templateId;
-          if (!supportsOperationalInferenceTemplate(saved.templateId))
+          const guide = mappedGuideIds.includes(saved.templateId);
+          if (!guide && !supportsOperationalInferenceTemplate(saved.templateId))
             throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
+          if (guide !== guidePackage) throw Error("CANDIDATE_OUTSIDE_PACKAGE_KIND");
           console.error(
             JSON.stringify({
               event: "finite-preparation-template",
@@ -535,8 +553,11 @@ async function main() {
         ownerApproved: !!existingPackage,
         executableScope: selection
           ? "Exact operational pairs and explicitly listed supported customer attempts under one package"
-          : "one exact operational review pair per verified prepared candidate",
-        supportedTemplateIds: operationalInferenceTemplateIds,
+          : guidePackage
+            ? "one exact review pair per verified prepared guide"
+            : "one exact operational review pair per verified prepared candidate",
+        supportedTemplateIds: guidePackage ? [] : operationalInferenceTemplateIds,
+        supportedGuideIds: guidePackage ? mappedGuideIds : [],
         candidatesInspected: preparationOptions!.candidates.length,
         proposals: prepared,
         proposal: prepared.length === 1 ? prepared[0] : null,

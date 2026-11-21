@@ -198,13 +198,75 @@ test("an editorial-case package admits only editorial case pairs, and no other p
   assert.throws(() => assertWorkPackageMembership(customer, editorial, null), /WORK_OUTSIDE_PACKAGE/);
 });
 
+test("a guide package admits only the review pairs of guides with a claim map, and no other package admits a guide", async () => {
+  const at = new Date();
+  const templates = await prepareFiniteAllocationPackage(at),
+    editorial = await prepareFiniteAllocationPackage(at, finitePackagePreparers.editorialCases),
+    guides = await prepareFiniteAllocationPackage(at, finitePackagePreparers.guidePairs);
+  validateAllocationPackage(guides);
+  assert.deepEqual(guides.supportedPreparers, ["guide-review-pair-v1"]);
+  assert.equal(new Set([templates, editorial, guides].map(allocationPackageId)).size, 3);
+  // The same inventory, allocation and attempt limits as the other packages: only the kind differs.
+  assert.deepEqual(guides.contentIds, templates.contentIds);
+  assert.deepEqual(guides.laneAttemptLimits, templates.laneAttemptLimits);
+  assert.equal(requestDigest(guides.allocation), requestDigest(additionalInferenceAllocation));
+  assert.match(guides.holds[0]!, /^Supported guide review pairs: GUD-01, .*GUD-10; /);
+  assert.match(guides.holds[0]!, /under the guidance policy as the owner approved it/);
+
+  // A guide with a claim map is admitted under the guide package, with its review plan.
+  assert.doesNotThrow(() => assertWorkPackageMembership(work(), guides, "GUD-01"));
+  assert.doesNotThrow(() => assertWorkPackageMembership({ ...work(), role: "challenge" }, guides, "GUD-10"));
+  // A guide without a claim map has no preparer, and an ID outside the inventory is outside the package.
+  assert.throws(() => assertWorkPackageMembership(work(), guides, "GUD-11"), /PREPARER_UNAVAILABLE/);
+  assert.throws(() => assertWorkPackageMembership(work(), guides, "GUD-31"), /WORK_OUTSIDE_PACKAGE/);
+  const unplanned = work();
+  delete unplanned.bindings.operationalPlan;
+  assert.throws(() => assertWorkPackageMembership(unplanned, guides, "GUD-01"), /PREPARER_UNAVAILABLE/);
+  // No other package admits a guide.
+  assert.throws(() => assertWorkPackageMembership(work(), templates, "GUD-01"), /PREPARER_UNAVAILABLE/);
+  assert.throws(() => assertWorkPackageMembership(work(), editorial, "GUD-01"), /WORK_OUTSIDE_PACKAGE/);
+  // And the guide package admits nothing else: not a template, a customer case or an editorial case.
+  assert.doesNotThrow(() => assertWorkPackageMembership(work(), templates, "TPL-07"));
+  assert.throws(() => assertWorkPackageMembership(work(), guides, "TPL-07"), /PREPARER_UNAVAILABLE/);
+  const customerCase = guides.corpora.find((c) => c.name === "customer-ai")!.cases[0]!;
+  const customer: FiniteWork = {
+    ...work(),
+    lane: "customer",
+    role: "customer",
+    pair: null,
+    caseHash: customerCase.hash,
+    bindings: { candidateVersionId: null, corpus: "customer-ai", caseId: customerCase.id, sourceFiles: [] },
+  };
+  assert.doesNotThrow(() => assertWorkPackageMembership(customer, templates, null));
+  assert.throws(() => assertWorkPackageMembership(customer, guides, null), /WORK_OUTSIDE_PACKAGE/);
+  const editorialCase = guides.corpora.find((c) => c.name === "editorial")!.cases[0]!;
+  const evaluation: FiniteWork = {
+    ...work(),
+    lane: "editorial_evaluation",
+    caseHash: editorialCase.hash,
+    bindings: {
+      candidateVersionId: "702d4a86-27de-5ff7-8d76-d590426594ec",
+      corpus: "editorial",
+      caseId: editorialCase.id,
+      sourceFiles: [],
+      historicalCutoff: at.toISOString(),
+    },
+  };
+  assert.throws(() => assertWorkPackageMembership(evaluation, guides, null), /WORK_OUTSIDE_PACKAGE/);
+});
+
 test("a package names one known preparer set", async () => {
   await assert.rejects(
     () => prepareFiniteAllocationPackage(new Date(), ["another-preparer"] as never),
     /PACKAGE_PREPARERS_INVALID/,
   );
   const pkg = await prepareFiniteAllocationPackage();
-  for (const supportedPreparers of [[], ["editorial-case-pair-v1", "operational-template-pair-v1"], ["x"]])
+  for (const supportedPreparers of [
+    [],
+    ["editorial-case-pair-v1", "operational-template-pair-v1"],
+    ["guide-review-pair-v1", "operational-template-pair-v1"],
+    ["x"],
+  ])
     assert.throws(
       () => validateAllocationPackage({ ...pkg, supportedPreparers } as never),
       /ALLOCATION_PACKAGE_INVALID/,
