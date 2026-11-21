@@ -1675,3 +1675,48 @@ test("the saved results, the business profile, the tasks and the check's save pa
     }),
   );
 });
+
+// RUL-004: "Return matched facts, requirement ID/version, jurisdiction, source references,
+// confidence label and missing facts."
+// CMP-003: "Represent federal, state/FCT and LGA requirements separately".
+test("a saved result names what it was worked out from, where each requirement applies and which rule and version it is, and links the official sources", async () => {
+  const { page, errors, unknown, close } = await desktop(`/workspace/assessments/${ASSESSMENT}`);
+  try {
+    await ready(page);
+    const result = page.getByTestId("assessment-result");
+    await expect(page.getByTestId("result-basis").locator("span")).toHaveText([
+      "Rules as at 18 Nov 2026",
+      "Rules version synthetic-ruleset",
+      "1 result with a source",
+      "Reference cccccccccccc",
+    ]);
+    const item = assessment.result.items[0]!;
+    const card = page.getByTestId(`card-item-${item.ruleId}`);
+    await expect(card).toContainText(`Federal · Rule ${item.ruleId}, version ${item.ruleVersion}`);
+    await expect(card).toContainText("Why am I seeing this?");
+    await expect(card).toContainText(item.reason);
+    await expect(card).toContainText(`Next step: ${item.nextStep}`);
+    // It sits under the label the rules gave it.
+    await expect(page.getByRole("region", { name: item.label })).toContainText(item.title);
+    await expect(result).toContainText("What Valo does not cover yet");
+    await expect(result).toContainText("Official sources");
+    await expect(result.getByRole("link", { name: "Synthetic official route" })).toHaveAttribute(
+      "href",
+      "https://example.test/route",
+    );
+    // The fixture's own names for its rules and its rule are left out: each happens to hold one of
+    // the old words.
+    const shown = (await result.innerText())
+      .replace(/\s+/g, " ")
+      .replace(assessment.result.rulesetVersion, "")
+      .replace(item.title, "");
+    assert.doesNotMatch(
+      shown,
+      /\bruleset\b|\bas of\b|\bhash\b|coverage unavailable|source-backed|\breleased\b|known coverage gaps|official routes/i,
+    );
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});

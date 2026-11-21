@@ -429,3 +429,42 @@ test("what a visitor chose on the landing page is handed to sign-up and sign-in:
     await close();
   }
 });
+
+/** The project's words for a result, none of which a result shows now. */
+const OLD_RESULT_WORDS =
+  /\bruleset\b|\bas of\b|\bhash\b|coverage unavailable|source-backed|\breleased\b|known coverage gaps|official routes|question assessed/i;
+
+// CMP-002's acceptance: "no output states that the business is legally exempt or fully compliant
+// merely because a questionnaire did not trigger a rule."
+// RUL-006's acceptance: "coverage gaps and excluded high-risk sectors are visible".
+test("a check that no published rule covers says so in plain words, says it is not an exemption, and shows what Valo does not cover", async () => {
+  const { respond } = checking();
+  const { page, errors, close } = await app.desktop("/checker", respond);
+  try {
+    await ready(page);
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    const result = page.getByTestId("assessment-result");
+    await result.waitFor();
+    // What the result was worked out from, in words.
+    await expect(page.getByTestId("result-basis").locator("span")).toHaveText([
+      "Rules as at 18 Nov 2026",
+      "Rules version synthetic-ruleset",
+      "0 results with a source",
+      "Reference cccccccccccc",
+    ]);
+    // Nothing matched: said plainly, and never as a finding that nothing applies.
+    const nothing = page.getByTestId("status-coverage-unavailable");
+    await expect(nothing).toContainText("No published rule covers these answers yet.");
+    await expect(nothing).toContainText("This does not mean that you are exempt from anything.");
+    // What is not covered is still shown.
+    await expect(result).toContainText("What Valo does not cover yet");
+    await expect(result).toContainText("Synthetic coverage gap.");
+    // The fixture's own name for its rules is left out: it happens to hold one of the old words.
+    const shown = (await result.innerText()).replace(/\s+/g, " ").replace(noResult.rulesetVersion, "");
+    assert.doesNotMatch(shown, OLD_RESULT_WORDS);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});

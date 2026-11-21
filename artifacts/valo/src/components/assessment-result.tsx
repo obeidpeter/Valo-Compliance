@@ -30,12 +30,19 @@ export function AssessmentResultView({
     .filter((g) => g.items.length);
   return (
     <div className="grid min-w-0 gap-6" data-testid="assessment-result">
-      <div className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted-foreground">
-        <span>As of {formatDay(result.asOfDate)}</span>
-        <span className="min-w-0 break-all">Ruleset {result.rulesetVersion}</span>
-        <span>{result.sourceBackedRecommendations} source-backed</span>
+      <div
+        className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground"
+        data-testid="result-basis"
+      >
+        <span>Rules as at {formatDay(result.asOfDate)}</span>
+        <span className="min-w-0 break-all">Rules version {result.rulesetVersion}</span>
+        <span>
+          {result.sourceBackedRecommendations === 1
+            ? "1 result with a source"
+            : `${result.sourceBackedRecommendations} results with a source`}
+        </span>
         <span className="truncate" title={result.resultHash}>
-          hash {result.resultHash.slice(0, 12)}
+          Reference {result.resultHash.slice(0, 12)}
         </span>
       </div>
 
@@ -47,12 +54,13 @@ export function AssessmentResultView({
 
       {result.items.length === 0 ? (
         <div className="surface rule-lines p-6 sm:p-8" data-testid="status-coverage-unavailable">
-          <p className="eyebrow">Coverage unavailable</p>
-          <p className="font-display mt-3 text-2xl sm:text-3xl">No released rules cover these answers yet.</p>
+          <p className="eyebrow">Nothing to show yet</p>
+          <p className="font-display mt-3 text-2xl sm:text-3xl">
+            No published rule covers these answers yet.
+          </p>
           <p className="mt-3 max-w-xl leading-relaxed text-muted-foreground">
-            This is not a finding that you are exempt from anything. It only means Valo has no checked,
-            released rule to compare your answers against. Use the official routes below, or ask a qualified
-            adviser.
+            This does not mean that you are exempt from anything. It only means Valo has no checked, published
+            rule to compare your answers with. Use the official sources below, or ask a qualified adviser.
           </p>
         </div>
       ) : (
@@ -90,7 +98,7 @@ export function AssessmentResultView({
           )}
           {result.gaps.length > 0 && (
             <div className="surface p-5">
-              <p className="eyebrow">Known coverage gaps</p>
+              <p className="eyebrow">What Valo does not cover yet</p>
               <ul className="mt-3 grid gap-2 text-sm leading-relaxed">
                 {result.gaps.map((g) => (
                   <li key={g} className="border-l-2 border-[hsl(var(--ochre))] pl-3">
@@ -105,7 +113,7 @@ export function AssessmentResultView({
 
       {result.officialRoutes.length > 0 && (
         <div className="surface p-5">
-          <p className="eyebrow">Official routes</p>
+          <p className="eyebrow">Official sources</p>
           <ul className="mt-3 grid gap-2">
             {result.officialRoutes.map((r) => (
               <li key={r.url}>
@@ -140,24 +148,29 @@ function Item({
   const [open, setOpen] = useState(false);
   const detail = item;
   const missingStates = new Map(detail.missingAnswerStates?.map((answer) => [answer.field, answer.state]));
-  const jur = [item.jurisdiction.level, item.jurisdiction.state, item.jurisdiction.lga]
-    .filter(Boolean)
-    .join(" / ");
+  // CMP-003: federal, state and local requirements are told apart, each named for where it applies.
+  const { level, state, lga } = item.jurisdiction;
+  const place =
+    level === "federal"
+      ? "Federal"
+      : level === "state"
+        ? ["State", state].filter(Boolean).join(": ")
+        : ["Local government", [lga, state].filter(Boolean).join(", ")].filter(Boolean).join(": ");
   return (
     <li className="surface overflow-hidden" data-testid={"card-item-" + item.ruleId}>
       <div className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="font-medium leading-snug">{item.title}</p>
-            <p className="mt-1 font-mono text-[0.7rem] uppercase tracking-wider text-muted-foreground">
-              {jur} · {item.ruleId} v{item.ruleVersion}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {place} · Rule {item.ruleId}, version {item.ruleVersion}
             </p>
           </div>
           {action}
         </div>
         {detail.assessedProposition && (
           <p className="mt-3 text-sm">
-            <span className="text-muted-foreground">Question assessed: </span>
+            <span className="text-muted-foreground">The question checked: </span>
             {detail.assessedProposition}
           </p>
         )}
