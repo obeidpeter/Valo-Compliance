@@ -498,9 +498,9 @@ business profile. The home had no way into the requirements check before.
 | Requirements | A card with "Check requirements" and "Saved results" | Not on the home |
 | Business profile | Its name and four lines | The same, with "rev 3" in the corner |
 
-**Not changed yet.** A document's row still reads "Business draft" and "rev 3", and a new
-document is still titled "private business draft". Those words change with the rest of the
-workspace's words.
+**Changed since.** A document's row read "Business draft" and "rev 3", and a new document was
+titled "private business draft". Those words changed with the editor's, described
+[below](#phase-5-the-document-editor-in-plain-words).
 
 **Found on the way: the phone's menu closes when focus moves on.** With the menu open, Tab went
 on from its last link to the page behind it, where the control that took the focus lay hidden
@@ -537,6 +537,62 @@ documented in its library and is not exercised here.
 **Where the choice is lost.** It is kept while the sign-up page stays open, through the
 provider's own steps. Reloading the page part-way, or finishing sign-up in another tab, loses it,
 and the visitor then starts on the workspace's home, where "New document" is one press away.
+
+### Phase 5: the document editor in plain words
+
+The editor and the documents list now say what they mean in the customer's words. How a document
+is saved, checked and downloaded is unchanged.
+
+| Where | Now | Before |
+| --- | --- | --- |
+| A document's row in the list | "Draft", "Version 3", "Saved 19 Nov 2026, 10:00" | "Business draft", "rev 3" |
+| A new document's title | The kind's name, such as "Invoice"; a blank one is "Untitled document" | "Invoice — private business draft"; "Untitled business draft" |
+| The way back | "Your documents", to the documents list | "Workspace", to the home |
+| Where the document stands | One "Draft" mark and "Your own document: not a Valo template, and not reviewed." | Three marks: "Business draft", "Not a released template", "Not reviewed" |
+| Saved state | "Saved · version 3" | "Saved · rev 3" |
+| The two views | "Edit" and "Preview" | "Edit" and "Saved preview" |
+| What is missing | "Still needed", each question by its own name | "Missing details", each line ending "This answer is required." |
+| Earlier saves | "Versions", "Version 3" | "Revisions", "rev 3" |
+| Files | "Download this document", "Make a Word file", "Make a PDF file", "PDF · version 3 · ready", "13 KB" | "Private exports · development only", "Create DOCX draft", "Revision 3 · PDF · ready", "Attempts: 1 · 12,345 bytes" |
+| A file that was not made | A sentence for each of the three reasons a customer can act on, and a reference to quote for any other | The failure's code alone |
+| The questions | "Questions", "Row 1", "Add a row" | "Guided form · TPL-01", "Goods, work and agreed charges · row 1", "Add goods, work and agreed charges row" |
+| The document's own text | "Text and tables", "Add a paragraph", "Lettering", "Colour" | "Body", "Paragraph", "Typeface", "Accent" |
+
+**Kept on purpose.**
+
+- A draft status stays in the list, in the editor and under the preview. EDT-003 asks for "a clear
+  draft status".
+- A file is still made only after the customer ticks a box that asks for a draft copy (EDT-005).
+  The box now reads "I want a draft copy: marked as a draft on every page, with any missing details
+  left as they are."
+- A document's title is printed as its heading. That is why a new invoice now starts as "Invoice"
+  and not as "Invoice — private business draft".
+- What the editor says a document is not (a Valo template, reviewed, proof of payment, a
+  government tax invoice, professionally reviewed) is all still said, in fewer words.
+
+**Moved, not removed.** The panel and the documents screen each carried a sentence for developers:
+that the approval of downloads for production and their disaster recovery are still unproved.
+It is now on the developer notes page. The banner on every page still says that the build is not
+launched and takes made-up details only.
+
+**Found on the way.** The list of what is missing named a table's unanswered cells by an internal
+key ("items:0:description: This answer is required."). Each now reads by the table's, the row's
+and the column's names: "Goods, work and agreed charges, row 1: Description".
+
+**Not changed, and why.**
+
+- The questions themselves ("Issuing business legal name", "Goods/work supplied and agreed
+  billing basis") and the notice over each form come from the frozen question definitions.
+  Rewording them changes the twelve forms, not the editor, and waits for the owner's decision.
+- Amounts in the questions are still typed in kobo, and a new form still opens with every
+  required question marked in red. Each changes in a step of its own.
+- A downloaded file still prints "Saved revision 3". The words inside a file are the API's.
+- The sentences a wording check pins keep the word "drafts", such as "Drafts you already created
+  stay in your workspace."
+- The drafting assistant's screens keep their words until their own step.
+
+Four scripts that need a verified test account, and so run in no CI job, name the editor's
+buttons and tabs. They were updated and not run.
 
 ### Found on the way: keyboard focus rests clear of the bars
 

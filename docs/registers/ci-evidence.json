@@ -2547,7 +2547,7 @@
       "job": "foundation",
       "file": "artifacts/valo/src/components/library-exports.test.tsx",
       "test": "the business library lists each ready export with its revision, its download and the template version it came from",
-      "proves": "The workspace home's ready-exports list, rendered on the server from synthetic exports, names each file's document, format and revision, links its download and its document, and says which template and version the document was made from, or that it was not made from a template."
+      "proves": "The documents screen's list of files ready to download, rendered on the server from synthetic files, names each file's document, kind and version, links its download and its document, and says which template and version the document was made from, or that it was not made from a template."
     },
     {
       "requirement": "DOC-005",
@@ -2646,6 +2646,41 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the New document page puts first the documents of a task chosen before signing up, starts one with a press, and shows no such section for a choice the site does not offer",
       "proves": "Signed in through a stand-in identity with synthetic data, the New document page opened with a chosen task shows that task's one, two or three documents first, on a desktop and on a phone without scrolling sideways, and one press on one of them sends a new document named for it; with nothing chosen or a made-up choice it shows no such section."
+    },
+    {
+      "requirement": "EDT-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the document editor shows a draft status and the saved version, lists the versions with the current one marked, previews the saved version, and makes a file only once a marked draft is asked for",
+      "proves": "Signed in through a stand-in identity with synthetic data, the document editor shows a “Draft” mark, the saved version, and that version and the one before it in a list with the current one marked and the earlier one offered for restoring, and its Preview tab shows the saved document's text. The API is answered in the page, so nothing is saved or restored for real."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "the document editor shows a draft status and the saved version, lists the versions with the current one marked, previews the saved version, and makes a file only once a marked draft is asked for",
+      "proves": "In the document editor, the buttons that make a Word file and a PDF stay disabled until the customer ticks the box asking for a draft copy marked on every page with missing details left as they are; the request then names the saved version and carries that acknowledgement. The API is answered in the page, so no file is made."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "an invoice started from its questions lists what it still needs by each question's own name, a table's row and column included, never by an internal key, and on a phone fits 360 and 320 pixels with no automated WCAG 2.2 AA failure",
+      "proves": "For an invoice started from its questions with nothing answered, the editor lists every unanswered question by its own name and a table's cell by its table, row and column, with no internal key and no repeated “This answer is required.”"
+    },
+    {
+      "requirement": "NFR-006",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "an invoice started from its questions lists what it still needs by each question's own name, a table's row and column included, never by an internal key, and on a phone fits 360 and 320 pixels with no automated WCAG 2.2 AA failure",
+      "proves": "On an emulated phone, the editor of an invoice started from its questions fits 360 and 320 pixels, moves keyboard focus only to visible outlined controls and has no automated WCAG 2.2 AA failure. This is an automated check, not a manual or assistive-technology review."
+    },
+    {
+      "requirement": "EDT-005",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/api.test.ts",
+      "test": "what a new document still needs is listed in the questions' own words, a table's row and column by name, and never by an internal key",
+      "proves": "For each of the twelve kinds of document that start from questions, with nothing answered, every line of what is still needed is a question's own label, or a table's label, row number and column label."
     }
   ]
 }
