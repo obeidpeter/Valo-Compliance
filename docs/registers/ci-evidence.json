@@ -2814,6 +2814,13 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "a saved request reads 'Enquiry received' with what has not happened, and the customer's own requests read in plain words",
       "proves": "Signed in through a stand-in identity with synthetic data, a request saved from the support form shows “Enquiry received”, says that no appointment has been made and nothing was sent outside Valo, and never shows “Appointment booked”; the customer's own requests give each state and topic in words. The save is answered by a test stand-in, so this shows the screen's words, not that staff receive the request."
+    },
+    {
+      "requirement": "PRV-003",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a privacy request reads in words: its kind, its state, each step and who did what; and the screen still says what a request is not",
+      "proves": "Signed in through a stand-in identity with synthetic data, the privacy screen gives a request's kind, state, steps and history in words, still says that a request received or partly done is not a confirmed deletion or a complete copy, and keeps the download's scope statement. This shows the screen's words, not that a request is verified or carried out in any system."
     }
   ]
 }
