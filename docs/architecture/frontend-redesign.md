@@ -1146,6 +1146,39 @@ dispute do and do not do. They are left for when a price and a refund policy are
 One script that needs a verified test account, and so runs in no CI job, read the two empty
 states by their old words. It was updated and not run.
 
+### Phase 6: the tax authority and its number, as the specification names them
+
+The guidance page lists six official sources. One read "Federal Inland Revenue Service", "Federal
+taxes and TIN", with the address firs.gov.ng. It was the only place the site said "TIN", and the
+plan asked for a short explanation beside that term.
+
+The specification no longer uses either name. Its 2026 update reads: "The Nigeria Revenue Service
+has replaced the former FIRS framework, and the new Tax ID replaces the previous TIN identifier."
+Its source S02 is the Nigeria Revenue Service's, on www.nrs.gov.ng.
+
+The entry now follows the specification:
+
+| | Before | Now |
+| --- | --- | --- |
+| Name | "Federal Inland Revenue Service" | "Nigeria Revenue Service" |
+| What for | "Federal taxes and TIN" | "Federal taxes and the Tax ID" |
+| Added line | | "It has replaced the Federal Inland Revenue Service (FIRS), and the Tax ID replaces the TIN." |
+| Address | https://www.firs.gov.ng | https://www.nrs.gov.ng |
+
+The added line is for someone who knows the earlier names. It says what the specification says and
+no more. The sentence above the list is unchanged: "These are links, not endorsements, and none of
+these bodies has reviewed Valo."
+
+The address was not opened. This environment's network settings do not allow that host, or the
+earlier one. It is the host of the specification's own source, and it is listed as open decision 12
+for the owner to open once.
+
+Each link in the list was named for a test by the first word of the source's name. Two names now
+begin with "Nigeria", so each link is named by its address instead.
+
+A new test reads the page in the server's HTML: the six addresses in order, the entry's three
+lines, that the earlier address is gone, and that each link has a name of its own.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
@@ -1199,7 +1232,7 @@ accepted by it.
 
 | Heuristic | Built | Not done |
 | --- | --- | --- |
-| 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. | The words inside a downloaded file, such as "Saved revision 3", are the server's and are unchanged. |
+| 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. The purchases screen says that real payments are switched off and that nothing can be bought yet. | The words inside a downloaded file, such as "Saved revision 3", are the server's and are unchanged. |
 | 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
 | 3. User control and freedom | The editor has undo and keeps every version. "Start over" asks first. Five discards ask in the app's own dialog. "Save before leaving?" also catches the browser's Back and Forward buttons. | On the compiled site the Back button was checked once by hand; no CI test can sign in to it. |
 | 4. Consistency and standards | The component styles are in one layer. Dates, times, amounts and counts go through one formatter. One header, one footer and one phone bar. One page where a document starts. | |
@@ -1208,7 +1241,7 @@ accepted by it.
 | 7. Flexibility and efficiency | "Make another like this". A task chosen on the landing page is carried through sign-up. The check fills in from the business profile. | A new document is not filled in from the business profile: its questions are the frozen forms'. |
 | 8. Aesthetic and minimalist design | The landing page is rebuilt around the two things a visitor can do. A document page gives what it is for before its notices. The home opens on its greeting. | |
 | 9. Help users recognise, diagnose and recover from errors | A failed request is described in words, with no status code. A failure at Valo offers the way to report it, with a reference to quote. | The server's own sentences, which are shown as sent. |
-| 10. Help and documentation | The help page has fourteen questions in five groups, and three of its answers link to the page they send the visitor to. The landing page has five questions. "CAC" is spelt out in the check and on the business profile. | "TIN" is not explained. It appears once, in the list of official sources on the guidance page. |
+| 10. Help and documentation | The help page has fourteen questions in five groups, and three of its answers link to the page they send the visitor to. The landing page has five questions. "CAC" is spelt out in the check and on the business profile. The guidance page names the "Tax ID" and says it replaces the TIN. | |
 
 Not built, and not a matter of words: testing with five business owners. The plan called for it to
 find what an audit by one reader cannot. It waits for the owner to arrange the participants.
@@ -1253,10 +1286,10 @@ Open:
     the draft notice), and the server's own sentences for a failed request.
 11. Legal approval of the privacy and terms pages. The privacy requests' sentences were put in
     plainer words with no limit changed; a legal reader should see them at the same time.
-12. The list of official sources on the guidance page names the "Federal Inland Revenue Service"
-    and its address. The specification's own source list (S02) names the "Nigeria Revenue
-    Service". Which name and address a visitor should be sent to has to be checked against the
-    official sites. This environment could not reach either site, so the list is unchanged.
+12. The guidance page now names the "Nigeria Revenue Service" and the "Tax ID", in the
+    specification's words, and links to https://www.nrs.gov.ng, the host of the specification's
+    source S02. This environment's network settings do not allow that host, so the address was
+    not opened. Open it once to confirm that it is the authority's site.
 13. The drafting assistant says "AI provider", "Inserted verbatim by the server" and "Input hash".
     Its sentences are the notice a customer agrees to before anything is sent to the AI, and the
     server records that notice's version with every request (`customer-ai-development-notice-v2`).
