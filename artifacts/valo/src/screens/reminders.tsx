@@ -285,7 +285,15 @@ export default function RemindersPage() {
           ) : log.isError ? (
             <ErrorState error={log.error} onRetry={() => log.refetch()} />
           ) : records.length === 0 ? (
-            <EmptyState mark={<Clock className="h-5 w-5 text-muted-foreground" />} title="No reminders yet">
+            <EmptyState
+              mark={<Clock className="h-5 w-5 text-muted-foreground" />}
+              title="No reminders yet"
+              action={
+                <Link href="/workspace/tasks" className="btn btn-ghost">
+                  Go to your tasks
+                </Link>
+              }
+            >
               A reminder appears here once reminders are on and a task has a due date you have confirmed.
             </EmptyState>
           ) : (

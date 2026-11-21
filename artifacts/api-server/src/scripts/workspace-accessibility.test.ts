@@ -2607,3 +2607,65 @@ test("a privacy request reads in words: its kind, its state, each step and who d
     await close();
   }
 });
+
+// A sentence that shows only once a list is empty, or a form is opened, is read here: the tests
+// that read each screen as it opens do not see it.
+test("an empty list of tasks or reminders says what to do next in the customer's words, and the new-task form's hint names a saved result", async () => {
+  {
+    const { page, errors, unknown, close } = await desktop(
+      "/workspace/tasks",
+      except({
+        "GET /workspace/tasks/page": api.ListTasksPageResponse.parse({
+          items: [],
+          total: 0,
+          openCount: 0,
+          filteredTotal: 0,
+          page: 1,
+          pageSize: 20,
+          hasNext: false,
+        }),
+      }),
+    );
+    try {
+      await ready(page);
+      const empty = page.getByTestId("status-empty");
+      await expect(empty).toContainText("No tasks yet");
+      await expect(empty).toContainText(
+        "Add anything you need to remember. Tasks work even where no published rule covers your situation.",
+      );
+      await expect(empty.getByRole("link", { name: "From a saved result" })).toHaveAttribute(
+        "href",
+        "/workspace/assessments",
+      );
+      await empty.getByRole("button", { name: "Write a task" }).click();
+      await expect(page.locator("main")).toContainText(
+        'To link a task to a rule, open a saved result and use "Add task" on an item marked "Likely relevant".',
+      );
+      assert.deepEqual(oldWordsIn(await page.locator("main").innerText()), []);
+      assert.deepEqual(errors, []);
+      assert.deepEqual(unknown, []);
+    } finally {
+      await close();
+    }
+  }
+  const { page, errors, unknown, close } = await desktop(
+    "/workspace/reminders",
+    except({ "GET /workspace/reminders": [] }),
+  );
+  try {
+    await ready(page);
+    const empty = page.getByTestId("status-empty");
+    await expect(empty).toContainText("No reminders yet");
+    await expect(empty).toContainText(
+      "A reminder appears here once reminders are on and a task has a due date you have confirmed.",
+    );
+    await expect(empty.getByRole("link", { name: "Go to your tasks" })).toHaveAttribute(
+      "href",
+      "/workspace/tasks",
+    );
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});

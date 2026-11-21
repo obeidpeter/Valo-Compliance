@@ -14,6 +14,7 @@ const OLD_WORDS: [name: string, pattern: RegExp][] = [
   ["not released", /not released/i],
   ["assessment history, saved assessments", /\bassessments?\b/i],
   ["whole kobo", /whole kobo/i],
+  ["operational aids", /operational aids?/i],
 ];
 
 /** The old words a screen's text holds, each named as the word list names it, with where it was found. */
