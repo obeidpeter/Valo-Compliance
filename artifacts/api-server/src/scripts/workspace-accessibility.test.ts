@@ -1602,6 +1602,80 @@ test("an amount is typed in naira and saved as the same amount in whole kobo; wh
   }
 });
 
+// Some questions are asked only after a choice, such as a tax amount once the customer says they
+// have one. When the choice is changed, their answers are kept but hidden, and the form says what
+// that means for the document.
+test("an answer hidden by a changed choice is said to be kept, not checked and not put in the document; the preview leaves it out; and changing the choice back shows it again", async () => {
+  const data = emptyGuidedData("TPL-01");
+  Object.assign(data.values, {
+    taxMode: "supplied",
+    taxLabel: "Synthetic levy label",
+    taxAmountKobo: "75000",
+    taxBasis: "Synthetic basis for the levy",
+  });
+  const taxed = (revision: number) => ({ ...invoice(revision), content: compileGuidedContent(data) });
+  const sent: { title: string; content: { blocks: Parameters<typeof guidedDataFromBlocks>[0] } }[] = [];
+  const opened = except({
+    [`GET /workspace/documents/${DOCUMENT}`]: api.GetDocumentResponse.parse(taxed(3)),
+    [`GET /workspace/documents/${DOCUMENT}/revisions`]: api.ListDocumentRevisionsResponse.parse([taxed(3)]),
+  });
+  const saving: Api = async (route, method, path, query) => {
+    if (method === "PATCH" && path === `/workspace/documents/${DOCUMENT}`) {
+      sent.push(route.request().postDataJSON() as (typeof sent)[number]);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.SaveDocumentResponse.parse({ ...taxed(3 + sent.length), ...sent.at(-1), id: DOCUMENT }),
+        ),
+      });
+    } else await opened(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop(`/workspace/documents/${DOCUMENT}`, saving);
+  try {
+    await ready(page);
+    const hint = page.getByTestId("text-guided-hidden");
+    const label = page.locator("#g-taxLabel");
+    const printed = page.getByTestId("preview-doc");
+    const tab = (name: string) => page.getByRole("tab", { name, exact: true });
+    // With the choice made, its questions show their answers, the document prints them, and
+    // nothing is said about hidden answers.
+    await expect(label).toHaveValue("Synthetic levy label");
+    await expect(hint).toHaveCount(0);
+    await tab("Preview").click();
+    await expect(printed).toContainText("Synthetic levy label");
+    await expect(printed).toContainText("Synthetic basis for the levy");
+
+    // The choice is changed: the three answers are hidden, and the form says what that means.
+    await tab("Edit").click();
+    await page.locator("#g-taxMode").selectOption("none");
+    await expect(label).toHaveCount(0);
+    await expect(hint).toHaveText(
+      "3 earlier answers are kept but hidden, because a choice they depend on was changed. Hidden answers are not checked and are not put in the document. They are shown again if you change the choice back.",
+    );
+    // Kept: the saved document still holds them. Not put in the document: the preview does not.
+    await expect
+      .poll(() => sent.length && guidedDataFromBlocks(sent.at(-1)!.content.blocks)!.values.taxMode, {
+        timeout: 15_000,
+      })
+      .toBe("none");
+    assert.equal(guidedDataFromBlocks(sent.at(-1)!.content.blocks)!.values.taxLabel, "Synthetic levy label");
+    await tab("Preview").click();
+    await expect(printed).toContainText(GUIDED_SPECS_V1["TPL-01"].title);
+    assert.doesNotMatch(await printed.innerText(), /Synthetic levy label|Synthetic basis for the levy/);
+
+    // Changing the choice back shows them again, as they were.
+    await tab("Edit").click();
+    await page.locator("#g-taxMode").selectOption("supplied");
+    await expect(label).toHaveValue("Synthetic levy label");
+    await expect(hint).toHaveCount(0);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
 /** The project's words for a saved result, a version and the check, none of which the workspace's
  * screens show now. */
 const OLD_WORKSPACE_WORDS = /assessment|\brev\b|\brevisions?\b|ruleset|questionnaire|snapshot|\bchecker\b/i;
