@@ -78,6 +78,7 @@ glossary; it grows as pages are rewritten.
 | check my requirements | requirements checker, check rules |
 | create account, sign in | open a workspace |
 | not yet available | not released, held |
+| saved results | assessment history, saved assessments |
 | industry names as written ("Retail and wholesale") | slugs ("retail-wholesale") |
 | amounts in naira ("₦1,500.00") | whole kobo |
 
@@ -229,7 +230,53 @@ rewritten in the later phases. A check that the old words are gone comes with th
 The pages' own headings and text still use the old words, such as "Compliance guidance" and
 "Resources". The public pages phase rewrites them.
 
-Not built yet: the workspace's five sections and its account menu.
+### Phase 2: the workspace's sections, its account menu and the phone's bar
+
+The workspace had eleven tabs in one row, which ran off the side of a phone. It now has five
+sections, and the pages about the account itself are in a menu of their own.
+
+| Section | Opens | Tabs on its screens |
+| --- | --- | --- |
+| Home | `/workspace` | none |
+| Documents | `/workspace/documents` | Your documents, Drafting assistant |
+| Requirements | `/workspace/checker` | Check requirements, Saved results |
+| Tasks | `/workspace/tasks` | Tasks, Reminders |
+| Business profile | `/workspace/profile` | none |
+
+- On a wide screen the header lists the five sections in place of the site's pages, then Help, the
+  account menu and sign out. The account menu is a button with the person's initial. It lists
+  Sign-in and security, Privacy and data, and Purchases, and those three screens show tabs of
+  their own.
+- On a phone a bar at the bottom lists the five sections, in place of the public pages' two
+  buttons. The menu button opens help, the account's three pages and sign out. It does not list
+  the site's pages, so "Documents" names one place on the screen; the footer still links to them.
+- Every screen marks its section in the header and in the bar, and its page in the tabs. A screen
+  opened from a page is marked with it: a document's editor with Documents, a saved result with
+  Saved results.
+- One list, `artifacts/valo/src/components/workspace-sections.ts`, feeds the header, the tabs and
+  the bar. A test fails when the app has a workspace screen that is in no section and not among
+  the account's pages.
+- **Your documents** (`/workspace/documents`) is a new screen. It has every saved document, the
+  files ready to download and the saved templates, which were all on the home screen. The home
+  screen keeps the three documents saved most recently and a link to the rest.
+- No address changes. Every address that opened a screen before still opens it.
+- Outside the workspace a signed-in person keeps the site's header, with a Workspace button, the
+  account menu and sign out. The phone's first button reads "Your documents" and opens that
+  screen.
+
+Not changed, and why:
+
+- The screens' own headings and page titles still use the old words, such as "Saved assessments"
+  and "History". The sign-up and workspace phase rewrites them.
+- The home screen still has two ways to start a document and the documents screen repeats them.
+  The same phase makes them one "New document" entry.
+- A customer's support requests stay on the support page, which the workspace reaches through
+  Help. The messages and help phase looks at a shorter way there.
+
+What no browser test covers: the server-rendered pages signed in. The identity provider cannot
+load in a test, so no browser sees them that way. A test draws their account links for a
+synthetic signed-in visitor and checks what is drawn. How the account menu opens and closes is
+checked on the same component in the browser app.
 
 ### Found on the way: keyboard focus rests clear of the bars
 
