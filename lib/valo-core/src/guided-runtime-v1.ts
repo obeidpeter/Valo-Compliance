@@ -22,6 +22,15 @@ type Content = {
   selectedClauses: string[];
   formatting: { font: "serif" | "sans"; accent: "forest" | "charcoal" };
 };
+/** A document's own fields by name, as the editor calls each. */
+export const DOCUMENT_FIELD_LABELS: Record<keyof Content["fields"], string> = {
+  issuerName: "Issued by",
+  recipientName: "Addressed to",
+  documentNumber: "Reference number",
+  issueDate: "Issue date",
+  dueDate: "Due date",
+  notes: "Notes",
+};
 /** Content as parsed input gives it, where an absent financial input may be present as undefined. */
 type ContentInput = Omit<Content, "financialInput"> & { financialInput?: Parsed<FinancialInput> | undefined };
 export const guidedVisible = (f: { when?: { field: string; equals: string } }, v: Record<string, string>) =>
