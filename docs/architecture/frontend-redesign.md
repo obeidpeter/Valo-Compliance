@@ -713,6 +713,29 @@ The check's optional name details said "a private assessment is stored only when
 agree to save it". It now says "the result is stored, privately, only when you explicitly agree
 to save it".
 
+### Phase 5: "Make another like this", and one door to a new document
+
+**Make another like this.** A business that sends an invoice every week started each one from
+empty questions. The editor now has a card, "Make another", with one button.
+
+- It starts a new document with the saved one's details and opens it.
+- Its reference and its dates are left blank, so the new document gets its own. Everything else is
+  kept as it was saved. Nothing is filled in or invented.
+- The saved document is not changed.
+- It waits while the editor has changes it has not saved, and says "Save your changes first."
+- The new document says what it still needs, as any document does.
+- No copy is offered of a document whose saved questions cannot be read.
+
+**One door.** "Create a document" on an industry's page and on the guides page led to the
+workspace. That sent a signed-out visitor to sign-in and forgot why they came. Both now lead
+through sign-up with the choice kept, as the landing page's and the documents search's links
+already did.
+
+**A signed-in visitor is sent on.** The sign-up and sign-in pages now send a visitor who is
+already signed in to where the form would have sent them: "New document" for what they chose,
+otherwise their workspace. Until now this was left to the identity provider's form, which no
+test can load. It is now the app's own code and is tested with the stand-in identity.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
