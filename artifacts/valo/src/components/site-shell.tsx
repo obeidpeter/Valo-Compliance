@@ -140,7 +140,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-[100dvh] flex-col">
       <DevBanner />
-      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- Escape from any control in the header closes the menu; the header takes no focus */}
+      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- Escape from any control in the header closes the menu, and so does focus moving on from the header; the header takes no focus */}
       <header
         className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md"
         onKeyDown={(e) => {
@@ -148,6 +148,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
             setOpen(false);
             e.currentTarget.querySelector<HTMLButtonElement>('[data-testid="button-menu"]')?.focus();
           }
+        }}
+        // The opened menu lies over the top of the page. When keyboard focus moves on to the page,
+        // the menu closes, so the control that takes the focus is not hidden under it.
+        onBlur={(e) => {
+          if (open && e.relatedTarget instanceof Node && !e.currentTarget.contains(e.relatedTarget))
+            setOpen(false);
         }}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 lg:px-8">
