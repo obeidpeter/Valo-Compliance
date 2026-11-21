@@ -1,51 +1,29 @@
 import { Link, useLocation } from "wouter";
-import { cn } from "@/lib/utils";
+import { sectionTab } from "./site-chrome";
+import { ACCOUNT_PAGES, onAccountPage, onPage, sectionOf } from "./workspace-sections";
 
-const TABS = [
-  { href: "/workspace", label: "Overview", exact: true },
-  { href: "/workspace/ai", label: "Draft assistant" },
-  { href: "/workspace/assessments", label: "Assessments" },
-  { href: "/workspace/tasks", label: "Tasks" },
-  { href: "/workspace/reminders", label: "Reminders" },
-  { href: "/workspace/checker", label: "Checker" },
-  { href: "/workspace/notifications", label: "Notifications" },
-  { href: "/workspace/profile", label: "Profile" },
-  { href: "/workspace/privacy", label: "Privacy" },
-  { href: "/workspace/purchases", label: "Purchases" },
-  { href: "/workspace/account", label: "Account" },
-];
-
+/**
+ * The tabs at the top of a workspace screen: the pages of the section the screen is in, or the
+ * account's pages on one of those, with the screen's own page marked. A section with a single page
+ * has no tabs. The sections themselves are in the header and, on a phone, in the bottom bar.
+ */
 export function WorkspaceNav() {
-  const [loc] = useLocation();
+  const [path] = useLocation();
+  const pages = onAccountPage(path) ? ACCOUNT_PAGES : (sectionOf(path)?.pages ?? []);
+  if (pages.length === 0) return null;
   return (
-    <nav
-      aria-label="Workspace"
-      className="-mx-5 mb-8 overflow-x-auto border-b border-border px-5 lg:mx-0 lg:px-0"
-    >
-      <ul className="flex min-w-max gap-1">
-        {TABS.map((t) => {
-          const active = t.exact
-            ? loc === t.href || loc.startsWith("/workspace/documents")
-            : loc.startsWith(t.href);
-          return (
-            <li key={t.href}>
-              <Link
-                href={t.href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "relative block px-3 py-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring",
-                  active
-                    ? "font-medium text-foreground after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-                data-testid={"link-ws-" + t.label.toLowerCase().replace(/ /g, "-")}
-              >
-                {t.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+    // Named apart from the header's lists, which already use the section's and the account's names.
+    <nav aria-label="In this section" className="mb-8 flex flex-wrap gap-2" data-testid="nav-section-pages">
+      {pages.map((page) => (
+        <Link
+          key={page.href}
+          href={page.href}
+          aria-current={onPage(page, path) ? "page" : undefined}
+          className={sectionTab(onPage(page, path))}
+        >
+          {page.label}
+        </Link>
+      ))}
     </nav>
   );
 }

@@ -17,11 +17,11 @@ export function MobileDock() {
     >
       <div className="grid grid-cols-2 gap-2">
         <a
-          href={basePath + (signedIn ? "/workspace" : "/sign-up")}
+          href={basePath + (signedIn ? "/workspace/documents" : "/sign-up")}
           className={DOCK_BUTTON + " btn-primary"}
           data-testid="link-dock-documents"
         >
-          {signedIn ? "My documents" : "Create a document"}
+          {signedIn ? "Your documents" : "Create a document"}
         </a>
         <a
           href={`${basePath}/checker`}

@@ -5,7 +5,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { build } from "esbuild";
-import { chromium, devices, type Page, type Route } from "playwright";
+import { chromium, devices, type BrowserContextOptions, type Page, type Route } from "playwright";
 import axe from "axe-core";
 
 /**
@@ -158,9 +158,10 @@ export async function startApp(account: keyof typeof identities) {
     args: ["--no-sandbox"],
   });
 
-  /** A phone-sized page whose API calls `api` answers; any other host is unreachable. */
-  async function phone(path: string, api: Api) {
-    const context = await browser.newContext({ ...devices["Moto G4"] });
+  /** A page in a browser context of its own, whose API calls `api` answers; any other host is
+   * unreachable. */
+  async function open(path: string, api: Api, options: BrowserContextOptions) {
+    const context = await browser.newContext(options);
     const page = await context.newPage();
     const unknown: string[] = [],
       errors: string[] = [];
@@ -188,7 +189,10 @@ export async function startApp(account: keyof typeof identities) {
 
   return {
     origin,
-    phone,
+    /** A phone-sized page (Moto G4). */
+    phone: (path: string, api: Api) => open(path, api, { ...devices["Moto G4"] }),
+    /** A page as wide as a desktop screen, where the app lays itself out in full. */
+    desktop: (path: string, api: Api) => open(path, api, { viewport: { width: 1440, height: 900 } }),
     async close() {
       await browser.close();
       server.close();
