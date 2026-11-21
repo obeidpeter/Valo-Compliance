@@ -590,7 +590,8 @@ and the column's names: "Goods, work and agreed charges, row 1: Description".
   Rewording them changes the twelve forms, not the editor, and waits for the owner's decision.
 - Amounts in the questions were still typed in kobo. That changed in a step of its own,
   [below](#phase-5-amounts-are-typed-listed-and-printed-in-naira).
-- A downloaded file still prints "Saved revision 3". The words inside a file are the API's.
+- A downloaded file still printed "Saved revision 3". The words inside a file are the API's, and
+  changed in a later step, [below](#phase-6-the-words-inside-a-downloaded-document).
 - The sentences a wording check pins keep the word "drafts", such as "Drafts you already created
   stay in your workspace."
 - The drafting assistant's screens keep their words until their own step.
@@ -1214,6 +1215,59 @@ Found and not a fault:
 
 The survey reads the web app's source. It does not read what the server sends.
 
+### Phase 6: the words inside a downloaded document
+
+The owner accepted on 21 November that a downloaded document should be put in the site's words
+before the test with five business owners, since each of them downloads one. This is what a
+customer's own document printed, in its Word file and its PDF, and what it prints now.
+
+| Part of the file | Before | Now |
+| --- | --- | --- |
+| The notice at the top and on every page | "INCOMPLETE BUSINESS DRAFT — user-provided information. Not verified payment proof, a government tax invoice, official approval or legal advice." | "INCOMPLETE DRAFT — details as the business entered them. Not proof of payment, a government tax invoice, an official approval or legal advice." |
+| The line under the title | "Valo · Saved revision 3" | "Valo · Saved version 3" |
+| A blank document's own fields | "issuerName:", "recipientName:", "documentNumber:", "issueDate:", "dueDate:", "notes:" | "Issued by:", "Addressed to:", "Reference number:", "Issue date:", "Due date:", "Notes:", the editor's names |
+| A date | "2026-11-21" | "21 Nov 2026", as the site writes a day |
+| The note a document made from questions starts with | "Private business draft from user-entered answers; no professional review, payment verification or signature execution is claimed." | "Draft made from the answers the business entered. It does not claim a professional review, a verified payment or a signature." |
+
+The file may be read by whoever the customer sends it to, so the notice and the note speak of "the
+business", not of "you".
+
+What is kept:
+
+- The notice still marks an incomplete draft, which EDT-005 requires of a file whose details may
+  be missing, and still says it is not proof of payment or a government tax invoice (PAY-009), an
+  official approval or legal advice.
+- A detail that was not given still prints "[Not supplied]". Nothing is filled in.
+- A date that is no real day still prints as it was typed, as an amount that is no amount does.
+- What is saved is unchanged. Only what is printed from it changes.
+
+The preview and the two files share one projection of a document made from questions, so the
+preview prints its dates the same way. A blank document's preview now writes its two dates so as
+well.
+
+A saved version prints differently, so the render version is raised to 5. A file asked for again
+is made afresh. A document saved before keeps the note it was saved with.
+
+**Only a customer's own document changes.** The same code prints a prepared template's sample and
+a purchase receipt. Those are left exactly as they were: a template's sample belongs with the
+templates' own review, and a receipt with the purchases screen's words (decision 15). Their output
+was compared before and after this change, as the page a PDF is printed from and as the Word
+file's text, and is identical. A test now holds both to their earlier words.
+
+Tests: the file's fields, dates and line under the title, in each of the three kinds of file; a
+date in each of the twelve forms; the note; and, in a browser, a blank document's preview and the
+preview of an invoice made from questions. The three evidence citations that named the notice
+name it by its new words. The export test that runs against a database reads the new words too.
+
+Not changed: the names of the questions a document prints, such as "Issuing business legal name",
+which are the frozen forms'.
+
+**Found on the way.** The shared library and the server hold more of the system's words that reach
+a customer, and the source test reads only the web app. The first of them is on the result of the
+requirements check, under "Read this first": "Conditional source-governed guidance, not legal
+certification." The browser tests answer the check with a notice of their own, so it was never
+read. It is the next step.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
@@ -1267,8 +1321,8 @@ accepted by it.
 
 | Heuristic | Built | Not done |
 | --- | --- | --- |
-| 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. The purchases screen says that real payments are switched off and that nothing can be bought yet. | The words inside a downloaded file, such as "Saved revision 3", are the server's and are unchanged. |
-| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
+| 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. The purchases screen says that real payments are switched off and that nothing can be bought yet. A downloaded document says "Saved version 3". | |
+| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format, and a document prints its dates the same way. A downloaded document names its fields as the editor does. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, everything about buying and about an order: saving a test order, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. None of it shows while nothing is for sale and nothing was ordered. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
 | 3. User control and freedom | The editor has undo and keeps every version. "Start over" asks first. Five discards ask in the app's own dialog. "Save before leaving?" also catches the browser's Back and Forward buttons. | On the compiled site the Back button was checked once by hand; no CI test can sign in to it. |
 | 4. Consistency and standards | The component styles are in one layer. Dates, times, amounts and counts go through one formatter. One header, one footer and one phone bar. One page where a document starts. | |
 | 5. Error prevention | A new form opens without red marks, and what a document still needs is listed before a download. The check chooses no answer for the visitor. The editor saves nothing underneath an open question. Someone who cannot sign in is told before writing that no reply is emailed. | |
@@ -1303,40 +1357,44 @@ Accepted by the owner on 2026-11-20:
 3. The current colours and typefaces stay.
 4. No price words until pricing is set.
 
-Open:
+Accepted by the owner on 2026-11-21:
+
+6. The twelve forms' own questions, and the notice above them, are frozen in
+   `lib/valo-core/src/guided-specs-v1.ts`. Some are in the project's words. They stay as they are
+   until the test with five business owners shows which of them confuse people. A second version
+   of the forms then rewords those, and documents already made keep the first.
+7. The documents list keeps its "Access" filter for free and paid documents, which DOC-002
+   requires. It is looked at again when prices are set.
+8. The names of the workspace's sections ("Home", "Documents", "Requirements", "Tasks", "Business
+   profile") stay, unless the testers stumble on them.
+9. Every date and time stays Lagos time with no label beside it, unless the testers ask. The help
+   page says so once.
+10. Words that are the server's. The words inside a downloaded document are reworded before the
+    test, which is [done](#phase-6-the-words-inside-a-downloaded-document). The server's own
+    sentences for a failed request are reworded in batches.
+13. The drafting assistant says "AI provider", "Inserted verbatim by the server" and "Input hash".
+    Its sentences are the notice a customer agrees to before anything is sent to the AI, and the
+    server records that notice's version with every request (`customer-ai-development-notice-v2`).
+    It is reworded as a new version of the notice when the AI budget is decided, so that the
+    records and the prepared evaluation packages change once.
+14. The workspace data download says "Queued", "Prepare a private JSON snapshot" and "Prepared
+    export availability withdrawn". Its sentences state limits on a privacy right, and a test in
+    CI reads most of them word for word. They are reworded with the privacy page, after its legal
+    read.
+15. The purchases screen's words about buying and about an order: "Save test order", "Continue
+    hosted test checkout", "Staff reconciliation required", "Refund amount in NGN", "Provider
+    dispute observation", and the panels for a bank dispute and a payment concern. They say
+    "test" because only a test checkout exists, and they state what a refund and a dispute do and
+    do not do. They are reworded when a price and a refund policy are set, with a legal reader.
+
+Waiting on the owner:
 
 5. Five small-business owners for the phase 6 test, about twenty minutes each, with made-up details
-   only. The owner arranges them.
-6. The twelve forms' own questions, and the notice above them, are frozen in
-   `lib/valo-core/src/guided-specs-v1.ts`. Some are in the project's words. The screen already
-   shows "naira" where a question says "in whole kobo", but the question itself is unchanged.
-   Rewording the questions needs a decision to unfreeze them.
-7. The documents list has an "Access" filter for free and paid documents, which DOC-002 requires.
-   No price is set, so the page cannot say what a paid document costs. Hide the filter until a
-   price is set, or keep it.
-8. The names of the workspace's sections ("Home", "Documents", "Requirements", "Tasks", "Business
-   profile") were chosen in the plan. They stand unless the owner prefers others.
-9. Every date and time is Lagos time, with no label beside it. The help page says so once.
-10. Words that are the server's and were left alone: inside a downloaded file ("Saved revision 3",
-    the draft notice), and the server's own sentences for a failed request.
+   only. The owner arranges them. A task sheet and a notes form for the sessions are written. They
+   are kept outside this repository, because the filled-in notes will be about real people.
 11. Legal approval of the privacy and terms pages. The privacy requests' sentences were put in
     plainer words with no limit changed; a legal reader should see them at the same time.
 12. The guidance page now names the "Nigeria Revenue Service" and the "Tax ID", in the
     specification's words, and links to https://www.nrs.gov.ng, the host of the specification's
     source S02. This environment's network settings do not allow that host, so the address was
     not opened. Open it once to confirm that it is the authority's site.
-13. The drafting assistant says "AI provider", "Inserted verbatim by the server" and "Input hash".
-    Its sentences are the notice a customer agrees to before anything is sent to the AI, and the
-    server records that notice's version with every request (`customer-ai-development-notice-v2`).
-    Putting the notice in plainer words means a new version of it, which touches the records and
-    the prepared evaluation packages. It belongs with the decision on the AI budget, so it is
-    unchanged.
-14. The workspace data download says "Queued", "Prepare a private JSON snapshot" and "Prepared
-    export availability withdrawn". Its sentences state limits on a privacy right, and a test in
-    CI reads most of them word for word. They are unchanged; reword them with the privacy page.
-15. The purchases screen's words about buying and about an order: "Save test order", "Continue
-    hosted test checkout", "Staff reconciliation required", "Refund amount in NGN", "Provider
-    dispute observation", and the panels for a bank dispute and a payment concern. They say
-    "test" because only a test checkout exists, and they state what a refund and a dispute do and
-    do not do. They are unchanged. Reword them when a price and a refund policy are set, with a
-    legal reader.
