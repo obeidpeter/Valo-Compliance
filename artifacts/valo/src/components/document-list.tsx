@@ -47,12 +47,16 @@ export function DocumentList({
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{d.title}</span>
                     <span className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                      <span>Business draft</span>
-                      <span className="font-mono">rev {d.revision}</span>
-                      <span>{formatDateTime(d.updatedAt)}</span>
+                      <span>Draft</span>
+                      <span>Version {d.revision}</span>
+                      <span>Saved {formatDateTime(d.updatedAt)}</span>
                     </span>
                   </span>
-                  {miss > 0 && <span className="pill pill-ochre hidden sm:inline-flex">{miss} missing</span>}
+                  {miss > 0 && (
+                    <span className="pill pill-ochre hidden sm:inline-flex">
+                      {miss === 1 ? "1 detail missing" : `${miss} details missing`}
+                    </span>
+                  )}
                   <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </li>

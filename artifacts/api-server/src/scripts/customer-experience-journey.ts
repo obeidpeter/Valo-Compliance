@@ -237,7 +237,7 @@ try {
       endpoint = `/api/workspace/documents/${saved.id}`;
     await page!.goto(url);
     await expect(page!.getByTestId("input-title")).toHaveValue(input.title);
-    await expect(page!.getByTestId("card-missing")).toContainText("unresolved template placeholders");
+    await expect(page!.getByTestId("card-missing")).toContainText("Blanks still in the text");
     await expect(page!.getByText("All details filled in", { exact: true })).toHaveCount(0);
     await page!.getByTestId("input-title").fill("Synthetic saved before leaving");
     await page!.getByTestId("link-back").click();
@@ -246,7 +246,7 @@ try {
     await expect(page!.getByTestId("input-title")).toHaveValue("Synthetic saved before leaving");
     await page!.getByTestId("link-back").click();
     await page!.getByTestId("button-save-leave").click();
-    await expect(page!).toHaveURL(/\/workspace$/);
+    await expect(page!).toHaveURL(/\/workspace\/documents$/);
     expect(GetDocumentResponse.parse((await api(endpoint)).body).title).toBe(
       "Synthetic saved before leaving",
     );
@@ -258,7 +258,7 @@ try {
     ).toBe("10000");
     await page!.getByTestId("link-back").click();
     await page!.getByTestId("button-save-leave").click();
-    await expect(page!).toHaveURL(/\/workspace$/);
+    await expect(page!).toHaveURL(/\/workspace\/documents$/);
     expect(
       GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0]!.unitPriceKobo,
     ).toBe("25000");
@@ -271,7 +271,7 @@ try {
     await expect(page!.getByTestId("input-doc-price-0")).toHaveValue("12x");
     await page!.getByTestId("link-back").click();
     await page!.getByTestId("button-discard-leave").click();
-    await expect(page!).toHaveURL(/\/workspace$/);
+    await expect(page!).toHaveURL(/\/workspace\/documents$/);
     expect(
       GetDocumentResponse.parse((await api(endpoint)).body).content.financialInput?.lines[0]!.unitPriceKobo,
     ).toBe("25000");
@@ -1017,7 +1017,7 @@ try {
         }),
       ).toBe(true);
       const edit = page!.getByRole("tab", { name: "Edit", exact: true }),
-        preview = page!.getByRole("tab", { name: "Saved preview" });
+        preview = page!.getByRole("tab", { name: "Preview", exact: true });
       await edit.focus();
       await page!.keyboard.press("ArrowRight");
       await expect(preview).toBeFocused();

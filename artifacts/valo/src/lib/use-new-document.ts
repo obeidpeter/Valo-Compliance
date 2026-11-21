@@ -14,7 +14,7 @@ export function useNewDocument() {
   const create = useCreateDocument();
   function start() {
     create.mutate(
-      { data: { title: "Untitled business draft", content: blankContent() } },
+      { data: { title: "Untitled document", content: blankContent() } },
       {
         onSuccess: (doc) => {
           void qc.invalidateQueries({ queryKey: getListDocumentsQueryKey() });

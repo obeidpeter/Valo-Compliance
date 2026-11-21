@@ -38,7 +38,7 @@ export function UnsavedNavigationDialog({
       </h2>
       <p className="mt-3 text-sm">
         {description ??
-          "You have changes that are not saved, including any unapplied amounts. Save them, explicitly discard them, or stay here."}
+          "You have changes that are not saved, including any amounts you have not applied. Save them, discard them, or stay here."}
       </p>
       {error && (
         <p role="alert" className="mt-3 text-sm text-destructive">

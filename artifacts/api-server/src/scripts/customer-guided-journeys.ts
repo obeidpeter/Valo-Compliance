@@ -119,12 +119,13 @@ export async function runGuidedCustomerJourneys(
         const response = page.waitForResponse(
           (r) => r.request().method() === "POST" && r.url().includes(`/api/v1/documents/${id}/exports`),
         );
-        await page.getByRole("button", { name: `Create ${format.toUpperCase()} draft`, exact: true }).click();
+        const kind = format === "docx" ? "Word" : "PDF";
+        await page.getByRole("button", { name: `Make a ${kind} file`, exact: true }).click();
         lastExport = Date.now();
         const created = await response;
         expect(created.status()).toBe(202);
         const job = await created.json();
-        const link = page.getByRole("link", { name: `Download ${format.toUpperCase()}`, exact: true });
+        const link = page.getByRole("link", { name: `Download the ${kind} file`, exact: true });
         await expect(link).toBeVisible({ timeout: 65000 });
         const url = (await link.getAttribute("href"))!,
           download = await page.request.get(url);

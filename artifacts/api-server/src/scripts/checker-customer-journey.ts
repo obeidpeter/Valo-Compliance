@@ -316,8 +316,8 @@ try {
           ack = panel.getByRole("checkbox");
         await ack.focus();
         await ack.press("Space");
-        await panel.getByRole("button", { name: "Create DOCX draft", exact: true }).click();
-        await panel.getByRole("button", { name: "Create PDF draft", exact: true }).click();
+        await panel.getByRole("button", { name: "Make a Word file", exact: true }).click();
+        await panel.getByRole("button", { name: "Make a PDF file", exact: true }).click();
         let jobs: ReturnType<typeof ListDocumentExportsResponse.parse> = [];
         await expect
           .poll(

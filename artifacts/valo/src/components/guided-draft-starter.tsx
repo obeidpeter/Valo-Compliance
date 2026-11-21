@@ -30,7 +30,8 @@ export function GuidedDraftStarter({ chosen }: { chosen?: LandingTask | undefine
     create.mutate(
       {
         data: {
-          title: `${GUIDED_SPECS_V1[id].title} — private business draft`,
+          // The title is printed as the document's heading, so it starts as the kind's own name.
+          title: GUIDED_SPECS_V1[id].title,
           content: compileGuidedContent(emptyGuidedData(id)),
         },
       },

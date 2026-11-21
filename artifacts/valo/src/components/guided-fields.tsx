@@ -103,7 +103,7 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
   return (
     <div ref={root} className="grid gap-8" data-testid="guided-fields">
       <header className="grid gap-2">
-        <p className="eyebrow">Guided form · {spec.templateId}</p>
+        <p className="eyebrow">Questions</p>
         <h2 className="font-display text-2xl leading-tight">{spec.title}</h2>
         {spec.description && (
           <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{spec.description}</p>
@@ -196,7 +196,7 @@ export function GuidedFields({ spec, value, onChange, disabled, onValidityChange
             ? "One earlier answer is"
             : `${hiddenWithValues.length} earlier answers are`}{" "}
           kept but hidden because a related choice changed. Hidden answers are not checked here; whether they
-          appear in the document depends on the template.
+          appear in the document depends on the kind of document.
         </p>
       )}
     </div>
@@ -210,7 +210,7 @@ function FieldInput({
   error,
   disabled,
   onChange,
-  label,
+  spoken,
 }: {
   field: GuidedField;
   id: string;
@@ -218,7 +218,8 @@ function FieldInput({
   error?: string | undefined;
   disabled?: boolean | undefined;
   onChange: (v: string) => void;
-  label?: string;
+  /** Added to the label for a screen reader only: which row of a table the answer belongs to. */
+  spoken?: string;
 }) {
   const helpId = id + "-help",
     errId = id + "-error";
@@ -233,7 +234,12 @@ function FieldInput({
     "aria-required": f.required,
     "data-testid": "input-" + id,
   };
-  const text = label ?? f.label;
+  const text = (
+    <>
+      {f.label}
+      {spoken && <span className="sr-only"> {spoken}</span>}
+    </>
+  );
   const req = f.required ? (
     <span className="ml-1 text-xs font-normal text-muted-foreground">Required</span>
   ) : (
@@ -438,7 +444,7 @@ function TableEditor({
               <fieldset className="min-w-0">
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <legend className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-                    {t.label} · row {i + 1}
+                    Row {i + 1}
                   </legend>
                   <button
                     type="button"
@@ -461,7 +467,7 @@ function TableEditor({
                         key={c.id}
                         field={c}
                         id={`${base}-${i}-${c.id}`}
-                        label={`${c.label} (row ${i + 1})`}
+                        spoken={`(row ${i + 1})`}
                         value={r[c.id] ?? ""}
                         error={issues[`${t.id}:${i}:${c.id}`]}
                         disabled={disabled}
@@ -488,7 +494,7 @@ function TableEditor({
         data-testid={`button-add-${t.id}`}
       >
         <Plus className="h-4 w-4" aria-hidden />
-        Add {t.label.toLowerCase()} row
+        Add a row
       </button>
       {rows.length >= t.maxRows && <p className="hint">Row limit reached.</p>}
     </fieldset>

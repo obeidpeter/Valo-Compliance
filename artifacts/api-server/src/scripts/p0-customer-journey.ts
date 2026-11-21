@@ -184,8 +184,8 @@ try {
   await check("real_private_DOCX_PDF_same_revision_and_anonymous_denial", async () => {
     const panel = page.getByTestId("private-exports");
     await panel.getByRole("checkbox").check();
-    await panel.getByRole("button", { name: "Create DOCX draft", exact: true }).click();
-    await panel.getByRole("button", { name: "Create PDF draft", exact: true }).click();
+    await panel.getByRole("button", { name: "Make a Word file", exact: true }).click();
+    await panel.getByRole("button", { name: "Make a PDF file", exact: true }).click();
     await expect
       .poll(
         async () => {
@@ -210,7 +210,12 @@ try {
         expect(response.headers()["cache-control"]).toContain("no-store");
         const [download] = await Promise.all([
           page.waitForEvent("download", { timeout: 30000 }),
-          panel.getByRole("link", { name: `Download ${format.toUpperCase()}`, exact: true }).click(),
+          panel
+            .getByRole("link", {
+              name: `Download the ${format === "docx" ? "Word" : "PDF"} file`,
+              exact: true,
+            })
+            .click(),
         ]);
         const stream = await download.createReadStream(),
           parts: Buffer[] = [];
@@ -316,7 +321,9 @@ try {
     await page.getByTestId("input-title").fill("Synthetic writer one");
     await expect(page.getByTestId("status-save")).toContainText("Saved", { timeout: 30000 });
     await secondPage!.getByTestId("input-title").fill("Synthetic writer two preserved");
-    await expect(secondPage!.getByTestId("status-save")).toContainText("Conflict", { timeout: 30000 });
+    await expect(secondPage!.getByTestId("status-save")).toContainText("changed somewhere else", {
+      timeout: 30000,
+    });
     await expect(secondPage!.getByTestId("input-title")).toHaveValue("Synthetic writer two preserved");
     await secondPage!.getByTestId("button-keep-mine").click();
     await expect(secondPage!.getByTestId("status-save")).toContainText("Saved", { timeout: 30000 });

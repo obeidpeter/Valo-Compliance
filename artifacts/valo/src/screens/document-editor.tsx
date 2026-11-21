@@ -53,6 +53,12 @@ type Snapshot = { title: string; content: CanonicalDocument };
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error" | "conflict" | "blocked";
 
 const AUTOSAVE_MS = 1400;
+/** What each part of a document's own text is called. */
+const BLOCK_NAMES: Record<DocumentBlockType, string> = {
+  paragraph: "Paragraph",
+  list: "List",
+  table: "Table",
+};
 const ser = (s: Snapshot) => JSON.stringify(s);
 
 export default function DocumentEditor({ id }: { id: string }) {
@@ -206,7 +212,7 @@ export default function DocumentEditor({ id }: { id: string }) {
     if (inFlight.current) return;
     if (
       financialDirty.current &&
-      !window.confirm("Discard unapplied financial inputs and undo the last document edit?")
+      !window.confirm("Discard the amounts you have not applied and undo your last change?")
     )
       return;
     setHistory((h) => {
@@ -227,7 +233,7 @@ export default function DocumentEditor({ id }: { id: string }) {
   }
   function applyFinancial() {
     if (!latest.current || !financialValue.current) {
-      setLeaveError("Correct the financial fields before saving. Your typed values are still here.");
+      setLeaveError("Correct the financial fields before saving. What you typed is still here.");
       return false;
     }
     const next = {
@@ -244,7 +250,9 @@ export default function DocumentEditor({ id }: { id: string }) {
   }
   function saveEverything(leave = false) {
     if (state === "conflict") {
-      setLeaveError("Resolve the revision conflict before saving and leaving.");
+      setLeaveError(
+        "This document was changed somewhere else. Choose which version to keep before you leave.",
+      );
       return;
     }
     if (financialDirty.current && !applyFinancial()) return;
@@ -303,7 +311,7 @@ export default function DocumentEditor({ id }: { id: string }) {
     if (
       (financialDirty.current || ser(latest.current) !== lastSaved.current) &&
       !window.confirm(
-        "You have unsaved changes, including unapplied financial inputs. Restoring will replace them. Continue?",
+        "You have changes that are not saved, including any amounts you have not applied. Restoring this version replaces them. Continue?",
       )
     )
       return;
@@ -350,8 +358,8 @@ export default function DocumentEditor({ id }: { id: string }) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-12">
         <ErrorState error={doc.error} onRetry={() => doc.refetch()} />
-        <Link href="/workspace" className="btn btn-ghost btn-sm mt-4">
-          Back to workspace
+        <Link href="/workspace/documents" className="btn btn-ghost btn-sm mt-4">
+          Back to your documents
         </Link>
       </div>
     );
@@ -364,7 +372,7 @@ export default function DocumentEditor({ id }: { id: string }) {
     guided = guidedDataFromBlocks(content.blocks);
   } catch {
     guidedError =
-      "The saved guided layout cannot be safely loaded. Restore a valid revision rather than removing its required questions.";
+      "This document's saved questions cannot be loaded safely. Restore an earlier version rather than removing its questions.";
   }
   const manualBlocks = content.blocks.filter((b) => !b.id.startsWith(GUIDED_PREFIX));
   const setFields = (k: keyof CanonicalDocument["fields"], v: string) =>
@@ -407,11 +415,11 @@ export default function DocumentEditor({ id }: { id: string }) {
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
-          href="/workspace"
+          href="/workspace/documents"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           data-testid="link-back"
         >
-          <ArrowLeft className="h-4 w-4" /> Workspace
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Your documents
         </Link>
         <SaveIndicator
           state={finDirty ? "dirty" : state}
@@ -420,13 +428,12 @@ export default function DocumentEditor({ id }: { id: string }) {
         />
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2">
+      <p className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
         <span className="pill pill-ink" data-testid="status-doc">
-          Business draft
+          Draft
         </span>
-        <span className="pill pill-ink">Not a released template</span>
-        <span className="pill pill-ink">Not reviewed</span>
-      </div>
+        <span data-testid="text-doc-standing">Your own document: not a Valo template, and not reviewed.</span>
+      </p>
       <label className="sr-only" htmlFor="doc-title">
         Title
       </label>
@@ -436,42 +443,42 @@ export default function DocumentEditor({ id }: { id: string }) {
         value={title}
         maxLength={160}
         onChange={(e) => update({ title: e.target.value, content })}
-        placeholder="Name this draft"
+        placeholder="Title of this document"
         aria-invalid={!title.trim()}
         className="document-title font-display mt-3 w-full rounded-md bg-transparent text-4xl leading-tight placeholder:text-muted-foreground/60 sm:text-5xl"
         data-testid="input-title"
       />
       {!title.trim() && (
-        <p className="hint !text-destructive">A title is needed before this draft can be saved.</p>
+        <p className="hint !text-destructive">Give the document a title so that it can be saved.</p>
       )}
 
       {state === "conflict" && (
         <Notice
           className="mt-5"
-          title={"Saved elsewhere" + (conflictRev ? " — now at revision " + conflictRev : "")}
+          title={"Changed somewhere else" + (conflictRev ? " — now at version " + conflictRev : "")}
         >
-          Another tab or device saved this draft after you opened it. Your unsaved text is still on screen and
-          has not been discarded.
+          This document was saved in another tab or on another device after you opened it here. What you typed
+          here is still on the screen and has not been lost.
           <div className="mt-3 flex flex-wrap gap-2">
             <button className="btn btn-primary btn-sm" onClick={keepMine} data-testid="button-keep-mine">
-              Save mine as a new revision
+              Save mine as the newest version
             </button>
             <button
               className="btn btn-ghost btn-sm"
               onClick={() => {
-                if (window.confirm("Discard your unsaved text and load the latest saved version?"))
+                if (window.confirm("Discard what you typed here and load the newest saved version?"))
                   void takeTheirs();
               }}
               data-testid="button-load-theirs"
             >
-              Discard mine, load latest
+              Discard mine and load the newest
             </button>
           </div>
         </Notice>
       )}
       {state === "error" && (
         <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {errMsg} Your text is still here.
+          {errMsg} What you typed is still here.
         </p>
       )}
 
@@ -510,12 +517,12 @@ export default function DocumentEditor({ id }: { id: string }) {
                   }}
                   onClick={() => setTab(t)}
                   className={cn(
-                    "rounded-full px-4 py-1.5 text-sm capitalize transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    "rounded-full px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                     tab === t ? "bg-foreground text-background" : "hover:bg-secondary",
                   )}
                   data-testid={"tab-" + t}
                 >
-                  {t === "preview" ? "Saved preview" : "Edit"}
+                  {t === "preview" ? "Preview" : "Edit"}
                 </button>
               ))}
             </div>
@@ -526,10 +533,10 @@ export default function DocumentEditor({ id }: { id: string }) {
                 disabled={!history.length}
                 data-testid="button-undo"
               >
-                <Undo2 className="h-4 w-4" /> Undo
+                <Undo2 className="h-4 w-4" aria-hidden="true" /> Undo
               </button>
               <a href="#private-exports" className="btn btn-ghost btn-sm" data-testid="button-export">
-                <Download className="h-4 w-4" /> Private draft exports
+                <Download className="h-4 w-4" aria-hidden="true" /> Download
               </a>
             </div>
           </div>
@@ -544,7 +551,7 @@ export default function DocumentEditor({ id }: { id: string }) {
             <div role="tabpanel" id="editor-preview-panel" aria-labelledby="editor-tab-preview" tabIndex={0}>
               {state !== "saved" && (
                 <p className="mb-3 text-sm text-muted-foreground">
-                  Showing the last saved revision. Unsaved edits are not included.
+                  This is the last saved version. Changes you have not saved are not in it.
                 </p>
               )}
               {saved && <DocPreview title={saved.title} content={saved.content} revision={saved.revision} />}
@@ -619,7 +626,7 @@ export default function DocumentEditor({ id }: { id: string }) {
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                     <p className="eyebrow">Financial details</p>
                     <span className="text-xs text-muted-foreground">
-                      Totals in whole kobo; tables update when applied
+                      The document&rsquo;s tables update when you apply your changes
                     </span>
                   </div>
                   <FinancialFields
@@ -645,7 +652,8 @@ export default function DocumentEditor({ id }: { id: string }) {
                       className="hint !text-destructive"
                       data-testid="status-financial-unsaved"
                     >
-                      Unapplied financial changes — not saved. Apply or save them before exporting or leaving.
+                      You have changed amounts that are not applied, so they are not saved. Apply them before
+                      you download or leave.
                     </p>
                   )}
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -660,13 +668,16 @@ export default function DocumentEditor({ id }: { id: string }) {
                       onClick={applyFinancial}
                       data-testid="button-apply-financial"
                     >
-                      Apply financial changes
+                      Apply these amounts
                     </button>
                     <button
                       type="button"
                       className="btn btn-ghost btn-sm"
                       onClick={() => {
-                        if (!financialDirty.current || window.confirm("Discard unapplied financial inputs?"))
+                        if (
+                          !financialDirty.current ||
+                          window.confirm("Discard the amounts you have not applied?")
+                        )
                           resetFinancial(content);
                       }}
                       data-testid="button-reset-financial"
@@ -677,7 +688,7 @@ export default function DocumentEditor({ id }: { id: string }) {
                 </div>
               )}
 
-              <p className="eyebrow mb-4 mt-10">Body</p>
+              <p className="eyebrow mb-4 mt-10">Text and tables</p>
               <ol className="grid gap-3">
                 {manualBlocks.map((b, i) => (
                   <BlockEditor
@@ -706,21 +717,21 @@ export default function DocumentEditor({ id }: { id: string }) {
                     onClick={() => addBlock("paragraph")}
                     data-testid="button-add-paragraph"
                   >
-                    <Pilcrow className="h-4 w-4" /> Paragraph
+                    <Pilcrow className="h-4 w-4" aria-hidden="true" /> Add a paragraph
                   </button>
                   <button
                     className="btn btn-ghost btn-sm"
                     onClick={() => addBlock("list")}
                     data-testid="button-add-list"
                   >
-                    <List className="h-4 w-4" /> List
+                    <List className="h-4 w-4" aria-hidden="true" /> Add a list
                   </button>
                   <button
                     className="btn btn-ghost btn-sm"
                     onClick={() => addBlock("table")}
                     data-testid="button-add-table"
                   >
-                    <Table2 className="h-4 w-4" /> Table
+                    <Table2 className="h-4 w-4" aria-hidden="true" /> Add a table
                   </button>
                 </div>
               )}
@@ -742,7 +753,7 @@ export default function DocumentEditor({ id }: { id: string }) {
               <div className="mt-8 grid gap-4 border-t border-border pt-6 sm:grid-cols-2">
                 <div>
                   <label className="label" htmlFor="fmt-font">
-                    Typeface
+                    Lettering
                   </label>
                   <select
                     id="fmt-font"
@@ -759,13 +770,13 @@ export default function DocumentEditor({ id }: { id: string }) {
                     }
                     data-testid="select-font"
                   >
-                    <option value="serif">Serif</option>
-                    <option value="sans">Sans</option>
+                    <option value="serif">Classic (serif)</option>
+                    <option value="sans">Plain (sans-serif)</option>
                   </select>
                 </div>
                 <div>
                   <label className="label" htmlFor="fmt-accent">
-                    Accent
+                    Colour
                   </label>
                   <select
                     id="fmt-accent"
@@ -785,8 +796,8 @@ export default function DocumentEditor({ id }: { id: string }) {
                     }
                     data-testid="select-accent"
                   >
-                    <option value="forest">Forest</option>
-                    <option value="charcoal">Charcoal</option>
+                    <option value="forest">Green</option>
+                    <option value="charcoal">Dark grey</option>
                   </select>
                 </div>
               </div>
@@ -796,7 +807,7 @@ export default function DocumentEditor({ id }: { id: string }) {
 
         <aside className="grid h-fit gap-4 lg:sticky lg:top-24">
           <div className="surface p-5" data-testid="card-missing">
-            <p className="eyebrow">Missing details</p>
+            <p className="eyebrow">Still needed</p>
             {missing.length ? (
               <ul className="mt-3 grid gap-1.5 text-sm">
                 {missing.map((m) => (
@@ -808,14 +819,15 @@ export default function DocumentEditor({ id }: { id: string }) {
               </ul>
             ) : (
               <p className="mt-3 flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-primary" /> Checked fields supplied — review the whole draft
+                <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> Nothing is missing from
+                the details Valo checks. Read the whole document before you use it.
               </p>
             )}
-            <p className="hint mt-3">Incomplete drafts save normally. Nothing is filled in for you.</p>
+            <p className="hint mt-3">A document saves with details missing. Valo fills nothing in for you.</p>
           </div>
           <div className="surface p-5" data-testid="card-revisions">
             <p className="eyebrow flex items-center gap-2">
-              <History className="h-3.5 w-3.5" /> Revisions
+              <History className="h-3.5 w-3.5" aria-hidden="true" /> Versions
             </p>
             {revs.isLoading ? (
               <Skel className="mt-3 h-24" />
@@ -839,7 +851,7 @@ export default function DocumentEditor({ id }: { id: string }) {
                         data-testid={"row-revision-" + r.revision}
                       >
                         <span>
-                          <span className="font-mono">rev {r.revision}</span>
+                          <span>Version {r.revision}</span>
                           <span className="block text-xs text-muted-foreground">
                             {formatDateTime(r.updatedAt)}
                           </span>
@@ -867,7 +879,7 @@ export default function DocumentEditor({ id }: { id: string }) {
               </ol>
             )}
             <p className="hint mt-3">
-              Restoring saves that content as a new revision. Older history stays intact.
+              Restoring a version saves it as the newest one. Every earlier version is kept.
             </p>
           </div>
           <DocumentExports
@@ -887,9 +899,9 @@ function SaveIndicator({ state, rev, onRetry }: { state: SaveState; rev: number;
     idle: ["", ""],
     dirty: ["Unsaved changes", "pill-ochre"],
     saving: ["Saving", "pill-ink"],
-    saved: ["Saved · rev " + rev, "pill-forest"],
+    saved: ["Saved · version " + rev, "pill-forest"],
     error: ["Not saved", "pill-ochre"],
-    conflict: ["Conflict — not saved", "pill-ochre"],
+    conflict: ["Not saved — changed somewhere else", "pill-ochre"],
     blocked: ["Needs a title to save", "pill-ochre"],
   };
   const [text, cls] = map[state];
@@ -939,7 +951,7 @@ function BlockEditor({
       <li className="rounded-xl border border-dashed border-border p-3" data-testid={"block-" + index}>
         <p className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
           <Table2 className="h-3.5 w-3.5" />
-          {block.text || "Financial table"} · edit with Financial details above
+          {block.text || "Financial table"} · change it in Financial details above
         </p>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
@@ -966,7 +978,7 @@ function BlockEditor({
     >
       <div className="mb-1 flex items-center justify-between px-2 pt-1 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <Icon className="h-3.5 w-3.5" /> {block.type}
+          <Icon className="h-3.5 w-3.5" aria-hidden="true" /> {BLOCK_NAMES[block.type]}
         </span>
         <span className="flex gap-0.5 opacity-60 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
           <IconBtn label="Move up" disabled={index === 0} onClick={() => onMove(-1)}>
@@ -975,7 +987,11 @@ function BlockEditor({
           <IconBtn label="Move down" disabled={index === count - 1} onClick={() => onMove(1)}>
             <ArrowDown className="h-3.5 w-3.5" />
           </IconBtn>
-          <IconBtn label="Delete section" disabled={count === 1} onClick={onDelete}>
+          <IconBtn
+            label={"Delete this " + BLOCK_NAMES[block.type].toLowerCase()}
+            disabled={count === 1}
+            onClick={onDelete}
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </IconBtn>
         </span>
@@ -1016,16 +1032,16 @@ function BlockEditor({
                 onChange({ ...block, rows: [...block.rows, block.rows[0]?.map(() => "") ?? [""]] })
               }
             >
-              <Plus className="mr-0.5 inline h-3 w-3" />
-              Row
+              <Plus className="mr-0.5 inline h-3 w-3" aria-hidden="true" />
+              Add a row
             </button>
             <button
               className="text-xs text-muted-foreground underline-offset-2 hover:underline disabled:opacity-40"
               disabled={(block.rows[0]?.length ?? 0) >= 10}
               onClick={() => onChange({ ...block, rows: block.rows.map((r) => [...r, ""]) })}
             >
-              <Plus className="mr-0.5 inline h-3 w-3" />
-              Column
+              <Plus className="mr-0.5 inline h-3 w-3" aria-hidden="true" />
+              Add a column
             </button>
           </div>
         </div>
@@ -1159,7 +1175,7 @@ function DocPreview({
         </p>
       )}
       <p className="mt-10 font-mono text-[0.7rem] uppercase tracking-wider text-muted-foreground">
-        Business draft · revision {revision} · not reviewed · not a released template
+        Draft · version {revision} · your own document, not reviewed
       </p>
     </article>
   );

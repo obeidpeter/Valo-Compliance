@@ -2,8 +2,10 @@ import type { CanonicalDocument, DocumentBlock } from "@workspace/api-client-rea
 import {
   guidedDataFromBlocks,
   guidedDataIssues,
+  guidedFieldIssue,
   guidedRenderableBlocks,
 } from "@workspace/valo-core/guided-runtime";
+import type { GuidedSpec } from "@workspace/valo-core/guided";
 import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 
 export { describeError, type DescribedError, type ErrorKind } from "./describe-error";
@@ -34,6 +36,27 @@ export const FIELD_LABELS: Record<keyof CanonicalDocument["fields"], string> = {
   notes: "Notes",
 };
 
+/** What the questions say of a required answer that was simply not given. */
+const UNANSWERED = guidedFieldIssue({ id: "", label: "", type: "text", required: true }, "");
+
+/**
+ * One line of the list for something a guided document still needs: the question in its own words,
+ * a table's row and column by name, then what is wrong with the answer unless it was simply not
+ * given.
+ */
+function neededLine(spec: GuidedSpec, key: string, message: string): string {
+  const [tableId, row, columnId] = key.split(":");
+  const table = spec.tables.find((t) => t.id === tableId);
+  const name =
+    spec.fields.find((f) => f.id === key)?.label ??
+    (table && row !== undefined
+      ? `${table.label}, row ${Number(row) + 1}: ${table.columns.find((c) => c.id === columnId)?.label ?? columnId}`
+      : table?.label);
+  if (!name) return message;
+  return message === UNANSWERED ? name : `${name}: ${message}`;
+}
+
+/** What a document still needs before it is complete, one line each, in the order of its questions. */
 export function missingFields(content: CanonicalDocument): string[] {
   const out: string[] = [];
   let visible = content.blocks;
@@ -42,25 +65,23 @@ export function missingFields(content: CanonicalDocument): string[] {
     if (answers) {
       const spec = GUIDED_SPECS_V1[answers.templateId];
       for (const [key, message] of Object.entries(guidedDataIssues(spec, answers)))
-        out.push(`${spec.fields.find((f) => f.id === key)?.label ?? key}: ${message}`);
+        out.push(neededLine(spec, key, message));
       visible = guidedRenderableBlocks(content);
     } else {
       (Object.keys(FIELD_LABELS) as (keyof CanonicalDocument["fields"])[]).forEach((k) => {
         if (!content.fields[k]?.trim()) out.push(FIELD_LABELS[k]);
       });
       if (!content.blocks.some((b) => b.text.trim() || b.rows.some((r) => r.some((c) => c.trim()))))
-        out.push("Body text");
+        out.push("The document's text");
     }
   } catch {
     return [
-      "The saved guided layout is unsupported or altered. Restore a valid revision; do not treat it as complete.",
+      "This document's saved questions cannot be read. Restore an earlier version, and do not treat this one as complete.",
     ];
   }
   const body = visible.flatMap((b) => [b.text, ...b.rows.flat()]).join("\n");
   const placeholders = [...new Set(body.match(/\[[^\]\n]{0,140}\]|\{\{[^}\n]{1,140}\}\}|_{3,}/g) ?? [])];
   if (placeholders.length)
-    out.push(
-      `Possible unresolved template placeholders (${placeholders.length}): ${placeholders.slice(0, 5).join(", ")}`,
-    );
+    out.push(`Blanks still in the text (${placeholders.length}): ${placeholders.slice(0, 5).join(", ")}`);
   return out;
 }
