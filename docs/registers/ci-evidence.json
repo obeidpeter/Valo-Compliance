@@ -2807,6 +2807,13 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "the reminders screen says in plain words whether emails are being sent and what has happened to each reminder",
       "proves": "Signed in through a stand-in identity with synthetic data, the reminders screen says that reminders are off unless turned on, that each is planned for 09:00 Lagos time, and whether emails are being sent; its delivery log gives each reminder's state and reason in words, and a message the email service accepted is not called sent or delivered. This shows the screen's words, not that a reminder is scheduled or an email sent."
+    },
+    {
+      "requirement": "SRV-002",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "a saved request reads 'Enquiry received' with what has not happened, and the customer's own requests read in plain words",
+      "proves": "Signed in through a stand-in identity with synthetic data, a request saved from the support form shows “Enquiry received”, says that no appointment has been made and nothing was sent outside Valo, and never shows “Appointment booked”; the customer's own requests give each state and topic in words. The save is answered by a test stand-in, so this shows the screen's words, not that staff receive the request."
     }
   ]
 }

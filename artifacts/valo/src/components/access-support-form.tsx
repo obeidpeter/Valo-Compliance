@@ -80,7 +80,10 @@ export function AccessSupportForm({ defaultTopic = "general" }: { defaultTopic?:
       <div className="surface reveal p-6 sm:p-8" role="status" data-testid="access-support-ack">
         <CheckCircle2 className="h-7 w-7 text-primary" aria-hidden />
         <p className="font-display mt-4 text-2xl">Saved. Not emailed.</p>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{ack.message}</p>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Your message is saved for a member of Valo's staff to read. Nothing about your account has been
+          checked or confirmed.
+        </p>
         <dl className="mt-6 grid gap-3 rounded-xl border border-border bg-background p-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="eyebrow">Reference</dt>
@@ -89,17 +92,17 @@ export function AccessSupportForm({ defaultTopic = "general" }: { defaultTopic?:
             </dd>
           </div>
           <div>
-            <dt className="eyebrow">Delivery</dt>
+            <dt className="eyebrow">Email</dt>
             <dd className="mt-1">
               <span className="pill pill-ochre">
-                <span className="dot" /> Not dispatched
+                <span className="dot" /> None sent
               </span>
             </dd>
           </div>
         </dl>
         <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-          Your message is stored for a Valo staff member to read. No email has been sent to you or anyone
-          else, and no response time is promised. Keep the reference if you write again.
+          No email has been sent to you or to anyone else. Valo does not send replies by email yet, and no
+          time for a reply is promised. Keep the reference if you write again.
         </p>
         <button
           className="btn btn-ghost btn-sm mt-5"
@@ -205,6 +208,12 @@ export function AccessSupportForm({ defaultTopic = "general" }: { defaultTopic?:
           onChange={(e) => setWebsite(e.target.value)}
         />
       </div>
+      {/* Said before the message is written, not only after it is saved: someone who cannot sign in
+          has nowhere else to read a reply. */}
+      <p className="text-sm text-muted-foreground" data-testid="text-access-limits">
+        A member of Valo's staff reads your message. Valo does not send replies by email yet, and no time for
+        a reply is promised.
+      </p>
       <p className="rounded-xl border border-[hsl(38_50%_80%)] bg-[hsl(var(--ochre-soft))] px-4 py-3 text-sm">
         Never include passwords, verification codes, ID numbers or payment details. Valo staff will never ask
         for them.
@@ -215,7 +224,7 @@ export function AccessSupportForm({ defaultTopic = "general" }: { defaultTopic?:
           className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
           data-testid="text-access-error"
         >
-          {err.message} You can retry safely; it will not create a duplicate.
+          {err.message} You can try again: your message is saved once, not twice.
         </p>
       )}
       <div>

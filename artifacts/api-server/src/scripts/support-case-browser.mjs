@@ -303,12 +303,14 @@ const run = async () => {
     await page.getByRole("button", { name: "Newer messages", exact: true }).click();
     checks.push("Conversation paging preserves the customer reply draft.");
     failNext = 409;
-    await page.getByRole("button", { name: "Save reply to portal", exact: true }).click();
-    await page.getByText("This case changed", { exact: true }).waitFor();
-    assert(await page.getByRole("button", { name: "Save reply to portal", exact: true }).isDisabled());
+    await page.getByRole("button", { name: "Save reply", exact: true }).click();
+    await page.getByText("This request changed", { exact: true }).waitFor();
+    assert(await page.getByRole("button", { name: "Save reply", exact: true }).isDisabled());
     await page.getByRole("button", { name: "Reload latest conversation", exact: true }).click();
-    await page.getByRole("button", { name: "Save reply to portal", exact: true }).click();
-    await page.getByText("Your reply was saved to this case. It was not emailed.", { exact: true }).waitFor();
+    await page.getByRole("button", { name: "Save reply", exact: true }).click();
+    await page
+      .getByText("Your reply is saved with this request. It was not emailed.", { exact: true })
+      .waitFor();
     assert.equal(requests[1].input.expectedVersion, 2);
     assert.notEqual(requests[0].input.idempotencyKey, requests[1].input.idempotencyKey);
     checks.push(
@@ -316,11 +318,13 @@ const run = async () => {
     );
     await page.getByLabel("Add information to this request").fill("A second reply with uncertain response.");
     failNext = 500;
-    await page.getByRole("button", { name: "Save reply to portal", exact: true }).click();
+    await page.getByRole("button", { name: "Save reply", exact: true }).click();
     await page.getByRole("button", { name: "Retry the same reply", exact: true }).waitFor();
     assert(await page.getByLabel("Add information to this request").isDisabled());
     await page.getByRole("button", { name: "Retry the same reply", exact: true }).click();
-    await page.getByText("Your reply was saved to this case. It was not emailed.", { exact: true }).waitFor();
+    await page
+      .getByText("Your reply is saved with this request. It was not emailed.", { exact: true })
+      .waitFor();
     assert.deepEqual(requests[2].input, requests[3].input);
     checks.push("Unknown customer save result locks edits and retries exactly the same idempotent input.");
     reset();

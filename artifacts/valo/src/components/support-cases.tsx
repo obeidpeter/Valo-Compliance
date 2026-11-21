@@ -4,6 +4,7 @@ import { useAccountEpoch } from "./account-state-boundary";
 import { ErrorState } from "./states";
 import { formatDateTime } from "@/lib/format";
 import { useUnsavedNavigation } from "@/lib/use-unsaved-navigation";
+import { supportStatusWords, supportTopic } from "@/lib/support-words";
 import {
   getSupportCase,
   listSupportCases,
@@ -75,13 +76,15 @@ export function SupportMessages({
     <section aria-label={staff ? "Case conversation and saved notes" : "Case conversation"}>
       <h3 className="text-sm font-semibold">Conversation</h3>
       {!visible.length ? (
-        <p className="mt-2 text-sm text-muted-foreground">No replies have been saved yet.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {staff ? "No replies have been saved yet." : "No replies yet."}
+        </p>
       ) : (
         <ol className="mt-3 grid gap-3">
           {visible.map((message) => (
             <li key={message.id} className="min-w-0 rounded-xl border border-border p-4">
               <p className="text-xs text-muted-foreground">
-                {message.authorKind === "staff" ? "Valo staff" : "Customer"} ·{" "}
+                {message.authorKind === "staff" ? "Valo staff" : staff ? "Customer" : "You"} ·{" "}
                 {formatDateTime(message.createdAt)}
                 {staff &&
                   ` · ${message.visibility === "internal" ? "Internal record · not sent" : "Customer portal"}`}
@@ -169,11 +172,11 @@ export function CustomerSupportCases() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 id="customer-support-heading" className="font-display text-3xl">
-            Your saved support requests
+            Your support requests
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            Read staff replies and add information here. Replies are saved in this signed-in portal; email
-            delivery is not available.
+            Read staff replies and add to a request here. Replies are kept on this page. Valo does not email
+            them yet, so come back here to read them.
           </p>
         </div>
         <button
@@ -197,11 +200,9 @@ export function CustomerSupportCases() {
       )}
       {!denied && list.data && (
         <>
-          <p className="mt-4 text-sm text-muted-foreground">{list.data.notice}</p>
           {!list.data.cases.length && (
             <p className="mt-5 text-sm">
-              No saved requests on this page. Use the form above to save a new request, then refresh this
-              list.
+              No requests on this page. To make one, use the form above, then refresh this list.
             </p>
           )}
           <ul className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -209,7 +210,7 @@ export function CustomerSupportCases() {
               <li key={item.id} className="surface min-w-0 p-5">
                 <h3 className="break-all font-mono text-sm">{item.reference}</h3>
                 <p className="mt-2 text-sm">
-                  {item.category.replaceAll("_", " ")} · <strong>{item.status.replaceAll("_", " ")}</strong>
+                  {supportTopic(item.category)} · <strong>{supportStatusWords(item.status)}</strong>
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">Updated {formatDateTime(item.updatedAt)}</p>
                 <button
@@ -292,13 +293,16 @@ export function CustomerSupportCases() {
           {!detailDenied && detail.data && row && (
             <div className="mt-4 grid gap-5">
               <p className="text-sm">
-                <strong>{row.status.replaceAll("_", " ")}</strong> · version {row.version}
+                <strong>{supportStatusWords(row.status)}</strong>
               </p>
               <div>
                 <h4 className="text-sm font-semibold">Original request</h4>
                 <p className="mt-2 whitespace-pre-wrap text-sm [overflow-wrap:anywhere]">{row.scope}</p>
               </div>
-              <p className="rounded-xl bg-secondary p-3 text-sm">{detail.data.notice}</p>
+              <p className="rounded-xl bg-secondary p-3 text-sm">
+                A reply here is not an appointment or a professional review. Nothing is emailed, and your
+                request is not passed to anyone outside Valo.
+              </p>
               <SupportMessages messages={detail.data.messages} />
               <div
                 className="flex flex-wrap items-center gap-3"
@@ -351,12 +355,13 @@ export function CustomerSupportCases() {
                   aria-describedby="support-customer-reply-hint"
                 />
                 <p id="support-customer-reply-hint" className="text-xs text-muted-foreground">
-                  8–4,000 characters. Do not include passwords, payment credentials or identity documents.
-                  {row.status === "resolved" && " Adding information reopens this resolved case."}
+                  8 to 4,000 characters. Do not include passwords, card or bank details, or identity
+                  documents.
+                  {row.status === "resolved" && " Adding information opens this resolved request again."}
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <button className="btn btn-primary btn-sm" disabled={locked || body.trim().length < 8}>
-                    {mutation.isPending ? "Saving reply…" : "Save reply to portal"}
+                    {mutation.isPending ? "Saving reply…" : "Save reply"}
                   </button>
                   <button
                     type="button"
@@ -374,20 +379,20 @@ export function CustomerSupportCases() {
             <div className="mt-4">
               <ErrorState
                 error={mutation.error}
-                title={conflict ? "This case changed" : "Reply was not confirmed"}
+                title={conflict ? "This request changed" : "Your reply was not confirmed"}
               />
             </div>
           )}
           {conflict && (
             <p className="mt-3 text-sm" role="status">
-              Your reply is preserved. Reload the latest conversation, review changes, then save again.
+              Your reply is still here. Reload the conversation, read what changed, then save again.
             </p>
           )}
           {uncertain && (
             <div className="mt-3 rounded-xl border border-border p-4 text-sm" role="status">
               <p>
-                The save result is unknown. Retry the same request safely; it uses the same reference and will
-                not create a second reply.
+                Valo could not confirm whether your reply was saved. Try the same reply again: it is saved
+                once, not twice.
               </p>
               <button
                 type="button"
@@ -404,14 +409,14 @@ export function CustomerSupportCases() {
           )}
           {saved && (
             <p className="mt-4 text-sm" role="status">
-              Your reply was saved to this case. It was not emailed.
+              Your reply is saved with this request. It was not emailed.
             </p>
           )}
         </section>
       )}
       {dirty && (
         <p className="mt-3 text-sm text-muted-foreground">
-          Save or discard your reply before opening another case or changing pages.
+          Save or discard your reply before you open another request or change pages.
         </p>
       )}
       <SupportDraftGuard dirty={dirty} onDiscard={discard} />

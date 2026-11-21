@@ -490,3 +490,55 @@ test("no signed-out screen shows one of the project's own words that the word li
   }
   assert.deepEqual(problems, []);
 });
+
+test("someone who cannot sign in is told before writing that no reply is emailed yet, and the saved message says what has not happened", async () => {
+  const sent: unknown[] = [];
+  const { page, errors, unknown, close } = await app.desktop(
+    "/account-access",
+    async (route, method, path, query) => {
+      if (method === "POST" && path === "/public/access-support") {
+        sent.push(route.request().postDataJSON());
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(
+            api.RequestAccessSupportResponse.parse({
+              reference: "VALO-ACCESS-SYNTHETIC-1",
+              message: "Synthetic test fixture: a note in the server's own words.",
+              delivery: "not_dispatched",
+            }),
+          ),
+        });
+      } else await answer(route, method, path, query);
+    },
+  );
+  try {
+    await ready(page);
+    // Before anything is written.
+    await expect(page.getByTestId("text-access-limits")).toHaveText(
+      "A member of Valo's staff reads your message. Valo does not send replies by email yet, and no time for a reply is promised.",
+    );
+    await page.getByTestId("input-access-email").fill("synthetic-visitor@example.test");
+    await page.getByTestId("input-access-message").fill("Synthetic message: I cannot sign in to my account.");
+    await page.getByTestId("button-access-submit").click();
+    const saved = page.getByTestId("access-support-ack");
+    await expect(saved).toContainText("Saved. Not emailed.");
+    await expect(saved).toContainText(
+      "Your message is saved for a member of Valo's staff to read. Nothing about your account has been checked or confirmed.",
+    );
+    await expect(saved).toContainText(
+      "No email has been sent to you or to anyone else. Valo does not send replies by email yet, and no time for a reply is promised. Keep the reference if you write again.",
+    );
+    await expect(page.getByTestId("text-access-reference")).toHaveText("VALO-ACCESS-SYNTHETIC-1");
+    await expect(saved).toContainText("None sent");
+    assert.doesNotMatch(
+      (await saved.innerText()).replace(/\s+/g, " "),
+      /dispatch|development build|server's own words/i,
+    );
+    assert.equal(sent.length, 1);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
