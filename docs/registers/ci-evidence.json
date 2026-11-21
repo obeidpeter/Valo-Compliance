@@ -303,6 +303,13 @@
       "proves": "On the compiled web server with synthetic data, a template and a guidance entry the API stops listing are gone from the next library and resources views, and their own pages say they are not available and do not name them, in the server's HTML and after the browser reads them again; downloads and the checker are not checked here."
     },
     {
+      "requirement": "EDP-011",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/sources/source-page-words.integration.test.ts",
+      "test": "the daily check holds what rests on a page when its words change, not when only its bytes do",
+      "proves": "On a real database the daily check holds what rests on a web page as soon as the words read from it change, and holds nothing when the page returns different bytes with the same words; a file is still compared by its bytes. The rows are synthetic and the transaction is rolled back."
+    },
+    {
       "requirement": "EDP-008",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/publication/operational-export-inspection.test.ts",
