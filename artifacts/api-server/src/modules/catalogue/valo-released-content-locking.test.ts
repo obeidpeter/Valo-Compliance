@@ -10,6 +10,7 @@ import { workspaceActorFromRecord } from "../../platform/workspace-context";
  */
 test("template downloads read storage outside the transaction that holds the source lock", async (t) => {
   const core = await import("@workspace/valo-core");
+  const guide = await import("../publication/guidance-document");
   let inTransaction = false,
     permitted = true,
     lockedStatus = "published",
@@ -96,6 +97,10 @@ test("template downloads read storage outside the transaction that holds the sou
         record(`storage ${ref.id}`);
         return Buffer.from("master bytes");
       },
+      // The guide page's reading of a guide is not exercised by a template download: the real
+      // functions stand, read past the index this stand-in replaces.
+      guidePageText: guide.guidePageText,
+      guideReferences: guide.guideReferences,
     },
   });
   // The released content reaches the source state through the sources module's index.

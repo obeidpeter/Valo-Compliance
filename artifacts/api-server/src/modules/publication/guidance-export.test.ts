@@ -14,7 +14,7 @@ import {
   closeRenderer,
   renderDocument,
 } from "../../lib/valo-render";
-import { buildEditorialCaseCandidates } from "../editorial/editorial-case-candidates";
+import { buildGuideCandidate, mappedGuideIds } from "./guidance-bundle";
 import { guidanceCandidate } from "./guidance-candidate";
 import {
   GUIDE_LABEL,
@@ -95,18 +95,22 @@ test("every draft guide prints as a guide in Word and PDF, and the files hold ev
         "None of these drafts has been reviewed, and none is published.",
         'The line "AI drafted and reviewed; ..." near the end of each file is the notice a released guide carries.',
         "It is printed here so that the layout is complete. It is not a statement about these drafts.",
-        "No sources are listed: a guide's sources come from its claim map, which these samples do not have.",
+        "GUD-01 to GUD-10 list their sources, read on 14 November 2026. The other guides list none:",
+        "a guide's sources come from its claim map, and theirs are not written yet.",
         "",
       ].join("\n"),
     );
   }
   const now = new Date();
   for (const id of guideIds) {
-    const content = await guidanceCandidate(id, 1, now);
-    const candidate = inspected(id, content);
+    // A guide with a claim map is printed as that map builds it, sources and all; any other is
+    // printed from its words alone.
+    const mapped = mappedGuideIds.includes(id) ? await buildGuideCandidate(id) : null;
+    const document = mapped?.document ?? (await guidanceCandidate(id, 1, now)).document;
+    const candidate = mapped?.candidate ?? inspected(id, await guidanceCandidate(id, 1, now));
     const files = {
-      docx: await renderDocument(content.document, "docx", 1, "guidance_draft"),
-      pdf: await renderDocument(content.document, "pdf", 1, "guidance_draft"),
+      docx: await renderDocument(document, "docx", 1, "guidance_draft"),
+      pdf: await renderDocument(document, "pdf", 1, "guidance_draft"),
     };
     const report = await inspectOperationalExports(candidate, files, GUIDANCE_DRAFT_NOTICE);
     assert.equal(report.passed, true, `${id}: ${JSON.stringify(report)}`);
@@ -135,7 +139,11 @@ test("every draft guide prints as a guide in Word and PDF, and the files hold ev
         GUIDE_LABEL.sourcesChecked,
       ])
         assert.ok(text.includes(`${label}:`), `${where}: ${label}`);
-      assert.ok(!text.includes(`${GUIDE_LABEL.sources}:`), `${where}: lists no sources without a claim map`);
+      assert.equal(
+        text.includes(`${GUIDE_LABEL.sources}:`),
+        Boolean(mapped),
+        `${where}: lists sources only with a claim map`,
+      );
     }
 
     // The inspection is bound to this candidate: the same files fail for one that says more.
@@ -151,11 +159,10 @@ test("every draft guide prints as a guide in Word and PDF, and the files hold ev
 });
 
 test("a guide prepared with its claim map lists each source with its place and official address", async () => {
-  // GUD-01's retained claim map, as the editorial evaluation builds it. Its sources are held and
-  // unresolved there, and stay so: this reads only where each claim points.
-  const mapped = buildEditorialCaseCandidates().built.find((c) => c.caseId === "EVAL-EDP-C004")!;
-  const references = guideReferences(mapped);
-  assert.ok(references.length >= 5, "GUD-01's claims point to several places");
+  // GUD-01 as its claim map builds it: a real candidate, with the sources its claims point to.
+  const built = await buildGuideCandidate("GUD-01");
+  const references = guideReferences(built);
+  assert.ok(references.length >= 8, "GUD-01's claims point to several places");
   assert.ok(references.every((r) => r.url.startsWith("https://")));
   assert.equal(
     new Set(references.map((r) => `${r.url} ${r.locator}`)).size,
@@ -163,14 +170,12 @@ test("a guide prepared with its claim map lists each source with its place and o
     "each place is listed once",
   );
 
-  const content = await guidanceCandidate("GUD-01", 1, new Date(), undefined, references);
-  const candidate = inspected("GUD-01", content);
   const files = {
-    docx: await renderDocument(content.document, "docx", 1, "guidance"),
-    pdf: await renderDocument(content.document, "pdf", 1, "guidance"),
+    docx: await renderDocument(built.document, "docx", 1, "guidance"),
+    pdf: await renderDocument(built.document, "pdf", 1, "guidance"),
   };
   // A guide's candidate is inspected against the released guide's notice without being told to.
-  const report = await inspectOperationalExports(candidate, files);
+  const report = await inspectOperationalExports(built.candidate, files);
   assert.equal(report.passed, true, JSON.stringify(report));
   for (const [format, text] of [
     ["Word", docxText(files.docx)],
@@ -185,6 +190,8 @@ test("a guide prepared with its claim map lists each source with its place and o
       assert.ok(packed.includes(r.locator.replace(/\s+/g, "")), `${format}: ${r.locator}`);
       assert.ok(packed.includes(r.url), `${format}: ${r.url}`);
     }
+    // The sources were read on 14 November 2026, and the file says so.
+    assert.ok(text.includes("Sources checked: 14 Nov 2026"), `${format}: the day the sources were read`);
   }
 });
 
