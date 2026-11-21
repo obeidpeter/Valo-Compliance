@@ -361,7 +361,11 @@ command that publishes.
    captures and checks a guide again before its reviews. In a test with made-up captures and
    reviews, and the owner's approval supposed, a guide passes every check the publisher makes and
    nothing is published).
-8. The same review route templates use, opened to guides, and the publish command.
+8. The same review route templates use, opened to guides (built: a package of its own kind for
+   guide review pairs, which the owner approves apart from templates; the plan, the manifest and
+   the checks made before anything is sent all take a guide. Not yet done: a test that runs a
+   guide's two reviews through the dispatcher with a stand-in for the model, and the publish
+   command run for a guide).
 9. The daily check compares a page's words, not its bytes (built).
 10. A released guide shown on the site as a free guide, not as a template.
 11. Claim maps for GUD-11 to GUD-30, from the official files whose checksums match the recorded

@@ -68,8 +68,22 @@ record describes. That is deliberate: someone has to read the new file and write
 
 ## What happens next, and what is not built
 
-- **The two reviews.** They run only inside an allocation the owner approves. The commands that
-  plan and run a review pair take templates only today; opening them to guides is the next change.
+- **The two reviews.** They run only inside an allocation the owner approves, and the owner
+  approves guide reviews apart from template reviews. The steps are the templates' own, with a
+  package of the guides' kind:
+
+  1. `tsx src/scripts/finite-allocation-approval.ts prepare <package.json> --guide-pairs` writes a
+     package that admits the review pairs of guides and nothing else. Only the owner, or someone on
+     the owner's written instruction, records its approval with the same command's `approve`.
+  2. `tsx src/scripts/finite-inference-run.ts --prepare <package id> --candidate=<artifact id>:<sha256>`
+     plans the pair for a prepared guide. It calls no model.
+  3. `--admit` and then `--execute` of the same command admit the pair under the approved package
+     and run the two reviews. This is the step that spends.
+  4. `tsx src/scripts/publish-reviewed-pair.ts <batch id> <result artifact id> <sha256>` saves the
+     version with its reviews and hands it to the publisher, or records the hold.
+
+  Steps 1 and 2 and the checks behind step 3 are tested for a guide. Steps 3 and 4 have been run in
+  tests for templates only, never for a guide, not even with a stand-in for the model.
 - **Publication.** The publisher makes every check again at release, including that each source is
   still the capture its address serves. A test passes a prepared guide through all of those checks
   in a database transaction that is rolled back. No guide has been published.
