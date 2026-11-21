@@ -344,6 +344,31 @@ result still shows which it is. DOC-002 requires free and premium filters, so th
 price words does not reach them. The owner decides whether that changes while no price is set;
 it would be a change to the requirement, not to this page.
 
+### Phase 4: the guidance pages
+
+The three pages the header's Guidance link groups, and the page of a guide and of an industry:
+
+| Page | Heading now | Heading before |
+| --- | --- | --- |
+| Overview (`/compliance`) | Guidance, and where it comes from | No rule is shown until it can name its source. |
+| Guides (`/resources`) | Guides | Guidance that names its sources. |
+| By industry (`/industries`) | Guidance by industry | Find what fits your trade. |
+
+- The browser tab of each page now carries the same name as its heading: "Guidance", "Guides"
+  and "Guidance by industry", and "Documents and guidance" for the documents list. They read
+  "Business requirements", "Business resources", "Industry coverage" and "Document library".
+- Every button to the requirements check reads "Check my requirements". They read "Run the
+  requirements checker".
+- A page with nothing to show says "No guidance is published yet", or "No guides are published
+  yet", and says in plain words what a visitor can still do.
+- A guide's date reads "Sources checked", on its card and on its page, as a template's does. It
+  read "Reviewed", which could be taken for a person's review (CMP-004). Its notices have the
+  same plain headings as a template's.
+- An industry is named the same way on every page: as the list of industries writes it, starting
+  with a capital, in the heading, the browser tab, the search results and the filter. The name
+  itself comes from the coverage plan and is not changed.
+- Counts are written by the shared formatter, as "3 guides".
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
