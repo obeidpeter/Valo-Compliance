@@ -60,7 +60,18 @@ export type AmendmentRecord = {
    * wording in this copy has been compared with the other. A passage of any other section is not
    * confirmed as the operative text. Undefined when one official copy is known.
    */
-  comparedSections?: Record<string, { method: string; on: string }>;
+  comparedSections?: Record<
+    string,
+    {
+      method: string;
+      on: string;
+      /**
+       * Where only parts of a long section were compared: the opening words of each part that was.
+       * A quotation from the section is confirmed only when it holds one of them.
+       */
+      only?: readonly string[];
+    }
+  >;
   /** Differences and open questions. An open one holds every passage of the sections it names. */
   conflicts: readonly { about: string; sections: readonly string[] | "all"; open: boolean; note: string }[];
   limits: string;
@@ -98,6 +109,8 @@ export function guideSourceDecision(
   passage: GuidePassage,
   now: Date,
   records: readonly AmendmentRecord[] = guideAmendmentRecords,
+  /** The quotations a guide binds to the passage, where the caller knows them. */
+  quotes?: readonly string[],
 ): SourceDecision {
   const text = passage.instrument;
   if (text.kind === "official_page") {
@@ -127,11 +140,22 @@ export function guideSourceDecision(
     textReasons.push("the amendment record gives a different commencement");
   if (!onOfficialHost(record.url)) textReasons.push("the text is not on an official host in the policy");
   if (record.comparedSections) {
-    const uncompared = passage.sections.filter((s) => !record.comparedSections![s]);
+    const compared = record.comparedSections;
+    const uncompared = passage.sections.filter((s) => !compared[s]);
     if (uncompared.length || !passage.sections.length)
       textReasons.push(
         `the official copies of this text differ, and section ${uncompared.join(", ") || "(none named)"} has not been compared between them`,
       );
+    // A section compared in part confirms only quotations from the parts that were compared.
+    for (const section of passage.sections) {
+      const parts = compared[section]?.only;
+      if (!parts) continue;
+      const within = (quote: string) => parts.some((part) => flat(quote).includes(flat(part)));
+      if (!quotes?.length || !quotes.every(within))
+        textReasons.push(
+          `section ${section} has been compared between the official copies only in part, and a quotation is from outside that part`,
+        );
+    }
   }
 
   const reasons: string[] = [];
@@ -187,12 +211,13 @@ export function decidedSource(
   };
 }
 
+const BUDGET_OFFICE = "https://budgetoffice.gov.ng/index.php";
 const NASS_ACTS_LIST =
   "https://nass.gov.ng/documents/magazine_track/?draw=1&start=0&length=500&search%5Bvalue%5D=&search%5Bregex%5D=false";
 
 /**
  * The amendment records held today, for the two Acts GUD-01 to GUD-10 quote. Each says what was
- * done and what was not. Neither is complete: see `notRead`, `comparedSections` and `limits`.
+ * done and what was not: see `notRead`, `comparedSections` and `limits`.
  */
 export const guideAmendmentRecords: readonly AmendmentRecord[] = [
   {
@@ -230,6 +255,46 @@ export const guideAmendmentRecords: readonly AmendmentRecord[] = [
         searchedAt: "2026-11-21T19:51:21Z",
         rawSha256: "8df0e8fae0ec39d2f66082021942209b899cb2ffdd40ba3b8fd46b6b888211bd",
         found: "The page links to the Commission's procedures and fees. It lists no amending instrument.",
+      },
+      {
+        place: "Budget Office of the Federation: Finance Act 2021",
+        url: `${BUDGET_OFFICE}/resources/internal-resources/budget-documents/finance-act-2021/download`,
+        searchedAt: "2026-11-21T20:19:08Z",
+        rawSha256: "12fea86def009aade42b2cff875ee8f25b9b8fe2cfe2580b850cfc3003d28ba5",
+        found:
+          "Thirteen parts, none for the Companies and Allied Matters Act. It names that Act once, in a provision on capital gains.",
+      },
+      {
+        place: "Budget Office of the Federation: Finance Act 2023",
+        url: `${BUDGET_OFFICE}/finance-act-2023/finance-act-2023-2/download`,
+        searchedAt: "2026-11-21T20:19:21Z",
+        rawSha256: "9264789296e39bdd104480dec3e28a5c7170dbca97887f8b24586d0416baf11b",
+        found:
+          "A scanned copy. Its arrangement of sections, read from the page images, lists twelve parts, none for the Companies and Allied Matters Act.",
+      },
+      {
+        place: "Budget Office of the Federation: the Gazette with the Finance Act 2019",
+        url: `${BUDGET_OFFICE}/resources/internal-resources/policy-documents/ogp/2020-finance-act/download`,
+        searchedAt: "2026-11-21T20:18:56Z",
+        rawSha256: "7bcbccd05494fba233b0305167fc4302c12dcdf6249d027d968b549d311e9760",
+        found:
+          "The Official Gazette of 14 January 2020 with the Finance Act 2019, made before the Companies and Allied Matters Act 2020.",
+      },
+      {
+        place: "National Assembly: Nigeria Revenue Service (Establishment) Act 2025",
+        url: "https://nass.gov.ng/documents/download/11251",
+        searchedAt: "2026-11-21T20:21:45Z",
+        rawSha256: "c100f5f10b089ae9a162c0c05fe8ba425b0b79ae936065aa0788893a8ef2b2a8",
+        found:
+          "The Act names the Companies and Allied Matters Act once, for directors' duties. It changes nothing in it.",
+      },
+      {
+        place: "National Assembly: Joint Revenue Board of Nigeria (Establishment) Act 2025",
+        url: "https://nass.gov.ng/documents/download/11247",
+        searchedAt: "2026-11-21T20:21:46Z",
+        rawSha256: "97b648230dee2f6fc1e9f5248343dfb8d6c6d17b4c2d38abe661abee6201e458",
+        found:
+          "The Act names the Companies and Allied Matters Act once, for directors' duties. It changes nothing in it.",
       },
     ],
     amendments: [
@@ -324,16 +389,23 @@ export const guideAmendmentRecords: readonly AmendmentRecord[] = [
           },
         },
       },
-    ],
-    notRead: [
       {
-        title: "The Finance Acts made since 2020",
-        why: "a Finance Act can amend other Acts, the National Assembly's list holds none of them, and no copy on an official host in the policy has been found",
+        // A scanned copy: no passage of it is kept. Its long title names the Companies and Allied
+        // Matters Act No. 3, 2020, and its Part XII holds one section, as its arrangement prints it.
+        title: "Finance Act 2020",
+        url: `${BUDGET_OFFICE}/resources/internal-resources/budget-documents/finance-act-2020/download`,
+        rawSha256: "9b9148fcc191df6f42738e6fe4f4280f7dd087a794f52682a529dbe7cdeb3633",
+        capturedAt: "2026-11-21T20:18:32Z",
+        commencement:
+          "This Act takes effect from 1 January, 2021 or such other date that shall be indicated by the National Assembly by law (or by Presidential Order).",
+        // The whole of section 432 is replaced, so every passage of it counts as changed.
+        sections: { "432": { quote: "60. Substitution for section 432.", removes: [] } },
       },
     ],
+    notRead: [],
     conflicts: [],
     limits:
-      "The search covers the National Assembly's published list, the two 2025 tax Acts and the Commission's resources page on the days shown, and the Business Facilitation Act as captured on 14 November 2026; its host could not be reached on 21 November. No Gazette index was searched and no court decision was looked for.",
+      "The search covers the National Assembly's published list, the four revenue Acts of 2025, the Finance Acts of 2020, 2021 and 2023 as the Budget Office serves them, and the Commission's resources page, on the days shown, and the Business Facilitation Act as captured on 14 November 2026; its host could not be reached on 21 November. The Finance Acts of 2020 and 2023 are scanned copies, read from their page images by an AI assistant. Whether a Finance Act later than 2023 exists was not established. No Gazette index was searched and no court decision was looked for.",
   },
   {
     instrument: "NASS-NTAA-2025",
@@ -360,16 +432,58 @@ export const guideAmendmentRecords: readonly AmendmentRecord[] = [
         found:
           "Its repeals (section 195) and consequential amendments (section 196) do not name the Nigeria Tax Administration Act.",
       },
+      {
+        place: "National Assembly: Nigeria Revenue Service (Establishment) Act 2025",
+        url: "https://nass.gov.ng/documents/download/11251",
+        searchedAt: "2026-11-21T20:21:45Z",
+        rawSha256: "c100f5f10b089ae9a162c0c05fe8ba425b0b79ae936065aa0788893a8ef2b2a8",
+        found:
+          "The Act refers to the Nigeria Tax Administration Act and repeals the Federal Inland Revenue Service (Establishment) Act 2007. It changes nothing in the Nigeria Tax Administration Act.",
+      },
+      {
+        place: "National Assembly: Joint Revenue Board of Nigeria (Establishment) Act 2025",
+        url: "https://nass.gov.ng/documents/download/11247",
+        searchedAt: "2026-11-21T20:21:46Z",
+        rawSha256: "97b648230dee2f6fc1e9f5248343dfb8d6c6d17b4c2d38abe661abee6201e458",
+        found:
+          "The Act refers to the Nigeria Tax Administration Act once. Its consequential amendment deletes section 86 of the Personal Income Tax Act; it changes nothing in the Nigeria Tax Administration Act.",
+      },
     ],
     amendments: [],
     notRead: [],
     // The Gazette copy the revenue service serves is a scanned image. Its machine-read text is too
     // unreliable to compare by machine, so each section is compared by reading.
     comparedSections: {
+      "4": {
+        method:
+          'Read by an AI assistant against page A 266 of the Gazette copy. The two read the same, except that the Gazette copy says "for the purpose of compliance" where the National Assembly\'s copy says "for the purposes of compliance".',
+        on: "2026-11-21",
+      },
+      "7": {
+        method:
+          'Read by an AI assistant against page A 267 of the Gazette copy. The two read the same, except that subsections (2) and (4) of the National Assembly\'s copy add "of this section" after the subsection they name.',
+        on: "2026-11-21",
+      },
+      "11": {
+        method:
+          'Read by an AI assistant against pages A 269 and A 270 of the Gazette copy. The two read the same, except that the Gazette copy writes "Nigeria Tax Act, 2025" where the National Assembly\'s copy writes "Nigeria Tax Act", three times, and in subsection (6)(b) says "pursuant to paragraph (a) of this subsection" where the National Assembly\'s copy says "under paragraph (a)".',
+        on: "2026-11-21",
+      },
       "31": {
         method:
-          'Read by an AI assistant against the Gazette copy\'s words, kept as NTAA-NRS-31-COMPARATOR. The two read the same, except that subsection (3) of the National Assembly\'s copy adds "of this section" after "subsection (1)".',
+          'Read by an AI assistant against the Gazette copy\'s words, kept as NTAA-NRS-31-COMPARATOR, and its page A 281. The two read the same, except that subsection (3) of the National Assembly\'s copy adds "of this section" after "subsection (1)".',
         on: "2026-11-21",
+      },
+      "33": {
+        method:
+          "Read by an AI assistant against page A 281 of the Gazette copy. The two read the same word for word; the National Assembly's copy has one comma more, in subsection (4)(b).",
+        on: "2026-11-21",
+      },
+      "147": {
+        method:
+          "The three definitions the guides quote were read by an AI assistant against pages A 330 and A 332 of the Gazette copy. They read the same; the Gazette copy writes the defined terms without capital letters. The rest of section 147 was not compared.",
+        on: "2026-11-21",
+        only: ['"Nigerian Company" means', '"Tax Authority" means', '"Taxable Person" means'],
       },
     },
     conflicts: [
@@ -380,13 +494,13 @@ export const guideAmendmentRecords: readonly AmendmentRecord[] = [
         note: "The National Assembly's copy prints 26 June 2025 at its head, and its section 148 gives the Act's name only. The Gazette copy served by the revenue service prints 1 January 2026 at its head, and its section 148 says the Act comes into effect on 1 January 2025. Both places in the Gazette copy were read from the page images by an AI assistant on 21 November 2026. Under every one of these the Act is in force from 1 January 2026, the day used here. No guide states when the Act commenced, and none may while this is open.",
       },
       {
-        about: "three words in section 31(3)",
-        sections: ["31"],
+        about: "small differences of wording between the two official copies",
+        sections: ["4", "7", "11", "31"],
         open: false,
-        note: 'The National Assembly\'s copy says "under subsection (1) of this section"; the Gazette copy says "under subsection (1)". Both point to the same subsection.',
+        note: 'Section 4: "purpose" in the Gazette copy, "purposes" in the National Assembly\'s. Sections 7(2), 7(4) and 31(3): the National Assembly\'s copy adds "of this section". Section 11: the Gazette copy adds ", 2025" after "Nigeria Tax Act" three times, and words subsection (6)(b) differently. None is in a number, a time limit or who must act. The guides quote the National Assembly\'s copy.',
       },
     ],
     limits:
-      "The search covers the National Assembly's published list and the Nigeria Tax Act 2025 on the days shown. The Gazette copy is a scanned image and has been compared with this copy for section 31 only. No Gazette index was searched and no court decision was looked for.",
+      "The search covers the National Assembly's published list and the other three revenue Acts of 2025 on the days shown. The Gazette copy is a scanned image: sections 4, 7, 11, 31 and 33 and three definitions of section 147 were compared with it by reading its page images, and no other section was. No Gazette index was searched and no court decision was looked for.",
   },
 ];

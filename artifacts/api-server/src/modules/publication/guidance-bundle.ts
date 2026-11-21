@@ -66,7 +66,8 @@ export async function buildGuideCandidate(
     const passage = passages(source.id);
     if (!passage) throw Error(`GUIDE_SOURCE_PASSAGE_MISSING:${id}:${source.id}`);
     used.push(passage);
-    const decision = guideSourceDecision(passage, now, records);
+    const quotes = built.claims.filter((c) => c.sourceId === source.id).map((c) => c.quote);
+    const decision = guideSourceDecision(passage, now, records, quotes);
     if (decision.status !== "approved")
       notCurrent.push(
         `${id}: ${source.title} (${source.id}) is not marked current: ${decision.reasons.join("; ")}.`,
@@ -173,7 +174,8 @@ export async function guideClaimScopeProblems(
     problems.push("the candidate's claims are not what the claim map yields from its sources");
   for (const line of rebuilt.missingEvidence) problems.push(line);
   for (const source of bundle.sources) {
-    const decision = guideSourceDecision(held.get(source.id)!, now, records);
+    const quotes = c.claims.filter((claim) => claim.sourceId === source.id).map((claim) => claim.quote);
+    const decision = guideSourceDecision(held.get(source.id)!, now, records, quotes);
     if (
       decision.status !== source.status ||
       decision.operativeTextConfirmed !== source.operativeTextConfirmed ||

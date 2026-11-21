@@ -61,6 +61,7 @@ on one of these hosts:
 - `nipc.gov.ng` and `m.nipc.gov.ng` (Nigerian Investment Promotion Commission, which serves copies
   of the Business Facilitation Act and the Labour Act)
 - `fmino.gov.ng` (Federal Ministry of Information and National Orientation)
+- `budgetoffice.gov.ng` (Budget Office of the Federation, which serves the Finance Acts)
 
 ## What approving this file means
 

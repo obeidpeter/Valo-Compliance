@@ -45,6 +45,7 @@ export const guidanceOfficialHosts = [
   "nipc.gov.ng",
   "m.nipc.gov.ng",
   "fmino.gov.ng",
+  "budgetoffice.gov.ng",
 ] as const;
 
 /** Sentences of the policy file the code depends on. The policy is refused if the file lacks one. */
