@@ -213,10 +213,16 @@ artifact, so the owner can open them.
 As for customer requests (decision 0008): a login that can do nothing but publish.
 
 - A migration creates `valo_publisher_login`, which may only become the publisher role.
-- The publisher runs on its own connection (`VALO_PUBLISHER_DATABASE_URL`).
-- The database refuses a change to `published` or `withdrawn` from a session that logged in as
-  anyone else, so the application's own login cannot publish even by switching role.
+- A release runs on the publisher's own connection (`VALO_PUBLISHER_DATABASE_URL`), which must lead
+  to the application's own database.
+- The database refuses a change to `published` from a session that logged in as anyone else, so the
+  application's own login cannot publish even by switching role. Holding and withdrawing a version
+  take content away, and stay open to the application's login.
 - An operator script sets the login's password, which is kept in the secret store.
+
+This limits who can release. It does not move the gates into the database: the publisher's login
+could still publish a version with one statement, so its connection string goes only to the
+command that publishes.
 
 ## What this decision does not do
 

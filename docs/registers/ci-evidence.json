@@ -1417,6 +1417,13 @@
     },
     {
       "requirement": "EDP-009",
+      "job": "postgres",
+      "file": "artifacts/api-server/src/modules/publication/publication-guards.integration.test.ts",
+      "test": "a content version is published only by a session that logged in as the publisher",
+      "proves": "PostgreSQL refuses to set a candidate version to published from the application's own login, as itself or as the publisher role, and accepts it from a session that logged in as the publisher login; that login holds nothing itself, can become only the publisher role, and as that role can read no customer drafts or orders, change no price and add no version; the real release runs on that connection and still refuses a candidate that fails its gates."
+    },
+    {
+      "requirement": "EDP-009",
       "job": "foundation",
       "file": "artifacts/api-server/src/modules/sources/source-controls.test.ts",
       "test": "HTML extraction preserves untrusted text but cannot execute scripts or fetch document resources",
