@@ -19,42 +19,19 @@ import { EmptyState, ErrorState, Notice, Skel } from "@/components/states";
 import { describeError } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import { live } from "@/lib/checker";
+import { REMINDER_STATUS, reminderMeaning, reminderNeedsHelp, triedTimes } from "@/lib/reminder-words";
 import { cn } from "@/lib/utils";
 
 const OFFSETS = Object.values(ReminderPreferencesInputOffsetsItem) as Offset[];
 const offsetLabel = (n: number) =>
   n === 0 ? "On the due date" : n === 1 ? "1 day before" : n + " days before";
-const STATUS: Record<ReminderRecordStatus, { label: string; tone: string; desc: string }> = {
-  held: { label: "Held", tone: "pill-ochre", desc: "Not sent: delivery is not available." },
-  pending: { label: "Pending", tone: "pill-ink", desc: "Scheduled, not yet sent." },
-  sent: {
-    label: "Accepted by provider",
-    tone: "pill-forest",
-    desc: "The email provider accepted this message. Delivery to your inbox has not been confirmed.",
-  },
-  cancelled: { label: "Cancelled", tone: "pill-ink", desc: "Will not be sent." },
-  failed: {
-    label: "Not confirmed",
-    tone: "pill-ochre",
-    desc: "Provider acceptance was not confirmed. A retry uses the same message reference, not a new message.",
-  },
-};
-const REASONS: Record<string, string> = {
-  EMAIL_PROVIDER_NOT_CONFIGURED:
-    "New delivery attempts are paused. Your preference and task are saved; no inbox delivery has been confirmed.",
-  EMAIL_REPLAY_WINDOW_EXPIRED:
-    "The previous outcome is unconfirmed and its safe retry window has ended. Delivery is paused to avoid a duplicate. Your task is saved.",
-  EMAIL_FIRST_ATTEMPT_UNKNOWN:
-    "The first attempt time could not be verified. Delivery is paused to avoid a duplicate. Contact support; your task is saved.",
-  TASK_REVIEW_REQUIRED: "Review this task before reminders can resume.",
-  EMAIL_DISPATCH_IN_PROGRESS: "An email attempt is in progress. Inbox delivery has not been confirmed.",
-  REMINDERS_OPTED_OUT: "Reminders were turned off before dispatch.",
-  TASK_NO_LONGER_SCHEDULED: "This task no longer has an active confirmed reminder date.",
-  SCHEDULE_CHANGED: "The confirmed date or selected timing changed.",
-  SOURCE_NO_LONGER_ELIGIBLE:
-    "The supporting guidance needs review. No statutory reminder will be sent from it.",
-  PREFERENCES_CHANGED: "Your reminder preferences changed.",
-  TASK_CHANGED: "The task changed; this earlier reminder was cancelled.",
+/** The colour of each state's label. */
+const TONE: Record<ReminderRecordStatus, string> = {
+  held: "pill-ochre",
+  pending: "pill-ink",
+  sent: "pill-forest",
+  cancelled: "pill-ink",
+  failed: "pill-ochre",
 };
 
 export default function RemindersPage() {
@@ -107,7 +84,7 @@ export default function RemindersPage() {
     setErr(null);
     setSavedNote(false);
     if (enabled && offsets.length < 1) {
-      setErr("Choose at least one timing while reminders are on.");
+      setErr("Choose at least one time while reminders are on.");
       return;
     }
     save.mutate(
@@ -152,11 +129,8 @@ export default function RemindersPage() {
         <h1 className="font-display mt-2 text-4xl">Reminders</h1>
       </div>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        Off unless you turn them on. Reminders only apply to tasks with a due date you confirmed.
-      </p>
-      <p role="note" className="hint mt-3">
-        Development-only delivery: sending stays off unless an approved sender and the specifically authorized
-        verified owner recipient are configured. Provider acceptance is not inbox delivery.
+        Reminders are off unless you turn them on. They apply only to tasks with a due date you have
+        confirmed.
       </p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.15fr]">
@@ -181,22 +155,25 @@ export default function RemindersPage() {
                 data-testid="status-delivery"
               >
                 <p className="flex items-center gap-2 font-medium">
-                  {p.deliveryAvailable ? <BellRing className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-                  {p.deliveryAvailable ? "Delivery available" : "Delivery not available"}
+                  {p.deliveryAvailable ? (
+                    <BellRing className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <BellOff className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {p.deliveryAvailable ? "Test emails only" : "Reminder emails are not being sent yet"}
                 </p>
-                {!p.deliveryAvailable && (
-                  <p className="mt-1 text-foreground/80">
-                    {p.deliveryBlocker ?? "No reminder channel is configured."} Your choices are stored, but
-                    nothing will be sent and scheduled reminders stay held.
-                  </p>
-                )}
+                <p className="mt-1 text-foreground/80">
+                  {p.deliveryAvailable
+                    ? "Valo is still being built. A reminder is sent only as a test, to the workspace owner's verified email address."
+                    : "You can save your choices now. Nothing is sent, and each reminder stays on hold, until sending is switched on."}
+                </p>
               </div>
 
               <label className="flex cursor-pointer items-center justify-between gap-4">
                 <span>
-                  <span className="block font-medium">Remind me about due tasks</span>
+                  <span className="block font-medium">Send email reminders before a task is due</span>
                   <span className="text-sm text-muted-foreground">
-                    Opt-in. You can turn this off at any time.
+                    Off unless you turn it on. You can turn it off at any time.
                   </span>
                 </span>
                 <span className="relative inline-flex">
@@ -218,7 +195,7 @@ export default function RemindersPage() {
               </label>
 
               <fieldset disabled={!enabled} className="disabled:opacity-50">
-                <legend className="label">When (choose 1 to 4)</legend>
+                <legend className="label">How long before the due date (choose up to 4)</legend>
                 <div className="flex flex-wrap gap-2">
                   {OFFSETS.map((o) => {
                     const on = offsets.includes(o);
@@ -247,20 +224,20 @@ export default function RemindersPage() {
                     );
                   })}
                 </div>
-                <p className="hint">Times use {p.timezone}.</p>
+                <p className="hint">Each reminder is planned for 09:00, Lagos time.</p>
               </fieldset>
 
               {conflict && (
-                <Notice title="Preferences changed in another tab">
-                  Your selections above are kept. Load the latest saved preferences to continue; this replaces
-                  your selections.
+                <Notice title="Your preferences were changed somewhere else">
+                  What you chose above is still here. To go on, load the preferences that were saved last.
+                  That replaces what you chose above.
                   <button
                     type="button"
                     className="btn btn-ink btn-sm mt-3"
                     onClick={loadLatest}
                     data-testid="button-reload-prefs"
                   >
-                    Load latest
+                    Load the saved preferences
                   </button>
                 </Notice>
               )}
@@ -275,9 +252,9 @@ export default function RemindersPage() {
                   className="rounded-xl bg-secondary px-4 py-3 text-sm"
                   data-testid="status-saved"
                 >
-                  Preferences saved. This does not send anything
-                  {p.deliveryAvailable ? "" : ", and delivery is currently unavailable"}. Check the log for
-                  each reminder's actual status.
+                  Preferences saved. Saving sends nothing
+                  {p.deliveryAvailable ? "" : ", and reminder emails are not being sent yet"}. The delivery
+                  log shows what has happened to each reminder.
                 </p>
               )}
               <button
@@ -293,11 +270,11 @@ export default function RemindersPage() {
         </section>
 
         <section aria-labelledby="log-h">
-          <div className="mb-4 flex items-end justify-between">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
             <h2 id="log-h" className="font-display text-2xl">
               Delivery log
             </h2>
-            <span className="text-xs text-muted-foreground">Actual status, from the server</span>
+            <span className="text-xs text-muted-foreground">What has happened to each reminder</span>
           </div>
           {log.isLoading ? (
             <div className="grid gap-2">
@@ -308,68 +285,56 @@ export default function RemindersPage() {
           ) : log.isError ? (
             <ErrorState error={log.error} onRetry={() => log.refetch()} />
           ) : records.length === 0 ? (
-            <EmptyState
-              mark={<Clock className="h-5 w-5 text-muted-foreground" />}
-              title="No reminders scheduled"
-            >
-              Reminders appear here once enabled and a task has a confirmed due date.
+            <EmptyState mark={<Clock className="h-5 w-5 text-muted-foreground" />} title="No reminders yet">
+              A reminder appears here once reminders are on and a task has a due date you have confirmed.
             </EmptyState>
           ) : (
             <ul className="surface divide-y divide-border overflow-hidden" data-testid="list-reminders">
-              {records.map((r) => {
-                const s = STATUS[r.status] ?? { label: r.status, tone: "pill-ink", desc: "" };
-                return (
-                  <li
-                    key={r.id}
-                    className="grid gap-1 p-4 sm:grid-cols-[1fr_auto] sm:items-center"
-                    data-testid={"row-reminder-" + r.id}
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {taskTitle.get(r.taskId) ?? "Archived or unavailable task"}
-                      </p>
-                      <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-                        scheduled {formatDateTime(r.scheduledAt)}
-                        {r.deliveredAt ? " · delivered " + formatDateTime(r.deliveredAt) : ""}
-                      </p>
+              {records.map((r) => (
+                <li
+                  key={r.id}
+                  className="grid gap-1 p-4 sm:grid-cols-[1fr_auto] sm:items-center"
+                  data-testid={"row-reminder-" + r.id}
+                >
+                  <div className="min-w-0">
+                    <p className="break-words text-sm font-medium">
+                      {taskTitle.get(r.taskId) ?? "A task no longer in your list"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Planned for {formatDateTime(r.scheduledAt)}
+                      {r.deliveredAt ? " · Delivered " + formatDateTime(r.deliveredAt) : ""}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">{reminderMeaning(r)}</p>
+                    {reminderNeedsHelp(r) && (
+                      <Link
+                        href="/support"
+                        className="mt-1 inline-block text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
+                      >
+                        Report a problem
+                      </Link>
+                    )}
+                    {r.lastAttemptAt && (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {r.reason === "EMAIL_ATTEMPT_LIMIT_REACHED"
-                          ? "Delivery paused after five attempts. Your task and due date are unchanged."
-                          : r.reason === "EMAIL_ACCEPTANCE_UNCONFIRMED"
-                            ? s.desc
-                            : r.reason
-                              ? (REASONS[r.reason] ?? "This reminder is paused. Contact support for details.")
-                              : s.desc}
+                        {triedTimes(r.attempts)} Last tried {formatDateTime(r.lastAttemptAt)}.
                       </p>
-                      {r.reason === "EMAIL_ATTEMPT_LIMIT_REACHED" && (
-                        <Link
-                          href="/help"
-                          className="mt-1 inline-block text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4"
-                        >
-                          Contact support
-                        </Link>
-                      )}
-                      {r.lastAttemptAt && (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Attempts: {r.attempts} · Last attempt {formatDateTime(r.lastAttemptAt)}
-                        </p>
-                      )}
-                      {r.nextAttemptAt && (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {r.reason === "EMAIL_DISPATCH_IN_PROGRESS"
-                            ? "If interrupted, recovery is available after "
-                            : "Retry after "}
-                          {formatDateTime(r.nextAttemptAt)} if reminders are still enabled.
-                        </p>
-                      )}
-                    </div>
-                    <span className={"pill w-fit " + s.tone}>
-                      <span className="dot" />
-                      {s.label}
-                    </span>
-                  </li>
-                );
-              })}
+                    )}
+                    {r.nextAttemptAt && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {r.reason === "EMAIL_DISPATCH_IN_PROGRESS"
+                          ? "If this try is cut short, Valo tries again after "
+                          : r.status === "held"
+                            ? "Valo looks at this again after "
+                            : "Valo tries again after "}
+                        {formatDateTime(r.nextAttemptAt)}, if reminders are still on.
+                      </p>
+                    )}
+                  </div>
+                  <span className={"pill w-fit " + (TONE[r.status] ?? "pill-ink")}>
+                    <span className="dot" />
+                    {REMINDER_STATUS[r.status]?.label ?? r.status}
+                  </span>
+                </li>
+              ))}
             </ul>
           )}
         </section>

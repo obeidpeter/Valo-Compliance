@@ -835,6 +835,48 @@ What is checked, and what is not:
   change is not in the repository.
 - Closing the tab or reloading still shows the browser's own warning, as before.
 
+### Phase 6: the reminders in plain words
+
+The reminders screen spoke in the words of the system that sends email. It now says the same
+things in the customer's words.
+
+| Before | Now |
+| --- | --- |
+| "Development-only delivery: sending stays off unless an approved sender and the specifically authorized verified owner recipient are configured. Provider acceptance is not inbox delivery." and "Delivery not available", with a note written for operators | "Reminder emails are not being sent yet", with "You can save your choices now. Nothing is sent, and each reminder stays on hold, until sending is switched on." |
+| "Delivery available" | "Test emails only", with "Valo is still being built. A reminder is sent only as a test, to the workspace owner's verified email address." |
+| "Remind me about due tasks", "Opt-in. You can turn this off at any time." | "Send email reminders before a task is due", "Off unless you turn it on. You can turn it off at any time." |
+| "When (choose 1 to 4)" | "How long before the due date (choose up to 4)" |
+| "Times use Africa/Lagos." | "Each reminder is planned for 09:00, Lagos time." |
+| "Held", "Pending", "Accepted by provider" | "On hold", "Scheduled", "Accepted by email service" |
+| "scheduled 25 Nov 2026, 10:00", in the typeface kept for codes | "Planned for 25 Nov 2026, 10:00" |
+| "Attempts: 2 · Last attempt …", "Retry after … if reminders are still enabled." | "Tried 2 times. Last tried …", "Valo tries again after …, if reminders are still on." |
+| "Actual status, from the server" | "What has happened to each reminder" |
+| "Contact support", leading to the help page | "Report a problem", leading to the form |
+
+What is kept:
+
+- "Delivery log", the requirement's own name for it (WRK-003).
+- The difference between the email service accepting a message and the message reaching an inbox.
+  No label says "sent" or "delivered". An accepted message reads "The email service accepted this
+  message. That does not show it reached your inbox."
+- Every reason the server records has a sentence. They are in `lib/reminder-words.ts`.
+
+Corrected on the way:
+
+- A cancelled reminder of an archived task had no sentence of its own, and read "This reminder is
+  paused. Contact support for details." It now reads "The task was archived." A reason the screen
+  does not know says only what the reminder's state means.
+- The hour is stated. It is the hour the server plans every reminder for.
+- On a phone the log's heading broke over two lines, and a long task title was cut off. The
+  heading's caption now goes under it, and a title wraps.
+
+Not changed: the reminder email's own words, which are the server's, and the note the server
+sends for operators, which the screen no longer shows. No reminder email is sent to a customer
+yet.
+
+One script that needs a verified test account, and so runs in no CI job, looked for "held" in the
+log. It now looks for "on hold". It was updated and not run.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
