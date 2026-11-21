@@ -462,8 +462,7 @@ The last of the public pages. Each is headed with the name its links give it.
   - How to download a document. The answer named an "Export" control the editor does not have. It
     now says where the Word and PDF files are made.
 - **About.** "What works today" is in plain words, and says that the drafting assistant is AI
-  and runs only when asked for and agreed to. It no longer lists proposals, which no document here
-  is for.
+  and runs only when asked for and agreed to.
 - **Pricing.** The page still opens on "Prices have not been set". The disabled "Checkout
   unavailable" button is gone; the page says that payments are switched off.
 
