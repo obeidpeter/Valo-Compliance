@@ -23,6 +23,7 @@ import { formatDateTime, formatDay } from "@/lib/format";
 import { describeAssessmentChange } from "@/lib/assessment-changes";
 import { reviewFacts, displayFact, factLabel, live } from "@/lib/checker";
 import { RESULT_LABELS, RESULT_TONES, factAtPath, canCreateSourceTask } from "@/lib/rich-checker";
+import { shortRulesVersion } from "@/lib/result-words";
 import { useToast } from "@/hooks/use-toast";
 
 function counts(a: SavedAssessment) {
@@ -95,7 +96,9 @@ export function AssessmentsList() {
                       <span className="block font-medium">{formatDateTime(a.createdAt)}</span>
                       <span className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                         <span>Rules as at {formatDay(a.result.asOfDate)}</span>
-                        <span className="min-w-0 break-all">Rules version {a.result.rulesetVersion}</span>
+                        <span className="min-w-0 break-all" title={a.result.rulesetVersion}>
+                          Rules version {shortRulesVersion(a.result.rulesetVersion)}
+                        </span>
                         <span>
                           {a.profileRevision
                             ? "From your profile, version " + a.profileRevision

@@ -7,6 +7,7 @@ import { factLabel } from "@/lib/checker";
 import { formatDay } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { MISSING_ANSWER_STATE_LABELS, RESULT_LABELS, RESULT_TONES } from "@/lib/rich-checker";
+import { resultGaps, resultNotice, shortRulesVersion } from "@/lib/result-words";
 
 export function AssessmentResultView({
   result,
@@ -28,6 +29,8 @@ export function AssessmentResultView({
   const groups = labels
     .map((label) => ({ label, items: result.items.filter((i) => i.label === label) }))
     .filter((g) => g.items.length);
+  // The box below says that nothing was found, so the list of what is not covered does not repeat it.
+  const gaps = resultGaps(result.gaps, result.items.length === 0);
   return (
     <div className="grid min-w-0 gap-6" data-testid="assessment-result">
       <div
@@ -35,7 +38,9 @@ export function AssessmentResultView({
         data-testid="result-basis"
       >
         <span>Rules as at {formatDay(result.asOfDate)}</span>
-        <span className="min-w-0 break-all">Rules version {result.rulesetVersion}</span>
+        <span className="min-w-0 break-all" title={result.rulesetVersion}>
+          Rules version {shortRulesVersion(result.rulesetVersion)}
+        </span>
         <span>
           {result.sourceBackedRecommendations === 1
             ? "1 result with a source"
@@ -48,7 +53,7 @@ export function AssessmentResultView({
 
       {result.notice && (
         <Notice tone="ink" title="Read this first">
-          {result.notice}
+          {resultNotice(result.notice)}
         </Notice>
       )}
 
@@ -82,7 +87,7 @@ export function AssessmentResultView({
         ))
       )}
 
-      {(result.unanswered.length > 0 || result.gaps.length > 0) && (
+      {(result.unanswered.length > 0 || gaps.length > 0) && (
         <div className="grid gap-4 md:grid-cols-2">
           {result.unanswered.length > 0 && (
             <div className="surface p-5">
@@ -96,11 +101,11 @@ export function AssessmentResultView({
               </ul>
             </div>
           )}
-          {result.gaps.length > 0 && (
+          {gaps.length > 0 && (
             <div className="surface p-5">
               <p className="eyebrow">What Valo does not cover yet</p>
               <ul className="mt-3 grid gap-2 text-sm leading-relaxed">
-                {result.gaps.map((g) => (
+                {gaps.map((g) => (
                   <li key={g} className="border-l-2 border-[hsl(var(--ochre))] pl-3">
                     {g}
                   </li>

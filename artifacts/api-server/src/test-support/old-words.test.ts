@@ -32,9 +32,20 @@ const NOT_FOR_CUSTOMERS = [
 
 /**
  * Text that holds an old word and is not shown as written, each with why. A line here is an
- * exception to the word list, so it says what it is. There is none today.
+ * exception to the word list, so it says what it is.
  */
-const NOT_SHOWN_AS_WRITTEN: { file: string; text: RegExp; why: string }[] = [];
+const NOT_SHOWN_AS_WRITTEN: { file: string; text: RegExp; why: string }[] = [
+  {
+    file: "src/lib/result-words.ts",
+    text: /^Conditional source-governed guidance, not legal certification\./,
+    why: "the rules engine's own notice, kept so that the screen can say it in the site's words instead",
+  },
+  {
+    file: "src/lib/result-words.ts",
+    text: /^Rule is not released$/,
+    why: "the rules engine's own reason for holding a rule back, kept so that the screen can say it in the site's words instead",
+  },
+];
 
 function sourceFiles(directory: string): string[] {
   const found: string[] = [];

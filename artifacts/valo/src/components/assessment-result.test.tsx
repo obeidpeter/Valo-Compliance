@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AssessmentItem, AssessmentResult } from "@workspace/api-client-react";
 import { factLabel } from "@/lib/checker";
+import { resultGaps, resultNotice } from "@/lib/result-words";
 import { AssessmentResultView } from "./assessment-result";
 
 const source = {
@@ -36,7 +37,8 @@ const item = (
   ...extra,
 });
 
-// The excluded-sector gap is the checker's own wording (lib/valo-core/src/checker.ts).
+// The excluded-sector gap is the checker's own wording (lib/valo-core/src/checker.ts). The page says
+// it, and the checker's other sentences, in the site's words (lib/result-words.ts).
 const excludedSectors =
   "High-impact healthcare, financial services and energy activities require activity-specific released evidence.";
 
@@ -105,8 +107,27 @@ test("every result explains in plain words why it is shown, with its rule, versi
 
 test("the result page shows every coverage gap and the excluded sectors, and no score", () => {
   assert.ok(html.includes("What Valo does not cover yet"));
-  for (const gap of result.gaps) assert.ok(html.includes(`${gap}</li>`), gap);
-  assert.ok(html.includes(result.notice));
+  // Each thing the checker says it does not cover is on the page, in the site's words.
+  const said = resultGaps(result.gaps, false);
+  assert.equal(said.length, result.gaps.length);
+  for (const gap of said) assert.ok(html.includes(`${gap}</li>`), gap);
+  assert.ok(
+    html.includes(
+      "Valo does not cover every state, the FCT and every local government area. Check what applies in Lagos with the authorities there.</li>",
+    ),
+  );
+  // The excluded sectors are named.
+  assert.ok(
+    html.includes(
+      "Healthcare, financial services and energy are covered only where a published rule is about that activity.</li>",
+    ),
+  );
+  // The notice says it is not a legal certificate, and that a missing answer is no exemption.
+  assert.ok(html.includes(resultNotice(result.notice)));
+  assert.ok(html.includes("It is not a legal certificate."));
+  assert.ok(html.includes("A missing or unknown answer never means that you are exempt."));
+  // The checker's own wording is not printed beside them.
+  for (const sent of [...result.gaps, result.notice]) assert.ok(!html.includes(sent), sent);
   assert.doesNotMatch(html, /score|\d\s*%|percent/i);
 });
 
@@ -126,7 +147,12 @@ test("the result page shows why a held rule gives no result and links each offic
       React.createElement(AssessmentResultView, { result: held }),
     ),
   );
-  assert.ok(page.includes("SYN-HELD: Evidence is stale or not yet checked</li>"), "the held rule's reason");
+  assert.ok(
+    page.includes(
+      "Rule SYN-HELD is on hold and gives no result here: its review date has passed, or its sources have not been checked yet.</li>",
+    ),
+    "the held rule's reason",
+  );
   assert.ok(
     page.includes("No published rule covers these answers yet."),
     "no result is presented as a finding",
