@@ -165,6 +165,13 @@ export function guideOwnBlocks<T extends { id: string }>(blocks: readonly T[]) {
 }
 
 /**
+ * A claim's locator as a reader sees it. A locator that names words of the text, the only kind the
+ * locator check accepts for a passage with no section number in it, is shown as those words.
+ */
+export const displayLocator = (locator: string) =>
+  locator.replace(/^(?:heading|passage|paragraph)\s*:\s*/i, "the words: ");
+
+/**
  * The sources a guide lists: one entry for each place a claim points to, as the guide page lists
  * them. A claim whose source is missing, or is not an https address, is left out here; the gate holds
  * such a candidate on its own.
@@ -176,7 +183,37 @@ export function guideReferences(
     .flatMap((claim) => {
       const source = bundle.sources.find((s) => s.id === claim.sourceId);
       if (!source || new URL(source.url).protocol !== "https:") return [];
-      return [{ url: source.url, title: source.title, locator: claim.locator }];
+      return [{ url: source.url, title: source.title, locator: displayLocator(claim.locator) }];
     })
     .filter((s, i, all) => all.findIndex((x) => x.url === s.url && x.locator === s.locator) === i);
+}
+
+/**
+ * A guide's title and own words as the guide page shows them, read from the document its candidate
+ * carries: a paragraph for each block and a bulleted line for each item of a list. Null for a body
+ * that is not a guide's document, such as the plain text an older fixture carries.
+ */
+export function guidePageText(body: string): { title: string; body: string } | null {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(body);
+  } catch {
+    return null;
+  }
+  const parsed = documentInput.safeParse(raw);
+  if (!parsed.success || !parsed.data.content.blocks.some((b) => b.id === GUIDE_PART.covers)) return null;
+  const own = guideOwnBlocks(parsed.data.content.blocks);
+  return {
+    title: parsed.data.title,
+    body: own
+      .map((b) =>
+        b.type === "list"
+          ? b.text
+              .split("\n")
+              .map((item) => `• ${item}`)
+              .join("\n")
+          : b.text,
+      )
+      .join("\n\n"),
+  };
 }

@@ -15,9 +15,15 @@ export type GuideProvenance = {
   version: number;
 };
 
-/** What a guide's limits say whichever guide it is. A guide's own exclusions come from its claim map. */
+/** What every guide covers, in the words the guide page and its files show under "What it covers". */
+export const GUIDE_SCOPE =
+  "Nigeria's national rules on this subject. It does not cover rules made by a state, the Federal Capital Territory or a local government.";
+/** Every guide's limits, in the words shown under "Limits you should know". */
 export const GUIDE_LIMITATIONS =
-  "Conditional general information, not a compliance determination, comprehensive local coverage or professional review. Use the stated facts, exceptions, source period and official next steps. Development evaluation only; unresolved evidence holds publication.";
+  "General information, not advice on your own situation. It does not decide whether a rule applies to your business or whether your business complies. A rule can change after the date the sources were checked. Read the official source, and ask a qualified adviser about your own case.";
+/** A guide's sources are checked again within this many days, the cadence the source gate applies
+ * to every subject a guide covers (sourceTargetAllowed). */
+export const GUIDE_REVIEW_DAYS = 30;
 
 /**
  * The canonical guide for one exact R1 guidance ID: its retained words, rebuilt from the intake and
@@ -46,10 +52,10 @@ export async function guidanceCandidate(
     provenance.noteHash !== intake.provenance.noteHash
   )
     throw Error("TEMPLATE_PROVENANCE_OR_BODY_MISMATCH");
-  const scope: string = intake.catalogue.scope,
+  const scope = GUIDE_SCOPE,
     limitations = GUIDE_LIMITATIONS;
   const reviewedAt = now.toISOString(),
-    reviewBy = new Date(+now + 90 * 86400000).toISOString();
+    reviewBy = new Date(+now + GUIDE_REVIEW_DAYS * 86400000).toISOString();
   const document = guidanceReleaseDocument({
     section: intake.section,
     scope,

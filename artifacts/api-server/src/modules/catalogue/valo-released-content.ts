@@ -7,6 +7,8 @@ import {
   getPublicationArtifact,
   type ArtifactRef,
   currentOperationalPermission,
+  guidePageText,
+  guideReferences,
 } from "../publication";
 import { createDocumentInTransaction, getDocument } from "../documents";
 import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
@@ -72,12 +74,16 @@ export function projectReleasedResource(row: typeof valoContentVersions.$inferSe
   const b = publicationSchema.parse(row.bundle),
     c = b.candidate;
   if (c.contentClass !== "sourced_guidance") throw new Error("Not a released resource class");
+  // A guide prepared through the publisher carries its document; the page shows the guide's own
+  // words out of it. Any other body is shown as the text it is.
+  const guide = guidePageText(c.body);
   const first = c.body
     .split("\n")
     .find((l) => l.trim())
     ?.replace(/^#{1,6}\s+/, "")
     .trim();
-  const title = first && first.length <= 140 ? first : row.slug.replace(/-/g, " ");
+  const title = guide?.title ?? (first && first.length <= 140 ? first : row.slug.replace(/-/g, " "));
+  const body = guide?.body ?? c.body;
   const kind = c.coverage?.kind ?? "guidance";
   if (kind === "template") throw new Error("Resource classification mismatch");
   return {
@@ -86,19 +92,13 @@ export function projectReleasedResource(row: typeof valoContentVersions.$inferSe
     title,
     kind,
     industrySlugs: c.coverage?.industrySlugs ?? [],
-    summary: c.body.replace(/\s+/g, " ").slice(0, 260),
-    body: c.body,
+    summary: body.replace(/\s+/g, " ").slice(0, 260),
+    body,
     reviewedAt: c.sourceCheckDate,
     disclosure: c.disclosure,
     scope: c.scope,
     limitations: c.limitations,
-    sources: c.claims
-      .flatMap((claim) => {
-        const s = b.sources.find((s) => s.id === claim.sourceId);
-        if (!s || new URL(s.url).protocol !== "https:") return [];
-        return [{ url: s.url, title: s.title, locator: claim.locator }];
-      })
-      .filter((s, i, a) => a.findIndex((x) => x.url === s.url && x.locator === s.locator) === i),
+    sources: guideReferences(b),
   };
 }
 export async function releasedResources() {

@@ -9,8 +9,11 @@
  * Used only inside the module, and not re-exported: claim-locator.ts, operational-restrictions.ts, publication-final-check.ts.
  */
 export * from "./candidate-arithmetic";
+export * from "./guidance-bundle";
 export * from "./guidance-candidate";
+export * from "./guidance-claim-map";
 export * from "./guidance-document";
+export * from "./guidance-passages";
 export * from "./inference-operational-coverage";
 export * from "./operational-authoring-contract";
 export * from "./operational-content";
