@@ -91,6 +91,10 @@ Approving this file publishes nothing and spends nothing.
   later edit to this file ends the approval until the owner approves the new text.
 - Until then every guide is held with the reason `policy_not_owner_approved`, and its rights record
   is not cleared, because the basis of that record is point 7.
+- A published guide is shown on the site only while this file is still the file the owner approved.
+  After any edit to this file, every published guide leaves the site until it has been released
+  again under the newly approved text.
 - The owner's restriction file (`operational-publication-restrictions.json`) narrows this policy as
   it narrows the templates' one: a suspension, or an exclusion of guides or of Nigeria, stops guides
-  too.
+  too. Any change to that file takes the published guides off the site for as long as the change
+  stands, unless they are released again under it.

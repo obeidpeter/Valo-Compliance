@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { sha256, type PublicationBundle } from "@workspace/valo-core";
+import { digest, mandatoryEnhancedChecks, sha256, type PublicationBundle } from "@workspace/valo-core";
 import type { AmendmentRecord } from "./guidance-amendments";
 import { buildGuideCandidate } from "./guidance-bundle";
 import { retainedGuidePassages, type GuidePassages } from "./guidance-passages";
 import { guidancePolicy } from "./guidance-policy";
 import { assembleGuideBundle } from "./guidance-release";
+import { enhancedChecksFromReviews } from "./operational-review-contract";
 import type { ArtifactRef } from "./publication-artifacts";
 import { chatGPTPermissionRecord } from "./rights-applicability";
 
@@ -118,4 +119,50 @@ export async function assembledGuide(
     ...(options.records ? { amendmentRecords: options.records } : {}),
   });
   return { built, applicability, ...result };
+}
+
+/**
+ * A bundle with two made-up reviews that both pass, each answering the five enhanced checks from
+ * the guide's own first source. For tests of what follows the reviews: no model reviewed anything.
+ */
+export function withMadeUpReviews(bundle: PublicationBundle): PublicationBundle {
+  const evidenceHash = digest(bundle.sources);
+  const passage = bundle.sources[0]!.text.slice(0, 200);
+  const outputs = (["factual", "challenge"] as const).map((role) => ({
+    role,
+    output: {
+      verdict: "pass" as const,
+      findings: [],
+      missingEvidence: [],
+      observations: [],
+      enhancedChecks: mandatoryEnhancedChecks.map((name) => ({
+        name,
+        result: "pass" as const,
+        passage,
+        note: "made up for a test",
+      })),
+    },
+  }));
+  const reviewed: PublicationBundle = {
+    ...bundle,
+    reviews: outputs.map(({ role }) => ({
+      runId: `no-model-was-called-${role}`,
+      model: "none: made up for a test",
+      promptVersion: "made up for a test",
+      candidateHash: bundle.candidate.hash,
+      evidenceHash,
+      role,
+      verdict: "pass",
+      findings: [],
+      receivedOtherVerdict: false,
+    })),
+    enhancedChecks: enhancedChecksFromReviews(bundle, outputs),
+  };
+  reviewed.manifest = {
+    ...bundle.manifest,
+    status: "eligible",
+    reviewHash: digest({ draft: reviewed.draftRun, reviews: reviewed.reviews }),
+    checksHash: digest({ mechanical: reviewed.mechanicalChecks, enhanced: reviewed.enhancedChecks }),
+  };
+  return reviewed;
 }

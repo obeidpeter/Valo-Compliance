@@ -93,6 +93,11 @@ test("template downloads read storage outside the transaction that holds the sou
         record("rights evidence");
         return permitted;
       },
+      // No guide is among this test's versions; the guidance policy is never read.
+      guidancePolicy: async () => {
+        record("guidance policy file");
+        return { policy: { hash: "guidance-policy-hash", ownerApproved: false } };
+      },
       getPublicationArtifact: async (ref: { id: string }) => {
         record(`storage ${ref.id}`);
         return Buffer.from("master bytes");
