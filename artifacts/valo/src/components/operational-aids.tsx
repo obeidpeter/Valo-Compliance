@@ -2,7 +2,10 @@ import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { useListOperationalRecommendations } from "@workspace/api-client-react";
 
-/** Optional operational document aids. Not legal recommendations and not derived from checker duties. */
+/**
+ * Business documents offered under a result: the same list for everyone. They are not legal
+ * recommendations, and are not worked out from the result above them.
+ */
 export function OperationalAids() {
   const recs = useListOperationalRecommendations({
     query: { refetchInterval: 15000, refetchOnWindowFocus: true, retry: false },
@@ -16,7 +19,7 @@ export function OperationalAids() {
         data-testid="status-operational-aids-error"
       >
         <p className="min-w-0 text-muted-foreground">
-          Optional operational aids could not be loaded. Your results above are not affected.
+          A list of optional business documents could not be loaded. Your results above are not affected.
         </p>
         <button
           type="button"
@@ -25,7 +28,7 @@ export function OperationalAids() {
           onClick={() => recs.refetch()}
           data-testid="button-retry-operational-aids"
         >
-          {recs.isFetching ? "Retrying…" : "Retry"}
+          {recs.isFetching ? "Trying again…" : "Try again"}
         </button>
       </div>
     );
@@ -37,7 +40,7 @@ export function OperationalAids() {
       aria-labelledby="ops-aids-heading"
       data-testid="section-operational-aids"
     >
-      <p className="eyebrow">Optional operational aids</p>
+      <p className="eyebrow">Optional</p>
       <h3 id="ops-aids-heading" className="font-display mt-1 text-lg">
         Business documents you may find useful
       </h3>
@@ -47,7 +50,7 @@ export function OperationalAids() {
       </p>
       <ul className="mt-4 grid gap-2">
         {items.map((it) => (
-          <li key={it.id}>
+          <li key={it.id} className="min-w-0">
             <Link
               href={"/library/" + encodeURIComponent(it.slug)}
               className="group flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 text-sm transition-colors hover:bg-secondary"

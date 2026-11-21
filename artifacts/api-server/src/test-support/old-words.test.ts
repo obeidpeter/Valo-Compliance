@@ -13,7 +13,10 @@ import { oldWordsIn } from "./old-words";
  */
 const web = resolve(import.meta.dirname, "../../../valo");
 
-/** Screens and panels only staff or developers open. They keep the project's own words. */
+/**
+ * Screens and panels only staff or developers open. They keep the project's own words. A file that
+ * holds anything a customer can be shown is not listed, even where staff panels share it.
+ */
 const NOT_FOR_CUSTOMERS = [
   "src/screens/staff.tsx",
   "src/screens/privacy-operations.tsx",
@@ -21,12 +24,10 @@ const NOT_FOR_CUSTOMERS = [
   "src/screens/development.tsx",
   "src/components/staff-support-cases.tsx",
   "src/components/content-escalations.tsx",
-  "src/components/dispute-workflows.tsx",
   "src/components/source-evidence.tsx",
   "src/components/source-safety-controls.tsx",
   "src/components/editorial-record.tsx",
   "src/components/prepared-candidates.tsx",
-  "src/components/operational-aids.tsx",
 ];
 
 /**

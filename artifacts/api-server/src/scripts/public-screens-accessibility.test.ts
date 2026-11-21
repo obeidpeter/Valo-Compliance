@@ -472,6 +472,75 @@ test("a check that no published rule covers says so in plain words, says it is n
   }
 });
 
+// The list under a result is the same for everyone. The checks of the result answer it with nothing,
+// so neither the list nor its failure was ever on the screen for them.
+test("under a result, business documents are offered as optional, in words that say they are not advice and not chosen from the answers; when the list cannot be loaded the visitor is told the results are not affected and can try again", async () => {
+  const offered = api.ListOperationalRecommendationsResponse.parse({
+    items: [
+      {
+        id: "synthetic-document-1",
+        slug: "synthetic-invoice",
+        title: "Synthetic invoice",
+        type: "template",
+        summary: "Synthetic test fixture: what the document is for.",
+        industry: "retail-wholesale",
+      },
+    ],
+    total: 1,
+    page: 1,
+    heldTemplates: 0,
+  });
+  let failing = true;
+  const { respond } = checking();
+  const { page, errors, close } = await app.phone("/checker", async (route, method, path, query) => {
+    if (method === "GET" && path === "/public/recommendations")
+      return route.fulfill(
+        failing
+          ? { status: 500, contentType: "application/json", body: '{"error":"Synthetic failure"}' }
+          : { status: 200, contentType: "application/json", body: JSON.stringify(offered) },
+      );
+    return respond(route, method, path, query);
+  });
+  try {
+    await ready(page);
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    await page.getByTestId("assessment-result").waitFor();
+    // The list could not be loaded: what happened, what it does not change, and a way on.
+    const failed = page.getByTestId("status-operational-aids-error");
+    await expect(failed.locator("p")).toHaveText(
+      "A list of optional business documents could not be loaded. Your results above are not affected.",
+    );
+    await expect(failed).toHaveAttribute("role", "status");
+    const again = page.getByTestId("button-retry-operational-aids");
+    await expect(again).toHaveText("Try again");
+    assert.deepEqual(oldWordsIn(await failed.innerText()), []);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the list that could not be loaded"), []);
+    await page.setViewportSize({ width: 360, height: 640 });
+
+    failing = false;
+    await again.click();
+    const list = page.getByTestId("section-operational-aids");
+    await list.waitFor();
+    await expect(failed).toHaveCount(0);
+    await expect(list.locator(".eyebrow")).toHaveText("Optional");
+    await expect(list.getByRole("heading", { name: "Business documents you may find useful" })).toBeVisible();
+    await expect(list).toContainText(
+      "These are general business templates, shown the same way to everyone. They are not legal advice, are not chosen from your answers, and do not mean any duty applies to you.",
+    );
+    const link = page.getByTestId("link-aid-synthetic-invoice");
+    await expect(link).toContainText("Synthetic invoice");
+    await expect(link).toHaveAttribute("href", "/library/synthetic-invoice");
+    assert.deepEqual(oldWordsIn(await list.innerText()), []);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "the optional documents"), []);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
 // The redesign's word list (docs/architecture/frontend-redesign.md, "Words").
 test("no signed-out screen shows one of the project's own words that the word list replaced", async () => {
   const problems: string[] = [];
