@@ -2027,6 +2027,56 @@ test("before the editor or the tasks screen discards what the customer entered, 
   }
 });
 
+// The server refuses a change to a task that was changed somewhere else after it was opened. The
+// tasks screen says so itself, in the three places it can happen, and keeps what was typed.
+test("when a task was changed somewhere else, the tasks screen says so in plain words for a change of status, an archive and a save, and keeps what was typed", async () => {
+  const first = tasks[0]!.id;
+  const refusing: Api = async (route, method, path, query) => {
+    if ((method === "PATCH" || method === "DELETE") && path === `/workspace/tasks/${first}`)
+      await route.fulfill({
+        status: 409,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error:
+            "This task was changed somewhere else after you opened it. Your unsaved notes were not overwritten.",
+          currentRevision: 2,
+        }),
+      });
+    else await answer(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop("/workspace/tasks", refusing);
+  try {
+    await ready(page);
+    const card = page.getByTestId(`card-task-${first}`);
+    // A change of status.
+    await page.getByTestId(`select-state-${first}`).selectOption("in_progress");
+    await expect(card.getByRole("alert")).toHaveText(
+      "This task was changed somewhere else. The list now shows its newest version. Try again.",
+    );
+    // An archive.
+    await page.getByTestId(`button-archive-${first}`).click();
+    await page.getByTestId(`button-confirm-archive-${first}`).click();
+    await expect(card.getByRole("alert").last()).toHaveText(
+      "This task was changed somewhere else. The list now shows its newest version. Archive it again if you still want to.",
+    );
+    // A save of edits: what was typed stays in the form.
+    await page.getByTestId(`button-edit-${first}`).click();
+    const notes = page.getByTestId(`input-edit-${first}-notes`);
+    await notes.fill("Synthetic notes typed before the save was refused");
+    await page.getByTestId(`button-edit-${first}-submit`).click();
+    await expect(card).toContainText("This task was changed somewhere else");
+    await expect(card).toContainText("What you typed is still in the form below.");
+    await expect(notes).toHaveValue("Synthetic notes typed before the save was refused");
+    const said = await card.innerText();
+    assert.deepEqual(oldWordsIn(said), []);
+    assert.doesNotMatch(said, /elsewhere|refreshed/);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});
+
 // The browser's own box stopped the page while it asked. The app's dialog does not, so the editor
 // holds its autosave and the keyboard's save and undo while a question is open: otherwise a save
 // could be on its way when the customer chose, and the choice would do nothing.

@@ -140,7 +140,7 @@ test("template downloads read storage outside the transaction that holds the sou
     try {
       await assert.rejects(readReleasedMaster("version-1", "pdf", actor), {
         status: 404,
-        message: /evidence is unresolved/,
+        message: /while Valo confirms that it may be offered/,
       });
     } finally {
       permitted = true;
@@ -156,7 +156,7 @@ test("template downloads read storage outside the transaction that holds the sou
       try {
         await assert.rejects(readReleasedMaster("version-1", "pdf", actor), {
           status: 404,
-          message: /evidence is unresolved/,
+          message: /while Valo confirms that it may be offered/,
         });
       } finally {
         checkedStatus = "published";
@@ -171,7 +171,7 @@ test("template downloads read storage outside the transaction that holds the sou
     try {
       await assert.rejects(readReleasedMaster("version-1", "pdf", actor), {
         status: 404,
-        message: /withdrawn, expired or unavailable/,
+        message: /has been withdrawn or has expired/,
       });
     } finally {
       lockedStatus = "published";

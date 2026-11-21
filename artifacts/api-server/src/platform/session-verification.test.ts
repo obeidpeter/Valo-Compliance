@@ -117,7 +117,7 @@ test("everyday routes recheck the provider at least once a minute", async () => 
   assert.deepEqual(await sessions.verify(identity, "cached"), {
     ok: false,
     status: 401,
-    error: "Session is no longer active. Sign in again.",
+    error: "Your session has ended. Sign in again.",
   });
   assert.equal(state.calls, 2);
 });
@@ -149,7 +149,7 @@ test("refusals are never cached, so a newly verified email works at once", async
   state.user.locked = true;
   clock.now += SESSION_CACHE_TTL_MS;
   const locked = await sessions.verify(identity, "cached");
-  assert.equal(locked.ok || locked.error, "Account is suspended or locked");
+  assert.equal(locked.ok || locked.error, "Your account is suspended or locked.");
 });
 
 test("each session is checked on its own, and another user's session never passes", async () => {

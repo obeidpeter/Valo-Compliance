@@ -686,7 +686,7 @@ try {
       );
       await page!.getByRole("button", { name: "Save changes", exact: true }).click();
       expect((await conflict).status()).toBe(409);
-      await expect(page!.getByText("This task changed elsewhere", { exact: true })).toBeVisible();
+      await expect(page!.getByText("This task was changed somewhere else", { exact: true })).toBeVisible();
       await expect(notes).toHaveValue("Unsaved synthetic task notes");
       await page!.getByTestId("tab-done").click();
       await page!.getByTestId("button-confirm").click();

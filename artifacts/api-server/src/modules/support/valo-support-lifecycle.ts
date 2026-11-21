@@ -106,7 +106,11 @@ async function privateWorkspace(tx: Tx, id: string) {
     .select({ id: valoPrivacyTombstones.id })
     .from(valoPrivacyTombstones)
     .where(eq(valoPrivacyTombstones.workspaceId, id));
-  if (!row || erased) throw new ValoProblem(404, "The support workspace is unavailable.");
+  if (!row || erased)
+    throw new ValoProblem(
+      404,
+      "This workspace is no longer available, so its support requests cannot be opened.",
+    );
 }
 async function lockedCase(tx: Tx, id: string, workspaceId?: string) {
   const [first] = await tx
@@ -118,12 +122,12 @@ async function lockedCase(tx: Tx, id: string, workspaceId?: string) {
         workspaceId ? eq(valoSupportCases.workspaceId, workspaceId) : undefined,
       ),
     );
-  if (!first) throw new ValoProblem(404, "Support case not found.");
+  if (!first) throw new ValoProblem(404, "This support request was not found.");
   // Same workspace-before-case order as privacy quarantine; final status is
   // checked after the lock, so queued staff replies cannot recreate erased data.
   if (first.workspaceId) await privateWorkspace(tx, first.workspaceId);
   const [row] = await tx.select().from(valoSupportCases).where(eq(valoSupportCases.id, id)).for("update");
-  if (!row) throw new ValoProblem(404, "Support case not found.");
+  if (!row) throw new ValoProblem(404, "This support request was not found.");
   return row;
 }
 async function source(tx: Tx, row: Case) {
@@ -135,7 +139,7 @@ async function source(tx: Tx, row: Case) {
         and(eq(valoSupportTickets.id, row.ticketId!), eq(valoSupportTickets.workspaceId, row.workspaceId!)),
       )
       .for("share");
-    if (!r) throw new ValoProblem(404, "Support intake is unavailable.");
+    if (!r) throw new ValoProblem(404, "This support request can no longer be opened.");
     return {
       reference: `VALO-${r.id}`,
       category: r.category,
@@ -149,7 +153,7 @@ async function source(tx: Tx, row: Case) {
     .from(valoAccessSupport)
     .where(eq(valoAccessSupport.id, row.accessId!))
     .for("share");
-  if (!r) throw new ValoProblem(404, "Support intake is unavailable.");
+  if (!r) throw new ValoProblem(404, "This support request can no longer be opened.");
   return {
     reference: `VALO-ACCESS-${r.id}`,
     category: r.topic,
@@ -288,13 +292,16 @@ async function replay(
     );
   if (old) {
     if (old.payloadHash !== hash(input))
-      throw new ValoProblem(409, "This request key already belongs to a different action.");
+      throw new ValoProblem(
+        409,
+        "This was already sent once in a different form. Reload the page and try again.",
+      );
     return true;
   }
   if (row.version !== input.expectedVersion)
     throw new ValoProblem(
       409,
-      "This case changed elsewhere. Reload the latest case; your draft has not been applied.",
+      "This request was changed somewhere else after you opened it. Reload it to see what changed. What you sent has not been saved.",
       row.version,
     );
   return false;

@@ -32,7 +32,7 @@ export const verifiedWorkspace: RequestHandler = async (req, res, next) => {
   try {
     const auth = getAuth(req);
     if (!auth.userId || !auth.sessionId) {
-      res.status(401).json({ error: "Sign in with a verified email to access your workspace" });
+      res.status(401).json({ error: "You are not signed in, or your session has ended." });
       return;
     }
     const check = await sessions.verify(
@@ -61,7 +61,7 @@ export const sameOriginMutation: RequestHandler = (req, res, next) => {
   if (!trusted) {
     res.status(503).json({
       code: "ORIGIN_CONFIGURATION_UNAVAILABLE",
-      error: "Trusted site configuration is unavailable. No changes were saved.",
+      error: "Valo is not set up to accept changes at the moment. Nothing was saved. Try again later.",
     });
     return;
   }
@@ -74,7 +74,11 @@ export const sameOriginMutation: RequestHandler = (req, res, next) => {
       forwardedProtocolPresent: Boolean(req.get("x-forwarded-proto")),
       multiHopForwardedHost: Boolean(req.get("x-forwarded-host")?.includes(",")),
     });
-    res.status(403).json({ code: "UNTRUSTED_ORIGIN", error: "A same-origin JSON request is required" });
+    res.status(403).json({
+      code: "UNTRUSTED_ORIGIN",
+      error:
+        "This request was not sent the way Valo's own pages send one, so it was refused. Nothing was saved. Reload the page and try again.",
+    });
     return;
   }
   next();
