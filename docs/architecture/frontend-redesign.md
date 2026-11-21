@@ -770,6 +770,40 @@ are not checked.
 Words that appear only in a state it does not open, such as an error message or a dialog, are
 not read. Phase 6 goes through those messages.
 
+### Phase 6: asking before something is discarded
+
+Five places asked a question in the browser's own box. Its buttons read "OK" and "Cancel" and
+say nothing of what happens next.
+
+| Where | The question | Keep | Go ahead |
+| --- | --- | --- | --- |
+| Editor, Undo, with amounts not applied | "Undo, and discard the amounts you have not applied?" | "Keep them" | "Discard them and undo" |
+| Editor, restoring a version, with unsaved changes | "Restore version 2?" | "Keep my changes" | "Replace them with version 2" |
+| Editor, after a change somewhere else | "Discard what you typed here?" | "Keep what I typed" | "Discard mine and load the newest" |
+| Editor, resetting the amounts | "Discard the amounts you have not applied?" | "Keep them" | "Discard them" |
+| Tasks, choosing a view while editing a task | "Leave your task edits?" | "Stay and save them" | "Discard them and change view" |
+
+Each now asks in the app's own dialog, as the requirements check and the business profile
+already did. The heading names what would be lost. The button that keeps it comes first and
+takes the focus, and Escape does the same. The second button says what going ahead does.
+
+No new question is asked: each of these was asked before, in the browser's box. One is asked
+less often: the keyboard's undo no longer asks about unapplied amounts when there is nothing to
+undo. The staff privacy screen keeps the browser's box, as a staff tool.
+
+The browser's box stopped the page while it was open. The app's dialog does not. So while the
+editor asks, its autosave waits, and so do the keyboard's save and undo: otherwise a save could be
+on its way when the customer chose, and the choice would do nothing. The answer starts the autosave
+again, so text that was waiting is saved as it would have been.
+
+Two scripts that need a verified test account, and so run in no CI job, answered the browser's
+box. They now press the dialog's buttons. They were updated and not run.
+
+Found on the way, and not fixed in this step: "Save before leaving?" does not catch the browser's
+Back button. The router hears of the move first and takes the screen away before the screen's own
+guard is asked, so what was typed and not saved is lost without a question. Links and the app's
+own buttons are caught. The fix is the next step.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the

@@ -334,8 +334,10 @@ try {
     const before = GetDocumentResponse.parse(
       await (await context.request.get(`${base}/api/workspace/documents/${documentId}`)).json(),
     );
-    page.once("dialog", (dialog) => dialog.accept());
     await page.getByTestId(`button-restore-${saved.revision}`).click();
+    // The editor asks first only when something unsaved would be discarded.
+    const goAhead = page.getByTestId("button-confirm");
+    if (await goAhead.isVisible()) await goAhead.click();
     await expect(page.getByTestId("input-title")).toHaveValue("Synthetic P0 saved draft");
     await expect(page.getByTestId("status-save")).toContainText("Saved", { timeout: 30000 });
     const after = GetDocumentResponse.parse(

@@ -277,8 +277,9 @@ try {
     ).toBe("25000");
     await page!.goto(url);
     await page!.getByTestId("input-doc-price-0").fill("999.00");
-    page!.once("dialog", (dialog) => dialog.accept());
+    // The amount typed and not applied would be discarded, so the editor asks first.
     await page!.getByTestId("button-restore-1").click();
+    await page!.getByTestId("button-confirm").click();
     await expect(page!.getByTestId("input-doc-price-0")).toHaveValue("100");
     await expect(page!.getByTestId("button-apply-financial")).toBeDisabled();
     await page!.getByTestId("input-doc-price-0").fill("200.00");
@@ -316,8 +317,8 @@ try {
       await release!();
       await page!.unroute("**" + endpoint);
       await expect(page!.getByTestId("button-load-theirs")).toBeVisible();
-      page!.once("dialog", (dialog) => dialog.accept());
       await page!.getByTestId("button-load-theirs").click();
+      await page!.getByTestId("button-confirm").click();
       await expect(page!.getByTestId("input-doc-price-0")).toHaveValue("300");
       await expect(page!.getByTestId("button-apply-financial")).toBeDisabled();
     } finally {
@@ -641,8 +642,9 @@ try {
     await page!.getByRole("button", { name: "Edit", exact: true }).first().click();
     const notes = page!.locator("textarea").first();
     await notes.fill("Unsaved synthetic task notes");
-    page!.once("dialog", (dialog) => dialog.dismiss());
+    // The unsaved task edit would be discarded, so the screen asks first; keep it.
     await page!.getByTestId("tab-done").click();
+    await page!.getByTestId("button-keep").click();
     await expect(notes).toHaveValue("Unsaved synthetic task notes");
     let refreshed = false;
     const observe = async (response: import("playwright").Response) => {
@@ -686,8 +688,8 @@ try {
       expect((await conflict).status()).toBe(409);
       await expect(page!.getByText("This task changed elsewhere", { exact: true })).toBeVisible();
       await expect(notes).toHaveValue("Unsaved synthetic task notes");
-      page!.once("dialog", (dialog) => dialog.accept());
       await page!.getByTestId("tab-done").click();
+      await page!.getByTestId("button-confirm").click();
       await page!.getByTestId("tab-all").click();
       await expect(page!.getByText("Authoritative synthetic notes", { exact: true })).toBeVisible();
       await expect(page!.getByTestId("button-task-next")).toBeDisabled();
