@@ -43,7 +43,7 @@ export function ResourceCard({ r }: { r: ReleasedResource }) {
       </div>
       <p className="font-display mt-3 text-xl">{r.title}</p>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{r.summary}</p>
-      <p className="mt-3 text-xs text-muted-foreground">Reviewed {formatDay(r.reviewedAt)}</p>
+      <p className="mt-3 text-xs text-muted-foreground">Sources checked {formatDay(r.reviewedAt)}</p>
     </Link>
   );
 }

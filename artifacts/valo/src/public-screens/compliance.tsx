@@ -43,9 +43,9 @@ export function Compliance({ initial }: { initial?: CataloguePage | undefined })
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <GuidanceTabs current="/compliance" />
-      <PageHeader eyebrow="Compliance guidance" title="No rule is shown until it can name its source.">
-        Valo shows a rule only when it links to the official text it came from. Below is what is released
-        today, and where to check the official position directly.
+      <PageHeader eyebrow="Guidance" title="Guidance, and where it comes from">
+        Valo shows a rule only when it can name the official text it comes from. This page has what is
+        published today, and the authorities you can check with directly.
       </PageHeader>
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
@@ -71,25 +71,25 @@ export function Compliance({ initial }: { initial?: CataloguePage | undefined })
           ) : (
             <EmptyState
               mark={<Scale className="h-5 w-5 text-muted-foreground" />}
-              title="No checked regulatory guidance is published yet"
+              title="No guidance is published yet"
               action={
                 <>
                   <Link href="/checker" className="btn btn-primary">
-                    Run the requirements checker
+                    Check my requirements
                   </Link>
                   <Link href="/resources" className="btn btn-ghost">
-                    Browse resources
+                    Browse guides
                   </Link>
                 </>
               }
             >
-              Nothing has met the bar for publication yet, so nothing is shown. The checker can still point
-              you to official routes based on your answers.
+              Nothing has passed its checks yet, so nothing is shown. You can still check your requirements:
+              your answers point you to the official authority to ask.
             </EmptyState>
           )}
           <Notice className="mt-4" title="What this means for you">
-            Valo cannot yet tell you which rules apply to your business. Please confirm your obligations
-            directly with the relevant authority.
+            Valo cannot yet tell you which rules apply to your business. Please confirm what applies directly
+            with the relevant authority.
           </Notice>
         </section>
 

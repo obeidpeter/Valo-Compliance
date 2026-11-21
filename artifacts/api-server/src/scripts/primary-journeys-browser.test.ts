@@ -24,7 +24,7 @@ after(() => web.close());
 const TITLES: Record<string, string> = {
   "/sign-up": "Create account — Valo",
   "/checker": "Business requirements checker — Valo",
-  "/library": "Document library — Valo",
+  "/library": "Documents and guidance — Valo",
 };
 
 /** Opens the home page on a fresh emulated phone and runs the checks, then fails on any page error. */

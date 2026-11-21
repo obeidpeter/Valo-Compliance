@@ -27,7 +27,9 @@ export async function detailPageMetadata(path: string): Promise<Metadata> {
   if (!detail) return { title: UNAVAILABLE_TITLE, robots: { index: false, follow: false } };
   const origin = metadataOrigin();
   return {
-    title: pageTitle(detail.title),
+    // An industry is listed under its name in lower case; its page, like its heading, starts it with
+    // a capital. Every other title already does.
+    title: pageTitle(detail.title.charAt(0).toUpperCase() + detail.title.slice(1)),
     description: detail.description,
     alternates: origin ? { canonical: origin + path } : undefined,
     robots: { index: false, follow: false },

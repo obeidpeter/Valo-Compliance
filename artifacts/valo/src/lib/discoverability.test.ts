@@ -96,7 +96,7 @@ test("public pages get a title, description and canonical URL; private or unknow
   await withDiscovery(async () => {
     const page = (...slug: string[]) => generateMetadata({ params: Promise.resolve({ slug }) });
     assert.deepEqual(await page("library"), {
-      title: "Document library — Valo",
+      title: "Documents and guidance — Valo",
       description: publicPages["/library"]!.description,
       alternates: { canonical: `${origin}/library` },
       robots: { index: false, follow: false },

@@ -89,6 +89,10 @@ const TYPE_NAMES: Record<string, string> = {
 };
 export const typeName = (type: string) => TYPE_NAMES[type] ?? type;
 
+/** An industry's name as a page writes it. The list of industries has them in lower case; a page
+ * starts each with a capital, and changes nothing else. */
+export const industryName = (title: string) => title.charAt(0).toUpperCase() + title.slice(1);
+
 /**
  * A catalogue item's industries in words. The catalogue gives them as short codes joined by commas,
  * or as "All industries"; a result shows the names as written, never the codes. One or two are
@@ -100,7 +104,8 @@ export function industryLabel(industry: string, names: ReadonlyMap<string, strin
   const found = industry
     .split(",")
     .map((code) => names.get(code.trim()))
-    .filter((name): name is string => !!name);
+    .filter((name): name is string => !!name)
+    .map(industryName);
   if (found.length === 0) return null;
   return found.length <= 2 ? found.join(" · ") : `${found[0]} and ${found.length - 1} more`;
 }
