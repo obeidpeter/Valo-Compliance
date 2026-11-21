@@ -2688,6 +2688,34 @@
       "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
       "test": "a new form is not marked as wrong: each unanswered question is marked as still needed, shown as a mistake only once the customer has been to it and left it empty, and a wrong answer is shown as soon as it is given",
       "proves": "For an invoice started from its questions with nothing answered, every required question is marked “Still needed” in words and none is outlined as wrong; a question the customer goes to and leaves empty is then outlined with its message, an answer clears it, and a wrong quantity is outlined while the customer is still typing it. The API is answered in the page."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/lib/valo-guided.test.ts",
+      "test": "a document prints each amount in naira under its question's name, and never the unit the answer is stored in",
+      "proves": "For each of the twelve kinds of document that start from questions, the projection the preview, the Word file and the PDF share prints every answered money question under its name without “in whole kobo” and as an amount with the naira sign, and a table of payments prints “Allocated amount” over ₦1,500.50 and ₦0.05; no printed text or cell says “kobo”."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/guided-money.test.ts",
+      "test": "an amount typed in naira is stored as the same amount in whole kobo, from its digits alone",
+      "proves": "The editor's rule for a money question turns naira typed with or without separators and kobo into the same amount in whole kobo that the questions' own check accepts, keeping every digit of an amount larger than a number holds exactly."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "foundation",
+      "file": "artifacts/valo/src/lib/guided-money.test.ts",
+      "test": "what is not an amount in naira is stored as typed and refused, never as some other amount",
+      "proves": "Text that is not an amount in naira is stored exactly as typed and refused by the questions' own check, and digits too long to be naira are stored so that they cannot be read as a smaller amount in kobo."
+    },
+    {
+      "requirement": "NFR-008",
+      "job": "web-performance",
+      "file": "artifacts/api-server/src/scripts/workspace-accessibility.test.ts",
+      "test": "an amount is typed in naira and saved as the same amount in whole kobo; what is not an amount stays as typed and is refused; and a saved amount is shown and printed in naira",
+      "proves": "Signed in through a stand-in identity, typing “1,500.50” into an invoice's unit price reads back as ₦1,500.50 and the page saves 150050 kobo; “12.5x” stays in the box, is refused in words about naira and is saved as typed; and a document saved with 150000 kobo shows 1500 in the box and prints ₦1,500.00 under “Unit price, for the chosen quantity unit” in its preview. The API is answered in the page."
     }
   ]
 }

@@ -584,7 +584,8 @@ and the column's names: "Goods, work and agreed charges, row 1: Description".
 - The questions themselves ("Issuing business legal name", "Goods/work supplied and agreed
   billing basis") and the notice over each form come from the frozen question definitions.
   Rewording them changes the twelve forms, not the editor, and waits for the owner's decision.
-- Amounts in the questions are still typed in kobo. That changes in a step of its own.
+- Amounts in the questions were still typed in kobo. That changed in a step of its own,
+  [below](#phase-5-amounts-are-typed-listed-and-printed-in-naira).
 - A downloaded file still prints "Saved revision 3". The words inside a file are the API's.
 - The sentences a wording check pins keep the word "drafts", such as "Drafts you already created
   stay in your workspace."
@@ -610,6 +611,41 @@ the customer had typed anything.
 The business profile and the support forms already show no mistake until the customer has used
 the form. EDT-005 asks to "highlight unresolved fields": each one is still highlighted, in the
 form and in the list.
+
+### Phase 5: amounts are typed, listed and printed in naira
+
+A question about money asked for whole kobo. To enter ₦1,500.50 a customer had to type 150050.
+The amounts panel of a blank document already took naira, so two parts of the same editor
+disagreed.
+
+- **Typed.** A money question takes naira, with or without separators and kobo: "1500" or
+  "1,500.50". A naira sign stands in the box, and the amount is read back under it: "Reads as
+  ₦1,500.50".
+- **Stored.** The answer is still stored as whole kobo, worked out from the digits alone. Nothing
+  is rounded. The saved document, its checks and its totals are as before.
+- **Refused.** What is not an amount, such as "12.5x", stays in the box as typed, is saved as
+  typed, and is refused with "Enter an amount in naira, such as 1500 or 1500.50."
+- **Asked and listed.** The question reads "Unit price in naira, for the chosen quantity unit",
+  in the form and under "Still needed". The frozen question definitions still say "in whole
+  kobo"; only what the editor shows changes.
+- **Printed.** A document printed "Agreed fee in whole kobo" over "₦1,500.00 (150000 kobo
+  entered)", and headed a column "Unit price in NGN displayed from supplied kobo". It now prints
+  "Agreed fee" over "₦1,500.00", and "Unit price, for the chosen quantity unit". The preview, the
+  Word file and the PDF share this one projection of the saved answers.
+- **Files.** A saved version now prints differently, so the render version is raised. A file
+  asked for again is made afresh, not handed back as it was first made.
+- The amounts panel's labels say "(₦)" where they said "(NGN)", and the drafting assistant says
+  totals are worked out "to the exact kobo".
+
+**Kept.** Everything that is not an amount is still stored exactly as typed. Digits too long to
+be an amount in naira (more than 22 before the point) are stored as naira and refused, so they
+can never be read as a smaller amount in kobo.
+
+**Not changed.** The purchases screen ("Refund amount in NGN") and the finance staff screens keep
+their labels until their own step.
+
+One script that needs a verified test account, and so runs in no CI job, types amounts into the
+questions. It now types naira. It was updated and not run.
 
 ### Found on the way: keyboard focus rests clear of the bars
 
