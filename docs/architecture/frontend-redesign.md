@@ -83,6 +83,7 @@ glossary; it grows as pages are rewritten.
 | saved results | assessment history, saved assessments |
 | industry names as written ("Retail and wholesale") | slugs ("retail-wholesale") |
 | amounts in naira ("₦1,500.00") | whole kobo |
+| optional business documents | operational aids |
 
 Dates read "18 Nov 2026" and "18 Nov 2026, 09:00" everywhere.
 
@@ -1085,6 +1086,28 @@ screen's text, in a sentence chosen by a condition, and in a title. It failed ea
 What the test does not do: it reads the web app's source, not what the server sends, and it knows
 only the word list. It would not notice "provider" or "dispatch".
 
+The list of files left out was wrong at first. It named two files as staff-only that hold text a
+customer can be shown: the panel of optional documents under a result, and the panels about a
+bank dispute, one of which is on the purchases screen. Both are now read. A file that holds
+anything a customer can be shown is read, even where staff panels share it.
+
+Reading the first of them found a panel no browser test had ever drawn, because every test
+answered its list with nothing:
+
+- Above its heading it said "Optional operational aids", and a failure read "Optional operational
+  aids could not be loaded." with a "Retry" button. It now says "Optional" above the heading, and
+  a failure reads "A list of optional business documents could not be loaded. Your results above
+  are not affected." with "Try again". The heading, "Business documents you may find useful", is
+  unchanged, and so is the sentence that says the documents are not legal advice, are not chosen
+  from the answers and do not mean any duty applies.
+- With a document in the list, the result page grew wider than a phone's screen: 425 pixels on a
+  360-pixel phone, with the test's one-sentence summary. A row keeps its summary on one line,
+  and the row could not shrink to the screen. It now does, and a summary too long for the row
+  ends in an ellipsis.
+
+"Operational aids" joins the word list. A new browser test draws the panel with a document in it,
+and with its list failing, on a phone.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
@@ -1139,7 +1162,7 @@ accepted by it.
 | Heuristic | Built | Not done |
 | --- | --- | --- |
 | 1. Visibility of system status | The editor says "Saved · version 3" or "Unsaved changes". A download says "waiting to be made", "being made" or "ready". The check ticks a step once its questions are dealt with. The reminders screen says whether emails are being sent and what has happened to each reminder. A support request and a privacy request say where they stand in words. | The words inside a downloaded file, such as "Saved revision 3", are the server's and are unchanged. |
-| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. On the purchases screen, "Refund amount in NGN", "Provider dispute observation" and the payment concerns panel. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
+| 2. Match with the real world | One word list, with three tests that read the screens and one that reads the source, so that an old word cannot come back in any state. Amounts are typed, listed and printed in naira. Every date and time is on one Lagos clock in one format. | The twelve forms' own questions, which are frozen. The server's own sentences, over three hundred of them. The staff screens. The purchases screen, throughout: what it opens on, an order's states, the refund form ("Refund amount in NGN"), "Provider dispute observation", the information for a bank dispute and the payment concerns panel. The drafting assistant still says "AI provider", "server" and "hash". The workspace download still says "Queued" and "JSON snapshot". |
 | 3. User control and freedom | The editor has undo and keeps every version. "Start over" asks first. Five discards ask in the app's own dialog. "Save before leaving?" also catches the browser's Back and Forward buttons. | On the compiled site the Back button was checked once by hand; no CI test can sign in to it. |
 | 4. Consistency and standards | The component styles are in one layer. Dates, times, amounts and counts go through one formatter. One header, one footer and one phone bar. One page where a document starts. | |
 | 5. Error prevention | A new form opens without red marks, and what a document still needs is listed before a download. The check chooses no answer for the visitor. The editor saves nothing underneath an open question. Someone who cannot sign in is told before writing that no reply is emailed. | |
@@ -1189,8 +1212,7 @@ Open:
    profile") were chosen in the plan. They stand unless the owner prefers others.
 9. Every date and time is Lagos time, with no label beside it. The help page says so once.
 10. Words that are the server's and were left alone: inside a downloaded file ("Saved revision 3",
-    the draft notice), "Refund amount in NGN" on the purchases screen, and the server's own
-    sentences for a failed request.
+    the draft notice), and the server's own sentences for a failed request.
 11. Legal approval of the privacy and terms pages. The privacy requests' sentences were put in
     plainer words with no limit changed; a legal reader should see them at the same time.
 12. The list of official sources on the guidance page names the "Federal Inland Revenue Service"
