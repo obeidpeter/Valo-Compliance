@@ -58,8 +58,8 @@ One line of JSON. Its `state` is one of two.
 - `held`: the guide is not ready. `reasons` lists what the publication gate named, apart from the
   two reviews. No candidate is kept. Fix the cause and run the command again.
 - `awaiting_reviews`: the gate named nothing but the two reviews. The candidate is kept as a
-  private file. It appears in the staff Content area, in the list headed "Templates awaiting
-  their reviews". `id` and `candidateArtifact` name it.
+  private file. It appears in the staff Content area, in the list headed "Templates and guides
+  awaiting their reviews". `id` and `candidateArtifact` name it.
 
 Reasons you are likely to see:
 
