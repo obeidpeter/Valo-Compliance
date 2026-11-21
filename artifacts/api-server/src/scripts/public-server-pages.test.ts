@@ -888,3 +888,58 @@ test("the help page groups its questions by task and answers what a visitor asks
   // No price is set, so the page names none.
   assert.doesNotMatch(words, /\bfree\b|₦|\bprices?\b/i);
 });
+
+// The specification's 2026 update (docs/specification/essential-business-documents.txt): "The
+// Nigeria Revenue Service has replaced the former FIRS framework, and the new Tax ID replaces the
+// previous TIN identifier." Its source S02 is on www.nrs.gov.ng. The page named the earlier body and
+// the earlier number.
+test("the guidance page names the tax authority and its number as the specification does, says what each replaced, and gives every official source a link of its own", async () => {
+  const html = await (await fetch(web.origin + "/compliance")).text();
+  // The page's own notice is an aside too: the list is the one that opens with these words.
+  const opens = /<p class="eyebrow">Official sources<\/p>/;
+  const from = html.search(opens);
+  assert.ok(from > 0, "the list of official sources is in the server's HTML");
+  const aside = html.slice(from, html.indexOf("</aside>", from));
+  const sources = linksIn(html, opens, "</aside>");
+  assert.deepEqual(
+    sources.map((source) => source.href),
+    [
+      "https://www.cac.gov.ng",
+      "https://www.nrs.gov.ng",
+      "https://ndpc.gov.ng",
+      "https://smedan.gov.ng",
+      "https://son.gov.ng",
+      "https://www.nafdac.gov.ng",
+    ],
+  );
+  // The authority by its present name, with its number by its present name.
+  const tax = /<a\b[^>]*href="https:\/\/www\.nrs\.gov\.ng"[^>]*>([\s\S]*?)<\/a>/.exec(aside)?.[1] ?? "";
+  assert.deepEqual(
+    [...tax.matchAll(/<span class="block[^"]*">([^<]*)<\/span>/g)].map((line) => text(line[1]!)),
+    [
+      "Nigeria Revenue Service",
+      "Federal taxes and the Tax ID",
+      // Someone who knows the earlier names finds them here.
+      "It has replaced the Federal Inland Revenue Service (FIRS), and the Tax ID replaces the TIN.",
+    ],
+  );
+  // The earlier body is not offered as an authority, and its address is not linked.
+  const words = text(aside).replace(/\s+/g, " ");
+  assert.doesNotMatch(words, /Federal taxes and TIN/);
+  assert.doesNotMatch(aside, /firs\.gov\.ng/);
+  // Still links, not endorsements.
+  assert.ok(
+    words.includes("These are links, not endorsements, and none of these bodies has reviewed Valo."),
+    "the page says the links are not endorsements",
+  );
+  // Two of the names begin with the same word: each link has a name of its own for a test.
+  const ids = [...aside.matchAll(/data-testid="(link-source-[^"]*)"/g)].map((link) => link[1]);
+  assert.deepEqual(ids, [
+    "link-source-cac",
+    "link-source-nrs",
+    "link-source-ndpc",
+    "link-source-smedan",
+    "link-source-son",
+    "link-source-nafdac",
+  ]);
+});
