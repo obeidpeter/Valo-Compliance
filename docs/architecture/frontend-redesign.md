@@ -914,6 +914,66 @@ Not changed: the server's own sentences, which are shown as sent wherever the se
 There are over three hundred in the API. Putting them in plain words is a separate pass, on the
 API's side, and is not done.
 
+### Phase 6: the support forms in plain words
+
+Three places where a customer writes to Valo and reads what happened next.
+
+**The form for a request or a problem, and its receipt**
+
+| Before | Now |
+| --- | --- |
+| "Saved. Waiting for a person.", then the server's sentence: "Enquiry received and saved. Awaiting staff review; no appointment or external dispatch has been confirmed." | "Enquiry received", then "It is saved for a member of Valo's staff to read. No appointment has been made, and no time for a reply has been set. Nothing has been sent to anyone outside Valo." |
+| "Awaiting staff" | "Waiting for staff" |
+| "Your request is durably stored. It has not been sent to any outside provider, and no appointment or response time has been set." | "Keep the reference if you write again." |
+| "Requests are stored in your private workspace so we can tie them to your account. That needs a verified email first." | "A request is saved in your workspace, so it needs an account with a verified email address." |
+
+"Enquiry received" is the requirement's own wording (SRV-002), and the screen now says it itself.
+It came before only inside the server's sentence.
+
+**The form for someone who cannot sign in, and its acknowledgement**
+
+| Before | Now |
+| --- | --- |
+| Nothing said before the message was written | "A member of Valo's staff reads your message. Valo does not send replies by email yet, and no time for a reply is promised." |
+| The server's sentence: "Request received and saved. No account details have been confirmed. Replies are not yet dispatched from this development build." | "Your message is saved for a member of Valo's staff to read. Nothing about your account has been checked or confirmed." |
+| "Delivery: Not dispatched" | "Email: None sent" |
+| "You can retry safely; it will not create a duplicate." | "You can try again: your message is saved once, not twice." |
+
+Someone who cannot sign in has nowhere else to read a reply. So the form says before the message
+is written, not only after it is saved, that no reply is emailed yet.
+
+**The customer's own requests**
+
+| Before | Now |
+| --- | --- |
+| "Your saved support requests", "Replies are saved in this signed-in portal; email delivery is not available." | "Your support requests", "Replies are kept on this page. Valo does not email them yet, so come back here to read them." |
+| "support · awaiting customer", the system's names with the underscores taken out | "Valo product support · Staff have replied" |
+| "awaiting customer · version 4" | "Staff have replied" |
+| Two notes in the server's words: "Saved support workflow. Replies and decisions are durable; no external dispatch is enabled." and "No email, appointment, professional review or external referral is implied." | One note in the screen's words: "A reply here is not an appointment or a professional review. Nothing is emailed, and your request is not passed to anyone outside Valo." |
+| "Customer" beside the customer's own messages | "You" |
+| "Save reply to portal", "This case changed", "Your reply was saved to this case. It was not emailed." | "Save reply", "This request changed", "Your reply is saved with this request. It was not emailed." |
+| "The save result is unknown. Retry the same request safely; it uses the same reference and will not create a second reply." | "Valo could not confirm whether your reply was saved. Try the same reply again: it is saved once, not twice." |
+
+The states read "Waiting for staff", "With a member of staff", "Staff have replied" and
+"Resolved". They are in `lib/support-words.ts`.
+
+No limit that a screen stated was dropped:
+
+- The receipt still says that no appointment is made, that no time for a reply is set, and that
+  nothing is sent outside Valo.
+- The acknowledgement still says that no email is sent, that no time for a reply is promised, and
+  that nothing about the account is confirmed.
+- The customer's requests still say that nothing is emailed, and that a reply is not an
+  appointment, a professional review or a referral outside Valo.
+
+The screens no longer print the server's notes. Those are written for the workflow that staff and
+customers share. The server still sends them, unchanged.
+
+Not changed: the staff screens, which say "case"; the dialog that asks before leaving an unsaved
+reply, which staff screens share; and two panels left for a later, more careful step, because
+their words carry limits on privacy rights and on refunds: the customer's privacy requests and the
+payment concerns.
+
 ### Found on the way: keyboard focus rests clear of the bars
 
 On a phone, pressing Tab could leave the focused control behind the bar fixed to the bottom of the
