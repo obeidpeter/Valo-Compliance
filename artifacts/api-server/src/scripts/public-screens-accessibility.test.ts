@@ -11,6 +11,7 @@ import {
   wcagFailures,
   type Api,
 } from "../test-support/app-in-browser";
+import { oldWordsIn } from "../test-support/old-words";
 import { answer } from "../test-support/public-answers";
 
 /**
@@ -36,6 +37,8 @@ after(() => app.close());
 const SCREENS: { path: string; title: string; ready?: string; minimumStops?: number }[] = [
   { path: "/checker", title: "Check your requirements — Valo" },
   { path: "/account-access", title: "Trouble signing in — Valo" },
+  // An address the site does not have.
+  { path: "/synthetic-missing-page", title: "Page not found — Valo" },
   // The sign-in pages draw no site shell; the provider's card holds their heading and form. Their own
   // focusable elements are the wordmark and the access help link.
   {
@@ -467,4 +470,23 @@ test("a check that no published rule covers says so in plain words, says it is n
   } finally {
     await close();
   }
+});
+
+// The redesign's word list (docs/architecture/frontend-redesign.md, "Words").
+test("no signed-out screen shows one of the project's own words that the word list replaced", async () => {
+  const problems: string[] = [];
+  for (const screen of SCREENS) {
+    const { page, close } = await app.desktop(screen.path, answer);
+    try {
+      await page
+        .locator(screen.ready ?? "main h1")
+        .first()
+        .waitFor();
+      for (const found of oldWordsIn((await page.evaluate("document.body.innerText")) as string))
+        problems.push(`${screen.path}: ${found}`);
+    } finally {
+      await close();
+    }
+  }
+  assert.deepEqual(problems, []);
 });

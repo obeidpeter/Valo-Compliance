@@ -491,7 +491,7 @@ export function AIDraftCompose() {
               Build manually, no AI
             </button>
             <p className="hint">
-              Places all your notes in order as a private business draft. Nothing is sent to an AI provider.
+              Places all your notes in order as a document of your own. Nothing is sent to an AI provider.
             </p>
             {(manualErr || manErr) && (
               <p role="alert" className="mt-2 text-sm text-destructive" data-testid="status-manual-error">
@@ -656,14 +656,14 @@ export function AIDraftPreview({ id }: { id: string }) {
       )}
 
       {p.acceptedDocumentId && (
-        <Notice className="mt-4" tone="forest" title="Already saved as a business draft">
+        <Notice className="mt-4" tone="forest" title="Already saved to your documents">
           <Link
             href={"/workspace/documents/" + p.acceptedDocumentId}
             className="btn btn-primary btn-sm mt-2"
             data-testid="link-accepted-document"
           >
             <FileCheck2 className="h-4 w-4" />
-            Open draft and exports
+            Open the document
           </Link>
         </Notice>
       )}
@@ -790,7 +790,7 @@ export function AIDraftPreview({ id }: { id: string }) {
           <aside className="grid h-fit gap-4 lg:sticky lg:top-24">
             {canAccept && (
               <div className="surface p-5" data-testid="panel-accept">
-                <p className="eyebrow">Save to your drafts</p>
+                <p className="eyebrow">Save to your documents</p>
                 <label className="mt-3 flex cursor-pointer items-start gap-3 text-sm">
                   <input
                     type="checkbox"
@@ -800,7 +800,7 @@ export function AIDraftPreview({ id }: { id: string }) {
                     data-testid="checkbox-confirm-draft"
                   />
                   <span>
-                    I reviewed this. It is my business draft, not legal, tax or accounting advice, and not
+                    I reviewed this. It is my own document, not legal, tax or accounting advice, and not
                     approved by anyone.
                   </span>
                 </label>
@@ -826,7 +826,7 @@ export function AIDraftPreview({ id }: { id: string }) {
                   ) : (
                     <FileCheck2 className="h-4 w-4" />
                   )}
-                  Save as business draft
+                  Save to my documents
                 </button>
               </div>
             )}

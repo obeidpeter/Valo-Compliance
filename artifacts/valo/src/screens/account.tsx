@@ -34,7 +34,7 @@ export function AccountPage() {
       </header>
       <Notice className="mb-6" title="Deleting your sign-in account is not a Valo data deletion">
         Changes made below, including deleting your sign-in account, affect only the sign-in provider. They do
-        not delete your Valo workspace, drafts, assessments, tasks or requests. To have your Valo data
+        not delete your Valo workspace, documents, saved results, tasks or requests. To have your Valo data
         deleted, save a verified request on{" "}
         <Link
           href="/workspace/privacy"
@@ -128,12 +128,12 @@ export function PrivacyPage() {
             className="mt-2 text-sm leading-relaxed text-muted-foreground"
             data-testid="workspace-export-scope"
           >
-            A JSON copy of the sections listed in the file: profile versions, drafts and revisions,
-            assessments, tasks, reminder records, support requests, AI drafts, purchases, export/file metadata
-            and your own workspace activity. This is not complete privacy fulfilment. It does not include
-            Word/PDF file bytes, storage links, membership records, other people's activity, full system/staff
-            audits, sign-in-provider data, external-provider data or unlinked public contact requests. Use the
-            privacy request form for coordinated access to those systems.
+            A JSON copy of the sections listed in the file: profile versions, documents and their versions,
+            saved results, tasks, reminder records, support requests, AI drafts, purchases, export/file
+            metadata and your own workspace activity. This is not complete privacy fulfilment. It does not
+            include Word/PDF file bytes, storage links, membership records, other people's activity, full
+            system/staff audits, sign-in-provider data, external-provider data or unlinked public contact
+            requests. Use the privacy request form for coordinated access to those systems.
           </p>
           <WorkspaceDataDownload />
         </section>

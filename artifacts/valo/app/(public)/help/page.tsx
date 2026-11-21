@@ -5,7 +5,7 @@ import { fixedPageMetadata } from "@/server/page-metadata";
 const QA = [
   [
     "Does anyone at Valo check a document I write?",
-    'No. A document you write is your own. It is labelled "business draft", nobody at Valo reviews it, and it does not tell you what the law requires.',
+    'No. A document you write is your own. It is marked "Draft", nobody at Valo reviews it, and it does not tell you what the law requires.',
   ],
   [
     "Why is the list of documents or guides empty?",
@@ -13,7 +13,7 @@ const QA = [
   ],
   [
     "Can I download my document as a PDF or Word file?",
-    "Yes. Open the document in your workspace and go to its download section, where you can create a Word or PDF file. The file is made from your own saved text, and every page is marked as a business draft. A blank copy of a template can be downloaded only where the template is listed under Documents.",
+    "Yes. Open the document in your workspace and go to its download section, where you can make a Word file or a PDF. The file is made from your own saved text, and every page is marked as a draft. A blank copy of a template can be downloaded only where the template is listed under Documents.",
   ],
   [
     "How do I get a copy of my data, or ask for it to be corrected or deleted?",

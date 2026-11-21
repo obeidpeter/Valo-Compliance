@@ -4,9 +4,9 @@ import "../src/fonts.css";
 import "../src/index.css";
 
 export const metadata: Metadata = {
-  title: "Valo — Business documents and source-governed guidance",
+  title: "Valo — Documents and business requirements",
   description:
-    "A private workspace for Nigerian SME owners: your business drafts kept separate from source-governed compliance guidance. In development; not launched.",
+    "Business documents and source-backed guidance for Nigerian small businesses. In development; not launched.",
   icons: { icon: "/favicon.svg" },
 };
 
