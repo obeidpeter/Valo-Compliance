@@ -102,8 +102,8 @@ test("public pages get a title, description and canonical URL; private or unknow
       robots: { index: false, follow: false },
     });
     // Support and account access help are public pages too, so each is titled for what it is.
-    assert.equal((await page("support")).title, "Support — Valo");
-    assert.equal((await page("account-access")).title, "Account access help — Valo");
+    assert.equal((await page("support")).title, "Report a problem — Valo");
+    assert.equal((await page("account-access")).title, "Trouble signing in — Valo");
     // A released item's page is its own server-rendered route, titled as the API's discovery lists it.
     const template = (slug: string) => templateMetadata({ params: Promise.resolve({ slug }) });
     assert.deepEqual(await template("synthetic-invoice"), {

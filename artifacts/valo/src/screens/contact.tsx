@@ -6,8 +6,9 @@ export function AccountAccess() {
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
       <div>
-        <PageHeader eyebrow="Account access" title="Cannot get in? Start here.">
-          This form works whether you are signed out, unverified or suspended.
+        <PageHeader eyebrow="Help" title="Trouble signing in">
+          This form works whether you are signed out, your email is not yet verified, or your account is
+          suspended.
         </PageHeader>
         <ol className="grid gap-4 text-sm">
           {[
@@ -18,11 +19,11 @@ export function AccountAccess() {
                 <Link href="/sign-in" className="text-primary underline underline-offset-4">
                   Forgot password
                 </Link>{" "}
-                on the sign-in screen. Our authentication provider handles recovery; Valo never sees your
+                on the sign-in screen. Our sign-in provider handles the recovery; Valo never sees your
                 password.
               </>,
             ],
-            ["Email not verified", "Finish the code step sent to your inbox, then sign in again."],
+            ["Email not verified", "Enter the code sent to your inbox, then sign in again."],
             [
               "Suspended or still stuck",
               "Write to us here with the email you signed up with. Do not send passwords or codes.",

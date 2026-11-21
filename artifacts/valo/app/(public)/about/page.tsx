@@ -5,27 +5,27 @@ import { fixedPageMetadata } from "@/server/page-metadata";
 
 const WORKS = [
   [
-    "Private business drafts",
-    "Write invoices, quotations, reminders and proposals in a private editor with revision history. Export your own drafts to PDF or Word.",
+    "Your documents",
+    "Make invoices, quotations, receipts and payment reminders in a private editor that keeps every earlier version. Download your own documents as PDF or Word files.",
   ],
   [
-    "Requirements checker",
-    "Answer questions about your business. Each result says why it may apply, what is missing, and links to the official source.",
+    "Requirements check",
+    "Answer questions about your business. Each result says why it may apply and what is missing, and links to the official source.",
   ],
   [
     "Tasks and reminders",
-    "Turn checker results into your own tasks with dates you confirm. Reminder preferences are saved; delivery depends on a configured channel.",
+    "Turn a result into a task of your own, with a date you confirm. You can save how you want to be reminded; the reminders screen says whether a reminder can be sent yet.",
   ],
   [
-    "Draft assistant",
-    "Optional help shaping a first draft from your own details. You review everything before it becomes a document.",
+    "Drafting assistant",
+    "Optional help from AI in writing a first version from your own details. It runs only when you ask for it and agree. You review everything before it becomes a document.",
   ],
 ];
 const NOT = [
   "Legal, tax or accounting advice, or a substitute for it.",
-  "Professional review of your documents. Private business drafts are not professional advice or certified legal documents.",
-  "Payments, subscriptions or bookings. None are enabled.",
-  "Endorsement by any regulator or government body.",
+  "A professional's review of your documents. A document you write is not professional advice or a certified legal document.",
+  "A way to pay, subscribe or book. None of these is switched on.",
+  "Endorsed by any regulator or government body.",
 ];
 
 export const generateMetadata = () => fixedPageMetadata("/about");
@@ -33,9 +33,9 @@ export const generateMetadata = () => fixedPageMetadata("/about");
 export default function About() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8">
-      <PageHeader eyebrow="About Valo" title="Two shelves, kept apart on purpose.">
-        Valo is a private workspace for the documents a Nigerian small business writes every week, alongside
-        guidance that is shown only when it traces back to official text.
+      <PageHeader eyebrow="About Valo" title="Documents and guidance for Nigerian small businesses">
+        Valo is a place to make the documents a small business in Nigeria writes every week, and to see which
+        requirements may apply to it. Guidance is shown only when it can name the official text it comes from.
       </PageHeader>
       <div className="grid gap-12 lg:grid-cols-[1.2fr_1fr]">
         <section>
@@ -60,10 +60,10 @@ export default function About() {
             ))}
           </ul>
           <div className="mt-8 rounded-2xl border border-border bg-sidebar p-5 text-sm leading-relaxed">
-            <p className="font-medium">Still in development</p>
+            <p className="font-medium">Still being built</p>
             <p className="mt-1 text-muted-foreground">
-              Please use synthetic test details only. The public catalogue grows only when an item can name
-              its sources; empty pages say so rather than fill space.
+              Please use made-up details only. A template or guide is listed only once it can name its
+              sources, and a page with nothing to list says so.
             </p>
           </div>
           <div className="mt-6 flex flex-wrap gap-2">

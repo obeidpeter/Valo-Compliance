@@ -9,14 +9,14 @@ export default function Contact() {
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
       <div>
-        <PageHeader eyebrow="Contact" title="Write to the people building Valo.">
-          No account needed. Your message is saved for a staff member with a reference you can quote. It is
-          not emailed anywhere, and we do not promise a response time.
+        <PageHeader eyebrow="Help" title="Contact us">
+          You do not need an account. Your message is saved for a member of staff, and you get a reference you
+          can quote. It is not emailed anywhere, and we do not promise when you will hear back.
         </PageHeader>
         <p className="text-sm text-muted-foreground">
-          Locked out? Use{" "}
+          Cannot sign in? See{" "}
           <PublicLink href="/account-access" className="text-primary underline underline-offset-4">
-            account access help
+            Trouble signing in
           </PublicLink>
           .
         </p>

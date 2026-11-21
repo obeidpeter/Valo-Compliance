@@ -35,7 +35,7 @@ after(() => app.close());
 /** The public screens the primary-page checks leave out, with the title each gives the page. */
 const SCREENS: { path: string; title: string; ready?: string; minimumStops?: number }[] = [
   { path: "/checker", title: "Check your requirements — Valo" },
-  { path: "/account-access", title: "Account access help — Valo" },
+  { path: "/account-access", title: "Trouble signing in — Valo" },
   // The sign-in pages draw no site shell; the provider's card holds their heading and form. Their own
   // focusable elements are the wordmark and the access help link.
   {

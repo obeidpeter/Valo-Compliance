@@ -56,7 +56,7 @@ export function ErrorState({
           )}
           {(d.kind === "forbidden" || d.kind === "unauthenticated") && (
             <Link href="/account-access" className="btn btn-ghost btn-sm" data-testid="link-access-help">
-              Account access help
+              Trouble signing in
             </Link>
           )}
         </div>

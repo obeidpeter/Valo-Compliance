@@ -1721,7 +1721,7 @@
       "job": "web-performance",
       "file": "artifacts/api-server/src/scripts/public-screens-accessibility.test.ts",
       "test": "on a phone, each public screen the primary-page checks leave out names itself in the page title, fits 360 and 320 pixels, moves keyboard focus only to visible outlined elements and has no automated WCAG 2.2 AA failure",
-      "proves": "For a signed-out visitor with synthetic data, the public checker, account access help and the sign-in and sign-up frames each name themselves in the page title, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements that come to rest on screen and clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab, and show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; the identity provider's own sign-in forms are not checked."
+      "proves": "For a signed-out visitor with synthetic data, the requirements check, the page for trouble signing in and the sign-in and sign-up frames each name themselves in the page title, do not scroll sideways at 360 or 320 pixels, move keyboard focus only to visible outlined elements that come to rest on screen and clear of the header, the phone's bottom bar and any other bar that stays on screen, going forward with Tab and back with Shift+Tab, and show no failing axe-core WCAG 2.0, 2.1 or 2.2 A or AA rule; the identity provider's own sign-in forms are not checked."
     },
     {
       "requirement": "NFR-006",
