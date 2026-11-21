@@ -274,14 +274,14 @@ function ShellRoutes() {
         <Route path="/checker" component={Checker} />
         <Route path="/workspace/assessments">
           {() => (
-            <RequireAuth title="Assessment history">
+            <RequireAuth title="Saved results">
               <AssessmentsList />
             </RequireAuth>
           )}
         </Route>
         <Route path="/workspace/assessments/:id">
           {(p) => (
-            <RequireAuth title="Assessment">
+            <RequireAuth title="Saved result">
               <AssessmentDetail id={p.id} />
             </RequireAuth>
           )}

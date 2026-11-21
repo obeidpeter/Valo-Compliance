@@ -43,8 +43,8 @@ export function AssessmentsList() {
       <WorkspaceNav />
       <div className="reveal flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">Saved assessments</p>
-          <h1 className="font-display mt-2 text-4xl">History</h1>
+          <p className="eyebrow">Requirements</p>
+          <h1 className="font-display mt-2 text-4xl">Saved results</h1>
         </div>
         <Link href="/checker" className="btn btn-primary" data-testid="link-new-assessment">
           <ClipboardCheck className="h-4 w-4" />
@@ -52,7 +52,8 @@ export function AssessmentsList() {
         </Link>
       </div>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        Each saved check keeps the answers and the ruleset it used, so you can see what changed later.
+        Each saved result keeps the answers and the version of the rules it used, so you can see later what
+        changed.
       </p>
       <div className="mt-8">
         {list.isLoading ? (
@@ -66,14 +67,14 @@ export function AssessmentsList() {
         ) : sorted.length === 0 ? (
           <EmptyState
             mark={<ClipboardCheck className="h-5 w-5 text-muted-foreground" />}
-            title="No saved checks yet"
+            title="No saved results yet"
             action={
               <Link href="/checker" className="btn btn-primary">
-                Run the checker
+                Check my requirements
               </Link>
             }
           >
-            Run the checker, then tick consent to keep a private copy here.
+            Check your requirements, then choose to save the result. It is kept here.
           </EmptyState>
         ) : (
           <ol className="relative grid gap-3 border-l border-border pl-5 sm:pl-6">
@@ -92,16 +93,18 @@ export function AssessmentsList() {
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block font-medium">{formatDateTime(a.createdAt)}</span>
-                      <span className="mt-1 flex flex-wrap gap-x-3 font-mono text-xs text-muted-foreground">
-                        <span>as of {formatDay(a.result.asOfDate)}</span>
-                        <span>ruleset {a.result.rulesetVersion}</span>
+                      <span className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                        <span>Rules as at {formatDay(a.result.asOfDate)}</span>
+                        <span className="min-w-0 break-all">Rules version {a.result.rulesetVersion}</span>
                         <span>
-                          {a.profileRevision ? "profile rev " + a.profileRevision : "questionnaire snapshot"}
+                          {a.profileRevision
+                            ? "From your profile, version " + a.profileRevision
+                            : "From the answers you gave"}
                         </span>
                       </span>
                     </span>
                     {a.result.items.length === 0 ? (
-                      <span className="pill pill-ink">Coverage unavailable</span>
+                      <span className="pill pill-ink">No rules covered these answers</span>
                     ) : (
                       <span className="flex flex-wrap gap-1.5">
                         {c.map(({ label, count }) => (
@@ -160,13 +163,13 @@ export function AssessmentDetail({ id }: { id: string }) {
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        All assessments
+        All saved results
       </Link>
-      <h1 className="font-display mt-3 text-4xl">Assessment of {formatDateTime(s.createdAt)}</h1>
-      <p className="mt-2 font-mono text-xs text-muted-foreground">
+      <h1 className="font-display mt-3 text-4xl">Result saved {formatDateTime(s.createdAt)}</h1>
+      <p className="mt-2 text-sm text-muted-foreground" data-testid="text-result-origin">
         {s.profileRevision
-          ? "From saved profile revision " + s.profileRevision
-          : "From a consented questionnaire snapshot"}
+          ? "Worked out from your business profile, version " + s.profileRevision + "."
+          : "Worked out from the answers you gave when you checked."}
       </p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_18rem]">
@@ -222,7 +225,7 @@ export function AssessmentDetail({ id }: { id: string }) {
           </div>
           <div className="w-full sm:w-72">
             <label className="label" htmlFor="prev">
-              Earlier assessment
+              Earlier result
             </label>
             <select
               id="prev"
@@ -233,7 +236,7 @@ export function AssessmentDetail({ id }: { id: string }) {
               data-testid="select-compare"
             >
               <option value="">
-                {list.isLoading ? "Loading..." : others.length ? "Choose one" : "No other assessments"}
+                {list.isLoading ? "Loading…" : others.length ? "Choose one" : "No other saved results"}
               </option>
               {others.map((o) => (
                 <option key={o.id} value={o.id}>
@@ -293,7 +296,7 @@ function Comparison({
   if (none)
     return (
       <p className="mt-5 rounded-xl bg-secondary px-4 py-3 text-sm" data-testid="status-no-changes">
-        No differences in answers or matched rules between these two assessments.
+        Nothing differs between these two results: not your answers, and not the rules that matched.
       </p>
     );
   const pf = previous?.facts as unknown as Record<string, unknown> | undefined;

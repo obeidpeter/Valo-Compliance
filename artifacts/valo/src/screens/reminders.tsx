@@ -167,12 +167,9 @@ export default function RemindersPage() {
             <ErrorState error={prefs.error} onRetry={() => prefs.refetch()} />
           ) : (
             <form onSubmit={submit} noValidate className="surface grid gap-6 p-5 sm:p-7">
-              <div className="flex items-center justify-between">
-                <h2 id="pref-h" className="font-display text-2xl">
-                  Preferences
-                </h2>
-                <span className="font-mono text-xs text-muted-foreground">rev {rev}</span>
-              </div>
+              <h2 id="pref-h" className="font-display text-2xl">
+                Preferences
+              </h2>
 
               <div
                 className={cn(

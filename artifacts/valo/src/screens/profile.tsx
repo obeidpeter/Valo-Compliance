@@ -43,10 +43,8 @@ const EMPTY: Profile = {
   marketingConsent: false,
 };
 
-/** An answer in words. The profile has its own words for the two ways of not answering; every other
- * answer reads as it does in the requirements check. */
-const label = (s: string) =>
-  (({ unknown: "Unknown", unanswered: "Not answered yet" }) as Record<string, string>)[s] ?? valueLabel(s);
+/** An answer in words, as it reads in the requirements check and in a saved result. */
+const label = valueLabel;
 
 export default function ProfilePage() {
   const currentAccount = useAccountEpoch();
@@ -110,7 +108,7 @@ export default function ProfilePage() {
           setTouched(false);
           setConflict(false);
           qc.setQueryData(getGetWorkspaceQueryKey(), next);
-          toast({ title: "Profile saved", description: "Saved as revision " + next.profileRevision + "." });
+          toast({ title: "Profile saved", description: "Saved as version " + next.profileRevision + "." });
           if (leaving.current) {
             leaving.current = false;
             navigation.proceed();
@@ -177,16 +175,16 @@ export default function ProfilePage() {
         href="/workspace"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Workspace
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Home
       </Link>
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="font-display text-4xl">Business profile</h1>
-        <span className="font-mono text-xs text-muted-foreground" data-testid="text-profile-revision">
-          revision {ws.data?.profileRevision ?? 0}
+        <span className="text-sm text-muted-foreground" data-testid="text-profile-revision">
+          {ws.data?.profileRevision ? `Version ${ws.data.profileRevision}` : "Not saved yet"}
         </span>
       </div>
       <p className="mt-2 text-muted-foreground">
-        Each save creates a new revision. "Unknown" is always an acceptable answer.
+        Each save keeps a new version. &ldquo;I do not know&rdquo; is always an acceptable answer.
       </p>
 
       <form ref={form} onSubmit={submit} noValidate className="mt-8 grid gap-6">
@@ -305,9 +303,9 @@ export default function ProfilePage() {
                 data-testid="select-employees-mode"
               >
                 <option value="number">I know the number</option>
-                <option value="unknown">Unknown</option>
-                <option value="unanswered">Not answered yet</option>
-                <option value="not_applicable">Not applicable</option>
+                <option value="unknown">{label("unknown")}</option>
+                <option value="unanswered">{label("unanswered")}</option>
+                <option value="not_applicable">{label("not_applicable")}</option>
               </select>
               {empMode === "number" && (
                 <input
@@ -338,8 +336,8 @@ export default function ProfilePage() {
                   }
                   data-testid="select-year-mode"
                 >
-                  <option value="unknown">Unknown</option>
-                  <option value="year">Year</option>
+                  <option value="unknown">{label("unknown")}</option>
+                  <option value="year">I know the year</option>
                 </select>
                 {yearMode === "year" && (
                   <input
@@ -383,15 +381,15 @@ export default function ProfilePage() {
 
         {conflict && (
           <Notice title="This profile changed in another tab">
-            Your edits are still here. Load the latest saved version to continue (this replaces the form with
-            the newer revision), or copy anything you need first.
+            What you typed is still here. Load the newest saved version to carry on. That replaces what is in
+            the form, so copy anything you need first.
             <button
               type="button"
               className="btn btn-ink btn-sm mt-3"
               onClick={reloadLatest}
               data-testid="button-reload-profile"
             >
-              Load latest revision
+              Load the newest version
             </button>
           </Notice>
         )}
@@ -408,7 +406,7 @@ export default function ProfilePage() {
             disabled={save.isPending}
             data-testid="button-save-profile"
           >
-            {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save new revision
+            {save.isPending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />} Save profile
           </button>
         </div>
       </form>

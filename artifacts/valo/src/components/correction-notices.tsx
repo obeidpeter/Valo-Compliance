@@ -43,7 +43,7 @@ export function CorrectionNotices() {
                   ? "purchase"
                   : n.entityKind === "tasks"
                     ? "task"
-                    : "assessment"}
+                    : "result"}
             </Link>
           </li>
         ))}

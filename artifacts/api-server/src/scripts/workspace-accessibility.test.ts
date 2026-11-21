@@ -524,8 +524,8 @@ const SIGNED_IN: { path: string; title: string; area?: string }[] = [
   { path: "/workspace/documents/new", title: "New document" },
   { path: `/workspace/documents/${DOCUMENT}`, title: "Document editor" },
   { path: "/workspace/checker", title: "Check your requirements" },
-  { path: "/workspace/assessments", title: "Assessment history" },
-  { path: `/workspace/assessments/${ASSESSMENT}`, title: "Assessment" },
+  { path: "/workspace/assessments", title: "Saved results" },
+  { path: `/workspace/assessments/${ASSESSMENT}`, title: "Saved result" },
   { path: "/workspace/ai", title: "Drafting assistant" },
   { path: `/workspace/ai/${DRAFT}`, title: "Draft preview" },
   { path: "/workspace/tasks", title: "Tasks" },
@@ -1569,4 +1569,109 @@ test("an amount is typed in naira and saved as the same amount in whole kobo; wh
   } finally {
     await close();
   }
+});
+
+/** The project's words for a saved result, a version and the check, none of which the workspace's
+ * screens show now. */
+const OLD_WORKSPACE_WORDS = /assessment|\brev\b|\brevisions?\b|ruleset|questionnaire|snapshot|\bchecker\b/i;
+
+// WRK-001: "Show profile, saved templates, drafts, purchases, assessment history, tasks and
+// enquiries."
+test("the saved results, the business profile, the tasks and the check's save panel say 'result' and 'version' in the customer's words", async () => {
+  /** What a screen's own content reads, on one line. */
+  const read = async (page: Page, within = "main") =>
+    (await page.locator(within).innerText()).replace(/\s+/g, " ");
+  const open = async (path: string, check: (page: Page) => Promise<void>, how: Api = answer) => {
+    const { page, errors, unknown, close } = await desktop(path, how);
+    try {
+      await ready(page);
+      await check(page);
+      assert.deepEqual(errors, [], path);
+      assert.deepEqual(unknown, [], path);
+    } finally {
+      await close();
+    }
+  };
+
+  // The list of saved results: what each was worked out from, in words.
+  await open("/workspace/assessments", async (page) => {
+    await expect(page.locator("main h1")).toHaveText("Saved results");
+    const row = page.getByTestId(`link-assessment-${ASSESSMENT}`);
+    await expect(row).toContainText("18 Nov 2026, 10:00");
+    await expect(row).toContainText("Rules as at 18 Nov 2026");
+    await expect(row).toContainText("Rules version synthetic-ruleset");
+    await expect(row).toContainText("From your profile, version 3");
+    // The fixture's own name for its rules is left out: it happens to hold one of the old words.
+    assert.doesNotMatch(
+      (await read(page)).replace(assessment.result.rulesetVersion, ""),
+      OLD_WORKSPACE_WORDS,
+    );
+  });
+
+  // One saved result: its heading, where it came from, the way back and the comparison's words.
+  await open(`/workspace/assessments/${ASSESSMENT}`, async (page) => {
+    await expect(page.locator("main h1")).toHaveText("Result saved 18 Nov 2026, 10:00");
+    await expect(page.getByTestId("text-result-origin")).toHaveText(
+      "Worked out from your business profile, version 3.",
+    );
+    await expect(page.getByRole("link", { name: "All saved results" })).toHaveAttribute(
+      "href",
+      "/workspace/assessments",
+    );
+    await expect(page.getByLabel("Earlier result")).toContainText("No other saved results");
+  });
+
+  // The business profile: its version, the same words for not knowing as the check uses, and a
+  // button that says what it does.
+  await open("/workspace/profile", async (page) => {
+    await expect(page.getByTestId("text-profile-revision")).toHaveText("Version 3");
+    await expect(page.getByTestId("button-save-profile")).toHaveText("Save profile");
+    await expect(page.getByTestId("select-employees-mode").locator("option")).toHaveText([
+      "I know the number",
+      "I do not know",
+      "Not answered",
+      "Not applicable",
+    ]);
+    const shown = await read(page);
+    assert.doesNotMatch(shown, OLD_WORKSPACE_WORDS);
+    assert.doesNotMatch(shown, /\bUnknown\b|Not answered yet/);
+    assert.match(shown, /Each save keeps a new version\. “I do not know” is always an acceptable answer\./);
+  });
+
+  // The tasks and the reminders.
+  await open("/workspace/tasks", async (page) => {
+    await expect(page.getByTestId(`card-task-${tasks[0]!.id}`)).toContainText(
+      "Version 1 · saved 12 Nov 2026, 10:00",
+    );
+    assert.doesNotMatch(await read(page), OLD_WORKSPACE_WORDS);
+  });
+  await open("/workspace/reminders", async (page) => {
+    assert.doesNotMatch(await read(page), /\brev\b|\brevisions?\b/i);
+  });
+
+  // The check's save panel, after a check worked out from the profile's answers.
+  await open(
+    "/workspace/checker",
+    async (page) => {
+      await page.getByTestId("button-prefill").click();
+      await page.getByTestId("button-step-5").click();
+      await page.getByTestId("button-run").click();
+      const panel = page.getByTestId("panel-save");
+      await expect(panel).toBeVisible();
+      await expect(panel.locator(".eyebrow")).toHaveText("Save this result");
+      await expect(panel).toContainText("With the answers I gave here");
+      await expect(panel).toContainText("With my business profile, version 3");
+      const save = page.getByTestId("button-save-assessment");
+      await expect(save).toHaveText("Save this result");
+      await expect(save).toBeDisabled();
+      await panel
+        .getByRole("checkbox", { name: "I agree to Valo storing this result privately in my workspace." })
+        .check();
+      await expect(save).toBeEnabled();
+      assert.doesNotMatch(await read(page, '[data-testid="panel-save"]'), OLD_WORKSPACE_WORDS);
+    },
+    except({
+      "POST /workspace/checker/preview": api.PreviewWorkspaceAssessmentResponse.parse(assessment.result),
+    }),
+  );
 });
