@@ -2,6 +2,7 @@ import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { expect, type Page } from "@playwright/test";
 import * as api from "@workspace/api-zod";
+import { assess, checkerFactsSchema } from "@workspace/valo-core";
 import {
   menuProblems,
   phoneProblems,
@@ -466,6 +467,82 @@ test("a check that no published rule covers says so in plain words, says it is n
     // The fixture's own name for its rules is left out: it happens to hold one of the old words.
     const shown = (await result.innerText()).replace(/\s+/g, " ").replace(noResult.rulesetVersion, "");
     assert.doesNotMatch(shown, OLD_RESULT_WORDS);
+    assert.deepEqual(errors, []);
+  } finally {
+    await close();
+  }
+});
+
+// The other checks of the result answer the check with a result of their own making, so the rules
+// engine's own sentences were never on the screen for them. This one answers with what the engine
+// itself works out from the answers the page sent, with no rule published: what a visitor gets today.
+test("a result worked out by the rules engine itself, with no rule published, says its notice and what it does not cover in the site's words", async () => {
+  const worked: ReturnType<typeof assess>[] = [];
+  const { page, errors, close } = await app.phone("/checker", async (route, method, path, query) => {
+    if (method === "POST" && path === "/checker/preview") {
+      const { facts } = route.request().postDataJSON() as { facts: unknown };
+      const result = assess(
+        checkerFactsSchema.parse(facts),
+        [],
+        "2026-11-18",
+        new Date("2026-11-18T09:00:00Z"),
+      );
+      worked.push(result);
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(api.PreviewAssessmentResponse.parse(result)),
+      });
+    }
+    if (method === "GET" && path === "/public/recommendations")
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(noAids) });
+    return answer(route, method, path, query);
+  });
+  try {
+    await ready(page);
+    // One answer, so that the result can name a place.
+    await page.getByTestId("button-step-2").click();
+    await page.getByTestId("select-state").selectOption("Lagos");
+    await page.getByTestId("button-step-5").click();
+    await page.getByTestId("button-run").click();
+    const result = page.getByTestId("assessment-result");
+    await result.waitFor();
+    assert.equal(worked.length, 1);
+    // What the engine said, in its own words.
+    assert.match(worked[0]!.notice, /source-governed/);
+    assert.equal(worked[0]!.gaps.length, 3);
+    // What the visitor reads. The rules' version is quoted by its first twelve characters, as the
+    // result's reference is: the engine names a set of rules by a code of 64.
+    await expect(page.getByTestId("result-basis").locator("span")).toHaveText([
+      "Rules as at 18 Nov 2026",
+      /^Rules version [0-9a-f]{12}$/,
+      "0 results with a source",
+      /^Reference [0-9a-f]{12}$/,
+    ]);
+    await expect(page.getByTestId("result-basis").locator("span").nth(1)).toHaveAttribute(
+      "title",
+      worked[0]!.rulesetVersion,
+    );
+    await expect(result).toContainText("Read this first");
+    await expect(result).toContainText(
+      "This is guidance that depends on your answers. It is not a legal certificate. A missing or unknown answer never means that you are exempt.",
+    );
+    const nothing = page.getByTestId("status-coverage-unavailable");
+    await expect(nothing).toContainText("No published rule covers these answers yet.");
+    await expect(nothing).toContainText("This does not mean that you are exempt from anything.");
+    // The list does not say again that nothing was found.
+    await expect(result.locator("li.border-l-2")).toHaveText([
+      "Valo does not cover every state, the FCT and every local government area. Check what applies in Lagos with the authorities there.",
+      "Healthcare, financial services and energy are covered only where a published rule is about that activity.",
+    ]);
+    const shown = (await result.innerText()).replace(/\s+/g, " ");
+    assert.doesNotMatch(
+      shown,
+      /source-governed|released|eligible|not comprehensive|high-impact|establish exemption|\bLGA\b/i,
+    );
+    assert.deepEqual(oldWordsIn(shown), []);
+    await settled(page);
+    assert.deepEqual(await phoneProblems(page, "a result the engine worked out"), []);
     assert.deepEqual(errors, []);
   } finally {
     await close();

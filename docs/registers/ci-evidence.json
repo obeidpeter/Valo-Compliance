@@ -1063,7 +1063,7 @@
       "job": "foundation",
       "file": "artifacts/valo/src/components/assessment-result.test.tsx",
       "test": "the result page shows why a held rule gives no result and links each official route",
-      "proves": "The checker's result page, rendered on the server from a synthetic result with no items, lists a held rule's stale-evidence reason among the coverage gaps, says no published rule covers these answers yet and links the official route to open in a new tab."
+      "proves": "The checker's result page, rendered on the server from a synthetic result with no items, lists a held rule among what is not covered, with its stale-evidence reason in the site's words (its review date has passed, or its sources have not been checked yet), says no published rule covers these answers yet and links the official route to open in a new tab."
     },
     {
       "requirement": "DOC-001",
@@ -2239,7 +2239,7 @@
       "job": "foundation",
       "file": "artifacts/valo/src/components/assessment-result.test.tsx",
       "test": "the result page shows every coverage gap and the excluded sectors, and no score",
-      "proves": "The checker's result page, rendered on the server from a synthetic result, lists every coverage gap, including the excluded high-impact healthcare, financial services and energy activities, shows the not-legal-certification notice, and contains no “score”, “percent” or percent sign after a number."
+      "proves": "The checker's result page, rendered on the server from a synthetic result, lists every coverage gap in the site's words, including that healthcare, financial services and energy are covered only where a published rule is about the activity, shows the notice that it is not a legal certificate, and contains no “score”, “percent” or percent sign after a number."
     },
     {
       "requirement": "RUL-006",
