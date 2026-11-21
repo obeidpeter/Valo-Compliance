@@ -2339,3 +2339,122 @@ test("the reminders screen says in plain words whether emails are being sent and
     await close();
   }
 });
+
+// SRV-002: "the user sees “Enquiry received”, not “Appointment booked”". The receipt and the
+// customer's own requests say what has happened, and what has not, in words a customer is not asked
+// to learn.
+test("a saved request reads 'Enquiry received' with what has not happened, and the customer's own requests read in plain words", async () => {
+  const CASE = "00000000-0000-4000-8000-0000000051a1";
+  const request = {
+    id: CASE,
+    sourceKind: "workspace",
+    reference: "VALO-SUP-SYNTHETIC-1",
+    category: "support",
+    status: "awaiting_customer",
+    version: 4,
+    updatedAt: at(19),
+  };
+  const sent: unknown[] = [];
+  const how: Api = async (route, method, path, query) => {
+    if (method === "POST" && path === "/workspace/support") {
+      sent.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(
+          api.CreateSupportTicketResponse.parse({
+            reference: "VALO-SUP-SYNTHETIC-2",
+            message: "Synthetic test fixture: a note in the server's own words.",
+            dispatchStatus: "awaiting_staff",
+          }),
+        ),
+      });
+    } else
+      await except({
+        "GET /workspace/support-cases": api.ListCustomerSupportCasesResponse.parse({
+          cases: [request],
+          page: 1,
+          pageSize: 25,
+          hasMore: false,
+          notice: "Synthetic test fixture: a note in the server's own words.",
+        }),
+        [`GET /workspace/support-cases/${CASE}`]: api.GetCustomerSupportCaseResponse.parse({
+          case: {
+            ...request,
+            scope: "Synthetic request: the download did not start.",
+            contactEmail: "synthetic-accessibility@example.test",
+            sharingConsent: false,
+            createdAt: at(18),
+          },
+          messages: [
+            {
+              id: "00000000-0000-4000-8000-0000000051b1",
+              body: "Synthetic reply from staff.",
+              createdAt: at(19),
+              authorKind: "staff",
+              visibility: "customer",
+            },
+            {
+              id: "00000000-0000-4000-8000-0000000051b2",
+              body: "Synthetic note from the customer.",
+              createdAt: at(18),
+              authorKind: "customer",
+              visibility: "customer",
+            },
+          ],
+          messagesPage: 1,
+          messagePageSize: 25,
+          moreMessages: false,
+          notice: "Synthetic test fixture: a note in the server's own words.",
+        }),
+      })(route, method, path, query);
+  };
+  const { page, errors, unknown, close } = await desktop("/support", how);
+  try {
+    await ready(page);
+    // The customer's own requests.
+    const requests = page.getByTestId("customer-support-cases");
+    await expect(page.locator("#customer-support-heading")).toHaveText("Your support requests");
+    await expect(requests).toContainText(
+      "Replies are kept on this page. Valo does not email them yet, so come back here to read them.",
+    );
+    await expect(requests).toContainText("Valo product support · Staff have replied");
+    await requests.getByRole("button", { name: "View conversation" }).click();
+    await expect(requests).toContainText("Synthetic request: the download did not start.");
+    await expect(requests).toContainText(
+      "A reply here is not an appointment or a professional review. Nothing is emailed, and your request is not passed to anyone outside Valo.",
+    );
+    await expect(requests).toContainText("Valo staff · 19 Nov 2026, 10:00");
+    await expect(requests).toContainText("You · 18 Nov 2026, 10:00");
+    await expect(requests.getByRole("button", { name: "Save reply", exact: true })).toBeDisabled();
+    const read = (await requests.innerText()).replace(/\s+/g, " ");
+    // The request's state and topic are words, not the system's names, and no note of the server's
+    // own is shown.
+    assert.doesNotMatch(
+      read,
+      /awaiting_customer|awaiting customer|\bversion\b|portal|\bcase\b|durabl|dispatch|server's own words/i,
+    );
+
+    // The form, and its receipt.
+    await page.getByTestId("input-scope").fill("Synthetic request: the file would not open.");
+    await page.getByTestId("button-submit-ticket").click();
+    const receipt = page.getByTestId("ticket-receipt");
+    await expect(receipt).toHaveAttribute("role", "status");
+    await expect(receipt).toContainText("Enquiry received");
+    await expect(receipt).toContainText(
+      "It is saved for a member of Valo's staff to read. No appointment has been made, and no time for a reply has been set. Nothing has been sent to anyone outside Valo.",
+    );
+    await expect(page.getByTestId("text-ticket-reference")).toHaveText("VALO-SUP-SYNTHETIC-2");
+    await expect(receipt).toContainText("Waiting for staff");
+    assert.doesNotMatch(
+      (await receipt.innerText()).replace(/\s+/g, " "),
+      /appointment booked|durabl|provider|dispatch|server's own words/i,
+    );
+    assert.equal(sent.length, 1);
+    assert.deepEqual((await wcagFailures(page)).failures, []);
+    assert.deepEqual(errors, []);
+    assert.deepEqual(unknown, []);
+  } finally {
+    await close();
+  }
+});

@@ -12,8 +12,7 @@ export function TicketSignedOut() {
     <div className="surface p-6 sm:p-8" data-testid="ticket-signed-out">
       <p className="font-display text-2xl">Sign in to send this</p>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Requests are stored in your private workspace so we can tie them to your account. That needs a
-        verified email first.
+        A request is saved in your workspace, so it needs an account with a verified email address.
       </p>
       <div className="mt-5 flex flex-wrap gap-2">
         <Link href="/sign-in" className="btn btn-primary">
@@ -69,10 +68,14 @@ export function TicketFormInner({
 
   if (receipt) {
     return (
-      <div className="surface reveal p-6 sm:p-8" data-testid="ticket-receipt">
-        <CheckCircle2 className="h-7 w-7 text-primary" />
-        <p className="font-display mt-4 text-2xl">Saved. Waiting for a person.</p>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{receipt.message}</p>
+      <div className="surface reveal p-6 sm:p-8" role="status" data-testid="ticket-receipt">
+        <CheckCircle2 className="h-7 w-7 text-primary" aria-hidden="true" />
+        {/* SRV-002: the user sees "Enquiry received", not "Appointment booked". */}
+        <p className="font-display mt-4 text-2xl">Enquiry received</p>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          It is saved for a member of Valo's staff to read. No appointment has been made, and no time for a
+          reply has been set. Nothing has been sent to anyone outside Valo.
+        </p>
         <dl className="mt-6 grid gap-3 rounded-xl border border-border bg-background p-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="eyebrow">Reference</dt>
@@ -84,14 +87,13 @@ export function TicketFormInner({
             <dt className="eyebrow">Status</dt>
             <dd className="mt-1">
               <span className="pill pill-ochre">
-                <span className="dot" /> Awaiting staff
+                <span className="dot" /> Waiting for staff
               </span>
             </dd>
           </div>
         </dl>
         <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-          Your request is durably stored. It has not been sent to any outside provider, and no appointment or
-          response time has been set.
+          Keep the reference if you write again.
         </p>
         <button
           className="btn btn-ghost btn-sm mt-5"
@@ -143,12 +145,12 @@ export function TicketFormInner({
           maxLength={4000}
           aria-invalid={touched && !!scopeErr}
           onChange={(e) => setScope(e.target.value)}
-          placeholder="Describe the situation in your own words. Please use test details only during development."
+          placeholder="Describe it in your own words. While Valo is being built, use test details only."
           data-testid="input-scope"
         />
         <div className="hint flex justify-between">
           <span className={touched && scopeErr ? "text-destructive" : ""}>
-            {touched && scopeErr ? scopeErr : "Minimum 10 characters."}
+            {touched && scopeErr ? scopeErr : "At least 10 characters."}
           </span>
           <span className="font-mono">{scope.length}/4000</span>
         </div>
