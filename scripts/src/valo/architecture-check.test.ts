@@ -10,6 +10,9 @@ import {
   importCycles,
   inferenceBindingReport,
   inferenceBindingViolations,
+  PUBLISHER_CONNECTION_ENTRY,
+  publisherConnectionReport,
+  publisherConnectionViolations,
   moduleBoundaryViolations,
   publicServerEntries,
   publicServerViolations,
@@ -112,6 +115,37 @@ test("only the reviewed entries may enter a workspace scope", () => {
   assert.equal(workspaceActorViolations("artifacts/api-server/src/routes/valo.ts", scoped).length, 1);
   for (const entry of WORKSPACE_SCOPE_ENTRIES)
     assert.equal(workspaceActorViolations(entry, scoped).length, 0);
+});
+
+test("only the publisher names the publisher's database connection", () => {
+  const use =
+    "const { publisherDb } = await import('@workspace/db');\nawait publisherDb().transaction(run);\n";
+  assert.deepEqual(publisherConnectionViolations(PUBLISHER_CONNECTION_ENTRY, use), []);
+  const elsewhere = publisherConnectionViolations("artifacts/api-server/src/routes/valo.ts", use);
+  assert.equal(elsewhere.length, 2, "the import and the call are each reported");
+  assert.match(
+    elsewhere[0]!,
+    /^artifacts\/api-server\/src\/routes\/valo\.ts:1 publisher-connection only the publisher/,
+  );
+  // Renaming it on the way in does not hide it.
+  assert.equal(
+    publisherConnectionViolations(
+      "artifacts/api-server/src/lib/example.ts",
+      "import { publisherDb as other } from '@workspace/db';\n",
+    ).length,
+    1,
+  );
+  // A test may stand in for the connection, or check the boundary.
+  assert.deepEqual(publisherConnectionViolations("artifacts/api-server/src/lib/example.test.ts", use), []);
+  // The word in a comment or a string is not a use.
+  assert.deepEqual(
+    publisherConnectionViolations(
+      "artifacts/api-server/src/lib/example.ts",
+      "// publisherDb is for the publisher\nconst name = 'publisherDb';\n",
+    ),
+    [],
+  );
+  assert.deepEqual(publisherConnectionReport(), [], "the repository keeps the rule");
 });
 
 test("only the reviewed operator commands provide the dispatcher's binding checks, and only the real ones", () => {

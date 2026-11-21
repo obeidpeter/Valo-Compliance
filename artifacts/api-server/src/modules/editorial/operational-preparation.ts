@@ -16,6 +16,7 @@ import {
   developmentPublicationOnly,
   operationalPolicy,
   putPublicationArtifact,
+  assertPublisherCanLogIn,
   publishOperationalVersion,
   recordActualPublicationHold,
   type ReleaseAttestations,
@@ -49,6 +50,9 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
   const { db, valoContentVersions, valoPublicationPolicies, valoPreparedCandidates } =
     await import("@workspace/db");
   developmentPublicationOnly();
+  // The one-step path pays for authoring and reviews and then releases. It finds out now, before
+  // anything is paid for, whether the publisher can log in.
+  if (requestReviews) await assertPublisherCanLogIn();
   const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
   const useRecordedAuthoring = requestReviews && setting("VALO_OPERATIONAL_AUTHORING") === "recorded";
   const versions = await db

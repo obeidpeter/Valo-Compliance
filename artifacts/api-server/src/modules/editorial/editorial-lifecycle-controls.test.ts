@@ -3,7 +3,11 @@ import assert from "node:assert/strict";
 import { narrowOperationalPolicy, publicationCheckTime } from "../publication/operational-restrictions";
 import { operationalPolicy } from "../publication/operational-policy";
 import { lifecycleSeedUrl, assertLifecycleRunDatabase } from "./editorial-lifecycle-sandbox";
-import { dispatchEditorialLifecycle, lifecycleCaseIds } from "./editorial-lifecycle-dispatch";
+import {
+  dispatchEditorialLifecycle,
+  lifecycleCaseIds,
+  lifecyclePublisherUrl,
+} from "./editorial-lifecycle-dispatch";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { sha256 } from "@workspace/valo-core";
@@ -72,6 +76,22 @@ test("destructive lifecycle tests reject native, remote, ambiguous and same-appl
     "valo_lifecycle_run_" + "a".repeat(32),
   );
 });
+test("a lifecycle copy is released through the publisher login of its own server, or not at all", () => {
+  const copy =
+    "postgresql://owner:synthetic@127.0.0.1:5544/valo_lifecycle_run_0123456789abcdef0123456789abcdef";
+  const seedPublisher =
+    "postgresql://valo_publisher_login:synthetic@127.0.0.1:5544/valo_lifecycle_seed_0123456789abcdef";
+  // The seed server's publisher connection, with the copy's database name.
+  assert.equal(
+    lifecyclePublisherUrl(seedPublisher, copy),
+    "postgresql://valo_publisher_login:synthetic@127.0.0.1:5544/valo_lifecycle_run_0123456789abcdef0123456789abcdef",
+  );
+  // None configured, or one that cannot be read: the copy gets no publisher connection, so a
+  // release in it fails as unavailable and is never run on the application's own login.
+  assert.equal(lifecyclePublisherUrl(undefined, copy), undefined);
+  assert.equal(lifecyclePublisherUrl("not a connection string", copy), undefined);
+});
+
 test("original ten lifecycle case IDs route to a genuine-baseline prerequisite without calls or fabricated pass", async () => {
   const before = {
     mode: process.env.NODE_ENV,

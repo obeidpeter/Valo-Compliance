@@ -11,6 +11,7 @@ import {
   workspaceScopeUnavailable,
   type ScopeKey,
 } from "./workspace-scope";
+import { endPublisherPool, publisherPool } from "./publisher-login";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
@@ -91,6 +92,7 @@ class ValoPool extends pg.Pool {
 
   override async end(): Promise<void> {
     await this.#customer?.end();
+    await endPublisherPool();
     return super.end();
   }
 
@@ -167,6 +169,11 @@ export function createPool(options: pg.PoolConfig = {}, customerOptions: pg.Pool
 
 export const pool = createPool();
 export const db = drizzle(pool, { schema });
+/**
+ * The database as the publisher sees it: connections that logged in as the publisher login. Only
+ * the release of a content version runs here; everything else uses `db`.
+ */
+export const publisherDb = () => drizzle(publisherPool(), { schema });
 export { schema };
 export {
   runInWorkspaceScope,
@@ -175,5 +182,11 @@ export {
   WORKSPACE_SCOPE_ROLE,
   WORKSPACE_SCOPE_UNAVAILABLE_CODE,
 } from "./workspace-scope";
+
+export {
+  PUBLISHER_LOGIN_ROLE,
+  PUBLISHER_LOGIN_UNAVAILABLE_CODE,
+  publisherConnectionString,
+} from "./publisher-login";
 
 export * from "./schema";

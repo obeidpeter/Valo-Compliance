@@ -192,7 +192,11 @@ test(
           ),
         );
       await copyDatabaseFunctions(scoped, schema, INFERENCE_LEDGER_FUNCTIONS);
-      t.mock.module("@workspace/db", { namedExports: { ...database, db: drizzle(scoped), pool: scoped } });
+      // The fixture schema's copied tables carry no triggers, and the application is pointed at
+      // them through this one pool: the release runs on it too, not on the real publisher login.
+      t.mock.module("@workspace/db", {
+        namedExports: { ...database, db: drizzle(scoped), pool: scoped, publisherDb: () => drizzle(scoped) },
+      });
       t.mock.module(new URL("../modules/publication/publication-artifacts.ts", import.meta.url).href, {
         namedExports: { getPublicationArtifact: get, putPublicationArtifact: put },
       });

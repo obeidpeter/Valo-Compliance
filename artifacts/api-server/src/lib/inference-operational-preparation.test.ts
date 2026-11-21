@@ -45,7 +45,8 @@ test("actual preparation and prepared-candidate readiness bind another form with
   let reviewCalls = 0,
     authoringCalls = 0,
     publishCalls = 0,
-    holdCalls = 0;
+    holdCalls = 0,
+    publisherChecks = 0;
   const database = {
     select: () => ({
       from: (table: unknown) => ({
@@ -133,6 +134,13 @@ test("actual preparation and prepared-candidate readiness bind another form with
   });
   t.mock.module(new URL("../modules/publication/publication-publisher.ts", import.meta.url).href, {
     namedExports: {
+      // The publisher's login is not enabled here.
+      assertPublisherCanLogIn: async () => {
+        publisherChecks++;
+        throw Object.assign(Error("The publisher login is unavailable"), {
+          code: "VALO_PUBLISHER_LOGIN_UNAVAILABLE",
+        });
+      },
       publishOperationalVersion: async () => {
         publishCalls++;
         throw Error("PUBLICATION_FORBIDDEN");
@@ -143,7 +151,8 @@ test("actual preparation and prepared-candidate readiness bind another form with
       },
     },
   });
-  const { prepareOperationalCandidateRelease } = await import("../modules/editorial/operational-preparation");
+  const { prepareOperationalCandidateRelease, prepareInventoryRelease } =
+    await import("../modules/editorial/operational-preparation");
   const { readOperationalInferenceReadiness } =
     await import("../modules/ai-lanes/inference-operational-ready");
   const now = new Date(),
@@ -314,6 +323,24 @@ test("actual preparation and prepared-candidate readiness bind another form with
   assert.equal(authoringCalls, 0);
   assert.equal(publishCalls, 0);
   assert.equal(networkCalls, 0);
+  // Preparing a candidate never releases, so it never asks for the publisher's login.
+  assert.equal(publisherChecks, 0);
+  // The one-step path pays for authoring and reviews and then releases. With the publisher's login
+  // unavailable it stops before anything is paid for, saved or published.
+  saved.length = 0;
+  preparedRows.length = 0;
+  await assert.rejects(
+    () => prepareInventoryRelease(path),
+    (error: { code?: string }) => error.code === "VALO_PUBLISHER_LOGIN_UNAVAILABLE",
+  );
+  assert.equal(publisherChecks, 1);
+  assert.equal(authoringCalls, 0);
+  assert.equal(reviewCalls, 0);
+  assert.equal(publishCalls, 0);
+  assert.equal(holdCalls, 0);
+  assert.equal(networkCalls, 0);
+  assert.equal(saved.length, 0);
+  assert.equal(preparedRows.length, 0);
 });
 test("multi-candidate reports require exact selection and retain old single-pair compatibility", async () => {
   // Loaded here, not at the top: the AI module reads the publication index, and the test above

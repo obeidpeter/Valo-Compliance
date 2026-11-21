@@ -211,6 +211,16 @@ customer request, export and reminder fails until it is fixed; no connection is 
 migration and enable the login (see `docs/valo/migration-workspace-row-security.md`)
 before releasing code that expects them.
 
+`VALO_PUBLISHER_LOGIN_UNAVAILABLE` means a content version could not be released because the
+publisher's own connection is missing or wrong. Check, in order: the publisher login migration is
+applied; `VALO_PUBLISHER_DATABASE_URL` is set for the command that publishes, leads to the same
+host, port and database as `DATABASE_URL`, and logs in as `valo_publisher_login` with its current
+password; and the login can log in (`lib/db/scripts/publisher-login.mjs` enables it). A release
+refused with error code `42501` and "published only by a session that logged in as
+valo_publisher_login" was attempted on another connection: the database publishes a version only
+for the publisher's login. Nothing else uses the login, so preparing, reviewing, holding,
+withdrawing and reading content are unaffected (see `docs/valo/migration-publisher-login.md`).
+
 A customer request that answers the generic 503 with error code `42501` in its log
 ran a command `valo_workspace_scope` does not hold: the code started using a table,
 command or column before a migration granted it (`WORKSPACE_SCOPE_PRIVILEGES` in

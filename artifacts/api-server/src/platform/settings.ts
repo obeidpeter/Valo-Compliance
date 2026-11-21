@@ -232,6 +232,12 @@ export const SETTINGS = {
       "Separately prepared genuine-evidence seed database that editorial lifecycle cases clone into a disposable database (development only).",
     secret: true,
   },
+  VALO_EDITORIAL_LIFECYCLE_PUBLISHER_DATABASE_URL: {
+    group: "Editorial",
+    description:
+      "The lifecycle seed database's server, logged in as valo_publisher_login. A lifecycle case that releases a version does so on its disposable copy through this login; without it such a case fails as the publisher login is unavailable (development only).",
+    secret: true,
+  },
   VALO_RUN_EDITORIAL_PROOF: {
     group: "Editorial",
     description: "`official-development-only` to run the development editorial proof.",
@@ -311,6 +317,18 @@ export const OTHER_PACKAGE_SETTINGS: Record<string, SettingDefinition> = {
     group: "Database",
     description:
       "Password lib/db/scripts/workspace-login.mjs gives valo_workspace_login when an operator enables it; at least 24 printable ASCII characters. The application never reads it.",
+    secret: true,
+  },
+  VALO_PUBLISHER_DATABASE_URL: {
+    group: "Database",
+    description:
+      "The same database, logged in as valo_publisher_login, for releasing a content version (read by lib/db; lib/db/scripts/publisher-login.mjs prints it). The database publishes a version only in a session that logged in as this login, so a release fails while it is unset. Give it only to the process that publishes.",
+    secret: true,
+  },
+  VALO_PUBLISHER_LOGIN_PASSWORD: {
+    group: "Database",
+    description:
+      "Password lib/db/scripts/publisher-login.mjs gives valo_publisher_login when an operator enables it; at least 24 printable ASCII characters. The application never reads it.",
     secret: true,
   },
 };

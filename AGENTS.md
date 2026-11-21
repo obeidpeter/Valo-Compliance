@@ -111,6 +111,12 @@ Rules that apply now:
   that returns only that total, like `valo_customer_ai_reservations`. The shared
   inference ledger is written only through its functions
   (`valo_inference_budget_commit` and the others in decision 0008).
+- A content version is released only on the publisher's own connection (`publisherDb`,
+  `VALO_PUBLISHER_DATABASE_URL`): the database publishes a version only in a session that logged
+  in as `valo_publisher_login`, which may become the publisher role and nothing else. Only
+  `publishOperationalVersion` uses that connection; the `publisher-connection` repository rule
+  enforces this. Never give the login another privilege or membership outside a reviewed
+  migration, and never give its connection string to the API or the worker.
 - Only the operator commands in `FINITE_WORK_BINDING_ENTRIES` hand the inference
   dispatcher its work-binding checks (`provideFiniteWorkBindings`), and only the real
   `assertFiniteWorkBindings`; the `inference-bindings` repository rule enforces this.

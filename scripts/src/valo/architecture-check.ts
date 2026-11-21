@@ -14,6 +14,7 @@ import ts from "typescript";
  *   and lazy imports.
  * - workspace-actor: see workspaceActorViolations.
  * - inference-bindings: see inferenceBindingViolations.
+ * - publisher-connection: see publisherConnectionViolations.
  * - module-boundary: see moduleBoundaryViolations.
  * - public-server: see publicServerViolations.
  * - web-formatting: see webFormattingViolations.
@@ -313,6 +314,38 @@ export function inferenceBindingReport(root = repositoryRoot): string[] {
   );
 }
 
+/** The one file that releases a content version, on the publisher's own database connection. */
+export const PUBLISHER_CONNECTION_ENTRY =
+  "artifacts/api-server/src/modules/publication/publication-publisher.ts";
+
+/**
+ * publisher-connection (decision 0017): the database publishes a content version only in a session
+ * that logged in as the publisher. `publisherDb` opens such a session, so it may be named only by
+ * the publisher itself. Any other code that reached for it could publish past the gates. Tests
+ * may name it, to stand in for it or to check the boundary.
+ */
+export function publisherConnectionViolations(path: string, text: string): string[] {
+  if (!/\.tsx?$/.test(path) || /\.test\.tsx?$/.test(path) || !text.includes("publisherDb")) return [];
+  if (path === PUBLISHER_CONNECTION_ENTRY) return [];
+  const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const violations: string[] = [];
+  const visit = (node: ts.Node) => {
+    if (ts.isIdentifier(node) && node.text === "publisherDb")
+      violations.push(
+        `${path}:${lineOf(source, node.getStart(source))} publisher-connection only the publisher may use the publisher's database connection`,
+      );
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return violations;
+}
+
+export function publisherConnectionReport(root = repositoryRoot): string[] {
+  return sourceFiles(join(root, "artifacts/api-server/src"), isProductSource).flatMap((file) =>
+    publisherConnectionViolations(relative(root, file), readFileSync(file, "utf8")),
+  );
+}
+
 const MODULES = "artifacts/api-server/src/modules/";
 
 /**
@@ -528,6 +561,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     ...cycleViolations(),
     ...workspaceActorReport(),
     ...inferenceBindingReport(),
+    ...publisherConnectionReport(),
     ...moduleBoundaryViolations(),
     ...publicServerViolations(),
     ...webFormattingReport(),
