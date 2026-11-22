@@ -21,13 +21,14 @@ import {
   actOnManualRevision,
   privateManualFile,
   releasedManualFile,
+  purchasedManualFile,
 } from "../modules/manual-library";
 
 const uuid = z
   .string()
   .uuid()
   .transform((value) => value.toLowerCase());
-function sendFile(res: Response, file: Awaited<ReturnType<typeof releasedManualFile>>) {
+function sendManualFile(res: Response, file: Awaited<ReturnType<typeof releasedManualFile>>) {
   res.set({
     "Content-Type": exportMime[file.format],
     "Content-Disposition": 'attachment; filename="' + file.filename + '"',
@@ -36,6 +37,14 @@ function sendFile(res: Response, file: Awaited<ReturnType<typeof releasedManualF
   });
   res.send(file.bytes);
 }
+/** Mounted after workspace identity resolution, on the scoped customer connection. */
+export const premiumManualTemplateRouter = Router().get(
+  "/workspace/manual-premium-templates/:id/download",
+  async (req, res) => {
+    res.set("Cache-Control", "private, no-store");
+    sendManualFile(res, await purchasedManualFile(res.locals.valoActor, uuid.parse(req.params.id)));
+  },
+);
 export function createManualLibraryRouter(
   authenticate: (req: Request) => Promise<SourceStaffActor> = verifiedStaffSession,
 ) {
@@ -106,7 +115,7 @@ export function createManualLibraryRouter(
     );
   });
   router.get("/admin/manual-library/:id/revisions/:version/file", async (req, res) => {
-    sendFile(
+    sendManualFile(
       res,
       await privateManualFile(
         res.locals.manualEditor,
@@ -117,9 +126,9 @@ export function createManualLibraryRouter(
   });
   router.get("/account/manual-templates/:id/download", async (req, res) => {
     res.set("Cache-Control", "private, no-store");
-    // A verified customer session is sufficient. Staff privileges are only used for private previews.
+    // This route serves only released free templates. Premium editions require a workspace purchase.
     await authenticate(req);
-    sendFile(res, await releasedManualFile(uuid.parse(req.params.id)));
+    sendManualFile(res, await releasedManualFile(uuid.parse(req.params.id)));
   });
   return router;
 }

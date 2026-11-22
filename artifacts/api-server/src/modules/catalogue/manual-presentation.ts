@@ -1,4 +1,4 @@
-import type { releasedManualEntries } from "../manual-library";
+import { isManualTemplate, type releasedManualEntries } from "../manual-library";
 import type { ReleasedLibraryItem } from "./valo-catalogue";
 
 type PublicRevision = Awaited<ReturnType<typeof releasedManualEntries>>[number];
@@ -37,7 +37,7 @@ export function manualResource(row: PublicRevision) {
   };
 }
 export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
-  const template = row.kind === "template";
+  const template = isManualTemplate(row.kind);
   return {
     id: row.id,
     slug: row.slug,
@@ -53,7 +53,7 @@ export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
         : row.kind === "regulatory_article"
           ? "Regulatory guidance"
           : "Practical business guides",
-    access: "free",
+    access: row.kind === "premium_template" ? "premium" : "free",
     reviewedAt: row.publishedAt!.toISOString(),
     href: (template ? "/library/" : "/resources/") + row.slug,
   };
@@ -68,6 +68,7 @@ export function manualTemplate(row: PublicRevision) {
     version: row.version,
     publicationMethod: "manual" as const,
     reviewedAt: row.publishedAt!.toISOString(),
+    access: row.kind === "premium_template" ? ("premium" as const) : ("free" as const),
     reviewBy: null,
     disclosure,
     scope: "Business template",

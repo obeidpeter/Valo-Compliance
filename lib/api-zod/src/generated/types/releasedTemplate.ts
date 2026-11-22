@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ReleasedTemplateAccess } from './releasedTemplateAccess';
 import type { ReleasedTemplateFormatsItem } from './releasedTemplateFormatsItem';
 import type { ReleasedTemplatePublicationMethod } from './releasedTemplatePublicationMethod';
 
@@ -19,6 +20,7 @@ export interface ReleasedTemplate {
   /** @nullable */
   reviewBy: Date | null;
   publicationMethod?: ReleasedTemplatePublicationMethod;
+  access?: ReleasedTemplateAccess;
   disclosure: string;
   scope: string;
   limitations: string;
