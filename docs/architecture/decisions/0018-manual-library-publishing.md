@@ -4,7 +4,7 @@ The product owner approved a publishing workflow with a $0 review budget on 22 N
 
 ## Staff workflow
 
-Open **Staff → Content → Publish to the library**. Choose **New item**, enter the title, and choose a content type and industry. General business is available for guides and templates. Each industry can have one live introduction.
+Open **Staff → Content → Publish guides and templates**. Choose **New item**, enter the title, and choose a content type and industry. General business is available for guides and templates. Each industry can have one live introduction.
 
 Paste text or upload a Word (.docx) or PDF file up to 2 MB. Valo reads the text locally. For a scanned PDF, enter the text readers should see. Choose **Save draft and preview**. A template preview includes a download of the exact file. Pasting a template creates a Word file. Choose **Publish this version** to release the preview.
 
@@ -14,7 +14,7 @@ Open a saved entry to make a correction. Readers see the current release until a
 
 The application requires an active Content role and recent MFA. It records the editor and date for each saved, published and withdrawn version. It uses the existing database, a separate item identity, and a fingerprint of the previewed text and attachment. Every revision keeps its original content type. A new public version requires an explicit staff action. The editing routes make no AI calls and create no review allocations or worker jobs.
 
-Practical guides appear on Guides. An industry introduction also appears on its category page. Templates appear in Documents, and signed-in readers can download their published file. The publication date is identified as editorial publication. Industry introductions contribute no source-check dates or regulatory evidence. Previously reviewed releases continue to use their recorded evidence and existing file access rules.
+Readers can filter Guides by industry. An industry introduction also appears on its category page. Templates appear in Documents, and signed-in readers can download their published file. The publication date is identified as editorial publication. Industry introductions contribute no source-check dates or regulatory evidence. Previously reviewed releases continue to use their recorded evidence and existing file access rules.
 
 Existing project drafts can be pasted or uploaded individually. The editor saves regulatory drafts privately. Both the API and PostgreSQL enforce the regulatory hold, including new releases through the earlier sourced-guidance publisher. Enabling regulatory publication after the owner's source check requires a separate change.
 

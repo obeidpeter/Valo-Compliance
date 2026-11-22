@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowLeft, BookOpen, ExternalLink, FileX } from "lucide-react";
 import {
   useListReleasedResources,
@@ -20,6 +21,7 @@ import {
 } from "@/components/resource-parts";
 import { describeError } from "@/lib/describe-error";
 import { formatCount, formatDay } from "@/lib/format";
+import { industryName } from "@/lib/library-filters";
 import { fromServer } from "@/lib/server-data";
 import { ANY_DOCUMENT, signUpFor } from "@/lib/start";
 
@@ -30,6 +32,18 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
     query: { queryKey: getListReleasedResourcesQueryKey(), ...liveContent, ...fromServer(initial) },
   });
   const items = q.data ?? [];
+  const [selectedIndustry, setIndustry] = useState("");
+  const industries = [...new Set(items.flatMap((r) => r.industrySlugs))].sort();
+  const hasGeneral = items.some((r) => r.industrySlugs.length === 0);
+  const selected =
+    industries.includes(selectedIndustry) || (selectedIndustry === "general" && hasGeneral)
+      ? selectedIndustry
+      : "";
+  const visible = selected
+    ? items.filter((r) =>
+        selected === "general" ? r.industrySlugs.length === 0 : r.industrySlugs.includes(selected),
+      )
+    : items;
   return (
     <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
       <GuidanceTabs current="/resources" />
@@ -47,11 +61,36 @@ export function Resources({ initial }: { initial?: ReleasedResource[] | undefine
         <ErrorState error={q.error} onRetry={() => q.refetch()} />
       ) : items.length > 0 ? (
         <>
-          <p className="mb-4 text-sm text-muted-foreground" data-testid="text-resource-count">
-            {formatCount(items.length)} guide{items.length === 1 ? "" : "s"}
+          {industries.length > 0 && (
+            <div className="mb-4">
+              <label htmlFor="guide-industry" className="block text-sm font-medium">
+                Filter guides by industry
+              </label>
+              <select
+                className="mt-1 rounded-lg border border-border bg-background p-2"
+                id="guide-industry"
+                value={selected}
+                onChange={(e) => setIndustry(e.target.value)}
+              >
+                <option value="">All industries</option>
+                {hasGeneral && <option value="general">General business</option>}
+                {industries.map((slug) => (
+                  <option key={slug} value={slug}>
+                    {industryName(slug.replaceAll("-", " "))}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <p
+            className="mb-4 text-sm text-muted-foreground"
+            aria-live="polite"
+            data-testid="text-resource-count"
+          >
+            {formatCount(visible.length)} guide{visible.length === 1 ? "" : "s"}
           </p>
           <ul className="grid gap-3 md:grid-cols-2">
-            {items.map((r) => (
+            {visible.map((r) => (
               <li key={r.id} data-testid={"card-resource-" + r.id}>
                 <ResourceCard r={r} />
               </li>

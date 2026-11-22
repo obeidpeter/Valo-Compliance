@@ -132,7 +132,9 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
     load(row);
     await list.refetch();
     setMessage(
-      action === "publish" ? "Published. Readers can now open this version." : "Withdrawn from the library.",
+      action === "publish"
+        ? "Published. Readers can now open this version."
+        : "Withdrawn. Readers can no longer open this version.",
     );
   }
   async function previewFile() {
@@ -148,7 +150,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
   return (
     <section className="surface mt-8 p-5 sm:p-7" aria-labelledby="manual-library-title">
       <h2 className="font-display text-2xl" id="manual-library-title">
-        Publish to the library
+        Publish guides and templates
       </h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Save a private draft, preview it, then publish when you’re ready.
@@ -384,7 +386,7 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                     className="btn btn-ghost btn-sm"
                     disabled={busy || dirty}
                     onClick={() => {
-                      if (window.confirm("Withdraw the live version from the library?"))
+                      if (window.confirm("Withdraw the version readers currently see?"))
                         void work(() => act("withdraw"));
                     }}
                   >

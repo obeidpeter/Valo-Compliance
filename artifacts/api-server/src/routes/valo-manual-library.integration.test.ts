@@ -381,6 +381,9 @@ test(
           await page.getByRole("button", { name: "Publish this version" }).click();
           await expect(preview).toContainText("Readers can see version 1.");
           const publicPage = await publicSite.desktop("/industries/" + industry);
+          const guidesPage = await publicSite.desktop("/resources");
+          await guidesPage.page.getByLabel("Filter guides by industry").selectOption(industry);
+          await expect(guidesPage.page.getByRole("link").filter({ hasText: title })).toBeVisible();
           await expect(publicPage.page.getByRole("heading", { name: title })).toBeVisible();
           await expect(publicPage.page.getByRole("region", { name: title })).toContainText(
             "Keep a dated delivery note.",
@@ -404,6 +407,7 @@ test(
           assert.deepEqual(publicPage.unknown, []);
           await staff.close();
           await publicPage.close();
+          await guidesPage.close();
         } finally {
           await Promise.all([browser.close(), publicSite.close()]);
         }
