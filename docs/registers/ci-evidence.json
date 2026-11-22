@@ -1318,6 +1318,13 @@
       "proves": "For each of the five privacy guides, every word of the guide is placed in its claim map and every sentence about the law names a passage; with no passage supplied each such sentence is reported as not bound and no claim is made. The test has no official words to read, so it does not show that a quotation is in the official text."
     },
     {
+      "requirement": "EDP-003",
+      "job": "foundation",
+      "file": "artifacts/api-server/src/modules/publication/guidance-claims-captured.test.ts",
+      "test": "the eight food guides are mapped, and each map places every sentence of its guide",
+      "proves": "For each of the eight food guides, every word of the guide is placed in its claim map and every sentence that says what a guideline says names a passage; with no passage supplied each such sentence is reported as not bound and no claim is made. The test has no official words to read, so it does not show that a quotation is in a guideline."
+    },
+    {
       "requirement": "EDP-004",
       "job": "foundation",
       "file": "scripts/src/valo/publication.test.ts",

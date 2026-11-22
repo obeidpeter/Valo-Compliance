@@ -210,7 +210,10 @@ test("a guide package admits only the review pairs of guides with a claim map, a
   assert.deepEqual(guides.contentIds, templates.contentIds);
   assert.deepEqual(guides.laneAttemptLimits, templates.laneAttemptLimits);
   assert.equal(requestDigest(guides.allocation), requestDigest(additionalInferenceAllocation));
-  assert.match(guides.holds[0]!, /^Supported guide review pairs: GUD-01, .*GUD-10, .*GUD-15; /);
+  assert.match(
+    guides.holds[0]!,
+    /^Supported guide review pairs: GUD-01, .*GUD-10, .*GUD-15, GUD-19, .*GUD-26; /,
+  );
   assert.match(guides.holds[0]!, /under the guidance policy as the owner approved it/);
 
   // A guide with a claim map is admitted under the guide package, with its review plan.
@@ -218,6 +221,7 @@ test("a guide package admits only the review pairs of guides with a claim map, a
   assert.doesNotThrow(() => assertWorkPackageMembership({ ...work(), role: "challenge" }, guides, "GUD-10"));
   // A guide without a claim map has no preparer, and an ID outside the inventory is outside the package.
   assert.doesNotThrow(() => assertWorkPackageMembership(work(), guides, "GUD-15"));
+  assert.doesNotThrow(() => assertWorkPackageMembership(work(), guides, "GUD-26"));
   assert.throws(() => assertWorkPackageMembership(work(), guides, "GUD-16"), /PREPARER_UNAVAILABLE/);
   assert.throws(() => assertWorkPackageMembership(work(), guides, "GUD-31"), /WORK_OUTSIDE_PACKAGE/);
   const unplanned = work();

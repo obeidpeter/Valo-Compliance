@@ -223,6 +223,32 @@ page images. It is not legal review.
     returned the file, with the checksum the drafts' evidence recorded. The drafts' notes say the
     address's listing calls the file a reference copy. No amendment record has been made for it.
 
+### Facts gathered while the food guides were mapped (22 November 2026)
+
+- **Eight more guides are mapped.** GUD-19 to GUD-26, the food guides, each have a claim map:
+  138 sentences in all. Most of what they say is a way of working. Where a sentence says what a
+  guideline says, it is tied to the guideline's words.
+- **Their sources are eight guidelines of the food and drug regulator** (NAFDAC). None is kept in
+  the repository: 22 passages are recorded by place and checksum, as for the privacy guides. Each
+  guideline is now a source that staff can register for the daily check.
+- **Whether each guideline is the current edition.** The regulator's guidelines index fills its
+  table by script, so it was read in a browser on 22 November 2026. Its data lists 171 guidelines.
+  Each of the eight is listed once, at the address its copy was fetched from, with a review date
+  that matches the one the copy prints, and no other edition of it is listed. The index calls
+  five of them "Uncontrolled", two "Published (Uncontrolled)" and one "Published". What
+  "uncontrolled" means for a copy's standing was not established. Whether a regulation or an Act
+  made since changes what a guideline says was not looked for.
+- **The check made outside the tests.** Built with the repository's own code from the eight
+  official files as fetched on 21 November 2026 (their checksums are the ones the drafts'
+  evidence recorded), each of the eight guides had every sentence about a guideline bound and
+  every source marked current. With the owner's approval supposed, in that run only, the gate
+  named nothing but the two reviews. No guide repeats more than ten words in a row from a passage
+  it cites. Their reviews measure between 25,034 and 39,687 by the cautious count.
+- **Two guidelines contradict themselves, and the guides say so.** The micro scale guideline gives
+  a staff strength of 1 to 5 in one place and 1 to 9 in another. The registration guideline gives
+  its processing time as "one hundred and twenty (180) working days". GUD-19 and GUD-21 tell the
+  reader not to rely on either number.
+
 ## Proposal
 
 Each hold becomes a condition the guide's own route checks. A guide that fails one stays held.
@@ -427,8 +453,9 @@ command that publishes.
     released under is still the guidance policy as approved, and the provider's permission for its
     wording is still current, as for a template).
 11. Claim maps for GUD-11 to GUD-30, from the official files whose checksums match the recorded
-    ones (built for GUD-11 to GUD-15, the privacy guides, with an amendment record for each of
-    their two texts. GUD-16 to GUD-30 are not mapped: see the three things found in their texts).
+    ones (built for GUD-11 to GUD-15, the privacy guides, and GUD-19 to GUD-26, the food guides,
+    with an amendment record for each of their ten texts. GUD-16 to GUD-18 and GUD-27 to GUD-30
+    are not mapped: see the three things found in their texts).
 
 ## Decisions for the product owner
 

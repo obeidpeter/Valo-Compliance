@@ -219,11 +219,19 @@ test("each amendment record matches the retained texts it describes", () => {
   // Each text read only from captures has a record of its own. The record describes the file at
   // the address of the text's lead, under the checksum the drafts' source evidence recorded for it
   // on 14 November 2026, and gives the day the text's passages are dated from.
-  const evidence = (
-    retained("docs/content-candidates/source-evidence/privacy-consumer-sources.json") as {
-      sources: { url: string; pdfSha256: string }[];
-    }
-  ).sources;
+  const evidence = [
+    ...(
+      retained("docs/content-candidates/source-evidence/privacy-consumer-sources.json") as {
+        sources: { url: string; pdfSha256: string }[];
+      }
+    ).sources,
+    ...(
+      retained("docs/content-candidates/source-evidence/products-sources.json") as {
+        url: string;
+        sha256: string;
+      }[]
+    ).map((source) => ({ url: source.url, pdfSha256: source.sha256 })),
+  ];
   for (const text of capturedTexts) {
     const record = guideAmendmentRecords.find((r) => r.instrument === text.id);
     assert.ok(record, text.id);

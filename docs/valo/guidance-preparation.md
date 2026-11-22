@@ -25,6 +25,14 @@ owner has approved the guidance policy: it then prints what holds the guide and 
    | `NRS-TAXID-HOW` | The revenue service's page on how Tax ID retrieval works | GUD-08 |
    | `S04` | Nigeria Data Protection Act 2023, the Commission's copy | GUD-11 to GUD-15 |
    | `S05` | The Commission's General Application and Implementation Directive 2025 | GUD-11 to GUD-15 |
+   | `NAFDAC-FSAN-GDL-004-03` | NAFDAC guideline: inspection of micro scale food manufacturing facilities | GUD-19 |
+   | `NAFDAC-FSAN-GDL-005-03` | NAFDAC guideline: inspection of small scale food enterprises | GUD-19 |
+   | `NAFDAC-FSAN-GDL-001-03` | NAFDAC guideline: pre-packaged food manufacturing and packaging facilities | GUD-19, GUD-20 |
+   | `NAFDAC-FRRA-GDL-002-01` | NAFDAC guideline: registration of pre-packaged food made in Nigeria | GUD-21, GUD-26 |
+   | `NAFDAC-FSAN-GDL-006-03` | NAFDAC guideline: good manufacturing practice for food | GUD-22, GUD-23 |
+   | `NAFDAC-FSAN-GDL-008-03` | NAFDAC guideline: food hygienic practices | GUD-24 |
+   | `NAFDAC-IE-GDL-001-02` | NAFDAC guideline: handling and disposal of unwholesome regulated products | GUD-25 |
+   | `NAFDAC-FRR-GDL-003-01` | NAFDAC guideline: advertisement of food products | GUD-26 |
 
    The command asks only for the addresses the guide it is given rests on.
 
@@ -53,11 +61,12 @@ Run it from `artifacts/api-server`, with the guide and the path of the terms fil
 NODE_ENV=development tsx src/scripts/finite-inference-run.ts --prepare-guide-candidate GUD-01 /path/to/terms.json
 ```
 
-Only GUD-01 to GUD-15 have a claim map today, so only they can be named.
+Only GUD-01 to GUD-15 and GUD-19 to GUD-26 have a claim map today, so only they can be named.
 
 The words of the two Acts GUD-01 to GUD-10 quote are kept in the repository. The words of the data
-protection Act and the directive are not: for GUD-11 to GUD-15 the repository keeps only where each
-passage starts and ends and the checksum of its words. Such a guide is built only from a capture.
+protection Act, the directive and the eight food guidelines are not: for GUD-11 to GUD-15 and
+GUD-19 to GUD-26 the repository keeps only where each passage starts and ends and the checksum of
+its words. Such a guide is built only from a capture.
 If no capture supplies any of its passages, the command stops with `GUIDE_HAS_NO_BOUND_SOURCE`:
 its addresses are not watched yet, their captures are older than a day, or the files read
 differently from the way they read on 21 November 2026.
@@ -116,4 +125,5 @@ record describes. That is deliberate: someone has to read the new file and write
   different bytes each time they are fetched while saying the same words. The daily check compares
   a web page by its words, so that alone holds nothing. If a page's words change, what rests on it
   is held until it is prepared and reviewed again.
-- **The other fifteen guides**, GUD-16 to GUD-30, have no claim map yet.
+- **Seven guides have no claim map yet**: GUD-16 to GUD-18 (consumer protection) and GUD-27 to
+  GUD-30 (employment).

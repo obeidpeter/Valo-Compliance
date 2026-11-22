@@ -54,6 +54,14 @@ const pageCapture = (leadId: string, text: string): GuideCapture => ({
 test("each address a guide's passages are read from is a known official source", () => {
   assert.deepEqual([...guideCaptureLeads].sort(), [
     "CAC-BN-PROCESS",
+    "NAFDAC-FRR-GDL-003-01",
+    "NAFDAC-FRRA-GDL-002-01",
+    "NAFDAC-FSAN-GDL-001-03",
+    "NAFDAC-FSAN-GDL-004-03",
+    "NAFDAC-FSAN-GDL-005-03",
+    "NAFDAC-FSAN-GDL-006-03",
+    "NAFDAC-FSAN-GDL-008-03",
+    "NAFDAC-IE-GDL-001-02",
     "NASS-NTAA-2025",
     "NRS-TAXID-HOW",
     "S03",
