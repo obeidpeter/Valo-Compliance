@@ -176,13 +176,6 @@ schemas:
       scope: { type: string }
       limitations: { type: string }
       sources: { type: array, items: { $ref: "#/components/schemas/PublicSourceReference" } }
-  PublicSourceReference:
-    type: object
-    required: [url, title, locator]
-    properties:
-      url: { type: string }
-      title: { type: string }
-      locator: { type: string }
   IndustryCoverage:
     type: object
     required: [id, slug, title, deeperPackTarget, enhancedEvidenceRequired, coverageState, evidenceState, sourceCheckedAt, publishedItems]

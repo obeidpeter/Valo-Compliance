@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "guidance:check-manual-sources": "tsx src/scripts/check-manual-regulatory.ts",
     "test:valo-manual-library-db": "VALO_RUN_DB_TESTS=synthetic-development-only NODE_ENV=development node --experimental-test-module-mocks --import tsx --test src/routes/valo-manual-library.integration.test.ts",
     "valo:industry-guide-reviews": "tsx src/scripts/industry-guide-reviews.ts",
     "test:valo-industry-guide-reviews": "node --import tsx --test src/scripts/industry-guide-reviews.test.ts",

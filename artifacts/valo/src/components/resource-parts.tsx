@@ -12,8 +12,30 @@ export const KIND_LABEL: Record<ReleasedResourceKind, string> = {
 
 export const liveContent = { refetchInterval: 15000, refetchOnWindowFocus: true } as const;
 
-/** Released text rendered as plaintext paragraphs. Never interpreted as HTML. */
-export function PlainText({ text, className }: { text: string; className?: string }) {
+function referenceLinks(text: string, urls: readonly string[]) {
+  return text.split(/(\[[^\]\n]+\]\(https:\/\/[^\s)]+\))/g).map((part, index) => {
+    const link = /^\[([^\]\n]+)\]\((https:\/\/[^\s)]+)\)$/.exec(part);
+    if (!link) return part;
+    return urls.includes(link[2]!) ? (
+      <a key={index} href={link[2]} target="_blank" rel="noopener noreferrer" className="underline">
+        {link[1]}
+      </a>
+    ) : (
+      part
+    );
+  });
+}
+
+/** Plaintext paragraphs with optional links to the exact verified sources. */
+export function PlainText({
+  text,
+  className,
+  sourceUrls,
+}: {
+  text: string;
+  className?: string;
+  sourceUrls?: readonly string[];
+}) {
   const paras = text
     .split(/\n{2,}/)
     .map((p) => p.trim())
@@ -30,7 +52,7 @@ export function PlainText({ text, className }: { text: string; className?: strin
           </ul>
         ) : (
           <p key={i} className="whitespace-pre-line">
-            {p}
+            {sourceUrls ? referenceLinks(p, sourceUrls) : p}
           </p>
         );
       })}
@@ -39,7 +61,7 @@ export function PlainText({ text, className }: { text: string; className?: strin
 }
 
 export function resourceCheckLabel(r: ReleasedResource) {
-  if (r.publicationMethod === "manual") return "Published";
+  if (r.publicationMethod === "manual") return r.kind === "guidance" ? "Sources checked" : "Published";
   return r.kind === "guide" && r.sources.length === 0 ? "Draft and evidence checked" : "Sources checked";
 }
 

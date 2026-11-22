@@ -4,6 +4,21 @@ import { extractSource, EXTRACTION_VERSION } from "./source-extract";
 import { storeSourceSnapshot } from "./source-storage";
 import { instrumentIdentity } from "./source-identity";
 import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
+
+/** A one-off read for a manual source check. It neither registers a watch nor starts a worker. */
+export async function readManualOfficialSource(leadId: string) {
+  assertDevelopmentRuntime();
+  const response = await fetchOfficialSource(leadId);
+  if (response.status !== 200) throw new SourceFailure(`SOURCE_HTTP_${response.status}`);
+  const { text } = await extractSource(response.bytes, response.mime, sourceBodyLimit(leadId));
+  return {
+    leadId,
+    url: referenceFor(leadId).url,
+    checkedAt: response.fetchedAt.toISOString(),
+    rawChecksum: createHash("sha256").update(response.bytes).digest("hex"),
+    text,
+  };
+}
 export async function captureReference(id: string) {
   const { db, valoSourceSnapshots } = await import("@workspace/db");
   assertDevelopmentRuntime();

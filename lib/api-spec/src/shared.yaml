@@ -1,5 +1,12 @@
 # Schemas that more than one module, or a shared response, uses.
 schemas:
+  PublicSourceReference:
+    type: object
+    required: [url, title, locator]
+    properties:
+      url: { type: string }
+      title: { type: string }
+      locator: { type: string }
   AccessSupportAck:
     type: object
     required: [reference, message, delivery]

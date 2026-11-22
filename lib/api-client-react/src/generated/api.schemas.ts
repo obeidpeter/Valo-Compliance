@@ -5,6 +5,12 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface PublicSourceReference {
+  url: string;
+  title: string;
+  locator: string;
+}
+
 export type AccessSupportAckDelivery = typeof AccessSupportAckDelivery[keyof typeof AccessSupportAckDelivery];
 
 
@@ -337,12 +343,6 @@ export type ReleasedResourcePublicationMethod = typeof ReleasedResourcePublicati
 export const ReleasedResourcePublicationMethod = {
   manual: 'manual',
 } as const;
-
-export interface PublicSourceReference {
-  url: string;
-  title: string;
-  locator: string;
-}
 
 export interface ReleasedResource {
   id: string;
@@ -1476,6 +1476,88 @@ export interface LibraryExport {
 export interface SessionMfaVerification {
   verified: true;
   checkedAt: string;
+}
+
+export interface OwnerGuidanceRevision {
+  /** @minimum 1 */
+  version: number;
+  /** @pattern ^[a-f0-9]{64}$ */
+  digest: string;
+}
+
+export interface OwnerGuidanceCheck {
+  id: string;
+  /** @minimum 0 */
+  sources: number;
+  holds: string[];
+}
+
+export type OwnerGuidanceItemState = typeof OwnerGuidanceItemState[keyof typeof OwnerGuidanceItemState];
+
+
+export const OwnerGuidanceItemState = {
+  draft: 'draft',
+  published: 'published',
+  withdrawn: 'withdrawn',
+  replaced: 'replaced',
+} as const;
+
+export type OwnerGuidanceItemLive = {
+  version: number;
+  digest: string;
+} | null;
+
+export interface OwnerGuidanceItem {
+  itemId: string;
+  version: number;
+  digest: string;
+  title: string;
+  body: string;
+  state: OwnerGuidanceItemState;
+  /** @nullable */
+  checkId: string | null;
+  /** @nullable */
+  checkedAt: string | null;
+  holds: string[];
+  sources: PublicSourceReference[];
+  live: OwnerGuidanceItemLive;
+}
+
+export interface OwnerGuidancePage {
+  items: OwnerGuidanceItem[];
+  hasMore: boolean;
+}
+
+export type OwnerGuidanceDecisionAction = typeof OwnerGuidanceDecisionAction[keyof typeof OwnerGuidanceDecisionAction];
+
+
+export const OwnerGuidanceDecisionAction = {
+  publish: 'publish',
+  withdraw: 'withdraw',
+} as const;
+
+export interface OwnerGuidanceDecision {
+  action: OwnerGuidanceDecisionAction;
+  /** @minimum 1 */
+  version: number;
+  /** @pattern ^[a-f0-9]{64}$ */
+  digest: string;
+  checkId: string | null;
+  confirmed: true;
+}
+
+export type OwnerGuidanceReceiptState = typeof OwnerGuidanceReceiptState[keyof typeof OwnerGuidanceReceiptState];
+
+
+export const OwnerGuidanceReceiptState = {
+  published: 'published',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface OwnerGuidanceReceipt {
+  itemId: string;
+  version: number;
+  state: OwnerGuidanceReceiptState;
 }
 
 export type ManualLibraryEntryKind = typeof ManualLibraryEntryKind[keyof typeof ManualLibraryEntryKind];
@@ -3650,6 +3732,11 @@ export type GetCorrectionNoticesParams = {
    * @minimum 1
    * @maximum 10000
    */
+  page?: number;
+};
+
+export type ListOwnerGuidanceParams = {
+  /** @minimum 1 */
   page?: number;
 };
 

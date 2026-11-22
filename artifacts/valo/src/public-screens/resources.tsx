@@ -203,9 +203,14 @@ export function ResourceDetail({
               )}
               <PlainText
                 text={r.body}
+                sourceUrls={
+                  r.kind === "guidance" && r.publicationMethod === "manual"
+                    ? r.sources.map((s) => s.url)
+                    : undefined
+                }
                 className="mt-10 grid max-w-2xl gap-4 font-display text-[1.1rem] leading-relaxed"
               />
-              {r.publicationMethod !== "manual" && (
+              {(r.publicationMethod !== "manual" || r.kind === "guidance") && (
                 <section className="mt-10 grid gap-6 border-t border-border pt-8 text-sm leading-relaxed">
                   <div>
                     <h2 className="eyebrow">What it covers</h2>
@@ -221,7 +226,7 @@ export function ResourceDetail({
               )}
             </div>
             <aside className="grid gap-4 lg:sticky lg:top-24 lg:self-start">
-              {r.publicationMethod !== "manual" && (r.sources.length > 0 || r.kind !== "guide") && (
+              {(r.sources.length > 0 || (r.publicationMethod !== "manual" && r.kind !== "guide")) && (
                 <div className="surface p-5">
                   <p className="eyebrow">Sources</p>
                   {r.sources.length ? (

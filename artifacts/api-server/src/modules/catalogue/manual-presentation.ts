@@ -3,10 +3,15 @@ import type { ReleasedLibraryItem } from "./valo-catalogue";
 
 type PublicRevision = Awaited<ReturnType<typeof releasedManualEntries>>[number];
 export const manualResourceKind = (row: PublicRevision) =>
-  row.kind === "industry_introduction" ? ("industry_introduction" as const) : ("guide" as const);
+  row.kind === "regulatory_article"
+    ? ("guidance" as const)
+    : row.kind === "industry_introduction"
+      ? ("industry_introduction" as const)
+      : ("guide" as const);
 const summary = (row: PublicRevision) => row.body.replace(/\s+/g, " ").slice(0, 260);
 const disclosure = "Published by the Valo editorial team.";
 export function manualResource(row: PublicRevision) {
+  const regulatory = row.kind === "regulatory_article";
   return {
     id: row.id,
     slug: row.slug,
@@ -16,11 +21,19 @@ export function manualResource(row: PublicRevision) {
     industrySlugs: row.industry ? [row.industry] : [],
     summary: summary(row),
     body: row.body,
-    reviewedAt: row.publishedAt!.toISOString(),
-    disclosure,
-    scope: row.industry ? row.industry.replaceAll("-", " ") : "General business",
-    limitations: "Everyday business guidance.",
-    sources: [],
+    reviewedAt: (row.sourceCheckedAt ?? row.publishedAt)!.toISOString(),
+    disclosure: regulatory
+      ? "The Valo development owner checked this version against the official sources shown. This article received no independent professional review."
+      : disclosure,
+    scope: regulatory
+      ? "Nigerian national rules on this subject."
+      : row.industry
+        ? row.industry.replaceAll("-", " ")
+        : "General business",
+    limitations: regulatory
+      ? "General information. State and local requirements and individual facts may differ."
+      : "Everyday business guidance.",
+    sources: (row.regulatorySources ?? []).map(({ url, title, locator }) => ({ url, title, locator })),
   };
 }
 export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
@@ -37,7 +50,9 @@ export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
       ? "Business templates"
       : row.kind === "industry_introduction"
         ? "Industry introductions"
-        : "Practical business guides",
+        : row.kind === "regulatory_article"
+          ? "Regulatory guidance"
+          : "Practical business guides",
     access: "free",
     reviewedAt: row.publishedAt!.toISOString(),
     href: (template ? "/library/" : "/resources/") + row.slug,

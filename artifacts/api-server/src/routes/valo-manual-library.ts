@@ -1,6 +1,12 @@
 import express, { Router, type Request, type Response } from "express";
 import { z } from "zod";
-import { GetManualLibraryRevisionResponse, ListManualLibraryResponse } from "@workspace/api-zod";
+import {
+  DecideOwnerGuidanceResponse,
+  RefreshOwnerGuidanceResponse,
+  GetManualLibraryRevisionResponse,
+  ListManualLibraryResponse,
+  ListOwnerGuidanceResponse,
+} from "@workspace/api-zod";
 import { verifiedStaffSession } from "../lib/valo-managed-session";
 import { mutationOriginFor, sameOriginMutation } from "../middlewares/valo-identity";
 import { requestComplexityLimit } from "../platform/request-complexity";
@@ -14,6 +20,9 @@ import {
   actOnManualRevision,
   privateManualFile,
   releasedManualFile,
+  listOwnerGuidance,
+  decideOwnerGuidance,
+  refreshOwnerSources,
 } from "../modules/manual-library";
 
 const uuid = z
@@ -33,6 +42,26 @@ export function createManualLibraryRouter(
   authenticate: (req: Request) => Promise<SourceStaffActor> = verifiedStaffSession,
 ) {
   const router = Router();
+  router.use("/admin/owner-guidance", async (req, res, next) => {
+    res.set("Cache-Control", "private, no-store");
+    res.locals.guidanceOwner = res.locals.verifiedStaff ?? (await authenticate(req));
+    next();
+  });
+  router.get("/admin/owner-guidance", async (req, res) => {
+    const page = z.coerce.number().int().min(1).max(10000).default(1).parse(req.query.page);
+    res.json(ListOwnerGuidanceResponse.parse(await listOwnerGuidance(res.locals.guidanceOwner, page)));
+  });
+  router.post("/admin/owner-guidance/:id/source-check", sameOriginMutation, async (req, res) => {
+    res.json(
+      RefreshOwnerGuidanceResponse.parse(
+        await refreshOwnerSources(res.locals.guidanceOwner, uuid.parse(req.params.id), req.body),
+      ),
+    );
+  });
+  router.post("/admin/owner-guidance/:id/decisions", sameOriginMutation, async (req, res) => {
+    const result = await decideOwnerGuidance(res.locals.guidanceOwner, uuid.parse(req.params.id), req.body);
+    res.json(DecideOwnerGuidanceResponse.parse(result));
+  });
   router.use("/admin/manual-library", async (req, res, next) => {
     res.set("Cache-Control", "private, no-store");
     res.locals.manualEditor = res.locals.verifiedStaff ?? (await authenticate(req));

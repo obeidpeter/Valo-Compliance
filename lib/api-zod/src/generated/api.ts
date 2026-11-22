@@ -3284,6 +3284,86 @@ export const VerifySessionMfaResponse = zod.object({
 })
 
 
+export const listOwnerGuidanceQueryPageDefault = 1;
+
+
+
+export const ListOwnerGuidanceQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).default(listOwnerGuidanceQueryPageDefault)
+})
+
+export const ListOwnerGuidanceResponse = zod.object({
+  "items": zod.array(zod.object({
+  "itemId": zod.uuid(),
+  "version": zod.int(),
+  "digest": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "state": zod.enum(['draft', 'published', 'withdrawn', 'replaced']),
+  "checkId": zod.string().nullable(),
+  "checkedAt": zod.string().nullable(),
+  "holds": zod.array(zod.string()),
+  "sources": zod.array(zod.object({
+  "url": zod.string(),
+  "title": zod.string(),
+  "locator": zod.string()
+})),
+  "live": zod.union([zod.object({
+  "version": zod.int(),
+  "digest": zod.string()
+}),zod.null()])
+})),
+  "hasMore": zod.boolean()
+})
+
+
+export const RefreshOwnerGuidanceParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const refreshOwnerGuidanceBodyDigestRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+export const RefreshOwnerGuidanceBody = zod.object({
+  "version": zod.int().min(1),
+  "digest": zod.string().regex(refreshOwnerGuidanceBodyDigestRegExp)
+})
+
+export const refreshOwnerGuidanceResponseSourcesMin = 0;
+
+
+
+export const RefreshOwnerGuidanceResponse = zod.object({
+  "id": zod.string(),
+  "sources": zod.int().min(refreshOwnerGuidanceResponseSourcesMin),
+  "holds": zod.array(zod.string())
+})
+
+
+export const DecideOwnerGuidanceParams = zod.object({
+  "id": zod.uuid()
+})
+
+
+export const decideOwnerGuidanceBodyDigestRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+export const DecideOwnerGuidanceBody = zod.object({
+  "action": zod.enum(['publish', 'withdraw']),
+  "version": zod.int().min(1),
+  "digest": zod.string().regex(decideOwnerGuidanceBodyDigestRegExp),
+  "checkId": zod.union([zod.uuid(),zod.null()]),
+  "confirmed": zod.literal(true)
+})
+
+export const DecideOwnerGuidanceResponse = zod.object({
+  "itemId": zod.uuid(),
+  "version": zod.int(),
+  "state": zod.enum(['published', 'withdrawn'])
+})
+
+
 export const listManualLibraryQueryPageDefault = 1;
 
 
