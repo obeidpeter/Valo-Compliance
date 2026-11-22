@@ -54,6 +54,9 @@ export function manualCatalogue(row: PublicRevision): ReleasedLibraryItem {
           ? "Regulatory guidance"
           : "Practical business guides",
     access: row.kind === "premium_template" ? "premium" : "free",
+    ...(row.kind === "template" && {
+      freeDownloadPath: "/api/account/manual-templates/" + row.id + "/download",
+    }),
     reviewedAt: row.publishedAt!.toISOString(),
     href: (template ? "/library/" : "/resources/") + row.slug,
   };

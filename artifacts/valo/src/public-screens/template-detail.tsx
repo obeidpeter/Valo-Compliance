@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Download, FilePlus2, FileX } from "lucide-react";
 import {
   useGetReleasedTemplate,
@@ -50,36 +50,51 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
   const [busy, setBusy] = useState<"docx" | "pdf" | null>(null);
   const [dlError, setDlError] = useState<string | null>(null);
 
-  async function download(format: "docx" | "pdf") {
-    setBusy(format);
-    setDlError(null);
-    try {
-      const res: unknown =
-        t.publicationMethod === "manual"
-          ? t.access === "premium"
-            ? await downloadPremiumManualTemplate(t.id)
-            : await downloadManualTemplate(t.id)
-          : await downloadReleasedTemplate(t.id, format);
-      const blob = res instanceof Blob ? res : new Blob([res as BlobPart]);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${t.slug}-v${t.version}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (e) {
-      const d = describeError(e);
-      setDlError(
-        d.kind === "notFound"
-          ? "This template can no longer be downloaded. It may have been withdrawn."
-          : d.message,
-      );
-    } finally {
-      setBusy(null);
+  const download = useCallback(
+    async (format: "docx" | "pdf") => {
+      setBusy(format);
+      setDlError(null);
+      try {
+        const res: unknown =
+          t.publicationMethod === "manual"
+            ? t.access === "premium"
+              ? await downloadPremiumManualTemplate(t.id)
+              : await downloadManualTemplate(t.id)
+            : await downloadReleasedTemplate(t.id, format);
+        const blob = res instanceof Blob ? res : new Blob([res as BlobPart]);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${t.slug}-v${t.version}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (e) {
+        const d = describeError(e);
+        setDlError(
+          d.kind === "notFound"
+            ? "This template can no longer be downloaded. It may have been withdrawn."
+            : d.message,
+        );
+      } finally {
+        setBusy(null);
+      }
+    },
+    [t.publicationMethod, t.access, t.id, t.slug, t.version],
+  );
+
+  useEffect(() => {
+    const intent = window.location.hash;
+    if (!intent.startsWith("#download-")) return;
+    // Consume this one request before starting the download so reloads and remounts do not repeat it.
+    window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+    if (intent !== "#download-" + t.id || t.access !== "free" || !t.formats[0]) {
+      setDlError("This download link is no longer current. Check this edition before downloading.");
+      return;
     }
-  }
+    void download(t.formats[0]);
+  }, [download, t.id, t.access, t.formats]);
 
   const createErr = create.isError ? describeError(create.error) : null;
   return (

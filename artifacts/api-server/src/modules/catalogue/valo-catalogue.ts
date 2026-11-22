@@ -11,6 +11,8 @@ export type ReleasedLibraryItem = {
   category?: string;
   access?: "free" | "premium";
   amountKobo?: number;
+  priceId?: string;
+  freeDownloadPath?: string;
   reviewedAt?: string;
   href?: string;
 };

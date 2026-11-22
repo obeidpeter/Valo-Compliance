@@ -5,6 +5,28 @@ import { GUIDED_SPECS_V1 } from "@workspace/valo-core/guided-specs";
 import { NAMED_IN_LEAD, landingTask, landingTasks, startPath } from "./landing-tasks";
 import { ANY_DOCUMENT, signUpFor } from "./start";
 import { checkoutSignInPath, templateCheckoutPath } from "./template-checkout";
+import { templateDownloadSignInPath } from "./template-download";
+
+test("free file sign-in returns to the chosen edition on Valo", () => {
+  const edition = "684762b8-d9c3-4061-9348-b5bb6036d580";
+  const slug = "synthetic-free-invoice";
+  const signIn = new URL(templateDownloadSignInPath(edition, slug), "https://valo.example");
+  const start = signIn.searchParams.get("start");
+  assert.equal(startPath(start), "/library/" + slug + "#download-" + edition);
+  assert.equal(signUpFor(start!), "/sign-up" + signIn.search);
+  assert.equal(
+    startPath("download-" + edition + "-invoice_v2.1"),
+    "/library/invoice_v2.1#download-" + edition,
+  );
+  for (const invalid of [
+    "download-" + edition + "-..",
+    "download-bad-id-invoice",
+    "download-" + edition + "-../staff",
+    "download-" + edition + "-https://elsewhere.example",
+  ]) {
+    assert.equal(startPath(invalid), undefined);
+  }
+});
 
 test("a checkout link carries only the selected price through sign-in and sign-up", () => {
   const id = "684762b8-d9c3-4061-9348-b5bb6036d580";

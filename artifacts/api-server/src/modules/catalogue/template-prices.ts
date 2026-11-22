@@ -35,16 +35,20 @@ export async function activeTemplatePrices(edition?: string) {
   return edition === undefined ? query : query.limit(1);
 }
 
-export async function approvedAmountsForEditions(editions: string[]): Promise<Map<string, number>> {
-  if (!editions.length) return new Map();
+export async function approvedPricesForEditions(editions: string[]) {
+  if (!editions.length) return new Map<string, { priceId: string; amountKobo: number }>();
   const { db, valoPrices: p } = await import("@workspace/db");
   const { effective, newestFirst } = currentPriceTerms(p);
   const rows = await db
-    .selectDistinctOn([p.contentVersionId], { edition: p.contentVersionId, amountKobo: p.amountKobo })
+    .selectDistinctOn([p.contentVersionId], {
+      edition: p.contentVersionId,
+      priceId: p.id,
+      amountKobo: p.amountKobo,
+    })
     .from(p)
     .where(and(inArray(p.contentVersionId, editions), effective))
     .orderBy(p.contentVersionId, ...newestFirst);
-  return new Map(rows.map((row) => [row.edition, row.amountKobo]));
+  return new Map(rows.map(({ edition, priceId, amountKobo }) => [edition, { priceId, amountKobo }]));
 }
 
 export async function offerForReleasedEdition(edition: string) {

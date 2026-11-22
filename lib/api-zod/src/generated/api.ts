@@ -780,6 +780,8 @@ export const ListPublicCatalogueResponse = zod.object({
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
+  "priceId": zod.uuid().optional().describe('Current approved checkout offer for this premium edition.'),
+  "freeDownloadPath": zod.string().optional().describe('Same-origin authenticated attachment path for this released free edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -847,6 +849,8 @@ export const ListSavedTemplatesResponse = zod.object({
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
+  "priceId": zod.uuid().optional().describe('Current approved checkout offer for this premium edition.'),
+  "freeDownloadPath": zod.string().optional().describe('Same-origin authenticated attachment path for this released free edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -868,6 +872,8 @@ export const ListSavedTemplatesResponse = zod.object({
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
+  "priceId": zod.uuid().optional().describe('Current approved checkout offer for this premium edition.'),
+  "freeDownloadPath": zod.string().optional().describe('Same-origin authenticated attachment path for this released free edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -899,6 +905,8 @@ export const SaveReleasedTemplateResponse = zod.object({
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
+  "priceId": zod.uuid().optional().describe('Current approved checkout offer for this premium edition.'),
+  "freeDownloadPath": zod.string().optional().describe('Same-origin authenticated attachment path for this released free edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -920,6 +928,8 @@ export const SaveReleasedTemplateResponse = zod.object({
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
+  "priceId": zod.uuid().optional().describe('Current approved checkout offer for this premium edition.'),
+  "freeDownloadPath": zod.string().optional().describe('Same-origin authenticated attachment path for this released free edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -957,6 +967,8 @@ export const UnsaveTemplateResponse = zod.object({
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
+  "priceId": zod.uuid().optional().describe('Current approved checkout offer for this premium edition.'),
+  "freeDownloadPath": zod.string().optional().describe('Same-origin authenticated attachment path for this released free edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -978,6 +990,8 @@ export const UnsaveTemplateResponse = zod.object({
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
+  "priceId": zod.uuid().optional().describe('Current approved checkout offer for this premium edition.'),
+  "freeDownloadPath": zod.string().optional().describe('Same-origin authenticated attachment path for this released free edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()
@@ -1001,6 +1015,8 @@ export const ListOperationalRecommendationsResponse = zod.object({
   "category": zod.string().optional(),
   "access": zod.enum(['free', 'premium']).optional(),
   "amountKobo": zod.int().min(1).optional().describe('Current approved NGN price in kobo for a released premium template edition.'),
+  "priceId": zod.uuid().optional().describe('Current approved checkout offer for this premium edition.'),
+  "freeDownloadPath": zod.string().optional().describe('Same-origin authenticated attachment path for this released free edition.'),
   "reviewedAt": zod.string().optional(),
   "href": zod.string().optional(),
   "reason": zod.string().optional()

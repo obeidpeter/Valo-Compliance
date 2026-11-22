@@ -106,6 +106,8 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   const card = await libraryCard();
   assert.equal(card?.id, first.id);
   assert.equal(card.amountKobo, detail.offer.amountKobo);
+  assert.equal(card.priceId, detail.offer.id);
+  assert.equal(card.freeDownloadPath, undefined);
   assert.deepEqual(detail.preview, [data.body]);
   assert.equal((await call("/public/resources/manual-" + itemId)).status, 404);
   assert.equal(
@@ -164,6 +166,8 @@ export async function exercisePremiumManualTemplate(call: Call, editor: string) 
   const replacedCard = await libraryCard();
   assert.equal(replacedCard?.id, next.id);
   assert.equal(replacedCard.amountKobo, undefined);
+  assert.equal(replacedCard.priceId, undefined);
+  assert.equal(replacedCard.freeDownloadPath, undefined);
   assert.equal(await productVisible(), false);
   assert.equal((await download(first.id, reader)).status, 403);
   assert.equal((await download(next.id, reader)).status, 403);

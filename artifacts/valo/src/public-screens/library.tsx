@@ -12,7 +12,10 @@ import {
 } from "@workspace/api-client-react";
 import { PublicLink as Link } from "@/components/public-link";
 import { EmptyState, ErrorState, Notice, PageHeader, Skel } from "@/components/states";
+import { useIdentity } from "@/islands/identity-store";
 import { formatCount, formatNaira } from "@/lib/format";
+import { templateCheckoutPath } from "@/lib/template-checkout";
+import { templateDownloadSignInPath } from "@/lib/template-download";
 import {
   catalogueParams,
   industryLabel,
@@ -48,6 +51,7 @@ export function Library({
   // The server's results are for the address the page was first opened at.
   const serverResults = search === initialSearch ? initialCatalogue : undefined;
   const [draft, setDraft] = useState(q);
+  const signedIn = useIdentity().status === "signed-in";
   useEffect(() => setDraft(q), [q]);
 
   const params = catalogueParams(filters);
@@ -260,14 +264,14 @@ export function Library({
             </p>
             <ul className="grid gap-3">
               {d.items.map((it) => (
-                <li key={it.id} data-testid={"card-item-" + it.id}>
+                <li key={it.id} className="surface" data-testid={"card-item-" + it.id}>
                   <Link
                     href={
                       it.href ??
                       (["guidance", "article"].includes(it.type) ? "/resources/" : "/library/") +
                         encodeURIComponent(it.slug)
                     }
-                    className="surface block p-5 transition-colors hover:bg-secondary/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="block rounded-[inherit] p-5 transition-colors hover:bg-secondary/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     data-testid={"link-item-" + it.slug}
                   >
                     <div className="flex flex-wrap items-center gap-2">
@@ -289,6 +293,29 @@ export function Library({
                     <p className="font-display mt-3 text-xl">{industryName(it.title)}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{it.summary}</p>
                   </Link>
+                  {it.type === "template" && it.access === "premium" && it.priceId && (
+                    <div className="px-5 pb-5">
+                      <Link
+                        href={templateCheckoutPath(it.priceId)}
+                        className="btn btn-primary btn-sm"
+                        data-testid="card-checkout"
+                      >
+                        Go to checkout<span className="sr-only"> for {it.title}</span>
+                      </Link>
+                    </div>
+                  )}
+                  {it.type === "template" && it.access === "free" && it.freeDownloadPath && (
+                    <div className="px-5 pb-5">
+                      <Link
+                        href={signedIn ? it.freeDownloadPath : templateDownloadSignInPath(it.id, it.slug)}
+                        className="btn btn-ghost btn-sm"
+                        data-testid="card-download"
+                      >
+                        {signedIn ? "Download" : "Sign in to download"}
+                        <span className="sr-only"> {it.title}</span>
+                      </Link>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
