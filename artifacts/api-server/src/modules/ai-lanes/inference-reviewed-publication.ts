@@ -1,5 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
-import { digest, evaluatePublication, publicationSchema, type PublicationBundle } from "@workspace/valo-core";
+import { digest, publicationSchema, type PublicationBundle } from "@workspace/valo-core";
 import {
   additionalInferenceAllocation,
   requestDigest,
@@ -8,6 +8,7 @@ import {
 } from "../ai";
 import {
   enhancedChecksFromReviews,
+  evaluateOperationalRelease,
   getPublicationArtifact,
   operationalReviewSchemaFor,
   publishOperationalVersion,
@@ -20,7 +21,7 @@ import { assertDevelopmentRuntime } from "../../platform/valo-development-runtim
 
 /** A saved candidate that passes the gate goes to the publisher, which rechecks every gate; one that
  * fails is held, with the reasons the gate gives. */
-async function releaseOrHold(versionId: string, eligibility: ReturnType<typeof evaluatePublication>) {
+async function releaseOrHold(versionId: string, eligibility: ReturnType<typeof evaluateOperationalRelease>) {
   return eligibility.decision === "eligible"
     ? await publishOperationalVersion(versionId)
     : { ...(await recordActualPublicationHold(versionId)), decision: "held" as const };
@@ -92,7 +93,7 @@ export async function publishReviewedOperationalCandidate(input: {
     if (saved.candidateHash !== first.candidateHash) throw Error("CANDIDATE_ALREADY_SAVED");
     if (saved.status !== "candidate")
       return { id: versionId, decision: saved.status, idempotent: true, rerun: true };
-    const release = await releaseOrHold(versionId, evaluatePublication(saved.bundle));
+    const release = await releaseOrHold(versionId, evaluateOperationalRelease(saved.bundle));
     return { id: versionId, decision: release.decision, release, rerun: true };
   }
 
@@ -202,7 +203,7 @@ export async function publishReviewedOperationalCandidate(input: {
       reviewBy: current.row.reviewBy,
     });
   });
-  const eligibility = evaluatePublication(bundle);
+  const eligibility = evaluateOperationalRelease(bundle);
   const release = await releaseOrHold(versionId, eligibility);
   const [stored] = await db
     .select({ status: valoContentVersions.status })

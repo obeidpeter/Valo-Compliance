@@ -4,6 +4,7 @@ import { randomUUID, createHash } from "node:crypto";
 import { readFile, mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as database from "@workspace/db";
@@ -15,7 +16,7 @@ import type { ArtifactRef } from "../modules/publication/publication-artifacts";
 import type { ManagedRequest, ManagedCompletionResult } from "../modules/ai/managed-inference";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import { copyDatabaseFunctions, INFERENCE_LEDGER_FUNCTIONS } from "../test-support/database-functions";
-import { digest, mandatoryEnhancedChecks } from "@workspace/valo-core";
+import { digest, evaluatePublication, mandatoryEnhancedChecks } from "@workspace/valo-core";
 
 test(
   "actual managed callers with real PostgreSQL, source/candidate/case checks and zero-network SDK",
@@ -44,9 +45,8 @@ test(
       }) as typeof client.query;
     });
     const directory = await mkdtemp(join(tmpdir(), "valo-real-callers-"));
-    const snapshotPath = new URL(
-      "../../../../docs/valo/evidence/chatgpt-provider-terms-snapshot.json",
-      import.meta.url,
+    const snapshotPath = fileURLToPath(
+      new URL("../../../../docs/valo/evidence/chatgpt-provider-terms-snapshot.json", import.meta.url),
     );
     const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
     const originalFetch = globalThis.fetch,
@@ -319,7 +319,7 @@ test(
         // fixture takes the same version number; preparing each at its own moment keeps every
         // fixture a distinct candidate with its own attempts.
         t.mock.timers.tick(1000);
-        const saved = await prepareOperationalCandidateRelease("TPL-07", snapshotPath.pathname);
+        const saved = await prepareOperationalCandidateRelease("TPL-07", snapshotPath);
         assert.ok(saved.candidateArtifact, "a prepared candidate awaits its reviews as an artifact");
         const current = await readOperationalInferenceReadiness({
           candidateVersionId: saved.id,
@@ -529,10 +529,6 @@ test(
         ).rows[0];
       const versionOf = (fixture: Awaited<ReturnType<typeof operational>>) =>
         fixture.manifest.works[0]!.bindings.candidateVersionId!;
-      const savedSlug = async (id: string) =>
-        String(
-          (await scoped.query("SELECT slug FROM valo_content_versions WHERE id=$1", [id])).rows[0]?.slug,
-        );
       const copy = (record: object) => put(Buffer.from(JSON.stringify(record)), "json");
       await t.test(
         "the publish command accepts only the reviews its approved batch settled for the candidate",
@@ -916,10 +912,9 @@ test(
       );
       // Decision 0017: a guide takes the same route. The policy is the one the owner approved. The
       // approvals of AI spending are synthetic ones recorded in this schema, the captures are made
-      // from the passages kept in the repository, and the model is the stand-in above. The release happens in this disposable schema, which is dropped; no
-      // guide is published anywhere else.
+      // from the passages kept in the repository, and the model is the stand-in above.
       await t.test(
-        "a prepared guide's two reviews are admitted only under an approval of guide reviews, run through the same dispatcher, and the publish command releases it, in this disposable schema",
+        "an approved regulatory review pair can pass while its guide stays private pending the owner's source check",
         async () => {
           await reset();
           const { prepareGuideCandidateRelease } = await import("../modules/editorial/guidance-preparation");
@@ -1123,19 +1118,19 @@ test(
               "nothing is saved before the reviews are checked",
             );
 
-            // The publish command saves the version with its reviews, and the real publisher
-            // releases it after making every check again, the source capture among them.
-            const result = await publish(
-              id,
-              reviews.map((r) => r.artifact),
-            );
-            assert.equal(result.eligibility?.decision, "eligible", JSON.stringify(result.eligibility));
-            assert.equal(result.status, "published");
+            // Passing reviews cannot authorize a new regulatory release. The saved draft keeps both receipts.
+            const artifacts = reviews.map((r) => r.artifact);
+            const result = await publish(id, artifacts);
+            const reasons = ["REGULATORY_ARTICLE_AWAITING_OWNER_SOURCE_CHECK"];
+            assert.equal(result.eligibility?.decision, "hold");
+            assert.deepEqual(result.eligibility?.reasons, reasons);
+            assert.equal(result.status, "held");
             const row = await savedVersion(prepared.id);
-            assert.equal(row.status, "published");
+            assert.equal(row.status, "held");
+            assert.equal(evaluatePublication(row.bundle).decision, "eligible");
             assert.equal(row.bundle.candidate.id, guide);
             assert.equal(row.bundle.candidate.contentClass, "sourced_guidance");
-            // It was released under the policy as the owner approved it, and no other.
+            // The older policy and both reviews still stand as evidence for this retained version.
             assert.equal(row.bundle.policy.ownerApproved, true);
             assert.equal(row.bundle.policy.hash, (await realGuidancePolicy.guidancePolicy()).policy.hash);
             assert.deepEqual(
@@ -1153,16 +1148,18 @@ test(
               "SELECT bundle_source_id,snapshot_id,raw_hash FROM valo_source_release_bindings WHERE target_kind='content' AND target_id=$1",
               [prepared.id],
             );
-            assert.equal(bound.rows.length, current.bundle.sources.length);
-            assert.ok(bound.rows.every((b) => b.snapshot_id === snapshotId && b.raw_hash === rawChecksum));
-
-            // On the site: shown as a guide while the owner's approval stands, and not without
-            // it. The approval's absence is supposed for a moment.
-            assert.ok((await liveReleasedVersions()).some((version) => version.id === prepared.id));
-            assert.deepEqual(
-              (await releasedResources()).filter((r) => r.id === prepared.id).map((r) => r.slug),
-              [await savedSlug(prepared.id)],
+            assert.deepEqual(bound.rows, []);
+            const retry = await publish(id, artifacts);
+            assert.equal(retry.decision, "held");
+            assert.equal(retry.idempotent, true);
+            const audit = await scoped.query(
+              "SELECT action,reason FROM valo_publication_audit WHERE version_id=$1",
+              [prepared.id],
             );
+            assert.deepEqual(audit.rows, [{ action: "held", reason: reasons[0] }]);
+            assert.equal(calls - before, 2, "publication and its retry make no additional model requests");
+            assert.ok(!(await liveReleasedVersions()).some((version) => version.id === prepared.id));
+            assert.ok(!(await releasedResources()).some((resource) => resource.id === prepared.id));
             guideApproval.absent = true;
             assert.ok(!(await liveReleasedVersions()).some((version) => version.id === prepared.id));
             assert.deepEqual(
