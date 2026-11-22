@@ -18,7 +18,7 @@ export function narrowOperationalPolicy(policy: PublicationBundle["policy"], raw
   const guidance = (policy as PublicationBundle["policy"] & { originalGuidanceIds?: string[] })
     .originalGuidanceIds;
   if (
-    restrictions.excludedClasses.some((x) => !policy.allowedClasses.includes(x)) ||
+    restrictions.excludedClasses.some((x) => !policy.allowedClasses.includes(x) && x !== "practical_guide") ||
     restrictions.excludedJurisdictions.some((x) => !policy.jurisdictions.includes(x)) ||
     restrictions.excludedOriginalGuidanceIds.some((x) => !guidance?.includes(x))
   )

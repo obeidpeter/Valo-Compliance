@@ -1,4 +1,4 @@
-import { sha256 } from "@workspace/valo-core";
+import { isPracticalGuideId, sha256 } from "@workspace/valo-core";
 import type { valoContentVersions } from "@workspace/db";
 import { getPublicationArtifact, type ArtifactRef } from "./publication-artifacts";
 import {
@@ -21,6 +21,11 @@ export async function currentOperationalPermission(row: typeof valoContentVersio
   )
     return false;
   const recorded = Boolean(provenance.generation);
+  if (
+    isPracticalGuideId(row.templateId) &&
+    (recorded || rights.kind !== "practical-business-guide-v1" || provenance.templateId !== row.templateId)
+  )
+    return false;
   const snapshot = JSON.parse((await getPublicationArtifact(rights.snapshot as ArtifactRef)).toString());
   const applicable = recorded
     ? await loadRightsApplicability()

@@ -13,7 +13,7 @@ export const preparedCandidateSchema = z
     kind: z.literal("valo-prepared-candidate-v1"),
     versionId: z.string().regex(/^[a-f0-9-]{36}$/),
     // A template's ID or a guide's.
-    templateId: z.string().regex(/^(?:TPL-\d{2,3}|GUD-\d{2})$/),
+    templateId: z.string().regex(/^(?:TPL-\d{2,3}|GUD-\d{2}|GUIDE-C0[12])$/),
     version: z.number().int().positive(),
     slug: z.string().min(1),
     policyId: z.string().min(1),

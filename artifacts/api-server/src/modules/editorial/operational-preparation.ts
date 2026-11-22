@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { eq, sql } from "drizzle-orm";
 import {
   candidateDigest,
+  isPracticalGuideId,
   digest,
   evaluatePublication,
   disclosure,
@@ -12,6 +13,10 @@ import {
 import { renderDocument } from "../../lib/valo-render";
 import {
   templateCandidate,
+  practicalGuideCandidate,
+  practicalGuidePolicy,
+  practicalGuideSlug,
+  readPracticalGuideIntake,
   type OperationalProvenance,
   developmentPublicationOnly,
   operationalPolicy,
@@ -42,7 +47,7 @@ export async function prepareInventoryRelease(snapshotPath: string) {
  * This entry never authors, requests AI reviews, approves inference or publishes. */
 export async function prepareOperationalCandidateRelease(templateId: string, snapshotPath: string) {
   assertDevelopmentRuntime();
-  if (!supportsOperationalInferenceTemplate(templateId))
+  if (!supportsOperationalInferenceTemplate(templateId) && !isPracticalGuideId(templateId))
     throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
   return prepareRelease(templateId, snapshotPath, false);
 }
@@ -60,7 +65,12 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
     .from(valoContentVersions)
     .where(eq(valoContentVersions.templateId, templateId));
   const version = Math.max(0, ...versions.map((r) => r.version)) + 1;
-  const intake = useRecordedAuthoring ? null : await readOperationalIntake(templateId, version);
+  const practical = isPracticalGuideId(templateId);
+  const intake = useRecordedAuthoring
+    ? null
+    : practical
+      ? await readPracticalGuideIntake(templateId, version)
+      : await readOperationalIntake(templateId, version);
   const applicability = useRecordedAuthoring
     ? await loadRightsApplicability()
     : await loadChatGPTPermission(snapshot, intake!.provenance);
@@ -69,7 +79,7 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
   if (!applicability.verified) throw Error("PROVIDER_RIGHTS_APPLICABILITY_UNVERIFIED");
   assertPermissionRoute(applicability.record, useRecordedAuthoring);
   const now = new Date(),
-    { policy, authority } = await operationalPolicy();
+    { policy, authority } = practical ? await practicalGuidePolicy() : await operationalPolicy();
   await db
     .insert(valoPublicationPolicies)
     .values({ id: policy.version, hash: policy.hash, policy, authority })
@@ -104,7 +114,9 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
       },
     };
   }
-  const content = await templateCandidate(templateId, version, now, recorded);
+  const content = practical
+    ? await practicalGuideCandidate(templateId, version, now, recorded)
+    : await templateCandidate(templateId, version, now, recorded);
   const provenance = await putPublicationArtifact(Buffer.from(JSON.stringify(content.provenance)), "json");
   if (
     snapshot.kind !== "official_provider_terms_snapshot" ||
@@ -124,6 +136,7 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
     snapshot: snapshotRef,
     provenanceHash: provenance.hash,
     originalOperationalOnly: true,
+    ...(practical ? { kind: "practical-business-guide-v1" } : {}),
     applicabilityHash: applicability.hash,
     applicability: applicability.record,
     customerLicenceAccepted: false,
@@ -140,17 +153,20 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
     id: templateId,
     version,
     body: JSON.stringify(content.document),
-    contentClass: "general_template" as const,
+    contentClass: practical ? "practical_guide" : "general_template",
+    ...(practical ? { coverage: { kind: "guide" as const, industrySlugs: [], locationIds: [] } } : {}),
     jurisdiction: "NG",
     risk: "general" as const,
     scope: content.scope,
     limitations: content.limitations,
-    assumptions: [
-      templateId === "TPL-07"
-        ? "Quantities and business facts are entered by the user."
-        : "Business facts and applicable terms are entered and checked by the user.",
-      "This is optional recordkeeping practice, not a regulated-sector or statutory register.",
-    ],
+    assumptions: practical
+      ? ["The worked example is fictional. The reader supplies their own business facts."]
+      : [
+          templateId === "TPL-07"
+            ? "Quantities and business facts are entered by the user."
+            : "Business facts and applicable terms are entered and checked by the user.",
+          "This is optional recordkeeping practice, not a regulated-sector or statutory register.",
+        ],
     unresolvedMaterialIssues: [],
     missingEvidence: [],
     sourceCheckDate: now.toISOString(),
@@ -163,8 +179,18 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
   const candidate = { ...rawCandidate, hash: candidateDigest(rawCandidate) };
   // Render the exact canonical body being reviewed; not independently regenerated prose.
   const files = {
-    docx: await renderDocument(content.document, "docx", version, "template_sample"),
-    pdf: await renderDocument(content.document, "pdf", version, "template_sample"),
+    docx: await renderDocument(
+      content.document,
+      "docx",
+      version,
+      practical ? "practical_guide" : "template_sample",
+    ),
+    pdf: await renderDocument(
+      content.document,
+      "pdf",
+      version,
+      practical ? "practical_guide" : "template_sample",
+    ),
   };
   const exportReport = await inspectOperationalExports(candidate, files);
   const exports = {
@@ -322,7 +348,11 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
     exportsHash: digest(bundle.exports),
   });
   const id = randomUUID(),
-    slug = templateId === "TPL-07" ? "inventory-register" : templateId.toLowerCase(),
+    slug = practical
+      ? practicalGuideSlug(templateId)
+      : templateId === "TPL-07"
+        ? "inventory-register"
+        : templateId.toLowerCase(),
     attestations: ReleaseAttestations = {
       provenance,
       rights: rightsRef,
@@ -332,6 +362,15 @@ async function prepareRelease(templateId: string, snapshotPath: string, requestR
       exportReport: reportRef,
     };
   const eligibility = evaluatePublication(bundle);
+  if (
+    practical &&
+    providerFailure === "FINITE_REVIEW_NOT_RUN" &&
+    eligibility.reasons.some(
+      (reason) =>
+        !["manifest_not_eligible", "review_required:factual", "review_required:challenge"].includes(reason),
+    )
+  )
+    providerFailure = "PRACTICAL_GUIDE_PUBLICATION_HOLD";
   // A candidate that passed its checks and waits for its two finite reviews stays a private
   // artifact: a saved version can never gain reviews, so it is saved, with them, only once they
   // pass (decision 0014). A candidate that failed a check is saved and held as before.

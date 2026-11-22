@@ -1,5 +1,6 @@
 import {
   candidateDigest,
+  isPracticalGuideId,
   digest,
   disclosure,
   mandatoryMechanicalChecks,
@@ -81,9 +82,10 @@ export function operationalMechanicalChecks(input: {
     "TPL-37": "regulated_sector",
     "TPL-39": "contracts",
   };
+  const practical =
+    isPracticalGuideId(c.id) && c.contentClass === "practical_guide" && c.coverage?.kind === "guide";
   const originalScope =
-    supportsOperationalInferenceTemplate(c.id) &&
-    c.contentClass === "general_template" &&
+    ((supportsOperationalInferenceTemplate(c.id) && c.contentClass === "general_template") || practical) &&
     c.risk === "general" &&
     c.evidenceMode === "original_operational" &&
     c.legalScopeStatus === "not_applicable" &&
@@ -119,7 +121,8 @@ export function operationalMechanicalChecks(input: {
     (!mandatoryRisk[c.id] || mandatoryRisk[c.id] === c.risk) &&
     p.ownerApproved &&
     p.developmentOnly === true &&
-    (c.contentClass !== "general_template" || Boolean(p.originalOperationalIds?.includes(c.id))) &&
+    (!(practical || c.contentClass === "general_template") ||
+      Boolean(p.originalOperationalIds?.includes(c.id))) &&
     p.allowedClasses.includes(c.contentClass) &&
     p.jurisdictions.includes(c.jurisdiction) &&
     p.risks.includes(c.risk);
@@ -188,7 +191,9 @@ export function operationalMechanicalChecks(input: {
       pass: (originalScope && blankFields) || (sourcedScope && sourceFacts.every((s) => s.bound)),
       legalClaimCount: c.claims.length,
       blankBusinessFields: blankFields,
-      applicability: "No regulatory numbers or claims; user facts must remain blank in this reusable master",
+      applicability: practical
+        ? "Fictional worked examples checked against the original article."
+        : "No regulatory numbers or claims; user facts must remain blank in this reusable master",
     },
     rights: {
       pass: a.verified && r.applicabilityHash === a.hash && r.provenanceHash === input.provenanceArtifactHash,
@@ -203,9 +208,9 @@ export function operationalMechanicalChecks(input: {
         sourceBound &&
         v.sourceText.toLowerCase().includes(parsed.data.title.toLowerCase()) &&
         parsed.data.content.blocks.length >= 5 &&
-        text.includes("Scope:") &&
-        text.includes("Limitations:"),
-      blankReusableMaster: blankFields,
+        text.includes(practical ? "What it covers:" : "Scope:") &&
+        text.includes(practical ? "Limits you should know:" : "Limitations:"),
+      ...(practical ? { articleFieldsEmpty: blankFields } : { blankReusableMaster: blankFields }),
       blockCount: parsed.success ? parsed.data.content.blocks.length : 0,
     },
     disclosures: {

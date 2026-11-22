@@ -8,6 +8,7 @@ export function parseFinitePreparationOptions(extra: string[]) {
     throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
   let retry = false,
     guidePairs = false,
+    practicalPairs = false,
     packageId: string | undefined;
   // Prepared candidates are private artifacts until their reviews pass (decision 0014), so each
   // is named by its exact artifact: --candidate=<artifact id>:<artifact sha256>.
@@ -16,6 +17,7 @@ export function parseFinitePreparationOptions(extra: string[]) {
     if (option === "--with-schema-retry") retry = true;
     // A new package for the review pairs of guides (decision 0017), in place of the templates' one.
     else if (option === "--guide-pairs") guidePairs = true;
+    else if (option === "--practical-guide-pairs") practicalPairs = true;
     else if (/^--package=finite-package:[a-f0-9]{64}$/.test(option)) {
       if (packageId) throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
       packageId = option.slice("--package=".length);
@@ -25,8 +27,19 @@ export function parseFinitePreparationOptions(extra: string[]) {
       candidates.push({ id, hash, extension: "json" });
     } else throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
   }
-  if (guidePairs && (retry || packageId)) throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
-  return { retry, packageId, candidates, guidePairs };
+  if (
+    (guidePairs && practicalPairs) ||
+    ((guidePairs || practicalPairs) && (retry || packageId)) ||
+    (practicalPairs && candidates.length > 2)
+  )
+    throw Error("FINITE_PREPARATION_OPTIONS_INVALID");
+  return {
+    retry,
+    packageId,
+    candidates,
+    guidePairs,
+    ...(practicalPairs ? { practicalPairs: true as const } : {}),
+  };
 }
 /** Select one immutable pair or customer case; never silently pick a candidate.
  * The single-proposal shape is retained for already-created private reports. */

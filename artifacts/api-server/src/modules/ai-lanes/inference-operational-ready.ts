@@ -1,11 +1,20 @@
 import { and, eq, or } from "drizzle-orm";
-import { candidateDigest, digest, publicationSchema, type PublicationBundle } from "@workspace/valo-core";
+import {
+  isPracticalGuideId,
+  candidateDigest,
+  digest,
+  publicationSchema,
+  type PublicationBundle,
+} from "@workspace/valo-core";
 import {
   getPublicationArtifact,
   readPreparedCandidate,
   readOperationalIntake,
   readGuidanceIntake,
   templateCandidate,
+  readPracticalGuideIntake,
+  practicalGuideCandidate,
+  practicalGuidePolicy,
   guidanceCandidate,
   guidancePolicy,
   guideReviewInputs,
@@ -42,7 +51,8 @@ export async function readOperationalInferenceReadiness(binding: OperationalCand
   if (Date.parse(prepared.reviewBy) <= Date.now()) throw Error("CANDIDATE_UNAVAILABLE_OR_STALE");
   // A prepared candidate is one of the supported original forms, or a guide with a claim map.
   const guide = mappedGuideIds.includes(prepared.templateId);
-  if (!guide && !supportsOperationalInferenceTemplate(prepared.templateId))
+  const practical = isPracticalGuideId(prepared.templateId);
+  if (!guide && !practical && !supportsOperationalInferenceTemplate(prepared.templateId))
     throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
   // A saved version ends a candidate's review: this one, published or held, or another saved under
   // the same version number. The database client loads only when a readiness check runs.
@@ -87,15 +97,18 @@ export async function readOperationalInferenceReadiness(binding: OperationalCand
   const rights = JSON.parse((await getPublicationArtifact(a.rights)).toString());
   const snapshot = JSON.parse((await getPublicationArtifact(rights.snapshot)).toString());
   if (guide) return { row, ...(await guideReadiness(row, bundle, a, provenance, rights, snapshot)) };
-  const intake = await readOperationalIntake(row.templateId, row.version),
-    { policy } = await operationalPolicy();
+  const intake = practical
+      ? await readPracticalGuideIntake(row.templateId, row.version)
+      : await readOperationalIntake(row.templateId, row.version),
+    { policy } = practical ? await practicalGuidePolicy() : await operationalPolicy();
   if (
     intake.sourceHash !== provenance.hash ||
     intake.manifestHash !== provenance.noteHash ||
     policy.hash !== bundle.policy.hash
   )
     throw Error("SAVED_PLAN_INPUT_CHANGED");
-  const original = await templateCandidate(row.templateId, row.version, new Date(candidate.sourceCheckDate), {
+  const build = practical ? practicalGuideCandidate : templateCandidate;
+  const original = await build(row.templateId, row.version, new Date(candidate.sourceCheckDate), {
     original: intake.section.body,
     provenance,
   });

@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
-import { publicationSchema } from "@workspace/valo-core";
+import { isPracticalGuideId, practicalGuideIds, publicationSchema } from "@workspace/valo-core";
 import { assertDevelopmentRuntime } from "../platform/valo-development-runtime";
 import {
   mappedGuideIds,
@@ -20,6 +20,7 @@ import {
   registerPreparedInferenceSubmanifest,
   readApprovedFiniteAllocationPackage,
   finitePackagePreparers,
+  practicalReviewLimits,
 } from "../modules/ai";
 import type { FiniteManifest } from "../modules/ai";
 
@@ -33,6 +34,7 @@ const finiteRunCommands = [
   "--prepare-customer",
   "--prepare-editorial-case",
   "--prepare-template-candidate",
+  "--prepare-practical-guide-candidate",
   "--prepare-guide-candidate",
   "--verify-prepared",
   "--admit",
@@ -113,12 +115,15 @@ async function main() {
     if (mode === "--prepare-customer") {
       if (!batchId) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
-      if (options.candidates.length || options.guidePairs) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      if (options.candidates.length || options.guidePairs || options.practicalPairs)
+        throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareCustomerFiniteManifest } = await import("../modules/ai-lanes");
       const existing = options.packageId
         ? await readApprovedFiniteAllocationPackage(pool, options.packageId)
         : null;
       const pkg = existing?.pkg ?? (await prepareFiniteAllocationPackage());
+      if (pkg.supportedPreparers[0] !== finitePackagePreparers.templatePairs[0])
+        throw Error("CANDIDATE_OUTSIDE_PACKAGE_KIND");
       const prepared = await prepareCustomerFiniteManifest(batchId, {
         retry: options.retry,
         packageId: allocationPackageId(pkg),
@@ -164,7 +169,7 @@ async function main() {
       // package: the case is named by its corpus id, as in --prepare-editorial-case EVAL-EDP-C019.
       if (!batchId || !/^EVAL-EDP-C\d{3}$/.test(batchId)) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const options = parseFinitePreparationOptions(extra);
-      if (options.candidates.length || options.retry || options.guidePairs)
+      if (options.candidates.length || options.retry || options.guidePairs || options.practicalPairs)
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareEditorialCaseManifest, isControlledFailureEditorialCase } =
         await import("../modules/editorial");
@@ -220,8 +225,15 @@ async function main() {
       );
       return;
     }
-    if (mode === "--prepare-template-candidate") {
-      if (!batchId || !supportsOperationalInferenceTemplate(batchId) || extra.length !== 1 || !extra[0])
+    if (mode === "--prepare-template-candidate" || mode === "--prepare-practical-guide-candidate") {
+      if (
+        !batchId ||
+        !(mode === "--prepare-practical-guide-candidate"
+          ? isPracticalGuideId(batchId)
+          : supportsOperationalInferenceTemplate(batchId)) ||
+        extra.length !== 1 ||
+        !extra[0]
+      )
         throw Error("FINITE_RUN_ARGUMENTS_INVALID");
       const { prepareOperationalCandidateRelease } = await import("../modules/editorial");
       const prepared = await prepareOperationalCandidateRelease(batchId, extra[0]);
@@ -273,7 +285,10 @@ async function main() {
           work = manifest?.works?.[0];
         if (!work?.bindings?.caseId || Date.parse(proposal.expiresAt) <= Date.now())
           throw Error("PREPARED_MANIFEST_EXPIRED");
-        const pkg = await prepareFiniteAllocationPackage(new Date(report.package.preparedAt));
+        const pkg = await prepareFiniteAllocationPackage(
+          new Date(report.package.preparedAt),
+          report.package.supportedPreparers,
+        );
         if (requestDigest(pkg) !== requestDigest(report.package)) throw Error("PREPARED_PACKAGE_CHANGED");
         const { prepareCustomerFiniteManifest } = await import("../modules/ai-lanes");
         const exact = await prepareCustomerFiniteManifest(work.bindings.caseId, {
@@ -307,7 +322,10 @@ async function main() {
       }
       const packet = report.decisionPacket;
       if (!packet || Date.parse(packet.expiresAt) <= Date.now()) throw Error("PREPARED_MANIFEST_EXPIRED");
-      const currentPackage = await prepareFiniteAllocationPackage(new Date(report.package.preparedAt));
+      const currentPackage = await prepareFiniteAllocationPackage(
+        new Date(report.package.preparedAt),
+        report.package.supportedPreparers,
+      );
       if (requestDigest(currentPackage) !== requestDigest(report.package))
         throw Error("PREPARED_PACKAGE_CHANGED");
       const rebuilt = buildFiniteDecisionPacket(
@@ -411,9 +429,9 @@ async function main() {
           preparationOptions!.retry ||
           preparationOptions!.packageId ||
           // --guide-pairs chooses the kind of a new package; an approved package has its kind already.
-          (preparationOptions!.guidePairs && batchId !== "new") ||
+          ((preparationOptions!.guidePairs || preparationOptions!.practicalPairs) && batchId !== "new") ||
           !preparationOptions!.candidates.length)) ||
-      (selection && preparationOptions!.guidePairs) ||
+      (selection && (preparationOptions!.guidePairs || preparationOptions!.practicalPairs)) ||
       (mode === "--execute" && (!batchId || !/^[-a-zA-Z0-9_:]{1,160}$/.test(batchId)))
     )
       throw Error("FINITE_RUN_ARGUMENTS_INVALID");
@@ -426,14 +444,24 @@ async function main() {
             new Date(),
             preparationOptions!.guidePairs
               ? finitePackagePreparers.guidePairs
-              : finitePackagePreparers.templatePairs,
+              : preparationOptions!.practicalPairs
+                ? finitePackagePreparers.practicalPairs
+                : finitePackagePreparers.templatePairs,
           )),
         packageId = allocationPackageId(allocationPackage);
       // A package admits one kind of work: the templates' review pairs, or the guides'.
       const guidePackage =
         requestDigest(allocationPackage.supportedPreparers) ===
         requestDigest(finitePackagePreparers.guidePairs);
-      if (selection && guidePackage) throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const practicalPackage =
+        allocationPackage.supportedPreparers[0] === finitePackagePreparers.practicalPairs[0];
+      if (
+        allocationPackage.supportedPreparers[0] === finitePackagePreparers.editorialCases[0] ||
+        (selection && (guidePackage || practicalPackage)) ||
+        (practicalPackage && preparationOptions!.candidates.length > practicalGuideIds.length)
+      )
+        throw Error("FINITE_RUN_ARGUMENTS_INVALID");
+      const practicalArticles = new Set<string>();
       const holds: { candidateVersionId: string | null; templateId: string | null; reason: string }[] = [];
       const prepared: ReturnType<typeof finiteManifestProposal>[] = [];
       const customerHolds: { caseId: string; reason: string }[] = [];
@@ -445,9 +473,11 @@ async function main() {
           candidateVersionId = saved.versionId;
           templateId = saved.templateId;
           const guide = mappedGuideIds.includes(saved.templateId);
-          if (!guide && !supportsOperationalInferenceTemplate(saved.templateId))
+          const practical = isPracticalGuideId(saved.templateId);
+          if (!guide && !practical && !supportsOperationalInferenceTemplate(saved.templateId))
             throw Error("CANDIDATE_REQUEST_PREPARER_UNAVAILABLE");
-          if (guide !== guidePackage) throw Error("CANDIDATE_OUTSIDE_PACKAGE_KIND");
+          if (guide !== guidePackage || practical !== practicalPackage)
+            throw Error("CANDIDATE_OUTSIDE_PACKAGE_KIND");
           console.error(
             JSON.stringify({
               event: "finite-preparation-template",
@@ -455,6 +485,10 @@ async function main() {
               inferenceCalls: 0,
             }),
           );
+          if (practical) {
+            if (practicalArticles.has(saved.templateId)) throw Error("DUPLICATE_PRACTICAL_GUIDE");
+            practicalArticles.add(saved.templateId);
+          }
           const candidateArtifact = { ...ref, templateId: saved.templateId };
           const current = await readOperationalInferenceReadiness({
             candidateVersionId: saved.versionId,
@@ -553,11 +587,14 @@ async function main() {
         ownerApproved: !!existingPackage,
         executableScope: selection
           ? "Exact operational pairs and explicitly listed supported customer attempts under one package"
-          : guidePackage
-            ? "one exact review pair per verified prepared guide"
-            : "one exact operational review pair per verified prepared candidate",
-        supportedTemplateIds: guidePackage ? [] : operationalInferenceTemplateIds,
-        supportedGuideIds: guidePackage ? mappedGuideIds : [],
+          : practicalPackage
+            ? "one factual and challenge pair each for the invoice and quotation articles"
+            : guidePackage
+              ? "one exact review pair per verified prepared guide"
+              : "one exact operational review pair per verified prepared candidate",
+        supportedTemplateIds: guidePackage || practicalPackage ? [] : operationalInferenceTemplateIds,
+        supportedGuideIds: practicalPackage ? practicalGuideIds : guidePackage ? mappedGuideIds : [],
+        ...(practicalPackage ? { practicalReviewLimits } : {}),
         candidatesInspected: preparationOptions!.candidates.length,
         proposals: prepared,
         proposal: prepared.length === 1 ? prepared[0] : null,
@@ -566,8 +603,9 @@ async function main() {
         customerHolds,
         providerCalls: 0,
         approvalRowsWritten: 0,
-        nonpublicationCorpora:
-          "Original 80/60/60 rosters remain frozen; only listed supported customer attempts are prepared. Editorial/checker preparers remain held.",
+        nonpublicationCorpora: practicalPackage
+          ? "This package only admits the invoice and quotation review pairs."
+          : "Original 80/60/60 rosters remain frozen; only listed supported customer attempts are prepared. Editorial/checker preparers remain held.",
         excluded: ["authoring", "real customer confidential data", "production", "payments", "emails"],
         readiness: prepared.length
           ? "disabled exact proposals ready; no inference approval created"
@@ -591,7 +629,7 @@ async function main() {
           attemptCount: prepared.reduce((sum, p) => sum + p.attemptCount, 0),
           holds: holds.length + customerHolds.length,
           providerCalls: 0,
-          ownerApproved: false,
+          ownerApproved: !!existingPackage,
           decisionPacketHash: decisionPacket ? requestDigest(decisionPacket) : null,
           worstCaseReservationNanoUsd: decisionPacket?.worstCaseReservationNanoUsd ?? null,
           privateReportArtifact: artifact,

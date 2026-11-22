@@ -1,11 +1,13 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { z } from "zod";
-import { sha256 } from "@workspace/valo-core";
+import { isPracticalGuideId, sha256 } from "@workspace/valo-core";
 import { publicationWorkspaceRoot } from "./operational-policy";
 import { readGuidanceIntake, readOperationalIntake } from "./operational-intake";
 import { supportsOperationalInferenceTemplate } from "./inference-operational-coverage";
 /** The scope a guide's own wording is recorded under; a blank form keeps the scope it always had. */
+import { practicalProvenancePath, practicalSourcePath, readPracticalGuideIntake } from "./practical-guide";
+const practicalScope = "chatgpt_original_practical_article_provider_permission_only";
 const guidanceScope = "chatgpt_original_guidance_prose_provider_permission_only";
 const guideId = /^GUD-(0[1-9]|[12]\d|30)$/;
 const schema = z
@@ -21,6 +23,7 @@ const schema = z
         "blank_operational_forms_internal_business_licence",
         "chatgpt_original_operational_provider_permission_only",
         guidanceScope,
+        practicalScope,
       ])
       .nullable(),
     authoringRoute: z.literal("coordinator_chatgpt").optional(),
@@ -62,7 +65,8 @@ export function verifiedRightsApplicability(input: unknown, now = new Date()) {
       record.authoringRoute === "coordinator_chatgpt" &&
       Boolean(record.sourceBinding) &&
       (record.commercialUseScope === "chatgpt_original_operational_provider_permission_only" ||
-        record.commercialUseScope === guidanceScope) &&
+        record.commercialUseScope === guidanceScope ||
+        record.commercialUseScope === practicalScope) &&
       record.evidence.some((e) => e.url === chatGPTFAQ && e.quote === commercialQuote) &&
       [rowTerms, euTerms].every((url) =>
         record.evidence.some((e) => e.url === url && e.quote === ownershipQuote),
@@ -128,7 +132,15 @@ export function chatGPTPermissionRecord(
     sourceHash = sha256(source);
   // A guide's wording is bound through the manifest's guidance rows, a form's through its templates.
   const guide = guideId.test(binding.templateId);
-  if (binding.templateId) {
+  const practical = isPracticalGuideId(binding.templateId);
+  if (practical) {
+    if (
+      binding.path !== practicalSourcePath ||
+      binding.notePath !== practicalProvenancePath ||
+      !note.split("\n").some((line) => line.includes(practicalSourcePath) && line.includes(sourceHash))
+    )
+      throw Error("CHATGPT_SOURCE_HASH_NOT_BOUND");
+  } else if (binding.templateId) {
     const manifest = JSON.parse(note);
     const rows: { id: string; sourcePath: string; sourceSHA256: string }[] | undefined = guide
       ? manifest.guidance
@@ -173,16 +185,22 @@ export function chatGPTPermissionRecord(
     };
   });
   const record = schema.parse({
-    version: guide
-      ? "chatgpt-original-guidance-provider-permission-1"
-      : "chatgpt-original-operational-provider-permission-1",
+    version: practical
+      ? "chatgpt-original-practical-article-permission-1"
+      : guide
+        ? "chatgpt-original-guidance-provider-permission-1"
+        : "chatgpt-original-operational-provider-permission-1",
     status: "verified",
     accountPlan: "not_classified_or_required_for_documented_free_paid_output_permission",
     accountTerms: null,
     integration: "chatgpt",
     provider: "openai",
     authoringRoute: "coordinator_chatgpt",
-    commercialUseScope: guide ? guidanceScope : "chatgpt_original_operational_provider_permission_only",
+    commercialUseScope: practical
+      ? practicalScope
+      : guide
+        ? guidanceScope
+        : "chatgpt_original_operational_provider_permission_only",
     checkedAt: snapshot.retrievedAt,
     sourceBinding: {
       path: binding.path,
@@ -220,8 +238,11 @@ export async function loadChatGPTPermission(
 ) {
   const root = publicationWorkspaceRoot();
   // A guide's wording is bound to its own draft file through the intake manifest.
-  if (provenance && guideId.test(provenance.templateId)) {
-    const intake = await readGuidanceIntake(provenance.templateId, provenance.version);
+  if (provenance && (guideId.test(provenance.templateId) || isPracticalGuideId(provenance.templateId))) {
+    const practical = isPracticalGuideId(provenance.templateId);
+    const intake = practical
+      ? await readPracticalGuideIntake(provenance.templateId, provenance.version)
+      : await readGuidanceIntake(provenance.templateId, provenance.version);
     if (
       provenance.path !== intake.provenance.path ||
       provenance.hash !== intake.sourceHash ||
@@ -232,7 +253,9 @@ export async function loadChatGPTPermission(
       throw Error("INTAKE_AUTHORING_LINEAGE_MISMATCH");
     return chatGPTPermissionRecord(snapshot, provenance.sourceText, provenance.note, new Date(), {
       path: provenance.path,
-      notePath: "docs/content-candidates/r1-content-intake-manifest.json",
+      notePath: practical
+        ? practicalProvenancePath
+        : "docs/content-candidates/r1-content-intake-manifest.json",
       templateId: provenance.templateId,
     });
   }

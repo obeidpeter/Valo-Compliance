@@ -19,6 +19,8 @@ import {
 import {
   prepareFiniteAllocationPackage,
   allocationPackageId,
+  approveFiniteAllocationPackage,
+  revokeFiniteAllocationPackage,
   registerPreparedInferenceSubmanifest,
   readApprovedFiniteAllocationPackage,
   finitePackagePreparers,
@@ -165,6 +167,80 @@ test(
       d.withWork(id, w.key, () => d.complete(w.lane, w.request, { timeout: 100, maxRetries: 0 }));
     try {
       await reset();
+      await t.test(
+        "a practical package admits each article once even during concurrent admissions",
+        async () => {
+          await reset();
+          const pkg = await prepareFiniteAllocationPackage(
+            new Date(Date.now() - 1000),
+            finitePackagePreparers.practicalPairs,
+          );
+          const packageId = allocationPackageId(pkg);
+          const expires = new Date(Date.now() + 1800000).toISOString();
+          await approveFiniteAllocationPackage(
+            pool,
+            pkg,
+            {
+              confirmPackageId: packageId,
+              approvedBy: "synthetic-owner",
+              reference: "Synthetic fixture in the isolated test schema",
+              hours: 1,
+            },
+            schema,
+          );
+          const source = pkg.sourceFiles.find((file) =>
+            file.path.endsWith("/practical-guide-candidates.md"),
+          )!;
+          const make = (id: string): FiniteManifest => {
+            const key = randomUUID();
+            const works = (["factual", "challenge"] as const).map((role) => {
+              const item = work(key + role, "publication", key, role);
+              item.bindings.candidateArtifact!.templateId = id;
+              item.bindings.sourceFiles = [source];
+              return item;
+            });
+            return {
+              version: 2,
+              policyVersion: inferenceProposal.priceVersion,
+              allocation: { ...additionalInferenceAllocation },
+              preparedAt: new Date().toISOString(),
+              packageId,
+              works,
+            };
+          };
+          const admit = (manifest: FiniteManifest) =>
+            registerPreparedInferenceSubmanifest(store, manifest, expires, async () => {});
+          const first = make("GUIDE-C01"),
+            competing = make("GUIDE-C01"),
+            second = make("GUIDE-C02");
+          const direct = await seed(first.works);
+          await assert.rejects(
+            dispatcher.withPair(direct, first.works[0]!.pair!, async () => {}),
+            /PRACTICAL_GUIDE_PACKAGE_REQUIRED/,
+          );
+          await assert.rejects(
+            admit({ ...first, works: [first.works[0]!] }),
+            /PRACTICAL_GUIDE_REVIEW_PAIR_REQUIRED/,
+          );
+          await assert.rejects(
+            admit({ ...first, works: [first.works[0]!, second.works[1]!] }),
+            /PRACTICAL_GUIDE_REVIEW_PAIR_REQUIRED/,
+          );
+          const race = await Promise.allSettled([admit(first), admit(competing)]);
+          assert.deepEqual(race.map((result) => result.status).sort(), ["fulfilled", "rejected"]);
+          const rejected = race.find((result) => result.status === "rejected")!;
+          assert.match(String(rejected.reason), /PRACTICAL_GUIDE_PAIR_ALREADY_ADMITTED/);
+          const accepted = await admit(second);
+          assert.deepEqual(await admit(second), accepted);
+          await assert.rejects(admit(make("GUIDE-C02")), /PRACTICAL_GUIDE_PAIR_ALREADY_ADMITTED/);
+          const entries = await pool.query(
+            `SELECT sum(jsonb_array_length(manifest->'works'))::int n FROM "${schema}".valo_inference_batches WHERE manifest->>'packageId'=$1`,
+            [packageId],
+          );
+          assert.equal(entries.rows[0].n, 4);
+          await revokeFiniteAllocationPackage(pool, packageId, schema);
+        },
+      );
       await t.test(
         "actual managed entry dispatches all four approved lanes through shared durable reservation, SDK observation and settlement",
         async () => {
