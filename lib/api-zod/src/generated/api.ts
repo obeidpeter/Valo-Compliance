@@ -804,6 +804,7 @@ export const GetReleasedTemplateResponse = zod.object({
   "reviewedAt": zod.coerce.date(),
   "reviewBy": zod.coerce.date().nullable(),
   "publicationMethod": zod.enum(['manual']).optional(),
+  "access": zod.enum(['free', 'premium']).optional(),
   "disclosure": zod.string(),
   "scope": zod.string(),
   "limitations": zod.string(),
@@ -3377,7 +3378,7 @@ export const ListManualLibraryResponse = zod.object({
   "itemId": zod.uuid(),
   "version": zod.int(),
   "title": zod.string(),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'regulatory_article']),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
   "industry": zod.string().nullable()
 })),
@@ -3397,7 +3398,7 @@ export const GetManualLibraryRevisionResponse = zod.object({
   "itemId": zod.uuid(),
   "version": zod.int(),
   "title": zod.string(),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'regulatory_article']),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
   "industry": zod.string().nullable(),
   "id": zod.uuid(),
@@ -3433,7 +3434,7 @@ export const SaveManualLibraryDraftBody = zod.object({
   "requestId": zod.uuid(),
   "baseVersion": zod.int().min(saveManualLibraryDraftBodyBaseVersionMin),
   "title": zod.string().min(1).max(saveManualLibraryDraftBodyTitleMax),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'regulatory_article']),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']),
   "industry": zod.string().nullable(),
   "body": zod.string().max(saveManualLibraryDraftBodyBodyMax),
   "fileMode": zod.enum(['text', 'upload', 'keep']),
@@ -3451,7 +3452,7 @@ export const SaveManualLibraryDraftResponse = zod.object({
   "itemId": zod.uuid(),
   "version": zod.int(),
   "title": zod.string(),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'regulatory_article']),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
   "industry": zod.string().nullable(),
   "id": zod.uuid(),
@@ -3491,7 +3492,7 @@ export const ActOnManualLibraryResponse = zod.object({
   "itemId": zod.uuid(),
   "version": zod.int(),
   "title": zod.string(),
-  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'regulatory_article']),
+  "kind": zod.enum(['practical_guide', 'industry_introduction', 'template', 'premium_template', 'regulatory_article']),
   "state": zod.enum(['draft', 'published', 'replaced', 'withdrawn']),
   "industry": zod.string().nullable(),
   "id": zod.uuid(),
@@ -3522,6 +3523,13 @@ export const DownloadManualTemplateParams = zod.object({
 })
 
 export const DownloadManualTemplateResponse = zod.unknown()
+
+
+export const DownloadPremiumManualTemplateParams = zod.object({
+  "id": zod.uuid()
+})
+
+export const DownloadPremiumManualTemplateResponse = zod.unknown()
 
 
 export const GetBuildStatusResponse = zod.object({

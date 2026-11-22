@@ -36,6 +36,8 @@ const NOT_WORKSPACE_OWNED: Record<string, string> = {
     "Public catalogue template identifier; the draft is created in the caller's own workspace.",
   "GET /workspace/templates/{id}/files/{format}":
     "Public catalogue template identifier. The purchase check it relies on is proven in valo-template-entitlement.integration.test.ts.",
+  "GET /workspace/manual-premium-templates/{id}/download":
+    "Public edition identifier shared by all workspaces. The manual library integration test downloads as the verified purchaser and checks another workspace, replacement and reversal.",
   "PUT /workspace/saved-templates/{id}":
     "Public catalogue template identifier; saved-template ownership is proven in valo-saved-templates.integration.test.ts.",
   "DELETE /workspace/saved-templates/by-template/{templateId}":
@@ -1132,6 +1134,7 @@ test(
         const catalogue: Record<string, Record<string, string>> = {
           "POST /workspace/templates/{id}/draft": { id: randomUUID() },
           "GET /workspace/templates/{id}/files/{format}": { id: randomUUID(), format: "pdf" },
+          "GET /workspace/manual-premium-templates/{id}/download": { id: randomUUID() },
           "PUT /workspace/saved-templates/{id}": { id: randomUUID() },
           "DELETE /workspace/saved-templates/by-template/{templateId}": { templateId: "SYNTHETIC-ABSENT" },
         };

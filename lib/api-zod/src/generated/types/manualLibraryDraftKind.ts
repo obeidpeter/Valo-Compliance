@@ -13,5 +13,6 @@ export const ManualLibraryDraftKind = {
   practical_guide: 'practical_guide',
   industry_introduction: 'industry_introduction',
   template: 'template',
+  premium_template: 'premium_template',
   regulatory_article: 'regulatory_article',
 } as const;

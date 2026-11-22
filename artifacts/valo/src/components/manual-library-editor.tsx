@@ -17,7 +17,8 @@ import { ErrorState } from "./states";
 const kinds: Record<ManualLibraryDraft["kind"], string> = {
   practical_guide: "Practical guide",
   industry_introduction: "Industry introduction",
-  template: "Template",
+  template: "Free template",
+  premium_template: "Premium template",
   regulatory_article: "Regulatory article",
 };
 const inputStyle = "mt-1 block w-full rounded-lg border border-border bg-background p-2 text-base";
@@ -237,7 +238,13 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                     value={form.kind}
                     aria-label="Content type"
                     disabled={Boolean(snapshot)}
-                    onChange={(e) => update({ kind: e.target.value as typeof form.kind })}
+                    onChange={(e) => {
+                      const kind = e.target.value as typeof form.kind;
+                      update({
+                        kind,
+                        ...(kind === "premium_template" ? { fileMode: "upload", body: "" } : {}),
+                      });
+                    }}
                   >
                     {Object.entries(kinds).map(([k, label]) => (
                       <option value={k} key={k}>
@@ -281,12 +288,17 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                   aria-label="Content source"
                   onChange={(e) => {
                     const mode = e.target.value as typeof form.fileMode;
-                    update({ fileMode: mode, ...(mode === "upload" ? { body: "" } : {}) });
+                    update({
+                      fileMode: mode,
+                      ...(mode === "upload" && form.kind !== "premium_template" ? { body: "" } : {}),
+                    });
                   }}
                 >
-                  <option value="text">
-                    {form.kind === "template" ? "Create a Word template from text" : "Paste or edit text"}
-                  </option>
+                  {form.kind !== "premium_template" && (
+                    <option value="text">
+                      {form.kind === "template" ? "Create a Word template from text" : "Paste or edit text"}
+                    </option>
+                  )}
                   <option value="upload">Upload Word or PDF</option>
                   {snapshot?.fileFormat && <option value="keep">Keep the saved file</option>}
                 </select>
@@ -308,17 +320,27 @@ export function ManualLibraryEditor({ onDirtyChange }: { onDirtyChange: (dirty: 
                 </label>
               )}
               <label className="text-sm font-medium">
-                {form.kind === "template" ? "Template text or description" : "Guide text"}
+                {form.kind === "premium_template"
+                  ? "Public description"
+                  : form.kind === "template"
+                    ? "Template text or description"
+                    : "Guide text"}
                 <textarea
                   className={inputStyle}
                   rows={7}
-                  maxLength={60000}
-                  required={form.fileMode !== "upload"}
+                  maxLength={form.kind === "premium_template" ? 600 : 60000}
+                  required={form.kind === "premium_template" || form.fileMode !== "upload"}
                   value={form.body}
                   onChange={(e) => update({ body: e.target.value })}
                 />
               </label>
-              {form.fileMode === "upload" && (
+              {form.kind === "premium_template" && (
+                <p className="text-sm text-muted-foreground">
+                  Visitors can read the description. Downloading the file requires an active workspace
+                  purchase for this version.
+                </p>
+              )}
+              {form.fileMode === "upload" && form.kind !== "premium_template" && (
                 <p className="text-sm text-muted-foreground">
                   Leave the text blank to use the words in your file. For a scanned PDF, paste the text you
                   want readers to see.

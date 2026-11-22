@@ -48,7 +48,7 @@ import { supportCustomerRouter, supportOperationsRouter } from "./valo-support-l
 import { customerPaymentConcernsRouter, financePaymentConcernsRouter } from "./valo-payment-concerns";
 import { createSessionVerificationRouter } from "./valo-session-verification";
 import { makeStaffGate } from "../middlewares/valo-staff-gate";
-import { createManualLibraryRouter } from "./valo-manual-library";
+import { createManualLibraryRouter, premiumManualTemplateRouter } from "./valo-manual-library";
 import { sourceControlsRouter, correctionNoticesRouter } from "./valo-source-controls";
 const router = Router();
 router.use(createSessionVerificationRouter());
@@ -212,6 +212,7 @@ router.post("/workspace/support", async (req, res) => {
 // Mounted after the shared server identity, workspace and CSRF boundary above.
 router.use(requirementsRouter);
 router.use(customerAIRouter);
+router.use(premiumManualTemplateRouter);
 router.post("/workspace/templates/:id/draft", async (req, res) => {
   res.set("Cache-Control", "private, no-store");
   res

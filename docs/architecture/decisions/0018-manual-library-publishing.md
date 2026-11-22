@@ -16,7 +16,15 @@ Staff document uploads serve the editorial workflow. Customer workspaces continu
 
 The application requires an active Content role and recent MFA. It records the editor and date for each saved, published and withdrawn version. It uses the existing database, a separate item identity, and a fingerprint of the previewed text and attachment. Every revision keeps its original content type. A new public version requires an explicit staff action. The editing routes make no AI calls and create no review allocations or worker jobs.
 
-Readers can filter Guides by industry. An industry introduction also appears on its category page. Templates appear in Documents, and signed-in readers can download their published file. The publication date is identified as editorial publication. Industry introductions contribute no source-check dates or regulatory evidence. Previously reviewed releases continue to use their recorded evidence and existing file access rules.
+Readers can filter Guides by industry. An industry introduction also appears on its category page. Templates appear in Documents. Signed-in readers can download free templates. The publication date is identified as editorial publication. Industry introductions contribute no source-check dates or regulatory evidence. Previously reviewed releases continue to use their recorded evidence and existing file access rules.
+
+## Premium templates on development
+
+The owner approved preserving the 12 free and 28 premium baseline templates when using the $0 publisher. Select **Premium template**, upload the Word or PDF file, and write a separate public description of up to 600 characters. Download the saved preview before publishing. The catalogue shows the description and access level. The free download route serves only free editions.
+
+Migration `20261122183800_manual_premium_templates` registers immutable editions from both publishers as possible targets for commercial records. It preserves existing price, order and entitlement IDs. Publishing establishes no price or licence and grants no customer a purchase. Checkout requires an approved effective price and licence for the live edition. A download requires the same workspace, a verified order and an active entitlement for that edition. A reversal, suspension, replacement or withdrawal closes access to the affected file.
+
+Before applying the migration, verify a fresh development backup, rehearse migration and transaction rollback on its isolated restore, and compare all existing records. An application rollback can retain the additive edition registry. After editorial work resumes, preserve intervening changes before any database restore.
 
 Existing project drafts can be pasted or uploaded individually. The Content editor saves regulatory drafts privately. The original manual-library migration held regulatory publication pending the owner's separate decision.
 

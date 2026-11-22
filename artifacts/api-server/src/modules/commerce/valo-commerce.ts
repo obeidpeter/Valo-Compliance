@@ -28,7 +28,7 @@ import {
   type VerifiedTransaction,
 } from "./valo-paystack-contract";
 import { trustedSiteOrigin } from "../../lib/valo-site-origin";
-import { assertDevelopmentRuntime } from "../../platform/valo-development-runtime";
+import { assertDevelopmentRuntime, isDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import { CreateCommerceOrderBody } from "@workspace/api-zod";
 import { requestOrderRefund, refundView, handleRefundEvent } from "./valo-refunds";
 import { syncDispute } from "./valo-payment-disputes";
@@ -121,24 +121,42 @@ async function presentOrder(tx: Tx, order: typeof valoOrders.$inferSelect) {
 /** The released catalogue. It reads publication artifacts from storage and takes its own
  * pooled connections, so call it outside transactions: a caller that holds a transaction's
  * connection while it waits for another lets enough concurrent requests exhaust the pool. */
-export async function commerceProducts() {
-  const released = await liveOperationalVersions(),
-    ids = new Set(released.filter((v) => !/^TPL-(0[1-9]|1[0-2])$/.test(v.templateId)).map((v) => v.id)),
-    now = Date.now();
-  return (await db.select().from(valoPrices))
+async function commercialOffers() {
+  const [released, prices] = await Promise.all([liveOperationalVersions(), db.select().from(valoPrices)]);
+  const reviewedIds = new Set(
+    released.filter((v) => !/^TPL-(0[1-9]|1[0-2])$/.test(v.templateId)).map((v) => v.id),
+  );
+  const manualIds = new Set<string>();
+  if (prices.length && isDevelopmentRuntime()) {
+    const { rows } = await db.execute<{ edition: string }>(
+      sql`select edition from public.valo_live_manual_premium_versions(null)`,
+    );
+    for (const { edition } of rows) manualIds.add(edition);
+  }
+  const now = Date.now();
+  return prices
     .filter(
       (p) =>
-        ids.has(p.contentVersionId) && +p.effectiveFrom <= now && (!p.effectiveTo || +p.effectiveTo > now),
+        (reviewedIds.has(p.contentVersionId) || manualIds.has(p.contentVersionId)) &&
+        Boolean(p.approvalReference) &&
+        +p.effectiveFrom <= now &&
+        (!p.effectiveTo || +p.effectiveTo > now),
     )
     .map((p) => ({
-      id: p.id,
-      title: p.title,
-      amountKobo: p.amountKobo,
-      currency: p.currency,
-      licenceVersion: p.licenceVersion,
-      licenceText: p.licenceText,
-      taxTreatment: p.taxTreatment,
+      manual: manualIds.has(p.contentVersionId),
+      product: {
+        id: p.id,
+        title: p.title,
+        amountKobo: p.amountKobo,
+        currency: p.currency,
+        licenceVersion: p.licenceVersion,
+        licenceText: p.licenceText,
+        taxTreatment: p.taxTreatment,
+      },
     }));
+}
+export async function commerceProducts() {
+  return (await commercialOffers()).map((offer) => offer.product);
 }
 export async function purchases(actor: WorkspaceActor) {
   const listing = await db.transaction(async (tx) => {
@@ -193,7 +211,7 @@ export async function purchases(actor: WorkspaceActor) {
 export async function createOrder(actor: WorkspaceActor, raw: unknown) {
   const input = CreateCommerceOrderBody.strict().parse(raw);
   // Before the transaction: see commerceProducts.
-  const products = await commerceProducts();
+  const offer = (await commercialOffers()).find((entry) => entry.product.id === input.priceId);
   return db.transaction(async (tx) => {
     await assertSafetyActive(tx, "checkout");
     // Serialize one tenant's idempotency/price selection without trusting browser prices.
@@ -219,12 +237,19 @@ export async function createOrder(actor: WorkspaceActor, raw: unknown) {
       !price.approvalReference ||
       +price.effectiveFrom > Date.now() ||
       (price.effectiveTo && +price.effectiveTo <= Date.now()) ||
-      !products.some((p) => p.id === price.id)
+      !offer
     )
       throw new ValoProblem(
         409,
         "This product is not currently released with an approved price and licence. No order was created.",
       );
+    if (offer.manual) {
+      const edition = await tx.execute(
+        sql`select edition from public.valo_live_manual_premium_versions(${price.contentVersionId}::uuid)`,
+      );
+      if (!edition.rows.length)
+        throw new ValoProblem(409, "This template version is no longer available for purchase.");
+    }
     if (input.acceptedLicenceVersion !== price.licenceVersion)
       throw new ValoProblem(409, "The licence changed. Review the current licence before continuing.");
     const id = randomUUID();

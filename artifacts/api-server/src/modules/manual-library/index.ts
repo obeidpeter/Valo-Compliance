@@ -1,13 +1,16 @@
 import { and, desc, eq, getTableColumns, ne, or, sql } from "drizzle-orm";
-import { coveragePlan, digest, sha256 } from "@workspace/valo-core";
+import { baselineTemplates, coveragePlan, digest, sha256 } from "@workspace/valo-core";
 import { ActOnManualLibraryBody, SaveManualLibraryDraftBody } from "@workspace/api-zod";
 import type { db, valoManualLibrary } from "@workspace/db";
 import type { SourceStaffActor } from "../sources";
 import { ValoProblem } from "../../platform/valo-problem";
 import { assertDevelopmentRuntime, isDevelopmentRuntime } from "../../platform/valo-development-runtime";
 import type { EditorialFile } from "./files";
+import { authorizeWorkspaceWrite, type WorkspaceActor } from "../workspaces";
 
 type Revision = typeof valoManualLibrary.$inferSelect;
+export const isManualTemplate = (kind: Revision["kind"]) =>
+  kind === "template" || kind === "premium_template";
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const sectors = new Set(coveragePlan().industries.map((i) => i.slug));
 const missing = () => new ValoProblem(404, "This library item is unavailable.");
@@ -122,6 +125,17 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
   const input = SaveManualLibraryDraftBody.strict().parse(value);
   const title = input.title.trim();
   if (!title || hasControlCharacters(title)) throw new ValoProblem(422, "Enter a title on one line.");
+  if (isManualTemplate(input.kind)) {
+    const registered = baselineTemplates.find((entry) => entry.title.toLowerCase() === title.toLowerCase());
+    if (registered && (registered.access === "premium") !== (input.kind === "premium_template"))
+      throw new ValoProblem(422, "Choose the access level registered for this template.");
+  }
+  const premium = input.kind === "premium_template";
+  if (premium && (input.fileMode === "text" || !input.body.trim() || input.body.trim().length > 600))
+    throw new ValoProblem(
+      422,
+      "Choose a template file and enter a separate public description of up to 600 characters.",
+    );
   if (
     (input.industry !== null && !sectors.has(input.industry)) ||
     (input.kind === "industry_introduction" && !input.industry)
@@ -129,7 +143,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
     throw new ValoProblem(422, "Choose a listed industry for this item.");
   if (
     (input.fileMode === "upload") !== Boolean(input.upload) ||
-    (input.fileMode === "keep" && input.kind !== "template")
+    (input.fileMode === "keep" && !isManualTemplate(input.kind))
   )
     throw new ValoProblem(422, "Choose text, an uploaded file, or the saved template file.");
   const upload = input.upload
@@ -149,7 +163,7 @@ export async function saveManualDraft(actor: SourceStaffActor, itemId: string, v
       if (latest && latest.kind !== input.kind)
         throw new ValoProblem(409, "The content type is fixed when the first draft is saved.");
       let file: EditorialFile | undefined;
-      if (input.kind === "template") {
+      if (isManualTemplate(input.kind)) {
         if (input.fileMode === "keep") {
           const [base] = await tx
             .select({ bytes: t.fileBytes, format: t.fileFormat })
@@ -278,6 +292,23 @@ export async function releasedManualFile(id: string) {
         .where(and(eq(t.id, id), eq(t.kind, "template"), eq(t.state, "published")))
     )[0],
   );
+}
+export async function purchasedManualFile(actor: WorkspaceActor, id: string) {
+  assertDevelopmentRuntime();
+  const { db } = await import("@workspace/db");
+  return db.transaction(async (tx) => {
+    const { rows } = await tx.execute<{
+      slug: string;
+      version: number;
+      format: "docx" | "pdf";
+      bytes: Buffer;
+    }>(sql`select slug, version, format, bytes from public.valo_manual_purchased_file(${id}::uuid)`);
+    await authorizeWorkspaceWrite(tx, actor);
+    if (!rows[0])
+      throw new ValoProblem(403, "This workspace needs an active purchase for this template version.");
+    const { slug, version, format, bytes } = rows[0];
+    return attachment({ slug, version, fileFormat: format, fileBytes: bytes });
+  });
 }
 /** Existing readers may still run against the schema preceding the additive migration. */
 export async function releasedManualEntries(slug?: string) {

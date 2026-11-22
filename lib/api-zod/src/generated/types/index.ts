@@ -234,6 +234,7 @@ export * from './releasedResource';
 export * from './releasedResourceKind';
 export * from './releasedResourcePublicationMethod';
 export * from './releasedTemplate';
+export * from './releasedTemplateAccess';
 export * from './releasedTemplateFormatsItem';
 export * from './releasedTemplatePublicationMethod';
 export * from './releaseGate';

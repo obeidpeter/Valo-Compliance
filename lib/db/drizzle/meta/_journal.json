@@ -330,6 +330,13 @@
       "when": 1795363656199,
       "tag": "20261122160736_manual_regulatory_source_signoff",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1795372680000,
+      "tag": "20261122183800_manual_premium_templates",
+      "breakpoints": true
     }
   ]
 }

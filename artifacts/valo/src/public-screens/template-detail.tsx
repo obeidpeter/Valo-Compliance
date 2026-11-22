@@ -7,6 +7,7 @@ import {
   useCreateTemplateDraft,
   downloadReleasedTemplate,
   downloadManualTemplate,
+  downloadPremiumManualTemplate,
   type ReleasedTemplate,
 } from "@workspace/api-client-react";
 import { PublicLink as Link } from "@/components/public-link";
@@ -54,7 +55,9 @@ function CustomerActions({ t }: { t: ReleasedTemplate }) {
     try {
       const res: unknown =
         t.publicationMethod === "manual"
-          ? await downloadManualTemplate(t.id)
+          ? t.access === "premium"
+            ? await downloadPremiumManualTemplate(t.id)
+            : await downloadManualTemplate(t.id)
           : await downloadReleasedTemplate(t.id, format);
       const blob = res instanceof Blob ? res : new Blob([res as BlobPart]);
       const url = URL.createObjectURL(blob);
@@ -181,7 +184,9 @@ export function TemplateDetail({
           <article className="grid gap-10 lg:grid-cols-[1fr_340px]">
             <div className="min-w-0 lg:col-start-1">
               <div className="flex flex-wrap gap-2">
-                <span className="pill pill-forest">Template</span>
+                <span className="pill pill-forest">
+                  {t.access === "premium" ? "Premium template" : "Template"}
+                </span>
                 <span className="pill pill-ink" data-testid="text-version">
                   Version {t.version}
                 </span>
@@ -229,6 +234,11 @@ export function TemplateDetail({
             <aside className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
               <div className="surface grid gap-4 p-5">
                 <p className="font-display text-xl">Use this template</p>
+                {t.access === "premium" && (
+                  <p className="text-sm text-muted-foreground">
+                    Downloading this version requires an active purchase in your workspace.
+                  </p>
+                )}
                 {signedIn ? (
                   <CustomerActions t={t} />
                 ) : (

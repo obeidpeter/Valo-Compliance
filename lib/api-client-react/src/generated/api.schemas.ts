@@ -434,6 +434,14 @@ export const ReleasedTemplatePublicationMethod = {
   manual: 'manual',
 } as const;
 
+export type ReleasedTemplateAccess = typeof ReleasedTemplateAccess[keyof typeof ReleasedTemplateAccess];
+
+
+export const ReleasedTemplateAccess = {
+  free: 'free',
+  premium: 'premium',
+} as const;
+
 export type ReleasedTemplateFormatsItem = typeof ReleasedTemplateFormatsItem[keyof typeof ReleasedTemplateFormatsItem];
 
 
@@ -453,6 +461,7 @@ export interface ReleasedTemplate {
   /** @nullable */
   reviewBy: string | null;
   publicationMethod?: ReleasedTemplatePublicationMethod;
+  access?: ReleasedTemplateAccess;
   disclosure: string;
   scope: string;
   limitations: string;
@@ -1567,6 +1576,7 @@ export const ManualLibraryEntryKind = {
   practical_guide: 'practical_guide',
   industry_introduction: 'industry_introduction',
   template: 'template',
+  premium_template: 'premium_template',
   regulatory_article: 'regulatory_article',
 } as const;
 
@@ -1602,6 +1612,7 @@ export const ManualLibraryRevisionKind = {
   practical_guide: 'practical_guide',
   industry_introduction: 'industry_introduction',
   template: 'template',
+  premium_template: 'premium_template',
   regulatory_article: 'regulatory_article',
 } as const;
 
@@ -1662,6 +1673,7 @@ export const ManualLibraryDraftKind = {
   practical_guide: 'practical_guide',
   industry_introduction: 'industry_introduction',
   template: 'template',
+  premium_template: 'premium_template',
   regulatory_article: 'regulatory_article',
 } as const;
 

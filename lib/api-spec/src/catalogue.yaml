@@ -256,6 +256,7 @@ schemas:
       reviewedAt: { type: string, format: date-time }
       reviewBy: { type: [string, "null"], format: date-time }
       publicationMethod: { type: string, enum: [manual] }
+      access: { type: string, enum: [free, premium] }
       disclosure: { type: string }
       scope: { type: string }
       limitations: { type: string }

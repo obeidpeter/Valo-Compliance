@@ -17,6 +17,27 @@ import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { valoWorkspaces } from "./valo-workspaces";
 import { valoContentVersions } from "./valo-publication";
+import { valoManualLibrary } from "./valo-manual-library";
+
+/** Prices and purchases name an immutable edition from either publisher. */
+export const valoCommerceVersions = pgTable(
+  "valo_commerce_versions",
+  {
+    id: uuid("id").primaryKey(),
+    reviewedVersionId: uuid("reviewed_version_id").references(() => valoContentVersions.id, {
+      onDelete: "cascade",
+    }),
+    manualVersionId: uuid("manual_version_id").references(() => valoManualLibrary.id, {
+      onDelete: "cascade",
+    }),
+  },
+  (t) => [
+    check(
+      "valo_commerce_exact_version",
+      sql`num_nonnulls(${t.reviewedVersionId},${t.manualVersionId}) = 1 AND ${t.id} = coalesce(${t.reviewedVersionId},${t.manualVersionId})`,
+    ),
+  ],
+);
 
 /** No seed price book: customer-facing prices require explicit commercial approval. */
 export const valoPrices = pgTable(
@@ -25,7 +46,7 @@ export const valoPrices = pgTable(
     id: uuid("id").primaryKey(),
     contentVersionId: uuid("content_version_id")
       .notNull()
-      .references(() => valoContentVersions.id),
+      .references(() => valoCommerceVersions.id),
     title: text("title").notNull(),
     amountKobo: integer("amount_kobo").notNull(),
     currency: text("currency").notNull().default("NGN"),
@@ -161,7 +182,7 @@ export const valoEntitlements = pgTable(
     orderId: uuid("order_id").notNull(),
     contentVersionId: uuid("content_version_id")
       .notNull()
-      .references(() => valoContentVersions.id),
+      .references(() => valoCommerceVersions.id),
     status: text("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

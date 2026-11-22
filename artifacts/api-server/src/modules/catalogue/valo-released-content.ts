@@ -1,6 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import type { db, valoContentVersions } from "@workspace/db";
-import { evaluatePublication, publicationSchema, coveragePlan } from "@workspace/valo-core";
+import {
+  baselineTemplates,
+  evaluatePublication,
+  publicationSchema,
+  coveragePlan,
+} from "@workspace/valo-core";
 import {
   developmentPublicationOnly,
   operationalPolicy,
@@ -25,7 +30,7 @@ import {
 } from "./valo-catalogue";
 import { setting } from "../../platform/settings";
 import { lockSourceState, sourceTargetAllowed } from "../sources";
-import { releasedManualEntries } from "../manual-library";
+import { isManualTemplate, releasedManualEntries } from "../manual-library";
 import { manualCatalogue, manualResource, manualResourceKind, manualTemplate } from "./manual-presentation";
 export function releaseVisible(
   row: typeof valoContentVersions.$inferSelect,
@@ -143,7 +148,7 @@ export async function releasedResources() {
     ...existing
       .filter((r) => publicationSchema.parse(r.bundle).candidate.contentClass !== "general_template")
       .map(projectReleasedResource),
-    ...manual.filter((row) => row.kind !== "template").map(manualResource),
+    ...manual.filter((row) => !isManualTemplate(row.kind)).map(manualResource),
   ];
 }
 export function operationalPresentation(templateId: string) {
@@ -188,7 +193,7 @@ export async function liveCoverage() {
     }),
     ...manual.map((row) => ({
       id: row.slug,
-      kind: row.kind === "template" ? ("template" as const) : manualResourceKind(row),
+      kind: isManualTemplate(row.kind) ? ("template" as const) : manualResourceKind(row),
       industrySlugs: row.industry ? [row.industry] : [],
       locationIds: [],
       sourceCheckedAt: row.sourceCheckedAt?.toISOString() ?? null,
@@ -278,18 +283,21 @@ export function directorySearchItems(): ReleasedLibraryItem[] {
 export async function releasedCatalogue(query: CatalogueQuery = {}) {
   const [all, manual] = await Promise.all([liveReleasedVersions(), releasedManualEntries()]);
   const items = [...projectReleasedCatalogue(all), ...manual.map(manualCatalogue)];
+  const reviewedIds = new Set(all.map((row) => row.templateId));
+  const manualTitles = new Set(
+    manual.filter((row) => isManualTemplate(row.kind)).map((row) => row.title.toLowerCase()),
+  );
   return {
     ...paginateReleasedItems([...items, ...directorySearchItems()], query),
-    heldTemplates: Math.max(
-      0,
-      40 - all.filter((r) => /^TPL-(0[1-9]|[1-3][0-9]|40)$/.test(r.templateId)).length,
-    ),
+    heldTemplates: baselineTemplates.filter(
+      (entry) => !reviewedIds.has(entry.id) && !manualTitles.has(entry.title.toLowerCase()),
+    ).length,
   };
 }
 export async function releasedTemplate(slug: string) {
   if (slug.startsWith("manual-")) {
     const [row] = await releasedManualEntries(slug);
-    if (!row || row.kind !== "template") throw new ValoProblem(404, "This template is unavailable.");
+    if (!row || !isManualTemplate(row.kind)) throw new ValoProblem(404, "This template is unavailable.");
     return manualTemplate(row);
   }
   const row = (await liveOperationalVersions()).find((r) => r.slug === slug);

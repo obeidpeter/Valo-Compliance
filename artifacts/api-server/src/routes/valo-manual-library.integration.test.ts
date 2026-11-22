@@ -9,6 +9,7 @@ import { strToU8, unzipSync, zipSync } from "fflate";
 import { ValoProblem } from "../platform/valo-problem";
 import { wordFromText } from "../modules/manual-library/files";
 import { exerciseManualRegulatoryOwner } from "../test-support/manual-regulatory-owner";
+import { exercisePremiumManualTemplate } from "../test-support/manual-premium-template";
 import {
   GetManualLibraryRevisionResponse,
   GetPublicCoverageResponse,
@@ -121,7 +122,7 @@ test(
     assert.ok(["127.0.0.1", "localhost", "[::1]"].includes(new URL(process.env.DATABASE_URL!).hostname));
     const { db, pool, valoStaffAssignments, valoManualLibrary } = await import("@workspace/db");
     const { makeStaffGate } = await import("../middlewares/valo-staff-gate");
-    const { createManualLibraryRouter } = await import("./valo-manual-library");
+    const { createManualLibraryRouter, premiumManualTemplateRouter } = await import("./valo-manual-library");
     const { default: publicRouter } = await import("./valo");
     const editor = "synthetic-editor-" + randomUUID(),
       other = "synthetic-support-" + randomUUID();
@@ -150,6 +151,14 @@ test(
     app.use(express.json({ limit: "128kb", inflate: false }));
     app.use("/admin", makeStaffGate(authenticate));
     app.use(createManualLibraryRouter(authenticate));
+    app.use("/workspace/manual-premium-templates", async (req, res, next) => {
+      const session = await authenticate(req);
+      const { resolveWorkspace } = await import("../modules/workspaces");
+      const { runInWorkspaceScope } = await import("@workspace/db");
+      res.locals.valoActor = await resolveWorkspace(session.identityId);
+      runInWorkspaceScope(res.locals.valoActor.workspaceId, next);
+    });
+    app.use(premiumManualTemplateRouter);
     const { staffOperations } = await import("../modules/staff");
     const { createSourceControlsRouter } = await import("./valo-source-controls");
     const { makeSupportOperationsRouter } = await import("./valo-support-lifecycle");
@@ -334,6 +343,9 @@ test(
     await t.test(
       "a distinct verified owner may release only the exact source-checked regulatory revision",
       () => exerciseManualRegulatoryOwner(call, editor),
+    );
+    await t.test("premium manual files require the purchasing workspace and the exact released edition", () =>
+      exercisePremiumManualTemplate(call, editor),
     );
     await t.test("Word and PDF previews, original template downloads and withdrawal", async () => {
       const text = "Synthetic delivery checklist";

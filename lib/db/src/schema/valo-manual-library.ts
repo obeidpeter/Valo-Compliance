@@ -64,7 +64,13 @@ export const valoManualLibrary = pgTable(
     version: integer("version").notNull(),
     slug: text("slug").notNull(),
     kind: text("kind", {
-      enum: ["practical_guide", "industry_introduction", "template", "regulatory_article"],
+      enum: [
+        "practical_guide",
+        "industry_introduction",
+        "template",
+        "premium_template",
+        "regulatory_article",
+      ],
     }).notNull(),
     industry: text("industry"),
     title: text("title").notNull(),
@@ -99,7 +105,7 @@ export const valoManualLibrary = pgTable(
     index("valo_manual_state_slug").on(t.state, t.slug),
     check(
       "valo_manual_kind",
-      sql`${t.kind} IN ('practical_guide','industry_introduction','template','regulatory_article')`,
+      sql`${t.kind} IN ('practical_guide','industry_introduction','template','premium_template','regulatory_article')`,
     ),
     check(
       "valo_manual_state",
@@ -115,8 +121,9 @@ export const valoManualLibrary = pgTable(
     ),
     check(
       "valo_manual_file",
-      sql`(${t.fileBytes} IS NULL AND ${t.fileFormat} IS NULL AND ${t.kind} <> 'template') OR (${t.fileBytes} IS NOT NULL AND ${t.kind} = 'template' AND ${t.fileFormat} IS NOT NULL AND ${t.fileFormat} IN ('pdf','docx') AND octet_length(${t.fileBytes}) BETWEEN 1 AND 2097152)`,
+      sql`(${t.fileBytes} IS NULL AND ${t.fileFormat} IS NULL AND ${t.kind} NOT IN ('template','premium_template')) OR (${t.fileBytes} IS NOT NULL AND ${t.kind} IN ('template','premium_template') AND ${t.fileFormat} IS NOT NULL AND ${t.fileFormat} IN ('pdf','docx') AND octet_length(${t.fileBytes}) BETWEEN 1 AND 2097152)`,
     ),
+    check("valo_manual_premium_preview", sql`${t.kind} <> 'premium_template' OR length(${t.body}) <= 600`),
     check(
       "valo_manual_actors",
       sql`(${t.state} = 'draft') = (${t.publishedBy} IS NULL) AND (${t.publishedBy} IS NULL) = (${t.publishedAt} IS NULL) AND (${t.state} IN ('replaced','withdrawn')) = (${t.closedBy} IS NOT NULL) AND (${t.closedBy} IS NULL) = (${t.closedAt} IS NULL)`,

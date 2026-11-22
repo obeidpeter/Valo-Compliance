@@ -6038,6 +6038,100 @@ export function useDownloadManualTemplate<TData = Awaited<ReturnType<typeof down
 
 
 
+export const getDownloadPremiumManualTemplateUrl = (id: string,) => {
+
+
+
+
+  return `/api/workspace/manual-premium-templates/${encodeURIComponent(String(id))}/download`
+}
+
+export const downloadPremiumManualTemplate = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadPremiumManualTemplateUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadPremiumManualTemplateQueryKey = (id: string,) => {
+    return [
+    "downloadPremiumManualTemplate", ...(id ? [id] : [])
+    ] as const;
+    }
+
+
+export const getDownloadPremiumManualTemplateQueryOptions = <TData = Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError = ErrorType<void>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadPremiumManualTemplateQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadPremiumManualTemplate>>> = ({ signal }) => downloadPremiumManualTemplate(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DownloadPremiumManualTemplateQueryResult = NonNullable<Awaited<ReturnType<typeof downloadPremiumManualTemplate>>>
+export type DownloadPremiumManualTemplateQueryError = ErrorType<void>
+
+
+export function useDownloadPremiumManualTemplate<TData = Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError = ErrorType<void>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadPremiumManualTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof downloadPremiumManualTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadPremiumManualTemplate<TData = Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadPremiumManualTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof downloadPremiumManualTemplate>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadPremiumManualTemplate<TData = Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDownloadPremiumManualTemplate<TData = Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof downloadPremiumManualTemplate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDownloadPremiumManualTemplateQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetBuildStatusUrl = () => {
 
 
