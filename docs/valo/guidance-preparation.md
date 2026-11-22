@@ -23,6 +23,10 @@ owner has approved the guidance policy: it then prints what holds the guide and 
    | `CAC-BN-PROCESS` | The Commission's business-name page | GUD-01, GUD-03 |
    | `S03` | The Commission's registration portal, front page | GUD-05 |
    | `NRS-TAXID-HOW` | The revenue service's page on how Tax ID retrieval works | GUD-08 |
+   | `S04` | Nigeria Data Protection Act 2023, the Commission's copy | GUD-11 to GUD-15 |
+   | `S05` | The Commission's General Application and Implementation Directive 2025 | GUD-11 to GUD-15 |
+
+   The command asks only for the addresses the guide it is given rests on.
 
 3. **A capture of each address, checked within the last day.** The daily source check makes it. The
    preparer fetches nothing itself.
@@ -49,7 +53,14 @@ Run it from `artifacts/api-server`, with the guide and the path of the terms fil
 NODE_ENV=development tsx src/scripts/finite-inference-run.ts --prepare-guide-candidate GUD-01 /path/to/terms.json
 ```
 
-Only GUD-01 to GUD-10 have a claim map today, so only they can be named.
+Only GUD-01 to GUD-15 have a claim map today, so only they can be named.
+
+The words of the two Acts GUD-01 to GUD-10 quote are kept in the repository. The words of the data
+protection Act and the directive are not: for GUD-11 to GUD-15 the repository keeps only where each
+passage starts and ends and the checksum of its words. Such a guide is built only from a capture.
+If no capture supplies any of its passages, the command stops with `GUIDE_HAS_NO_BOUND_SOURCE`:
+its addresses are not watched yet, their captures are older than a day, or the files read
+differently from the way they read on 21 November 2026.
 
 ## What it prints
 
@@ -105,4 +116,4 @@ record describes. That is deliberate: someone has to read the new file and write
   different bytes each time they are fetched while saying the same words. The daily check compares
   a web page by its words, so that alone holds nothing. If a page's words change, what rests on it
   is held until it is prepared and reviewed again.
-- **The other twenty guides** have no claim map yet.
+- **The other fifteen guides**, GUD-16 to GUD-30, have no claim map yet.
