@@ -10,6 +10,7 @@ export type ReleasedLibraryItem = {
   templateId?: string;
   category?: string;
   access?: "free" | "premium";
+  amountKobo?: number;
   reviewedAt?: string;
   href?: string;
 };

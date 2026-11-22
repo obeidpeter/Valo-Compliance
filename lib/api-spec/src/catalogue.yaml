@@ -218,6 +218,7 @@ schemas:
       templateId: { type: string }
       category: { type: string }
       access: { type: string, enum: [free, premium] }
+      amountKobo: { type: integer, minimum: 1, description: Current approved NGN price in kobo for a released premium template edition. }
       reviewedAt: { type: string }
       href: { type: string }
       reason: { type: string }

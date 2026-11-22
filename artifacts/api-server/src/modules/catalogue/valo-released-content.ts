@@ -32,7 +32,11 @@ import { setting } from "../../platform/settings";
 import { lockSourceState, sourceTargetAllowed } from "../sources";
 import { isManualTemplate, releasedManualEntries } from "../manual-library";
 import { manualCatalogue, manualResource, manualResourceKind, manualTemplate } from "./manual-presentation";
-import { isFreeBaselineTemplate, offerForReleasedEdition } from "./template-prices";
+import {
+  approvedAmountsForEditions,
+  isFreeBaselineTemplate,
+  offerForReleasedEdition,
+} from "./template-prices";
 export function releaseVisible(
   row: typeof valoContentVersions.$inferSelect,
   policyHash: string,
@@ -288,8 +292,16 @@ export async function releasedCatalogue(query: CatalogueQuery = {}) {
   const manualTitles = new Set(
     manual.filter((row) => isManualTemplate(row.kind)).map((row) => row.title.toLowerCase()),
   );
+  const page = paginateReleasedItems([...items, ...directorySearchItems()], query);
+  const prices = await approvedAmountsForEditions(
+    page.items.filter((item) => item.type === "template" && item.access === "premium").map((item) => item.id),
+  );
   return {
-    ...paginateReleasedItems([...items, ...directorySearchItems()], query),
+    ...page,
+    items: page.items.map((item) => {
+      const amountKobo = prices.get(item.id);
+      return amountKobo === undefined ? item : { ...item, amountKobo };
+    }),
     heldTemplates: baselineTemplates.filter(
       (entry) => !reviewedIds.has(entry.id) && !manualTitles.has(entry.title.toLowerCase()),
     ).length,

@@ -523,6 +523,35 @@ test("a server-rendered page reached inside the browser app without a full load 
   }
 });
 
+test("library cards show approved naira prices and free access before and after filtering", async () => {
+  const [free, priced, unpriced] = items;
+  catalogueItems = [
+    { ...free!, access: "free" },
+    { ...priced!, access: "premium", amountKobo: 400000 },
+    { ...unpriced!, access: "premium" },
+  ];
+  try {
+    const address = "/library?type=template";
+    const html = await (await fetch(web.origin + address)).text();
+    const labels = [
+      ...html.replaceAll("<!-- -->", "").matchAll(/data-testid="card-access">([^<]*)<\/span>/g),
+    ].map((match) => match[1]);
+    assert.deepEqual(labels, ["Free", "Premium · ₦4,000.00", "Premium"]);
+    const { page, close } = await web.phone(address);
+    try {
+      await ready(page);
+      await page.getByTestId("select-access").selectOption("premium");
+      await expect(page.getByTestId("card-access")).toHaveText(["Premium · ₦4,000.00", "Premium"]);
+      await page.getByTestId("select-access").selectOption("free");
+      await expect(page.getByTestId("card-access")).toHaveText(["Free"]);
+    } finally {
+      await close();
+    }
+  } finally {
+    catalogueItems = null;
+  }
+});
+
 test("the library's filters, sort and page live in its address: the server renders the results an address asks for, a reload keeps them, a new search starts again from the first page, and clearing the filters empties the address", async () => {
   // Twenty-three released templates of one kind: a full first page of 20 and three on the second.
   catalogueItems = Array.from({ length: 23 }, (_, i) => ({
