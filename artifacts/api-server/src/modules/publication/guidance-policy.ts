@@ -10,22 +10,27 @@ import { operationalRestrictionsSchema } from "./operational-restrictions";
  *
  * The owner's recorded authority for templates says claims about law need a source-backed policy of
  * their own, so a guide is never released under the templates' policy. This one is read from the
- * policy file, which is proposed and not approved: every guide is held until the owner approves it.
+ * policy file. The owner approved that file's text on 22 November 2026. It counts as approved only
+ * while the file is, byte for byte, the text the owner approved.
  */
 export const GUIDANCE_POLICY_PATH = "docs/valo/policies/guidance-publication-policy.md";
 /** The owner's optional narrowing of what may be published. It can only take permissions away. */
 const RESTRICTIONS_PATH = "docs/valo/policies/operational-publication-restrictions.json";
 
 /**
- * The SHA-256 of the policy file as the product owner approved it. Null means the owner has not
- * approved the policy, which is the case today.
+ * The SHA-256 of the policy file as the product owner approved it. Null would mean that the owner
+ * has approved no text.
  *
- * Approval is recorded by one reviewed change: the owner's decision is written into the policy file
- * and this returns that file's hash. Never change it for any other reason. Any later edit of the
- * file ends the approval until the owner approves the new text.
+ * The owner approved the file by this checksum on 22 November 2026, and decision 0017 records the
+ * approval. Change this only on the owner's explicit, current approval of a file's exact text, and
+ * for no other reason. Any edit of the file ends the approval until the owner approves the new text.
+ *
+ * The approved text's own first paragraph was written before the approval and still calls the
+ * policy proposed. It cannot be corrected without ending the approval: decision 0017 says what is
+ * proposed for it.
  */
 export function guidancePolicyApprovedHash(): string | null {
-  return null;
+  return "5fd56570e44a8ae136be36e5022aa062932b6c058d19fa09594450d67b49727f";
 }
 
 /** The hosts the policy file lists. A guide's sources, its links and the places searched for later
@@ -55,8 +60,8 @@ export const guidanceOfficialHosts = [
  * with the passages read from the official files as fetched on 21 November 2026, the ten mapped
  * guides measure between 33,479 and 53,042.
  *
- * The policy file states this number, so the owner approves it with that file. No guide can be
- * prepared for its reviews before then, so no request is measured against it before then.
+ * The policy file states this number, and the owner approved it with that file on 22 November
+ * 2026.
  */
 export const GUIDE_REVIEW_INPUT_CEILING = 64_000;
 const thousands = (n: number) => String(n).replace(/\B(?=(\d{3})+$)/g, ",");
