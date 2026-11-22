@@ -495,6 +495,24 @@ const answers: Record<string, unknown> = {
     concerns: [],
     notice: "Synthetic test fixture.",
   }),
+  [`GET /admin/owner-guidance`]: api.ListOwnerGuidanceResponse.parse({
+    items: [
+      {
+        itemId: "00000000-0000-4000-8000-00000000a902",
+        version: 1,
+        digest: "a".repeat(64),
+        title: "Synthetic regulatory article",
+        body: "An article prepared for the development owner's source check.",
+        state: "draft",
+        checkId: null,
+        checkedAt: null,
+        holds: ["The official sources still need checking."],
+        sources: [],
+        live: null,
+      },
+    ],
+    hasMore: false,
+  }),
   [`GET /admin/staff-roles`]: api.GetStaffRoleAdministrationResponse.parse({
     assignments: [
       {
