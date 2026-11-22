@@ -132,14 +132,10 @@ export default function StaffPage() {
               {q.data.notice}
             </p>
             {area === "finance" && <FinanceRefunds />}
-            {area === "system" && (
-              <>
-                <StaffRoleAdministration />
-                <OwnerRegulatoryGuidance />
-              </>
-            )}
+            {area === "system" && <StaffRoleAdministration />}
             {area === "content" && <ManualLibraryEditor onDirtyChange={setManualDirty} />}
             {(area === "content" || area === "system") && <SourceSafetyControls key={area} area={area} />}
+            {area === "system" && <OwnerRegulatoryGuidance />}
             {area === "content" && <ContentEscalations onDirtyChange={setContentDirty} />}
             {area === "content" && (
               <details className="mt-6">
